@@ -30,7 +30,7 @@ does not compete with the project ordering in `docs/ROADMAP.md`.
 | Gate | Status | Exit evidence |
 | --- | --- | --- |
 | QA-A test readiness | active | solution-point review complete, direct gaps closed, enduring CTest manifest and platform commands ready |
-| QA-B independent Mac closeout | pending | focused Debug/Release, both VMs/modes, sanitizer, stress and broad regression retained |
+| QA-B independent Mac closeout | active | correctness, sanitizer, stress, Release, install and portable-package proof pass; quiet AC performance replay remains |
 | QA-C Linux qualification | pending | clean frozen build, conformance matrix and install/package proof retained |
 | QA-D Windows qualification | pending | clean frozen build, conformance matrix and install/package proof retained |
 | QA-E publication decision | pending | limitations/packages reconciled and Adrian explicitly selects unpublished, published initial or deferred |
@@ -101,6 +101,25 @@ entry point completed a 1,079-step dependency rebuild and again passed 180/180
 41/41, SP-02 18/18, SP-03 11/11, SP-04 24/24, SP-05 8/8, SP-06 52/52, SP-07
 39/39, SP-08 49/49 and SP-09 19/19; overlaps are deliberately de-duplicated by
 the umbrella label.
+
+## QA-B Mac evidence
+
+The independent Mac correctness closeout passes: complete Debug build; full
+Debug CTest 2,204/2,204; Apple ASan 180/180 with leak detection unavailable;
+six stress tests repeated 20 times each; complete ordinary profiling-off
+Release build; Release concurrency matrix 180/180; and a 156-file isolated
+install whose installed `rxc`, `rxas`, `rxlink`, `rxbvm` and `rxtvm` compile,
+link and run the documented basic concurrency program. Evidence is retained in
+[`evidence/2026-08-16-mac-closeout`](evidence/2026-08-16-mac-closeout/).
+
+The requested task-launch and seven-workload single-thread comparison reached
+the 36-pair noise ceiling and retained an unchanged Richards confirmation. It
+found no confirmed adverse guard, but the host power log proves that the whole
+campaign ran on battery. Under the performance-governance AC requirement this
+is diagnostic evidence only. A quiet AC replay of the exact retained manifests
+remains the sole open Mac QA-B item; the earlier accepted AC baselines are not
+invalidated. The diagnostic bundle is
+[`2026-08-16-initial-concurrency-mac-closeout`](../performance/evidence/2026-08-16-initial-concurrency-mac-closeout/).
 
 ## Deferred feature proposals
 

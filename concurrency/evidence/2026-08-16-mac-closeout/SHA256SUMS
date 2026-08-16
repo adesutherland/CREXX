@@ -1,0 +1,12 @@
+e60c0e2451d242b158cdf5a241fb07ec0136c8b8bea3ad04e206e0b557eff78e  ./COMMANDS.md
+74fc40f6fc50cc8def152634f0948eddfc1448c8a1c56faf8d9288bc78abf7b3  ./README.md
+80a7527d778536211294b8b5a0fae4cb9d5f5e86d32c81ec1f7aa778935fee18  ./install/install-and-smoke.log
+a05ca741bbcc3d39bfee58aabca2681506c8dfdbbc3c14a7e848d3575f0925ce  ./install/install-inventory.txt
+6177abccb780435ac69b41ccea68a4ad0ab4999b05f1b76963892bb77af8c225  ./install/package.sha256
+6df065c6f6c1a32f78ffb163925b24b2db9a48712e5a9d80d8b2ee380510e580  ./qa/asan-build.log
+b5257734f7c25d03e02889b07e6c5bea966510094bd8ae7f75e0393042b79e4c  ./qa/asan-concurrency-matrix.log
+6ec9c8c55c006394479d60ded5462f947e5134e8d33569bc5f2fd5d61656f63d  ./qa/debug-build.log
+118031b44b9086c6a4293293a72db51e01e4e3aa4d25da6858de8c0c73b91503  ./qa/debug-ctest.log
+d466b3990c5d399e48b912e50ff24ef165db82630d82472415a0a0a21888d838  ./qa/debug-stress-repeat-20.log
+1e592d5b020d241e7072c347fa7e76ee825e9fcb47f42318cdb28e503ab5e6f3  ./qa/release-build.log
+ea14356e5e7a8f79ffacee49f9cc9e4ee66ae96f3fbe37e147f8e298adcf4bf8  ./qa/release-concurrency-matrix.log

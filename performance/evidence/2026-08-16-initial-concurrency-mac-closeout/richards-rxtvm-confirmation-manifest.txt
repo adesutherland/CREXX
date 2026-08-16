@@ -1,0 +1,6 @@
+# Initial concurrency Mac closeout ordinary single-thread paired Release portfolio.
+# Frozen feature-baseline and QA-closeout VMs share every current RXBIN/library.
+# One warmup and 12 pairwise-balanced serial recorded rounds per cell.
+crexx-cross-runtime-matrix|1
+richards-rxtvm-control|Richards|crexx|rxtvm|feature-freeze|A|no|startup-included|20|PASS: AWFY Richards||/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-concurrency-perf.1UbveMNqZY/control-build/bin/rxtvm;/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin;-a;20
+richards-rxtvm-candidate|Richards|crexx|rxtvm|qa-candidate|A|no|startup-included|20|PASS: AWFY Richards||/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxtvm;/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin;-a;20

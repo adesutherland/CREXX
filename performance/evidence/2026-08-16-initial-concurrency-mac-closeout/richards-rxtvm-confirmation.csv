@@ -1,0 +1,2 @@
+workload,vm,metric,pairs,control_median,candidate_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total,guard_hit
+Richards,rxtvm,elapsed_ns,12,2194969000.000000,2170034500.000000,-8.540342,-2.691079,-1.156373,0.396950,6.786131,-0.984143,-3.652300,1.684013,noisy_inconclusive,8,12,no

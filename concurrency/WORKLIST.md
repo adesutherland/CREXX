@@ -24,7 +24,7 @@ stages and performance evidence are linked rather than reproduced here.
 | CONC-08 | bounded concurrent HTTP/TLS client | complete | Mac qualified and documented; initial publication pending | complete portable conformance under CONC-11 |
 | CONC-09 | sealed task-binding validation cache | complete | locally qualified and performance-guard clean | retain cache miss/hit and ordinary single-thread regression coverage |
 | CONC-10 | enduring documentation | complete | locally checked with generated API, examples, links and broad Debug regression | maintain references with implementation; portable publication remains CONC-11 |
-| CONC-11 | solution-point QA, portable conformance and initial publication | active | frozen feature baseline is Mac-qualified; direct contract gaps and deterministic labelled test manifest are complete; independent review and public Linux/Windows matrix remain | complete QA-A through QA-E in `QA-CLOSEOUT.md` |
+| CONC-11 | solution-point QA, portable conformance and initial publication | active | solution-point review and Mac correctness/sanitizer/install closeout pass; the Mac AC performance replay and Linux/Windows qualification remain | complete QA-A through QA-E in `QA-CLOSEOUT.md` |
 | CONC-12 | services, actors, events and projections | post-Release-1 proposal | `.taskscope.ask` is unsupported | require separate design approval after concurrency closure |
 | CONC-13 | open-host and extension providers | post-Release-1 proposal | provider type `3` and public plugin ABI unavailable | require separate design approval after concurrency closure |
 | CONC-14 | pool saturation telemetry | post-Release-1 proposal | `queued()` and `running()` are unsupported | require separate semantics and portability approval |
