@@ -2031,7 +2031,7 @@ foreach(required IN ITEMS
         \"gate_f_levelb_contract.byteendpoint\"
         \"gate_f_levelb_contract.serviceref\"
         \"gate_f_levelb_contract.transferbuffer\")
-  if(NOT rxdas_out MATCHES \"\${required}.*\\.interface\")
+  if(NOT rxdas_out MATCHES \"\${required}.*\\\\.interface\")
     message(FATAL_ERROR \"Gate F Level B contract is missing interface metadata for \${required}\")
   endif()
 endforeach()
