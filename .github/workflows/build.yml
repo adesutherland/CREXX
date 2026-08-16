@@ -177,6 +177,7 @@ jobs:
           ctest --test-dir "${{ runner.temp }}/build" \
             --output-on-failure \
             --no-tests=error \
+            --label-exclude "^performance-measurement$" \
             --parallel 1
 
       - name: CTest
@@ -186,6 +187,7 @@ jobs:
           ctest --test-dir "${{ runner.temp }}/build" \
             --output-on-failure \
             --no-tests=error \
+            --label-exclude "^performance-measurement$" \
             --parallel 2
 
       - name: Stage release payload

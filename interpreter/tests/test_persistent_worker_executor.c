@@ -449,6 +449,104 @@ static int parse_positive_size(const char *text, size_t *value_out) {
     return 1;
 }
 
+static int run_worker_topology(int argc, char **argv) {
+    rxvm_executor *executor;
+    rxvm_executor_request **requests;
+    rxvm_executor_result create_result;
+    rxvm_executor_statistics statistics;
+    uint64_t deadline;
+    size_t worker_count;
+    size_t worker;
+    size_t leaks;
+    int ok = 1;
+
+    if (argc != 4 || !parse_positive_size(argv[3], &worker_count)) {
+        fprintf(stderr, "usage: %s --worker-topology E5_RXBIN WORKERS\n",
+                argv[0]);
+        return 2;
+    }
+    executor = rxvm_executor_create(argv[2], worker_count, 1u, &create_result);
+    if (!executor || create_result != RXVM_EXECUTOR_OK) return 1;
+    requests = (rxvm_executor_request **)calloc(worker_count,
+                                                 sizeof(*requests));
+    if (!requests) {
+        (void)rxvm_executor_destroy(executor);
+        return 1;
+    }
+
+    for (worker = 0u; worker < worker_count; worker++) {
+        requests[worker] = submit_zero(
+                executor, worker, "e5worker.loop_forever");
+        if (!requests[worker]) ok = 0;
+    }
+    for (worker = 0u; ok && worker < worker_count; worker++) {
+        if (rxvm_executor_request_wait_started(requests[worker]) !=
+                RXVM_EXECUTOR_REQUEST_RUNNING) {
+            ok = 0;
+        }
+    }
+
+    memset(&statistics, 0, sizeof(statistics));
+    deadline = monotonic_nanoseconds() + 5000000000ULL;
+    while (ok && monotonic_nanoseconds() < deadline) {
+        rxvm_executor_statistics_get(executor, &statistics);
+        if (statistics.running_requests == worker_count &&
+            statistics.maximum_parallel_requests == worker_count) {
+            break;
+        }
+#if defined(_WIN32)
+        Sleep(1);
+#else
+        {
+            struct timespec delay = {0, 1000000L};
+            (void)nanosleep(&delay, 0);
+        }
+#endif
+    }
+    if (statistics.worker_count != worker_count ||
+        statistics.queue_capacity_per_worker != 1u ||
+        statistics.running_requests != worker_count ||
+        statistics.maximum_parallel_requests != worker_count) {
+        ok = 0;
+    }
+
+    for (worker = 0u; worker < worker_count; worker++) {
+        if (requests[worker] &&
+            rxvm_executor_cancel(requests[worker]) != RXVM_EXECUTOR_OK) {
+            ok = 0;
+        }
+    }
+    for (worker = 0u; worker < worker_count; worker++) {
+        int result = 0;
+        if (!requests[worker]) continue;
+        if (rxvm_executor_request_wait(requests[worker], &result) !=
+                RXVM_EXECUTOR_REQUEST_CANCELLED) {
+            ok = 0;
+        }
+        if (rxvm_executor_request_destroy(requests[worker]) !=
+                RXVM_EXECUTOR_OK) {
+            ok = 0;
+        }
+    }
+    free(requests);
+
+    rxvm_executor_statistics_get(executor, &statistics);
+    if (statistics.running_requests != 0u ||
+        statistics.cancelled_requests != worker_count) {
+        ok = 0;
+    }
+    leaks = rxvm_executor_destroy(executor);
+    if (leaks != 0u) ok = 0;
+    if (failures) ok = 0;
+
+    printf("E5_WORKER_TOPOLOGY result=%s workers=%zu max_parallel=%zu "
+           "running_after=%zu cancelled=%zu leaks=%zu\n",
+           ok ? "PASS" : "FAIL", worker_count,
+           statistics.maximum_parallel_requests,
+           statistics.running_requests, statistics.cancelled_requests, leaks);
+    return ok ? 0 : 1;
+}
+
 static int run_benchmark_direct(const char *rxbin,
                                 const char *procedure,
                                 size_t jobs,
@@ -978,6 +1076,9 @@ static int run_doorbell_stress(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
+    if (argc > 1 && strcmp(argv[1], "--worker-topology") == 0) {
+        return run_worker_topology(argc, argv);
+    }
     if (argc > 1 && strcmp(argv[1], "--benchmark") == 0) {
         return run_benchmark(argc, argv);
     }

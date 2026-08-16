@@ -1829,6 +1829,20 @@ if(BUILD_TESTING AND
         set_tests_properties(${TARGET_NAME}-native-return PROPERTIES
                 LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;native;lifecycle;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 30)
+        add_test(
+                NAME ${TARGET_NAME}-e6-worker-topology-w8
+                COMMAND ${CMAKE_COMMAND} -E env
+                        CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                        $<TARGET_FILE:${TARGET_NAME}>
+                        --worker-topology
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
+                        8)
+        set_tests_properties(
+                ${TARGET_NAME}-e6-worker-topology-w8
+                PROPERTIES
+                LABELS "interpreter;gate-e;e6;private;worker;topology;${_crexx_e5_doorbell_platform_label}"
+                PROCESSORS 8
+                TIMEOUT 30)
         foreach(_crexx_e6_workers IN ITEMS 1 2 4 8)
             foreach(_crexx_e6_workload IN ITEMS spin churn)
                 if("${_crexx_e6_workload}" STREQUAL "spin")
@@ -1848,7 +1862,7 @@ if(BUILD_TESTING AND
                 set_tests_properties(
                         ${TARGET_NAME}-e6-scale-${_crexx_e6_workload}-w${_crexx_e6_workers}
                         PROPERTIES
-                        LABELS "interpreter;perf3;gate-e;e6;private;scale;${_crexx_e6_workload};${_crexx_e5_doorbell_platform_label}"
+                        LABELS "interpreter;perf3;performance-measurement;gate-e;e6;private;scale;${_crexx_e6_workload};${_crexx_e5_doorbell_platform_label}"
                         PROCESSORS ${_crexx_e6_workers}
                         TIMEOUT 120)
             endforeach()
