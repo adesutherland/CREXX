@@ -54,6 +54,7 @@ designs.
 - [Instruction characteristics](books/crexx_vm_spec/instruction_characteristics.md)
 - [Platform considerations](books/crexx_vm_spec/platform_considerations.md)
 - [Current architecture notes](ai-context/CREXX_ARCHITECTURE.md)
+- [Concurrency architecture and maintainer reference](ai-context/CREXX_CONCURRENCY.md)
 - [Assembler internals](ai-context/RXAS_ASSEMBLER.md)
 - [Linker internals](ai-context/RXLINK_LINKER.md)
 - [Interpreter internals](ai-context/RXVM_INTERPRETER.md)

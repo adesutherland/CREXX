@@ -60,7 +60,7 @@ behavior.
 | `.channelvalue` | Implemented and directly tested | Canonical RXCV null, boolean, integer, float, decimal, string, binary, array, record and provider-reference documents are validated, including canonical record ordering and depth limits. |
 | `.channelcodec` | Interface contract implemented; no general codec registry | The exact encode/decode interface exists. Compiler-supported transferable types use their statically resolved `to_channel`/`from_channel` contract; there is no advertised dynamic registry. |
 | `.byteendpoint` | Implemented and directly tested | Memory/null endpoints, provider references, encoded-reference adapters, bounded reads/writes, half-close, cancellation and close use the common channel instructions. |
-| `.transferbuffer` | Implemented and directly tested | Allocate/copy/write/read, move invalidation, immutable seal and RXCV conversion are covered. Sealing provides integrity/immutability semantics, not encryption. |
+| `.transferbuffer` | Implemented and directly tested | Allocate/copy/write/read, move invalidation, immutable snapshot sealing and RXCV conversion are covered. Sealing prevents later buffer writes; it is not encryption, authentication or a checksum. |
 | `.serviceref` | Interface reserved; no concrete public service | The identity shape is declared for future single-owner services. No service implementation or usable `.taskscope.ask()` path exists. |
 
 ## RXAS, RXBIN and VM surface

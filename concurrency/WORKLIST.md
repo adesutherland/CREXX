@@ -78,7 +78,7 @@ the enduring reference marks it supported.
 
 - [x] Reconcile every public declaration and advertised behavior against source
   and executable tests.
-- [ ] Publish `docs/ai-context/CREXX_CONCURRENCY.md` as the holistic maintainer
+- [x] Publish `docs/ai-context/CREXX_CONCURRENCY.md` as the holistic maintainer
   and AI authority.
 - [ ] Publish a programming-guide chapter with approachable, runnable examples.
 - [ ] Publish a formal language-reference chapter with positive and negative
