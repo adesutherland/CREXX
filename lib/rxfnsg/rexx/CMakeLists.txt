@@ -4,6 +4,7 @@ set(RXFNSG_REXX_MODULES
   httpcodec
   httpcore
   http
+  httpserver
   llm
 )
 
@@ -12,11 +13,11 @@ foreach(_module IN LISTS RXFNSG_REXX_MODULES)
   list(APPEND RXFNSG_REXX_BINS "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin")
 endforeach()
 
-# `llm` and `http` share the public `rxfnsg` namespace.  During a clean or
-# parallel build the final consolidated image does not exist yet, so publish
-# the freshly compiled HTTP module under its namespace name in a private stage
-# directory.  This prevents the compiler from resolving LLM types against a
-# stale installed/build-tree `rxfnsg.rxbin`.
+# `httpserver`, `llm` and `http` share the public `rxfnsg` namespace. During a
+# clean or parallel build the final consolidated image does not exist yet, so
+# publish the freshly compiled HTTP module under its namespace name in a
+# private stage directory. This prevents later modules from resolving HTTP
+# types against a stale installed/build-tree `rxfnsg.rxbin`.
 set(_rxfnsg_http_stage_dir "${CMAKE_CURRENT_BINARY_DIR}/http-stage")
 set(_rxfnsg_http_stage_image "${_rxfnsg_http_stage_dir}/rxfnsg.rxbin")
 add_custom_command(
@@ -41,7 +42,7 @@ foreach(_binfile IN LISTS RXFNSG_REXX_BINS)
     list(APPEND _module_dependencies
       "${CMAKE_CURRENT_BINARY_DIR}/httpcodec.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/httpcore.rxbin")
-  elseif(_basename STREQUAL "llm")
+  elseif(_basename STREQUAL "httpserver" OR _basename STREQUAL "llm")
     list(APPEND _module_dependencies
       "${CMAKE_CURRENT_BINARY_DIR}/httpcore.rxbin"
       "${_rxfnsg_http_stage_image}")

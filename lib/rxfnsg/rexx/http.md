@@ -6,10 +6,11 @@ task, channel and byte-endpoint surface. The enduring user and API guide is:
 - [`docs/books/crexx_library_reference/concurrent_http.md`](../../../docs/books/crexx_library_reference/concurrent_http.md)
 
 The source namespace exposes `.httpclient`, `.httpresponse`, `.httpheaders`,
-`.httppolicy` and `.httpbody`. Internal connection-owner and transfer-contract
-types are not user APIs. `_rxhttpcore` is the one private, binary-oriented
-framing and parsing backend shared by the Level G HTTP and LLM modules; it is
-not an alternative public client.
+`.httppolicy`, `.httpbody`, `.httpserver`, `.httprequest` and `.httpservice`.
+Internal connection-owner and transfer-contract types are not user APIs.
+`_rxhttpcore` is the one private, binary-oriented framing and parsing backend
+shared by the Level G HTTP, server and LLM modules; it is not an alternative
+public client.
 
 The implementation currently includes:
 
@@ -23,6 +24,11 @@ Buffered callers may use `.get(path, headers)`, `.post(path, body, headers)`,
 or the general `.request(verb, path, binaryBody, headers)` task methods. Text
 callers use `response.body()`; binary callers use `response.body_bytes()`.
 Every client owns bounded task and socket resources and must be closed.
+
+The initial server is clear-text, buffered and deliberately bounded. A
+controller retains socket ownership and gives complete `.httprequest` values to
+sealed `.httpservice .taskwork` handlers. See [`httpserver.md`](httpserver.md)
+and the enduring guide for the handler bridge and supported protocol subset.
 
 There is deliberately no public Level B HTTP client. Level B provides the
 socket and binary primitives; Level G provides the user-facing HTTP policy,

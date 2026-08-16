@@ -565,6 +565,41 @@ httpresponse: class
     _streaming = 0
     return
 
+  /** Construct a text response for `.httpservice` handlers.
+   * @param status HTTP status code
+   * @param body buffered text body
+   * @param headers optional validated response fields and media type
+   * @return transferable server response
+   */
+  text: factory
+    arg status = .int, body = .string, ?headers = .httpheaders
+    if ?headers = 0 then headers = .httpheaders.media_type("text/plain; charset=utf-8")
+    return .httpresponse.binary(status, body as .binary, headers)
+
+  /** Construct a binary response for `.httpservice` handlers.
+   * @param status HTTP status code
+   * @param body buffered binary body
+   * @param headers optional validated response fields and media type
+   * @return transferable server response
+   */
+  binary: factory
+    arg status = .int, body = .binary, ?headers = .httpheaders
+    if ?headers = 0 then headers = .httpheaders.media_type("application/octet-stream")
+    call _http_failure_if status < 100 | status > 599, "HTTP response status must be 100..599"
+    _transport_status = 0
+    _http_status = status
+    _headers = headers.wire()
+    if headers.content_type() <> "" then _headers = "Content-Type: " || headers.content_type() || "0d0a"x || _headers
+    call _http_failure_if http_response_header_lines_valid(_headers) = 0, "HTTP response headers are inconsistent or unsafe"
+    _body = body
+    _stream_reference = ''x as .binary
+    _error = ""
+    _attempts = 1
+    _redirects = 0
+    _ambiguous = 0
+    _streaming = 0
+    return
+
   /** Decode the private request-owner response frame.
    * @param wire framed response bytes
    * @return independent response value
@@ -725,6 +760,10 @@ httpresponse: class
   header: method = .string
     arg name = .string
     return http_header_value(_headers, name)
+
+  /** Internal server bridge to validated response header fields. */
+  header_wire: method = .string
+    return _headers
 
   /** @return transport, protocol or non-2xx diagnostic */
   error: method = .string

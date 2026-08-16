@@ -32,7 +32,7 @@ foreach(_binfile IN LISTS REXXBINS)
     TARGET_GROUP "${_basename}"
     IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
     RXC_FLAGS -x
-    DEPENDS library classlib rxfnsg "${_rexx_file}" ${_prev_target}
+    DEPENDS library classlib rxfnsg "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin" "${_rexx_file}" ${_prev_target}
     RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
   )
   set(_prev_target "${_basename}_noopt_artifact" "${_basename}_opt_artifact")
@@ -57,6 +57,56 @@ if(TARGET rxtvm)
   list(APPEND _http_pooled_runners rxtvm)
 endif()
 
+add_custom_target(ts_http_server)
+add_dependencies(testrxfnsg ts_http_server)
+
+add_custom_target(ts_http_server_failures)
+add_dependencies(testrxfnsg ts_http_server_failures)
+
+foreach(_http_runner IN LISTS _http_pooled_runners)
+  crexx_add_rexx_opt_matrix(
+    LINKED_ALL_MODES
+    NAME "ts_http_server_${_http_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_server.crexx"
+    TARGET_GROUP ts_http_server
+    RUNNER "${_http_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x
+    DEPENDS library classlib rxfnsg "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin" "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_server.crexx"
+    RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
+    TEST_LABELS concurrency http server levelg library "${_http_runner}"
+  )
+  set_tests_properties(
+    "ts_http_server_${_http_runner}_noopt"
+    "ts_http_server_${_http_runner}_opt"
+    PROPERTIES
+      PASS_REGULAR_EXPRESSION "PASS: Level G HTTP server dispatched two bounded requests to task handlers"
+      TIMEOUT 90
+  )
+endforeach()
+
+foreach(_http_runner IN LISTS _http_pooled_runners)
+  crexx_add_rexx_opt_matrix(
+    LINKED_ALL_MODES
+    NAME "ts_http_server_failures_${_http_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_server_failures.crexx"
+    TARGET_GROUP ts_http_server_failures
+    RUNNER "${_http_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x
+    DEPENDS library classlib rxfnsg "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin" "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_server_failures.crexx"
+    RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
+    TEST_LABELS concurrency http server failure levelg library "${_http_runner}"
+  )
+  set_tests_properties(
+    "ts_http_server_failures_${_http_runner}_noopt"
+    "ts_http_server_failures_${_http_runner}_opt"
+    PROPERTIES
+      PASS_REGULAR_EXPRESSION "PASS: Level G HTTP server bounds unusable and failed handlers"
+      TIMEOUT 90
+  )
+endforeach()
+
 foreach(_http_runner IN LISTS _http_pooled_runners)
   crexx_add_rexx_opt_matrix(
     LINKED_ALL_MODES
@@ -66,7 +116,7 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
     RUNNER "${_http_runner}"
     IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
     RXC_FLAGS -x
-    DEPENDS library classlib rxfnsg "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_pooled.crexx"
+    DEPENDS library classlib rxfnsg "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin" "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_pooled.crexx"
     RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
     TEST_LABELS gate_f f1g http levelg library "${_http_runner}"
   )
@@ -91,7 +141,7 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
     RUNNER "${_http_runner}"
     IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
     RXC_FLAGS -x
-    DEPENDS library classlib rxfnsg "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_streaming.crexx"
+    DEPENDS library classlib rxfnsg "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin" "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_streaming.crexx"
     RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
     TEST_LABELS gate_f f1g http streaming levelg library "${_http_runner}"
   )
@@ -116,7 +166,7 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
     RUNNER "${_http_runner}"
     IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
     RXC_FLAGS -x
-    DEPENDS library classlib rxfnsg "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_crexx_rag.crexx"
+    DEPENDS library classlib rxfnsg "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin" "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_crexx_rag.crexx"
     RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
     TEST_LABELS gate_f f1g http compression crexx_rag levelg library "${_http_runner}"
   )
@@ -141,7 +191,7 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
     RUNNER "${_http_runner}"
     IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
     RXC_FLAGS -x
-    DEPENDS library classlib rxfnsg "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_tls_live.crexx"
+    DEPENDS library classlib rxfnsg "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin" "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_tls_live.crexx"
     RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
     TEST_LABELS gate_f f1g http tls levelg library "${_http_runner}"
   )
@@ -166,7 +216,7 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
     RUNNER "${_http_runner}"
     IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
     RXC_FLAGS -x
-    DEPENDS library classlib rxfnsg "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_policy.crexx"
+    DEPENDS library classlib rxfnsg "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin" "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_policy.crexx"
     RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
     TEST_LABELS gate_f f1g http policy levelg library "${_http_runner}"
   )
@@ -191,7 +241,7 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
     RUNNER "${_http_runner}"
     IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
     RXC_FLAGS -x
-    DEPENDS library classlib rxfnsg "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_codec.crexx"
+    DEPENDS library classlib rxfnsg "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin" "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_codec.crexx"
     RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
     TEST_LABELS gate_f f1g http compression levelg library "${_http_runner}"
   )

@@ -31,7 +31,7 @@
  */
 options levelb
 
-namespace _rxhttpcore expose http_request_wire http_stream_request_wire http_response_wire http_admission_frame http_body_start http_header_value http_header_count http_header_name_valid http_header_value_valid http_header_lines_valid http_method_valid http_method_idempotent http_request_target_valid http_retryable_status http_redirect_status http_same_origin_path http_content_length http_hex_value http_chunked_complete http_decode_chunked http_response_complete http_status_code http_build_request http_build_stream_head http_parse_response httpcoreresponse
+namespace _rxhttpcore expose http_request_wire http_stream_request_wire http_response_wire http_response_wire_value http_admission_frame http_body_start http_header_value http_header_count http_header_name_valid http_header_value_valid http_header_lines_valid http_response_header_lines_valid http_method_valid http_method_idempotent http_request_target_valid http_retryable_status http_redirect_status http_same_origin_path http_content_length http_hex_value http_chunked_complete http_decode_chunked http_response_complete http_status_code http_build_request http_build_stream_head http_parse_response httpcoreresponse http_parse_request httpcorerequest http_build_response httpcorewire
 import rxfnsb
 import concurrency
 
@@ -184,6 +184,26 @@ http_header_lines_valid: procedure = .boolean
     if http_header_name_valid(name) = 0 | http_header_value_valid(value) = 0 then return 0
     normalized = translate(name)
     reserved = normalized = "HOST" | normalized = "CONTENT-LENGTH" | normalized = "CONTENT-TYPE" | normalized = "CONNECTION" | normalized = "TRANSFER-ENCODING" | normalized = "ACCEPT-ENCODING"
+    if reserved then return 0
+    cursor = line_end + 2
+  end
+  return 1
+
+/** Validate server response fields while retaining library-owned framing. */
+http_response_header_lines_valid: procedure = .boolean
+  arg lines = .string
+  cursor = 1
+  do while cursor <= length(lines)
+    line_end = pos("0d0a"x, lines, cursor)
+    if line_end = 0 then return 0
+    line = substr(lines, cursor, line_end - cursor)
+    colon = pos(":", line)
+    if colon <= 1 then return 0
+    name = left(line, colon - 1)
+    value = substr(line, colon + 1)
+    if http_header_name_valid(name) = 0 | http_header_value_valid(value) = 0 then return 0
+    normalized = translate(name)
+    reserved = normalized = "CONTENT-LENGTH" | normalized = "CONNECTION" | normalized = "TRANSFER-ENCODING"
     if reserved then return 0
     cursor = line_end + 2
   end
@@ -358,6 +378,196 @@ http_build_stream_head: procedure = .binary
   if body_length >= 0 then request = request || "Content-Length: " || body_length || crlf || crlf
   else request = request || "Transfer-Encoding: chunked" || crlf || crlf
   return request as .binary
+
+/** Incremental result for one buffered inbound request. */
+httpcorerequest: class
+  _state = .int
+  _status = .int
+  _verb = .string
+  _target = .string
+  _headers = .string
+  _body = .binary
+  _consumed = .int
+  _keep_alive = .boolean
+  _error = .string
+
+  new: factory
+    arg state = .int, status = .int, verb = .string, target = .string, headers = .string, body = .binary, consumed = .int, keep_alive = .boolean, error = .string
+    _state = state
+    _status = status
+    _verb = verb
+    _target = target
+    _headers = headers
+    _body = body
+    _consumed = consumed
+    _keep_alive = keep_alive
+    _error = error
+    return
+
+  /** @return 0 incomplete, 1 complete and valid, 2 protocol error */
+  state: method = .int
+    return _state
+  status: method = .int
+    return _status
+  verb: method = .string
+    return _verb
+  target: method = .string
+    return _target
+  headers: method = .string
+    return _headers
+  body: method = .binary
+    return _body
+  consumed: method = .int
+    return _consumed
+  keep_alive: method = .boolean
+    return _keep_alive
+  error: method = .string
+    return _error
+
+/** Parse at most one HTTP/1.x request without owning the receive buffer.
+ * Transfer-Encoding is rejected in the initial buffered server; callers must
+ * send an absent or single canonical Content-Length field.
+ */
+http_parse_request: procedure = .httpcorerequest
+  arg message = .binary, maximum_header_bytes = .int, maximum_headers = .int, maximum_body_bytes = .int
+  empty = ''x as .binary
+  body_start = http_body_start(message)
+  if body_start = 0 then do
+    if binlength(message) > maximum_header_bytes then return .httpcorerequest.new(2, 431, "", "", "", empty, binlength(message), 0, "HTTP request headers exceed the configured limit")
+    return .httpcorerequest.new(0, 0, "", "", "", empty, 0, 0, "")
+  end
+  header_bytes = body_start - 1
+  if header_bytes > maximum_header_bytes then return .httpcorerequest.new(2, 431, "", "", "", empty, header_bytes, 0, "HTTP request headers exceed the configured limit")
+  head = binsubstr(message, 1, header_bytes) as .string
+  first_end = pos("0d0a"x, head)
+  first_terminator = 2
+  if first_end = 0 then do
+    first_end = pos("0a"x, head)
+    first_terminator = 1
+  end
+  if first_end = 0 then return .httpcorerequest.new(2, 400, "", "", "", empty, header_bytes, 0, "HTTP request line is incomplete")
+  request_line = left(head, first_end - 1)
+  if words(request_line) <> 3 then return .httpcorerequest.new(2, 400, "", "", "", empty, header_bytes, 0, "HTTP request line is invalid")
+  verb = word(request_line, 1)
+  target = word(request_line, 2)
+  version = word(request_line, 3)
+  if http_method_valid(verb) = 0 | http_request_target_valid(target) = 0 then return .httpcorerequest.new(2, 400, verb, target, "", empty, header_bytes, 0, "HTTP method or request target is invalid")
+  if version <> "HTTP/1.1" & version <> "HTTP/1.0" then return .httpcorerequest.new(2, 505, verb, target, "", empty, header_bytes, 0, "HTTP version is not supported")
+
+  headers = ""
+  cursor = first_end + first_terminator
+  count = 0
+  content_lengths = 0
+  content_length = 0
+  transfer_encoding = ""
+  host = ""
+  host_count = 0
+  connection = ""
+  do while cursor <= length(head)
+    line_end = pos("0d0a"x, head, cursor)
+    terminator = 2
+    if line_end = 0 then do
+      line_end = pos("0a"x, head, cursor)
+      terminator = 1
+    end
+    if line_end = 0 then leave
+    line = substr(head, cursor, line_end - cursor)
+    if line = "" then leave
+    colon = pos(":", line)
+    if colon <= 1 then return .httpcorerequest.new(2, 400, verb, target, headers, empty, header_bytes, 0, "HTTP request header is invalid")
+    name = left(line, colon - 1)
+    value = strip(substr(line, colon + 1))
+    if http_header_name_valid(name) = 0 | http_header_value_valid(value) = 0 then return .httpcorerequest.new(2, 400, verb, target, headers, empty, header_bytes, 0, "HTTP request header is unsafe")
+    count = count + 1
+    if count > maximum_headers then return .httpcorerequest.new(2, 431, verb, target, headers, empty, header_bytes, 0, "HTTP request has too many headers")
+    normalized = translate(name)
+    if normalized = "CONTENT-LENGTH" then do
+      content_lengths = content_lengths + 1
+      if value = "" | verify(value, "0123456789") <> 0 then return .httpcorerequest.new(2, 400, verb, target, headers, empty, header_bytes, 0, "HTTP Content-Length is invalid")
+      if length(value) > 10 then return .httpcorerequest.new(2, 413, verb, target, headers, empty, header_bytes, 0, "HTTP request body exceeds the configured limit")
+      content_length = value
+    end
+    else if normalized = "TRANSFER-ENCODING" then transfer_encoding = value
+    else if normalized = "HOST" then do
+      host_count = host_count + 1
+      host = value
+    end
+    else if normalized = "CONNECTION" then connection = translate(value)
+    headers = headers || name || ": " || value || "0d0a"x
+    cursor = line_end + terminator
+  end
+  if version = "HTTP/1.1" & host = "" then return .httpcorerequest.new(2, 400, verb, target, headers, empty, header_bytes, 0, "HTTP/1.1 request has no Host header")
+  if host_count > 1 then return .httpcorerequest.new(2, 400, verb, target, headers, empty, header_bytes, 0, "HTTP request has multiple Host fields")
+  if content_lengths > 1 then return .httpcorerequest.new(2, 400, verb, target, headers, empty, header_bytes, 0, "HTTP request has multiple Content-Length fields")
+  if transfer_encoding <> "" then return .httpcorerequest.new(2, 501, verb, target, headers, empty, header_bytes, 0, "HTTP request Transfer-Encoding is not supported")
+  if content_length < 0 | content_length > maximum_body_bytes then return .httpcorerequest.new(2, 413, verb, target, headers, empty, header_bytes, 0, "HTTP request body exceeds the configured limit")
+  total = header_bytes + content_length
+  if binlength(message) < total then return .httpcorerequest.new(0, 0, verb, target, headers, empty, 0, 0, "")
+  body = binsubstr(message, body_start, content_length)
+  connection_words = translate(connection, " ", ",")
+  if version = "HTTP/1.1" then keep_alive = wordpos("CLOSE", connection_words) = 0
+  else keep_alive = wordpos("KEEP-ALIVE", connection_words) > 0
+  return .httpcorerequest.new(1, 0, verb, target, headers, body, total, keep_alive, "")
+
+/** Binary response wrapper avoids a caller-register alias at the module edge. */
+httpcorewire: class
+  _bytes = .binary
+
+  new: factory
+    arg bytes = .binary
+    _bytes = bytes
+    return
+
+  bytes: method = .binary
+    return _bytes
+
+/** Wrap the existing private response transfer frame at a safe module edge. */
+http_response_wire_value: procedure = .httpcorewire
+  arg transport_status = .int, http_status = .int, headers = .string, body = .binary, error = .string, attempts = .int, redirects = .int, ambiguous = .boolean
+  wire = http_response_wire(transport_status, http_status, headers, body, error, attempts, redirects, ambiguous)
+  return .httpcorewire.new(wire)
+
+/** Build one bounded HTTP/1.1 response; connection framing remains core-owned. */
+http_build_response: procedure = .httpcorewire
+  arg status = .int, headers = .string, body = .binary, keep_alive = .boolean, send_body = .boolean
+  invalid_response = status < 100
+  if status > 599 then invalid_response = 1
+  if http_response_header_lines_valid(headers) = 0 then invalid_response = 1
+  if invalid_response then do
+    invalid = ''x as .binary
+    return .httpcorewire.new(invalid)
+  end
+  if status = 204 | status = 304 then body = ''x as .binary
+  select
+    when status = 200 then reason = "OK"
+    when status = 201 then reason = "Created"
+    when status = 202 then reason = "Accepted"
+    when status = 204 then reason = "No Content"
+    when status = 400 then reason = "Bad Request"
+    when status = 404 then reason = "Not Found"
+    when status = 405 then reason = "Method Not Allowed"
+    when status = 408 then reason = "Request Timeout"
+    when status = 413 then reason = "Payload Too Large"
+    when status = 429 then reason = "Too Many Requests"
+    when status = 431 then reason = "Request Header Fields Too Large"
+    when status = 500 then reason = "Internal Server Error"
+    when status = 501 then reason = "Not Implemented"
+    when status = 503 then reason = "Service Unavailable"
+    when status = 504 then reason = "Gateway Timeout"
+    when status = 505 then reason = "HTTP Version Not Supported"
+    otherwise reason = "Status"
+  end
+  crlf = "0d0a"x
+  if keep_alive then connection = "keep-alive"
+  else connection = "close"
+  head = "HTTP/1.1 " || status || " " || reason || crlf || ,
+         "Server: cREXX-http/1" || crlf
+  if headers <> "" then head = head || headers
+  head = head || "Content-Length: " || binlength(body) || crlf || ,
+         "Connection: " || connection || crlf || crlf
+  wire = head as .binary
+  if send_body then call binappend wire, body
+  return .httpcorewire.new(wire)
 
 /** Parsed raw response used by compatibility helpers and protocol tests. */
 httpcoreresponse: class

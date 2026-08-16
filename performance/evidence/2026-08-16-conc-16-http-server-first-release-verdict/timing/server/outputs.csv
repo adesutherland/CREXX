@@ -1,0 +1,105 @@
+sample_id,stream,line_number,text
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-warmup-1,stdout,1,SERVER_METRICS served=2 elapsed_us=331687 scans=266 idle_scans=261
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-warmup-1,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-1,stdout,1,SERVER_METRICS served=2 elapsed_us=315084 scans=253 idle_scans=248
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-1,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-2,stdout,1,SERVER_METRICS served=2 elapsed_us=332087 scans=266 idle_scans=261
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-2,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-3,stdout,1,SERVER_METRICS served=2 elapsed_us=331141 scans=265 idle_scans=260
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-3,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-4,stdout,1,SERVER_METRICS served=2 elapsed_us=330897 scans=265 idle_scans=260
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-4,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-5,stdout,1,SERVER_METRICS served=2 elapsed_us=330884 scans=265 idle_scans=260
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-5,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-6,stdout,1,SERVER_METRICS served=2 elapsed_us=329273 scans=264 idle_scans=259
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-6,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-7,stdout,1,SERVER_METRICS served=2 elapsed_us=332311 scans=266 idle_scans=261
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-7,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-8,stdout,1,SERVER_METRICS served=2 elapsed_us=330960 scans=265 idle_scans=260
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-8,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-9,stdout,1,SERVER_METRICS served=2 elapsed_us=330670 scans=265 idle_scans=260
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-9,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-10,stdout,1,SERVER_METRICS served=2 elapsed_us=330809 scans=265 idle_scans=260
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-10,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-11,stdout,1,SERVER_METRICS served=2 elapsed_us=332320 scans=266 idle_scans=261
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-11,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-12,stdout,1,SERVER_METRICS served=2 elapsed_us=330801 scans=265 idle_scans=260
+timing-HTTP-Server-rxbvm-noopt-server-rxbvm-noopt-recorded-12,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-warmup-1,stdout,1,SERVER_METRICS served=2 elapsed_us=329722 scans=264 idle_scans=259
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-warmup-1,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-1,stdout,1,SERVER_METRICS served=2 elapsed_us=331051 scans=265 idle_scans=260
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-1,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-2,stdout,1,SERVER_METRICS served=2 elapsed_us=309776 scans=249 idle_scans=244
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-2,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-3,stdout,1,SERVER_METRICS served=2 elapsed_us=329671 scans=264 idle_scans=259
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-3,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-4,stdout,1,SERVER_METRICS served=2 elapsed_us=325157 scans=245 idle_scans=240
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-4,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-5,stdout,1,SERVER_METRICS served=2 elapsed_us=329737 scans=264 idle_scans=259
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-5,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-6,stdout,1,SERVER_METRICS served=2 elapsed_us=327151 scans=262 idle_scans=257
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-6,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-7,stdout,1,SERVER_METRICS served=2 elapsed_us=329884 scans=264 idle_scans=259
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-7,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-8,stdout,1,SERVER_METRICS served=2 elapsed_us=330675 scans=265 idle_scans=260
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-8,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-9,stdout,1,SERVER_METRICS served=2 elapsed_us=329887 scans=264 idle_scans=259
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-9,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-10,stdout,1,SERVER_METRICS served=2 elapsed_us=327888 scans=263 idle_scans=258
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-10,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-11,stdout,1,SERVER_METRICS served=2 elapsed_us=328161 scans=263 idle_scans=258
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-11,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-12,stdout,1,SERVER_METRICS served=2 elapsed_us=327141 scans=262 idle_scans=257
+timing-HTTP-Server-rxbvm-opt-server-rxbvm-opt-recorded-12,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-warmup-1,stdout,1,SERVER_METRICS served=2 elapsed_us=330399 scans=265 idle_scans=260
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-warmup-1,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-1,stdout,1,SERVER_METRICS served=2 elapsed_us=333248 scans=267 idle_scans=262
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-1,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-2,stdout,1,SERVER_METRICS served=2 elapsed_us=329605 scans=264 idle_scans=259
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-2,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-3,stdout,1,SERVER_METRICS served=2 elapsed_us=330809 scans=265 idle_scans=260
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-3,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-4,stdout,1,SERVER_METRICS served=2 elapsed_us=330954 scans=265 idle_scans=260
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-4,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-5,stdout,1,SERVER_METRICS served=2 elapsed_us=331199 scans=265 idle_scans=260
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-5,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-6,stdout,1,SERVER_METRICS served=2 elapsed_us=329818 scans=264 idle_scans=259
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-6,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-7,stdout,1,SERVER_METRICS served=2 elapsed_us=331065 scans=265 idle_scans=260
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-7,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-8,stdout,1,SERVER_METRICS served=2 elapsed_us=330996 scans=265 idle_scans=260
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-8,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-9,stdout,1,SERVER_METRICS served=2 elapsed_us=332293 scans=266 idle_scans=261
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-9,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-10,stdout,1,SERVER_METRICS served=2 elapsed_us=331025 scans=265 idle_scans=260
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-10,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-11,stdout,1,SERVER_METRICS served=2 elapsed_us=329652 scans=264 idle_scans=259
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-11,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-12,stdout,1,SERVER_METRICS served=2 elapsed_us=330981 scans=265 idle_scans=260
+timing-HTTP-Server-rxtvm-noopt-server-rxtvm-noopt-recorded-12,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-warmup-1,stdout,1,SERVER_METRICS served=2 elapsed_us=329649 scans=264 idle_scans=259
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-warmup-1,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-1,stdout,1,SERVER_METRICS served=2 elapsed_us=330514 scans=265 idle_scans=260
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-1,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-2,stdout,1,SERVER_METRICS served=2 elapsed_us=329580 scans=264 idle_scans=259
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-2,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-3,stdout,1,SERVER_METRICS served=2 elapsed_us=329647 scans=264 idle_scans=259
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-3,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-4,stdout,1,SERVER_METRICS served=2 elapsed_us=329932 scans=264 idle_scans=259
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-4,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-5,stdout,1,SERVER_METRICS served=2 elapsed_us=331045 scans=265 idle_scans=260
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-5,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-6,stdout,1,SERVER_METRICS served=2 elapsed_us=328334 scans=263 idle_scans=258
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-6,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-7,stdout,1,SERVER_METRICS served=2 elapsed_us=328512 scans=263 idle_scans=258
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-7,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-8,stdout,1,SERVER_METRICS served=2 elapsed_us=329891 scans=264 idle_scans=259
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-8,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-9,stdout,1,SERVER_METRICS served=2 elapsed_us=329490 scans=264 idle_scans=259
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-9,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-10,stdout,1,SERVER_METRICS served=2 elapsed_us=329777 scans=264 idle_scans=259
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-10,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-11,stdout,1,SERVER_METRICS served=2 elapsed_us=330883 scans=265 idle_scans=260
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-11,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-12,stdout,1,SERVER_METRICS served=2 elapsed_us=319315 scans=257 idle_scans=252
+timing-HTTP-Server-rxtvm-opt-server-rxtvm-opt-recorded-12,stdout,2,PASS: Level G HTTP server dispatched two bounded requests to task handlers
