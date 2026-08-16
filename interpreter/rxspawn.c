@@ -285,6 +285,37 @@ static int crexxcmd_close_output_redirect(REDIRECT *redirect);
 static int crexxcmd_close_input_redirect(REDIRECT *redirect);
 static char *copy_value_string(value *string_value);
 
+static const RXSPAWN_SNAPSHOT_OVERRIDE *crexxcmd_enter_parent_snapshot(
+        const SHELLDATA *parent_data,
+        RXSPAWN_SNAPSHOT_OVERRIDE *snapshot,
+        int *termination_reason) {
+    const RXSPAWN_SNAPSHOT_OVERRIDE *previous = rxspawn_thread_snapshot;
+
+    if (!parent_data || !snapshot) return previous;
+    snapshot->working_directory = parent_data->working_directory;
+    snapshot->environment = (const char *const *)parent_data->environment;
+    snapshot->crexx_bindings = parent_data->crexx_binding_snapshot;
+    snapshot->crexx_binding_count = parent_data->crexx_binding_snapshot_count;
+    snapshot->cancelled = parent_data->cancelled;
+    snapshot->input_stopped = parent_data->input_stopped;
+    snapshot->output_stopped = parent_data->output_stopped;
+    snapshot->deadline_microseconds = parent_data->deadline_microseconds;
+    snapshot->termination_reason = termination_reason;
+    if (termination_reason) *termination_reason = 0;
+    rxspawn_thread_snapshot = snapshot;
+    return previous;
+}
+
+static void crexxcmd_leave_parent_snapshot(
+        SHELLDATA *parent_data,
+        const RXSPAWN_SNAPSHOT_OVERRIDE *previous,
+        int termination_reason) {
+    rxspawn_thread_snapshot = previous;
+    if (!parent_data || termination_reason == 0) return;
+    parent_data->terminated = 1u;
+    if (termination_reason == 2) parent_data->timed_out = 1u;
+}
+
 static const rxvm_native_payload_ops redirect_endpoint_payload_ops = {
     "rxsysb.redirect_endpoint",
     redirect_endpoint_payload_copy,
@@ -1892,6 +1923,9 @@ static int crexxcmd_run_path(void *userdata,
     REDIRECT *pErr;
     int spawn_rc;
     char *spawn_error;
+    RXSPAWN_SNAPSHOT_OVERRIDE nested_snapshot;
+    const RXSPAWN_SNAPSHOT_OVERRIDE *previous_snapshot;
+    int termination_reason = 0;
 
     if (out_text) *out_text = NULL;
     if (err_text) *err_text = NULL;
@@ -1915,12 +1949,16 @@ static int crexxcmd_run_path(void *userdata,
     pOut = rxspawn_redirect_from_value(&output_redirect);
     pErr = rxspawn_redirect_from_value(&error_redirect);
     spawn_error = NULL;
+    previous_snapshot = crexxcmd_enter_parent_snapshot(
+            parent_data, &nested_snapshot, &termination_reason);
     spawn_rc = shellspawn(command, pIn, pOut, pErr,
                           parent_data ? parent_data->variables : NULL,
                           NULL,
                           SHELLSPAWN_MODE_PATH,
                           command_rc,
                           &spawn_error);
+    crexxcmd_leave_parent_snapshot(
+            parent_data, previous_snapshot, termination_reason);
 
     if (out_text) *out_text = copy_value_string(&output_value);
     if (err_text) *err_text = copy_value_string(&error_value);
@@ -1958,6 +1996,9 @@ static int crexxcmd_run_argv(void *userdata,
     REDIRECT *pErr;
     int spawn_rc;
     char *spawn_error;
+    RXSPAWN_SNAPSHOT_OVERRIDE nested_snapshot;
+    const RXSPAWN_SNAPSHOT_OVERRIDE *previous_snapshot;
+    int termination_reason = 0;
 
     if (out_text) *out_text = NULL;
     if (err_text) *err_text = NULL;
@@ -1981,6 +2022,8 @@ static int crexxcmd_run_argv(void *userdata,
     pOut = rxspawn_redirect_from_value(&output_redirect);
     pErr = rxspawn_redirect_from_value(&error_redirect);
     spawn_error = NULL;
+    previous_snapshot = crexxcmd_enter_parent_snapshot(
+            parent_data, &nested_snapshot, &termination_reason);
     spawn_rc = spawn_argv_capture(argv,
                                   argc,
                                   pIn,
@@ -1989,6 +2032,8 @@ static int crexxcmd_run_argv(void *userdata,
                                   parent_data ? parent_data->variables : NULL,
                                   command_rc,
                                   &spawn_error);
+    crexxcmd_leave_parent_snapshot(
+            parent_data, previous_snapshot, termination_reason);
 
     if (out_text) *out_text = copy_value_string(&output_value);
     if (err_text) *err_text = copy_value_string(&error_value);
