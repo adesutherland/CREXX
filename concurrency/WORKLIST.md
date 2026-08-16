@@ -22,7 +22,7 @@ not reproduced as the current control model.
 | CONC-07 | reusable byte endpoints, child processes and ADDRESS redirects | complete | locally qualified | retain cross-platform endpoint/process regression coverage |
 | CONC-08 | bounded concurrent HTTP/TLS | complete | Mac qualified and documented; experimental publication pending | complete portable conformance and resolve HTTP architecture under CONC-16 |
 | CONC-09 | sealed task-binding validation cache | complete | locally qualified and performance-guard clean | retain cache miss/hit and ordinary single-thread regression coverage |
-| CONC-10 | enduring documentation | active | not complete | execute the documentation plan below |
+| CONC-10 | enduring documentation | complete | locally checked with generated API, examples, links and broad Debug regression | maintain references with implementation; portable publication remains CONC-11 |
 | CONC-11 | portable conformance and experimental publication | pending | Mac complete; public local/process/HTTP matrix incomplete | qualify Linux and Windows, then make the release/package decision |
 | CONC-12 | services, actors, events and projections | surface reserved | `.taskscope.ask` is unsupported | specify and implement one single-owner service before typed proxies/events |
 | CONC-13 | open-host and extension providers | reserved | provider type `3` and public plugin ABI unavailable | select protocol from interoperability evidence and prove a non-Rexx actor |
@@ -90,8 +90,28 @@ the enduring reference marks it supported.
 - [x] Replace internal development-stage terminology in enduring documents.
 - [x] Reconcile the Level G catalogue, project roadmap and beta release notes
   without claiming portable publication before CONC-11.
-- [ ] Compile examples through `rxc`, `rxas`, `rxlink` and both VMs as
+- [x] Compile examples through `rxc`, `rxas`, `rxlink` and both VMs as
   applicable; build/check generated documentation and links.
+
+### CONC-10 closeout evidence
+
+Local macOS closeout on 2026-08-16 recorded:
+
+- a 200-action focused rebuild of classlib, Level G and all documented/HTTP
+  test artifacts;
+- 41/41 class, documentation, generated-API and concurrent-HTTP tests across
+  both VMs and both optimization modes;
+- 41/41 compiler/channel concurrency tests, including all 19 fail-closed
+  language cases and imported task-method/`.taskwork` routes;
+- deterministic regeneration of `classlib-api.tex` with an unchanged SHA-256;
+- local-link resolution for every Markdown file changed by CONC-10; and
+- full Debug CTest, 2,192/2,192 passing in 340.09 seconds.
+
+No TeX engine is installed on this Mac, so no book PDF was rendered. The book
+structure includes the new chapters, and the Markdown sources, generated API,
+links and executable examples were checked directly. This local documentation
+closeout does not satisfy the portable conformance or release-publication work
+in CONC-11.
 
 ## CONC-11 portable conformance and publication
 
