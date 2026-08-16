@@ -9,7 +9,7 @@ conformance**
 This plan turns the approved Gate F user model and RXAS-only runtime boundary
 into staged production work. It does not weaken the mandatory first ordinary
 profiling-off Release verdict or the decision stops in
-[`AGENTS.md`](AGENTS.md).
+[`AGENTS.md`](../../performance/AGENTS.md).
 
 Authorities:
 
@@ -19,7 +19,7 @@ Authorities:
   transfer and lifecycle invariants; and
 - [`PERF3-13-GATE-F-AI-SPEC.md`](PERF3-13-GATE-F-AI-SPEC.md) defines the exact
   source, Level B, RXAS/RXBIN, provider and conformance contract; and
-- [`PERF3-13-WORKLIST.md`](PERF3-13-WORKLIST.md) remains the live status and
+- [`PERF3-13-WORKLIST.md`](../../performance/PERF3-13-WORKLIST.md) remains the live status and
   evidence control plane.
 
 ## Locked architecture
@@ -245,7 +245,7 @@ diagnostic. Any contradiction returns to Adrian; otherwise the already
 approved implementation proceeds without another syntax-design round.
 
 The declaration oracle is
-[`gate_f_levelb_contract.crexx`](../compiler/tests/rexx_src/gate_f_levelb_contract.crexx)
+[`gate_f_levelb_contract.crexx`](../../compiler/tests/rexx_src/gate_f_levelb_contract.crexx)
 and its focused CTest compiles, assembles and disassembles the interface
 metadata. The coherence matrix and exact vectors are in the maintainer/AI
 specification.
@@ -558,7 +558,7 @@ profile-20. Final hot-loop layout tuning is therefore deferred until the
 instruction surface is stable in F3/release hardening. `rxbvml` remained
 neutral in the retained one- and four-worker cells. The evidence and Mac
 closeout are retained in
-[`2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict`](evidence/2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict/).
+[`2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict`](../../performance/evidence/2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict/).
 
 The runtime registry at this checkpoint was deliberately core-only: it was
 seeded with the lifetime-pinned local descriptor. F1c subsequently completed
@@ -639,7 +639,7 @@ remains deferred to F3/release hardening. Mac closeout passes the complete
 2,112-test Debug suite, a 60-test focused Apple-ASan matrix, a 63-test focused
 ordinary Release matrix and 100-repeat endpoint/provider/ADDRESS stress.
 Evidence:
-[`2026-08-15-perf3-13-gate-f-f1d-first-release-verdict`](evidence/2026-08-15-perf3-13-gate-f-f1d-first-release-verdict/).
+[`2026-08-15-perf3-13-gate-f-f1d-first-release-verdict`](../../performance/evidence/2026-08-15-perf3-13-gate-f-f1d-first-release-verdict/).
 
 ## F1e completion record
 
@@ -675,7 +675,7 @@ concurrent process/SIGPIPE stress and 300 post-audit process repetitions that
 include running-sibling fail-fast cancellation. The final paired Release
 confirmation has no guard hit or confirmed regression and makes no improvement
 claim. Evidence:
-[`2026-08-15-perf3-13-gate-f-f1e-first-release-verdict`](evidence/2026-08-15-perf3-13-gate-f-f1e-first-release-verdict/).
+[`2026-08-15-perf3-13-gate-f-f1e-first-release-verdict`](../../performance/evidence/2026-08-15-perf3-13-gate-f-f1e-first-release-verdict/).
 
 ## F1f completion record
 
@@ -705,7 +705,7 @@ inconclusive. The likely cost is per-submission validation of the larger
 sealed binding. Adrian's standing overnight direction accepts recording this
 shape cost and defers tuning until F3/release hardening after the instruction
 and surface work stabilizes. Evidence:
-[`2026-08-15-perf3-13-gate-f-f1f-first-release-verdict`](evidence/2026-08-15-perf3-13-gate-f-f1f-first-release-verdict/).
+[`2026-08-15-perf3-13-gate-f-f1f-first-release-verdict`](../../performance/evidence/2026-08-15-perf3-13-gate-f-f1f-first-release-verdict/).
 
 ## F3C1 task-binding cache completion record
 
@@ -726,7 +726,7 @@ profiling-off Release verdict records +39.076017% `rxbvml` and +40.340609%
 `rxtvml` tiny-task latency, +1.551257% `rxtvml` throughput and inconclusive
 `rxbvml` throughput, with no adverse guard hit. The candidate adds 80 bytes to
 `rxbvm` and 64 bytes to `rxtvm`. Evidence:
-[`2026-08-15-perf3-13-gate-f-f3c1-task-binding-cache-first-release-verdict`](evidence/2026-08-15-perf3-13-gate-f-f3c1-task-binding-cache-first-release-verdict/).
+[`2026-08-15-perf3-13-gate-f-f3c1-task-binding-cache-first-release-verdict`](../../performance/evidence/2026-08-15-perf3-13-gate-f-f3c1-task-binding-cache-first-release-verdict/).
 
 ## F1g-D and local Gate F completion record
 
@@ -754,7 +754,7 @@ build and the final focused sanitizer matrix `39/39`. The full Debug sweep
 first exposed the explicit taskwork/direct-request distinction; all eight
 affected legacy cells pass after the boundary correction, and the complete
 sweep was rerun clean. Evidence:
-[`2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict`](evidence/2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict/).
+[`2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict`](../../performance/evidence/2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict/).
 
 ## Evidence and stop rules
 

@@ -14,10 +14,10 @@ ownership design in
 truth for F1 compiler, Level B, RXAS/RXBIN and RXVM implementation work.
 
 The original compile-only declaration oracle is
-[`gate_f_levelb_contract.crexx`](../compiler/tests/rexx_src/gate_f_levelb_contract.crexx).
+[`gate_f_levelb_contract.crexx`](../../compiler/tests/rexx_src/gate_f_levelb_contract.crexx).
 It proves that the Level B names and signatures in this document use the
 current class/interface grammar. The F1c implementation is
-[`Concurrency.crexx`](../lib/classlib/Concurrency.crexx), with functional and
+[`Concurrency.crexx`](../../lib/classlib/Concurrency.crexx), with functional and
 bridge-inspection tests covering the executable contract.
 
 Normative words `must`, `must not`, `should` and `may` have their usual
@@ -1230,15 +1230,15 @@ toolchain rule for library development: exercise `rxc`, `rxas`, `rxlink` and
 `rxvm`, not only the final class-library runtime.
 
 Evidence is retained in the
-[`F1a/F1b closeout`](evidence/2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict/)
-[`F1c closeout`](evidence/2026-08-14-perf3-13-gate-f-f1c-first-release-verdict/),
-[`F1d closeout`](evidence/2026-08-15-perf3-13-gate-f-f1d-first-release-verdict/)
+[`F1a/F1b closeout`](../../performance/evidence/2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict/)
+[`F1c closeout`](../../performance/evidence/2026-08-14-perf3-13-gate-f-f1c-first-release-verdict/),
+[`F1d closeout`](../../performance/evidence/2026-08-15-perf3-13-gate-f-f1d-first-release-verdict/)
 and
-[`F1e closeout`](evidence/2026-08-15-perf3-13-gate-f-f1e-first-release-verdict/),
+[`F1e closeout`](../../performance/evidence/2026-08-15-perf3-13-gate-f-f1e-first-release-verdict/),
 and the F1f evidence is retained in
-[`F1f closeout`](evidence/2026-08-15-perf3-13-gate-f-f1f-first-release-verdict/).
+[`F1f closeout`](../../performance/evidence/2026-08-15-perf3-13-gate-f-f1f-first-release-verdict/).
 F1g-D and the final local Gate F implementation evidence are retained in
-[`F1g-D closeout`](evidence/2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict/).
+[`F1g-D closeout`](../../performance/evidence/2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict/).
 
 After the first production edit, run the minimum focused correctness checks,
 freeze code, build ordinary profiling-off Release, run the smallest decisive

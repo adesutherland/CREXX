@@ -2,9 +2,14 @@
 
 Date opened: 2026-08-05
 
-Status: **Gate E E6 C0 ownership/scale selection accepted and Mac QA closed;
-Gate F F0-S through F1g-D implementation and Mac QA complete; experimental
-publication remains gated by portable conformance**
+Status: **allocator/worker-foundation and dated concurrency implementation
+record retained; live concurrency scope and publication status moved to
+[`concurrency/WORKLIST.md`](../concurrency/WORKLIST.md)**
+
+The M6/Gate F material below is historical development provenance. Do not add
+new concurrency work here. Performance measurements and retained evidence stay
+under `performance/`; product capability, portability and publication work are
+owned by the concurrency workspace.
 
 ## Current Gate E continuation
 
@@ -2753,14 +2758,14 @@ completion/transfer subset above. The full transport-neutral M6 programme
 was closed until the Gate E worker model and E6 scale/reclamation policy were
 selected. Those prerequisites are complete. Adrian approved the user model and
 staged Gate F implementation on 2026-08-14. The normative design is
-[`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md); the contract-first
+[`PERF3-13-GATE-F-DESIGN.md`](../concurrency/history/PERF3-13-GATE-F-DESIGN.md); the contract-first
 slices and verdict stops are in
-[`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
+[`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](../concurrency/history/PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
 
 The approachable F0 terminology, conceptual machine, approved Rexx task
 surface, complete Level B control layer and industrial HTTP consumer are now
 recorded in
-[`PERF3-13-GATE-F-USER-GUIDE.md`](PERF3-13-GATE-F-USER-GUIDE.md). It records
+[`PERF3-13-GATE-F-USER-GUIDE.md`](../concurrency/history/PERF3-13-GATE-F-USER-GUIDE.md). It records
 typed task declarations and methods, independent task calls within expressions,
 `DO PARALLEL`, `.taskwork`/`.taskcontext`, controller-side failure projection
 and class-configured pools/scopes. Adrian selected the low-level layering on
@@ -2769,7 +2774,7 @@ channel instructions implemented by RXVM over the Gate E executor/provider
 substrate. There is no RXPA task path, hidden native-payload contract or public
 angle-bracket task-intrinsic family. F0-S has locked the exact instruction,
 class and provider contract before the first opcode/runtime edit in
-[`PERF3-13-GATE-F-AI-SPEC.md`](PERF3-13-GATE-F-AI-SPEC.md).
+[`PERF3-13-GATE-F-AI-SPEC.md`](../concurrency/history/PERF3-13-GATE-F-AI-SPEC.md).
 
 The public model is structured task scopes, stateless task targets, stateful
 service/actor references, bounded channels, receiver-materialized
@@ -2800,7 +2805,7 @@ Gate F is contract-first and staged:
   provider type/capability codes, reusable byte-endpoint/child-process
   migration, feature/version gate, diagnostics and both-VM behavior. The exact
   contract and vectors are in
-  [`PERF3-13-GATE-F-AI-SPEC.md`](PERF3-13-GATE-F-AI-SPEC.md); the declaration
+  [`PERF3-13-GATE-F-AI-SPEC.md`](../concurrency/history/PERF3-13-GATE-F-AI-SPEC.md); the declaration
   oracle is
   [`gate_f_levelb_contract.crexx`](../compiler/tests/rexx_src/gate_f_levelb_contract.crexx).
 - [x] **F1a:** add RXBIN channel feature bit `1 << 3`, public opcodes
@@ -3052,11 +3057,11 @@ budget. Provider-specific opcode families remain rejected.
    Mac QA complete 2026-08-15; portable publication evidence pending.** The
    approved ownership
    surface and sequencing are recorded in
-   [`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md). After Gate E/E6
+   [`PERF3-13-GATE-F-DESIGN.md`](../concurrency/history/PERF3-13-GATE-F-DESIGN.md). After Gate E/E6
    selection, Adrian approved the user-facing model in
-   [`PERF3-13-GATE-F-USER-GUIDE.md`](PERF3-13-GATE-F-USER-GUIDE.md) and the
+   [`PERF3-13-GATE-F-USER-GUIDE.md`](../concurrency/history/PERF3-13-GATE-F-USER-GUIDE.md) and the
    staged execution in
-   [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
+   [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](../concurrency/history/PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
    F0-S produced the maintainer/AI contract, coherence matrix, compile-checked
    Level B declarations and exact RXAS/RXBIN/provider contract. F1a-F1f now
    implement the five opcodes, complete both-VM local provider, full RXCV,

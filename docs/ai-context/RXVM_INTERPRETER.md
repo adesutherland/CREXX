@@ -788,7 +788,7 @@ Level B classes and is accepted only under `OPTIONS LEVELG`. Concurrent HTTP
 remains F1g; unsupported Level B operations report status `19` rather than
 simulating success. A public provider-plugin ABI remains an F2 review. The
 exact current/future boundary is recorded in
-[`PERF3-13-GATE-F-AI-SPEC.md`](../../performance/PERF3-13-GATE-F-AI-SPEC.md).
+[`PERF3-13-GATE-F-AI-SPEC.md`](../../concurrency/history/PERF3-13-GATE-F-AI-SPEC.md).
 
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed
 strictly by the VM frames. There is no automated background Garbage Collector

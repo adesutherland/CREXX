@@ -1349,4 +1349,4 @@ validation rejects malformed or stale bindings. Raw
 channel/ticket integers are execution-local capabilities, not transferable
 values. Concurrent HTTP/TLS remains F1g. Exact status codes, RXCV layouts and
 lifecycle rules are normative in
-[`PERF3-13-GATE-F-AI-SPEC.md`](../../performance/PERF3-13-GATE-F-AI-SPEC.md).
+[`PERF3-13-GATE-F-AI-SPEC.md`](../../concurrency/history/PERF3-13-GATE-F-AI-SPEC.md).

@@ -47,21 +47,21 @@ ownership, safe headers/policy, verified TLS and explicit replay diagnostics.
 
 Use these current repository contracts when implementing the design:
 
-- [`PERF3-13-WORKLIST.md`](PERF3-13-WORKLIST.md) for Gate E/F status, approval
+- [`PERF3-13-WORKLIST.md`](../../performance/PERF3-13-WORKLIST.md) for Gate E/F status, approval
   and evidence sequencing;
 - [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md)
   for implementation slices, provider codes and verdict stops;
 - [`PERF3-13-GATE-F-AI-SPEC.md`](PERF3-13-GATE-F-AI-SPEC.md) for the exact
   source, Level B, RXAS/RXBIN, provider and conformance contract;
-- [`PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md`](PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md)
+- [`PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md`](../../performance/PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md)
   for the private physical delivery boundary;
-- [`RXVM_INTERPRETER.md`](../docs/ai-context/RXVM_INTERPRETER.md) for current
+- [`RXVM_INTERPRETER.md`](../../docs/ai-context/RXVM_INTERPRETER.md) for current
   VM ownership, callable descriptors and provider behavior;
-- [`CREXX_LEVELB_AUTHORING.md`](../docs/ai-context/CREXX_LEVELB_AUTHORING.md),
-  [`classes_and_interfaces.md`](../docs/books/crexx_language_reference/classes_and_interfaces.md)
-  and [`CREXX_LIBS.md`](../docs/ai-context/CREXX_LIBS.md) for the Level B
+- [`CREXX_LEVELB_AUTHORING.md`](../../docs/ai-context/CREXX_LEVELB_AUTHORING.md),
+  [`classes_and_interfaces.md`](../../docs/books/crexx_language_reference/classes_and_interfaces.md)
+  and [`CREXX_LIBS.md`](../../docs/ai-context/CREXX_LIBS.md) for the Level B
   source and object model; and
-- [`RXAS_ASSEMBLER.md`](../docs/ai-context/RXAS_ASSEMBLER.md) for the mandatory
+- [`RXAS_ASSEMBLER.md`](../../docs/ai-context/RXAS_ASSEMBLER.md) for the mandatory
   instruction, effect, signal, optimizer and RXBIN contract.
 
 ## Decision summary
@@ -736,7 +736,7 @@ boundary rather than changing the host process's signal disposition.
 
 Each production edit follows the mandatory focused-correctness, frozen
 profiling-off Release verdict and Adrian decision stop in
-[`performance/AGENTS.md`](AGENTS.md).
+[`performance/AGENTS.md`](../../performance/AGENTS.md).
 Approval of one phase does not approve the next.
 
 ## Required evidence matrix
