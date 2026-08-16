@@ -134,7 +134,7 @@ Release 1 concurrency work is now a bounded QA and publication programme:
 
 | Gate | Work | Exit condition |
 | --- | --- | --- |
-| QA-A: test readiness | Independently review every solution point, close direct test gaps, normalize the executable matrix, and prepare exact platform commands. | The frozen candidate is test-ready on Mac and every solution point has a source/test/risk disposition. |
+| QA-A: test readiness | Independently review every solution point, close direct test gaps, maintain the labelled matrix in [`concurrency/TEST-MANIFEST.md`](../concurrency/TEST-MANIFEST.md), and prepare exact platform commands. | The frozen candidate is test-ready on Mac and every solution point has a source/test/risk disposition. |
 | QA-B: Mac closeout | Run focused Debug/Release, both applicable VM modes, optimized/unoptimized toolchain paths, sanitizer, stress and broad regression. | The complete prepared matrix passes and retained evidence names any accepted limitation. |
 | QA-C: Linux qualification | Build and run the frozen matrix plus install/package smoke tests on the supported Linux host. | Linux results are complete; defects have been repaired on Mac and replayed, not developed interactively on the slow host. |
 | QA-D: Windows qualification | Run the same frozen matrix and package checks on the supported Windows toolchain and TLS/process backend. | Windows results are complete under the same defect-return discipline. |

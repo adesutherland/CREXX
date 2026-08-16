@@ -59,8 +59,11 @@ source reviewed, executable tests, commands/results and residual risk.
   `rxbvm` and `rxtvm`, optimized and unoptimized.
 - [x] Add a direct assertion that `.taskscope.ask()` signals
   `CHANNEL_ERROR`, code `26`, unsupported status `19`.
-- [ ] Replace the grep-derived concurrency test inventory with enduring CTest
-  labels and one deterministic orchestration entry point;
+- [x] Replace the grep-derived concurrency test inventory with enduring
+  `concurrency` and `concurrency-sp01` through `concurrency-sp09` CTest labels.
+  [`TEST-MANIFEST.md`](TEST-MANIFEST.md) defines the matrix and the
+  `concurrency-qa` build target constructs every declared artifact before
+  starting CTest.
 - [ ] Audit platform registration, fixture isolation, timeouts and diagnostics;
   and
 - [ ] Produce exact Linux and Windows validation commands and expected-result
@@ -71,6 +74,12 @@ Focused Mac evidence for the first two items: build targets
 `testConcurrency_(noopt|opt)` and every `testTaskContextEndpoint_*` case. All
 six executable cases passed on 2026-08-16 (the endpoint matrix covers both VM
 variants and both optimization modes).
+
+The labelled-manifest audit on Mac selected 179 unique correctness tests: all
+nine solution-point labels were non-empty, every solution test carried the
+umbrella label, and no umbrella test lacked a solution point. The
+`concurrency-qa` entry point then built its declared artifacts and passed all
+179 cases plus the required linked-runtime fixture (180/180) on 2026-08-16.
 
 ## Deferred feature proposals
 

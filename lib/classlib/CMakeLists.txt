@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
+
 set(CLSS
   StringIterable
   StringIterator
@@ -333,6 +335,7 @@ add_test(
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 set_tests_properties(classlib_rexxdoc_coverage PROPERTIES LABELS "docs;classlib")
+crexx_label_concurrency_tests(SP09 classlib_rexxdoc_coverage)
 
 add_test(
   NAME rexx_api_doc_exposed_regression
@@ -347,6 +350,7 @@ add_test(
     -P ${CMAKE_SOURCE_DIR}/tools/rexxDoc/tests/check_rexx_api_doc.cmake
 )
 set_tests_properties(rexx_api_doc_exposed_regression PROPERTIES LABELS "docs;classlib")
+crexx_label_concurrency_tests(SP09 rexx_api_doc_exposed_regression)
 
 add_test(
   NAME gate_f_levelb_bridge_inspection
@@ -356,5 +360,7 @@ add_test(
 )
 set_tests_properties(gate_f_levelb_bridge_inspection
   PROPERTIES LABELS "gate-f;classlib;inspection")
+crexx_label_concurrency_tests(SP05 gate_f_levelb_bridge_inspection)
+crexx_label_concurrency_tests(SP09 gate_f_levelb_bridge_inspection)
 
 add_subdirectory(tests_functional)

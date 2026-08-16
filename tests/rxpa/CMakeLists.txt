@@ -6,6 +6,7 @@ set(CMAKE_C_STANDARD 90)
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 
 # Including RXPlugin Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
@@ -94,6 +95,10 @@ add_test(NAME rxpa_dynamic_context_ownership
                 $<TARGET_FILE_NAME:_rxpa_dynlink>)
 set_tests_properties(rxpa_dynamic_context_ownership PROPERTIES
         LABELS "interpreter;worker;plugins;rxpa")
+crexx_label_concurrency_tests(SP01
+        rxpa_process_reentrant_manifest
+        rxpa_invalid_manifest_is_legacy
+        rxpa_dynamic_context_ownership)
 
 # Native declaration plugin used to prove RXPA class/interface metadata is
 # visible to the compiler without a Rexx-side contract shim.

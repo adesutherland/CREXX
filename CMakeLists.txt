@@ -365,6 +365,81 @@ add_subdirectory(examples)
 add_subdirectory(tests)
 add_subdirectory(bin crexx_driver)
 
+if(BUILD_TESTING)
+    if(WIN32)
+        set(_crexx_concurrency_default_test_jobs 1)
+    else()
+        set(_crexx_concurrency_default_test_jobs 10)
+    endif()
+    set(CREXX_CONCURRENCY_CTEST_JOBS
+            "${_crexx_concurrency_default_test_jobs}" CACHE STRING
+            "Parallel CTest jobs used by the deterministic concurrency QA target")
+    if(NOT CREXX_CONCURRENCY_CTEST_JOBS MATCHES "^[1-9][0-9]*$")
+        message(FATAL_ERROR
+                "CREXX_CONCURRENCY_CTEST_JOBS must be a positive integer")
+    endif()
+
+    add_custom_target(concurrency_test_artifacts)
+    set(_crexx_concurrency_required_targets
+            rxc rxas rxlink rxdas rxvm rxbvm
+            library classlib rxfnsg
+            linked_opt_runtime_artifacts
+            test_rxgraph test_linked_format test_e2_active_context
+            test_rxvmmemory test_rxvmworker test_rxvmchannel_registry
+            test_rxvmchannel_process test_rxvmbyteendpoint
+            test_rxvmchannel_byte test_rxvmactive
+            test_rxvmplugin_context test_rxpa_concurrency
+            test_gate_f_channel_local_bin test_gate_f_channel_process_bin
+            test_retired_process_opcode_bin run_tests_basic
+            program_generation_control-rxvml
+            program_generation_control-rxbvml
+            persistent_worker_executor-rxvml
+            persistent_worker_executor-rxbvml
+            _rxpa_dynlink _rxpa_invalid_manifest
+            testConcurrency testTaskContextEndpoint
+            concurrency_doc_examples
+            ts_address_array_lifecycle ts_address_spawn_transfer
+            address_spawn_transfer_fixture
+            ts_http_service_contract ts_llm_ollama ts_llm_providers
+            ts_http_server ts_http_server_failures ts_http_pooled
+            ts_http_streaming ts_http_crexx_rag ts_http_tls_live
+            ts_http_policy ts_http_codec address_llm_fixture_bin)
+    foreach(_crexx_concurrency_target IN LISTS
+            _crexx_concurrency_required_targets)
+        if(NOT TARGET "${_crexx_concurrency_target}")
+            message(FATAL_ERROR
+                    "Required concurrency QA target is missing: ${_crexx_concurrency_target}")
+        endif()
+        add_dependencies(concurrency_test_artifacts
+                "${_crexx_concurrency_target}")
+    endforeach()
+
+    foreach(_crexx_concurrency_optional_target IN ITEMS
+            rxtvm test_import_discovery_snapshot
+            program_generation_control-rxtvml
+            persistent_worker_executor-rxtvml)
+        if(TARGET "${_crexx_concurrency_optional_target}")
+            add_dependencies(concurrency_test_artifacts
+                    "${_crexx_concurrency_optional_target}")
+        endif()
+    endforeach()
+
+    set(_crexx_concurrency_ctest_configuration)
+    if(CMAKE_CONFIGURATION_TYPES)
+        set(_crexx_concurrency_ctest_configuration -C "$<CONFIG>")
+    endif()
+    add_custom_target(concurrency-qa
+            COMMAND ${CMAKE_CTEST_COMMAND}
+                    --test-dir "${CMAKE_BINARY_DIR}"
+                    ${_crexx_concurrency_ctest_configuration}
+                    --parallel "${CREXX_CONCURRENCY_CTEST_JOBS}"
+                    --output-on-failure
+                    -L "^concurrency"
+            DEPENDS concurrency_test_artifacts
+            USES_TERMINAL
+            COMMENT "Running the initial concurrency solution-point matrix")
+endif()
+
 install(EXPORT CREXXTargets
         FILE CREXXTargets.cmake
         NAMESPACE CREXX::

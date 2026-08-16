@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.24)
 project(CompilerTests C)
 
 find_package(Threads REQUIRED)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -22,6 +23,7 @@ if(UNIX)
     target_include_directories(test_import_discovery_snapshot PRIVATE ${CMAKE_SOURCE_DIR}/compiler)
     add_test(NAME import_discovery_snapshot COMMAND test_import_discovery_snapshot)
     set_tests_properties(import_discovery_snapshot PROPERTIES LABELS "compiler;imports;concurrency")
+    crexx_label_concurrency_tests(SP01 import_discovery_snapshot)
 endif()
 
 # Ensure the driver is built when tests are built
@@ -1204,6 +1206,7 @@ add_test(NAME gate_f_channel_contract
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/gate_f_channel_contract.cmake)
 set_tests_properties(gate_f_channel_contract PROPERTIES
         LABELS "compiler;performance;rxas;rxbin;gate-f;channels")
+crexx_label_concurrency_tests(SP02 gate_f_channel_contract)
 
 add_test(NAME nr09_numeric_context_contract
          COMMAND ${CMAKE_COMMAND}
@@ -1945,6 +1948,9 @@ add_crexx_run_test(repro_implicit_address_abuttal rexx_src/repro_implicit_addres
 add_crexx_run_test(implicit_address_indexed_stem rexx_src/implicit_address_indexed_stem.crexx)
 add_crexx_run_test(test_explicit_address rexx_src/test_explicit_address.crexx)
 add_crexx_run_test(test_address_redirect rexx_src/test_address_redirect.crexx)
+crexx_label_concurrency_tests(SP04
+        test_address_redirect_run_noopt
+        test_address_redirect_run_opt)
 add_crexx_run_test(address_crexx_flush_visible rexx_src/address_crexx_flush_visible.crexx)
 add_crexx_run_test(lineout_flush_visible rexx_src/lineout_flush_visible.crexx)
 add_crexx_run_test(optional_arg_presence_copy rexx_src/optional_arg_presence_copy.crexx)
@@ -2035,6 +2041,7 @@ add_test(NAME gate_f_levelb_contract
 set_tests_properties(gate_f_levelb_contract PROPERTIES
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         LABELS "compiler;levelb;concurrency;gate_f")
+crexx_label_concurrency_tests(SP05 gate_f_levelb_contract)
 
 # Gate F F1f is a linked end-to-end contract: task target placeholders must
 # travel through rxc and rxas, be sealed by rxlink, and then execute identically
@@ -2136,6 +2143,8 @@ endforeach()
             LABELS "compiler;levelg;concurrency;gate_f;f1f;linked;${MODE};${RUNNER}"
             RESOURCE_LOCK gate_f_concurrency_runtime
             TIMEOUT 180)
+    crexx_label_concurrency_tests(SP06 ${TEST_NAME})
+    crexx_label_concurrency_tests(SP08 ${TEST_NAME})
 endfunction()
 
 add_gate_f_levelg_conformance(rxbvm noopt)
@@ -2245,6 +2254,8 @@ endif()
             LABELS "compiler;levelg;concurrency;gate_f;f1f;linked;import;method;${MODE};${RUNNER}"
             RESOURCE_LOCK gate_f_concurrency_runtime
             TIMEOUT 180)
+    crexx_label_concurrency_tests(SP03 ${TEST_NAME})
+    crexx_label_concurrency_tests(SP06 ${TEST_NAME})
 endfunction()
 
 add_gate_f_task_method_import(rxbvm noopt)
@@ -2331,6 +2342,7 @@ endif()
             LABELS "compiler;levelg;concurrency;gate_f;f1f;linked;import;taskwork;${MODE};${RUNNER}"
             RESOURCE_LOCK gate_f_concurrency_runtime
             TIMEOUT 180)
+    crexx_label_concurrency_tests(SP06 ${TEST_NAME})
 endfunction()
 
 add_gate_f_taskwork_import(rxbvm noopt)
@@ -2363,6 +2375,7 @@ endif()
     set_tests_properties(${NAME} PROPERTIES
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
             LABELS "compiler;levelg;concurrency;gate_f;f1f;negative")
+    crexx_label_concurrency_tests(SP06 ${NAME})
 endfunction()
 
 add_gate_f_levelg_failure(gate_f_bad_scope
@@ -2447,6 +2460,7 @@ add_test(NAME gate_f_contextual_levelb
 set_tests_properties(gate_f_contextual_levelb PROPERTIES
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         LABELS "compiler;levelb;concurrency;gate_f;f1f;contextual")
+crexx_label_concurrency_tests(SP06 gate_f_contextual_levelb)
 
 # Gate F's compiler-generated task controller uses block-scoped signal
 # handlers.  Prove the shared control-transfer emitter independently so a
@@ -2527,6 +2541,8 @@ endif()
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
             LABELS "compiler;signals;control_flow;gate_f;${MODE};${RUNNER}"
             TIMEOUT 60)
+    crexx_label_concurrency_tests(SP06 ${TEST_NAME})
+    crexx_label_concurrency_tests(SP08 ${TEST_NAME})
 endfunction()
 
 add_signal_control_unwind_test(rxbvm noopt)
@@ -5207,6 +5223,7 @@ set_tests_properties(address_llm_provider PROPERTIES LABELS "compiler;stage3")
 set_tests_properties(address_llm_provider PROPERTIES
         PASS_REGULAR_EXPRESSION "PASS: address llm host"
         FAIL_REGULAR_EXPRESSION "address llm host failures")
+crexx_label_concurrency_tests(SP07 address_llm_provider)
 add_test(NAME address_native_kv_demo COMMAND native_kv_address_demo)
 set_tests_properties(address_native_kv_demo PROPERTIES LABELS "compiler;stage3")
 if(CREXX_BUILD_SQLITE_ADDRESS_DEMO)
@@ -5217,6 +5234,7 @@ add_test(NAME address_callback_host COMMAND test_address_callback_host)
 set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
 add_test(NAME e2_active_context_isolation COMMAND test_e2_active_context)
 set_tests_properties(e2_active_context_isolation PROPERTIES LABELS "compiler;stage3")
+crexx_label_concurrency_tests(SP01 e2_active_context_isolation)
 add_test(NAME dynamic_load COMMAND test_dynamic_load)
 set_tests_properties(dynamic_load PROPERTIES LABELS "compiler;stage3")
 foreach(_dynamic_interface_runner IN ITEMS rxvm)

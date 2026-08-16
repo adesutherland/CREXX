@@ -6,6 +6,7 @@ enable_testing()
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 
 set(REXXBINS
         tlinesz.rxbin
@@ -354,6 +355,14 @@ foreach(_ef0_runner IN LISTS _ef0_concrete_runners)
         )
     endforeach()
 endforeach()
+
+crexx_label_concurrency_tests(SP04
+        ts_address_array_lifecycle_noopt
+        ts_address_array_lifecycle_opt
+        ts_address_array_lifecycle_rxbvm_noopt
+        ts_address_array_lifecycle_rxbvm_opt
+        ${_ef0_spawn_transfer_tests})
+crexx_label_concurrency_tests(SP08 ${_ef0_spawn_transfer_tests})
 
 # Run each caught-signal sequence in one VM so the harnesses verify that call
 # unwind preserves exposed arrays and object receivers across repeated errors.

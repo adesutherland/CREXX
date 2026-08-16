@@ -6,6 +6,7 @@ enable_testing()
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 
 set(REXXBINS
   ts_http_service_contract
@@ -44,6 +45,13 @@ set_tests_properties(ts_llm_providers_noopt ts_llm_providers_opt
   PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxfnsg llm provider helpers")
 set_tests_properties(ts_http_service_contract_noopt ts_http_service_contract_opt
   PROPERTIES PASS_REGULAR_EXPRESSION "PASS: Level G HTTP service interface supplies the canonical dispatch adapter")
+crexx_label_concurrency_tests(SP07
+  ts_http_service_contract_noopt
+  ts_http_service_contract_opt
+  ts_llm_ollama_noopt
+  ts_llm_ollama_opt
+  ts_llm_providers_noopt
+  ts_llm_providers_opt)
 
 crexx_label_smoke_tests(
         ts_llm_providers_noopt
@@ -83,6 +91,12 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
       PASS_REGULAR_EXPRESSION "PASS: Level G HTTP server dispatched two bounded requests to task handlers"
       TIMEOUT 90
   )
+  crexx_label_concurrency_tests(SP07
+    "ts_http_server_${_http_runner}_noopt"
+    "ts_http_server_${_http_runner}_opt")
+  crexx_label_concurrency_tests(SP08
+    "ts_http_server_${_http_runner}_noopt"
+    "ts_http_server_${_http_runner}_opt")
 endforeach()
 
 foreach(_http_runner IN LISTS _http_pooled_runners)
@@ -105,6 +119,12 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
       PASS_REGULAR_EXPRESSION "PASS: Level G HTTP server bounds unusable and failed handlers"
       TIMEOUT 90
   )
+  crexx_label_concurrency_tests(SP07
+    "ts_http_server_failures_${_http_runner}_noopt"
+    "ts_http_server_failures_${_http_runner}_opt")
+  crexx_label_concurrency_tests(SP08
+    "ts_http_server_failures_${_http_runner}_noopt"
+    "ts_http_server_failures_${_http_runner}_opt")
 endforeach()
 
 foreach(_http_runner IN LISTS _http_pooled_runners)
@@ -127,6 +147,9 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
       PASS_REGULAR_EXPRESSION "PASS: rxfnsg pooled HTTP reused one owned connection for four task requests"
       TIMEOUT 90
   )
+  crexx_label_concurrency_tests(SP07
+    "ts_http_pooled_${_http_runner}_noopt"
+    "ts_http_pooled_${_http_runner}_opt")
 endforeach()
 
 add_custom_target(ts_http_streaming)
@@ -152,6 +175,12 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
       PASS_REGULAR_EXPRESSION "PASS: rxfnsg HTTP fixed and chunked request response streaming with bounded backpressure"
       TIMEOUT 120
   )
+  crexx_label_concurrency_tests(SP07
+    "ts_http_streaming_${_http_runner}_noopt"
+    "ts_http_streaming_${_http_runner}_opt")
+  crexx_label_concurrency_tests(SP08
+    "ts_http_streaming_${_http_runner}_noopt"
+    "ts_http_streaming_${_http_runner}_opt")
 endforeach()
 
 add_custom_target(ts_http_crexx_rag)
@@ -177,6 +206,9 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
       PASS_REGULAR_EXPRESSION "PASS: rxfnsg concurrent crexx-rag generation embedding gzip deflate integration"
       TIMEOUT 120
   )
+  crexx_label_concurrency_tests(SP07
+    "ts_http_crexx_rag_${_http_runner}_noopt"
+    "ts_http_crexx_rag_${_http_runner}_opt")
 endforeach()
 
 add_custom_target(ts_http_tls_live)
@@ -202,6 +234,9 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
       PASS_REGULAR_EXPRESSION "PASS: rxfnsg HTTP TLS"
       TIMEOUT 180
   )
+  crexx_label_concurrency_tests(SP07
+    "ts_http_tls_live_${_http_runner}_noopt"
+    "ts_http_tls_live_${_http_runner}_opt")
 endforeach()
 
 add_custom_target(ts_http_policy)
@@ -227,6 +262,12 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
       PASS_REGULAR_EXPRESSION "PASS: rxfnsg HTTP policy headers redirects retries ambiguity deadlines and limits"
       TIMEOUT 120
   )
+  crexx_label_concurrency_tests(SP07
+    "ts_http_policy_${_http_runner}_noopt"
+    "ts_http_policy_${_http_runner}_opt")
+  crexx_label_concurrency_tests(SP08
+    "ts_http_policy_${_http_runner}_noopt"
+    "ts_http_policy_${_http_runner}_opt")
 endforeach()
 
 add_custom_target(ts_http_codec)
@@ -252,4 +293,7 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
       PASS_REGULAR_EXPRESSION "PASS: rxfnsg HTTP gzip deflate bounded decoder"
       TIMEOUT 90
   )
+  crexx_label_concurrency_tests(SP07
+    "ts_http_codec_${_http_runner}_noopt"
+    "ts_http_codec_${_http_runner}_opt")
 endforeach()

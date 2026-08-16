@@ -14,12 +14,14 @@ Use these sources in order:
    `docs/ai-context/CREXX_CONCURRENCY.md`;
 3. the language, programming and library books under `docs/books/`;
 4. [`WORKLIST.md`](WORKLIST.md) for current status and remaining work;
-5. [`QA-CLOSEOUT.md`](QA-CLOSEOUT.md) for the frozen Release 1 review and
+5. [`TEST-MANIFEST.md`](TEST-MANIFEST.md) for the maintained executable matrix
+   and deterministic entry point;
+6. [`QA-CLOSEOUT.md`](QA-CLOSEOUT.md) for the frozen Release 1 review and
    platform-validation ledger;
-6. [`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md) for the current
+7. [`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md) for the current
    source-to-test truth matrix;
-7. [`DECISIONS.md`](DECISIONS.md) for accepted design boundaries; and
-8. [`history/`](history/) and `performance/evidence/` for dated provenance.
+8. [`DECISIONS.md`](DECISIONS.md) for accepted design boundaries; and
+9. [`history/`](history/) and `performance/evidence/` for dated provenance.
 
 The historical records contain the former Gate E/F names. Those names identify
 the development sequence only; they are not user-facing feature names or
@@ -54,6 +56,7 @@ area roadmap.
 | Maintainer or AI agent | `docs/ai-context/CREXX_CONCURRENCY.md` |
 | RXAS author | `docs/reference/rxas/instructions/09-io-sockets-processes-and-time.md` |
 | Current implementation and publication status | [`WORKLIST.md`](WORKLIST.md) |
+| Executable test manifest and entry point | [`TEST-MANIFEST.md`](TEST-MANIFEST.md) |
 | Release 1 solution-point and platform QA | [`QA-CLOSEOUT.md`](QA-CLOSEOUT.md) |
 | Source-to-test capability truth | [`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md) |
 

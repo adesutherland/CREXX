@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.24)
 project(Interpreter C)
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 find_package(Threads REQUIRED)
 
 set(CMAKE_C_STANDARD 99) # enables inline keyword
@@ -777,6 +778,31 @@ set_tests_properties(rxvmstem_storage PROPERTIES
 set_tests_properties(rxvmstem_allocator_family PROPERTIES
         LABELS "interpreter;stem;memory")
 
+crexx_label_concurrency_tests(SP01
+        rxvmmemory_allocator
+        rxvmworker_lifecycle
+        rxvmactive_isolation
+        rxvmplugin_context_ownership
+        rxpa_static_catalogue_replay
+        rxpa_static_session_lifecycle
+        rxpa_session_factory_failure_rollback
+        rxpa_session_manifest_fail_closed
+        rxpa_rxmath_static_mixed_policy
+        rxpa_legacy_call_serialization
+        rxpa_process_reentrant_overlap
+        rxpa_legacy_recursive_reentry
+        rxpa_branch_free_load_binding
+        rxpa_bound_legacy_serialization
+        rxpa_legacy_transition_quiescence)
+crexx_label_concurrency_tests(SP02 rxvmchannel_provider_registry)
+crexx_label_concurrency_tests(SP03
+        rxvmbyteendpoint_substrate
+        rxvmchannel_byte_provider)
+crexx_label_concurrency_tests(SP04
+        rxvmchannel_provider_registry
+        rxvmbyteendpoint_substrate
+        rxvmchannel_byte_provider)
+
 add_test(
         NAME crexxsaa_cache_tool_location
         COMMAND crexxsaa_tool --cache-dir ${CMAKE_CURRENT_BINARY_DIR}/crexxsaa-cache-tool-test --location)
@@ -1243,6 +1269,8 @@ foreach(_crexx_concrete_vm IN LISTS CREXX_CONCRETE_VM_TARGETS)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(rxasdispatchcontract-${_crexx_concrete_vm} PROPERTIES
             LABELS "interpreter;rxas;dispatch")
+    crexx_label_concurrency_tests(SP02
+            rxasdispatchcontract-${_crexx_concrete_vm})
 endforeach()
 
 if(BUILD_TESTING AND CREXX_VM_PROFILING)
@@ -1515,6 +1543,9 @@ set_tests_properties(gate_f_channel_local_rxbvm PROPERTIES
         LABELS "interpreter;perf3;gate-f;f1c;channels;lifecycle"
         PASS_REGULAR_EXPRESSION "PASS: Gate F F1c local channel"
         TIMEOUT 30)
+crexx_label_concurrency_tests(SP02 gate_f_channel_local_rxbvm)
+crexx_label_concurrency_tests(SP04 gate_f_channel_local_rxbvm)
+crexx_label_concurrency_tests(SP08 gate_f_channel_local_rxbvm)
 if(CREXX_THREADED_VM_SUPPORTED)
     add_dependencies(test_gate_f_channel_local_bin rxtvm)
     add_test(NAME gate_f_channel_local_rxtvm
@@ -1524,6 +1555,9 @@ if(CREXX_THREADED_VM_SUPPORTED)
             LABELS "interpreter;perf3;gate-f;f1c;channels;lifecycle"
             PASS_REGULAR_EXPRESSION "PASS: Gate F F1c local channel"
             TIMEOUT 30)
+    crexx_label_concurrency_tests(SP02 gate_f_channel_local_rxtvm)
+    crexx_label_concurrency_tests(SP04 gate_f_channel_local_rxtvm)
+    crexx_label_concurrency_tests(SP08 gate_f_channel_local_rxtvm)
 endif()
 
 # Gate F F1e executes one transport/conformance image on both concrete VMs.
@@ -1544,8 +1578,10 @@ add_test(NAME rxvmchannel_process_crash_replacement
 set_tests_properties(rxvmchannel_process_crash_replacement PROPERTIES
         LABELS "interpreter;perf3;gate-f;f1e;channels;process;crash;lifecycle"
         PASS_REGULAR_EXPRESSION
-                "PASS: Gate F F1e process crash and replacement"
+        "PASS: Gate F F1e process crash and replacement"
         TIMEOUT 45)
+crexx_label_concurrency_tests(SP04 rxvmchannel_process_crash_replacement)
+crexx_label_concurrency_tests(SP08 rxvmchannel_process_crash_replacement)
 add_test(NAME gate_f_channel_process_rxbvm
         COMMAND $<TARGET_FILE:rxbvm> test_gate_f_channel_process
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -1553,6 +1589,8 @@ set_tests_properties(gate_f_channel_process_rxbvm PROPERTIES
         LABELS "interpreter;perf3;gate-f;f1e;channels;process;lifecycle"
         PASS_REGULAR_EXPRESSION "PASS: Gate F F1e process channel"
         TIMEOUT 45)
+crexx_label_concurrency_tests(SP04 gate_f_channel_process_rxbvm)
+crexx_label_concurrency_tests(SP08 gate_f_channel_process_rxbvm)
 if(CREXX_THREADED_VM_SUPPORTED)
     add_dependencies(test_gate_f_channel_process_bin rxtvm)
     add_test(NAME gate_f_channel_process_rxtvm
@@ -1562,6 +1600,8 @@ if(CREXX_THREADED_VM_SUPPORTED)
             LABELS "interpreter;perf3;gate-f;f1e;channels;process;lifecycle"
             PASS_REGULAR_EXPRESSION "PASS: Gate F F1e process channel"
             TIMEOUT 45)
+    crexx_label_concurrency_tests(SP04 gate_f_channel_process_rxtvm)
+    crexx_label_concurrency_tests(SP08 gate_f_channel_process_rxtvm)
 endif()
 
 # Gate F replaces the pre-release spawn/redirect opcodes with the five channel
@@ -1603,6 +1643,8 @@ foreach(_retired_process_opcode RANGE 466 471)
             EXPECTED_FAILURE_DESCRIPTION "retired process opcode fails explicitly"
             REQUIRED_OUTPUT_REGEX "UNKNOWN_INSTRUCTION"
             TEST_LABELS "interpreter;rxas;gate-f;f1d;compatibility")
+    crexx_label_concurrency_tests(SP02
+            retired_process_opcode_${_retired_process_opcode}_rxbvm)
     if(CREXX_THREADED_VM_SUPPORTED)
         crexx_add_vm_expected_failure_test(
                 NAME retired_process_opcode_${_retired_process_opcode}_rxtvm
@@ -1612,6 +1654,8 @@ foreach(_retired_process_opcode RANGE 466 471)
                 EXPECTED_FAILURE_DESCRIPTION "retired process opcode fails explicitly"
                 REQUIRED_OUTPUT_REGEX "UNKNOWN_INSTRUCTION"
                 TEST_LABELS "interpreter;rxas;gate-f;f1d;compatibility")
+        crexx_label_concurrency_tests(SP02
+                retired_process_opcode_${_retired_process_opcode}_rxtvm)
     endif()
 endforeach()
 if(CREXX_THREADED_VM_SUPPORTED)
@@ -1840,6 +1884,7 @@ function(crexx_configure_program_generation_control TARGET_NAME)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(${TARGET_NAME} PROPERTIES
             LABELS "interpreter;perf3;gate-e;e4a;e4b")
+    crexx_label_concurrency_tests(SP01 ${TARGET_NAME})
 endfunction()
 
 add_executable(program_generation_control-rxvml
@@ -1972,6 +2017,7 @@ if(BUILD_TESTING AND
         set_tests_properties(${TARGET_NAME} PROPERTIES
                 LABELS "interpreter;perf3;gate-e;e5;private;industrial;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 120)
+        crexx_label_concurrency_tests(SP01 ${TARGET_NAME})
         add_test(
                 NAME ${TARGET_NAME}-doorbell-stress
                 COMMAND ${CMAKE_COMMAND} -E env
@@ -1983,6 +2029,10 @@ if(BUILD_TESTING AND
         set_tests_properties(${TARGET_NAME}-doorbell-stress PROPERTIES
                 LABELS "interpreter;perf3;gate-e;e5;private;industrial;race;lifecycle;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 120)
+        crexx_label_concurrency_stress_tests(SP01
+                ${TARGET_NAME}-doorbell-stress)
+        crexx_label_concurrency_tests(SP08
+                ${TARGET_NAME}-doorbell-stress)
         add_test(
                 NAME ${TARGET_NAME}-sparse-owner
                 COMMAND ${CMAKE_COMMAND} -E env
@@ -1994,6 +2044,7 @@ if(BUILD_TESTING AND
         set_tests_properties(${TARGET_NAME}-sparse-owner PROPERTIES
                 LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 120)
+        crexx_label_concurrency_tests(SP01 ${TARGET_NAME}-sparse-owner)
         add_test(
                 NAME ${TARGET_NAME}-sparse-owner-stress
                 COMMAND ${CMAKE_COMMAND} -E env
@@ -2006,6 +2057,10 @@ if(BUILD_TESTING AND
         set_tests_properties(${TARGET_NAME}-sparse-owner-stress PROPERTIES
                 LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;race;lifecycle;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 120)
+        crexx_label_concurrency_stress_tests(SP01
+                ${TARGET_NAME}-sparse-owner-stress)
+        crexx_label_concurrency_tests(SP08
+                ${TARGET_NAME}-sparse-owner-stress)
         add_test(
                 NAME ${TARGET_NAME}-sparse-progress
                 COMMAND ${CMAKE_COMMAND} -E env
@@ -2017,6 +2072,8 @@ if(BUILD_TESTING AND
         set_tests_properties(${TARGET_NAME}-sparse-progress PROPERTIES
                 LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 30)
+        crexx_label_concurrency_tests(SP01 ${TARGET_NAME}-sparse-progress)
+        crexx_label_concurrency_tests(SP08 ${TARGET_NAME}-sparse-progress)
         add_test(
                 NAME ${TARGET_NAME}-native-return
                 COMMAND ${CMAKE_COMMAND} -E env
@@ -2028,6 +2085,8 @@ if(BUILD_TESTING AND
         set_tests_properties(${TARGET_NAME}-native-return PROPERTIES
                 LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;native;lifecycle;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 30)
+        crexx_label_concurrency_tests(SP01 ${TARGET_NAME}-native-return)
+        crexx_label_concurrency_tests(SP08 ${TARGET_NAME}-native-return)
         foreach(_crexx_e6_workers IN ITEMS 1 2 4 8)
             foreach(_crexx_e6_workload IN ITEMS spin churn)
                 if("${_crexx_e6_workload}" STREQUAL "spin")
@@ -2065,6 +2124,8 @@ if(BUILD_TESTING AND
                     ${TARGET_NAME}-doorbell-fallback PROPERTIES
                     LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;windows"
                     TIMEOUT 30)
+            crexx_label_concurrency_tests(SP01
+                    ${TARGET_NAME}-doorbell-fallback)
             add_test(
                     NAME ${TARGET_NAME}-fallback
                     COMMAND ${CMAKE_COMMAND} -E env
@@ -2076,6 +2137,7 @@ if(BUILD_TESTING AND
             set_tests_properties(${TARGET_NAME}-fallback PROPERTIES
                     LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;windows"
                     TIMEOUT 120)
+            crexx_label_concurrency_tests(SP01 ${TARGET_NAME}-fallback)
             add_test(
                     NAME ${TARGET_NAME}-fallback-stress
                     COMMAND ${CMAKE_COMMAND} -E env
@@ -2088,6 +2150,10 @@ if(BUILD_TESTING AND
             set_tests_properties(${TARGET_NAME}-fallback-stress PROPERTIES
                     LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;race;lifecycle;windows"
                     TIMEOUT 120)
+            crexx_label_concurrency_stress_tests(SP01
+                    ${TARGET_NAME}-fallback-stress)
+            crexx_label_concurrency_tests(SP08
+                    ${TARGET_NAME}-fallback-stress)
             add_test(
                     NAME ${TARGET_NAME}-sparse-progress-fallback
                     COMMAND ${CMAKE_COMMAND} -E env
@@ -2100,6 +2166,10 @@ if(BUILD_TESTING AND
                     ${TARGET_NAME}-sparse-progress-fallback PROPERTIES
                     LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;windows"
                     TIMEOUT 30)
+            crexx_label_concurrency_tests(SP01
+                    ${TARGET_NAME}-sparse-progress-fallback)
+            crexx_label_concurrency_tests(SP08
+                    ${TARGET_NAME}-sparse-progress-fallback)
         endif()
     endfunction()
 

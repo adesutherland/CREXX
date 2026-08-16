@@ -6,6 +6,7 @@ enable_testing()
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 
 set(REXXBINS
   testrexx0
@@ -85,6 +86,16 @@ foreach(_binfile ${REXXBINS})
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
 
+crexx_label_concurrency_tests(SP03
+  testConcurrency_noopt
+  testConcurrency_opt)
+crexx_label_concurrency_tests(SP05
+  testConcurrency_noopt
+  testConcurrency_opt)
+crexx_label_concurrency_tests(SP08
+  testConcurrency_noopt
+  testConcurrency_opt)
+
 unset(_prev_native_target)
 foreach(_binfile ${NATIVE_REXXBINS})
     get_filename_component(_basename ${_binfile} NAME_WE)
@@ -158,6 +169,12 @@ foreach(_example IN LISTS CONCURRENCY_DOC_EXAMPLES)
       REQUIRED_OUTPUT_REGEX "PASS:"
       FORBIDDEN_OUTPUT_REGEX "FAIL:"
     )
+    crexx_label_concurrency_tests(SP06
+      "docs_${_example}_${_runner}_noopt"
+      "docs_${_example}_${_runner}_opt")
+    crexx_label_concurrency_tests(SP09
+      "docs_${_example}_${_runner}_noopt"
+      "docs_${_example}_${_runner}_opt")
   endforeach()
 endforeach()
 
@@ -182,4 +199,10 @@ foreach(_runner IN LISTS _concurrency_doc_runners)
     REQUIRED_OUTPUT_REGEX "PASS: taskcontext endpoint adapts a type-4 provider reference"
     FORBIDDEN_OUTPUT_REGEX "FAIL:"
   )
+  crexx_label_concurrency_tests(SP04
+    "testTaskContextEndpoint_${_runner}_noopt"
+    "testTaskContextEndpoint_${_runner}_opt")
+  crexx_label_concurrency_tests(SP05
+    "testTaskContextEndpoint_${_runner}_noopt"
+    "testTaskContextEndpoint_${_runner}_opt")
 endforeach()
