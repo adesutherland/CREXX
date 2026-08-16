@@ -65,7 +65,7 @@ Must-ship items are part of the Release 1 contract or release process.
 
    Publish a short design note explaining what Level B owns and what Level G
    owns. The Release 1 wording should say: Level B is stable; Level G has an
-   implemented experimental task/parallel surface and library overlay, not a
+   implemented initial task/parallel surface and library overlay, not a
    full stable language contract.
 
 5. Core UTF contract
@@ -145,10 +145,10 @@ Should-ship items are important but have explicit fallback paths.
 2. First Level G library version
 
    The development baseline now combines the existing LLM work with
-   experimental structured concurrency and a bounded HTTP client/server over
+   initial structured concurrency and a bounded HTTP client/server over
    one private protocol backend. Complete portable conformance and make the
    publication decision; richer Unicode remains
-   planned. Fallback: keep concurrency explicitly experimental and ship only
+   planned. Fallback: keep concurrency explicitly initial and ship only
    the Level G pieces with sufficient platform and package evidence.
 
 3. Initial Level C canonical-AST lowering proof
@@ -188,12 +188,14 @@ Should-ship items are important but have explicit fallback paths.
    metadata review before treating it as more than a prototype. Fallback: ZIP
    remains the portable Linux asset and `.deb` remains dev-snapshot-only.
 
-## Experimental Only
+## Initial Or Experimental Only
 
-These should not block Release 1.
+These should not block Release 1. Initial identifies the first bounded
+concurrency surface without claiming stable compatibility; experimental keeps
+its existing meaning for unrelated research and prototype work.
 
 - GPU VM plugin proof of concept.
-- Experimental structured concurrency until portable conformance, package proof
+- Initial structured concurrency until portable conformance, package proof
   and publication approval are complete.
 - Level G rich Unicode beyond the approved first slice.
 - Broad Level L syntax sugar.
@@ -282,13 +284,13 @@ common `rel1` label plus the tier and area labels shown here.
 | 36 | Add rxc optimizer/inlining improvements from current fail-closed gates | Rene | `rel1`, `should`, `compiler`, `performance` | Keep gates fail-closed and document deferred cases. |
 | 37 | Clean up plugin demos and separate core from non-core examples | Peter | `rel1`, `should`, `plugins`, `demos` | Clarify status in docs/CMake even if directories are not moved. |
 
-### Experimental Or Post-Release Candidates
+### Initial, Experimental Or Post-Release Candidates
 
 | # | Candidate issue | Owner | Labels | Fallback |
 | --- | --- | --- | --- | --- |
 | 38 | Add Level L syntax-sugar demo if syntax is approved | Adrian | `rel1`, `experimental`, `level-l` | Keep Level L demo library-only for Release 1. |
 | 39 | Add GPU VM plugin proof of concept behind experimental status | Adrian | `rel1`, `experimental`, `vm`, `plugins` | Publish design notes or keep the work out of the release branch. |
-| 40 | Qualify and decide publication of structured concurrency | Adrian | `rel1`, `experimental`, `vm` | Local/process tasks and ownership-safe transfer are implemented; keep the surface experimental unless portable conformance, package proof and release approval complete. Shared-memory subtasks remain out of scope. |
+| 40 | Qualify and decide publication of structured concurrency | Adrian | `rel1`, `initial`, `vm` | Local/process tasks and ownership-safe transfer are implemented; keep the surface initial unless portable conformance, package proof and release approval complete. Shared-memory subtasks remain out of scope. |
 | 41 | Design class and interface constants for Release 2 | Adrian | `r2`, `level-b`, `classes`, `compiler` | Keep Release 1 constants procedure-scoped; investigate whether constants should have a public view as part of the R2 class/interface constant design. |
 
 ## Dependency Map

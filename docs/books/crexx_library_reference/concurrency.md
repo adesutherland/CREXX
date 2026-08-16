@@ -6,7 +6,7 @@ canonical values, byte endpoints and explicit binary ownership. The language
 chapter adds Level G task syntax on top; the classes themselves are available
 at Level B.
 
-The surface is experimental on `develop`. Local-thread and isolated-process
+The surface is initial on `develop`. Local-thread and isolated-process
 providers are qualified on macOS in the current tree. Portable publication is
 still subject to Linux and Windows conformance.
 

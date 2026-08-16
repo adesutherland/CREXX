@@ -3,7 +3,7 @@
 Date: 2026-08-15
 
 Status: **user model approved; F0-S through F1g-D and Mac closeout QA are
-complete; experimental publication remains gated by portable conformance**
+complete; initial publication remains gated by portable conformance**
 
 This document is the approved user-oriented source of truth for Gate F
 concurrency. It explains the terms, the conceptual machine, the Rexx source
@@ -1032,6 +1032,6 @@ F1g-C adds `.httpheaders`, `.httppolicy`, verified TLS, explicit bounded
 redirect/retry rules and retained ambiguity diagnostics. F1g-D adds explicit
 fixed/chunked streaming, bounded gzip/deflate decoding and the concurrent
 `crexx-rag` generation/embedding integration fixture. Local implementation
-and Mac qualification are complete; experimental publication still requires
+and Mac qualification are complete; initial publication still requires
 the separately governed portable conformance evidence. Any
 contradiction or new language decision still returns to Adrian.

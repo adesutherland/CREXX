@@ -3,7 +3,7 @@
 Date: 2026-08-14
 
 Status: **implementation approved by Adrian; F0-S through F1g-D and Mac
-closeout QA complete; experimental publication remains gated by portable
+closeout QA complete; initial publication remains gated by portable
 conformance**
 
 This plan turns the approved Gate F user model and RXAS-only runtime boundary

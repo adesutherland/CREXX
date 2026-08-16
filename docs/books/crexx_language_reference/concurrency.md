@@ -1,7 +1,7 @@
 # Concurrency {#language-concurrency}
 
 This chapter defines the current cREXX task and parallel-block language
-surface. It is an experimental Level G extension. The Level B class contracts
+surface. It is an initial Level G extension. The Level B class contracts
 used by its lowering are specified in the library reference.
 
 ## Language level and contextual words

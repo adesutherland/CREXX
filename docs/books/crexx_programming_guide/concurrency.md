@@ -6,7 +6,7 @@ only when you need it. The runtime supplies bounded worker threads or isolated
 worker processes without exposing thread IDs, locks or shared writable VM
 objects.
 
-The current surface is experimental on `develop` and requires `OPTIONS
+The current surface is initial on `develop` and requires `OPTIONS
 LEVELG` for task declarations, task targets and `DO PARALLEL`. The underlying
 pool, scope, channel and value classes remain available to Level B programs.
 Portable publication is tracked separately from implementation status.

@@ -14,10 +14,12 @@ Use these sources in order:
    `docs/ai-context/CREXX_CONCURRENCY.md`;
 3. the language, programming and library books under `docs/books/`;
 4. [`WORKLIST.md`](WORKLIST.md) for current status and remaining work;
-5. [`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md) for the current
+5. [`QA-CLOSEOUT.md`](QA-CLOSEOUT.md) for the frozen Release 1 review and
+   platform-validation ledger;
+6. [`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md) for the current
    source-to-test truth matrix;
-6. [`DECISIONS.md`](DECISIONS.md) for accepted design boundaries; and
-7. [`history/`](history/) and `performance/evidence/` for dated provenance.
+7. [`DECISIONS.md`](DECISIONS.md) for accepted design boundaries; and
+8. [`history/`](history/) and `performance/evidence/` for dated provenance.
 
 The historical records contain the former Gate E/F names. Those names identify
 the development sequence only; they are not user-facing feature names or
@@ -31,11 +33,15 @@ current worklist states.
   closeout passed;
 - **portable** means the required Linux, Windows and Mac provider behavior has
   passed the current conformance matrix;
-- **published experimental** means release documentation and packages expose
-  the capability with an explicit experimental compatibility boundary; and
+- **published initial** means release documentation and packages expose the
+  capability with an explicit initial compatibility boundary; and
 - **stable** requires a separate compatibility and release decision.
 
 An implemented capability is not automatically portable, published or stable.
+
+The project-wide ordering authority is `docs/ROADMAP.md`. Files in this
+directory are detailed status, decision and evidence ledgers, not a competing
+area roadmap.
 
 ## Document destinations
 
@@ -48,6 +54,7 @@ An implemented capability is not automatically portable, published or stable.
 | Maintainer or AI agent | `docs/ai-context/CREXX_CONCURRENCY.md` |
 | RXAS author | `docs/reference/rxas/instructions/09-io-sockets-processes-and-time.md` |
 | Current implementation and publication status | [`WORKLIST.md`](WORKLIST.md) |
+| Release 1 solution-point and platform QA | [`QA-CLOSEOUT.md`](QA-CLOSEOUT.md) |
 | Source-to-test capability truth | [`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md) |
 
 Release-specific availability belongs in `docs/releases/`. Benchmark results

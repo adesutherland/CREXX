@@ -119,19 +119,33 @@ until they are narrowed.
 
 ## Concurrency Roadmap
 
-The experimental concurrency implementation has its own live
-[`concurrency/WORKLIST.md`](../concurrency/WORKLIST.md). That worklist records
-what is implemented, what remains before publication, and the separate
-performance follow-ups without mixing concurrency ownership back into the
-performance programme.
+This is the sole project roadmap entry that orders concurrency work. The
+[`concurrency/WORKLIST.md`](../concurrency/WORKLIST.md) and
+[`concurrency/QA-CLOSEOUT.md`](../concurrency/QA-CLOSEOUT.md) files are detailed
+status and evidence ledgers; they do not create a separate product roadmap.
 
-Current development work includes isolated local/process task execution,
-structured scopes, bounded endpoints and child-process redirection, and a
-concurrent HTTP client/server plus LLM providers over one private protocol
-backend. Portable conformance, package proof, release
-publication, a concrete single-owner service surface, and any public provider
-plugin or open-host protocol remain open. Shared writable VM state, detached
-ordinary tasks and public worker identities are not part of the model.
+The initial concurrency implementation is feature-complete on `develop` for
+its frozen Release 1 surface: local and isolated-process structured tasks,
+bounded channels and endpoints, child-process redirection, the Level B control
+classes, Level G task/parallel syntax, and the concurrent HTTP client/server
+and LLM transports over one private protocol backend.
+
+Release 1 concurrency work is now a bounded QA and publication programme:
+
+| Gate | Work | Exit condition |
+| --- | --- | --- |
+| QA-A: test readiness | Independently review every solution point, close direct test gaps, normalize the executable matrix, and prepare exact platform commands. | The frozen candidate is test-ready on Mac and every solution point has a source/test/risk disposition. |
+| QA-B: Mac closeout | Run focused Debug/Release, both applicable VM modes, optimized/unoptimized toolchain paths, sanitizer, stress and broad regression. | The complete prepared matrix passes and retained evidence names any accepted limitation. |
+| QA-C: Linux qualification | Build and run the frozen matrix plus install/package smoke tests on the supported Linux host. | Linux results are complete; defects have been repaired on Mac and replayed, not developed interactively on the slow host. |
+| QA-D: Windows qualification | Run the same frozen matrix and package checks on the supported Windows toolchain and TLS/process backend. | Windows results are complete under the same defect-return discipline. |
+| QA-E: publication decision | Reconcile packages, release notes, compatibility boundary and residual risks. | Adrian explicitly selects unpublished, published initial, or deferred status; passing QA alone does not imply stability. |
+
+Feature development remains frozen during this programme. Concrete services
+and `.taskscope.ask()`, provider type `3`, a public provider-plugin ABI, pool
+telemetry, server TLS/readiness/background lifecycle, HTTP/2 and WebSockets are
+post-Release-1 candidates requiring separate design approval. Shared writable
+VM state, detached ordinary tasks and public worker identities remain outside
+the model.
 
 ## Library, Plugin, And Host Integration Roadmap
 
@@ -143,7 +157,7 @@ ordinary tasks and public worker identities are not part of the model.
 | REXX/SAA compatibility | #424 | Continue through the `crexxsaa` and RXPA host-integration path. Variable-pool emulation needs explicit design before new commitments. |
 | IO endpoints, process pipes, and native handles | [`ai-context/CREXX_IO_PIPE_WORKING.md`](ai-context/CREXX_IO_PIPE_WORKING.md), #491 | Bounded provider type `4` endpoints and type `5` structured child processes now underpin ADDRESS redirection and concurrent HTTP streaming. Broader `rxio.*` stream classes, reusable pipeline helpers and any public native-handle surface remain future work. |
 | Mixed Rexx/native libraries | #432 | Combining Rexx scripts and native plugin functions into one library remains an architecture direction for plugin packaging. |
-| Threads and subtasks | #491, [`concurrency/WORKLIST.md`](../concurrency/WORKLIST.md) | Local-thread and isolated-process structured tasks are implemented experimentally with receiver-owned transferred values and no shared writable VM state. Portable qualification and publication remain open; durable single-owner services and open-host/provider extension are later work. |
+| Threads and subtasks | #491, [`concurrency/WORKLIST.md`](../concurrency/WORKLIST.md) | Local-thread and isolated-process structured tasks form the initial receiver-owned transfer surface with no shared writable VM state. Portable qualification and publication remain open; durable single-owner services and open-host/provider extension are separately approved later work. |
 
 ## Closed As Already Handled Or Stale
 

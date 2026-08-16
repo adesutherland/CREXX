@@ -2,7 +2,10 @@
 
 Approved: 2026-07-31
 
-Status: **approved live control plane for PERF3**. Adrian approved the roadmap
+Status: **retained detailed PERF3 programme ledger**. The project-wide ordering
+authority is [`docs/ROADMAP.md`](../docs/ROADMAP.md); this file retains
+performance activity status, evidence links and idea dispositions without
+creating a competing area roadmap. Adrian approved the programme
 and transfer boundary on 2026-07-31, then accepted the PERF3-01 current-product
 evidence boundary and ranked panel on 2026-07-31. PERF3-02's clean-host panel,
 C1b detached-guard proof, C2E2 storage-identity infrastructure and
@@ -11,11 +14,12 @@ C1abc production ladder on 2026-08-01. The disposable option mask and broad
 correctness-negative branch are removed from the ordinary compiler while the
 checksum-closed replay source preserves every investigated option.
 
-Concurrency product scope, portability and publication are no longer governed
-here. Their live control plane is
-[`concurrency/WORKLIST.md`](../concurrency/WORKLIST.md). This roadmap retains
-the allocator/worker performance history, regression verdicts and evidence
-links that informed the implementation.
+Concurrency product scope, portability and publication are not governed here.
+Their detailed status and evidence ledger is
+[`concurrency/WORKLIST.md`](../concurrency/WORKLIST.md), while project ordering
+remains in `docs/ROADMAP.md`. This file retains the allocator/worker performance
+history, regression verdicts and evidence links that informed the
+implementation.
 
 Historical terminology note: the internal Gate E/F and F1-style labels below
 name dated implementation slices, benchmarks and evidence directories. They do

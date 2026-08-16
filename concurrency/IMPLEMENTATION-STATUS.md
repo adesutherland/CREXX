@@ -81,20 +81,20 @@ behavior.
 
 | Surface | Current status | Evidence and boundary |
 | --- | --- | --- |
-| `.rxfnsg..httpclient` pooling and admission | Implemented and directly tested; experimental | `lib/rxfnsg/tests_functional/ts_http_pooled.crexx` exercises bounded concurrent requests and connection ownership through both VMs and optimization modes. |
+| `.rxfnsg..httpclient` pooling and admission | Implemented and directly tested; initial | `lib/rxfnsg/tests_functional/ts_http_pooled.crexx` exercises bounded concurrent requests and connection ownership through both VMs and optimization modes. |
 | Safe headers and policy | Implemented and directly tested | `ts_http_policy.crexx` covers header validation, redirects, retries, idempotency and ambiguous outcomes. |
 | Fixed/chunked request bodies and streamed responses | Implemented and directly tested | `ts_http_streaming.crexx` covers bounded endpoints, fixed and chunked framing, response streaming and trailers. |
 | gzip, zlib and raw DEFLATE response decoding | Implemented and directly tested | `ts_http_codec.crexx` exercises bounded decode behavior and malformed/limit paths. |
 | Verified TLS | Implemented and Mac-qualified | `ts_http_tls_live.crexx` provides live verified-TLS coverage where enabled. Portable backend/package qualification remains CONC-11. |
 | `crexx-rag` generation/embedding shapes | Implemented and directly tested locally | `ts_http_crexx_rag.crexx` validates authentication, idempotency, request fields and response shapes using a loopback fixture. |
 | General buffered `request`, `get` and `post` | Implemented and directly tested | The public Level G client accepts a verb, path and binary body, or the Rexx-friendly GET/POST forms. Text and binary responses use one typed `.httpresponse`. |
-| Bounded clear-text server | Implemented and directly tested; experimental | `.httpserver` owns all accepted sockets, parses complete bounded requests and submits transferable `.httprequest` records to sealed `.httpservice .taskwork` targets. `ts_http_server_*` covers both VMs and optimizer modes, parallel clients, binary bodies, pipelining boundaries, malformed framing and request deadlines. `ts_http_server_failures_*` covers raised handlers and responses outside server limits. |
+| Bounded clear-text server | Implemented and directly tested; initial | `.httpserver` owns all accepted sockets, parses complete bounded requests and submits transferable `.httprequest` records to sealed `.httpservice .taskwork` targets. `ts_http_server_*` covers both VMs and optimizer modes, parallel clients, binary bodies, pipelining boundaries, malformed framing and request deadlines. `ts_http_server_failures_*` covers raised handlers and responses outside server limits. |
 | Shared private protocol backend | Implemented and directly tested | `_rxhttpcore` is the only Level B HTTP framing/parsing/codec core. It is private and binary-oriented; it is shared by the Level G client, server and LLM surface rather than exposed as another client. |
 | Level G LLM transport | Implemented and directly tested | Ollama, OpenAI, Anthropic and Gemini use the public `.httpclient`; the former public Level B `rxhttp` convenience client has been removed. Provider behavior remains covered by `ts_llm_ollama` and `ts_llm_providers`; `address_llm_provider` links the ADDRESS environment through library/classlib/rxfnsg and proves transient provider cleanup. |
 
 ## Publication boundary
 
-The matrix proves an implemented experimental surface on `develop` and records
+The matrix proves an implemented initial surface on `develop` and records
 local Mac qualification. It does not establish that concurrency is present in
 an existing release tag, portable across every supported platform, or stable.
 Those claims require the CONC-11 matrix, install/package proof and an explicit

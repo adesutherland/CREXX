@@ -4,14 +4,14 @@ Date: 2026-08-13
 
 Status: **user model and staged Gate F implementation approved by Adrian on
 2026-08-14; F0-S through F1g-D implementation and Mac closeout QA complete;
-experimental publication remains gated by portable conformance**
+initial publication remains gated by portable conformance**
 
 This record is the normative design authority for the PERF3-13 Gate F
 public concurrency surface. It records the user model, ownership and transfer
 semantics that Gate F implementations must preserve. Implementation follows
 the contract-first slices and first-verdict stops in
 [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
-Experimental publication and push remain separately controlled.
+Initial publication and push remain separately controlled.
 
 Gate E remains the mechanism foundation. Its private executor, physical
 doorbells, fallback progress points, worker indices and current logical
@@ -686,7 +686,7 @@ exists.
   reuse for the local and isolated-process providers.
 - [ ] Deliver the bounded concurrent HTTP/TLS consumer over tasks, channels and
   byte endpoints without an HTTP opcode family.
-- [ ] Publish an experimental Level B surface only after portable local/process
+- [ ] Publish an initial Level B surface only after portable local/process
   conformance and an accepted first Release verdict.
 
 F1e implements core provider type `2` with capability mask `0x010f`: bounded
@@ -731,7 +731,7 @@ boundary rather than changing the host process's signal disposition.
   transport-neutral instruction and class contracts.
 - [ ] Complete both-VM, cross-platform, sanitizer, install/package and public
   compatibility closeout.
-- [ ] Stabilize the public surface only after experimental compatibility and
+- [ ] Stabilize the public surface only after initial compatibility and
   operational evidence are accepted.
 
 Each production edit follows the mandatory focused-correctness, frozen

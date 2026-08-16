@@ -2,12 +2,13 @@
 
 Status date: 2026-08-16  
 Branch: `develop`  
-Implementation baseline: `2212cf427`
+Frozen feature baseline: `b6a16dc3a`
 
-This is the sole live worklist for cREXX tasks, channels, worker/process
-providers, reusable byte endpoints, concurrent HTTP and future service/host
-providers. Historical development stages and performance evidence are linked,
-not reproduced as the current control model.
+This is the detailed status ledger for cREXX tasks, channels, worker/process
+providers, reusable byte endpoints and concurrent HTTP. `docs/ROADMAP.md` is
+the sole project roadmap. Release 1 closure execution and platform evidence
+are tracked in [`QA-CLOSEOUT.md`](QA-CLOSEOUT.md); historical development
+stages and performance evidence are linked rather than reproduced here.
 
 ## Capability ledger
 
@@ -20,14 +21,14 @@ not reproduced as the current control model.
 | CONC-05 | Level B pool/scope/task/channel/endpoint classes | implemented | locally qualified with RexxDoc and generated API reference | keep unsupported operations explicit and extend direct endpoint reconstruction coverage |
 | CONC-06 | Level G task and `DO PARALLEL` language surface | complete | locally qualified, Level G-gated and documented with checked examples | retain positive/negative compiler and runtime coverage |
 | CONC-07 | reusable byte endpoints, child processes and ADDRESS redirects | complete | locally qualified | retain cross-platform endpoint/process regression coverage |
-| CONC-08 | bounded concurrent HTTP/TLS client | complete | Mac qualified and documented; experimental publication pending | complete portable conformance under CONC-11 |
+| CONC-08 | bounded concurrent HTTP/TLS client | complete | Mac qualified and documented; initial publication pending | complete portable conformance under CONC-11 |
 | CONC-09 | sealed task-binding validation cache | complete | locally qualified and performance-guard clean | retain cache miss/hit and ordinary single-thread regression coverage |
 | CONC-10 | enduring documentation | complete | locally checked with generated API, examples, links and broad Debug regression | maintain references with implementation; portable publication remains CONC-11 |
-| CONC-11 | portable conformance and experimental publication | pending | Mac complete; public local/process/HTTP matrix incomplete | qualify Linux and Windows, then make the release/package decision |
-| CONC-12 | services, actors, events and projections | surface reserved | `.taskscope.ask` is unsupported | specify and implement one single-owner service before typed proxies/events |
-| CONC-13 | open-host and extension providers | reserved | provider type `3` and public plugin ABI unavailable | select protocol from interoperability evidence and prove a non-Rexx actor |
-| CONC-14 | pool saturation telemetry | reserved | `queued()` and `running()` are unsupported | specify snapshot semantics and provider portability before implementation |
-| CONC-15 | stabilization and transfer tuning | active as evidence-led follow-up | binding cache complete; wider payload/copy work open | route timing through performance governance without moving product ownership there |
+| CONC-11 | solution-point QA, portable conformance and initial publication | active | frozen feature baseline is Mac-qualified; independent review and public Linux/Windows matrix incomplete | complete QA-A through QA-E in `QA-CLOSEOUT.md` |
+| CONC-12 | services, actors, events and projections | post-Release-1 proposal | `.taskscope.ask` is unsupported | require separate design approval after concurrency closure |
+| CONC-13 | open-host and extension providers | post-Release-1 proposal | provider type `3` and public plugin ABI unavailable | require separate design approval after concurrency closure |
+| CONC-14 | pool saturation telemetry | post-Release-1 proposal | `queued()` and `running()` are unsupported | require separate semantics and portability approval |
+| CONC-15 | stabilization and transfer tuning | evidence-led follow-up only | binding cache complete; wider payload/copy comparisons are not closure requirements | act only on a defect or governed performance finding |
 | CONC-16 | HTTP implementation rationalisation and server | complete | one private Level B core and one public Level G client/server are Mac-qualified; Release guard clean | retain the architecture and take portable/server follow-ups through CONC-11 and new approved work |
 
 The evidence behind each status is reconciled in
@@ -118,7 +119,12 @@ links and executable examples were checked directly. This local documentation
 closeout does not satisfy the portable conformance or release-publication work
 in CONC-11.
 
-## CONC-11 portable conformance and publication
+## CONC-11 solution-point QA, portable conformance and publication
+
+The frozen implementation is reviewed and qualified through QA-A to QA-E in
+[`QA-CLOSEOUT.md`](QA-CLOSEOUT.md). Linux and Windows are validation hosts:
+failures are reduced and repaired on the primary Mac development host, then
+the corrected frozen candidate is replayed on the affected platform.
 
 - [ ] Build the ordinary product and concurrency libraries on supported Linux,
   Windows and Mac toolchains.
@@ -127,10 +133,14 @@ in CONC-11.
 - [ ] Prove cancellation, deadline, crash replacement, teardown, TLS and
   bounded streaming behavior on each platform.
 - [ ] Validate install/package contents and rebuilt linked images.
-- [ ] Record limitations and make an explicit experimental-publication
+- [ ] Record limitations and make an explicit initial-publication
   decision. Do not call the surface stable as a side effect of passing QA.
 
 ## CONC-12 service and event work
+
+This and the following provider/telemetry capabilities are post-Release-1
+proposals, not an approved sequence after CONC-11. They remain recorded so the
+frozen names and architectural positions are not mistaken for implementations.
 
 - [ ] Specify service creation, discovery, identity lifetime and serialized
   accepted-call ordering.

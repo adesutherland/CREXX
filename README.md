@@ -28,7 +28,7 @@ the bytecode toolchain, core standard libraries, host integration, and packaging
 on the supported desktop platforms. `rxdb` exists as an experimental debugger
 prototype and is not yet part of the stable release surface.
 
-`develop` also contains an experimental Level G structured-concurrency surface:
+`develop` also contains an initial Level G structured-concurrency surface:
 task declarations and `DO PARALLEL`, explicit pool/scope classes, local and
 isolated-process providers, bounded byte endpoints, structured child-process
 redirection, and a concurrent HTTP client. This work has local macOS
@@ -103,7 +103,7 @@ is searched for same-extension imports.
 - [Level B tutorial](docs/books/crexx_programming_guide/levelb_tutorial.md)
   teaches practical Level B for Rexx programmers with tested examples.
 - [Concurrent programming](docs/books/crexx_programming_guide/concurrency.md)
-  teaches the experimental Level G task and scope model with complete checked
+  teaches the initial Level G task and scope model with complete checked
   examples.
 - [Tasks and parallel execution](docs/books/crexx_language_reference/concurrency.md)
   defines the Level G syntax and evaluation rules.

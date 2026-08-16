@@ -8,7 +8,7 @@ gives complete request values to ordinary task classes. HTTP is a Rexx library
 built on concurrency; it is not a special RXAS instruction or channel provider
 type.
 
-The client is experimental on `develop` and currently macOS-qualified. Linux
+The client is initial on `develop` and currently macOS-qualified. Linux
 and Windows publication still requires the portable concurrency conformance
 matrix.
 

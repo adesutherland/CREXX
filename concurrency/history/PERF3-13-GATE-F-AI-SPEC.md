@@ -3,7 +3,7 @@
 Date: 2026-08-15
 
 Status: **F0-S normative contract and F1a-F1g-D implementation complete;
-Mac closeout QA complete; experimental publication remains gated by portable
+Mac closeout QA complete; initial publication remains gated by portable
 conformance**
 
 This is the exact maintainer-facing specification derived from the approved

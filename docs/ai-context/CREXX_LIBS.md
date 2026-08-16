@@ -219,7 +219,7 @@ as `ADDRESS LLM_GPT_4_1`, `ADDRESS CLAUDE_SONNET_4_5`, and
 through a small driver registry of exact aliases and prefixes. See
 `lib/rxfnsg/rexx/llm.md` and `demos/llm/`.
 
-`lib/rxfnsg/rexx/http.crexx` and `httpserver.crexx` are the experimental Level
+`lib/rxfnsg/rexx/http.crexx` and `httpserver.crexx` are the initial Level
 G HTTP surface. The transferable
 `.httpclient.pooled(origin, connections, admission, maximum_response, ?policy)`
 supports buffered `request`, `get` and `post` task methods plus endpoint-backed

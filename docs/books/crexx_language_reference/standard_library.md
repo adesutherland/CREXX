@@ -81,7 +81,7 @@ work:
 
 The private Level B `_rxhttpcore` module provides binary HTTP framing, parsing
 and codecs for higher layers; it is not a user client. User-facing HTTP belongs
-to `rxfnsg`: its experimental Level G client provides pooled task requests,
+to `rxfnsg`: its initial Level G client provides pooled task requests,
 policy, buffered content decoding and bounded response streaming, while its
 bounded server dispatches complete request values to task classes. The Level G
 LLM providers use the same client and private backend. See
@@ -106,7 +106,7 @@ smoke-tested debugging aid, not as a supported full debugger contract.
 ## Class Library
 
 `classlib` is loaded by the `crexx` driver by default and is part of the beta
-surface. Its experimental concurrency classes include `.taskpool`,
+surface. Its initial concurrency classes include `.taskpool`,
 `.taskscope`, `.task`, `.completion`, `.tasktarget`, `.taskwork`, `.channel`,
 `.channelvalue`, `.byteendpoint` and `.transferbuffer`. They provide explicit
 control beneath Level G syntax while preserving one provider-neutral contract.
@@ -128,7 +128,7 @@ The product documentation lives with the runtime source:
 
 ## Level G Libraries
 
-`rxfnsg` contains the LLM client modules used by demos and the experimental
+`rxfnsg` contains the LLM client modules used by demos and the initial
 concurrent HTTP client/server implementation. Level G task/parallel syntax and
 the classlib concurrency surface are implemented and tested on the current development
 baseline, but they are not the stable Level B contract. Start with the

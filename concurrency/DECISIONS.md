@@ -1,6 +1,6 @@
 # cREXX concurrency decisions
 
-Status: accepted design boundaries for the implemented experimental surface.
+Status: accepted design boundaries for the implemented initial surface.
 
 This file records durable decisions without the former internal gate names.
 The dated discussion and approval trail remains in [`history/`](history/).

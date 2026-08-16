@@ -153,7 +153,7 @@ design notes as the beta 3 issues are created.
 | B3-DL-09 | Define Level B versus Level G boundary | Adrian | `beta3`, `design-lock`, `level-b`, `level-g` | Short design note states stable Level B contract and first Level G overlay scope. | Already in Release 1 plan; keep linked here. |
 | B3-DL-10 | Define UTF/text ownership | Adrian | `beta3`, `design-lock`, `unicode`, `level-b`, `level-g` | `.string`, `.binary`, VM codepoint baseline, and Level G Unicode ownership are agreed. | Keep Classic Rexx value semantics separate from Level B `.string`. |
 | B3-DL-11 | Define Level C canonical AST lowering milestone | Adrian | `beta3`, `design-lock`, `level-c`, `compiler`, `high-risk` | Decide whether beta 3 includes a small compiled Classic Rexx proof by transforming Level C AST into the canonical compiler AST shape. | RexxScript is separate and should not be used as the Level C lowering proof. |
-| B3-DL-12 | Decide GPU/threading Release 1 status | Adrian | `beta3`, `design-lock`, `vm`, `experimental` | Stable, experimental, design-only, or post-R1 status is explicit. | Prevents accidental release commitment. |
+| B3-DL-12 | Decide GPU/threading Release 1 status | Adrian | `beta3`, `design-lock`, `vm`, `initial` | Threading is initial, while GPU remains experimental, design-only or post-R1 as separately recorded. | Prevents accidental release commitment. |
 
 ## Candidate Foundation Issues
 
@@ -484,13 +484,13 @@ Acceptance:
 ### B3-DL-12: Decide GPU/Threading Release 1 Status
 
 Purpose:
-- Avoid accidental release commitments for experimental VM directions.
+- Avoid accidental release commitments for initial or experimental VM directions.
 
 Guidance:
-- Decide whether GPU integration and VM threading/subtasks are stable,
-  experimental, design-only, or post-Release-1. If experimental, define what
-  users may rely on and what they may not. Keep this independent from the
-  stable Level B contract.
+- Record VM threading/subtasks as the initial bounded concurrency surface and
+  decide GPU integration separately as stable, experimental, design-only, or
+  post-Release-1. Define what users may rely on and what they may not. Keep
+  both independent from the stable Level B contract.
 
 Acceptance:
 - The release note and roadmap agree on status, and no package/doc path
