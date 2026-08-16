@@ -30,6 +30,8 @@ typedef struct fake_module {
     size_t opens;
     size_t starts;
     size_t closes;
+    const unsigned char *result_node;
+    size_t result_node_length;
 } fake_module;
 
 typedef struct fake_channel {
@@ -125,9 +127,50 @@ static int fake_terminal_snapshot(
     if (completion_out) {
         completion_out->state = 1;
         completion_out->message = "";
+        completion_out->result_node = channel->module->result_node;
+        completion_out->result_node_length =
+                channel->module->result_node_length;
     }
     if (completion_order_out) *completion_order_out = request->order;
     return 1;
+}
+
+static void put_u32(unsigned char *bytes, uint32_t value) {
+    bytes[0] = (unsigned char)value;
+    bytes[1] = (unsigned char)(value >> 8u);
+    bytes[2] = (unsigned char)(value >> 16u);
+    bytes[3] = (unsigned char)(value >> 24u);
+}
+
+static void put_u64(unsigned char *bytes, uint64_t value) {
+    unsigned int index;
+    for (index = 0u; index < 8u; index++) {
+        bytes[index] = (unsigned char)(value >> (index * 8u));
+    }
+}
+
+static unsigned char *nested_array_node(size_t wrappers, size_t *length_out) {
+    size_t length;
+    size_t offset = 0u;
+    size_t index;
+    unsigned char *node;
+
+    if (length_out) *length_out = 0u;
+    if (!length_out || wrappers > (SIZE_MAX - 12u) / 20u) return 0;
+    length = 12u + wrappers * 20u;
+    node = (unsigned char *)calloc(1u, length);
+    if (!node) return 0;
+    for (index = 0u; index < wrappers; index++) {
+        size_t child_length = length - offset - 20u;
+        put_u32(node + offset, 8u);
+        put_u64(node + offset + 4u, 8u + child_length);
+        put_u64(node + offset + 12u, 1u);
+        offset += 20u;
+    }
+    put_u32(node + offset, 0u);
+    put_u64(node + offset + 4u, 0u);
+    *length_out = length;
+    return node;
 }
 
 static uint64_t fake_completion_generation(void *channel_state) {
@@ -221,6 +264,10 @@ int main(void) {
     rxvm_runtime *runtime = rxvm_runtime_create();
     rxvm_context *context = 0;
     rxvm_channel_binary completion = {0};
+    unsigned char *maximum_depth_node = 0;
+    unsigned char *excess_depth_node = 0;
+    size_t maximum_depth_length = 0u;
+    size_t excess_depth_length = 0u;
     int64_t channel = 0;
     int64_t ticket = 0;
 
@@ -275,13 +322,40 @@ int main(void) {
               RXVM_CHANNEL_ALREADY_TERMINAL,
           "fake provider preserves one terminal completion");
 
+    maximum_depth_node = nested_array_node(62u, &maximum_depth_length);
+    excess_depth_node = nested_array_node(63u, &excess_depth_length);
+    CHECK(maximum_depth_node && excess_depth_node,
+          "construct provider-result depth boundary fixtures");
+    module.result_node = maximum_depth_node;
+    module.result_node_length = maximum_depth_length;
+    CHECK(rxvm_channel_start(
+              context, channel, null_document, sizeof(null_document),
+              0, &ticket) == RXVM_CHANNEL_OK && ticket != 0,
+          "start a maximum-depth provider result");
+    CHECK(rxvm_channel_wait(context, channel, 0, &completion) ==
+              RXVM_CHANNEL_OK && completion.length > maximum_depth_length,
+          "accept a provider result whose completed document reaches depth 64");
+    rxvm_channel_binary_free(&completion);
+
+    module.result_node = excess_depth_node;
+    module.result_node_length = excess_depth_length;
+    CHECK(rxvm_channel_start(
+              context, channel, null_document, sizeof(null_document),
+              0, &ticket) == RXVM_CHANNEL_OK && ticket != 0,
+          "start an excessive-depth provider result");
+    CHECK(rxvm_channel_wait(context, channel, 0, &completion) ==
+              RXVM_CHANNEL_PROVIDER_FAILURE && completion.data == 0,
+          "reject a provider result that would create a noncanonical completion");
+    module.result_node = 0;
+    module.result_node_length = 0u;
+
     CHECK(rxvm_channel_close(context, channel, 1) == RXVM_CHANNEL_OK,
           "fake provider drains and closes");
     CHECK(rxvm_channel_close(context, channel, 1) ==
               RXVM_CHANNEL_STALE_CAPABILITY,
           "closed fake-provider capability is stale");
-    CHECK(module.opens == 1u && module.starts == 1u && module.closes == 1u,
-          "fake provider receives each common lifecycle operation once");
+    CHECK(module.opens == 1u && module.starts == 3u && module.closes == 1u,
+          "fake provider receives the expected lifecycle call counts");
     CHECK(rxvm_channel_provider_unregister(runtime, FAKE_PROVIDER_TYPE) ==
               RXVM_CHANNEL_PROVIDER_REGISTRATION_OK,
           "provider unregisters after its final channel unpins");
@@ -299,6 +373,8 @@ int main(void) {
 
 cleanup:
     if (completion.data) rxvm_channel_binary_free(&completion);
+    free(maximum_depth_node);
+    free(excess_depth_node);
     if (context) rxvm_destroy(context);
     CHECK(rxvm_runtime_worker_count(runtime) == 0u,
           "provider test context unregisters its worker");

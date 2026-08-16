@@ -1095,7 +1095,9 @@ static rxvm_channel_status rxcv_buffer_provider_node(
         rxcv_buffer *buffer,
         const unsigned char *data,
         size_t length,
-        uint16_t *document_flags);
+        unsigned int depth,
+        uint16_t *document_flags,
+        uint64_t *document_members);
 
 static const char *channel_completion_message_from_state(int64_t state) {
     switch (state) {
@@ -1120,6 +1122,7 @@ rxvm_channel_status rxvm_channel_encode_process_completion(
     rxcv_buffer document;
     unsigned char header[16];
     uint16_t flags = 0u;
+    uint64_t members = 4u;
     rxvm_channel_status status;
 
     if (document_out) *document_out = 0;
@@ -1146,7 +1149,7 @@ rxvm_channel_status rxvm_channel_encode_process_completion(
     if (completion.result_node && completion.result_node_length) {
         status = rxcv_buffer_provider_node(
                 &payload, completion.result_node,
-                completion.result_node_length, &flags);
+                completion.result_node_length, 2u, &flags, &members);
         if (status != RXVM_CHANNEL_OK) {
             free(payload.data);
             return status;
@@ -1167,6 +1170,11 @@ rxvm_channel_status rxvm_channel_encode_process_completion(
         !rxcv_buffer_node(&document, RXCV_TAG_RECORD,
                           payload.data, payload.length)) {
         goto out_of_memory;
+    }
+    if (document.length > RXVM_CHANNEL_MAX_DOCUMENT) {
+        free(payload.data);
+        free(document.data);
+        return RXVM_CHANNEL_PROVIDER_FAILURE;
     }
     free(payload.data);
     *document_out = document.data;
@@ -1224,17 +1232,21 @@ static rxvm_channel_status rxcv_buffer_provider_node(
         rxcv_buffer *buffer,
         const unsigned char *data,
         size_t length,
-        uint16_t *document_flags) {
+        unsigned int depth,
+        uint16_t *document_flags,
+        uint64_t *document_members) {
     uint16_t flags = 0u;
-    uint64_t members = 0u;
+    uint64_t local_members = document_members ? *document_members : 0u;
     size_t consumed = 0u;
-    if (!data || !length ||
-        !rxcv_validate_node(data, length, 0u, &flags, &members, &consumed) ||
+    if (!data || !length || length > RXVM_CHANNEL_MAX_DOCUMENT ||
+        !rxcv_validate_node(data, length, depth, &flags, &local_members,
+                            &consumed) ||
         consumed != length) return RXVM_CHANNEL_PROVIDER_FAILURE;
     if (!rxcv_buffer_append(buffer, data, length)) {
         return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
     }
     if (document_flags) *document_flags |= flags;
+    if (document_members) *document_members = local_members;
     return RXVM_CHANNEL_OK;
 }
 
@@ -1249,6 +1261,7 @@ static rxvm_channel_status rxcv_encode_completion(
     size_t message_length;
     unsigned char document_header[16];
     uint16_t document_flags = 0u;
+    uint64_t document_members = 8u;
     rxvm_channel_status node_status;
 
     memset(&payload, 0, sizeof(payload));
@@ -1272,7 +1285,8 @@ static rxvm_channel_status rxcv_encode_completion(
     if (completion->details_node && completion->details_node_length) {
         node_status = rxcv_buffer_provider_node(
                 &payload, completion->details_node,
-                completion->details_node_length, &document_flags);
+                completion->details_node_length, 2u, &document_flags,
+                &document_members);
         if (node_status != RXVM_CHANNEL_OK) {
             free(payload.data);
             return node_status;
@@ -1291,7 +1305,8 @@ static rxvm_channel_status rxcv_encode_completion(
     if (completion->result_node && completion->result_node_length) {
         node_status = rxcv_buffer_provider_node(
                 &payload, completion->result_node,
-                completion->result_node_length, &document_flags);
+                completion->result_node_length, 2u, &document_flags,
+                &document_members);
         if (node_status != RXVM_CHANNEL_OK) {
             free(payload.data);
             return node_status;
@@ -1319,6 +1334,11 @@ static rxvm_channel_status rxcv_encode_completion(
         !rxcv_buffer_node(&document, RXCV_TAG_RECORD,
                           payload.data, payload.length)) {
         goto out_of_memory;
+    }
+    if (document.length > RXVM_CHANNEL_MAX_DOCUMENT) {
+        free(payload.data);
+        free(document.data);
+        return RXVM_CHANNEL_PROVIDER_FAILURE;
     }
     free(payload.data);
     output->data = document.data;

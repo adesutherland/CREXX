@@ -796,6 +796,7 @@ crexx_label_concurrency_tests(SP01
         rxpa_legacy_transition_quiescence)
 crexx_label_concurrency_tests(SP02 rxvmchannel_provider_registry)
 crexx_label_concurrency_tests(SP03
+        rxvmchannel_provider_registry
         rxvmbyteendpoint_substrate
         rxvmchannel_byte_provider)
 crexx_label_concurrency_tests(SP04

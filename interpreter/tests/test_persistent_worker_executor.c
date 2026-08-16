@@ -24,6 +24,8 @@ int e5_native_return_entered(void);
 
 #include "rxvm.h"
 #include "rxvmexecutor.h"
+#include "rxvmintp.h"
+#include "rxvmworker.h"
 
 static int failures;
 
@@ -104,6 +106,74 @@ static void destroy_terminal(rxvm_executor_request **request) {
     CHECK(rxvm_executor_request_destroy(*request) == RXVM_EXECUTOR_OK,
           "destroy a terminal request handle");
     *request = 0;
+}
+
+static int seal_task_binding(const char *rxbin,
+                             const char *symbol,
+                             unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE]) {
+    rxvm_context *context = rxvm_create();
+    size_t index;
+    int sealed = 0;
+
+    if (!context) return 0;
+    if (!rxvm_load_file(context, (char *)rxbin) || rxvm_link(context) != 0) {
+        rxvm_destroy(context);
+        return 0;
+    }
+    for (index = 0u; index < context->num_modules; index++) {
+        module *loaded = context->modules[index];
+        const RxGraph *graph = loaded && loaded->file
+                ? loaded->file->semantic_graph : 0;
+        if (graph && rx_graph_task_binding(graph, symbol, 1u, binding)) {
+            sealed = 1;
+            break;
+        }
+    }
+    rxvm_destroy(context);
+    return sealed;
+}
+
+static void run_task_binding_cache(const char *rxbin) {
+    unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE];
+    rxvm_executor *executor = 0;
+    rxvm_executor_result create_result = RXVM_EXECUTOR_INVALID;
+    rxvm_executor_register_image argument;
+    size_t submission;
+
+    CHECK(seal_task_binding(rxbin, "e5worker.identity", binding),
+          "seal the repeated-submission task binding");
+    if (failures) return;
+    executor = rxvm_executor_create(rxbin, 1u, 4u, &create_result);
+    CHECK(executor && create_result == RXVM_EXECUTOR_OK,
+          "create one worker for task-plan cache conformance");
+    if (!executor) return;
+
+    memset(&argument, 0, sizeof(argument));
+    argument.type = RXVM_EXECUTOR_REGISTER_STRING;
+    argument.bytes = "41";
+    argument.length = 2u;
+    for (submission = 0u; submission < 3u; submission++) {
+        rxvm_executor_request *request = 0;
+        rxvm_executor_completion completion;
+        rxvm_executor_result result =
+                rxvm_executor_submit_task_binding_registers_result(
+                        executor, 0u, binding, 0u, 0, 1u, &argument,
+                        RXVM_EXECUTOR_REGISTER_INTEGER, &request);
+        CHECK(result == RXVM_EXECUTOR_OK && request,
+              "accept a sealed task through the cache path");
+        if (!request) continue;
+        CHECK(rxvm_executor_request_wait_completion(request, &completion) ==
+                      RXVM_EXECUTOR_REQUEST_COMPLETED &&
+                      completion.result.type == RXVM_EXECUTOR_REGISTER_INTEGER &&
+                      completion.result.integer == 41,
+              "return the exact typed result through the cache path");
+        CHECK(rxvm_executor_request_destroy(request) == RXVM_EXECUTOR_OK,
+              "destroy a cached-task terminal request");
+        CHECK(rxvm_executor_task_plan_cache_entry_count(executor, 0u) == 1u,
+              "reuse one validated task plan for repeated identical submissions");
+    }
+    CHECK(rxvm_executor_destroy(executor) == 0u,
+          "cached task-plan worker tears down without leaks");
 }
 
 static void run_affinity_and_isolation(const char *rxbin) {
@@ -1014,6 +1084,7 @@ int main(int argc, char **argv) {
     run_affinity_and_isolation(argv[1]);
     run_backpressure_copy_and_drain(argv[1]);
     run_industrial_envelope_and_lifecycle(argv[1]);
+    run_task_binding_cache(argv[1]);
     if (failures) {
         fprintf(stderr, "E5_PERSISTENT_WORKERS result=FAIL failures=%d\n",
                 failures);

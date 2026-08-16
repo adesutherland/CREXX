@@ -39,18 +39,20 @@ does not compete with the project ordering in `docs/ROADMAP.md`.
 
 | ID | Solution point | Required review | Status |
 | --- | --- | --- | --- |
-| SP-01 | worker and VM ownership | execution state, allocator, RXPA policy, cancellation delivery and teardown | pending |
-| SP-02 | channel machine contract | RXAS/RXBIN feature, opcodes, effects/signals, malformed images and both VM dispatches | pending |
-| SP-03 | values, transfer and identity | canonical RXCV, bounds, receiver reconstruction, references, transfer buffers and sealed bindings | pending |
-| SP-04 | providers, endpoints and redirects | local/process pools, crash replacement, byte endpoints, child processes and resource close ordering | pending |
-| SP-05 | Level B control surface | pools, scopes, tasks, completions, channels, taskwork/context and explicit unsupported contracts | pending |
-| SP-06 | Level G compiler surface | gating, lowering, recursion, short-circuiting, structured lifetime, imports and toolchain execution | pending |
-| SP-07 | HTTP client, server and LLM | shared core, socket ownership, parsing/codec bounds, TLS, handler failure and provider integration | pending |
-| SP-08 | cross-cutting failure and lifecycle | exactly one terminal completion, cancel/deadline/crash races, backpressure, no leak or hang | pending |
-| SP-09 | build, installation and documentation | clean dependencies, installed linked images, packages, examples and stated limitations | pending |
+| SP-01 | worker and VM ownership | execution state, allocator, RXPA policy, cancellation delivery and teardown | PASS |
+| SP-02 | channel machine contract | RXAS/RXBIN feature, opcodes, effects/signals, malformed images and both VM dispatches | PASS |
+| SP-03 | values, transfer and identity | canonical RXCV, bounds, receiver reconstruction, references, transfer buffers and sealed bindings | FIXED |
+| SP-04 | providers, endpoints and redirects | local/process pools, crash replacement, byte endpoints, child processes and resource close ordering | PASS |
+| SP-05 | Level B control surface | pools, scopes, tasks, completions, channels, taskwork/context and explicit unsupported contracts | PASS |
+| SP-06 | Level G compiler surface | gating, lowering, recursion, short-circuiting, structured lifetime, imports and toolchain execution | PASS |
+| SP-07 | HTTP client, server and LLM | shared core, socket ownership, parsing/codec bounds, TLS, handler failure and provider integration | PASS |
+| SP-08 | cross-cutting failure and lifecycle | exactly one terminal completion, cancel/deadline/crash races, backpressure, no leak or hang | FIXED |
+| SP-09 | build, installation and documentation | clean dependencies, installed linked images, packages, examples and stated limitations | PASS |
 
 Each row closes only with a `PASS`, `FIXED` or `DEFERRED` disposition naming
 source reviewed, executable tests, commands/results and residual risk.
+The complete dispositions and repair record are in
+[`SOLUTION-REVIEW.md`](SOLUTION-REVIEW.md).
 
 ## QA-A gap closure
 
@@ -92,6 +94,13 @@ CTest metadata reported zero manifest tests without a timeout and zero without
 the `FAIL:`/`BAD:` diagnostic sentinel. A generated-command audit found no
 direct shell, `/tmp`, Unix file-command or `.so` dependency in the labelled
 test commands.
+
+After the SP-01 through SP-09 source review and its two repairs, the maintained
+entry point completed a 1,079-step dependency rebuild and again passed 180/180
+(84.72 seconds CTest time). The solution-point subsets were SP-01
+41/41, SP-02 18/18, SP-03 11/11, SP-04 24/24, SP-05 8/8, SP-06 52/52, SP-07
+39/39, SP-08 49/49 and SP-09 19/19; overlaps are deliberately de-duplicated by
+the umbrella label.
 
 ## Deferred feature proposals
 

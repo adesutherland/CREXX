@@ -233,6 +233,13 @@ void rxvm_executor_statistics_get(
         rxvm_executor *executor,
         rxvm_executor_statistics *statistics_out);
 
+/* Private test/diagnostic observation. Call only while the selected worker is
+ * quiescent; the returned count is the number of valid resolved task plans in
+ * that worker's fixed-size cache. This adds no work to the submission path. */
+size_t rxvm_executor_task_plan_cache_entry_count(
+        const rxvm_executor *executor,
+        size_t worker_affinity);
+
 /* Private E5 observation surface: "native", "sparse-owner" or "none". */
 const char *rxvm_executor_doorbell_backend_name(
         const rxvm_executor *executor);

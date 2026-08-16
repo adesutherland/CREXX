@@ -2783,6 +2783,24 @@ void rxvm_executor_statistics_get(
     executor_mutex_unlock(&executor->statistics_mutex);
 }
 
+size_t rxvm_executor_task_plan_cache_entry_count(
+        const rxvm_executor *executor,
+        size_t worker_affinity) {
+    const rxvm_executor_worker *worker;
+    size_t set;
+    size_t way;
+    size_t count = 0u;
+
+    if (!executor || worker_affinity >= executor->worker_count) return 0u;
+    worker = &executor->workers[worker_affinity];
+    for (set = 0u; set < RXVM_TASK_PLAN_CACHE_SETS; set++) {
+        for (way = 0u; way < RXVM_TASK_PLAN_CACHE_WAYS; way++) {
+            if (worker->task_plans[set][way].valid) count++;
+        }
+    }
+    return count;
+}
+
 const char *rxvm_executor_doorbell_backend_name(
         const rxvm_executor *executor) {
     if (!executor) return "none";

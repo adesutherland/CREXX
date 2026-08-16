@@ -1,7 +1,7 @@
 # cREXX concurrency implementation status
 
 Status date: 2026-08-16
-Source baseline: `2212cf427`
+Source baseline: the commit containing this document
 
 This is the source-to-documentation truth matrix for the concurrency surface on
 `develop`. It prevents a declaration, historical plan or passing test from
@@ -75,7 +75,7 @@ behavior.
 | Provider type `3`: open host | Reserved | No interoperable protocol or public provider exists. |
 | Provider type `4`: byte endpoint | Implemented and directly tested | `interpreter/tests/test_rxvmchannel_byte.c` and class tests cover bounded endpoint behavior and reference capabilities. |
 | Provider type `5`: child process | Implemented and directly tested locally | Child-process I/O redirects are built from provider references and endpoints rather than a separate redirect opcode family. Cross-platform publication still depends on CONC-11. |
-| Sealed task bindings and validation cache | Implemented and directly tested | The 80-byte RXTB binding identifies the resolved callable and detects a stale or mismatched linked shape before dispatch. Cache tests preserve one full validation per image/target and fast subsequent submissions. It is integrity metadata, not encryption. |
+| Sealed task bindings and validation cache | Implemented and directly tested | The 80-byte RXTB binding identifies the resolved callable and detects a stale or mismatched linked shape before dispatch. Direct executor tests prove that repeated identical submissions on one worker retain and reuse one validated plan; the cache key also includes the requested-result shape. It is integrity metadata, not encryption. |
 
 ## Concurrent HTTP surface
 

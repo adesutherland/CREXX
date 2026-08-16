@@ -6,9 +6,10 @@ RXVM providers fit together. It is written for maintainers and AI agents; the
 programming and language books provide the user-facing teaching and formal
 syntax.
 
-Current status: the surface described here is implemented experimentally on
-`develop` and has local Mac qualification. Portable Linux/Windows conformance,
-package proof and an explicit release-publication decision are still required.
+Current status: the surface described here is implemented as an initial
+surface on `develop` and has local Mac qualification. Portable Linux/Windows
+conformance, package proof and an explicit release-publication decision are
+still required.
 Do not describe it as released, portable or stable without checking release
 tags, `docs/releases/` and the live
 [`concurrency/WORKLIST.md`](../../concurrency/WORKLIST.md).
