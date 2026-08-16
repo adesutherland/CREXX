@@ -142,7 +142,7 @@ defined in
 | QA-B: Mac closeout | active | Run focused Debug/Release, both applicable VM modes, optimized/unoptimized toolchain paths, sanitizer, stress, broad regression and the governed performance comparison. | Correctness, sanitizer, stress, install and package proof pass. The retained performance run is diagnostic because the host was on battery; replaying its exact manifests on quiet AC power is the remaining item. |
 | QA-C: Linux qualification | ready, not run | Build and run the frozen matrix plus install/package smoke tests on the supported Linux host. | Linux results are complete; defects have been repaired on Mac and replayed, not developed interactively on the slow host. |
 | QA-D: Windows qualification | ready, not run | Run the same frozen matrix and package checks on the supported Windows toolchain and TLS/process backend. | Windows results are complete under the same defect-return discipline. |
-| QA-E: publication decision | selected: publish as initial | Reconcile packages, release notes, compatibility boundary and residual risks. | Adrian selected publication as **initial** on 2026-08-16. GitHub Actions is the first portable signal; native Linux and Windows qualification follows and may still identify blocking defects. |
+| QA-E: publication decision | complete: published as initial | Reconcile packages, release notes, compatibility boundary and residual risks. | Adrian selected publication as **initial** on 2026-08-16. The corrected publication commit `53b3de77a` passed Build CREXX on Windows x64, Linux x64, macOS arm64 and macOS x86_64, published the development snapshot, and passed CodeQL. Native Linux and Windows qualification follows and may still identify blocking defects. |
 
 Feature development remains frozen during this programme. Concrete services
 and `.taskscope.ask()`, provider type `3`, a public provider-plugin ABI, pool
@@ -167,7 +167,7 @@ policy.
 | REXX/SAA compatibility | #424 | Continue through the `crexxsaa` and RXPA host-integration path. Variable-pool emulation needs explicit design before new commitments. |
 | IO endpoints, process pipes, and native handles | [`ai-context/CREXX_IO_PIPE_WORKING.md`](ai-context/CREXX_IO_PIPE_WORKING.md), #491 | Bounded provider type `4` endpoints and type `5` structured child processes now underpin ADDRESS redirection and concurrent HTTP streaming. Broader `rxio.*` stream classes, reusable pipeline helpers and any public native-handle surface remain future work. |
 | Mixed Rexx/native libraries | #432 | Combining Rexx scripts and native plugin functions into one library remains an architecture direction for plugin packaging. |
-| Threads and subtasks | #491, [`concurrency/WORKLIST.md`](../concurrency/WORKLIST.md) | Local-thread and isolated-process structured tasks form the initial receiver-owned transfer surface with no shared writable VM state. Portable qualification and publication remain open; durable single-owner services and open-host/provider extension are separately approved later work. |
+| Threads and subtasks | #491, [`concurrency/WORKLIST.md`](../concurrency/WORKLIST.md) | Local-thread and isolated-process structured tasks form the published initial receiver-owned transfer surface with no shared writable VM state. GitHub Actions qualification is green; native-host qualification remains open. Durable single-owner services and open-host/provider extension are separately approved later work. |
 
 ## Closed As Already Handled Or Stale
 

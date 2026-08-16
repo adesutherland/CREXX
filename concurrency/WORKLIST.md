@@ -17,14 +17,14 @@ stages and performance evidence are linked rather than reproduced here.
 | CONC-01 | execution-owned VM state and worker lifecycle | complete | locally qualified; native-carrier evidence exists on Mac, Linux and Windows | retain as foundation; portable public surface is tracked by CONC-11 |
 | CONC-02 | RXAS/RXBIN channel contract | complete | both VMs locally qualified | maintain opcode, feature, effect, signal and malformed-image conformance |
 | CONC-03 | canonical `ChannelValue` and typed transfer | complete | locally qualified and documented | retain canonical validation and receiver-ownership coverage |
-| CONC-04 | local-thread and isolated-process task providers | complete | Mac qualified | complete Linux/Windows public conformance under CONC-11 |
+| CONC-04 | local-thread and isolated-process task providers | complete | Mac qualified; four-platform Actions matrix green | complete native Linux/Windows public conformance under CONC-11 |
 | CONC-05 | Level B pool/scope/task/channel/endpoint classes | implemented | locally qualified with RexxDoc, generated API reference and direct task-context endpoint coverage | retain explicit unsupported-operation and endpoint reconstruction assertions |
 | CONC-06 | Level G task and `DO PARALLEL` language surface | complete | locally qualified, Level G-gated and documented with checked examples | retain positive/negative compiler and runtime coverage |
 | CONC-07 | reusable byte endpoints, child processes and ADDRESS redirects | complete | locally qualified | retain cross-platform endpoint/process regression coverage |
-| CONC-08 | bounded concurrent HTTP/TLS client | complete | Mac qualified and documented; initial publication pending | complete portable conformance under CONC-11 |
+| CONC-08 | bounded concurrent HTTP/TLS client | complete | Mac qualified and documented; published as initial with four-platform Actions green | complete native-host conformance under CONC-11 |
 | CONC-09 | sealed task-binding validation cache | complete | locally qualified and performance-guard clean | retain cache miss/hit and ordinary single-thread regression coverage |
-| CONC-10 | enduring documentation | complete | locally checked with generated API, examples, links and broad Debug regression | maintain references with implementation; portable publication remains CONC-11 |
-| CONC-11 | solution-point QA, portable conformance and initial publication | active | initial publication is authorized; QA-A and Mac correctness/sanitizer/install closeout pass, while GitHub Actions, the Mac AC replay and native Linux/Windows executions remain | publish and reconcile CI, then complete QA-B through QA-D in `QA-CLOSEOUT.md` |
+| CONC-10 | enduring documentation | complete | locally checked with generated API, examples, links and broad Debug regression | maintain references with implementation; native-host qualification remains CONC-11 |
+| CONC-11 | solution-point QA, portable conformance and initial publication | active | initial publication and four-platform Actions/CodeQL pass; QA-A and Mac correctness/sanitizer/install closeout pass, while the Mac AC replay and native Linux/Windows executions remain | complete QA-B through QA-D in `QA-CLOSEOUT.md` |
 | CONC-12 | services, actors, events and projections | post-Release-1 proposal | `.taskscope.ask` is unsupported | require separate design approval after concurrency closure |
 | CONC-13 | open-host and extension providers | post-Release-1 proposal | provider type `3` and public plugin ABI unavailable | require separate design approval after concurrency closure |
 | CONC-14 | pool saturation telemetry | post-Release-1 proposal | `queued()` and `running()` are unsupported | require separate semantics and portability approval |

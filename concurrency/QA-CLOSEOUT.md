@@ -33,13 +33,25 @@ does not compete with the project ordering in `docs/ROADMAP.md`.
 | QA-B independent Mac closeout | active | correctness, sanitizer, stress, Release, install and portable-package proof pass; quiet AC performance replay remains |
 | QA-C Linux qualification | ready, not run | clean frozen build, conformance matrix and install/package proof retained |
 | QA-D Windows qualification | ready, not run | clean frozen build, conformance matrix and install/package proof retained |
-| QA-E publication decision | selected: publish as initial | Adrian authorized initial publication before the native Linux/Windows runs; CI and later host evidence can still block or qualify it |
+| QA-E publication decision | complete: published as initial | corrected commit `53b3de77a` passed the four-platform Build CREXX matrix, development-snapshot publication and CodeQL; later native-host evidence can still block or qualify it |
 
 On 2026-08-16 Adrian selected publication as **initial**, with GitHub Actions
 as the first portable validation and native Linux and Windows qualification to
 follow. This changes the execution order, not the evidence requirements:
 failures receive bounded tactical repair and replay, and the surface is not
 called stable.
+
+Initial publication completed on corrected commit
+`53b3de77a6d19d308d666901bd8a7aa144af46b1`. The first Actions replay found a
+portable generated-CMake regex escape defect and a Windows replay then exposed
+a nested child-process environment isolation race plus a fixed-port socket test
+hang. Commits `9de8924b8` and `53b3de77a` repaired those defects on Mac before
+the affected workflows were replayed. Build CREXX run `31974120536` then passed
+all 2,196 Windows tests, including `e2_active_context_isolation` and both
+`ts_rxsocket` compiler modes, as well as the Linux and two macOS jobs and the
+development-snapshot publication step. CodeQL run `31974120525` also passed.
+This is CI portability evidence, not a substitute for the scripted QA-C and
+QA-D native-host evidence contract.
 
 ## Solution-point ledger
 

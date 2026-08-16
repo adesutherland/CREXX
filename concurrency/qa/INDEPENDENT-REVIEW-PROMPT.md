@@ -1,8 +1,8 @@
 # Initial concurrency independent-review prompt
 
 Use the text below to start the fresh-agent review and remaining qualification.
-It is intentionally evidence-led and does not authorize publication or new
-concurrency design.
+It is intentionally evidence-led and does not authorize a second publication
+action or new concurrency design.
 
 ---
 
@@ -10,7 +10,10 @@ Work in the CREXX repository on `develop`. Review and qualify the frozen
 **initial concurrency** implementation; use no other maturity label.
 Your outcome is an independent evidence verdict for SP-01 through SP-09 and
 QA-B through QA-D after publication. Adrian has already selected publication
-as **initial**; passing tests do not make the surface stable.
+as **initial**. Corrected commit `53b3de77a` passed the four-platform Build
+CREXX workflow, development-snapshot publication and CodeQL; that CI signal
+does not replace the native QA-C/QA-D runners, and passing tests do not make
+the surface stable.
 
 First read the repository `AGENTS.md`, then these authorities in order:
 
