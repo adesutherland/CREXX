@@ -140,267 +140,6 @@
   \end{Members}
 \end{CrexxClass}
 
-\begin{CrexxClass}{\textit{.httpclient}}{rxhttp}
-
-  \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{\textit{.httpclient}}
-  \end{Hierarchy}
-
-  \begin{Members}
-
-    \Factory
-      {public}
-      {httpclient}
-      {\Params{
-        \ParamLine{\Param{host}{"127.0.0.1"}}
-        \ParamLine{\Param{port}{80}}
-        \ParamLine{\Param{timeout}{30000}}
-        \LastParamLine{\Param{tls}{0}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {send}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \LastParamLine{\Param{contentType}{""}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {sendWithHeaders}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \ParamLine{\Param{contentType}{""}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {post}
-      {\Params{
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{.string}}
-        \LastParamLine{\Param{contentType}{"application/octet-stream"}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {postWithHeaders}
-      {\Params{
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{.string}}
-        \ParamLine{\Param{contentType}{"application/octet-stream"}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {buildRequest}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \LastParamLine{\Param{contentType}{""}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {buildRequestWithHeaders}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \ParamLine{\Param{contentType}{""}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {extractBody}
-      {(\Param{response}{.string})}
-
-    \Method
-      {public}
-      {.string}
-      {header}
-      {(\Param{name}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {status}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {httpStatus}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {error}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {lastHttp}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {lastBody}
-      {()}
-
-  \end{Members}
-\end{CrexxClass}
-
-\begin{CrexxClass}{.http}{rxhttp}
-
-  \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .http \hfill\textit{.httpclient}}
-  \end{Hierarchy}
-
-  \begin{Members}
-
-    \Factory
-      {public}
-      {http}
-      {\Params{
-        \ParamLine{\Param{host}{"127.0.0.1"}}
-        \ParamLine{\Param{port}{80}}
-        \ParamLine{\Param{timeout}{30000}}
-        \LastParamLine{\Param{tls}{0}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {send}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \LastParamLine{\Param{contentType}{""}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {sendWithHeaders}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \ParamLine{\Param{contentType}{""}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {post}
-      {\Params{
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{.string}}
-        \LastParamLine{\Param{contentType}{"application/octet-stream"}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {postWithHeaders}
-      {\Params{
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{.string}}
-        \ParamLine{\Param{contentType}{"application/octet-stream"}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {buildRequest}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \LastParamLine{\Param{contentType}{""}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {buildRequestWithHeaders}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \ParamLine{\Param{contentType}{""}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {extractBody}
-      {(\Param{response}{.string})}
-
-    \Method
-      {public}
-      {.string}
-      {header}
-      {(\Param{name}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {status}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {httpStatus}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {error}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {lastHttp}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {lastBody}
-      {()}
-
-  \end{Members}
-\end{CrexxClass}
-
 \begin{CrexxClass}{.jsondocument}{rxjson}
 
   \begin{Hierarchy}
@@ -933,6 +672,24 @@
 
     \Factory
       {public}
+      {text}
+      {\Params{
+        \ParamLine{\Param{status}{.int}}
+        \ParamLine{\Param{body}{.string}}
+        \LastParamLine{\Param{?headers}{.httpheaders}}
+      }}
+
+    \Factory
+      {public}
+      {binary}
+      {\Params{
+        \ParamLine{\Param{status}{.int}}
+        \ParamLine{\Param{body}{.binary}}
+        \LastParamLine{\Param{?headers}{.httpheaders}}
+      }}
+
+    \Factory
+      {public}
       {from\_wire}
       {(\Param{wire}{.binary})}
 
@@ -987,6 +744,18 @@
 
     \Method
       {public}
+      {.binary}
+      {body\_bytes}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {raw}
+      {()}
+
+    \Method
+      {public}
       {.boolean}
       {streaming}
       {()}
@@ -1002,6 +771,12 @@
       {.string}
       {header}
       {(\Param{name}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {header\_wire}
+      {()}
 
     \Method
       {public}
@@ -1064,6 +839,26 @@
     \Method
       {public}
       {.httpresponse}
+      {request}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{.binary}}
+        \LastParamLine{\Param{headers}{.httpheaders}}
+      }}
+
+    \Method
+      {public}
+      {.httpresponse}
+      {get}
+      {\Params{
+        \ParamLine{\Param{path}{.string}}
+        \LastParamLine{\Param{headers}{.httpheaders}}
+      }}
+
+    \Method
+      {public}
+      {.httpresponse}
       {post}
       {\Params{
         \ParamLine{\Param{path}{.string}}
@@ -1086,6 +881,208 @@
       {public}
       {.void}
       {close}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.httprequest}{rxfnsg}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .httprequest}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {inbound}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{target}{.string}}
+        \ParamLine{\Param{headers}{.string}}
+        \ParamLine{\Param{body}{.binary}}
+        \LastParamLine{\Param{remote}{.string}}
+      }}
+
+    \Factory
+      {public}
+      {routed}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{target}{.string}}
+        \ParamLine{\Param{headers}{.string}}
+        \ParamLine{\Param{body}{.binary}}
+        \ParamLine{\Param{remote}{.string}}
+        \LastParamLine{\Param{reply\_reference}{.binary}}
+      }}
+
+    \Factory
+      {public}
+      {from\_channel}
+      {(\Param{encoded}{.channelvalue})}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {to\_channel}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {verb}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {target}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {body}
+      {()}
+
+    \Method
+      {public}
+      {.binary}
+      {body\_bytes}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {header}
+      {(\Param{name}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {headers}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {remote}
+      {()}
+
+    \Method
+      {public}
+      {.boolean}
+      {routed\_reply}
+      {()}
+
+    \Method
+      {public}
+      {.binary}
+      {reply\_reference}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.httpservice}}{rxfnsg}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.httpservice}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.httpresponse}
+      {handle}
+      {\Params{
+        \ParamLine{\Param{request}{.httprequest}}
+        \LastParamLine{\Param{context}{.taskcontext}}
+      }}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {dispatch}
+      {\Params{
+        \ParamLine{\Param{encoded}{.channelvalue}}
+        \LastParamLine{\Param{context}{.taskcontext}}
+      }}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.httpserver}{rxfnsg}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .httpserver}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {local}
+      {\Params{
+        \ParamLine{\Param{host}{.string}}
+        \ParamLine{\Param{port}{.int}}
+        \ParamLine{\Param{workers}{4}}
+        \ParamLine{\Param{admission}{64}}
+        \ParamLine{\Param{connections}{64}}
+        \ParamLine{\Param{maximum\_header\_bytes}{65536}}
+        \ParamLine{\Param{maximum\_headers}{100}}
+        \ParamLine{\Param{maximum\_body\_bytes}{8388608}}
+        \ParamLine{\Param{handler\_timeout}{30000}}
+        \LastParamLine{\Param{request\_timeout}{30000}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {serve}
+      {\Params{
+        \ParamLine{\Param{target}{.tasktarget}}
+        \LastParamLine{\Param{maximum\_requests}{-1}}
+      }}
+
+    \Method
+      {public}
+      {.void}
+      {close}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {host}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {port}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {served}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {scans}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {idle\_scans}
       {()}
 
   \end{Members}

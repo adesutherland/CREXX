@@ -4872,7 +4872,23 @@ add_custom_command(
         COMMENT "Compiling address_llm_host.crexx ..."
 )
 
-add_custom_target(address_llm_fixture_bin ALL DEPENDS address_llm_provider.rxbin address_llm_host.rxbin)
+# The Level G providers now own bounded task/endpoint resources. Link this
+# integration fixture through the normal library/classlib/rxfnsg toolchain so
+# interface providers and teardown match deployed images.
+add_custom_command(
+        OUTPUT address_llm_linked.rxbin
+        COMMAND $<TARGET_FILE:rxlink> -o address_llm_linked
+                address_llm_provider.rxbin
+                address_llm_host.rxbin
+                ${CMAKE_BINARY_DIR}/bin/library.rxbin
+                ${CMAKE_BINARY_DIR}/bin/classlib.rxbin
+                ${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin
+        DEPENDS rxlink address_llm_provider.rxbin address_llm_host.rxbin library classlib rxfnsg
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Linking Level G LLM ADDRESS fixture with its concurrency classes ..."
+)
+
+add_custom_target(address_llm_fixture_bin ALL DEPENDS address_llm_linked.rxbin)
 
 add_custom_command(
         OUTPUT native_kv_address_demo.rxbin
@@ -5186,10 +5202,7 @@ add_test(NAME address_cms_demo COMMAND
 set_tests_properties(address_cms_demo PROPERTIES LABELS "compiler;stage3")
 add_test(NAME address_llm_provider COMMAND
         ${CREXX_RXVM_EXECUTABLE}
-        ${CMAKE_BINARY_DIR}/bin/library.rxbin
-        ${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/address_llm_provider.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/address_llm_host.rxbin)
+        ${CMAKE_CURRENT_BINARY_DIR}/address_llm_linked.rxbin)
 set_tests_properties(address_llm_provider PROPERTIES LABELS "compiler;stage3")
 set_tests_properties(address_llm_provider PROPERTIES
         PASS_REGULAR_EXPRESSION "PASS: address llm host"

@@ -2,7 +2,7 @@
 
 Status date: 2026-08-16  
 Branch: `develop`  
-Implementation baseline: `183a730dc`
+Implementation baseline: `2212cf427`
 
 This is the sole live worklist for cREXX tasks, channels, worker/process
 providers, reusable byte endpoints, concurrent HTTP and future service/host
@@ -20,7 +20,7 @@ not reproduced as the current control model.
 | CONC-05 | Level B pool/scope/task/channel/endpoint classes | implemented | locally qualified with RexxDoc and generated API reference | keep unsupported operations explicit and extend direct endpoint reconstruction coverage |
 | CONC-06 | Level G task and `DO PARALLEL` language surface | complete | locally qualified, Level G-gated and documented with checked examples | retain positive/negative compiler and runtime coverage |
 | CONC-07 | reusable byte endpoints, child processes and ADDRESS redirects | complete | locally qualified | retain cross-platform endpoint/process regression coverage |
-| CONC-08 | bounded concurrent HTTP/TLS | complete | Mac qualified and documented; experimental publication pending | complete portable conformance and resolve HTTP architecture under CONC-16 |
+| CONC-08 | bounded concurrent HTTP/TLS client | complete | Mac qualified and documented; experimental publication pending | complete portable conformance under CONC-11 |
 | CONC-09 | sealed task-binding validation cache | complete | locally qualified and performance-guard clean | retain cache miss/hit and ordinary single-thread regression coverage |
 | CONC-10 | enduring documentation | complete | locally checked with generated API, examples, links and broad Debug regression | maintain references with implementation; portable publication remains CONC-11 |
 | CONC-11 | portable conformance and experimental publication | pending | Mac complete; public local/process/HTTP matrix incomplete | qualify Linux and Windows, then make the release/package decision |
@@ -28,7 +28,7 @@ not reproduced as the current control model.
 | CONC-13 | open-host and extension providers | reserved | provider type `3` and public plugin ABI unavailable | select protocol from interoperability evidence and prove a non-Rexx actor |
 | CONC-14 | pool saturation telemetry | reserved | `queued()` and `running()` are unsupported | specify snapshot semantics and provider portability before implementation |
 | CONC-15 | stabilization and transfer tuning | active as evidence-led follow-up | binding cache complete; wider payload/copy work open | route timing through performance governance without moving product ownership there |
-| CONC-16 | HTTP implementation rationalisation and server | selected; implementation pending | one private Level B HTTP core and one public Level G client/server surface approved | implement and qualify the client consolidation and bounded clear-text server without changing concurrency semantics |
+| CONC-16 | HTTP implementation rationalisation and server | complete | one private Level B core and one public Level G client/server are Mac-qualified; Release guard clean | retain the architecture and take portable/server follow-ups through CONC-11 and new approved work |
 
 The evidence behind each status is reconciled in
 [`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md). A declaration by itself
@@ -59,6 +59,11 @@ does not count as an implemented or supported capability.
   gzip/zlib/DEFLATE decoding.
 - [x] The concurrent generation/embedding fixture matches the required
   `crexx-rag` request, authentication, idempotency and response shapes.
+- [x] A bounded clear-text HTTP/1.1 server keeps sockets on its controller and
+  dispatches complete request records to `.httpservice .taskwork` targets.
+- [x] The Level G client, server and LLM providers share one private
+  binary-oriented `_rxhttpcore`; no public Level B HTTP convenience client
+  remains.
 
 ## Deliberately unsupported today
 
@@ -71,8 +76,8 @@ does not count as an implemented or supported capability.
 - [ ] public thread IDs, worker affinity or shared mutable VM values.
 
 `.taskcontext.endpoint` has an implementation that reconstructs a byte endpoint
-from a provider reference. CONC-10 must verify its executable coverage before
-the enduring reference marks it supported.
+from a provider reference, but remains provisional pending a direct public
+contract test.
 
 ## CONC-10 documentation plan
 
@@ -84,8 +89,8 @@ the enduring reference marks it supported.
 - [x] Publish a formal language-reference chapter with positive and negative
   syntax examples.
 - [x] Publish the Level B concurrency class guide and complete RexxDoc coverage.
-- [x] Publish the current concurrent HTTP guide, including streaming and
-  compression boundaries.
+- [x] Publish the current concurrent HTTP client/server guide, including
+  handler examples, streaming and compression boundaries.
 - [x] Add all chapters to `docs/index.md` and their book structures.
 - [x] Replace internal development-stage terminology in enduring documents.
 - [x] Reconcile the Level G catalogue, project roadmap and beta release notes
@@ -146,14 +151,7 @@ in CONC-11.
 
 ## CONC-16 HTTP architecture decision
 
-The repository currently has:
-
-- synchronous Level B `.rxhttp..httpclient`, used by the existing Level G LLM
-  provider classes; and
-- concurrent Level G `.rxfnsg..httpclient`, implemented independently over
-  tasks, endpoints and `rxsocket`.
-
-The selected architecture is:
+The implemented architecture is:
 
 - [x] retain one private, binary-oriented Level B request/response framing,
   parsing and codec core;
@@ -171,15 +169,55 @@ The selected architecture is:
   language does not provide interface inheritance;
 - [x] leave `.taskscope.ask`, `.serviceref`, compiler, RXAS/RXBIN, RXVM and the
   socket instruction/API surface unchanged; and
-- [ ] require equivalent protocol, TLS-client, malformed-message, client/server
+- [x] require equivalent protocol, TLS-client, malformed-message, client/server
   integration, both-VM, optimizer, sanitizer and governed Release evidence.
 
 The initial server is bounded, controller-owned and buffered. It supports
-clear-text HTTP/1.1 only. Server TLS, HTTP/2, WebSockets, detached/background
-serving and server response streaming require later proposals. Without a
+clear-text HTTP/1.1 plus limited HTTP/1.0 compatibility. Server TLS, HTTP/2,
+WebSockets, detached/background serving and server request/response streaming
+require later proposals. Without a
 multi-socket readiness primitive, the first server uses bounded nonblocking
 scans plus short blocking waits; idle CPU and response latency are explicit
 acceptance evidence rather than assumed properties.
+
+### CONC-16 closeout evidence
+
+The client/LLM consolidation is committed at `229b3e8b4`; the bounded server
+and protocol extensions are committed at `2212cf427`. Focused Debug and Release
+HTTP/client/server/LLM matrices each passed 35/35. The public server and its
+negative handler fixture each passed on `rxbvm` and `rxtvm`, optimized and
+unoptimized, under Apple ASan; LeakSanitizer is unavailable on that host.
+
+The mandatory profiling-off Release comparison found no single-thread guard
+breach. Confirmation deltas were between -0.681% and +0.306% across Sieve and
+RexxCPS on both VMs, with only the -0.681% result statistically clear and
+favourable. All 48 recorded server scenarios passed. Exact commands, raw
+samples, artifact checks and limitations are retained in
+[`2026-08-16-conc-16-http-server-first-release-verdict`](../performance/evidence/2026-08-16-conc-16-http-server-first-release-verdict/).
+
+Remaining HTTP work is not an unfinished part of CONC-16. Linux/Windows and
+package qualification belong to CONC-11. Server TLS, a readiness primitive,
+detached/background lifecycle, server request/response streaming, HTTP/2 and
+WebSockets require separately approved proposals.
+
+The enduring-documentation closeout then added the server classes to generated
+API output and checked 99 local Markdown links. Its focused Debug documentation,
+HTTP and LLM matrix passed 51/51; the final Release HTTP/LLM/ADDRESS matrix
+passed 36/36. Repeated API generation produced SHA-256
+`1c90e1ad4ae48132cf635b8aa8d80bc64fa016f8eed2503fd7d1b20ad6f7a310`;
+no TeX engine is installed on this Mac. A broad Debug run exposed that the LLM
+ADDRESS demonstrator still
+constructed transient providers without closing their new HTTP pools. The
+demonstrator now closes every provider and its integration fixture is linked
+through `rxc`, `rxas`, `rxlink` and `rxvm`; that test passes in Debug, Release
+and Apple ASan.
+
+The corrected 2,200-test Debug sweep passed 2,198 and timed out two tests under
+the concurrent generated-artifact rebuild: `ts_http_server_rxtvm_opt` at its
+90-second limit and unrelated `rxpa_signature_diagnostics` at 120 seconds.
+Serial confirmation passed them in 1.82 and 12.67 seconds respectively. No
+RXVM source changed in this slice, so these are recorded as rebuild-load
+slowdowns rather than product failures.
 
 ## Historical evidence
 

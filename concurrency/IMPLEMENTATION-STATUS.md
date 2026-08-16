@@ -1,8 +1,7 @@
 # cREXX concurrency implementation status
 
 Status date: 2026-08-16
-Source baseline: `183a730dc` plus the documentation-only concurrency control
-plane at `794b0112f`
+Source baseline: `2212cf427`
 
 This is the source-to-documentation truth matrix for the concurrency surface on
 `develop`. It prevents a declaration, historical plan or passing test from
@@ -88,7 +87,10 @@ behavior.
 | gzip, zlib and raw DEFLATE response decoding | Implemented and directly tested | `ts_http_codec.crexx` exercises bounded decode behavior and malformed/limit paths. |
 | Verified TLS | Implemented and Mac-qualified | `ts_http_tls_live.crexx` provides live verified-TLS coverage where enabled. Portable backend/package qualification remains CONC-11. |
 | `crexx-rag` generation/embedding shapes | Implemented and directly tested locally | `ts_http_crexx_rag.crexx` validates authentication, idempotency, request fields and response shapes using a loopback fixture. |
-| Synchronous `.rxhttp..httpclient` | Existing independent implementation | `lib/rxfnsb/rexx/rxhttp.crexx` remains the Level B synchronous client and is used by current LLM providers. It is not a wrapper around the concurrent client. Architecture rationalisation is CONC-16. |
+| General buffered `request`, `get` and `post` | Implemented and directly tested | The public Level G client accepts a verb, path and binary body, or the Rexx-friendly GET/POST forms. Text and binary responses use one typed `.httpresponse`. |
+| Bounded clear-text server | Implemented and directly tested; experimental | `.httpserver` owns all accepted sockets, parses complete bounded requests and submits transferable `.httprequest` records to sealed `.httpservice .taskwork` targets. `ts_http_server_*` covers both VMs and optimizer modes, parallel clients, binary bodies, pipelining boundaries, malformed framing and request deadlines. `ts_http_server_failures_*` covers raised handlers and responses outside server limits. |
+| Shared private protocol backend | Implemented and directly tested | `_rxhttpcore` is the only Level B HTTP framing/parsing/codec core. It is private and binary-oriented; it is shared by the Level G client, server and LLM surface rather than exposed as another client. |
+| Level G LLM transport | Implemented and directly tested | Ollama, OpenAI, Anthropic and Gemini use the public `.httpclient`; the former public Level B `rxhttp` convenience client has been removed. Provider behavior remains covered by `ts_llm_ollama` and `ts_llm_providers`; `address_llm_provider` links the ADDRESS environment through library/classlib/rxfnsg and proves transient provider cleanup. |
 
 ## Publication boundary
 
@@ -105,3 +107,5 @@ release decision.
 2. Add a direct unsupported-contract assertion for `.taskscope.ask()`; source
    already signals status `19`.
 3. Complete Linux and Windows qualification before public portability claims.
+4. Qualify the HTTP server beyond Mac and decide later proposals for server
+   TLS, multi-socket readiness, detached lifecycle and streaming handlers.

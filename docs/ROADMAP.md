@@ -127,7 +127,8 @@ performance programme.
 
 Current development work includes isolated local/process task execution,
 structured scopes, bounded endpoints and child-process redirection, and a
-concurrent HTTP library. Portable conformance, package proof, release
+concurrent HTTP client/server plus LLM providers over one private protocol
+backend. Portable conformance, package proof, release
 publication, a concrete single-owner service surface, and any public provider
 plugin or open-host protocol remain open. Shared writable VM state, detached
 ordinary tasks and public worker identities are not part of the model.

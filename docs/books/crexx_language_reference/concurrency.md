@@ -426,3 +426,10 @@ thread identity, affinity, locks, atomics or shared writable VM objects.
 Services and `.taskscope.ask()` are reserved for a later single-owner state
 model. Pool telemetry and cross-host providers are also not part of the current
 language surface.
+
+Library interfaces may still use the implemented task-target form. For
+example, `.httpserver.serve(task .handler())` receives a statically sealed
+`.taskwork` factory target and launches independent request tasks. That does
+not create a language service identity or make `.taskscope.ask()` available;
+the distinction is specified in the
+[HTTP client and server guide](../crexx_library_reference/concurrent_http.md).

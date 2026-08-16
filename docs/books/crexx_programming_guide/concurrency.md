@@ -368,6 +368,19 @@ body would need a blocking nested wait and is rejected in the current surface.
 Move the dependency to the controller, where cREXX can represent and join it
 without consuming a worker that waits for its own bounded pool.
 
+## HTTP uses the same task model
+
+The Level G HTTP client declares `get`, `post`, `request` and `post_stream` as
+task methods, so ordinary calls and `DO PARALLEL` use exactly the rules in this
+chapter. The HTTP server uses the explicit form: its controller submits a
+sealed `task .my_handler()` factory target for each complete request. A handler
+implements `.httpservice .taskwork`; it is stateless task work, not the future
+durable service represented by `.serviceref` and `.taskscope.ask()`.
+
+The [HTTP client and server guide](../crexx_library_reference/concurrent_http.md)
+contains a complete handler class, parallel client calls, lifecycle rules and
+links to both-VM executable fixtures.
+
 ## What not to design around yet
 
 The following names or concepts are reserved rather than usable today:

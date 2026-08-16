@@ -461,25 +461,42 @@ valid. They are not transferable resource identities. If asynchronous
 lifecycle is needed later, it belongs behind another provider using the same
 five RXAS operations.
 
-## Concurrent HTTP
+## Concurrent HTTP client and server
 
-`lib/rxfnsg/rexx/http.crexx` is a Level G concurrent HTTP library over tasks,
-endpoints and the existing owner-local socket/TLS primitives. It supplies:
+HTTP has one private protocol backend and one public surface:
 
-- bounded global/per-origin admission and reusable single-owner connections;
-- verified TLS by default;
-- validated headers and bounded metadata/body limits;
-- explicit retry, redirect, idempotency and ambiguous-outcome policy;
-- fixed and chunked request streams plus streamed responses; and
-- bounded gzip, zlib and raw DEFLATE decoding.
+- `lib/rxfnsg/rexx/httpcore.crexx` is private `_rxhttpcore`, a Level B
+  binary-oriented framing, parsing and codec module;
+- `lib/rxfnsg/rexx/http.crexx` is the public Level G client/value surface;
+- `lib/rxfnsg/rexx/httpserver.crexx` is the public Level G server/request/
+  service surface; and
+- `lib/rxfnsg/rexx/llm.crexx` uses the same `.httpclient` for local and hosted
+  providers.
 
-Only provider references and canonical values cross executions; socket
-integers remain with their connection owner.
+There is no public Level B HTTP convenience client. Do not recreate one around
+the private core: Level B owns mechanism, while Level G owns HTTP policy,
+typed values and bounded resource lifecycle.
 
-The repository also contains the independent synchronous Level B client
-`lib/rxfnsb/rexx/rxhttp.crexx`. Existing LLM providers currently use that
-client. Do not imply that one wraps the other or migrate callers as a
-documentation cleanup. The architectural decision is tracked as CONC-16.
+The client supplies bounded admission, reusable single-owner connections,
+verified TLS, validated headers, explicit retry/redirect/idempotency/ambiguity
+policy, buffered and streaming request forms, response streams and bounded
+gzip/zlib/raw-DEFLATE decoding. Only provider references and canonical values
+cross executions; socket integers remain with their connection owner.
+
+The initial server is clear-text and buffered. Its controller owns the listener
+and accepted sockets, parses complete bounded requests and submits a canonical
+`.httprequest` to a sealed `.httpservice .taskwork` target. The handler returns
+a buffered `.httpresponse` over a private byte endpoint. A service class writes
+a typed `handle(request, context)` method and an explicit `run` bridge that
+casts `self` to `.httpservice` and calls the interface default `dispatch`.
+This is a library use of tasks, not the reserved stateful-service/`ask()` model.
+
+The server bounds workers, task admission, accepted connections, header bytes,
+header count, body bytes, request-read time and handler time. It permits one
+in-flight request per connection and performs bounded nonblocking controller
+scans with a short idle wait. Server TLS, HTTP/2, WebSockets,
+detached/background lifecycle and streaming handler responses are not
+implemented.
 
 ## Deliberately absent or provisional
 
@@ -527,7 +544,7 @@ When changing this subsystem:
 | --- | --- |
 | Grammar, typing and lowering | `compiler/`, `compiler/tests/rexx_src/` |
 | Level B API and RXCV adapters | `lib/classlib/Concurrency.crexx` |
-| Concurrent HTTP | `lib/rxfnsg/rexx/http.crexx`, `lib/rxfnsg/tests_functional/` |
+| Concurrent HTTP | `lib/rxfnsg/rexx/httpcore.crexx`, `http.crexx`, `httpserver.crexx`, `lib/rxfnsg/tests_functional/` |
 | RXAS parse/metadata/validation | `assembler/`, `common/` |
 | Link-time task resealing | `linker/`, `common/` semantic graph code |
 | VM channel core/provider registry | `interpreter/rxvmchannel.c` |

@@ -55,6 +55,14 @@ The dated discussion and approval trail remains in [`history/`](history/).
     building block for child processes, HTTP and later providers.
 17. HTTP remains a Rexx library over tasks, channels, endpoints and sockets. It
     is not an RXAS instruction or a special HTTP provider type.
+18. HTTP has one private binary-oriented Level B protocol core and one public
+    Level G surface. The client, server and LLM providers share that core; a
+    second public Level B convenience client would duplicate policy and
+    framing ownership.
+19. The HTTP server controller owns listening and accepted sockets. It submits
+    only complete bounded request values to sealed `.httpservice .taskwork`
+    targets and receives buffered responses over a private byte endpoint.
+    Socket handles never cross executions.
 
 ## Deliberately absent
 

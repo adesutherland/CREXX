@@ -78,15 +78,15 @@ work:
   objects
 - `rxsocket`: VM-backed TCP sockets with optional TLS depending on build
   configuration
-- `rxhttp`: synchronous Level B HTTP client support layered on `rxsocket`
 
-These modules are intentionally modest. They provide enough transport and JSON
-support for current demos and integrations without claiming to be complete web
-frameworks. The separate `rxfnsg.http` module is the experimental Level G
-concurrent client: it provides pooled requests, policy, buffered content
-decoding and bounded response streaming. The two clients are independent today;
-see [Concurrent HTTP](../crexx_library_reference/concurrent_http.md) for their
-exact boundary.
+The private Level B `_rxhttpcore` module provides binary HTTP framing, parsing
+and codecs for higher layers; it is not a user client. User-facing HTTP belongs
+to `rxfnsg`: its experimental Level G client provides pooled task requests,
+policy, buffered content decoding and bounded response streaming, while its
+bounded server dispatches complete request values to task classes. The Level G
+LLM providers use the same client and private backend. See
+[Concurrent HTTP client and server](../crexx_library_reference/concurrent_http.md)
+for the complete surface and examples.
 
 ## ADDRESS and Trace Support
 
@@ -129,8 +129,8 @@ The product documentation lives with the runtime source:
 ## Level G Libraries
 
 `rxfnsg` contains the LLM client modules used by demos and the experimental
-concurrent HTTP implementation. Level G task/parallel syntax and the classlib
-concurrency surface are implemented and tested on the current development
+concurrent HTTP client/server implementation. Level G task/parallel syntax and
+the classlib concurrency surface are implemented and tested on the current development
 baseline, but they are not the stable Level B contract. Start with the
 [concurrent programming guide](../crexx_programming_guide/concurrency.md),
 which includes complete checked examples and explains when ordinary work stays

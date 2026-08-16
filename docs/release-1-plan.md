@@ -145,8 +145,9 @@ Should-ship items are important but have explicit fallback paths.
 2. First Level G library version
 
    The development baseline now combines the existing LLM work with
-   experimental structured concurrency and concurrent HTTP. Complete portable
-   conformance and make the publication decision; richer Unicode remains
+   experimental structured concurrency and a bounded HTTP client/server over
+   one private protocol backend. Complete portable conformance and make the
+   publication decision; richer Unicode remains
    planned. Fallback: keep concurrency explicitly experimental and ship only
    the Level G pieces with sufficient platform and package evidence.
 

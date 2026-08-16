@@ -44,7 +44,7 @@ An implemented capability is not automatically portable, published or stable.
 | Rexx programmer learning the model | `docs/books/crexx_programming_guide/concurrency.md` |
 | Language implementer or precise syntax reader | `docs/books/crexx_language_reference/concurrency.md` |
 | Level B class-library user | `docs/books/crexx_library_reference/concurrency.md` |
-| Concurrent HTTP user | `docs/books/crexx_library_reference/concurrent_http.md` |
+| Concurrent HTTP client/server user | `docs/books/crexx_library_reference/concurrent_http.md` |
 | Maintainer or AI agent | `docs/ai-context/CREXX_CONCURRENCY.md` |
 | RXAS author | `docs/reference/rxas/instructions/09-io-sockets-processes-and-time.md` |
 | Current implementation and publication status | [`WORKLIST.md`](WORKLIST.md) |

@@ -35,6 +35,7 @@ cd "$script_dir"
 generate ../rxfnsb/rexx/stem.crexx --exposed               >> "$output"
 generate ../rxfnsb/rexx/rxjson.crexx --exposed             >> "$output"
 generate ../rxfnsg/rexx/http.crexx --exposed               >> "$output"
+generate ../rxfnsg/rexx/httpserver.crexx --exposed         >> "$output"
 
 # Public multi-class concurrency surface; omit implementation classes.
 generate Concurrency.crexx --exposed                        >> "$output"
