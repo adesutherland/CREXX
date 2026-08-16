@@ -137,7 +137,6 @@ set(REXXBINS
         ts_rxjson_noisy_contract.rxbin
         ts_rxsocket.rxbin
         ts_socket_tls_live.rxbin
-        ts_rxhttp.rxbin
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
@@ -410,8 +409,6 @@ set_tests_properties(ts_rxsocket_noopt ts_rxsocket_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxsocket loopback")
 set_tests_properties(ts_socket_tls_live_noopt ts_socket_tls_live_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxsocket TLS live smoke")
-set_tests_properties(ts_rxhttp_noopt ts_rxhttp_opt
-        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxhttp helpers")
 set_tests_properties(ts_trace_noopt ts_trace_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: trace helpers")
 set_tests_properties(ts_version_noopt ts_version_opt

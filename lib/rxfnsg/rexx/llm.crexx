@@ -27,7 +27,7 @@ options levelg
 namespace rxfnsg expose llm ollama openai anthropic gemini
 import rxfnsb
 import rxjson
-import rxhttp
+import _rxhttpcore
 
 llm: interface
   *: factory
@@ -59,6 +59,9 @@ llm: interface
 
   lastHttp: method = .string
 
+  /** Close this provider's bounded HTTP connection-owner pool. */
+  close: method = .void
+
 ollama: class implements .llm
   _model = .string
   _host = .string
@@ -68,7 +71,7 @@ ollama: class implements .llm
   _error = .string
   _last_json = .string
   _last_http = .string
-  _http = .rxhttp..httpclient
+  _http = .httpclient
 
   *: match
     arg model = "gemma4:latest", host = "127.0.0.1", port = 11434, timeout = 120000
@@ -85,7 +88,7 @@ ollama: class implements .llm
     _error = ""
     _last_json = ""
     _last_http = ""
-    _http = .rxhttp..httpclient(_host, _port, _timeout)
+    _http = .httpclient.pooled("http://" || _host || ":" || _port, 2, 8, 8388608, _llm_policy(_timeout))
     return
 
   generate: method = .string
@@ -97,10 +100,14 @@ ollama: class implements .llm
   generateJson: method = .string
     arg prompt = .string
     _last_json = ""
-    _last_json = _http.post("/api/generate", buildBody(prompt), "application/json")
-    _last_http = _http.lastHttp()
-    if _http.status() <> 0 then do
-      call _set_error _http.status(), _http.error()
+    headers = .httpheaders.json()
+    response = _http.post("/api/generate", buildBody(prompt), headers)
+    _last_json = response.body()
+    _last_http = response.raw()
+    if response.succeeded() = 0 then do
+      code = response.transport_status()
+      if code = 0 then code = response.status()
+      call _set_error code, response.error()
       return _last_json
     end
     call _set_error 0, ""
@@ -122,14 +129,16 @@ ollama: class implements .llm
 
   buildRequest: method = .string
     arg prompt = .string
-    return _http.buildRequest("POST", "/api/generate", buildBody(prompt), "application/json")
+    headers = .httpheaders.json()
+    return _llm_request(_host, _port, "/api/generate", buildBody(prompt), headers)
 
   extractBody: method = .string
     arg response = .string
-    body = _http.extractBody(response)
-    _last_http = _http.lastHttp()
+    parsed = http_parse_response(response as .binary)
+    body = parsed.body() as .string
+    _last_http = response
     _last_json = body
-    if _http.status() <> 0 then call _set_error _http.status(), _http.error()
+    if parsed.error_code() <> 0 then call _set_error parsed.error_code(), parsed.error()
     else call _set_error 0, ""
     return body
 
@@ -166,6 +175,11 @@ ollama: class implements .llm
   lastHttp: method = .string
     return _last_http
 
+  /** Close this provider's bounded HTTP connection-owner pool. */
+  close: method = .void
+    call _http.close()
+    return
+
   _set_error: method
     arg code = .int, message = .string
     _status = code
@@ -180,7 +194,7 @@ openai: class
   _error = .string
   _last_json = .string
   _last_http = .string
-  _http = .rxhttp..httpclient
+  _http = .httpclient
 
   *: factory
     arg model = "gpt-4.1", apiKey = "", timeout = 120000
@@ -192,7 +206,7 @@ openai: class
     _error = ""
     _last_json = ""
     _last_http = ""
-    _http = .rxhttp..httpclient("api.openai.com", 443, _timeout, 1)
+    _http = .httpclient.pooled("https://api.openai.com", 2, 8, 8388608, _llm_policy(_timeout))
     return
 
   generate: method = .string
@@ -210,14 +224,17 @@ openai: class
       return ""
     end
 
-    headers = .string[]
-    headers[1] = "Authorization: Bearer " || _api_key
-    _last_json = _http.postWithHeaders("/v1/responses", buildBody(prompt), "application/json", headers)
-    _last_http = _http.lastHttp()
-    if _http.status() <> 0 then do
+    headers = .httpheaders.json()
+    call headers.add("Authorization", "Bearer " || _api_key)
+    response = _http.post("/v1/responses", buildBody(prompt), headers)
+    _last_json = response.body()
+    _last_http = response.raw()
+    if response.succeeded() = 0 then do
       message = _provider_error_message("OpenAI", _last_json)
-      if message = "" then message = _http.error()
-      call _set_error _http.status(), message
+      if message = "" then message = response.error()
+      code = response.transport_status()
+      if code = 0 then code = response.status()
+      call _set_error code, message
       return _last_json
     end
     call _set_error 0, ""
@@ -235,19 +252,20 @@ openai: class
 
   buildRequest: method = .string
     arg prompt = .string
-    headers = .string[]
-    headers[1] = "Authorization: Bearer " || _api_key
-    return _http.buildRequestWithHeaders("POST", "/v1/responses", buildBody(prompt), "application/json", headers)
+    headers = .httpheaders.json()
+    call headers.add("Authorization", "Bearer " || _api_key)
+    return _llm_request("api.openai.com", 443, "/v1/responses", buildBody(prompt), headers)
 
   extractBody: method = .string
     arg response = .string
-    body = _http.extractBody(response)
-    _last_http = _http.lastHttp()
+    parsed = http_parse_response(response as .binary)
+    body = parsed.body() as .string
+    _last_http = response
     _last_json = body
-    if _http.status() <> 0 then do
+    if parsed.error_code() <> 0 then do
       message = _provider_error_message("OpenAI", body)
-      if message = "" then message = _http.error()
-      call _set_error _http.status(), message
+      if message = "" then message = parsed.error()
+      call _set_error parsed.error_code(), message
     end
     else call _set_error 0, ""
     return body
@@ -292,6 +310,11 @@ openai: class
   lastHttp: method = .string
     return _last_http
 
+  /** Close this provider's bounded HTTP connection-owner pool. */
+  close: method = .void
+    call _http.close()
+    return
+
   _set_error: method
     arg code = .int, message = .string
     _status = code
@@ -306,7 +329,7 @@ anthropic: class
   _error = .string
   _last_json = .string
   _last_http = .string
-  _http = .rxhttp..httpclient
+  _http = .httpclient
 
   *: factory
     arg model = "claude-sonnet-4-5", apiKey = "", timeout = 120000
@@ -318,7 +341,7 @@ anthropic: class
     _error = ""
     _last_json = ""
     _last_http = ""
-    _http = .rxhttp..httpclient("api.anthropic.com", 443, _timeout, 1)
+    _http = .httpclient.pooled("https://api.anthropic.com", 2, 8, 8388608, _llm_policy(_timeout))
     return
 
   generate: method = .string
@@ -336,15 +359,18 @@ anthropic: class
       return ""
     end
 
-    headers = .string[]
-    headers[1] = "x-api-key: " || _api_key
-    headers[2] = "anthropic-version: 2023-06-01"
-    _last_json = _http.postWithHeaders("/v1/messages", buildBody(prompt), "application/json", headers)
-    _last_http = _http.lastHttp()
-    if _http.status() <> 0 then do
+    headers = .httpheaders.json()
+    call headers.add("x-api-key", _api_key)
+    call headers.add("anthropic-version", "2023-06-01")
+    response = _http.post("/v1/messages", buildBody(prompt), headers)
+    _last_json = response.body()
+    _last_http = response.raw()
+    if response.succeeded() = 0 then do
       message = _provider_error_message("Anthropic", _last_json)
-      if message = "" then message = _http.error()
-      call _set_error _http.status(), message
+      if message = "" then message = response.error()
+      code = response.transport_status()
+      if code = 0 then code = response.status()
+      call _set_error code, message
       return _last_json
     end
     call _set_error 0, ""
@@ -374,20 +400,21 @@ anthropic: class
 
   buildRequest: method = .string
     arg prompt = .string
-    headers = .string[]
-    headers[1] = "x-api-key: " || _api_key
-    headers[2] = "anthropic-version: 2023-06-01"
-    return _http.buildRequestWithHeaders("POST", "/v1/messages", buildBody(prompt), "application/json", headers)
+    headers = .httpheaders.json()
+    call headers.add("x-api-key", _api_key)
+    call headers.add("anthropic-version", "2023-06-01")
+    return _llm_request("api.anthropic.com", 443, "/v1/messages", buildBody(prompt), headers)
 
   extractBody: method = .string
     arg response = .string
-    body = _http.extractBody(response)
-    _last_http = _http.lastHttp()
+    parsed = http_parse_response(response as .binary)
+    body = parsed.body() as .string
+    _last_http = response
     _last_json = body
-    if _http.status() <> 0 then do
+    if parsed.error_code() <> 0 then do
       message = _provider_error_message("Anthropic", body)
-      if message = "" then message = _http.error()
-      call _set_error _http.status(), message
+      if message = "" then message = parsed.error()
+      call _set_error parsed.error_code(), message
     end
     else call _set_error 0, ""
     return body
@@ -426,6 +453,11 @@ anthropic: class
   lastHttp: method = .string
     return _last_http
 
+  /** Close this provider's bounded HTTP connection-owner pool. */
+  close: method = .void
+    call _http.close()
+    return
+
   _set_error: method
     arg code = .int, message = .string
     _status = code
@@ -440,7 +472,7 @@ gemini: class
   _error = .string
   _last_json = .string
   _last_http = .string
-  _http = .rxhttp..httpclient
+  _http = .httpclient
 
   *: factory
     arg model = "gemini-2.5-flash", apiKey = "", timeout = 120000
@@ -453,7 +485,7 @@ gemini: class
     _error = ""
     _last_json = ""
     _last_http = ""
-    _http = .rxhttp..httpclient("generativelanguage.googleapis.com", 443, _timeout, 1)
+    _http = .httpclient.pooled("https://generativelanguage.googleapis.com", 2, 8, 8388608, _llm_policy(_timeout))
     return
 
   generate: method = .string
@@ -471,14 +503,17 @@ gemini: class
       return ""
     end
 
-    headers = .string[]
-    headers[1] = "x-goog-api-key: " || _api_key
-    _last_json = _http.postWithHeaders(_path(), buildBody(prompt), "application/json", headers)
-    _last_http = _http.lastHttp()
-    if _http.status() <> 0 then do
+    headers = .httpheaders.json()
+    call headers.add("x-goog-api-key", _api_key)
+    response = _http.post(_path(), buildBody(prompt), headers)
+    _last_json = response.body()
+    _last_http = response.raw()
+    if response.succeeded() = 0 then do
       message = _provider_error_message("Gemini", _last_json)
-      if message = "" then message = _http.error()
-      call _set_error _http.status(), message
+      if message = "" then message = response.error()
+      code = response.transport_status()
+      if code = 0 then code = response.status()
+      call _set_error code, message
       return _last_json
     end
     call _set_error 0, ""
@@ -509,19 +544,20 @@ gemini: class
 
   buildRequest: method = .string
     arg prompt = .string
-    headers = .string[]
-    headers[1] = "x-goog-api-key: " || _api_key
-    return _http.buildRequestWithHeaders("POST", _path(), buildBody(prompt), "application/json", headers)
+    headers = .httpheaders.json()
+    call headers.add("x-goog-api-key", _api_key)
+    return _llm_request("generativelanguage.googleapis.com", 443, _path(), buildBody(prompt), headers)
 
   extractBody: method = .string
     arg response = .string
-    body = _http.extractBody(response)
-    _last_http = _http.lastHttp()
+    parsed = http_parse_response(response as .binary)
+    body = parsed.body() as .string
+    _last_http = response
     _last_json = body
-    if _http.status() <> 0 then do
+    if parsed.error_code() <> 0 then do
       message = _provider_error_message("Gemini", body)
-      if message = "" then message = _http.error()
-      call _set_error _http.status(), message
+      if message = "" then message = parsed.error()
+      call _set_error parsed.error_code(), message
     end
     else call _set_error 0, ""
     return body
@@ -560,6 +596,11 @@ gemini: class
   lastHttp: method = .string
     return _last_http
 
+  /** Close this provider's bounded HTTP connection-owner pool. */
+  close: method = .void
+    call _http.close()
+    return
+
   _path: method = .string
     if left(_model, 7) = "models/" then return "/v1beta/" || _model || ":generateContent"
     return "/v1beta/models/" || _model || ":generateContent"
@@ -583,3 +624,16 @@ _clean_env_value: procedure = .string
   value = changestr("0d"x, value, "")
   value = changestr("0a"x, value, "")
   return strip(value)
+
+_llm_policy: procedure = .httppolicy
+  arg timeout = .int
+  if timeout < 1 then timeout = 1
+  if timeout > 600000 then timeout = 600000
+  policy = .httppolicy.safe()
+  call policy.set_timeouts(timeout, timeout, timeout, timeout, timeout, timeout)
+  return policy
+
+_llm_request: procedure = .string
+  arg host = .string, port = .int, path = .string, body = .string, headers = .httpheaders
+  wire = http_build_request("POST", host, port, path, body as .binary, headers.content_type(), headers.wire(), "close", "identity")
+  return wire as .string

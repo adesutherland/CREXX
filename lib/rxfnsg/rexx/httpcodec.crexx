@@ -52,14 +52,19 @@ _httpcodec_adler32: procedure = .int
 
 _httpcodec_crc32: procedure = .int
   arg data = .binary
-  crc = 4294967295
-  do offset = 0 to binlength(data) - 1
-    current = crc <xor> <at..u8>(offset) data
+  table = .int[256]
+  do index = 0 to 255
+    current = index
     do bit = 1 to 8
       if (current <and> 1) <> 0 then current = (current <shr> 1) <xor> 3988292384
       else current = current <shr> 1
     end
-    crc = current
+    table[index + 1] = current
+  end
+  crc = 4294967295
+  do offset = 0 to binlength(data) - 1
+    slot = ((crc <xor> <at..u8>(offset) data) <and> 255) + 1
+    crc = (crc <shr> 8) <xor> table[slot]
   end
   return crc <xor> 4294967295
 
@@ -104,6 +109,11 @@ _httpinflater: class
   _maximum = .int
   _ok = .boolean
   _error = .string
+  _length_base = .binary
+  _length_extra = .binary
+  _distance_base = .binary
+  _distance_extra = .binary
+  _code_order = .binary
 
   new: factory
     arg input = .binary, start = .int, count = .int, maximum = .int
@@ -117,6 +127,11 @@ _httpinflater: class
     _maximum = maximum
     _ok = 1
     _error = ""
+    _length_base = '03000400050006000700080009000a000b000d000f001100130017001b001f0023002b0033003b0043005300630073008300a300c300e3000201'x as .binary
+    _length_extra = '0000000000000000010101010202020203030303040404040505050500'x as .binary
+    _distance_base = '01000200030004000500070009000d001100190021003100410061008100c1000101810101020103010401060108010c011001180120013001400160'x as .binary
+    _distance_extra = '000000000101020203030404050506060707080809090a0a0b0b0c0c0d0d'x as .binary
+    _code_order = '10111200080709060a050b040c030d020e010f'x as .binary
     call binresize _output, maximum
     return
 
@@ -217,10 +232,6 @@ _httpinflater: class
     literal_table = build_table(literal_lengths, literal_count)
     distance_table = build_table(distance_lengths, distance_count)
     if _ok = 0 then return
-    length_base = "3 4 5 6 7 8 9 10 11 13 15 17 19 23 27 31 35 43 51 59 67 83 99 115 131 163 195 227 258"
-    length_extra = "0 0 0 0 0 0 0 0 1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 5 5 5 5 0"
-    distance_base = "1 2 3 4 5 7 9 13 17 25 33 49 65 97 129 193 257 385 513 769 1025 1537 2049 3073 4097 6145 8193 12289 16385 24577"
-    distance_extra = "0 0 0 0 1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9 10 10 11 11 12 12 13 13"
     do forever
       symbol = decode_symbol(literal_table)
       if _ok = 0 then return
@@ -232,16 +243,16 @@ _httpinflater: class
           return
         end
         slot = symbol - 256
-        copy_length = word(length_base, slot)
-        extra = word(length_extra, slot)
+        copy_length = _httpcodec_u16le(_length_base, (slot - 1) * 2)
+        extra = <at..u8>(slot - 1) _length_extra
         if extra > 0 then copy_length = copy_length + read_bits(extra)
         distance_symbol = decode_symbol(distance_table)
         if distance_symbol < 0 | distance_symbol > 29 then do
           call fail("DEFLATE distance symbol is reserved or missing")
           return
         end
-        distance = word(distance_base, distance_symbol + 1)
-        extra = word(distance_extra, distance_symbol + 1)
+        distance = _httpcodec_u16le(_distance_base, distance_symbol * 2)
+        extra = <at..u8>(distance_symbol) _distance_extra
         if extra > 0 then distance = distance + read_bits(extra)
         if distance < 1 | distance > _output_pos then do
           call fail("DEFLATE back-reference exceeds decoded history")
@@ -284,10 +295,9 @@ _httpinflater: class
       call fail("DEFLATE dynamic-tree counts are invalid")
       return
     end
-    order = "16 17 18 0 8 7 9 6 10 5 11 4 12 3 13 2 14 1 15"
     code_lengths = .int[19]
     do index = 1 to code_count
-      code_lengths[word(order, index) + 1] = read_bits(3)
+      code_lengths[<at..u8>(index - 1) _code_order + 1] = read_bits(3)
     end
     code_table = build_table(code_lengths, 19)
     if _ok = 0 then return

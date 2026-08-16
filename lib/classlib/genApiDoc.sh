@@ -33,7 +33,6 @@ cd "$script_dir"
 
 # Classes found outside classlib.
 generate ../rxfnsb/rexx/stem.crexx --exposed               >> "$output"
-generate ../rxfnsb/rexx/rxhttp.crexx --exposed             >> "$output"
 generate ../rxfnsb/rexx/rxjson.crexx --exposed             >> "$output"
 generate ../rxfnsg/rexx/http.crexx --exposed               >> "$output"
 

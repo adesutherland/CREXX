@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 set(RXFNSG_REXX_MODULES
   httpcodec
+  httpcore
   http
   llm
 )
@@ -11,13 +12,47 @@ foreach(_module IN LISTS RXFNSG_REXX_MODULES)
   list(APPEND RXFNSG_REXX_BINS "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin")
 endforeach()
 
+# `llm` and `http` share the public `rxfnsg` namespace.  During a clean or
+# parallel build the final consolidated image does not exist yet, so publish
+# the freshly compiled HTTP module under its namespace name in a private stage
+# directory.  This prevents the compiler from resolving LLM types against a
+# stale installed/build-tree `rxfnsg.rxbin`.
+set(_rxfnsg_http_stage_dir "${CMAKE_CURRENT_BINARY_DIR}/http-stage")
+set(_rxfnsg_http_stage_image "${_rxfnsg_http_stage_dir}/rxfnsg.rxbin")
+add_custom_command(
+  OUTPUT "${_rxfnsg_http_stage_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${_rxfnsg_http_stage_dir}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "${CMAKE_CURRENT_BINARY_DIR}/http.rxbin"
+          "${_rxfnsg_http_stage_image}"
+  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/http.rxbin"
+  COMMENT "Staging current HTTP metadata for the Level G LLM module ..."
+  VERBATIM
+)
+
 foreach(_binfile IN LISTS RXFNSG_REXX_BINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
+
+  set(_module_dependencies)
+  set(_module_import_args)
+  if(_basename STREQUAL "httpcore")
+    list(APPEND _module_dependencies "${CMAKE_CURRENT_BINARY_DIR}/httpcodec.rxbin")
+  elseif(_basename STREQUAL "http")
+    list(APPEND _module_dependencies
+      "${CMAKE_CURRENT_BINARY_DIR}/httpcodec.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/httpcore.rxbin")
+  elseif(_basename STREQUAL "llm")
+    list(APPEND _module_dependencies
+      "${CMAKE_CURRENT_BINARY_DIR}/httpcore.rxbin"
+      "${_rxfnsg_http_stage_image}")
+    list(APPEND _module_import_args -i "${_rxfnsg_http_stage_dir}")
+  endif()
 
   add_custom_command(
     OUTPUT "${_binfile}"
     COMMAND $<TARGET_FILE:rxc>
             -x
+            ${_module_import_args}
             -i "${CMAKE_BINARY_DIR}/bin"
             -o "${_basename}"
             "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
@@ -31,6 +66,7 @@ foreach(_binfile IN LISTS RXFNSG_REXX_BINS)
       library
       classlib
       compiler_exit_bin
+      ${_module_dependencies}
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     COMMENT "cREXX compile and assemble ${_basename} ..."
     VERBATIM

@@ -79,6 +79,8 @@ failures = failures + check_int("provider error message", pos("model missing", c
 missingResponse = client.extractText('{"done":true}')
 failures = failures + check_int("missing response status", client.status(), -24)
 
+call client.close()
+
 if failures <> 0 then do
   say "rxfnsg llm failures:" failures
   exit 1

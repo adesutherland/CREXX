@@ -59,6 +59,10 @@ geminiError = geminiClient.extractText('{"error":{"message":"bad Gemini key"}}')
 failures = failures + check_int("gemini error status", geminiClient.status(), -63)
 failures = failures + check_int("gemini error message", pos("bad Gemini key", geminiClient.error()) > 0, 1)
 
+call openaiClient.close()
+call anthropicClient.close()
+call geminiClient.close()
+
 if failures <> 0 then do
   say "rxfnsg llm provider failures:" failures
   exit 1

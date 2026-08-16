@@ -1,0 +1,142 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/25 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    0.08 sec
+      Start 1726: ts_http_policy_rxbvm_noopt
+      Start 1728: ts_http_policy_rxtvm_noopt
+      Start 1712: ts_http_pooled_rxtvm_noopt
+      Start 1710: ts_http_pooled_rxbvm_noopt
+      Start 1729: ts_http_policy_rxtvm_opt
+      Start 1727: ts_http_policy_rxbvm_opt
+      Start 1718: ts_http_crexx_rag_rxbvm_noopt
+      Start 1720: ts_http_crexx_rag_rxtvm_noopt
+      Start 1714: ts_http_streaming_rxbvm_noopt
+      Start 1716: ts_http_streaming_rxtvm_noopt
+ 2/25 Test #1712: ts_http_pooled_rxtvm_noopt ...........   Passed    1.47 sec
+      Start 1721: ts_http_crexx_rag_rxtvm_opt
+ 3/25 Test #1710: ts_http_pooled_rxbvm_noopt ...........   Passed    1.55 sec
+      Start 1719: ts_http_crexx_rag_rxbvm_opt
+ 4/25 Test #1720: ts_http_crexx_rag_rxtvm_noopt ........   Passed    1.56 sec
+      Start 1711: ts_http_pooled_rxbvm_opt
+ 5/25 Test #1718: ts_http_crexx_rag_rxbvm_noopt ........   Passed    1.58 sec
+      Start 1713: ts_http_pooled_rxtvm_opt
+ 6/25 Test #1714: ts_http_streaming_rxbvm_noopt ........   Passed    1.61 sec
+      Start 1717: ts_http_streaming_rxtvm_opt
+ 7/25 Test #1716: ts_http_streaming_rxtvm_noopt ........   Passed    1.61 sec
+      Start 1715: ts_http_streaming_rxbvm_opt
+ 8/25 Test #1728: ts_http_policy_rxtvm_noopt ...........   Passed    2.80 sec
+      Start 1730: ts_http_codec_rxbvm_noopt
+ 9/25 Test #1726: ts_http_policy_rxbvm_noopt ...........   Passed    2.81 sec
+      Start 1732: ts_http_codec_rxtvm_noopt
+10/25 Test #1727: ts_http_policy_rxbvm_opt .............   Passed    2.91 sec
+      Start 1706: ts_llm_ollama_noopt
+11/25 Test #1729: ts_http_policy_rxtvm_opt .............   Passed    2.96 sec
+      Start 1708: ts_llm_providers_noopt
+12/25 Test #1711: ts_http_pooled_rxbvm_opt .............   Passed    1.45 sec
+      Start 1707: ts_llm_ollama_opt
+13/25 Test #1730: ts_http_codec_rxbvm_noopt ............   Passed    0.22 sec
+      Start 1709: ts_llm_providers_opt
+14/25 Test #1717: ts_http_streaming_rxtvm_opt ..........   Passed    1.42 sec
+      Start 1733: ts_http_codec_rxtvm_opt
+15/25 Test #1713: ts_http_pooled_rxtvm_opt .............   Passed    1.45 sec
+      Start 1731: ts_http_codec_rxbvm_opt
+16/25 Test #1732: ts_http_codec_rxtvm_noopt ............   Passed    0.22 sec
+17/25 Test #1719: ts_http_crexx_rag_rxbvm_opt ..........   Passed    1.50 sec
+18/25 Test #1721: ts_http_crexx_rag_rxtvm_opt ..........   Passed    1.61 sec
+19/25 Test #1715: ts_http_streaming_rxbvm_opt ..........   Passed    1.47 sec
+20/25 Test #1733: ts_http_codec_rxtvm_opt ..............   Passed    0.15 sec
+21/25 Test #1731: ts_http_codec_rxbvm_opt ..............   Passed    0.15 sec
+22/25 Test #1707: ts_llm_ollama_opt ....................   Passed    0.85 sec
+23/25 Test #1709: ts_llm_providers_opt .................   Passed    1.04 sec
+24/25 Test #1706: ts_llm_ollama_noopt ..................   Passed    2.17 sec
+25/25 Test #1708: ts_llm_providers_noopt ...............   Passed    4.56 sec
+
+100% tests passed, 0 tests failed out of 25
+
+Label Time Summary:
+compression    =   6.99 sec*proc (8 tests)
+crexx_rag      =   6.26 sec*proc (4 tests)
+f1g            =  30.51 sec*proc (20 tests)
+gate_f         =  30.51 sec*proc (20 tests)
+http           =  30.51 sec*proc (20 tests)
+levelg         =  30.51 sec*proc (20 tests)
+library        =  30.51 sec*proc (20 tests)
+linked         =  15.44 sec*proc (10 tests)
+linked_opt     =  16.96 sec*proc (12 tests)
+policy         =  11.48 sec*proc (4 tests)
+rxbvm          =  15.27 sec*proc (10 tests)
+rxtvm          =  15.24 sec*proc (10 tests)
+smoke          =   4.56 sec*proc (1 test)
+streaming      =   6.12 sec*proc (4 tests)
+
+Total Test time (real) =   7.64 sec
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/25 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    0.09 sec
+      Start 1726: ts_http_policy_rxbvm_noopt
+      Start 1728: ts_http_policy_rxtvm_noopt
+      Start 1710: ts_http_pooled_rxbvm_noopt
+      Start 1712: ts_http_pooled_rxtvm_noopt
+      Start 1729: ts_http_policy_rxtvm_opt
+      Start 1727: ts_http_policy_rxbvm_opt
+      Start 1718: ts_http_crexx_rag_rxbvm_noopt
+      Start 1714: ts_http_streaming_rxbvm_noopt
+      Start 1720: ts_http_crexx_rag_rxtvm_noopt
+      Start 1716: ts_http_streaming_rxtvm_noopt
+ 2/25 Test #1714: ts_http_streaming_rxbvm_noopt ........   Passed    1.54 sec
+      Start 1721: ts_http_crexx_rag_rxtvm_opt
+ 3/25 Test #1712: ts_http_pooled_rxtvm_noopt ...........   Passed    1.55 sec
+      Start 1719: ts_http_crexx_rag_rxbvm_opt
+ 4/25 Test #1718: ts_http_crexx_rag_rxbvm_noopt ........   Passed    1.60 sec
+      Start 1711: ts_http_pooled_rxbvm_opt
+ 5/25 Test #1710: ts_http_pooled_rxbvm_noopt ...........   Passed    1.61 sec
+      Start 1713: ts_http_pooled_rxtvm_opt
+ 6/25 Test #1720: ts_http_crexx_rag_rxtvm_noopt ........   Passed    1.66 sec
+      Start 1717: ts_http_streaming_rxtvm_opt
+ 7/25 Test #1716: ts_http_streaming_rxtvm_noopt ........   Passed    1.74 sec
+      Start 1715: ts_http_streaming_rxbvm_opt
+ 8/25 Test #1728: ts_http_policy_rxtvm_noopt ...........   Passed    3.01 sec
+      Start 1730: ts_http_codec_rxbvm_noopt
+ 9/25 Test #1713: ts_http_pooled_rxtvm_opt .............   Passed    1.41 sec
+      Start 1732: ts_http_codec_rxtvm_noopt
+10/25 Test #1719: ts_http_crexx_rag_rxbvm_opt ..........   Passed    1.52 sec
+      Start 1706: ts_llm_ollama_noopt
+11/25 Test #1726: ts_http_policy_rxbvm_noopt ...........   Passed    3.06 sec
+      Start 1708: ts_llm_providers_noopt
+12/25 Test #1729: ts_http_policy_rxtvm_opt .............   Passed    3.07 sec
+      Start 1709: ts_llm_providers_opt
+13/25 Test #1711: ts_http_pooled_rxbvm_opt .............   Passed    1.47 sec
+      Start 1707: ts_llm_ollama_opt
+14/25 Test #1727: ts_http_policy_rxbvm_opt .............   Passed    3.11 sec
+      Start 1733: ts_http_codec_rxtvm_opt
+15/25 Test #1721: ts_http_crexx_rag_rxtvm_opt ..........   Passed    1.59 sec
+      Start 1731: ts_http_codec_rxbvm_opt
+16/25 Test #1732: ts_http_codec_rxtvm_noopt ............   Passed    0.17 sec
+17/25 Test #1730: ts_http_codec_rxbvm_noopt ............   Passed    0.18 sec
+18/25 Test #1717: ts_http_streaming_rxtvm_opt ..........   Passed    1.57 sec
+19/25 Test #1715: ts_http_streaming_rxbvm_opt ..........   Passed    1.53 sec
+20/25 Test #1733: ts_http_codec_rxtvm_opt ..............   Passed    0.17 sec
+21/25 Test #1731: ts_http_codec_rxbvm_opt ..............   Passed    0.16 sec
+22/25 Test #1707: ts_llm_ollama_opt ....................   Passed    0.86 sec
+23/25 Test #1709: ts_llm_providers_opt .................   Passed    1.08 sec
+24/25 Test #1706: ts_llm_ollama_noopt ..................   Passed    2.17 sec
+25/25 Test #1708: ts_llm_providers_noopt ...............   Passed    4.58 sec
+
+100% tests passed, 0 tests failed out of 25
+
+Label Time Summary:
+compression    =   7.05 sec*proc (8 tests)
+crexx_rag      =   6.37 sec*proc (4 tests)
+f1g            =  31.74 sec*proc (20 tests)
+gate_f         =  31.74 sec*proc (20 tests)
+http           =  31.74 sec*proc (20 tests)
+levelg         =  31.74 sec*proc (20 tests)
+library        =  31.74 sec*proc (20 tests)
+linked         =  16.13 sec*proc (10 tests)
+linked_opt     =  17.55 sec*proc (12 tests)
+policy         =  12.26 sec*proc (4 tests)
+rxbvm          =  15.80 sec*proc (10 tests)
+rxtvm          =  15.94 sec*proc (10 tests)
+smoke          =   4.58 sec*proc (1 test)
+streaming      =   6.39 sec*proc (4 tests)
+
+Total Test time (real) =   7.77 sec
