@@ -1,0 +1,123 @@
+##cflags ndef nset niflink n1buf n2buf n3buf nvars nmaclist includes nosrcmap nmaclog
+
+options levelb
+import rxfnsb
+
+/*
+ * RXPP example: generating a class skeleton.
+ *
+ * This example demonstrates how RXPP macros can be used to reduce
+ * repetitive object-oriented boilerplate.
+ *
+ * The goal is NOT to generate a complete implementation.
+ *
+ * The programmer still writes the actual business logic.
+ *
+ * The goal is simply to define information once and generate several
+ * dependent code sections automatically.
+ *
+ * In this example, one FIELD declaration contributes code to multiple
+ * output streams:
+ *
+ *     - class attribute declarations
+ *     - factory initialization
+ *     - getter methods
+ *     - setter methods
+ *
+ * A single definition:
+ *
+ *     ##FIELD mname, _name, .string, ""
+ *
+ * generates:
+ *
+ *     _name = .string
+ *
+ *     _name = ""
+ *
+ *     mname: method = .string
+ *     return _name
+ *
+ *     set_name: method = .void
+ *     arg value = .string
+ *     _name = value
+ *     return
+ *
+ * This approach keeps related definitions synchronized and avoids
+ * maintaining the same information in multiple places.
+ *
+ * The generated code remains ordinary cREXX source code and can be
+ * compiled, debugged, and modified normally.
+ */
+
+##MACRO FIELD mname,name, type, initial
+    .section class_fields   &name = &type
+     if _mcalls=1 then do
+        .section factory *: factory            /* Emit generated factory initialization */
+     end
+    .section factory   &name = &initial
+    .section getters get_&mname: method = &type /* Return the value of &mname. */
+    .section getters   return &name
+    .section setters set_&mname: method = .void /* Set the value of &mname. */
+    .section setters   arg value = &type
+    .section setters   &name = value
+    .section setters return
+     if _mcalls=1 then do
+        .section copy_fields copy: method = .MeasurementSeries
+        .section copy_fields   result = .MeasurementSeries()
+     end
+    .section copy_fields    call result.set_&mname(&name)
+    if _mcalls=1 then do
+      .section usage_example ## m1 = .MeasurementSeries()
+    end
+    .section usage_example ## call m1.set_&mname(...)
+    .section usage_example ## say m1.get_&mname()
+##MEND
+
+/*
+ * FIELD macro.
+ *
+ * Parameters:
+ *
+ *    mname    generated method name
+ *    name     generated attribute name
+ *    type     cREXX type
+ *    initial  factory initialization value *
+ * The macro does not emit code immediately.
+ *
+ * Instead, it appends generated code to named sections.
+ *
+ * Later, ##emit inserts those accumulated sections into the class
+ * definition.
+ */
+##FIELD name,  _name,  .string, ""
+##FIELD unit,  _unit,  .string, ""
+##FIELD count, _count, .int,    0
+
+m1=.MeasurementSeries()
+m11= .MeasurementSeries()
+
+##emit usage_example
+
+/*
+ * Emit the accumulated code fragments.
+ *
+ * The order of the emitted sections determines the structure of the
+ * generated class.
+ */
+MeasurementSeries: class
+  ##emit class_fields   /* Emit generated class attributes */
+
+  ##emit factory
+return
+/*--------------------------------------------------------
+ * Generated getter methods
+ *--------------------------------------------------------
+ */
+  ##emit getters
+/*--------------------------------------------------------
+ * Generated setters methods
+ *--------------------------------------------------------
+ */
+  ##emit setters
+  ##emit copy_fields
+  return result

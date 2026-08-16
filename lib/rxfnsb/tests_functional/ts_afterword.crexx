@@ -1,0 +1,67 @@
+/*
+ * Functional tests for AFTERWORD().
+ *
+ * Verify:
+ *
+ *   - normal extraction
+ *   - preservation of internal whitespace
+ *   - preservation of leading whitespace in the returned text
+ *   - preservation of trailing whitespace
+ *   - handling of missing words
+ *   - handling of empty strings
+ *   - RXPP-style source preservation
+ */
+
+options levelb
+import rxfnsb
+
+errors = 0
+
+errors=errors+expect(1, afterword("one two three", 1), " two three")
+errors=errors+expect(2, afterword("one two three", 2), " three")
+errors=errors+expect(3, afterword("one two three", 3), "")
+errors=errors+expect(4, afterword("one two three", 4), "")
+
+errors=errors+expect(5, afterword("one  two   three", 1), "  two   three")
+errors=errors+expect(6, afterword("one  two   three", 2), "   three")
+
+errors=errors+expect(7, afterword("   one two", 1), " two")
+errors=errors+expect(8, afterword("   one two", 2), "")
+
+errors=errors+expect(9, afterword("one two   ", 1), " two   ")
+errors=errors+expect(10, afterword("one two   ", 2), "   ")
+
+errors=errors+expect(11, afterword("one", 1), "")
+errors=errors+expect(12, afterword("one", 2), "")
+
+errors=errors+expect(13, afterword("", 1), "")
+errors=errors+expect(14, afterword("     ", 1), "")
+
+errors=errors+expect(15, ,
+    afterword(".section getters     return _name", 2), ,
+    "     return _name")
+
+errors=errors+expect(16, ,
+    afterword(".section getters return _name", 2), ,
+    " return _name")
+
+errors=errors+expect(17, ,
+    afterword("alpha beta gamma delta", 3), ,
+    " delta")
+
+say
+
+if errors = 0 then say "PASS: subword"
+return errors <> 0
+
+
+expect: procedure=.int
+    arg testno = .int, actual = .string, expected = .string
+
+    if actual == expected then return 0
+
+    say "Test" testno "failed"
+    say "  expected: '" || expected || "'"
+    say "  actual  : '" || actual || "'"
+
+return 1

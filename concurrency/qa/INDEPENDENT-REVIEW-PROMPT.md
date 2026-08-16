@@ -9,8 +9,8 @@ concurrency design.
 Work in the CREXX repository on `develop`. Review and qualify the frozen
 **initial concurrency** implementation; use no other maturity label.
 Your outcome is an independent evidence verdict for SP-01 through SP-09 and
-QA-B through QA-D, followed by a QA-E decision brief for Adrian. Passing tests
-does not itself publish the surface.
+QA-B through QA-D after publication. Adrian has already selected publication
+as **initial**; passing tests do not make the surface stable.
 
 First read the repository `AGENTS.md`, then these authorities in order:
 
@@ -123,7 +123,7 @@ result identity and digests. If an interrupted run leaves processes holding
 artifacts open, stop those processes and start the whole runner again with new
 empty directories; do not patch around locks in the source tree.
 
-## 5. Reconcile for QA-E
+## 5. Reconcile after initial publication
 
 Return the Linux and Windows evidence to Mac, verify its digests, and reconcile
 it with the independent solution review and AC performance result. Produce a
@@ -135,11 +135,12 @@ concise decision brief containing:
 - install and package results;
 - every accepted limitation, environmental invalidation and residual risk;
 - any documentation or release-note mismatch; and
-- the three explicit choices: keep unpublished, publish as **initial**, or
-  defer and state the blocking defects.
+- whether the retained initial publication remains supportable or a blocking
+  defect requires it to be qualified, repaired or deferred.
 
-Do not select the publication choice for Adrian. Do not describe a platform as
-passing without its native runner's `RESULT.txt` and verified digests. End with
-the exact local commits and confirm that nothing was pushed.
+Do not change the publication label or describe a platform as passing without
+its native runner's `RESULT.txt` and verified digests. Escalate any evidence
+that conflicts with the initial-publication choice. End with the exact local
+commits and confirm whether anything was pushed.
 
 ---

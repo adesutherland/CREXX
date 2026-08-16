@@ -33,7 +33,13 @@ does not compete with the project ordering in `docs/ROADMAP.md`.
 | QA-B independent Mac closeout | active | correctness, sanitizer, stress, Release, install and portable-package proof pass; quiet AC performance replay remains |
 | QA-C Linux qualification | ready, not run | clean frozen build, conformance matrix and install/package proof retained |
 | QA-D Windows qualification | ready, not run | clean frozen build, conformance matrix and install/package proof retained |
-| QA-E publication decision | pending | limitations/packages reconciled and Adrian explicitly selects unpublished, published initial or deferred |
+| QA-E publication decision | selected: publish as initial | Adrian authorized initial publication before the native Linux/Windows runs; CI and later host evidence can still block or qualify it |
+
+On 2026-08-16 Adrian selected publication as **initial**, with GitHub Actions
+as the first portable validation and native Linux and Windows qualification to
+follow. This changes the execution order, not the evidence requirements:
+failures receive bounded tactical repair and replay, and the surface is not
+called stable.
 
 ## Solution-point ledger
 
@@ -103,6 +109,15 @@ entry point completed a 1,079-step dependency rebuild and again passed 180/180
 39/39, SP-08 49/49 and SP-09 19/19; overlaps are deliberately de-duplicated by
 the umbrella label.
 
+Immediately before publication, `origin/develop` contributed a deterministic
+eight-worker topology check on each of the three available Mac carriers. The
+merge retained the initial-concurrency labels for the existing native-return
+cases and added the topology checks to SP-01 and SP-08. Focused worker,
+RXPP/RexxScript and `afterword` integration passed 17/17; the generated class
+factory example passed RXPP and `rxc`; and the expanded concurrency entry point
+passed 183/183. This integration changes test coverage, not the public
+concurrency surface.
+
 ## QA-B Mac evidence
 
 The independent Mac correctness closeout passes: complete Debug build; full
@@ -127,7 +142,7 @@ invalidated. The diagnostic bundle is
 [`qa/INDEPENDENT-REVIEW-PROMPT.md`](qa/INDEPENDENT-REVIEW-PROMPT.md) is the
 paste-ready brief for a fresh agent. It requires an independent SP-01 through
 SP-09 evidence review, the outstanding quiet-AC replay, and native execution
-of the frozen Linux and Windows runners before QA-E is presented. Target hosts
+of the frozen Linux and Windows runners after initial publication. Target hosts
 remain validation-only: evidence and minimal reproducers return to Mac, where
 any repair and full local replay occur at a new exact commit.
 

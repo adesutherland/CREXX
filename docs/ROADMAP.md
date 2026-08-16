@@ -142,7 +142,7 @@ defined in
 | QA-B: Mac closeout | active | Run focused Debug/Release, both applicable VM modes, optimized/unoptimized toolchain paths, sanitizer, stress, broad regression and the governed performance comparison. | Correctness, sanitizer, stress, install and package proof pass. The retained performance run is diagnostic because the host was on battery; replaying its exact manifests on quiet AC power is the remaining item. |
 | QA-C: Linux qualification | ready, not run | Build and run the frozen matrix plus install/package smoke tests on the supported Linux host. | Linux results are complete; defects have been repaired on Mac and replayed, not developed interactively on the slow host. |
 | QA-D: Windows qualification | ready, not run | Run the same frozen matrix and package checks on the supported Windows toolchain and TLS/process backend. | Windows results are complete under the same defect-return discipline. |
-| QA-E: publication decision | pending | Reconcile packages, release notes, compatibility boundary and residual risks. | Adrian explicitly selects unpublished, published initial, or deferred status; passing QA alone does not imply stability. |
+| QA-E: publication decision | selected: publish as initial | Reconcile packages, release notes, compatibility boundary and residual risks. | Adrian selected publication as **initial** on 2026-08-16. GitHub Actions is the first portable signal; native Linux and Windows qualification follows and may still identify blocking defects. |
 
 Feature development remains frozen during this programme. Concrete services
 and `.taskscope.ask()`, provider type `3`, a public provider-plugin ABI, pool
@@ -151,6 +151,11 @@ post-Release-1 candidates requiring separate design approval. Shared writable
 VM state, detached ordinary tasks and public worker identities remain outside
 the model. These candidates are recorded here so they are not lost; they are
 not an approved automatic sequence after QA-E.
+
+The publication choice does not waive QA-B through QA-D and does not declare
+the surface stable. CI failures receive bounded tactical repairs and replay;
+native Linux and Windows failures return to Mac under the same defect-return
+policy.
 
 ## Library, Plugin, And Host Integration Roadmap
 

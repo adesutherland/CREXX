@@ -321,15 +321,28 @@ rexxscriptcoreevaluator: class
        return 1
     end
     if _starts_keyword(text, ".SECTION") = 1 then do
-       section=strip(word(text, 2))
-       expr = strip(subword(text, 3))
-       if section == "" then return _set_error("missing_section_name", "missing .SECTION name", stmtno, 1)
-       if expr == "" then return _set_error("missing_expression", "missing .SECTION expression", stmtno, 1)
-       expr=_modify_var_symbol(expr)
-       if _eval_expression(expr, stmtno) = 0 then return 0
-       output_count = output_count + 1
-       output_lines[output_count] = '@.section@'section'@'eval_value
-       return 1
+        section = word(text, 2)
+
+        if section == "" then return _set_error("missing_section_name", "missing .SECTION name", stmtno, 1)
+
+        /* AFTERWORD(text, 2) returns the original source text following the section name and preserves all whitespace.
+         * Remove exactly one separator character between the section name  and the generated payload.
+         * Any additional whitespace belongs to the generated line and must be preserved.
+         */
+        expr = afterword(text, 2)
+        if left(expr, 1) = " " then expr = substr(expr, 2)
+
+        /* Use a stripped copy only to determine whether an expression exists.
+         * Do not strip EXPR itself because its leading whitespace is significant.
+         */
+        if strip(expr) == "" then return _set_error("missing_expression", "missing .SECTION expression", stmtno, 1)
+
+        expr = _modify_var_symbol(expr)
+        if _eval_expression(expr, stmtno) = 0 then return 0
+
+        output_count = output_count + 1
+        output_lines[output_count] = '@.section@'section'@'eval_value
+        return 1
     end
 
     if _starts_keyword(text, "##MEND") = 1 then return 1

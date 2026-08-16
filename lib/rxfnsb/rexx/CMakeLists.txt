@@ -144,6 +144,7 @@ set(BIFS
 		rxsocket
 		wordrep
 		rxqueue
+		afterword
 )
 
 foreach (BIF ${BIFS})
