@@ -24,7 +24,6 @@
 static SRWLOCK odbc_generation_lock = SRWLOCK_INIT;
 #define ODBC_GENERATION_LOCK() AcquireSRWLockExclusive(&odbc_generation_lock)
 #define ODBC_GENERATION_UNLOCK() ReleaseSRWLockExclusive(&odbc_generation_lock)
-#define ODBC_THREAD_LOCAL __declspec(thread)
 #else
 #include <pthread.h>
 static pthread_mutex_t odbc_generation_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -32,6 +31,11 @@ static pthread_mutex_t odbc_generation_lock = PTHREAD_MUTEX_INITIALIZER;
     ((void)pthread_mutex_lock(&odbc_generation_lock))
 #define ODBC_GENERATION_UNLOCK() \
     ((void)pthread_mutex_unlock(&odbc_generation_lock))
+#endif
+
+#if defined(_MSC_VER)
+#define ODBC_THREAD_LOCAL __declspec(thread)
+#else
 #define ODBC_THREAD_LOCAL __thread
 #endif
 
