@@ -6,8 +6,11 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 find_package(Threads REQUIRED)
 
-set(CMAKE_C_STANDARD 99) # enables inline keyword
+set(CMAKE_C_STANDARD 11) # required by the concurrency atomics
+set(CMAKE_C_STANDARD_REQUIRED ON)
 if(MSVC)
+    # Visual Studio exposes its C11 atomic implementation behind this switch.
+    add_compile_options($<$<COMPILE_LANGUAGE:C>:/experimental:c11atomics>)
     set(CMAKE_C_FLAGS_RELEASE "/O2 /Ob2 /DNDEBUG")
 else()
     set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is about as good as it get in practice

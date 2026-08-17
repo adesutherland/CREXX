@@ -142,6 +142,10 @@ add_static_plugin_target(_rxpalink rxpa_staticlink.c)
 add_executable(testvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmmain.c
         $<TARGET_OBJECTS:${CREXX_DEFAULT_VM_CORE_OBJECT_TARGET}>)
+target_compile_features(testvm PRIVATE c_std_11)
+if(MSVC)
+    target_compile_options(testvm PRIVATE /experimental:c11atomics)
+endif()
 if(CREXX_DEFAULT_VM_USES_SWITCH)
     target_compile_definitions(testvm PRIVATE NTHREADED=1)
 endif()
@@ -259,6 +263,10 @@ add_static_plugin_target(_testfuncs rxpa_functests.c)
 add_executable(funcvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmmain.c
         $<TARGET_OBJECTS:${CREXX_DEFAULT_VM_CORE_OBJECT_TARGET}>)
+target_compile_features(funcvm PRIVATE c_std_11)
+if(MSVC)
+    target_compile_options(funcvm PRIVATE /experimental:c11atomics)
+endif()
 if(CREXX_DEFAULT_VM_USES_SWITCH)
     target_compile_definitions(funcvm PRIVATE NTHREADED=1)
 endif()
