@@ -71,7 +71,7 @@ nested_node = document.member(root, "nested")
 status = document.node_f32_array(nested_node, -1, packed, error)
 failures = failures + check_failure("nested array element", status, -5, packed, error)
 
-range_document = .jsondocument('{"f32_exponents":[1e2,1E-2],"f32_zero_exp":[0e999,-0E-999],"f32_max":[3.4028234663852886e38],"f32_subnormal":[1.401298464324817e-45],"f32_over":[3.5e38],"f32_under":[1e-50],"f64_subnormal":[1e-320],"f64_min_edge":[1e-324],"f64_max_edge":[1.8e308],"f64_over":[1e999],"i64_fraction":[1.5],"i64_high":[9223372036854775808],"i64_low":[-9223372036854775809]}')
+range_document = .jsondocument('{"f32_exponents":[1e2,1E-2],"f32_zero_exp":[0e999,-0E-999],"f32_max":[3.4028234663852886e38],"f32_subnormal":[1.401298464324817e-45],"f32_over":[3.5e38],"f32_under":[1e-50],"f64_subnormal":[1e-320],"f64_negative_subnormal":[-1e-320],"f64_min_edge":[1e-324],"f64_max_edge":[1.8e308],"f64_over":[1e999],"i64_fraction":[1.5],"i64_high":[9223372036854775808],"i64_low":[-9223372036854775809]}')
 range_root = range_document.root()
 status = range_document.node_f32_array(range_document.member(range_root, "f32_exponents"), 2, packed, error)
 failures = failures + check_int("f32 lower/upper exponent success", status, 0)
@@ -102,6 +102,8 @@ failures = failures + check_failure("binary64 overflow", status, -6, packed, err
 float_value = 0 as .float
 status = range_document.node_float(range_document.element(range_document.member(range_root, "f64_subnormal"), 1), float_value)
 failures = failures + check_int("node_float subnormal status", status, -4)
+status = range_document.node_float(range_document.element(range_document.member(range_root, "f64_negative_subnormal"), 1), float_value)
+failures = failures + check_int("node_float negative subnormal status", status, -4)
 status = range_document.node_float(range_document.element(range_document.member(range_root, "f64_max_edge"), 1), float_value)
 failures = failures + check_int("node_float maximum edge status", status, -4)
 status = range_document.node_i64_array(range_document.member(range_root, "i64_fraction"), 1, packed, error)
