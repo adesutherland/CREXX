@@ -1,0 +1,5 @@
+variant,image,assemble_rc,link_rc,run_rc,output
+control,queens,0,0,1,FAIL: eight-queens search did not find a placement
+control,flow_regression,0,0,1,FAIL: stale inline result 0
+candidate,queens,0,0,0,benchmark=awfy_queens repetitions=1 result=1 | PASS: AWFY Queens
+candidate,flow_regression,0,0,0,final 1 | PASS: flow copy fixed-point inline result

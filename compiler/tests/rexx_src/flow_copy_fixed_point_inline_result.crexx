@@ -1,0 +1,45 @@
+options levelb comments_dash
+
+result = 0
+do iteration = 1 to 1
+  worker = .FlowCopyWorker()
+  result = worker.run()
+  if result <> 1 then do
+    say "FAIL: stale inline result" result
+    return 1
+  end
+end
+
+say "final" result
+say "PASS: flow copy fixed-point inline result"
+return 0
+
+FlowCopyWorker: class
+  values = .int[]
+
+  *: factory
+    do i = 1 to 16
+      values[i] = 1
+    end
+    return
+
+  run: method = .int
+    result = 1
+    do i = 1 to 10 while result = 1
+      result = answer()
+    end
+    return result
+
+  answer: method = .int
+    do i = 1 to 16
+      values[i] = 1
+    end
+    do i = 1 to 8
+      values[i] = 1
+    end
+    return recursiveAnswer(0)
+
+  recursiveAnswer: method = .int
+    arg depth = .int
+    if depth = 0 then return recursiveAnswer(depth + 1)
+    return 1

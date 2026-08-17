@@ -227,6 +227,9 @@ validate_manifest: procedure = .int
       return execution_error("runtime/vm is empty for " || entry_id)
     if fields[7] <> "yes" & fields[7] <> "no" then
       return execution_error("aggregate must be yes or no for " || entry_id)
+    if fields[7] = "yes" & fields[3] = "crexx" & fields[4] <> "rxvm" & ,
+        fields[4] <> "rxtvm" & fields[4] <> "rxbvm" then
+      return execution_error("cREXX aggregate VM must be rxvm, rxtvm or rxbvm for " || entry_id)
     if fields[7] = "yes" & (\is_digits(fields[9]) | fields[9] = "0") then
       return execution_error("aggregate work must be a positive integer for " || entry_id)
     if fields[10] = "" then return execution_error("expectation is empty for " || entry_id)
@@ -471,12 +474,14 @@ write_aggregates: procedure = .int
   comparison_names = .string[]
   comparison_names[1] = "rxvm/oorexx"
   comparison_names[2] = "rxvm/netrexx"
-  comparison_names[3] = "rxbvm/oorexx"
-  comparison_names[4] = "rxbvm/netrexx"
+  comparison_names[3] = "rxtvm/oorexx"
+  comparison_names[4] = "rxtvm/netrexx"
+  comparison_names[5] = "rxbvm/oorexx"
+  comparison_names[6] = "rxbvm/netrexx"
   products = .float[]
   counts = .int[]
   memberships = .string[]
-  do comparison_index = 1 to 4
+  do comparison_index = 1 to comparison_names[0]
     products[comparison_index] = 1.0
     counts[comparison_index] = 0
     memberships[comparison_index] = ""
@@ -496,8 +501,13 @@ write_aggregates: procedure = .int
 
   do summary_index = 1 to ids[0]
     if aggregates[summary_index] <> "yes" | runtimes[summary_index] <> "crexx" then iterate
-    comparison_start = 1
-    if vms[summary_index] = "rxbvm" then comparison_start = 3
+    select
+      when vms[summary_index] = "rxvm" then comparison_start = 1
+      when vms[summary_index] = "rxtvm" then comparison_start = 3
+      when vms[summary_index] = "rxbvm" then comparison_start = 5
+      otherwise return execution_error("unsupported cREXX aggregate VM: " || ,
+          vms[summary_index])
+    end
     do reference_offset = 0 to 1
       comparison_index = comparison_start + reference_offset
       reference_runtime = "oorexx"
@@ -526,17 +536,23 @@ write_aggregates: procedure = .int
     end
   end
   if write_lines(ratios_path, ratios) <> 0 then return 1
+  geomeans = format_geomeans(comparison_names, products, counts, memberships)
+  if geomeans[0] = 1 then return execution_error("no cREXX aggregate was produced")
+  return write_lines(geomeans_path, geomeans)
+
+format_geomeans: procedure = .string[]
+  arg comparison_names = .string[], products = .float[], counts = .int[], ,
+      memberships = .string[]
   geomeans = .string[]
   geomeans[1] = "comparison,n,geometric_mean,membership"
-  do comparison_index = 1 to 4
-    if counts[comparison_index] = 0 then
-      return execution_error("no aggregate members for " || comparison_names[comparison_index])
+  do comparison_index = 1 to comparison_names[0]
+    if counts[comparison_index] = 0 then iterate
     geometric_mean = nth_root(products[comparison_index], counts[comparison_index])
     geomeans[geomeans[0] + 1] = comparison_names[comparison_index] || "," || ,
         counts[comparison_index] || "," || float_text(geometric_mean) || "," || ,
         csv_field(memberships[comparison_index])
   end
-  return write_lines(geomeans_path, geomeans)
+  return geomeans
 
 find_summary: procedure = .int
   arg workload = .string, runtime = .string, vm = .string, ids = .string[], ,
@@ -855,6 +871,31 @@ self_test: procedure = .int
     return execution_error("safe-component self-test failed")
   if floatabs(normalized_rate(2000.0, 2000000000.0) - 1000.0) > 0.000001 then
     return execution_error("normalized-rate self-test failed")
+  comparison_names = .string[]
+  comparison_names[1] = "rxvm/oorexx"
+  comparison_names[2] = "rxvm/netrexx"
+  comparison_names[3] = "rxtvm/oorexx"
+  comparison_names[4] = "rxtvm/netrexx"
+  comparison_names[5] = "rxbvm/oorexx"
+  comparison_names[6] = "rxbvm/netrexx"
+  products = .float[]
+  counts = .int[]
+  memberships = .string[]
+  do comparison_index = 1 to comparison_names[0]
+    products[comparison_index] = 1.0
+    counts[comparison_index] = 0
+    memberships[comparison_index] = ""
+  end
+  products[1] = 4.0
+  products[2] = 9.0
+  counts[1] = 2
+  counts[2] = 2
+  memberships[1] = "Sieve;Permute"
+  memberships[2] = "Sieve;Permute"
+  geomeans = format_geomeans(comparison_names, products, counts, memberships)
+  if geomeans[0] <> 3 | pos("rxvm/oorexx,2,2", geomeans[2]) <> 1 | ,
+      pos("rxvm/netrexx,2,3", geomeans[3]) <> 1 then
+    return execution_error("product-only aggregate self-test failed")
   bsd_rss = .string[]
   bsd_rss[1] = "12345  maximum resident set size"
   if extract_rss(bsd_rss) <> "12345" then

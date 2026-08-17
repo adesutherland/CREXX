@@ -1306,6 +1306,46 @@ static int flow_copy_read_can_share_register(RxcpFlowProcedure *procedure,
     return flow_count_register_reads(procedure, block->anchor, state, source) == 1;
 }
 
+static int flow_copy_path_uses_unmaterialized_source(
+        const RxcpFlowProcedure *procedure,
+        const RxcpFlowBlock *use_block,
+        const int *state,
+        int value) {
+    size_t steps = 0;
+    int target = value;
+    if (!procedure || !use_block || !state || value < 0) return 0;
+    while (target >= 0 && state[target] >= 0 &&
+           state[target] != target && steps++ < procedure->value_count) {
+        int source = state[target];
+        size_t copy_definition;
+        for (copy_definition = 0;
+             copy_definition < procedure->definition_count;
+             copy_definition++) {
+            const RxcpFlowDefinition *copy =
+                    &procedure->definitions[copy_definition];
+            const RxcpFlowBlock *copy_block;
+            size_t source_definition;
+            if (copy->value != (size_t)target || copy->copy_source != source ||
+                !bits_has(&use_block->reaching_in, copy_definition)) continue;
+            copy_block = &procedure->blocks[copy->block];
+            for (source_definition = 0;
+                 source_definition < procedure->definition_count;
+                 source_definition++) {
+                const RxcpFlowDefinition *source_def =
+                        &procedure->definitions[source_definition];
+                if (source_def->value == (size_t)source &&
+                    bits_has(&copy_block->reaching_in, source_definition) &&
+                    source_def->anchor &&
+                    source_def->anchor->flow_skip_assignment_store) {
+                    return 1;
+                }
+            }
+        }
+        target = source;
+    }
+    return 0;
+}
+
 static int flow_mark_copy_reads(RxcpFlowProcedure *procedure,
                                 RxcpFlowBlock *block,
                                 ASTNode *node,
@@ -1334,8 +1374,16 @@ static int flow_mark_copy_reads(RxcpFlowProcedure *procedure,
             flow_copy_read_can_share_register(procedure, block, node, state, source)) {
             Symbol *replacement = procedure->values[source].symbol;
             if (node->flow_substitute_symbol != replacement) {
-                node->flow_substitute_symbol = replacement;
-                changed = 1;
+                /* A skipped definition has no new physical target value. Keep
+                 * an earlier deeper substitution when a reaching copy was
+                 * established only after that source definition was skipped.
+                 * A copy made before the skipped write is deliberately still
+                 * allowed: it denotes the preserved old physical value. */
+                if (!flow_copy_path_uses_unmaterialized_source(
+                        procedure, block, state, value)) {
+                    node->flow_substitute_symbol = replacement;
+                    changed = 1;
+                }
             }
         }
     }

@@ -24,7 +24,10 @@
 options levelb comments_dash
 import rxfnsb
 
-/* Run cREXX language benchmarks repeatedly and emit machine-readable CSV. */
+/*
+ * Convenience process-smoke runner for cREXX language benchmarks.
+ * Formal baselines use performance/tools/run_cross_runtime_matrix.crexx.
+ */
 main: procedure = .int
   arg args = .string[]
 
@@ -91,8 +94,8 @@ main: procedure = .int
     i = i + 1
   end
 
-  if vm_name <> "rxvm" & vm_name <> "rxbvm" then
-    return argument_error("--vm must be rxvm or rxbvm")
+  if vm_name <> "rxvm" & vm_name <> "rxtvm" & vm_name <> "rxbvm" then
+    return argument_error("--vm must be rxvm, rxtvm or rxbvm")
   if mode <> "opt" & mode <> "noopt" then
     return argument_error("--mode must be opt or noopt")
   if runs < 1 then return argument_error("--runs must be a positive integer")
@@ -115,10 +118,11 @@ main: procedure = .int
 
   platform_name = platform_description()
   crexx_version = version()
+  runtime_role = vm_role(vm_name)
   csv_lines = .string[]
-  csv_lines[1] = "benchmark,vm,mode,runs,min_ns,median_ns,mean_ns,max_ns,platform,crexx_version"
+  csv_lines[1] = "benchmark,vm,mode,runs,min_ns,median_ns,mean_ns,max_ns,platform,crexx_version,vm_role,result_role"
   sample_lines = .string[]
-  sample_lines[1] = "benchmark,vm,mode,lifecycle,phase,sequence,elapsed_ns,platform,crexx_version"
+  sample_lines[1] = "benchmark,vm,mode,lifecycle,phase,sequence,elapsed_ns,platform,crexx_version,vm_role,result_role"
 
   do benchmark_index = 1 to selected[0]
     benchmark_name = selected[benchmark_index]
@@ -131,7 +135,7 @@ main: procedure = .int
       elapsed_ns = run_once(command, expected_provenance)
       if elapsed_ns < 0 then return 1
       sample_lines[sample_lines[0] + 1] = sample_csv_row(benchmark_name, vm_name, mode, ,
-          "warmup", warmup, elapsed_ns, platform_name, crexx_version)
+          "warmup", warmup, elapsed_ns, platform_name, crexx_version, runtime_role)
     end
 
     samples = .int[]
@@ -142,14 +146,15 @@ main: procedure = .int
       samples[run] = elapsed_ns
       total_ns = total_ns + elapsed_ns
       sample_lines[sample_lines[0] + 1] = sample_csv_row(benchmark_name, vm_name, mode, ,
-          "recorded", run, elapsed_ns, platform_name, crexx_version)
+          "recorded", run, elapsed_ns, platform_name, crexx_version, runtime_role)
     end
 
     call sort_samples samples
     median_ns = sample_median(samples)
     mean_ns = total_ns <idiv> runs
     csv_lines[csv_lines[0] + 1] = csv_row(benchmark_name, vm_name, mode, runs, ,
-        samples[1], median_ns, mean_ns, samples[runs], platform_name, crexx_version)
+        samples[1], median_ns, mean_ns, samples[runs], platform_name, crexx_version, ,
+        runtime_role)
   end
 
   emit_rc = emit_csv(csv_lines, output_path)
@@ -162,13 +167,15 @@ usage: procedure = .void
   say ""
   say "Options:"
   say "  --build-dir PATH      Build tree (default: cmake-build-release)"
-  say "  --vm rxvm|rxbvm       VM executable (default: rxvm)"
+  say "  --vm NAME             rxvm product or rxtvm/rxbvm concrete control"
   say "  --mode opt|noopt      Benchmark bytecode mode (default: opt)"
   say "  --warmups N           Unrecorded runs per benchmark (default: 2)"
   say "  --runs N              Recorded runs per benchmark (default: 10)"
   say "  --benchmark NAME      Repeatable benchmark name; use README.md for the current set"
   say "  --output PATH         Write CSV to PATH instead of stdout"
   say "  --samples-output PATH Write serial warmup/recorded samples as CSV"
+  say ""
+  say "This is a process-smoke convenience runner, not formal scorecard authority."
   say "  -h, --help            Show this help"
   return
 
@@ -304,20 +311,27 @@ platform_description: procedure = .string
 csv_row: procedure = .string
   arg benchmark_name = .string, vm_name = .string, mode = .string, runs = .int, ,
       min_ns = .int, median_ns = .int, mean_ns = .int, max_ns = .int, ,
-      platform_name = .string, crexx_version = .string
+      platform_name = .string, crexx_version = .string, runtime_role = .string
   return csv_field(benchmark_name) || "," || csv_field(vm_name) || "," || ,
       csv_field(mode) || "," || runs || "," || min_ns || "," || median_ns || ,
       "," || mean_ns || "," || max_ns || "," || csv_field(platform_name) || ,
-      "," || csv_field(crexx_version)
+      "," || csv_field(crexx_version) || "," || csv_field(runtime_role) || ,
+      ",process-smoke"
 
 sample_csv_row: procedure = .string
   arg benchmark_name = .string, vm_name = .string, mode = .string, ,
       phase = .string, sequence = .int, elapsed_ns = .int, ,
-      platform_name = .string, crexx_version = .string
+      platform_name = .string, crexx_version = .string, runtime_role = .string
   return csv_field(benchmark_name) || "," || csv_field(vm_name) || "," || ,
       csv_field(mode) || ",process," || csv_field(phase) || "," || sequence || ,
       "," || elapsed_ns || "," || csv_field(platform_name) || "," || ,
-      csv_field(crexx_version)
+      csv_field(crexx_version) || "," || csv_field(runtime_role) || ,
+      ",process-smoke"
+
+vm_role: procedure = .string
+  arg vm_name = .string
+  if vm_name = "rxvm" then return "product"
+  return "concrete-engine-control"
 
 csv_field: procedure = .string
   arg value = .string

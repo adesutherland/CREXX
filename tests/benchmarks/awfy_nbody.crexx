@@ -1,0 +1,208 @@
+/*
+ * Level B port of the Are We Fast Yet? NBody benchmark.
+ * Derived from upstream commit 74306fec151070fd07157cefeacf19e7e0bcdc89;
+ * see THIRD_PARTY_NOTICES.md. The existing rxmath sqrt function is the
+ * disclosed cREXX native-math substrate.
+ */
+options levelb comments_dash
+import rxmath
+
+arg argv = .string[]
+
+steps = 1
+if argv[0] >= 1 then steps = argv[1]
+if steps < 1 then return fail("steps must be positive")
+if steps <> 1 & steps <> 250000 then return fail("no reference energy for steps " || steps)
+
+system = .NBodySystem()
+do iteration = 1 to steps
+  call system.advance(0.01)
+end
+energy = system.energy()
+
+expected = -0.16907495402506745 as .float
+if steps = 250000 then expected = -0.1690859889909308 as .float
+if fabs(energy - expected) > 0.0000000000001 then
+  return fail("expected " || expected || ", got " || energy)
+
+say "benchmark=awfy_nbody steps="steps "energy="energy
+say "PASS: AWFY NBody"
+return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1
+
+NBodyBody: class
+  x = .float
+  y = .float
+  z = .float
+  vx = .float
+  vy = .float
+  vz = .float
+  mass = .float
+
+  *: factory
+    arg initial_x = .float, initial_y = .float, initial_z = .float, ,
+      initial_vx = .float, initial_vy = .float, initial_vz = .float, ,
+      initial_mass = .float
+    constant DAYS_PER_YEAR = 365.24
+    constant SOLAR_MASS = 39.478417604357434
+    x = initial_x
+    y = initial_y
+    z = initial_z
+    vx = initial_vx * DAYS_PER_YEAR
+    vy = initial_vy * DAYS_PER_YEAR
+    vz = initial_vz * DAYS_PER_YEAR
+    mass = initial_mass * SOLAR_MASS
+    return
+
+  getX: method = .float
+    value = x
+    return value
+  getY: method = .float
+    value = y
+    return value
+  getZ: method = .float
+    value = z
+    return value
+  getVX: method = .float
+    value = vx
+    return value
+  getVY: method = .float
+    value = vy
+    return value
+  getVZ: method = .float
+    value = vz
+    return value
+  getMass: method = .float
+    value = mass
+    return value
+
+  setX: method = .void
+    arg value = .float
+    x = value
+    return
+  setY: method = .void
+    arg value = .float
+    y = value
+    return
+  setZ: method = .void
+    arg value = .float
+    z = value
+    return
+  setVX: method = .void
+    arg value = .float
+    vx = value
+    return
+  setVY: method = .void
+    arg value = .float
+    vy = value
+    return
+  setVZ: method = .void
+    arg value = .float
+    vz = value
+    return
+
+  offsetMomentum: method = .void
+    arg px = .float, py = .float, pz = .float
+    constant SOLAR_MASS = 39.478417604357434
+    vx = 0.0 - (px / SOLAR_MASS)
+    vy = 0.0 - (py / SOLAR_MASS)
+    vz = 0.0 - (pz / SOLAR_MASS)
+    return
+
+NBodySystem: class
+  bodies = .NBodyBody[]
+
+  *: factory
+    bodies[1] = .NBodyBody(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0)
+    bodies[2] = .NBodyBody(4.84143144246472090, -1.16032004402742839, ,
+      -0.103622044471123139, 0.00166007664274403694, ,
+      0.00769901118419740425, -0.0000690460016972063023, ,
+      0.000954791938424326609)
+    bodies[3] = .NBodyBody(8.34336671824457987, 4.12479856412430479, ,
+      -0.403523417114321381, -0.00276742510726862411, ,
+      0.00499852801234917238, 0.0000230417297573763929, ,
+      0.000285885980666130812)
+    bodies[4] = .NBodyBody(12.8943695621391310, -15.1111514016986312, ,
+      -0.223307578892655734, 0.00296460137564761618, ,
+      0.00237847173959480950, -0.0000296589568540237556, ,
+      0.0000436624404335156298)
+    bodies[5] = .NBodyBody(15.3796971148509165, -25.9193146099879641, ,
+      0.179258772950371181, 0.00268067772490389322, ,
+      0.00162824170038242295, -0.0000951592254519715870, ,
+      0.0000515138902046611451)
+
+    px = 0.0 as .float
+    py = 0.0 as .float
+    pz = 0.0 as .float
+    body_count = bodies[0]
+    do i = 1 to body_count
+      body_ref = reference bodies[i]
+      body = dereference body_ref
+      px = px + body.getVX() * body.getMass()
+      py = py + body.getVY() * body.getMass()
+      pz = pz + body.getVZ() * body.getMass()
+    end
+    sun_ref = reference bodies[1]
+    sun = dereference sun_ref
+    call sun.offsetMomentum(px, py, pz)
+    return
+
+  advance: method = .void
+    arg dt = .float
+    body_count = bodies[0]
+    do i = 1 to body_count
+      i_body_ref = reference bodies[i]
+      i_body = dereference i_body_ref
+      do j = i + 1 to body_count
+        j_body_ref = reference bodies[j]
+        j_body = dereference j_body_ref
+        dx = i_body.getX() - j_body.getX()
+        dy = i_body.getY() - j_body.getY()
+        dz = i_body.getZ() - j_body.getZ()
+        squared = dx * dx + dy * dy + dz * dz
+        distance = sqrt(squared)
+        magnitude = dt / (squared * distance)
+
+        call i_body.setVX(i_body.getVX() - dx * j_body.getMass() * magnitude)
+        call i_body.setVY(i_body.getVY() - dy * j_body.getMass() * magnitude)
+        call i_body.setVZ(i_body.getVZ() - dz * j_body.getMass() * magnitude)
+        call j_body.setVX(j_body.getVX() + dx * i_body.getMass() * magnitude)
+        call j_body.setVY(j_body.getVY() + dy * i_body.getMass() * magnitude)
+        call j_body.setVZ(j_body.getVZ() + dz * i_body.getMass() * magnitude)
+      end
+    end
+
+    do i = 1 to body_count
+      body_ref = reference bodies[i]
+      body = dereference body_ref
+      call body.setX(body.getX() + dt * body.getVX())
+      call body.setY(body.getY() + dt * body.getVY())
+      call body.setZ(body.getZ() + dt * body.getVZ())
+    end
+    return
+
+  energy: method = .float
+    total = 0.0 as .float
+    body_count = bodies[0]
+    do i = 1 to body_count
+      i_body_ref = reference bodies[i]
+      i_body = dereference i_body_ref
+      total = total + 0.5 * i_body.getMass() * ,
+        (i_body.getVX() * i_body.getVX() + ,
+         i_body.getVY() * i_body.getVY() + ,
+         i_body.getVZ() * i_body.getVZ())
+      do j = i + 1 to body_count
+        j_body_ref = reference bodies[j]
+        j_body = dereference j_body_ref
+        dx = i_body.getX() - j_body.getX()
+        dy = i_body.getY() - j_body.getY()
+        dz = i_body.getZ() - j_body.getZ()
+        distance = sqrt(dx * dx + dy * dy + dz * dz)
+        total = total - (i_body.getMass() * j_body.getMass()) / distance
+      end
+    end
+    return total

@@ -1,0 +1,21 @@
+# Portfolio-v2 optimized post-RXAS disassembly fusion census, 2026-08-17.
+# Generate these files from the corresponding benchmark_*_opt.rxbin images
+# with rxdas before running performance/tools/inventory_fusions.crexx.
+crexx-fusion-census|1
+sieve|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_awfy_sieve_opt.rxas
+permute|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_awfy_permute_opt.rxas
+mandelbrot|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_awfy_mandelbrot_opt.rxas
+mandelbrot-hoisted|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_awfy_mandelbrot_hoisted_control_opt.rxas
+towers|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_awfy_towers_opt.rxas
+bounce|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_awfy_bounce_opt.rxas
+storage|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_awfy_storage_opt.rxas
+list|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_awfy_list_opt.rxas
+richards|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_awfy_richards_opt.rxas
+json-legacy|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_json_parser_opt.rxas
+json-parse|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_json_parse_opt.rxas
+json-query|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_json_query_opt.rxas
+base64-v1|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_base64_roundtrip_opt.rxas
+base64-v2|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_base64_roundtrip_v2_opt.rxas
+rexxcps|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_rexxcps_levelb_opt.rxas
+queens|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_awfy_queens_opt.rxas
+nbody|cmake-build-release/tests/benchmarks/fusion-census-disassembly/benchmark_awfy_nbody_opt.rxas

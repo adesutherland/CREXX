@@ -114,8 +114,16 @@ until they are narrowed.
 | JIT / MIR / LLVM-style backend research | #331 | Research only. Keep separate from the interpreter and bytecode release contract. |
 | RXAS instruction rationalisation | #288, #338, #357 | Review after instruction coverage is better understood. Preserve assembler-user value unless there is a measured maintenance cost. |
 | Optimizer and loop super-instructions | #339 | `BCTP` / `IGTBR` optimizer work has landed. Future optimizer work should be benchmark-driven and covered by RXAS optimizer tests. |
-| RXAS control-flow and dispatch optimization | PERF3-11/12 performance programme | The reusable immutable CFG, signal policy, sparse component SSA/use index and transactional proof service are implemented. Current consumers include branch threading, conversion/copy placement and capability-lazy loop-scoped joined-key reuse. Continue with metadata- and proof-driven consumers such as transactional PARSE, then bounded hoisting/register-finalization work; keep exact local normalizations in the cheap peephole and do not recreate dense whole-procedure scans. |
+| Performance benchmark portfolio expansion | PERF3 closeout portfolio v2 | Qualify Full AWFY Json first, then DeltaBlue and CD on shared honest container/identity foundations, then Havlak. Each addition needs pinned provenance, semantic equivalence, deterministic correctness, opt/no-opt and product/control qualification before timing or promotion. Direct Java and CPython ports are separately labelled language controls, never inferred Rexx aggregate members. |
+| Generic final/concrete scalar access | transferred PERF3-04 | Start with a hand-equivalent ceiling and a generic compiler proof across the expanded suite. Cover receiver identity and initialization, writable ownership, signals, debug/source identity, opt/no-opt and both concrete VMs. Missing proof retains the ordinary call for that site; do not add JSON-, vector- or numeric-width-specific opcodes. |
+| RXAS control-flow and bounded compiler optimization | PERF3-11/12 performance programme | The reusable immutable CFG, signal policy, sparse component SSA/use index and transactional proof service are implemented. Current consumers include branch threading, conversion/copy placement, capability-lazy loop-scoped joined-key reuse and the completed exit-owned PARSE lowering. Continue only with evidence-selected bounded hoisting, register finalisation and late-inlining consumers, one production candidate and first Release verdict at a time; keep exact local normalizations in the cheap peephole and do not recreate dense whole-procedure scans. |
 | String performance follow-up | #470 | Performance results are useful, but regressions or semantic fallout should be tracked through concrete bugs such as #583. |
+
+The post-PERF3 performance order is therefore benchmark foundations, generic
+scalar-access proof, then broader bounded optimizer consumers. VM handler
+layout is frozen until release-candidate finalisation, when the current
+portfolio and platform evidence must be regenerated before any low-level shape
+decision.
 
 ## Concurrency Roadmap
 

@@ -3422,6 +3422,18 @@ add_crexx_run_test(inline_test_named_factory_selector rexx_src/inline_test_named
 add_crexx_run_test(inline_test_factory_arg_scope rexx_src/inline_test_factory_arg_scope.crexx)
 add_crexx_run_test(inline_test_computed_receiver_copyback rexx_src/inline_test_computed_receiver_copyback.crexx)
 add_crexx_run_test(inline_test_mutating_method_scalar_attr_return rexx_src/inline_test_mutating_method_scalar_attr_return.crexx)
+add_crexx_run_test(flow_copy_fixed_point_inline_result rexx_src/flow_copy_fixed_point_inline_result.crexx)
+add_test(
+        NAME flow_copy_fixed_point_inline_result_contract
+        COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/flow_copy_fixed_point_inline_result.crexx
+                -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/flow_copy_fixed_point_inline_result_contract_ws
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/flow_copy_fixed_point_inline_result_contract.cmake
+)
+set_tests_properties(flow_copy_fixed_point_inline_result_contract
+                     PROPERTIES LABELS "compiler;flow;performance")
 add_crexx_run_test(inline_test_ref_opt rexx_src/inline_test_ref_opt.crexx)
 add_crexx_run_test(inline_test_ref_indexed rexx_src/inline_test_ref_indexed.crexx)
 add_crexx_run_test(inline_test_ref_stem rexx_src/inline_test_ref_stem.crexx)

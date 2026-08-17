@@ -1,0 +1,1477 @@
+sample_id,stream,line_number,text
+timing-Sieve-sieve-rxvm-warmup-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-warmup-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-warmup-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-warmup-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-warmup-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-warmup-1,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-warmup-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-warmup-1,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-netrexx-warmup-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-warmup-2,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-oorexx-warmup-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-warmup-2,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-rxtvm-warmup-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-warmup-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxvm-warmup-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-warmup-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-1,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-1,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-netrexx-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-2,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-oorexx-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-2,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-rxtvm-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxvm-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-3,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-3,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-rxvm-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-recorded-4,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxvm-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-4,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-netrexx-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-4,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-oorexx-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-4,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-rxvm-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-5,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-recorded-5,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-5,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-5,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-netrexx-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-6,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-oorexx-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-6,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-rxtvm-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-recorded-6,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxvm-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-6,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-7,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-7,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-rxvm-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-7,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-recorded-7,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-recorded-8,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxvm-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-8,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-netrexx-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-8,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-oorexx-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-8,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-rxvm-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-9,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-recorded-9,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-oorexx-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-9,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-netrexx-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-9,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-netrexx-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-netrexx-recorded-10,stdout,2,PASS: AWFY Sieve NetRexx decimal port
+timing-Sieve-sieve-oorexx-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-oorexx-recorded-10,stdout,2,PASS: AWFY Sieve Classic port
+timing-Sieve-sieve-rxtvm-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-recorded-10,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxvm-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-recorded-10,stdout,2,PASS: AWFY Sieve
+timing-Permute-permute-rxvm-warmup-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-warmup-1,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-warmup-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-warmup-1,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-warmup-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-warmup-1,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-warmup-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-warmup-1,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-netrexx-warmup-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-warmup-2,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-oorexx-warmup-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-warmup-2,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-rxtvm-warmup-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-warmup-2,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxvm-warmup-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-warmup-2,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxvm-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-1,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-recorded-1,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-1,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-1,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-netrexx-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-2,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-oorexx-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-2,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-rxtvm-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-recorded-2,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxvm-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-2,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-3,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-3,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-rxvm-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-3,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-recorded-3,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-recorded-4,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-recorded-4,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxvm-recorded-4,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-4,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-netrexx-recorded-4,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-4,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-oorexx-recorded-4,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-4,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-rxvm-recorded-5,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-5,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-recorded-5,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-recorded-5,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-5,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-5,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-recorded-5,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-5,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-netrexx-recorded-6,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-6,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-oorexx-recorded-6,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-6,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-rxtvm-recorded-6,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-recorded-6,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxvm-recorded-6,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-6,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-7,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-7,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-recorded-7,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-7,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-rxvm-recorded-7,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-7,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-recorded-7,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-recorded-7,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-recorded-8,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-recorded-8,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxvm-recorded-8,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-8,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-netrexx-recorded-8,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-8,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-oorexx-recorded-8,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-8,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-rxvm-recorded-9,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-9,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-recorded-9,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-recorded-9,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-oorexx-recorded-9,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-9,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-netrexx-recorded-9,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-9,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-netrexx-recorded-10,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-netrexx-recorded-10,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-permute-oorexx-recorded-10,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-oorexx-recorded-10,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-rxtvm-recorded-10,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-recorded-10,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxvm-recorded-10,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-recorded-10,stdout,2,PASS: AWFY Permute
+timing-Bounce-bounce-rxvm-warmup-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-warmup-1,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxtvm-warmup-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxtvm-warmup-1,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-warmup-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-oorexx-warmup-1,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-warmup-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-netrexx-warmup-1,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-netrexx-warmup-2,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-netrexx-warmup-2,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-oorexx-warmup-2,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-oorexx-warmup-2,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-rxtvm-warmup-2,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxtvm-warmup-2,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxvm-warmup-2,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-warmup-2,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxvm-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-recorded-1,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxtvm-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxtvm-recorded-1,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-oorexx-recorded-1,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-netrexx-recorded-1,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-netrexx-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-netrexx-recorded-2,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-oorexx-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-oorexx-recorded-2,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-rxtvm-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxtvm-recorded-2,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxvm-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-recorded-2,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-oorexx-recorded-3,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-netrexx-recorded-3,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-rxvm-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-recorded-3,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxtvm-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxtvm-recorded-3,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxtvm-recorded-4,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxtvm-recorded-4,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxvm-recorded-4,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-recorded-4,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-netrexx-recorded-4,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-netrexx-recorded-4,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-oorexx-recorded-4,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-oorexx-recorded-4,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-rxvm-recorded-5,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-recorded-5,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxtvm-recorded-5,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxtvm-recorded-5,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-5,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-oorexx-recorded-5,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-recorded-5,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-netrexx-recorded-5,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-netrexx-recorded-6,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-netrexx-recorded-6,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-oorexx-recorded-6,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-oorexx-recorded-6,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-rxtvm-recorded-6,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxtvm-recorded-6,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxvm-recorded-6,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-recorded-6,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-7,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-oorexx-recorded-7,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-recorded-7,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-netrexx-recorded-7,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-rxvm-recorded-7,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-recorded-7,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxtvm-recorded-7,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxtvm-recorded-7,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxtvm-recorded-8,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxtvm-recorded-8,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxvm-recorded-8,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-recorded-8,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-netrexx-recorded-8,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-netrexx-recorded-8,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-oorexx-recorded-8,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-oorexx-recorded-8,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-rxvm-recorded-9,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-recorded-9,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxtvm-recorded-9,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxtvm-recorded-9,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-oorexx-recorded-9,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-oorexx-recorded-9,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-netrexx-recorded-9,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-netrexx-recorded-9,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-netrexx-recorded-10,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-netrexx-recorded-10,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+timing-Bounce-bounce-oorexx-recorded-10,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-oorexx-recorded-10,stdout,2,PASS: AWFY Bounce ooRexx object port
+timing-Bounce-bounce-rxtvm-recorded-10,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxtvm-recorded-10,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxvm-recorded-10,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-recorded-10,stdout,2,PASS: AWFY Bounce
+timing-Richards-richards-rxvm-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-warmup-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxtvm-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxtvm-warmup-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-warmup-1,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-warmup-1,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-netrexx-warmup-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-warmup-2,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-oorexx-warmup-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-warmup-2,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-rxtvm-warmup-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxtvm-warmup-2,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxvm-warmup-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-warmup-2,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxtvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxtvm-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-1,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-1,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-netrexx-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-2,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-oorexx-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-2,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-rxtvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxtvm-recorded-2,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-2,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-3,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-3,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-rxvm-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-3,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxtvm-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxtvm-recorded-3,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxtvm-recorded-4,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxtvm-recorded-4,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxvm-recorded-4,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-4,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-netrexx-recorded-4,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-4,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-oorexx-recorded-4,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-4,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-rxvm-recorded-5,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-5,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxtvm-recorded-5,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxtvm-recorded-5,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-5,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-5,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-recorded-5,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-5,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-netrexx-recorded-6,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-6,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-oorexx-recorded-6,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-6,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-rxtvm-recorded-6,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxtvm-recorded-6,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxvm-recorded-6,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-6,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-7,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-7,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-recorded-7,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-7,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-rxvm-recorded-7,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-7,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxtvm-recorded-7,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxtvm-recorded-7,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxtvm-recorded-8,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxtvm-recorded-8,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxvm-recorded-8,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-8,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-netrexx-recorded-8,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-8,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-oorexx-recorded-8,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-8,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-rxvm-recorded-9,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-9,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxtvm-recorded-9,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxtvm-recorded-9,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-oorexx-recorded-9,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-9,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-netrexx-recorded-9,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-9,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-netrexx-recorded-10,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-netrexx-recorded-10,stdout,2,PASS: AWFY Richards NetRexx decimal port
+timing-Richards-richards-oorexx-recorded-10,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-oorexx-recorded-10,stdout,2,PASS: AWFY Richards ooRexx port
+timing-Richards-richards-rxtvm-recorded-10,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxtvm-recorded-10,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxvm-recorded-10,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-recorded-10,stdout,2,PASS: AWFY Richards
+timing-Base64-v2-base64-v2-rxvm-warmup-1,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxvm-warmup-1,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxtvm-warmup-1,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxtvm-warmup-1,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-oorexx-warmup-1,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-oorexx-warmup-1,stdout,2,PASS: Base64 Roundtrip v2 ooRexx port
+timing-Base64-v2-base64-v2-netrexx-warmup-1,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-netrexx-warmup-1,stdout,2,PASS: Base64 Roundtrip v2 NetRexx decimal port
+timing-Base64-v2-base64-v2-netrexx-warmup-2,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-netrexx-warmup-2,stdout,2,PASS: Base64 Roundtrip v2 NetRexx decimal port
+timing-Base64-v2-base64-v2-oorexx-warmup-2,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-oorexx-warmup-2,stdout,2,PASS: Base64 Roundtrip v2 ooRexx port
+timing-Base64-v2-base64-v2-rxtvm-warmup-2,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxtvm-warmup-2,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxvm-warmup-2,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxvm-warmup-2,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxvm-recorded-1,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxvm-recorded-1,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxtvm-recorded-1,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxtvm-recorded-1,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-oorexx-recorded-1,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-oorexx-recorded-1,stdout,2,PASS: Base64 Roundtrip v2 ooRexx port
+timing-Base64-v2-base64-v2-netrexx-recorded-1,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-netrexx-recorded-1,stdout,2,PASS: Base64 Roundtrip v2 NetRexx decimal port
+timing-Base64-v2-base64-v2-netrexx-recorded-2,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-netrexx-recorded-2,stdout,2,PASS: Base64 Roundtrip v2 NetRexx decimal port
+timing-Base64-v2-base64-v2-oorexx-recorded-2,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-oorexx-recorded-2,stdout,2,PASS: Base64 Roundtrip v2 ooRexx port
+timing-Base64-v2-base64-v2-rxtvm-recorded-2,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxtvm-recorded-2,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxvm-recorded-2,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxvm-recorded-2,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-oorexx-recorded-3,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-oorexx-recorded-3,stdout,2,PASS: Base64 Roundtrip v2 ooRexx port
+timing-Base64-v2-base64-v2-netrexx-recorded-3,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-netrexx-recorded-3,stdout,2,PASS: Base64 Roundtrip v2 NetRexx decimal port
+timing-Base64-v2-base64-v2-rxvm-recorded-3,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxvm-recorded-3,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxtvm-recorded-3,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxtvm-recorded-3,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxtvm-recorded-4,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxtvm-recorded-4,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxvm-recorded-4,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxvm-recorded-4,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-netrexx-recorded-4,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-netrexx-recorded-4,stdout,2,PASS: Base64 Roundtrip v2 NetRexx decimal port
+timing-Base64-v2-base64-v2-oorexx-recorded-4,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-oorexx-recorded-4,stdout,2,PASS: Base64 Roundtrip v2 ooRexx port
+timing-Base64-v2-base64-v2-rxvm-recorded-5,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxvm-recorded-5,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxtvm-recorded-5,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxtvm-recorded-5,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-oorexx-recorded-5,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-oorexx-recorded-5,stdout,2,PASS: Base64 Roundtrip v2 ooRexx port
+timing-Base64-v2-base64-v2-netrexx-recorded-5,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-netrexx-recorded-5,stdout,2,PASS: Base64 Roundtrip v2 NetRexx decimal port
+timing-Base64-v2-base64-v2-netrexx-recorded-6,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-netrexx-recorded-6,stdout,2,PASS: Base64 Roundtrip v2 NetRexx decimal port
+timing-Base64-v2-base64-v2-oorexx-recorded-6,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-oorexx-recorded-6,stdout,2,PASS: Base64 Roundtrip v2 ooRexx port
+timing-Base64-v2-base64-v2-rxtvm-recorded-6,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxtvm-recorded-6,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxvm-recorded-6,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxvm-recorded-6,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-oorexx-recorded-7,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-oorexx-recorded-7,stdout,2,PASS: Base64 Roundtrip v2 ooRexx port
+timing-Base64-v2-base64-v2-netrexx-recorded-7,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-netrexx-recorded-7,stdout,2,PASS: Base64 Roundtrip v2 NetRexx decimal port
+timing-Base64-v2-base64-v2-rxvm-recorded-7,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxvm-recorded-7,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxtvm-recorded-7,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxtvm-recorded-7,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxtvm-recorded-8,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxtvm-recorded-8,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxvm-recorded-8,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxvm-recorded-8,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-netrexx-recorded-8,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-netrexx-recorded-8,stdout,2,PASS: Base64 Roundtrip v2 NetRexx decimal port
+timing-Base64-v2-base64-v2-oorexx-recorded-8,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-oorexx-recorded-8,stdout,2,PASS: Base64 Roundtrip v2 ooRexx port
+timing-Base64-v2-base64-v2-rxvm-recorded-9,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxvm-recorded-9,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxtvm-recorded-9,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxtvm-recorded-9,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-oorexx-recorded-9,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-oorexx-recorded-9,stdout,2,PASS: Base64 Roundtrip v2 ooRexx port
+timing-Base64-v2-base64-v2-netrexx-recorded-9,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-netrexx-recorded-9,stdout,2,PASS: Base64 Roundtrip v2 NetRexx decimal port
+timing-Base64-v2-base64-v2-netrexx-recorded-10,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-netrexx-recorded-10,stdout,2,PASS: Base64 Roundtrip v2 NetRexx decimal port
+timing-Base64-v2-base64-v2-oorexx-recorded-10,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-oorexx-recorded-10,stdout,2,PASS: Base64 Roundtrip v2 ooRexx port
+timing-Base64-v2-base64-v2-rxtvm-recorded-10,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxtvm-recorded-10,stdout,2,PASS: Base64 Roundtrip v2
+timing-Base64-v2-base64-v2-rxvm-recorded-10,stdout,1,benchmark=base64_roundtrip_v2 repetitions=18000 encoded_length=1368 checksum=130560
+timing-Base64-v2-base64-v2-rxvm-recorded-10,stdout,2,PASS: Base64 Roundtrip v2
+timing-Towers-towers-rxvm-warmup-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-warmup-1,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxtvm-warmup-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxtvm-warmup-1,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-oorexx-warmup-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-oorexx-warmup-1,stdout,2,PASS: AWFY Towers ooRexx object port
+timing-Towers-towers-netrexx-warmup-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-netrexx-warmup-1,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-netrexx-warmup-2,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-netrexx-warmup-2,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-oorexx-warmup-2,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-oorexx-warmup-2,stdout,2,PASS: AWFY Towers ooRexx object port
+timing-Towers-towers-rxtvm-warmup-2,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxtvm-warmup-2,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxvm-warmup-2,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-warmup-2,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxvm-recorded-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-recorded-1,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxtvm-recorded-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxtvm-recorded-1,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-oorexx-recorded-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-oorexx-recorded-1,stdout,2,PASS: AWFY Towers ooRexx object port
+timing-Towers-towers-netrexx-recorded-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-netrexx-recorded-1,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-netrexx-recorded-2,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-netrexx-recorded-2,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-oorexx-recorded-2,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-oorexx-recorded-2,stdout,2,PASS: AWFY Towers ooRexx object port
+timing-Towers-towers-rxtvm-recorded-2,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxtvm-recorded-2,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxvm-recorded-2,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-recorded-2,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-oorexx-recorded-3,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-oorexx-recorded-3,stdout,2,PASS: AWFY Towers ooRexx object port
+timing-Towers-towers-netrexx-recorded-3,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-netrexx-recorded-3,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-rxvm-recorded-3,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-recorded-3,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxtvm-recorded-3,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxtvm-recorded-3,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxtvm-recorded-4,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxtvm-recorded-4,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxvm-recorded-4,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-recorded-4,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-netrexx-recorded-4,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-netrexx-recorded-4,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-oorexx-recorded-4,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-oorexx-recorded-4,stdout,2,PASS: AWFY Towers ooRexx object port
+timing-Towers-towers-rxvm-recorded-5,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-recorded-5,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxtvm-recorded-5,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxtvm-recorded-5,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-oorexx-recorded-5,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-oorexx-recorded-5,stdout,2,PASS: AWFY Towers ooRexx object port
+timing-Towers-towers-netrexx-recorded-5,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-netrexx-recorded-5,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-netrexx-recorded-6,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-netrexx-recorded-6,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-oorexx-recorded-6,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-oorexx-recorded-6,stdout,2,PASS: AWFY Towers ooRexx object port
+timing-Towers-towers-rxtvm-recorded-6,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxtvm-recorded-6,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxvm-recorded-6,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-recorded-6,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-oorexx-recorded-7,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-oorexx-recorded-7,stdout,2,PASS: AWFY Towers ooRexx object port
+timing-Towers-towers-netrexx-recorded-7,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-netrexx-recorded-7,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-rxvm-recorded-7,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-recorded-7,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxtvm-recorded-7,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxtvm-recorded-7,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxtvm-recorded-8,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxtvm-recorded-8,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxvm-recorded-8,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-recorded-8,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-netrexx-recorded-8,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-netrexx-recorded-8,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-oorexx-recorded-8,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-oorexx-recorded-8,stdout,2,PASS: AWFY Towers ooRexx object port
+timing-Towers-towers-rxvm-recorded-9,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-recorded-9,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxtvm-recorded-9,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxtvm-recorded-9,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-oorexx-recorded-9,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-oorexx-recorded-9,stdout,2,PASS: AWFY Towers ooRexx object port
+timing-Towers-towers-netrexx-recorded-9,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-netrexx-recorded-9,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-netrexx-recorded-10,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-netrexx-recorded-10,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-oorexx-recorded-10,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-oorexx-recorded-10,stdout,2,PASS: AWFY Towers ooRexx object port
+timing-Towers-towers-rxtvm-recorded-10,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxtvm-recorded-10,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxvm-recorded-10,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-recorded-10,stdout,2,PASS: AWFY Towers
+timing-RexxCPS-rexxcps-rxvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxvm-warmup-1,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-warmup-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-warmup-1,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-warmup-1,stdout,8,     Performance: 38438660 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-warmup-1,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxtvm-warmup-1,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxtvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-warmup-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxtvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxtvm-warmup-1,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-warmup-1,stdout,8,     Performance: 38815092 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-warmup-1,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-warmup-1,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-warmup-1,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-warmup-1,stdout,3,       System is: DARWIN
+timing-RexxCPS-rexxcps-oorexx-warmup-1,stdout,4,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-warmup-1,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-warmup-1,stdout,6,     Performance: 33105047 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-warmup-1,stdout,7,
+timing-RexxCPS-rexxcps-regina-warmup-1,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-warmup-1,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-warmup-1,stdout,3,       System is: UNIX
+timing-RexxCPS-rexxcps-regina-warmup-1,stdout,4,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0s)
+timing-RexxCPS-rexxcps-regina-warmup-1,stdout,5,
+timing-RexxCPS-rexxcps-regina-warmup-1,stdout,6,     Performance: 29592803 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-warmup-1,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-warmup-1,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-warmup-1,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-warmup-1,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-warmup-1,stdout,4,          Averaging: 100 measures of 300 iterations
+timing-RexxCPS-rexxcps-netrexx-warmup-1,stdout,5,                       of 1000 clauses (over 0.791415962    s)
+timing-RexxCPS-rexxcps-netrexx-warmup-1,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-warmup-1,stdout,7,Total (full DOs): 0.791415962 secs (average of 100 measures of 300 iterations)
+timing-RexxCPS-rexxcps-netrexx-warmup-1,stdout,8,Time for one iteration (1000 clauses) was: 0.000026375368166666666667 seconds
+timing-RexxCPS-rexxcps-netrexx-warmup-1,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-warmup-1,stdout,10,     Performance: 37_914_163 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-warmup-1,stdout,11,                ( 37.914E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-warmup-1,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-warmup-1,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-netrexx-warmup-2,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-warmup-2,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-warmup-2,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-warmup-2,stdout,4,          Averaging: 100 measures of 300 iterations
+timing-RexxCPS-rexxcps-netrexx-warmup-2,stdout,5,                       of 1000 clauses (over 0.809901458    s)
+timing-RexxCPS-rexxcps-netrexx-warmup-2,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-warmup-2,stdout,7,Total (full DOs): 0.809901458 secs (average of 100 measures of 300 iterations)
+timing-RexxCPS-rexxcps-netrexx-warmup-2,stdout,8,Time for one iteration (1000 clauses) was: 0.000026991180466666666667 seconds
+timing-RexxCPS-rexxcps-netrexx-warmup-2,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-warmup-2,stdout,10,     Performance: 37_049_139 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-warmup-2,stdout,11,                ( 37.049E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-warmup-2,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-warmup-2,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-regina-warmup-2,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-warmup-2,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-warmup-2,stdout,3,       System is: UNIX
+timing-RexxCPS-rexxcps-regina-warmup-2,stdout,4,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0s)
+timing-RexxCPS-rexxcps-regina-warmup-2,stdout,5,
+timing-RexxCPS-rexxcps-regina-warmup-2,stdout,6,     Performance: 28863333 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-warmup-2,stdout,7,
+timing-RexxCPS-rexxcps-oorexx-warmup-2,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-warmup-2,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-warmup-2,stdout,3,       System is: DARWIN
+timing-RexxCPS-rexxcps-oorexx-warmup-2,stdout,4,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-warmup-2,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-warmup-2,stdout,6,     Performance: 34769396 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-warmup-2,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-warmup-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-warmup-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxtvm-warmup-2,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxtvm-warmup-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-warmup-2,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxtvm-warmup-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxtvm-warmup-2,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-warmup-2,stdout,8,     Performance: 38660080 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-warmup-2,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-warmup-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxvm-warmup-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-warmup-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxvm-warmup-2,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-warmup-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-warmup-2,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxvm-warmup-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-warmup-2,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-warmup-2,stdout,8,     Performance: 38326071 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-warmup-2,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-warmup-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxvm-recorded-1,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-recorded-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-recorded-1,stdout,8,     Performance: 38991371 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-1,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxtvm-recorded-1,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxtvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-recorded-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxtvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxtvm-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-recorded-1,stdout,8,     Performance: 39284125 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-recorded-1,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-1,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-1,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-1,stdout,3,       System is: DARWIN
+timing-RexxCPS-rexxcps-oorexx-recorded-1,stdout,4,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-recorded-1,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-1,stdout,6,     Performance: 33431371 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-regina-recorded-1,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-1,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-1,stdout,3,       System is: UNIX
+timing-RexxCPS-rexxcps-regina-recorded-1,stdout,4,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0s)
+timing-RexxCPS-rexxcps-regina-recorded-1,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-1,stdout,6,     Performance: 28663123 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-recorded-1,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-recorded-1,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-recorded-1,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-recorded-1,stdout,4,          Averaging: 100 measures of 300 iterations
+timing-RexxCPS-rexxcps-netrexx-recorded-1,stdout,5,                       of 1000 clauses (over 0.784826245    s)
+timing-RexxCPS-rexxcps-netrexx-recorded-1,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-recorded-1,stdout,7,Total (full DOs): 0.784826245 secs (average of 100 measures of 300 iterations)
+timing-RexxCPS-rexxcps-netrexx-recorded-1,stdout,8,Time for one iteration (1000 clauses) was: 0.000026155941466666666667 seconds
+timing-RexxCPS-rexxcps-netrexx-recorded-1,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-recorded-1,stdout,10,     Performance: 38_232_231 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-recorded-1,stdout,11,                ( 38.232E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-recorded-1,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-recorded-1,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-netrexx-recorded-2,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-recorded-2,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-recorded-2,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-recorded-2,stdout,4,          Averaging: 100 measures of 300 iterations
+timing-RexxCPS-rexxcps-netrexx-recorded-2,stdout,5,                       of 1000 clauses (over 0.823310381    s)
+timing-RexxCPS-rexxcps-netrexx-recorded-2,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-recorded-2,stdout,7,Total (full DOs): 0.823310381 secs (average of 100 measures of 300 iterations)
+timing-RexxCPS-rexxcps-netrexx-recorded-2,stdout,8,Time for one iteration (1000 clauses) was: 0.000027438203 seconds
+timing-RexxCPS-rexxcps-netrexx-recorded-2,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-recorded-2,stdout,10,     Performance: 36_445_535 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-recorded-2,stdout,11,                ( 36.446E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-recorded-2,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-recorded-2,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-regina-recorded-2,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-2,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-2,stdout,3,       System is: UNIX
+timing-RexxCPS-rexxcps-regina-recorded-2,stdout,4,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0s)
+timing-RexxCPS-rexxcps-regina-recorded-2,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-2,stdout,6,     Performance: 28997975 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-oorexx-recorded-2,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-2,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-2,stdout,3,       System is: DARWIN
+timing-RexxCPS-rexxcps-oorexx-recorded-2,stdout,4,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-recorded-2,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-2,stdout,6,     Performance: 34262885 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxtvm-recorded-2,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxtvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-recorded-2,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-rxtvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxtvm-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-recorded-2,stdout,8,     Performance: 38105835 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-recorded-2,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxvm-recorded-2,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-recorded-2,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-recorded-2,stdout,8,     Performance: 38995553 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-2,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-3,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-3,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-3,stdout,3,       System is: DARWIN
+timing-RexxCPS-rexxcps-oorexx-recorded-3,stdout,4,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-recorded-3,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-3,stdout,6,     Performance: 33349758 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-regina-recorded-3,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-3,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-3,stdout,3,       System is: UNIX
+timing-RexxCPS-rexxcps-regina-recorded-3,stdout,4,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1s)
+timing-RexxCPS-rexxcps-regina-recorded-3,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-3,stdout,6,     Performance: 28195780 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-recorded-3,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-recorded-3,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-recorded-3,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-recorded-3,stdout,4,          Averaging: 100 measures of 300 iterations
+timing-RexxCPS-rexxcps-netrexx-recorded-3,stdout,5,                       of 1000 clauses (over 0.785087166    s)
+timing-RexxCPS-rexxcps-netrexx-recorded-3,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-recorded-3,stdout,7,Total (full DOs): 0.785087166 secs (average of 100 measures of 300 iterations)
+timing-RexxCPS-rexxcps-netrexx-recorded-3,stdout,8,Time for one iteration (1000 clauses) was: 0.000026164611133333333333 seconds
+timing-RexxCPS-rexxcps-netrexx-recorded-3,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-recorded-3,stdout,10,     Performance: 38_219_563 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-recorded-3,stdout,11,                ( 38.220E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-recorded-3,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-recorded-3,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-rxvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxvm-recorded-3,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-recorded-3,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-recorded-3,stdout,8,     Performance: 38118327 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-3,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxtvm-recorded-3,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxtvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-recorded-3,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxtvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxtvm-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-recorded-3,stdout,8,     Performance: 38297265 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-recorded-3,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxtvm-recorded-4,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxtvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-recorded-4,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxtvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxtvm-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-recorded-4,stdout,8,     Performance: 38749815 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-recorded-4,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxvm-recorded-4,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-recorded-4,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-rxvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-recorded-4,stdout,8,     Performance: 37150035 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-4,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-netrexx-recorded-4,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-recorded-4,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-recorded-4,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-recorded-4,stdout,4,          Averaging: 100 measures of 300 iterations
+timing-RexxCPS-rexxcps-netrexx-recorded-4,stdout,5,                       of 1000 clauses (over 0.918437411    s)
+timing-RexxCPS-rexxcps-netrexx-recorded-4,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-recorded-4,stdout,7,Total (full DOs): 0.918437411 secs (average of 100 measures of 300 iterations)
+timing-RexxCPS-rexxcps-netrexx-recorded-4,stdout,8,Time for one iteration (1000 clauses) was: 0.0000306091514 seconds
+timing-RexxCPS-rexxcps-netrexx-recorded-4,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-recorded-4,stdout,10,     Performance: 32_669_968 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-recorded-4,stdout,11,                ( 32.670E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-recorded-4,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-recorded-4,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-regina-recorded-4,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-4,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-4,stdout,3,       System is: UNIX
+timing-RexxCPS-rexxcps-regina-recorded-4,stdout,4,        Averaged: 200 x 100 iterations of 1000 clauses (over 0.9s)
+timing-RexxCPS-rexxcps-regina-recorded-4,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-4,stdout,6,     Performance: 21759305 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-oorexx-recorded-4,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-4,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-4,stdout,3,       System is: DARWIN
+timing-RexxCPS-rexxcps-oorexx-recorded-4,stdout,4,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-recorded-4,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-4,stdout,6,     Performance: 34048291 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-recorded-5,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-recorded-5,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-recorded-5,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-recorded-5,stdout,4,          Averaging: 100 measures of 300 iterations
+timing-RexxCPS-rexxcps-netrexx-recorded-5,stdout,5,                       of 1000 clauses (over 0.804821129    s)
+timing-RexxCPS-rexxcps-netrexx-recorded-5,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-recorded-5,stdout,7,Total (full DOs): 0.804821129 secs (average of 100 measures of 300 iterations)
+timing-RexxCPS-rexxcps-netrexx-recorded-5,stdout,8,Time for one iteration (1000 clauses) was: 0.0000268223791 seconds
+timing-RexxCPS-rexxcps-netrexx-recorded-5,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-recorded-5,stdout,10,     Performance: 37_282_301 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-recorded-5,stdout,11,                ( 37.282E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-recorded-5,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-recorded-5,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-rxvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxvm-recorded-5,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-recorded-5,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-rxvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-recorded-5,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-recorded-5,stdout,8,     Performance: 37506282 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-5,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxtvm-recorded-5,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxtvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-recorded-5,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxtvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxtvm-recorded-5,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-recorded-5,stdout,8,     Performance: 39253593 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-recorded-5,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-5,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-5,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-5,stdout,3,       System is: DARWIN
+timing-RexxCPS-rexxcps-oorexx-recorded-5,stdout,4,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-recorded-5,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-5,stdout,6,     Performance: 33555893 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-5,stdout,7,
+timing-RexxCPS-rexxcps-regina-recorded-5,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-5,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-5,stdout,3,       System is: UNIX
+timing-RexxCPS-rexxcps-regina-recorded-5,stdout,4,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1s)
+timing-RexxCPS-rexxcps-regina-recorded-5,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-5,stdout,6,     Performance: 27930568 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-5,stdout,7,
+timing-RexxCPS-rexxcps-regina-recorded-6,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-6,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-6,stdout,3,       System is: UNIX
+timing-RexxCPS-rexxcps-regina-recorded-6,stdout,4,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0s)
+timing-RexxCPS-rexxcps-regina-recorded-6,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-6,stdout,6,     Performance: 28967735 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-6,stdout,7,
+timing-RexxCPS-rexxcps-oorexx-recorded-6,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-6,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-6,stdout,3,       System is: DARWIN
+timing-RexxCPS-rexxcps-oorexx-recorded-6,stdout,4,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-recorded-6,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-6,stdout,6,     Performance: 33204031 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-6,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxtvm-recorded-6,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxtvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-recorded-6,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-rxtvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxtvm-recorded-6,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-recorded-6,stdout,8,     Performance: 37636113 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-recorded-6,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxvm-recorded-6,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-recorded-6,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-recorded-6,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-recorded-6,stdout,8,     Performance: 39142620 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-6,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-netrexx-recorded-6,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-recorded-6,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-recorded-6,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-recorded-6,stdout,4,          Averaging: 100 measures of 300 iterations
+timing-RexxCPS-rexxcps-netrexx-recorded-6,stdout,5,                       of 1000 clauses (over 0.812327963    s)
+timing-RexxCPS-rexxcps-netrexx-recorded-6,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-recorded-6,stdout,7,Total (full DOs): 0.812327963 secs (average of 100 measures of 300 iterations)
+timing-RexxCPS-rexxcps-netrexx-recorded-6,stdout,8,Time for one iteration (1000 clauses) was: 0.000027072326366666666667 seconds
+timing-RexxCPS-rexxcps-netrexx-recorded-6,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-recorded-6,stdout,10,     Performance: 36_938_089 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-recorded-6,stdout,11,                ( 36.938E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-recorded-6,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-recorded-6,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-rxtvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxtvm-recorded-7,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxtvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-recorded-7,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-rxtvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxtvm-recorded-7,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-recorded-7,stdout,8,     Performance: 37924793 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-recorded-7,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-7,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-7,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-7,stdout,3,       System is: DARWIN
+timing-RexxCPS-rexxcps-oorexx-recorded-7,stdout,4,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-recorded-7,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-7,stdout,6,     Performance: 34155426 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-7,stdout,7,
+timing-RexxCPS-rexxcps-regina-recorded-7,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-7,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-7,stdout,3,       System is: UNIX
+timing-RexxCPS-rexxcps-regina-recorded-7,stdout,4,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1s)
+timing-RexxCPS-rexxcps-regina-recorded-7,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-7,stdout,6,     Performance: 28007360 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-7,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-recorded-7,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-recorded-7,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-recorded-7,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-recorded-7,stdout,4,          Averaging: 100 measures of 300 iterations
+timing-RexxCPS-rexxcps-netrexx-recorded-7,stdout,5,                       of 1000 clauses (over 0.812152542    s)
+timing-RexxCPS-rexxcps-netrexx-recorded-7,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-recorded-7,stdout,7,Total (full DOs): 0.812152542 secs (average of 100 measures of 300 iterations)
+timing-RexxCPS-rexxcps-netrexx-recorded-7,stdout,8,Time for one iteration (1000 clauses) was: 0.000027066852666666666667 seconds
+timing-RexxCPS-rexxcps-netrexx-recorded-7,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-recorded-7,stdout,10,     Performance: 36_945_559 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-recorded-7,stdout,11,                ( 36.946E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-recorded-7,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-recorded-7,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-rxvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxvm-recorded-7,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-recorded-7,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-rxvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-recorded-7,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-recorded-7,stdout,8,     Performance: 37893070 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-7,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxvm-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-recorded-8,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxvm-recorded-8,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-recorded-8,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxvm-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-recorded-8,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-recorded-8,stdout,8,     Performance: 38885994 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-8,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-netrexx-recorded-8,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-recorded-8,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-recorded-8,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-recorded-8,stdout,4,          Averaging: 100 measures of 300 iterations
+timing-RexxCPS-rexxcps-netrexx-recorded-8,stdout,5,                       of 1000 clauses (over 0.795984287    s)
+timing-RexxCPS-rexxcps-netrexx-recorded-8,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-recorded-8,stdout,7,Total (full DOs): 0.795984287 secs (average of 100 measures of 300 iterations)
+timing-RexxCPS-rexxcps-netrexx-recorded-8,stdout,8,Time for one iteration (1000 clauses) was: 0.000026527805566666666667 seconds
+timing-RexxCPS-rexxcps-netrexx-recorded-8,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-recorded-8,stdout,10,     Performance: 37_696_296 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-recorded-8,stdout,11,                ( 37.696E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-recorded-8,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-recorded-8,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-regina-recorded-8,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-8,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-8,stdout,3,       System is: UNIX
+timing-RexxCPS-rexxcps-regina-recorded-8,stdout,4,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1s)
+timing-RexxCPS-rexxcps-regina-recorded-8,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-8,stdout,6,     Performance: 28419560 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-8,stdout,7,
+timing-RexxCPS-rexxcps-oorexx-recorded-8,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-8,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-8,stdout,3,       System is: DARWIN
+timing-RexxCPS-rexxcps-oorexx-recorded-8,stdout,4,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.2s)
+timing-RexxCPS-rexxcps-oorexx-recorded-8,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-8,stdout,6,     Performance: 33516922 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-8,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-recorded-8,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxtvm-recorded-8,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxtvm-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-recorded-8,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-rxtvm-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxtvm-recorded-8,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-recorded-8,stdout,8,     Performance: 37570574 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-recorded-8,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-regina-recorded-9,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-9,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-9,stdout,3,       System is: UNIX
+timing-RexxCPS-rexxcps-regina-recorded-9,stdout,4,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.0s)
+timing-RexxCPS-rexxcps-regina-recorded-9,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-9,stdout,6,     Performance: 28883425 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-9,stdout,7,
+timing-RexxCPS-rexxcps-netrexx-recorded-9,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-recorded-9,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-recorded-9,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-recorded-9,stdout,4,          Averaging: 100 measures of 300 iterations
+timing-RexxCPS-rexxcps-netrexx-recorded-9,stdout,5,                       of 1000 clauses (over 0.83310971    s)
+timing-RexxCPS-rexxcps-netrexx-recorded-9,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-recorded-9,stdout,7,Total (full DOs): 0.83310971 secs (average of 100 measures of 300 iterations)
+timing-RexxCPS-rexxcps-netrexx-recorded-9,stdout,8,Time for one iteration (1000 clauses) was: 0.000027765387566666666667 seconds
+timing-RexxCPS-rexxcps-netrexx-recorded-9,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-recorded-9,stdout,10,     Performance: 36_016_065 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-recorded-9,stdout,11,                ( 36.016E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-recorded-9,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-recorded-9,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-rxvm-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-recorded-9,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxvm-recorded-9,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-recorded-9,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-rxvm-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-recorded-9,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-recorded-9,stdout,8,     Performance: 36867685 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-9,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-recorded-9,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxtvm-recorded-9,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxtvm-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-recorded-9,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxtvm-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxtvm-recorded-9,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-recorded-9,stdout,8,     Performance: 39659287 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-recorded-9,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-oorexx-recorded-9,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-9,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-9,stdout,3,       System is: DARWIN
+timing-RexxCPS-rexxcps-oorexx-recorded-9,stdout,4,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.4s)
+timing-RexxCPS-rexxcps-oorexx-recorded-9,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-9,stdout,6,     Performance: 28365032 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-9,stdout,7,
+timing-RexxCPS-rexxcps-oorexx-recorded-10,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-oorexx-recorded-10,stdout,2, REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+timing-RexxCPS-rexxcps-oorexx-recorded-10,stdout,3,       System is: DARWIN
+timing-RexxCPS-rexxcps-oorexx-recorded-10,stdout,4,        Averaged: 300 x 100 iterations of 1000 clauses (over 0.9s)
+timing-RexxCPS-rexxcps-oorexx-recorded-10,stdout,5,
+timing-RexxCPS-rexxcps-oorexx-recorded-10,stdout,6,     Performance: 31625120 REXX clauses per second
+timing-RexxCPS-rexxcps-oorexx-recorded-10,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-recorded-10,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxtvm-recorded-10,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxtvm-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-recorded-10,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-rxtvm-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxtvm-recorded-10,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-recorded-10,stdout,8,     Performance: 37944832 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-recorded-10,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxvm-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-recorded-10,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.gc38a5d184dee.dirty 20260817
+timing-RexxCPS-rexxcps-rxvm-recorded-10,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-recorded-10,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-rxvm-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-recorded-10,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-recorded-10,stdout,8,     Performance: 37660244 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-10,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-netrexx-recorded-10,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+timing-RexxCPS-rexxcps-netrexx-recorded-10,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+timing-RexxCPS-rexxcps-netrexx-recorded-10,stdout,3,          System is: Java
+timing-RexxCPS-rexxcps-netrexx-recorded-10,stdout,4,          Averaging: 100 measures of 300 iterations
+timing-RexxCPS-rexxcps-netrexx-recorded-10,stdout,5,                       of 1000 clauses (over 0.78446904    s)
+timing-RexxCPS-rexxcps-netrexx-recorded-10,stdout,6,
+timing-RexxCPS-rexxcps-netrexx-recorded-10,stdout,7,Total (full DOs): 0.78446904 secs (average of 100 measures of 300 iterations)
+timing-RexxCPS-rexxcps-netrexx-recorded-10,stdout,8,Time for one iteration (1000 clauses) was: 0.0000261439489 seconds
+timing-RexxCPS-rexxcps-netrexx-recorded-10,stdout,9,
+timing-RexxCPS-rexxcps-netrexx-recorded-10,stdout,10,     Performance: 38_249_769 NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-recorded-10,stdout,11,                ( 38.250E+6 cps)
+timing-RexxCPS-rexxcps-netrexx-recorded-10,stdout,12,
+timing-RexxCPS-rexxcps-netrexx-recorded-10,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+timing-RexxCPS-rexxcps-regina-recorded-10,stdout,1,----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+timing-RexxCPS-rexxcps-regina-recorded-10,stdout,2, REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+timing-RexxCPS-rexxcps-regina-recorded-10,stdout,3,       System is: UNIX
+timing-RexxCPS-rexxcps-regina-recorded-10,stdout,4,        Averaged: 300 x 100 iterations of 1000 clauses (over 1.1s)
+timing-RexxCPS-rexxcps-regina-recorded-10,stdout,5,
+timing-RexxCPS-rexxcps-regina-recorded-10,stdout,6,     Performance: 28247098 REXX clauses per second
+timing-RexxCPS-rexxcps-regina-recorded-10,stdout,7,
+timing-Storage-storage-rxvm-warmup-1,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxvm-warmup-1,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxtvm-warmup-1,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxtvm-warmup-1,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxtvm-warmup-2,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxtvm-warmup-2,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxvm-warmup-2,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxvm-warmup-2,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxvm-recorded-1,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxvm-recorded-1,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxtvm-recorded-1,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxtvm-recorded-1,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxtvm-recorded-2,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxtvm-recorded-2,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxvm-recorded-2,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxvm-recorded-2,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxvm-recorded-3,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxvm-recorded-3,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxtvm-recorded-3,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxtvm-recorded-3,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxtvm-recorded-4,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxtvm-recorded-4,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxvm-recorded-4,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxvm-recorded-4,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxvm-recorded-5,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxvm-recorded-5,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxtvm-recorded-5,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxtvm-recorded-5,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxtvm-recorded-6,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxtvm-recorded-6,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxvm-recorded-6,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxvm-recorded-6,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxvm-recorded-7,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxvm-recorded-7,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxtvm-recorded-7,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxtvm-recorded-7,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxtvm-recorded-8,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxtvm-recorded-8,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxvm-recorded-8,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxvm-recorded-8,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxvm-recorded-9,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxvm-recorded-9,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxtvm-recorded-9,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxtvm-recorded-9,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxtvm-recorded-10,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxtvm-recorded-10,stdout,2,PASS: AWFY Storage
+timing-Storage-storage-rxvm-recorded-10,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-storage-rxvm-recorded-10,stdout,2,PASS: AWFY Storage
+timing-List-list-rxvm-warmup-1,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxvm-warmup-1,stdout,2,PASS: AWFY List
+timing-List-list-rxtvm-warmup-1,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxtvm-warmup-1,stdout,2,PASS: AWFY List
+timing-List-list-rxtvm-warmup-2,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxtvm-warmup-2,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-warmup-2,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxvm-warmup-2,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-recorded-1,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxvm-recorded-1,stdout,2,PASS: AWFY List
+timing-List-list-rxtvm-recorded-1,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxtvm-recorded-1,stdout,2,PASS: AWFY List
+timing-List-list-rxtvm-recorded-2,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxtvm-recorded-2,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-recorded-2,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxvm-recorded-2,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-recorded-3,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxvm-recorded-3,stdout,2,PASS: AWFY List
+timing-List-list-rxtvm-recorded-3,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxtvm-recorded-3,stdout,2,PASS: AWFY List
+timing-List-list-rxtvm-recorded-4,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxtvm-recorded-4,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-recorded-4,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxvm-recorded-4,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-recorded-5,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxvm-recorded-5,stdout,2,PASS: AWFY List
+timing-List-list-rxtvm-recorded-5,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxtvm-recorded-5,stdout,2,PASS: AWFY List
+timing-List-list-rxtvm-recorded-6,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxtvm-recorded-6,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-recorded-6,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxvm-recorded-6,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-recorded-7,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxvm-recorded-7,stdout,2,PASS: AWFY List
+timing-List-list-rxtvm-recorded-7,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxtvm-recorded-7,stdout,2,PASS: AWFY List
+timing-List-list-rxtvm-recorded-8,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxtvm-recorded-8,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-recorded-8,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxvm-recorded-8,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-recorded-9,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxvm-recorded-9,stdout,2,PASS: AWFY List
+timing-List-list-rxtvm-recorded-9,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxtvm-recorded-9,stdout,2,PASS: AWFY List
+timing-List-list-rxtvm-recorded-10,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxtvm-recorded-10,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-recorded-10,stdout,1,benchmark=awfy_list repetitions=2000 result=10
+timing-List-list-rxvm-recorded-10,stdout,2,PASS: AWFY List
+timing-JSON-legacy-json-legacy-rxvm-warmup-1,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxvm-warmup-1,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxtvm-warmup-1,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxtvm-warmup-1,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxtvm-warmup-2,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxtvm-warmup-2,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxvm-warmup-2,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxvm-warmup-2,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxvm-recorded-1,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxvm-recorded-1,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxtvm-recorded-1,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxtvm-recorded-1,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxtvm-recorded-2,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxtvm-recorded-2,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxvm-recorded-2,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxvm-recorded-2,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxvm-recorded-3,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxvm-recorded-3,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxtvm-recorded-3,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxtvm-recorded-3,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxtvm-recorded-4,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxtvm-recorded-4,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxvm-recorded-4,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxvm-recorded-4,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxvm-recorded-5,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxvm-recorded-5,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxtvm-recorded-5,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxtvm-recorded-5,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxtvm-recorded-6,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxtvm-recorded-6,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxvm-recorded-6,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxvm-recorded-6,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxvm-recorded-7,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxvm-recorded-7,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxtvm-recorded-7,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxtvm-recorded-7,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxtvm-recorded-8,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxtvm-recorded-8,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxvm-recorded-8,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxvm-recorded-8,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxvm-recorded-9,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxvm-recorded-9,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxtvm-recorded-9,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxtvm-recorded-9,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxtvm-recorded-10,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxtvm-recorded-10,stdout,2,PASS: JSON Parser
+timing-JSON-legacy-json-legacy-rxvm-recorded-10,stdout,1,benchmark=json_parser repetitions=45000 operations=8
+timing-JSON-legacy-json-legacy-rxvm-recorded-10,stdout,2,PASS: JSON Parser
+timing-JSON-parse-json-parse-rxvm-warmup-1,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxvm-warmup-1,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxtvm-warmup-1,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxtvm-warmup-1,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxtvm-warmup-2,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxtvm-warmup-2,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxvm-warmup-2,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxvm-warmup-2,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxvm-recorded-1,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxvm-recorded-1,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxtvm-recorded-1,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxtvm-recorded-1,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxtvm-recorded-2,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxtvm-recorded-2,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxvm-recorded-2,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxvm-recorded-2,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxvm-recorded-3,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxvm-recorded-3,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxtvm-recorded-3,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxtvm-recorded-3,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxtvm-recorded-4,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxtvm-recorded-4,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxvm-recorded-4,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxvm-recorded-4,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxvm-recorded-5,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxvm-recorded-5,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxtvm-recorded-5,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxtvm-recorded-5,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxtvm-recorded-6,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxtvm-recorded-6,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxvm-recorded-6,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxvm-recorded-6,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxvm-recorded-7,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxvm-recorded-7,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxtvm-recorded-7,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxtvm-recorded-7,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxtvm-recorded-8,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxtvm-recorded-8,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxvm-recorded-8,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxvm-recorded-8,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxvm-recorded-9,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxvm-recorded-9,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxtvm-recorded-9,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxtvm-recorded-9,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxtvm-recorded-10,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxtvm-recorded-10,stdout,2,PASS: JSON Parse
+timing-JSON-parse-json-parse-rxvm-recorded-10,stdout,1,benchmark=json_parse repetitions=30000 operations=8
+timing-JSON-parse-json-parse-rxvm-recorded-10,stdout,2,PASS: JSON Parse
+timing-JSON-query-json-query-rxvm-warmup-1,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxvm-warmup-1,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxtvm-warmup-1,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxtvm-warmup-1,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxtvm-warmup-2,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxtvm-warmup-2,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxvm-warmup-2,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxvm-warmup-2,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxvm-recorded-1,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxvm-recorded-1,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxtvm-recorded-1,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxtvm-recorded-1,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxtvm-recorded-2,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxtvm-recorded-2,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxvm-recorded-2,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxvm-recorded-2,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxvm-recorded-3,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxvm-recorded-3,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxtvm-recorded-3,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxtvm-recorded-3,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxtvm-recorded-4,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxtvm-recorded-4,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxvm-recorded-4,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxvm-recorded-4,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxvm-recorded-5,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxvm-recorded-5,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxtvm-recorded-5,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxtvm-recorded-5,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxtvm-recorded-6,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxtvm-recorded-6,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxvm-recorded-6,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxvm-recorded-6,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxvm-recorded-7,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxvm-recorded-7,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxtvm-recorded-7,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxtvm-recorded-7,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxtvm-recorded-8,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxtvm-recorded-8,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxvm-recorded-8,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxvm-recorded-8,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxvm-recorded-9,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxvm-recorded-9,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxtvm-recorded-9,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxtvm-recorded-9,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxtvm-recorded-10,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxtvm-recorded-10,stdout,2,PASS: JSON Query
+timing-JSON-query-json-query-rxvm-recorded-10,stdout,1,benchmark=json_query repetitions=3000000 operations=8
+timing-JSON-query-json-query-rxvm-recorded-10,stdout,2,PASS: JSON Query
+timing-Queens-queens-rxvm-warmup-1,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxvm-warmup-1,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxtvm-warmup-1,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxtvm-warmup-1,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxtvm-warmup-2,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxtvm-warmup-2,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxvm-warmup-2,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxvm-warmup-2,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxvm-recorded-1,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxvm-recorded-1,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxtvm-recorded-1,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxtvm-recorded-1,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxtvm-recorded-2,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxtvm-recorded-2,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxvm-recorded-2,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxvm-recorded-2,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxvm-recorded-3,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxvm-recorded-3,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxtvm-recorded-3,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxtvm-recorded-3,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxtvm-recorded-4,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxtvm-recorded-4,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxvm-recorded-4,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxvm-recorded-4,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxvm-recorded-5,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxvm-recorded-5,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxtvm-recorded-5,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxtvm-recorded-5,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxtvm-recorded-6,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxtvm-recorded-6,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxvm-recorded-6,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxvm-recorded-6,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxvm-recorded-7,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxvm-recorded-7,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxtvm-recorded-7,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxtvm-recorded-7,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxtvm-recorded-8,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxtvm-recorded-8,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxvm-recorded-8,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxvm-recorded-8,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxvm-recorded-9,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxvm-recorded-9,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxtvm-recorded-9,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxtvm-recorded-9,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxtvm-recorded-10,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxtvm-recorded-10,stdout,2,PASS: AWFY Queens
+timing-Queens-queens-rxvm-recorded-10,stdout,1,benchmark=awfy_queens repetitions=4000 result=1
+timing-Queens-queens-rxvm-recorded-10,stdout,2,PASS: AWFY Queens
+timing-NBody-nbody-rxvm-warmup-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxvm-warmup-1,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxtvm-warmup-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxtvm-warmup-1,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxtvm-warmup-2,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxtvm-warmup-2,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxvm-warmup-2,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxvm-warmup-2,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxvm-recorded-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxvm-recorded-1,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxtvm-recorded-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxtvm-recorded-1,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxtvm-recorded-2,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxtvm-recorded-2,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxvm-recorded-2,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxvm-recorded-2,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxvm-recorded-3,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxvm-recorded-3,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxtvm-recorded-3,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxtvm-recorded-3,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxtvm-recorded-4,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxtvm-recorded-4,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxvm-recorded-4,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxvm-recorded-4,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxvm-recorded-5,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxvm-recorded-5,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxtvm-recorded-5,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxtvm-recorded-5,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxtvm-recorded-6,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxtvm-recorded-6,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxvm-recorded-6,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxvm-recorded-6,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxvm-recorded-7,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxvm-recorded-7,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxtvm-recorded-7,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxtvm-recorded-7,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxtvm-recorded-8,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxtvm-recorded-8,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxvm-recorded-8,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxvm-recorded-8,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxvm-recorded-9,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxvm-recorded-9,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxtvm-recorded-9,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxtvm-recorded-9,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxtvm-recorded-10,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxtvm-recorded-10,stdout,2,PASS: AWFY NBody
+timing-NBody-nbody-rxvm-recorded-10,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-nbody-rxvm-recorded-10,stdout,2,PASS: AWFY NBody

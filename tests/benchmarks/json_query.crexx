@@ -1,0 +1,48 @@
+/*
+ * Deterministic parse-once indexed JSON query workload.
+ *
+ * Construction is deliberately outside the repeated kernel. Each repetition
+ * uses document-local root/member/node traversal rather than a compatibility
+ * selector that reparses source text.
+ */
+options levelb comments_dash
+import rxjson
+
+arg argv = .string[]
+
+repetitions = 1
+if argv[0] >= 1 then repetitions = argv[1]
+if repetitions < 1 then return fail("repetitions must be positive")
+
+payload = fixture()
+document = .jsondocument(payload)
+if document.valid() <> 1 then return fail("document is invalid")
+
+result = 0
+do iteration = 1 to repetitions
+  root = document.root()
+  operations = document.member(root, "operations")
+  result = document.node_count(operations)
+  if result <> 8 then return fail("expected 8 operations, got " || result)
+end
+
+say "benchmark=json_query repetitions="repetitions "operations="result
+say "PASS: JSON Query"
+return 0
+
+fixture: procedure = .string
+  return '{"head":{"requestCounter":4,"ok":true},"operations":[' || ,
+    '["destroy","w54"],' || ,
+    '["set","w2",{"activeControl":"w99"}],' || ,
+    '["set","w21",{"customVariant":"variant_navigation"}],' || ,
+    '["create","w95","rwt.widgets.Composite",{"parent":"w53","bounds":[0,0,1008,586],"children":["w96","w97"],"tabIndex":-1}],' || ,
+    '["create","w96","rwt.widgets.Label",{"parent":"w95","bounds":[10,30,112,26],"text":"TableViewer"}],' || ,
+    '["listen","w98",{"KeyDown":true,"Modify":true}],' || ,
+    '["set","w99",{"itemCount":118,"headerVisible":true,"selection":["w108"]}],' || ,
+    '["call","rwt.client.BrowserNavigation","addToHistory",{"entries":[["tableviewer","TableViewer"]]}]' || ,
+    ']}'
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

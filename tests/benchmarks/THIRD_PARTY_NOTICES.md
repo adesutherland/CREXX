@@ -2,12 +2,14 @@
 
 ## Are We Fast Yet? / SOM-derived benchmarks
 
-The Sieve, Permute, Towers, Bounce, Storage, List, and Richards ports are based
-on the SOM/Java benchmarks distributed by the Are We Fast Yet? project.
+The Sieve, Permute, Towers, Bounce, Storage, List, Richards and Queens ports
+are based on the SOM/Java benchmarks distributed by the Are We Fast Yet?
+project.
 Copyright (c)
 2001–2021, see the upstream project authors. The Mandelbrot port follows the
 Are We Fast Yet? version derived from the Computer Language Benchmarks Game.
-The expanded ports were reviewed against upstream commit
+The NBody port follows the Are We Fast Yet? version of the Computer Language
+Benchmarks Game workload. The expanded ports were reviewed against upstream commit
 `74306fec151070fd07157cefeacf19e7e0bcdc89`.
 
 The deterministic JSON fixture uses the RAP-style request/data shape found in

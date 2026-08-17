@@ -1,0 +1,272 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 the cREXX contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+options levelb comments_dash
+import rxfnsb
+
+main: procedure = .int
+  arg args = .string[]
+  manifest = ""
+  output = ""
+  self_test_requested = 0
+
+  i = 1
+  do while i <= args[0]
+    option = args[i]
+    if option = "--self-test" then self_test_requested = 1
+    else if option = "--manifest" then do
+      if i = args[0] then return argument_error("missing value after --manifest")
+      i = i + 1
+      manifest = args[i]
+    end
+    else if option = "--output" then do
+      if i = args[0] then return argument_error("missing value after --output")
+      i = i + 1
+      output = args[i]
+    end
+    else if option = "-h" | option = "--help" then do
+      call usage
+      return 0
+    end
+    else return argument_error("unknown option: " || option)
+    i = i + 1
+  end
+
+  if self_test_requested then return self_test()
+  if manifest = "" | output = "" then
+    return argument_error("--manifest and --output are required")
+
+  rows = read_manifest(manifest)
+  if rows[0] = 0 then return execution_error("fusion manifest has no rows")
+  results = .string[]
+  results[1] = "workload,kind,identity,static_sites,path"
+  do row_index = 1 to rows[0]
+    fields = split_delimited(rows[row_index], "|")
+    if inventory_image(fields[1], fields[2], results) <> 0 then return 1
+  end
+  if write_lines(output, results) <> 0 then return 1
+  say "PASS: inventoried fusion sites in" rows[0] "RXAS images at" output
+  return 0
+
+inventory_image: procedure = .int
+  arg workload = .string, path = .string, expose results = .string[]
+  identities = .string[]
+  counts = .int[]
+  previous2 = ""
+  previous1 = ""
+  if lines(path) = 0 then
+    return execution_error("RXAS image is empty or missing: " || path)
+  do while lines(path)
+    source_line = linein(path)
+    instruction = executable_instruction(source_line)
+    if instruction = "" then iterate
+    identity = public_fusion_identity(instruction)
+    if identity <> "" then
+      call add_count "public-serialized", identity, identities, counts
+    private = private_identity(previous2, previous1, instruction)
+    if private <> "" then call add_count "private-load-time", private, identities, counts
+    previous2 = previous1
+    previous1 = instruction
+  end
+  call linein path
+
+  do i = 1 to identities[0]
+    parts = split_delimited(identities[i], "|")
+    results[results[0] + 1] = workload || "," || parts[1] || "," || ,
+        parts[2] || "," || counts[i] || "," || path
+  end
+  return 0
+
+executable_instruction: procedure = .string
+  arg source_line = .string
+  if length(source_line) < 4 then return ""
+  instruction = source_line
+  label_separator = pos(":", instruction)
+  if left(instruction, 1) <> " " then do
+    if label_separator = 0 | label_separator > 16 then return ""
+    instruction = substr(instruction, label_separator + 1)
+  end
+  instruction = strip_inline_comment(instruction)
+  address_comment = pos(" * 0x", instruction)
+  if address_comment > 0 then
+    instruction = left(instruction, address_comment - 1)
+  instruction = strip(instruction)
+  if instruction = "" | left(instruction, 1) = "." then return ""
+  if left(instruction, 1) = "/" | left(instruction, 1) = "*" then return ""
+  return changestr(",", instruction, " ")
+
+strip_inline_comment: procedure = .string
+  arg value = .string
+  do forever
+    comment_start = pos("/*", value)
+    if comment_start = 0 then return value
+    comment_end = pos("*/", value, comment_start + 2)
+    if comment_end = 0 then return left(value, comment_start - 1)
+    value = left(value, comment_start - 1) || ,
+        substr(value, comment_end + 2)
+  end
+
+private_identity: procedure = .string
+  arg previous2 = .string, previous1 = .string, current = .string
+  if lower(word(previous1, 1)) = "unlink" & ,
+      lower(word(current, 1)) = "linkref" & ,
+      word(previous1, 2) = word(current, 2) & ,
+      word(current, 2) <> word(current, 3) then
+    return "PRIVATE_R1_RELINK"
+
+  if lower(word(previous2, 1)) = "linkattr1" & ,
+      lower(word(previous1, 1)) = "copy" & ,
+      lower(word(current, 1)) = "unlink" & ,
+      word(previous2, 2) = word(previous1, 3) & ,
+      word(previous2, 2) = word(current, 2) & ,
+      word(previous2, 2) <> word(previous2, 3) & ,
+      word(previous2, 2) <> word(previous1, 2) & ,
+      word(previous2, 3) <> word(previous1, 2) then
+    return "PRIVATE_R2_COPYATTR1"
+  return ""
+
+public_fusion_identity: procedure = .string
+  arg instruction = .string
+  mnemonic = lower(word(instruction, 1))
+  public = " append bctp beq bne bgt bge blt ble fdivsub fmulticopy" || ,
+    " fgtbr fltbr igtbr iltbr igetunlink iloadsetunlink" || ,
+    " iloadsetunlinkn isetattr1 isetunlink isetunlinkn" || ,
+    " linksetattrslinkadd loadsettp2 loadsettpswap minlinkattr1" || ,
+    " nulln parseplan parsepos2 parsewords3 parsewords3d sappend" || ,
+    " setlinkattr1 setlinkiload settpcall settpswap settpswapcall" || ,
+    " settpswapsettpswap swapcall swapn swapsettp swapsettpswap" || ,
+    " unlinkbr unlinkn "
+  if pos(" " || mnemonic || " ", public) > 0 then return mnemonic
+  if (mnemonic = "itof" | mnemonic = "stoi") & words(instruction) = 3 then
+    return mnemonic || "-two-register"
+  return ""
+
+add_count: procedure = .void
+  arg kind = .string, identity = .string, expose identities = .string[], ,
+      expose counts = .int[]
+  key = kind || "|" || identity
+  do i = 1 to identities[0]
+    if identities[i] = key then do
+      counts[i] = counts[i] + 1
+      return
+    end
+  end
+  next = identities[0] + 1
+  identities[next] = key
+  counts[next] = 1
+  return
+
+read_manifest: procedure = .string[]
+  arg path = .string
+  rows = .string[]
+  header_seen = 0
+  do while lines(path)
+    line = linein(path)
+    if line = "" | left(strip(line), 1) = "#" then iterate
+    if \header_seen then do
+      if line <> "crexx-fusion-census|1" then do
+        call linein path
+        say "ERROR: fusion manifest header is not recognized"
+        empty = .string[]
+        return empty
+      end
+      header_seen = 1
+      iterate
+    end
+    fields = split_delimited(line, "|")
+    if fields[0] <> 2 then do
+      call linein path
+      say "ERROR: fusion manifest row must have two fields"
+      empty = .string[]
+      return empty
+    end
+    rows[rows[0] + 1] = line
+  end
+  call linein path
+  return rows
+
+split_delimited: procedure = .string[]
+  arg value = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    offset = pos(delimiter, value, start)
+    if offset = 0 then do
+      fields[fields[0] + 1] = substr(value, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(value, start, offset - start)
+    start = offset + length(delimiter)
+  end
+  return fields
+
+write_lines: procedure = .int
+  arg path = .string, text_lines = .string[]
+  do i = 1 to text_lines[0]
+    if lineout(path, text_lines[i]) <> 0 then do
+      call lineout path
+      return execution_error("could not write output: " || path)
+    end
+  end
+  call lineout path
+  return 0
+
+usage: procedure = .void
+  say "Usage: inventory_fusions --manifest PATH --output PATH"
+  say "       inventory_fusions --self-test"
+  return
+
+self_test: procedure = .int
+  if executable_instruction("   unlink r2") <> "unlink r2" | ,
+      executable_instruction("   .traceevent x") <> "" then
+    return execution_error("RXAS instruction parser self-test failed")
+  if private_identity("", "unlink r2", "linkref r2 r3") <> ,
+      "PRIVATE_R1_RELINK" then
+    return execution_error("private R1 positive self-test failed")
+  if private_identity("", "unlink r2", "linkref r2 r2") <> "" then
+    return execution_error("private R1 alias self-test failed")
+  if private_identity("linkattr1 r4 r5 1", "copy r6 r4", "unlink r4") <> ,
+      "PRIVATE_R2_COPYATTR1" then
+    return execution_error("private R2 positive self-test failed")
+  if private_identity("linkattr1 r4 r5 1", "copy r5 r4", "unlink r4") <> "" then
+    return execution_error("private R2 distinct-register self-test failed")
+  if public_fusion_identity("iloadsetunlinkn r1 r2 r3") = "" | ,
+      public_fusion_identity("parseplan r1 r2 r3") = "" | ,
+      public_fusion_identity("itof r1 r2") <> "itof-two-register" | ,
+      public_fusion_identity("itof r1") <> "" then
+    return execution_error("public-fusion classification self-test failed")
+  if executable_instruction("lb_1:          unlink r2 * 0x000001:0000") <> ,
+      "unlink r2" then
+    return execution_error("disassembly parser self-test failed")
+  say "PASS: fusion inventory tool self-test"
+  return 0
+
+argument_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 2
+
+execution_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

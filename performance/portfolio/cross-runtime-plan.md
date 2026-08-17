@@ -1,6 +1,7 @@
 # Cross-runtime benchmark coverage plan
 
-Status: active comparative scope; 12-item Tier A portfolio approved 2026-07-15
+Status: retained qualification plan; portfolio-v2 Mac baseline complete
+2026-08-17
 
 The programme target is stronger than “rerun RexxCPS”: every approved Tier A
 workload should be ported, qualified and run on **CREXX, ooRexx and NetRexx**.
@@ -73,10 +74,14 @@ the common CREXX/ooRexx/NetRexx comparison, not to Regina.
 | PARSE, stems, TRACE and ADDRESS | present inside RexxCPS mix | Keep focused probes in Tier B unless profiling demonstrates a coverage gap |
 
 The approved additions are Bounce, Storage, List, Richards, JSON, an RFC 4648
-Base64 round trip, and compile/load/first-result lifecycle measurement. Queens,
-DeltaBlue, Havlak, filesystem-I/O workloads and focused Classic-semantics probes
-remain Tier B/reserve work. They are not silently included in the Tier A
-aggregate.
+Base64 round trip, and compile/load/first-result lifecycle measurement. Queens
+and NBody have separately named cREXX Tier B sources in portfolio v2. They
+remain outside Tier A and every aggregate. Full AWFY Json, DeltaBlue, CD,
+Havlak, filesystem-I/O workloads and focused Classic-semantics probes remain
+post-PERF3 or reserve work. They are not silently included in the Tier A
+aggregate. The additive v2 source/runtime contract is
+[`manifest-v2.md`](manifest-v2.md); this original Tier A plan remains the
+historical qualification basis.
 
 The 12-item Tier A list is a coverage and reporting portfolio, not an assertion
 that all 11 steady-state workloads are aggregate-compatible. The initial common

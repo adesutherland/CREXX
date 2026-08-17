@@ -1,0 +1,69 @@
+Test project /private/tmp/crexx-perf3-closeout-v2.U7d5fV/build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/26 Test    #1: linked_opt_runtime_artifacts_build ................   Passed    0.10 sec
+      Start  701: flow_copy_fixed_point_inline_result_run_noopt
+ 2/26 Test  #701: flow_copy_fixed_point_inline_result_run_noopt .....   Passed    0.19 sec
+      Start  702: flow_copy_fixed_point_inline_result_run_opt
+ 3/26 Test  #702: flow_copy_fixed_point_inline_result_run_opt .......   Passed    0.19 sec
+      Start  703: flow_copy_fixed_point_inline_result_contract
+ 4/26 Test  #703: flow_copy_fixed_point_inline_result_contract ......   Passed    0.17 sec
+      Start 1990: benchmark_awfy_mandelbrot_hoisted_control_noopt
+ 5/26 Test #1990: benchmark_awfy_mandelbrot_hoisted_control_noopt ...   Passed    0.01 sec
+      Start 1991: benchmark_awfy_mandelbrot_hoisted_control_opt
+ 6/26 Test #1991: benchmark_awfy_mandelbrot_hoisted_control_opt .....   Passed    0.02 sec
+      Start 2002: benchmark_awfy_queens_noopt
+ 7/26 Test #2002: benchmark_awfy_queens_noopt .......................   Passed    0.01 sec
+      Start 2003: benchmark_awfy_queens_opt
+ 8/26 Test #2003: benchmark_awfy_queens_opt .........................   Passed    0.02 sec
+      Start 2004: benchmark_json_parser_noopt
+ 9/26 Test #2004: benchmark_json_parser_noopt .......................   Passed    0.01 sec
+      Start 2005: benchmark_json_parser_opt
+10/26 Test #2005: benchmark_json_parser_opt .........................   Passed    0.02 sec
+      Start 2006: benchmark_json_parse_noopt
+11/26 Test #2006: benchmark_json_parse_noopt ........................   Passed    0.01 sec
+      Start 2007: benchmark_json_parse_opt
+12/26 Test #2007: benchmark_json_parse_opt ..........................   Passed    0.02 sec
+      Start 2008: benchmark_json_query_noopt
+13/26 Test #2008: benchmark_json_query_noopt ........................   Passed    0.01 sec
+      Start 2009: benchmark_json_query_opt
+14/26 Test #2009: benchmark_json_query_opt ..........................   Passed    0.02 sec
+      Start 2012: benchmark_base64_roundtrip_v2_noopt
+15/26 Test #2012: benchmark_base64_roundtrip_v2_noopt ...............   Passed    0.01 sec
+      Start 2013: benchmark_base64_roundtrip_v2_opt
+16/26 Test #2013: benchmark_base64_roundtrip_v2_opt .................   Passed    0.02 sec
+      Start 2020: benchmark_awfy_nbody_noopt
+17/26 Test #2020: benchmark_awfy_nbody_noopt ........................   Passed    0.01 sec
+      Start 2021: benchmark_awfy_nbody_opt
+18/26 Test #2021: benchmark_awfy_nbody_opt ..........................   Passed    0.02 sec
+      Start 2029: nr10_cross_runtime_matrix_selftest_noopt
+19/26 Test #2029: nr10_cross_runtime_matrix_selftest_noopt ..........   Passed    0.02 sec
+      Start 2030: nr10_cross_runtime_matrix_selftest_opt
+20/26 Test #2030: nr10_cross_runtime_matrix_selftest_opt ............   Passed    0.05 sec
+      Start 2031: nr10_lifecycle_tool_selftest_noopt
+21/26 Test #2031: nr10_lifecycle_tool_selftest_noopt ................   Passed    0.01 sec
+      Start 2032: nr10_lifecycle_tool_selftest_opt
+22/26 Test #2032: nr10_lifecycle_tool_selftest_opt ..................   Passed    0.05 sec
+      Start 2033: nr10_artifact_inventory_selftest_noopt
+23/26 Test #2033: nr10_artifact_inventory_selftest_noopt ............   Passed    0.01 sec
+      Start 2034: nr10_artifact_inventory_selftest_opt
+24/26 Test #2034: nr10_artifact_inventory_selftest_opt ..............   Passed    0.04 sec
+      Start 2035: perf3_fusion_inventory_selftest_noopt
+25/26 Test #2035: perf3_fusion_inventory_selftest_noopt .............   Passed    0.01 sec
+      Start 2036: perf3_fusion_inventory_selftest_opt
+26/26 Test #2036: perf3_fusion_inventory_selftest_opt ...............   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 26
+
+Label Time Summary:
+benchmark              =   0.47 sec*proc (22 tests)
+compiler               =   0.17 sec*proc (1 test)
+flow                   =   0.17 sec*proc (1 test)
+fusion                 =   0.04 sec*proc (2 tests)
+language               =   0.24 sec*proc (14 tests)
+linked_opt             =   0.50 sec*proc (12 tests)
+native-math-control    =   0.03 sec*proc (2 tests)
+performance            =   0.39 sec*proc (9 tests)
+runner                 =   0.23 sec*proc (8 tests)
+smoke                  =   0.31 sec*proc (11 tests)
+
+Total Test time (real) =   1.15 sec
