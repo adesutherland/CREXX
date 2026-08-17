@@ -38,6 +38,12 @@ Inc.; the complete upstream revised-BSD notice is retained in the source file.
 The indexed nodes/occurrences and `rxmath` boundary are disclosed Level B
 adaptations.
 
+`awfy_havlak.crexx` derives its CFG builder, Havlak/Tarjan loop recognizer,
+union-find and loop-structure graph from the Google Havlak sources at the same
+pinned commit. Copyright 2011 Google Inc. The port retains the upstream Apache
+License 2.0 header. Stable integer handles and typed arrays are disclosed Level
+B adaptations for object identity and collection storage.
+
 MIT license used by the SOM-derived sources:
 
 > Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -63,6 +69,13 @@ The upstream project and citation metadata are at
 
 The complete shared MIT text is in `LICENSE-SOM-MIT.txt`. The upstream
 Benchmarks Game license text is preserved in `LICENSE-AWFY.md`.
+
+## Google Havlak benchmark
+
+The Havlak-derived source is licensed under the Apache License, Version 2.0.
+The license terms are available at
+<https://www.apache.org/licenses/LICENSE-2.0>. The required copyright and
+license notice is retained at the head of `awfy_havlak.crexx`.
 
 The Computer Language Benchmarks Game material is distributed under the
 Revised BSD license. Copyright 2008–2012 Isaac Gouy; the Are We Fast Yet?

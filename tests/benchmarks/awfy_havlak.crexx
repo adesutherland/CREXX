@@ -1,0 +1,542 @@
+/*
+ * Copyright 2011 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Level B port of the Are We Fast Yet? Havlak benchmark at commit
+ * 74306fec151070fd07157cefeacf19e7e0bcdc89. Stable integer handles lower
+ * basic-block, loop and union-find identity into typed arrays while retaining
+ * the upstream CFG construction, Havlak/Tarjan algorithm and result contract.
+ */
+options levelb comments_dash
+
+arg argv = .string[]
+
+dummy_loops = 1
+if argv[0] >= 1 then dummy_loops = argv[1]
+finder_repeats = 50
+if argv[0] >= 2 then finder_repeats = argv[2]
+if finder_repeats < 0 then return fail("finder repetitions must be non-negative")
+expected_loops = expectedLoops(dummy_loops)
+if expected_loops < 0 then
+  return fail("no reference result for " || dummy_loops || " dummy loops")
+
+benchmark = .HavlakProgram()
+result = benchmark.run(dummy_loops, finder_repeats)
+if result[1] <> expected_loops | result[2] <> 5213 then
+  return fail("expected " || expected_loops || "/5213, got " || ,
+      result[1] || "/" || result[2])
+
+say "benchmark=awfy_havlak dummy_loops="dummy_loops,
+    "finder_repeats="finder_repeats,
+    "loops="result[1] "nodes="result[2],
+    "adaptation=stable-indexed-cfg-union-find"
+say "PASS: AWFY Havlak"
+return 0
+
+expectedLoops: procedure = .int
+  arg dummy_loops = .int
+  select
+    when dummy_loops = 1 then return 1605
+    when dummy_loops = 15 then return 1647
+    when dummy_loops = 150 then return 2052
+    when dummy_loops = 1500 then return 6102
+    when dummy_loops = 15000 then return 46602
+    otherwise return -1
+  end
+  return -1
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1
+
+/** Ordered integer vector used for CFG edges, pools and work lists. */
+HIntList: class
+  values_ = .int[]
+  count_ = .int
+
+  *: factory
+    count_ = 0
+    return
+
+  append: method = .void
+    arg value = .int
+    count_ = count_ + 1
+    values_[count_] = value
+    return
+
+  get: method = .int
+    arg index = .int
+    return values_[index]
+
+  size: method = .int
+    return count_
+
+  isEmpty: method = .int
+    return count_ = 0
+
+  contains: method = .int
+    arg value = .int
+    do index = 1 to count_
+      if values_[index] = value then return 1
+    end
+    return 0
+
+  removeFirst: method = .int
+    if count_ = 0 then return 0
+    value = values_[1]
+    do index = 1 to count_ - 1
+      values_[index] = values_[index + 1]
+    end
+    values_[count_] = 0
+    count_ = count_ - 1
+    return value
+
+/** Insertion-ordered integer set used by Havlak non-backedges and loop sets. */
+HIntSet: class
+  values_ = .int[]
+  count_ = .int
+
+  *: factory
+    count_ = 0
+    return
+
+  add: method = .void
+    arg value = .int
+    do index = 1 to count_
+      if values_[index] = value then return
+    end
+    call appendKnownUnique(value)
+    return
+
+  appendKnownUnique: method = .void
+    arg value = .int
+    /* Callers prove single parent/body insertion from the Havlak node pool. */
+    count_ = count_ + 1
+    values_[count_] = value
+    return
+
+  get: method = .int
+    arg index = .int
+    return values_[index]
+
+  size: method = .int
+    return count_
+
+/** Stable indexed representation of the loop-structure forest. */
+HLoopGraph: class
+  count_ = .int
+  parent_ = .int[]
+  is_root_ = .int[]
+  nesting_ = .int[]
+  depth_ = .int[]
+  header_ = .int[]
+  reducible_ = .int[]
+  children_ = .HIntSet[]
+  blocks_ = .HIntSet[]
+
+  *: factory
+    count_ = 1
+    parent_[1] = 0
+    is_root_[1] = 1
+    nesting_[1] = 0
+    depth_[1] = 0
+    header_[1] = 0
+    reducible_[1] = 1
+    children_[1] = .HIntSet()
+    blocks_[1] = .HIntSet()
+    return
+
+  reset: method = .void
+    count_ = 1
+    parent_[1] = 0
+    is_root_[1] = 1
+    nesting_[1] = 0
+    depth_[1] = 0
+    header_[1] = 0
+    reducible_[1] = 1
+    children_[1] = .HIntSet()
+    blocks_[1] = .HIntSet()
+    return
+
+  createLoop: method = .int
+    arg header = .int, reducible = .int
+    count_ = count_ + 1
+    loop_handle = count_
+    parent_[loop_handle] = 0
+    is_root_[loop_handle] = 0
+    nesting_[loop_handle] = 0
+    depth_[loop_handle] = 0
+    header_[loop_handle] = header
+    reducible_[loop_handle] = reducible
+    children_[loop_handle] = .HIntSet()
+    blocks_[loop_handle] = .HIntSet()
+    if header <> 0 then call addBlock(loop_handle, header)
+    return loop_handle
+
+  addBlock: method = .void
+    arg loop_handle = .int, block = .int
+    set_ref = reference blocks_[loop_handle]
+    set = dereference set_ref
+    call set.appendKnownUnique(block)
+    return
+
+  setParent: method = .void
+    arg loop_handle = .int, parent = .int
+    parent_[loop_handle] = parent
+    set_ref = reference children_[parent]
+    set = dereference set_ref
+    call set.appendKnownUnique(loop_handle)
+    return
+
+  parentOf: method = .int
+    arg loop_handle = .int
+    return parent_[loop_handle]
+
+  count: method = .int
+    return count_
+
+  calculateNestingLevel: method = .void
+    do loop_handle = 2 to count_
+      if parent_[loop_handle] = 0 then call setParent(loop_handle, 1)
+    end
+    call calculateRec(1, 0)
+    return
+
+  calculateRec: method = .void
+    arg loop_handle = .int, depth = .int
+    depth_[loop_handle] = depth
+    children = children_[loop_handle]
+    do index = 1 to children.size()
+      child = children.get(index)
+      call calculateRec(child, depth + 1)
+      candidate = 1 + nesting_[child]
+      if candidate > nesting_[loop_handle] then nesting_[loop_handle] = candidate
+    end
+    return
+
+/**
+ * Complete benchmark application, CFG, loop finder and union-find arena.
+ *
+ * Basic-block names are zero-based upstream; handles are name+1 so Level B
+ * typed arrays remain one-based. DFS handles are likewise dfs-number+1.
+ */
+HavlakProgram: class
+  node_count_ = .int
+  node_present_ = .int[]
+  start_node_ = .int
+  in_edges_ = .HIntList[]
+  out_edges_ = .HIntList[]
+  edge_count_ = .int
+  edge_from_ = .int[]
+  edge_to_ = .int[]
+
+  main_lsg_ = .HLoopGraph
+  temp_lsg_ = .HLoopGraph
+  use_main_lsg_ = .int
+
+  number_ = .int[]
+  last_ = .int[]
+  header_ = .int[]
+  type_ = .int[]
+  uf_parent_ = .int[]
+  uf_block_ = .int[]
+  uf_loop_ = .int[]
+  non_back_preds_ = .HIntSet[]
+  back_preds_ = .HIntList[]
+
+  *: factory
+    node_count_ = 0
+    start_node_ = 0
+    edge_count_ = 0
+    main_lsg_ = .HLoopGraph()
+    temp_lsg_ = .HLoopGraph()
+    use_main_lsg_ = 1
+    node_count_ = 1
+    start_node_ = 1
+    node_present_[1] = 1
+    in_edges_[1] = .HIntList()
+    out_edges_[1] = .HIntList()
+    return
+
+  run: method = .int[]
+    arg dummy_loops = .int, finder_repeats = .int
+    call constructSimpleCFG()
+    do iteration = 1 to dummy_loops
+      call findLoops(1)
+    end
+    call constructCFG(10, 10, 5)
+    call findLoops(1)
+    do iteration = 1 to finder_repeats
+      call findLoops(0)
+    end
+    call main_lsg_.calculateNestingLevel()
+    result = .int[]
+    result[1] = main_lsg_.count()
+    result[2] = node_count_
+    return result
+
+  createNode: method = .int
+    arg name = .int
+    handle = name + 1
+    if handle > node_count_ then do
+      do index = node_count_ + 1 to handle
+        node_present_[index] = 0
+        in_edges_[index] = .HIntList()
+        out_edges_[index] = .HIntList()
+      end
+      node_count_ = handle
+    end
+    if \node_present_[handle] then do
+      node_present_[handle] = 1
+      if node_count_ = 1 then start_node_ = handle
+    end
+    return handle
+
+  addEdge: method = .void
+    arg from_name = .int, to_name = .int
+    from = createNode(from_name)
+    destination = createNode(to_name)
+    out_ref = reference out_edges_[from]
+    out = dereference out_ref
+    call out.append(destination)
+    in_ref = reference in_edges_[destination]
+    incoming = dereference in_ref
+    call incoming.append(from)
+    edge_count_ = edge_count_ + 1
+    edge_from_[edge_count_] = from
+    edge_to_[edge_count_] = destination
+    return
+
+  buildDiamond: method = .int
+    arg start = .int
+    call addEdge(start, start + 1)
+    call addEdge(start, start + 2)
+    call addEdge(start + 1, start + 3)
+    call addEdge(start + 2, start + 3)
+    return start + 3
+
+  buildConnect: method = .void
+    arg start = .int, destination = .int
+    call addEdge(start, destination)
+    return
+
+  buildStraight: method = .int
+    arg start = .int, count = .int
+    do index = 0 to count - 1
+      call buildConnect(start + index, start + index + 1)
+    end
+    return start + count
+
+  buildBaseLoop: method = .int
+    arg from = .int
+    header = buildStraight(from, 1)
+    diamond1 = buildDiamond(header)
+    d11 = buildStraight(diamond1, 1)
+    diamond2 = buildDiamond(d11)
+    footer = buildStraight(diamond2, 1)
+    call buildConnect(diamond2, d11)
+    call buildConnect(diamond1, header)
+    call buildConnect(footer, from)
+    footer = buildStraight(footer, 1)
+    return footer
+
+  constructSimpleCFG: method = .void
+    node = createNode(0)
+    footer = buildBaseLoop(0)
+    node = createNode(1)
+    call addEdge(0, 2)
+    return
+
+  constructCFG: method = .void
+    arg par_loops = .int, ppar_loops = .int, pppar_loops = .int
+    next_name = 2
+    do par_tree = 1 to par_loops
+      node = createNode(next_name + 1)
+      call buildConnect(2, next_name + 1)
+      next_name = next_name + 1
+      do parallel_index = 1 to ppar_loops
+        top = next_name
+        next_name = buildStraight(next_name, 1)
+        do inner = 1 to pppar_loops
+          next_name = buildBaseLoop(next_name)
+        end
+        bottom = buildStraight(next_name, 1)
+        call buildConnect(next_name, top)
+        next_name = bottom
+      end
+      call buildConnect(next_name, 1)
+    end
+    return
+
+  isAncestor: method = .int
+    arg ancestor = .int, node = .int
+    return ancestor <= node & node <= last_[ancestor]
+
+  doDFS: method = .int
+    arg block = .int, current = .int
+    uf_parent_[current] = current
+    uf_block_[current] = block
+    uf_loop_[current] = 0
+    number_[block] = current
+    last_id = current
+    outgoing = out_edges_[block]
+    do index = 1 to outgoing.size()
+      target = outgoing.get(index)
+      if number_[target] = 0 then
+        last_id = doDFS(target, last_id + 1)
+    end
+    last_[current] = last_id
+    return last_id
+
+  addBackPred: method = .void
+    arg header = .int, predecessor = .int
+    list_ref = reference back_preds_[header]
+    list = dereference list_ref
+    call list.append(predecessor)
+    return
+
+  addNonBackPred: method = .void
+    arg header = .int, predecessor = .int
+    set_ref = reference non_back_preds_[header]
+    set = dereference set_ref
+    call set.add(predecessor)
+    return
+
+  findSet: method = .int
+    arg initial = .int
+    path = .HIntList()
+    node = initial
+    original_parent = uf_parent_[initial]
+    do while node <> uf_parent_[node]
+      parent = uf_parent_[node]
+      if parent <> uf_parent_[parent] then call path.append(node)
+      node = parent
+    end
+    do index = 1 to path.size()
+      uf_parent_[path.get(index)] = original_parent
+    end
+    return node
+
+  createActiveLoop: method = .int
+    arg block = .int, reducible = .int
+    if use_main_lsg_ then return main_lsg_.createLoop(block, reducible)
+    return temp_lsg_.createLoop(block, reducible)
+
+  setActiveLoopParent: method = .void
+    arg loop_handle = .int, parent = .int
+    if use_main_lsg_ then call main_lsg_.setParent(loop_handle, parent)
+    else call temp_lsg_.setParent(loop_handle, parent)
+    return
+
+  addActiveLoopBlock: method = .void
+    arg loop_handle = .int, block = .int
+    if use_main_lsg_ then call main_lsg_.addBlock(loop_handle, block)
+    else call temp_lsg_.addBlock(loop_handle, block)
+    return
+
+  findLoops: method = .void
+    arg use_main = .int
+    if start_node_ = 0 then return
+    use_main_lsg_ = use_main
+    if \use_main_lsg_ then call temp_lsg_.reset()
+    size = node_count_
+
+    do block = 1 to size
+      number_[block] = 0
+    end
+    do index = 1 to size
+      header_[index] = 0
+      type_[index] = 1
+      last_[index] = 0
+      uf_parent_[index] = index
+      uf_block_[index] = 0
+      uf_loop_[index] = 0
+      non_back_preds_[index] = .HIntSet()
+      back_preds_[index] = .HIntList()
+    end
+
+    last_node = doDFS(start_node_, 1)
+
+    do w = 1 to size
+      header_[w] = 1
+      type_[w] = 1
+      node_w = uf_block_[w]
+      if node_w = 0 then type_[w] = 5
+      else do
+        incoming = in_edges_[node_w]
+        do edge = 1 to incoming.size()
+          predecessor_block = incoming.get(edge)
+          v = number_[predecessor_block]
+          if v <> 0 then do
+            if isAncestor(w, v) then call addBackPred(w, v)
+            else call addNonBackPred(w, v)
+          end
+        end
+      end
+    end
+    header_[1] = 1
+
+    do w = size to 1 by -1
+      node_pool = .HIntList()
+      node_w = uf_block_[w]
+      if node_w <> 0 then do
+        backs = back_preds_[w]
+        do index = 1 to backs.size()
+          v = backs.get(index)
+          if v <> w then call node_pool.append(findSet(v))
+          else type_[w] = 3
+        end
+
+        work_list = .HIntList()
+        do index = 1 to node_pool.size()
+          call work_list.append(node_pool.get(index))
+        end
+        if node_pool.size() <> 0 then type_[w] = 2
+
+        do while \work_list.isEmpty()
+          x = work_list.removeFirst()
+          non_backs = non_back_preds_[x]
+          if non_backs.size() > 32768 then return
+          do index = 1 to non_backs.size()
+            y = non_backs.get(index)
+            ydash = findSet(y)
+            if \isAncestor(w, ydash) then do
+              type_[w] = 4
+              call addNonBackPred(w, ydash)
+            end
+            else do
+              if ydash <> w & \node_pool.contains(ydash) then do
+                call work_list.append(ydash)
+                call node_pool.append(ydash)
+              end
+            end
+          end
+        end
+
+        if node_pool.size() > 0 | type_[w] = 3 then do
+          loop_handle = createActiveLoop(node_w, type_[w] <> 4)
+          uf_loop_[w] = loop_handle
+          do index = 1 to node_pool.size()
+            node = node_pool.get(index)
+            header_[node] = w
+            uf_parent_[node] = w
+            nested_loop = uf_loop_[node]
+            if nested_loop <> 0 then call setActiveLoopParent(nested_loop, loop_handle)
+            else call addActiveLoopBlock(loop_handle, uf_block_[node])
+          end
+        end
+      end
+    end
+    return

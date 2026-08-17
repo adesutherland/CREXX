@@ -49,6 +49,7 @@ engine cells.
 | `awfy-json-full` | `awfy_json.crexx` plus exact 25,820-byte fixture | pinned AWFY Json full-input contract through cREXX indexed `.jsondocument` | post-PERF3 qualified `standard-library-indexed-document` reserve lane | no |
 | `deltablue` | `awfy_deltablue.crexx` | pinned AWFY chain and projection contracts through stable indexed Level B graph state | post-PERF3 qualified `stable-indexed-constraint-graph` reserve lane | no |
 | `cd` | `awfy_cd.crexx` | pinned AWFY 200-frame collision detector through value records and benchmark-private indexed red/black maps | post-PERF3 qualified `indexed-red-black-tree-native-math` reserve lane | no |
+| `havlak` | `awfy_havlak.crexx` | pinned AWFY CFG, loop-recognition, union-find and loop-forest contracts through stable indexed Level B state | post-PERF3 qualified `stable-indexed-cfg-union-find` reserve lane | no |
 | `base64-v1` | `base64_roundtrip.crexx` | historical RFC 4648 round trip | retained historical cell | no in v2 |
 | `base64-v2` | `base64_roundtrip_v2.crexx` plus v2 ooRexx/NetRexx ports | RFC 4648 with each runtime's fastest disclosed byte surface and arithmetic digit decode | new qualified-series candidate | yes, replacing only the v2 Base64 member |
 | `rexxcps` | `rexxcps_levelb.crexx` | RexxCPS 2.2d for cREXX | retained disclosed adaptation and native CPS | no; mandatory separate representative row |
@@ -81,6 +82,10 @@ new identity, so it must never be compared as though it were the v1 aggregate.
 - Keep CD outside every aggregate. Its disclosed indexed-tree/native-math
   adaptation and adverse optimized expansion remain separate evidence for
   generic scalar access and late inlining.
+- Keep Havlak outside every aggregate. Its direct executable retains the exact
+  50 discarded recognition passes; bounded CTest and maintained-runner forms
+  must report their explicit repeat count. Normal value-array and any future
+  packed-binary controls remain separate identities.
 - Keep the canonical and hoisted Mandelbrot sources separate in every artifact
   name and table.
 - Formal timing remains ordinary profiling-off Release, two warmups and ten
@@ -88,10 +93,8 @@ new identity, so it must never be compared as though it were the v1 aggregate.
 - Retain raw samples, product/tool/source hashes, build settings, host state,
   lifecycle, RSS and artifact results under a new dated v2 evidence directory.
 
-Full AWFY Json, DeltaBlue and CD completed their own post-PERF3 qualifications
-on 2026-08-17 and are reserve lanes, not promoted members. Havlak still needs
-its own provenance, equivalence and qualification gate before any promotion
-decision.
+Full AWFY Json, DeltaBlue, CD and Havlak completed their own post-PERF3
+qualifications on 2026-08-17 and are reserve lanes, not promoted members.
 
 The first formal Apple ARM64 baseline is retained in
 [`2026-08-17-perf3-closeout-current-mac-v2`](../evidence/2026-08-17-perf3-closeout-current-mac-v2/).

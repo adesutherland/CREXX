@@ -203,6 +203,7 @@ benchmark_base: procedure = .string
     when benchmark_name = "richards" then return "benchmark_awfy_richards"
     when benchmark_name = "deltablue" then return "benchmark_awfy_deltablue"
     when benchmark_name = "cd" then return "benchmark_awfy_cd"
+    when benchmark_name = "havlak" then return "benchmark_awfy_havlak"
     when benchmark_name = "awfy-json" then return "benchmark_awfy_json"
     when benchmark_name = "json" then return "benchmark_json_parser"
     when benchmark_name = "base64" then return "benchmark_base64_roundtrip"
@@ -240,6 +241,11 @@ benchmark_command: procedure = .string[]
     when benchmark_name = "deltablue" then command[argument_slot] = "500"
     /* Bounded reserve lane: all 200 frames with a published reference total. */
     when benchmark_name = "cd" then command[argument_slot] = "10"
+    /* Bounded reserve lane: full graph plus one discarded recognition pass. */
+    when benchmark_name = "havlak" then do
+      command[argument_slot] = "1"
+      command[argument_slot + 1] = "1"
+    end
     /* Qualified reserve lane: exact fixture plus 50 complete parse/verify loops. */
     when benchmark_name = "awfy-json" then do
       command[argument_slot] = "50"

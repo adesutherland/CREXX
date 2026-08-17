@@ -21,6 +21,7 @@ timed I/O in their kernels.
 | `awfy_richards.crexx` | Are We Fast Yet? / Richards | scheduler queues, state transitions and a larger call graph |
 | `awfy_deltablue.crexx` | Are We Fast Yet? / DeltaBlue at pinned commit `74306fec151070fd07157cefeacf19e7e0bcdc89` | complete chain/projection constraint solving through a stable indexed Level B graph |
 | `awfy_cd.crexx` | Are We Fast Yet? / CD at pinned commit `74306fec151070fd07157cefeacf19e7e0bcdc89` | value records, moving-point collision maths, recursive voxel reduction and benchmark-private indexed red/black trees |
+| `awfy_havlak.crexx` | Are We Fast Yet? / Havlak at pinned commit `74306fec151070fd07157cefeacf19e7e0bcdc89` | large control-flow graph construction, loop recognition, union-find and loop-forest nesting through stable handles |
 | `awfy_json.crexx` | Are We Fast Yet? / Json at pinned commit `74306fec151070fd07157cefeacf19e7e0bcdc89` | complete 25,820-byte RAP parse and verification through the indexed `rxjson` document surface |
 | `awfy_queens.crexx` | Are We Fast Yet? / SOM | recursive search, object attributes and boolean arrays |
 | `awfy_nbody.crexx` | Are We Fast Yet? / Benchmarks Game | floating-point object access and disclosed native `rxmath` square root |
@@ -114,6 +115,42 @@ bounded size-10 process pilot is 5.155663x/5.414906x slower for product
 to 33.96 seconds optimized versus 0.43 seconds no-opt. These results feed the
 generic scalar-access and bounded late-inlining/register-finalisation stages;
 no-opt is not substituted as the product result.
+
+### AWFY Havlak reserve lane
+
+`awfy_havlak.crexx` retains the pinned upstream `LoopTesterApp` construction:
+one simple CFG, the requested dummy recognitions, a graph built with parameters
+`10, 10, 5`, one persistent recognition and 50 recognitions into fresh,
+discarded loop forests. The published result pairs are 1/1,605, 15/1,647,
+150/2,052, 1,500/6,102 and 15,000/46,602 loops; every case has 5,213 CFG
+nodes.
+
+Java object identity is lowered to stable integer handles. Ordered integer
+vectors preserve predecessor, successor and work-list order; insertion-ordered
+sets preserve uniqueness; flat typed arrays retain DFS, union-find and loop
+state. Persistent and temporary loop forests remain separate. A loop is
+parented once and every loop-body handle is inserted once, so those two
+internal set insertions use a no-search append with the uniqueness proof stated
+in the source. Generic non-back-predecessor insertion still performs the set
+membership check.
+
+The direct benchmark defaults to the exact upstream 50 discarded recognition
+passes. Its optional second argument changes only that repeat count: CTest uses
+`1 0` as a bounded full-graph correctness smoke, while the maintained runner
+uses `1 1` to exercise creation and disposal of a second complete loop forest.
+Both forms are explicitly non-canonical and must not be reported as the full
+AWFY timing workload.
+
+The primary equivalence lane deliberately uses normal `.int[]` value arrays;
+these are typed but not packed numeric buffers. Packed `.binary` plus
+`<at..i64>` is retained as a separately labelled representation control for
+the generic scalar-access work. It is not silently substituted here because
+the current product's direct packed reads include byte-range and canonical
+representation handling and are slower than an already-grown `.int[]` in the
+focused sequential-read control. That follow-on also includes an explicitly
+selectable aligned `rxinteger` accessor/view whose alignment, extent, bounds
+and host representation are checked once. Its syntax and whether it remains
+backed by `.binary` or a future packed-integer container are deliberately open.
 
 RexxCPS is different: it reconstructs a dynamic mix derived from about 2.5
 million lines of traced Rexx programs and reports clauses per second. Version
@@ -254,6 +291,12 @@ is likewise excluded from the historical default set. Every process-smoke
 sample runs all 200 frames at the bounded published size of 10 aircraft and
 loads the disclosed `rxmath` plugin before the standard library.
 
+The qualified Havlak reserve lane is available explicitly as
+`--benchmark havlak` and remains outside the historical default set. Each
+process-smoke sample uses one dummy recognition and one discarded complete
+recognition (`1 1`). Run the benchmark executable directly without the second
+argument for the exact upstream 50-pass workload.
+
 For a diagnostic sample stream, also request the serial samples:
 
 ```bash
@@ -335,8 +378,8 @@ nested-reference-container boundary; JSON exposes the absence of a full cREXX
 JSON object model. Those adaptations are never silently aggregated. The
 lifecycle lane is reported separately from steady-state workload aggregates.
 Queens and NBody have separately named Tier B cREXX sources. Full AWFY Json,
-DeltaBlue and CD are qualified, separately named post-PERF3 reserve lanes;
-none changes the v2 aggregate. Havlak, filesystem-I/O workloads and focused
+DeltaBlue, CD and Havlak are qualified, separately named post-PERF3 reserve
+lanes; none changes the v2 aggregate. Filesystem-I/O workloads and focused
 Classic-semantics probes remain pending or reserve work.
 
 The confirmed capability gaps and audit candidates uncovered while porting are

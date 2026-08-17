@@ -1,0 +1,17 @@
+scope,build,mode,vm,args,expected,actual,status,boundary
+direct-matrix,Release,noopt,rxvm,"1 0",1605/5213,1605/5213,PASS,final-source
+direct-matrix,Release,noopt,rxtvm,"1 0",1605/5213,1605/5213,PASS,final-source
+direct-matrix,Release,noopt,rxbvm,"1 0",1605/5213,1605/5213,PASS,final-source
+direct-matrix,Release,opt,rxvm,"1 0",1605/5213,1605/5213,PASS,final-source
+direct-matrix,Release,opt,rxtvm,"1 0",1605/5213,1605/5213,PASS,final-source
+direct-matrix,Release,opt,rxbvm,"1 0",1605/5213,1605/5213,PASS,final-source
+published-reference,Release,noopt,rxvm,"15 0",1647/5213,1647/5213,PASS,final-source
+published-reference,Release,noopt,rxvm,"150 0",2052/5213,2052/5213,PASS,final-source
+published-reference,Release,noopt,rxvm,"1500 0",6102/5213,6102/5213,PASS,final-source
+published-reference,Release,noopt,rxvm,"15000 0",46602/5213,,NOT-EXECUTED-PASS,"exact 1602+3n relation; attempts interrupted at 916.56s and 1567.48s"
+maintained-runner,Release,noopt,rxvm,"1 1",1605/5213,1605/5213,PASS,single process integration sample
+maintained-runner,Release,opt,rxvm,"1 1",1605/5213,1605/5213,PASS,single process integration sample
+focused-ctest,Debug,noopt,rxvm,"1 0",PASS,PASS,PASS,linked runtime fixture
+focused-ctest,Debug,opt,rxvm,"1 0",PASS,PASS,PASS,linked runtime fixture
+focused-ctest,Release,noopt,rxvm,"1 0",PASS,PASS,PASS,linked runtime fixture
+focused-ctest,Release,opt,rxvm,"1 0",PASS,PASS,PASS,linked runtime fixture

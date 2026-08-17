@@ -1,0 +1,23 @@
+Havlak generated-code observation
+Date: 2026-08-17
+
+Source RXAS retained metadata:
+mode,bytes,instructions,procedures,locals_sum,max_locals,max_procedure,linkattr_text,minlinkattr_text,unlink_text,copy_text
+opt,399422,2600,41,678,114,run,572,232,364,154
+noopt,165494,1159,43,442,65,findLoops,252,110,160,31
+
+Stripped linked image:
+mode,bytes,instructions,sha256
+opt,26197,2536,fb5e26e0fad0b8848cebde225e05e955f9b55f8c444ca3f15fcddd72a1418fb4
+noopt,22014,1160,d1e814e212010be3f4a0e66d101ceaa70017947aa969888c4146dc75abde8c49
+
+Interpretation:
+- optimized source instruction count is 2.243313x no-opt;
+- optimized stripped-linked instruction count is 2.186207x no-opt;
+- stable indexed CFG, loop-forest and union-find access expands into more
+  linked-attribute, unlink and copy traffic and raises the peak locals count;
+- the bounded runner's one sample per mode is integration evidence, not a
+  timing verdict;
+- retain this observation for generic scalar access and bounded late-inlining/
+  register-finalisation; do not alter Havlak's source/result contract or
+  aggregate it.
