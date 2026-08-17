@@ -202,6 +202,7 @@ benchmark_base: procedure = .string
     when benchmark_name = "list" then return "benchmark_awfy_list"
     when benchmark_name = "richards" then return "benchmark_awfy_richards"
     when benchmark_name = "deltablue" then return "benchmark_awfy_deltablue"
+    when benchmark_name = "cd" then return "benchmark_awfy_cd"
     when benchmark_name = "awfy-json" then return "benchmark_awfy_json"
     when benchmark_name = "json" then return "benchmark_json_parser"
     when benchmark_name = "base64" then return "benchmark_base64_roundtrip"
@@ -215,26 +216,37 @@ benchmark_command: procedure = .string[]
   command = .string[]
   command[1] = build_dir || "/bin/" || vm_name
   command[2] = build_dir || "/tests/benchmarks/" || benchmark_base(benchmark_name) || "_" || mode || ".rxbin"
-  command[3] = build_dir || "/bin/library.rxbin"
-  command[4] = "-a"
+  argument_slot = 5
+  if benchmark_name = "cd" then do
+    command[3] = "rx_rxmath"
+    command[4] = build_dir || "/bin/library.rxbin"
+    command[5] = "-a"
+    argument_slot = 6
+  end
+  else do
+    command[3] = build_dir || "/bin/library.rxbin"
+    command[4] = "-a"
+  end
   select
-    when benchmark_name = "sieve" then command[5] = "50"
-    when benchmark_name = "permute" then command[5] = "50"
-    when benchmark_name = "mandelbrot" then command[5] = "500"
-    when benchmark_name = "towers" then command[5] = "10"
-    when benchmark_name = "bounce" then command[5] = "100"
-    when benchmark_name = "storage" then command[5] = "10"
-    when benchmark_name = "list" then command[5] = "100"
-    when benchmark_name = "richards" then command[5] = "1"
+    when benchmark_name = "sieve" then command[argument_slot] = "50"
+    when benchmark_name = "permute" then command[argument_slot] = "50"
+    when benchmark_name = "mandelbrot" then command[argument_slot] = "500"
+    when benchmark_name = "towers" then command[argument_slot] = "10"
+    when benchmark_name = "bounce" then command[argument_slot] = "100"
+    when benchmark_name = "storage" then command[argument_slot] = "10"
+    when benchmark_name = "list" then command[argument_slot] = "100"
+    when benchmark_name = "richards" then command[argument_slot] = "1"
     /* Bounded reserve lane: complete chain and projection contracts. */
-    when benchmark_name = "deltablue" then command[5] = "500"
+    when benchmark_name = "deltablue" then command[argument_slot] = "500"
+    /* Bounded reserve lane: all 200 frames with a published reference total. */
+    when benchmark_name = "cd" then command[argument_slot] = "10"
     /* Qualified reserve lane: exact fixture plus 50 complete parse/verify loops. */
     when benchmark_name = "awfy-json" then do
-      command[5] = "50"
-      command[6] = build_dir || "/tests/benchmarks/awfy_json_rap_minified.json"
+      command[argument_slot] = "50"
+      command[argument_slot + 1] = build_dir || "/tests/benchmarks/awfy_json_rap_minified.json"
     end
-    when benchmark_name = "json" then command[5] = "5000"
-    when benchmark_name = "base64" then command[5] = "500"
+    when benchmark_name = "json" then command[argument_slot] = "5000"
+    when benchmark_name = "base64" then command[argument_slot] = "500"
     /* RexxCPS uses its canonical 100 x 100 defaults and self-calibration. */
     when benchmark_name = "rexxcps" then nop
   end

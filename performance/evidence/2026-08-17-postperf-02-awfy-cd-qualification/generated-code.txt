@@ -1,0 +1,21 @@
+CD generated-code observation
+Date: 2026-08-17
+
+Source RXAS retained metadata:
+mode,bytes,instructions,procedures,locals_sum,max_locals,max_procedure,linkattr_text,minlinkattr_text,unlink_text,copy_text
+opt,697831,5613,48,751,93,remove,1892,861,1217,483
+noopt,253688,1957,50,541,56,handleNewFrame,478,199,310,78
+
+Stripped linked image:
+mode,bytes,instructions,sha256
+opt,42546,5765,f44771541b536e1642127598b33a87b98e627c661c479d50fb48f59b243adcb5
+noopt,32873,2172,33d6a2cab1145fac5f54a20d1d8d0bcccfe552fed485bd60d72266ac4d82a3b1
+
+Interpretation:
+- optimized source instruction count is 2.868166x no-opt;
+- indexed tree, recursive voxel and value-record accessor shapes expand into
+  materially more linked-attribute and copy traffic;
+- the size-10 process gap is about 5.1x, while the exact size-100 orientation
+  is 33.96 seconds optimized versus 0.43 seconds no-opt;
+- retain this for generic scalar access and bounded late-inlining/register-
+  finalisation; do not alter CD's source/result contract or aggregate it.

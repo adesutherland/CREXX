@@ -64,6 +64,17 @@ crexx_add_rexx_opt_matrix(
         FORBIDDEN_OUTPUT_REGEX "FAIL:|Failed|PANIC:"
 )
 crexx_add_rexx_opt_matrix(
+        NAME benchmark_awfy_cd
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/awfy_cd.crexx
+        TARGET_GROUP language_benchmarks
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_BINARY_DIR}/lib/plugins/rxmath
+        DEPENDS library compiler_exit_bin _rxmath
+        RUNTIME_ARGS rx_rxmath ${LIBRPATH} -a 2
+        TEST_LABELS "benchmark;language;indexed-red-black-tree-adaptation;native-math-control"
+        REQUIRED_OUTPUT_REGEX "PASS: AWFY CD"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|Failed|PANIC:"
+)
+crexx_add_rexx_opt_matrix(
         NAME benchmark_awfy_json
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/awfy_json.crexx
         TARGET_GROUP language_benchmarks
@@ -218,6 +229,7 @@ crexx_label_smoke_tests(
         benchmark_awfy_richards_opt
         benchmark_awfy_queens_opt
         benchmark_awfy_deltablue_opt
+        benchmark_awfy_cd_opt
         benchmark_awfy_json_opt
         benchmark_awfy_nbody_opt
         benchmark_json_parser_opt

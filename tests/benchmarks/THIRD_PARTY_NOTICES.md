@@ -31,6 +31,13 @@ assertions from the same pinned Java/SOM sources. Its stable integer handles,
 planner-owned typed arrays and tagged constraint representation are disclosed
 Level B adaptations for the language's value-copy object semantics.
 
+`awfy_cd.crexx` derives its 200-frame simulator, collision detector, voxel
+reduction and red/black-tree algorithms from the CD sources at the same pinned
+commit. Copyright (c) 2001-2010 Purdue University and Copyright (C) 2015 Apple
+Inc.; the complete upstream revised-BSD notice is retained in the source file.
+The indexed nodes/occurrences and `rxmath` boundary are disclosed Level B
+adaptations.
+
 MIT license used by the SOM-derived sources:
 
 > Permission is hereby granted, free of charge, to any person obtaining a copy

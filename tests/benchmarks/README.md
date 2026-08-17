@@ -20,6 +20,7 @@ timed I/O in their kernels.
 | `awfy_list.crexx` | Are We Fast Yet? / SOM | linked-list recursion and explicit weak references |
 | `awfy_richards.crexx` | Are We Fast Yet? / Richards | scheduler queues, state transitions and a larger call graph |
 | `awfy_deltablue.crexx` | Are We Fast Yet? / DeltaBlue at pinned commit `74306fec151070fd07157cefeacf19e7e0bcdc89` | complete chain/projection constraint solving through a stable indexed Level B graph |
+| `awfy_cd.crexx` | Are We Fast Yet? / CD at pinned commit `74306fec151070fd07157cefeacf19e7e0bcdc89` | value records, moving-point collision maths, recursive voxel reduction and benchmark-private indexed red/black trees |
 | `awfy_json.crexx` | Are We Fast Yet? / Json at pinned commit `74306fec151070fd07157cefeacf19e7e0bcdc89` | complete 25,820-byte RAP parse and verification through the indexed `rxjson` document surface |
 | `awfy_queens.crexx` | Are We Fast Yet? / SOM | recursive search, object attributes and boolean arrays |
 | `awfy_nbody.crexx` | Are We Fast Yet? / Benchmarks Game | floating-point object access and disclosed native `rxmath` square root |
@@ -88,6 +89,31 @@ instructions and amplifies linked attribute/copy traffic. This is retained as
 an input to the later generic scalar-access and late-inlining work; it is not a
 reason to change the benchmark contract or report the no-opt result as the
 product result.
+
+### AWFY CD reserve lane
+
+`awfy_cd.crexx` retains the pinned upstream 200-frame simulator and its
+published collision totals for 2, 10, 100, 200, 250, 500 and 1,000 aircraft.
+It preserves value-semantics vector, aircraft, motion and collision records,
+the moving-point quadratic collision test, recursive voxel enumeration and
+ordered-map traversal. The port uses the existing `rxmath` `sin`, `cos` and
+`sqrt` functions and the maintained Level B `floattrunc` routine for the
+upstream voxel hash's truncation-toward-zero rule.
+
+Java object identity in the upstream red/black maps is lowered to stable
+integer node and occurrence handles in benchmark-private typed arrays. The
+tree insertion, rotation, traversal and removal algorithms remain in the
+measured source; the lane does not substitute the class-library AVL tree. The
+adaptation is labelled `indexed-red-black-tree-native-math`, remains outside
+Tier A and enters no aggregate.
+
+The qualification retains another optimizer boundary rather than changing the
+port: optimized source RXAS is 2.868166x the no-opt instruction count, and the
+bounded size-10 process pilot is 5.155663x/5.414906x slower for product
+`rxvm`/concrete `rxtvm`. A passed size-100 stripped-linked orientation widens
+to 33.96 seconds optimized versus 0.43 seconds no-opt. These results feed the
+generic scalar-access and bounded late-inlining/register-finalisation stages;
+no-opt is not substituted as the product result.
 
 RexxCPS is different: it reconstructs a dynamic mix derived from about 2.5
 million lines of traced Rexx programs and reports clauses per second. Version
@@ -223,6 +249,11 @@ Each process-smoke sample runs the complete chain and projection contracts at
 bounded size 500. Retain optimized and unoptimized cells separately because
 the current optimizer expansion is an observed result, not comparable noise.
 
+The qualified CD reserve lane is available explicitly as `--benchmark cd` and
+is likewise excluded from the historical default set. Every process-smoke
+sample runs all 200 frames at the bounded published size of 10 aircraft and
+loads the disclosed `rxmath` plugin before the standard library.
+
 For a diagnostic sample stream, also request the serial samples:
 
 ```bash
@@ -303,9 +334,9 @@ cREXX references directly. `Storage` exposes the current array/object and
 nested-reference-container boundary; JSON exposes the absence of a full cREXX
 JSON object model. Those adaptations are never silently aggregated. The
 lifecycle lane is reported separately from steady-state workload aggregates.
-Queens and NBody have separately named Tier B cREXX sources. Full AWFY Json and
-DeltaBlue are qualified, separately named post-PERF3 reserve lanes; neither
-changes the v2 aggregate. CD, Havlak, filesystem-I/O workloads and focused
+Queens and NBody have separately named Tier B cREXX sources. Full AWFY Json,
+DeltaBlue and CD are qualified, separately named post-PERF3 reserve lanes;
+none changes the v2 aggregate. Havlak, filesystem-I/O workloads and focused
 Classic-semantics probes remain pending or reserve work.
 
 The confirmed capability gaps and audit candidates uncovered while porting are

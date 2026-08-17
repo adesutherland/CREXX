@@ -1,6 +1,6 @@
 # Post-PERF3 performance worklist
 
-Status: **active — POSTPERF-02 DeltaBlue and CD**
+Status: **active — POSTPERF-03 Havlak**
 
 Started: 2026-08-17
 
@@ -17,8 +17,8 @@ mandatory first ordinary-Release verdict in `performance/AGENTS.md`.
 | ID | Stage | Status | Exit |
 | --- | --- | --- | --- |
 | POSTPERF-01 | Full AWFY Json | complete | Exact upstream payload and verification contract; opt/no-opt product and concrete-VM qualification; retained source/RXAS/RXBIN evidence; docs and local commit |
-| POSTPERF-02 | DeltaBlue and CD | active — DeltaBlue qualification closeout; CD next | Both pinned upstream ports qualified together because they share identity/container foundations; neither is silently promoted to Tier A |
-| POSTPERF-03 | Havlak | pending | Pinned upstream port qualified after POSTPERF-02 foundations; retained as a separate large-graph lane |
+| POSTPERF-02 | DeltaBlue and CD | complete | Both pinned upstream ports qualified with stable indexed identity/container adaptations; neither is promoted to Tier A or any aggregate |
+| POSTPERF-03 | Havlak | active | Pinned upstream port qualified after POSTPERF-02 foundations; retained as a separate large-graph lane |
 | POSTPERF-04 | Generic final/concrete scalar accessor proof | pending | Hand-equivalent ceiling and generic proof across the expanded suite; any production candidate gets a separate mandatory first Release verdict |
 | POSTPERF-05 | Bounded hoisting, register finalisation and late inlining | pending | Evidence ranks bounded consumers; select at most one production candidate at a time and apply the mandatory verdict gate |
 
@@ -114,7 +114,7 @@ qualification evidence is at
 
 ## POSTPERF-02 — DeltaBlue and CD
 
-Status: **active — DeltaBlue qualification closeout; CD next**.
+Status: **complete — DeltaBlue and CD qualified as separate reserve lanes**.
 
 ### Frozen source and result contracts
 
@@ -192,7 +192,26 @@ boundary: optimized source RXAS is 4.250319x the no-opt instruction count, and
 optimized median process time is 18.323543x no-opt for product `rxvm` and
 16.810123x for `rxtvm`. The result is retained for the later generic scalar-
 access and bounded late-inlining/register-finalisation stages. DeltaBlue
-remains a reserve lane and changes no aggregate; CD is next.
+remains a reserve lane and changes no aggregate.
+
+### CD closeout result
+
+The exact 200-frame CD port preserves value records, moving-point collision
+maths, recursive voxel reduction and benchmark-private indexed red/black
+trees. All seven published totals pass in no-opt; optimized executions pass at
+2, 10 and 100 aircraft. The bounded Debug/Release optimized/unoptimized
+three-VM matrix passes 12/12, focused Debug and Release CTest pass 3/3 each,
+and the explicit maintained runner passes all four pilot cells. Qualification
+evidence is at
+[`evidence/2026-08-17-postperf-02-awfy-cd-qualification`](evidence/2026-08-17-postperf-02-awfy-cd-qualification/README.md).
+
+CD independently confirms the optimizer boundary: optimized source RXAS is
+2.868166x the no-opt instruction count, and optimized median process time is
+5.155663x no-opt for product `rxvm` and 5.414906x for `rxtvm` at bounded size
+10. A passed stripped-linked size-100 orientation is 33.96 seconds optimized
+versus 0.43 seconds no-opt. The source and contract remain unchanged; these
+results transfer to generic scalar-access and bounded late-inlining/register-
+finalisation. POSTPERF-02 changes no aggregate.
 
 ### Qualification checklist
 
@@ -200,15 +219,15 @@ remains a reserve lane and changes no aggregate; CD is next.
 - [x] Audit Level B object, collection, identity and native-math boundaries.
 - [x] Freeze the stable-handle DeltaBlue and indexed-red/black-tree CD design.
 - [x] Implement and qualify DeltaBlue opt/no-opt smoke execution.
-- [ ] Implement and qualify CD opt/no-opt smoke execution.
-- [ ] Pass both products under `rxvm`, `rxtvm` and `rxbvm` in Debug and
+- [x] Implement and qualify CD opt/no-opt smoke execution.
+- [x] Pass both products under `rxvm`, `rxtvm` and `rxbvm` in Debug and
       profiling-off Release.
-- [ ] Retain source/RXAS/RXBIN hashes and structural/adaptation observations.
-- [ ] Take a bounded product/concrete pilot only after correctness; add neither
+- [x] Retain source/RXAS/RXBIN hashes and structural/adaptation observations.
+- [x] Take a bounded product/concrete pilot only after correctness; add neither
       workload to the v2 common aggregate.
-- [ ] Update benchmark, third-party, portfolio and roadmap documentation.
-- [ ] Run focused Release QA, required broad Debug CTest and `git diff --check`.
-- [ ] Close POSTPERF-02 and commit locally before opening POSTPERF-03.
+- [x] Update benchmark, third-party, portfolio and roadmap documentation.
+- [x] Run focused Release QA, required broad Debug CTest and `git diff --check`.
+- [x] Close POSTPERF-02 and commit locally before opening POSTPERF-03.
 
 ## Restart rule
 
