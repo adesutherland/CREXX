@@ -1,0 +1,40 @@
+Internal ctest changing into directory: C:/crexx-qa/windows-msvc-2b793c81e-build
+Test project C:/crexx-qa/windows-msvc-2b793c81e-build
+  Test    #1: linked_opt_runtime_artifacts_build
+  Test  #500: gate_f_levelg_rxbvm_noopt
+  Test  #501: gate_f_levelg_rxbvm_opt
+  Test  #526: signal_control_unwind_rxbvm_noopt
+  Test  #527: signal_control_unwind_rxbvm_opt
+  Test #1097: gate_f_channel_local_rxbvm
+  Test #1098: rxvmchannel_process_crash_replacement
+  Test #1099: gate_f_channel_process_rxbvm
+  Test #1160: persistent_worker_executor-rxvml-doorbell-stress
+  Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress
+  Test #1163: persistent_worker_executor-rxvml-sparse-progress
+  Test #1164: persistent_worker_executor-rxvml-native-return
+  Test #1165: persistent_worker_executor-rxvml-e6-worker-topology-w8
+  Test #1176: persistent_worker_executor-rxvml-fallback-stress
+  Test #1177: persistent_worker_executor-rxvml-sparse-progress-fallback
+  Test #1179: persistent_worker_executor-rxbvml-doorbell-stress
+  Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+  Test #1182: persistent_worker_executor-rxbvml-sparse-progress
+  Test #1183: persistent_worker_executor-rxbvml-native-return
+  Test #1184: persistent_worker_executor-rxbvml-e6-worker-topology-w8
+  Test #1195: persistent_worker_executor-rxbvml-fallback-stress
+  Test #1196: persistent_worker_executor-rxbvml-sparse-progress-fallback
+  Test #1230: ts_address_spawn_transfer_noopt
+  Test #1231: ts_address_spawn_transfer_opt
+  Test #1480: ts_address_spawn_transfer_rxbvm_noopt
+  Test #1481: ts_address_spawn_transfer_rxbvm_opt
+  Test #1578: testConcurrency_noopt
+  Test #1579: testConcurrency_opt
+  Test #1603: ts_http_server_rxbvm_noopt
+  Test #1604: ts_http_server_rxbvm_opt
+  Test #1605: ts_http_server_failures_rxbvm_noopt
+  Test #1606: ts_http_server_failures_rxbvm_opt
+  Test #1609: ts_http_streaming_rxbvm_noopt
+  Test #1610: ts_http_streaming_rxbvm_opt
+  Test #1615: ts_http_policy_rxbvm_noopt
+  Test #1616: ts_http_policy_rxbvm_opt
+
+Total Tests: 36

@@ -1,0 +1,6 @@
+PASS: initial concurrency Windows qualification
+commit=2b793c81e0987f627ab72e3c4e505ae5c6a95abe
+concurrency_tests=194
+tls_backend=SCHANNEL
+portable_archive=CREXX-windows-x64.zip
+artifact_directory=C:\crexx-qa\windows-gcc-2b793c81e-evidence-artifacts

@@ -1,0 +1,14 @@
+Internal ctest changing into directory: C:/crexx-qa/windows-msvc-2b793c81e-build
+Test project C:/crexx-qa/windows-msvc-2b793c81e-build
+  Test    #1: linked_opt_runtime_artifacts_build
+  Test    #2: rxgraph_unit
+  Test  #502: gate_f_task_method_import_rxbvm_noopt
+  Test  #503: gate_f_task_method_import_rxbvm_opt
+  Test  #983: rxlink_format_check
+  Test #1013: rxvmchannel_provider_registry
+  Test #1014: rxvmbyteendpoint_substrate
+  Test #1015: rxvmchannel_byte_provider
+  Test #1578: testConcurrency_noopt
+  Test #1579: testConcurrency_opt
+
+Total Tests: 10

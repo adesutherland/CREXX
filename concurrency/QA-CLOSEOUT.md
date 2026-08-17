@@ -1,6 +1,6 @@
 # cREXX initial concurrency QA closeout
 
-Status date: 2026-08-16
+Status date: 2026-08-17
 
 Branch: `develop`
 
@@ -16,10 +16,11 @@ does not compete with the project ordering in `docs/ROADMAP.md`.
 - QA may add tests, diagnostics, portability repairs and defect fixes. A
   language, RXAS/RXBIN, public ABI or architectural change still requires
   Adrian's separate approval.
-- Linux and Windows execute a versioned, scripted candidate. They are not
-  interactive development hosts. A platform failure is captured with a minimal
-  reproducer and diagnostics, repaired and tested on Mac, then replayed on the
-  affected host.
+- Linux and Windows normally execute a versioned, scripted candidate rather
+  than acting as interactive development hosts. A platform failure is captured
+  with a minimal reproducer and diagnostics. If Adrian explicitly directs a
+  bounded repair on the affected host, the complete native matrix must be
+  replayed from a new clean exact commit before that platform can pass.
 - Concurrency is called **initial** until an explicit later compatibility
   decision; passing QA does not silently make it stable.
 - Every completed step receives focused QA and a local commit. No push is
@@ -32,7 +33,7 @@ does not compete with the project ordering in `docs/ROADMAP.md`.
 | QA-A test readiness | complete | solution-point review complete, direct gaps closed, enduring CTest manifest and frozen platform runners ready |
 | QA-B independent Mac closeout | active | correctness, sanitizer, stress, Release, install and portable-package proof pass; quiet AC performance replay remains |
 | QA-C Linux qualification | ready, not run | clean frozen build, conformance matrix and install/package proof retained |
-| QA-D Windows qualification | ready, not run | clean frozen build, conformance matrix and install/package proof retained |
+| QA-D Windows qualification | complete | exact clean commit passed MSVC, Clang and GCC conformance, full CTest, TLS, stress, install and ZIP-package proof |
 | QA-E publication decision | complete: published as initial | corrected commit `53b3de77a` passed the four-platform Build CREXX matrix, development-snapshot publication and CodeQL; later native-host evidence can still block or qualify it |
 
 On 2026-08-16 Adrian selected publication as **initial**, with GitHub Actions
@@ -149,14 +150,44 @@ remains the sole open Mac QA-B item; the earlier accepted AC baselines are not
 invalidated. The diagnostic bundle is
 [`2026-08-16-initial-concurrency-mac-closeout`](../performance/evidence/2026-08-16-initial-concurrency-mac-closeout/).
 
+## QA-D Windows evidence
+
+Native Windows qualification passes on exact clean commit
+`2b793c81e0987f627ab72e3c4e505ae5c6a95abe`. The slow x64 host used two build
+jobs and two CTest jobs, MinSizeRel, profiling off and SCHANNEL throughout.
+
+| Compiler | Concurrency | Complete CTest | Install/package smoke |
+| --- | ---: | ---: | --- |
+| MSVC 19.44.35228 | 137/137 | 2,076/2,076 | `rxbvm` PASS |
+| Clang 22.1.7 | 194/194 | 2,220/2,220 | `rxbvm` and `rxtvm` PASS |
+| GCC 16.1.0 | 194/194 | 2,220/2,220 | `rxbvm` and `rxtvm` PASS |
+
+Every lane also passed non-empty SP-01 through SP-09 inventories, trusted-host
+and hostname-mismatch live TLS, every stress test for 20 repetitions, a fresh
+install and extracted-ZIP toolchain smoke. Original runner digests, package
+digests and the curated repository evidence digest were independently checked
+with no missing or mismatched files.
+
+Adrian directed bounded Windows-side repairs during this campaign. The formal
+matrix was restarted from fresh external directories only after those repairs
+were locally committed. The fixes cover strict-safe runner cleanliness,
+MSVC C11 atomics and parser-mode defaults, deterministic Windows underflow
+handling, a missing system-plugin `errno` include, and correct Clang/MinGW TLS
+storage. No language, RXAS/RXBIN, public ABI or architecture changed.
+
+Commands, logs, inventories, results and digests are retained in
+[`evidence/2026-08-17-windows-qualification`](evidence/2026-08-17-windows-qualification/README.md).
+The binary ZIPs remain in the external artifact directories named by the
+retained `RESULT.txt` files.
+
 ## Independent continuation
 
 [`qa/INDEPENDENT-REVIEW-PROMPT.md`](qa/INDEPENDENT-REVIEW-PROMPT.md) is the
 paste-ready brief for a fresh agent. It requires an independent SP-01 through
-SP-09 evidence review, the outstanding quiet-AC replay, and native execution
-of the frozen Linux and Windows runners after initial publication. Target hosts
-remain validation-only: evidence and minimal reproducers return to Mac, where
-any repair and full local replay occur at a new exact commit.
+SP-09 evidence review, the outstanding quiet-AC replay, formal execution of the
+frozen Linux runner, and review of the completed Windows QA-D evidence. Windows
+does not need another qualification run without a concrete evidence
+inconsistency or a new source candidate.
 
 ## Deferred feature proposals
 

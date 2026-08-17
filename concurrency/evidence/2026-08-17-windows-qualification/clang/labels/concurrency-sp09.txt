@@ -1,0 +1,23 @@
+Test project C:/crexx-qa/windows-clang-2b793c81e-build
+  Test    #1: linked_opt_runtime_artifacts_build
+  Test #1656: classlib_rexxdoc_coverage
+  Test #1657: rexx_api_doc_exposed_regression
+  Test #1658: gate_f_levelb_bridge_inspection
+  Test #1704: docs_concurrency_basic_rxbvm_noopt
+  Test #1705: docs_concurrency_basic_rxbvm_opt
+  Test #1706: docs_concurrency_basic_rxtvm_noopt
+  Test #1707: docs_concurrency_basic_rxtvm_opt
+  Test #1708: docs_concurrency_providers_rxbvm_noopt
+  Test #1709: docs_concurrency_providers_rxbvm_opt
+  Test #1710: docs_concurrency_providers_rxtvm_noopt
+  Test #1711: docs_concurrency_providers_rxtvm_opt
+  Test #1712: docs_concurrency_transferable_objects_rxbvm_noopt
+  Test #1713: docs_concurrency_transferable_objects_rxbvm_opt
+  Test #1714: docs_concurrency_transferable_objects_rxtvm_noopt
+  Test #1715: docs_concurrency_transferable_objects_rxtvm_opt
+  Test #1716: docs_concurrency_taskwork_rxbvm_noopt
+  Test #1717: docs_concurrency_taskwork_rxbvm_opt
+  Test #1718: docs_concurrency_taskwork_rxtvm_noopt
+  Test #1719: docs_concurrency_taskwork_rxtvm_opt
+
+Total Tests: 20

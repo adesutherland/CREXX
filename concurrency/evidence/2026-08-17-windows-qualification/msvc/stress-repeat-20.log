@@ -1,0 +1,263 @@
+Internal ctest changing into directory: C:/crexx-qa/windows-msvc-2b793c81e-build
+Test project C:/crexx-qa/windows-msvc-2b793c81e-build
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.03 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+    Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1160: persistent_worker_executor-rxvml-doorbell-stress
+1/6 Test #1160: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+    Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1162: persistent_worker_executor-rxvml-sparse-owner-stress
+2/6 Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.05 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+    Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1176: persistent_worker_executor-rxvml-fallback-stress
+3/6 Test #1176: persistent_worker_executor-rxvml-fallback-stress ........   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+    Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1179: persistent_worker_executor-rxbvml-doorbell-stress
+4/6 Test #1179: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+    Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+5/6 Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.05 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+    Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.04 sec
+    Start 1195: persistent_worker_executor-rxbvml-fallback-stress
+6/6 Test #1195: persistent_worker_executor-rxbvml-fallback-stress .......   Passed    0.03 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Label Time Summary:
+concurrency           =   0.22 sec*proc (6 tests)
+concurrency-sp01      =   0.22 sec*proc (6 tests)
+concurrency-sp08      =   0.22 sec*proc (6 tests)
+concurrency-stress    =   0.22 sec*proc (6 tests)
+e5                    =   0.22 sec*proc (6 tests)
+fallback              =   0.15 sec*proc (4 tests)
+gate-e                =   0.22 sec*proc (6 tests)
+industrial            =   0.22 sec*proc (6 tests)
+interpreter           =   0.22 sec*proc (6 tests)
+lifecycle             =   0.22 sec*proc (6 tests)
+perf3                 =   0.22 sec*proc (6 tests)
+private               =   0.22 sec*proc (6 tests)
+race                  =   0.22 sec*proc (6 tests)
+sparse                =   0.07 sec*proc (2 tests)
+windows               =   0.22 sec*proc (6 tests)
+
+Total Test time (real) =   4.72 sec

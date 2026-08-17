@@ -12,8 +12,9 @@ Your outcome is an independent evidence verdict for SP-01 through SP-09 and
 QA-B through QA-D after publication. Adrian has already selected publication
 as **initial**. Corrected commit `53b3de77a` passed the four-platform Build
 CREXX workflow, development-snapshot publication and CodeQL; that CI signal
-does not replace the native QA-C/QA-D runners, and passing tests do not make
-the surface stable.
+does not replace native qualification, and passing tests do not make the
+surface stable. Windows QA-D subsequently passed MSVC, Clang and GCC at exact
+commit `2b793c81e0987f627ab72e3c4e505ae5c6a95abe`.
 
 First read the repository `AGENTS.md`, then these authorities in order:
 
@@ -36,9 +37,9 @@ are provenance only.
   overwrite user changes.
 - Keep the public language, RXAS/RXBIN, ABI and architecture frozen. A change
   to any of those requires Adrian's approval and a numbered plan before edits.
-- Linux and Windows are validation hosts, not development hosts. Do not edit
-  source there. Retain the failure, make a minimal reproducer, and return it to
-  Mac for repair and local replay before testing a new exact commit.
+- Linux and Windows normally act as validation hosts. Do not edit source there
+  without Adrian's explicit direction. Any directed bounded repair must be
+  committed and followed by a complete replay from a new clean exact commit.
 - Do not overlap build and test processes, particularly on Windows. Do not
   convert environmental failures or live TLS failures into skips.
 - Exercise `rxc`, `rxas`, `rxlink` and the applicable VM paths. Library work is
@@ -107,17 +108,27 @@ live TLS, the 20-cycle stress run, installed smoke, ZIP smoke and extracted
 Debian-package smoke against `concurrency/qa/EVIDENCE.md`. Preserve the sibling
 artifact directory separately; do not commit its binaries.
 
-## 4. Execute QA-D on Windows
+## 4. Review the completed QA-D Windows evidence
 
-Transfer the same exact clean commit to the supported Windows host. Use fresh,
-empty directories outside the repository and run from PowerShell:
+Review `concurrency/evidence/2026-08-17-windows-qualification/`. Confirm each
+MSVC, Clang and GCC `RESULT.txt` identifies exact commit
+`2b793c81e0987f627ab72e3c4e505ae5c6a95abe`, and verify the curated
+`SHA256SUMS`, each lane's original `SOURCE-SHA256SUMS`, label inventories,
+full CTest, live TLS, stress, install and extracted-ZIP smoke. The expected
+counts are 137 concurrency and 2,076 full tests for MSVC, and 194 concurrency
+and 2,220 full tests for each of Clang and GCC.
+
+Do not rerun QA-D without a concrete evidence inconsistency or a new source
+candidate. If a new candidate does require qualification, use fresh empty
+directories outside the repository and run from PowerShell:
 
 ```powershell
 $expectedCommit = (git rev-parse HEAD).Trim()
 concurrency/qa/run-windows-qualification.ps1 `
   -ExpectedCommit $expectedCommit `
   -BuildDirectory C:\crexx-qa\concurrency-build `
-  -EvidenceDirectory C:\crexx-qa\concurrency-evidence
+  -EvidenceDirectory C:\crexx-qa\concurrency-evidence `
+  -BuildJobs 2 -TestJobs 2
 ```
 
 Verify the same contract, including the Windows process and TLS backend, every

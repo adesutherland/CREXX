@@ -1,0 +1,60 @@
+Internal ctest changing into directory: C:/crexx-qa/windows-msvc-2b793c81e-build
+UpdateCTestConfiguration  from :C:/crexx-qa/windows-msvc-2b793c81e-build/DartConfiguration.tcl
+Parse Config file:C:/crexx-qa/windows-msvc-2b793c81e-build/DartConfiguration.tcl
+UpdateCTestConfiguration  from :C:/crexx-qa/windows-msvc-2b793c81e-build/DartConfiguration.tcl
+Parse Config file:C:/crexx-qa/windows-msvc-2b793c81e-build/DartConfiguration.tcl
+Test project C:/crexx-qa/windows-msvc-2b793c81e-build
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added setup test linked_opt_runtime_artifacts_build required by fixture linked_opt_runtime_artifacts
+Added 1 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+    Start    1: linked_opt_runtime_artifacts_build
+
+1: Test command: "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" "--build" "C:/crexx-qa/windows-msvc-2b793c81e-build" "--target" "linked_opt_runtime_artifacts"
+1: Working Directory: C:/crexx-qa/windows-msvc-2b793c81e-build
+1: Test timeout computed to be: 1800
+1: [0/2] Re-checking globbed directories...
+1: [1/2] Creating rxvm copy of rxbvm
+1/3 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    2.72 sec
+test 1613
+    Start 1613: ts_http_tls_live_rxbvm_noopt
+
+1613: Test command: "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" "-P" "C:/crexx-qa/windows-msvc-2b793c81e-build/lib/rxfnsg/tests_functional/ts_http_tls_live_rxbvm_noopt_linked_runtime.cmake"
+1613: Working Directory: C:/crexx-qa/windows-msvc-2b793c81e-build/lib/rxfnsg/tests_functional
+1613: Test timeout computed to be: 180
+1613: PASS: rxfnsg HTTP TLS trusted host and hostname mismatch verification
+2/3 Test #1613: ts_http_tls_live_rxbvm_noopt .........   Passed    1.43 sec
+test 1614
+    Start 1614: ts_http_tls_live_rxbvm_opt
+
+1614: Test command: "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" "-P" "C:/crexx-qa/windows-msvc-2b793c81e-build/lib/rxfnsg/tests_functional/ts_http_tls_live_rxbvm_opt_linked_runtime.cmake"
+1614: Working Directory: C:/crexx-qa/windows-msvc-2b793c81e-build/lib/rxfnsg/tests_functional
+1614: Test timeout computed to be: 180
+1614: PASS: rxfnsg HTTP TLS trusted host and hostname mismatch verification
+3/3 Test #1614: ts_http_tls_live_rxbvm_opt ...........   Passed    1.69 sec
+
+The following tests passed:
+	linked_opt_runtime_artifacts_build
+	ts_http_tls_live_rxbvm_noopt
+	ts_http_tls_live_rxbvm_opt
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+concurrency         =   3.12 sec*proc (2 tests)
+concurrency-sp07    =   3.12 sec*proc (2 tests)
+f1g                 =   3.12 sec*proc (2 tests)
+gate_f              =   3.12 sec*proc (2 tests)
+http                =   3.12 sec*proc (2 tests)
+levelg              =   3.12 sec*proc (2 tests)
+library             =   3.12 sec*proc (2 tests)
+linked              =   1.43 sec*proc (1 test)
+linked_opt          =   1.69 sec*proc (1 test)
+rxbvm               =   3.12 sec*proc (2 tests)
+tls                 =   3.12 sec*proc (2 tests)
+
+Total Test time (real) =   6.00 sec

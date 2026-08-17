@@ -1,0 +1,14 @@
+expected_commit=2b793c81e0987f627ab72e3c4e505ae5c6a95abe
+head=2b793c81e0987f627ab72e3c4e505ae5c6a95abe
+platform=Microsoft Windows NT 10.0.26200.0
+architecture=X64
+cmake=cmake version 3.31.6-msvc6
+ninja=1.12.1
+build_jobs=2
+test_jobs=2
+tls_trusted_host=example.com
+tls_mismatch_host=wrong.host.badssl.com
+CMAKE_BUILD_TYPE:STRING=MinSizeRel
+CREXX_ENABLE_TLS:STRING=SCHANNEL
+CREXX_VM_HANDLER_PANEL:STRING=profile-20
+CREXX_VM_PROFILING:BOOL=OFF

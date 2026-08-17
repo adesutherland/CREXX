@@ -1,0 +1,76 @@
+UpdateCTestConfiguration  from :C:/crexx-qa/windows-gcc-2b793c81e-build/DartConfiguration.tcl
+Parse Config file:C:/crexx-qa/windows-gcc-2b793c81e-build/DartConfiguration.tcl
+Test project C:/crexx-qa/windows-gcc-2b793c81e-build
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added setup test linked_opt_runtime_artifacts_build required by fixture linked_opt_runtime_artifacts
+Added 1 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+    Start    1: linked_opt_runtime_artifacts_build
+
+1: Test command: C:\msys64\ucrt64\bin\cmake.exe "--build" "C:/crexx-qa/windows-gcc-2b793c81e-build" "--target" "linked_opt_runtime_artifacts"
+1: Working Directory: C:/crexx-qa/windows-gcc-2b793c81e-build
+1: Test timeout computed to be: 1800
+1: [0/2] Re-checking globbed directories...
+1: [1/2] Creating rxvm copy of rxtvm
+1/5 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    0.30 sec
+test 1751
+    Start 1751: ts_http_tls_live_rxbvm_noopt
+
+1751: Test command: C:\msys64\ucrt64\bin\cmake.exe "-P" "C:/crexx-qa/windows-gcc-2b793c81e-build/lib/rxfnsg/tests_functional/ts_http_tls_live_rxbvm_noopt_linked_runtime.cmake"
+1751: Working Directory: C:/crexx-qa/windows-gcc-2b793c81e-build/lib/rxfnsg/tests_functional
+1751: Test timeout computed to be: 180
+1751: PASS: rxfnsg HTTP TLS trusted host and hostname mismatch verification
+2/5 Test #1751: ts_http_tls_live_rxbvm_noopt .........   Passed    1.71 sec
+test 1752
+    Start 1752: ts_http_tls_live_rxbvm_opt
+
+1752: Test command: C:\msys64\ucrt64\bin\cmake.exe "-P" "C:/crexx-qa/windows-gcc-2b793c81e-build/lib/rxfnsg/tests_functional/ts_http_tls_live_rxbvm_opt_linked_runtime.cmake"
+1752: Working Directory: C:/crexx-qa/windows-gcc-2b793c81e-build/lib/rxfnsg/tests_functional
+1752: Test timeout computed to be: 180
+1752: PASS: rxfnsg HTTP TLS trusted host and hostname mismatch verification
+3/5 Test #1752: ts_http_tls_live_rxbvm_opt ...........   Passed    1.60 sec
+test 1753
+    Start 1753: ts_http_tls_live_rxtvm_noopt
+
+1753: Test command: C:\msys64\ucrt64\bin\cmake.exe "-P" "C:/crexx-qa/windows-gcc-2b793c81e-build/lib/rxfnsg/tests_functional/ts_http_tls_live_rxtvm_noopt_linked_runtime.cmake"
+1753: Working Directory: C:/crexx-qa/windows-gcc-2b793c81e-build/lib/rxfnsg/tests_functional
+1753: Test timeout computed to be: 180
+1753: PASS: rxfnsg HTTP TLS trusted host and hostname mismatch verification
+4/5 Test #1753: ts_http_tls_live_rxtvm_noopt .........   Passed    1.41 sec
+test 1754
+    Start 1754: ts_http_tls_live_rxtvm_opt
+
+1754: Test command: C:\msys64\ucrt64\bin\cmake.exe "-P" "C:/crexx-qa/windows-gcc-2b793c81e-build/lib/rxfnsg/tests_functional/ts_http_tls_live_rxtvm_opt_linked_runtime.cmake"
+1754: Working Directory: C:/crexx-qa/windows-gcc-2b793c81e-build/lib/rxfnsg/tests_functional
+1754: Test timeout computed to be: 180
+1754: PASS: rxfnsg HTTP TLS trusted host and hostname mismatch verification
+5/5 Test #1754: ts_http_tls_live_rxtvm_opt ...........   Passed    1.70 sec
+
+The following tests passed:
+	linked_opt_runtime_artifacts_build
+	ts_http_tls_live_rxbvm_noopt
+	ts_http_tls_live_rxbvm_opt
+	ts_http_tls_live_rxtvm_noopt
+	ts_http_tls_live_rxtvm_opt
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+concurrency         =   6.43 sec*proc (4 tests)
+concurrency-sp07    =   6.43 sec*proc (4 tests)
+f1g                 =   6.43 sec*proc (4 tests)
+gate_f              =   6.43 sec*proc (4 tests)
+http                =   6.43 sec*proc (4 tests)
+levelg              =   6.43 sec*proc (4 tests)
+library             =   6.43 sec*proc (4 tests)
+linked              =   3.13 sec*proc (2 tests)
+linked_opt          =   3.30 sec*proc (2 tests)
+rxbvm               =   3.31 sec*proc (2 tests)
+rxtvm               =   3.11 sec*proc (2 tests)
+tls                 =   6.43 sec*proc (4 tests)
+
+Total Test time (real) =   6.81 sec
