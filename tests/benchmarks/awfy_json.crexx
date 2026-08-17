@@ -1,0 +1,65 @@
+/*
+ * Full Are We Fast Yet? Json workload for cREXX.
+ *
+ * The fixture is the exact minified RAP payload from smarr/are-we-fast-yet at
+ * commit 74306fec151070fd07157cefeacf19e7e0bcdc89. It is loaded once outside
+ * the repeated kernel. Every iteration parses the complete payload and
+ * applies the upstream observable-result checks.
+ *
+ * This port deliberately uses cREXX's supported indexed .jsondocument rather
+ * than reproducing AWFY's minimal-json object graph. It is therefore a
+ * standard-library-indexed-document adaptation, not an aggregate-equivalent
+ * implementation.
+ */
+options levelb comments_dash
+import rxfnsb
+import rxjson
+
+arg argv = .string[]
+
+repetitions = 1
+fixture_path = ""
+if argv[0] >= 1 then repetitions = argv[1]
+if argv[0] >= 2 then fixture_path = argv[2]
+if repetitions < 1 then return fail("repetitions must be positive")
+if fixture_path = "" then return fail("fixture path is required")
+
+payload = loadtext(fixture_path, "")
+if binlength(payload) <> 25820 then
+  return fail("expected a 25820-byte fixture, got " || binlength(payload))
+
+operations_count = 0
+indexed_nodes = 0
+do iteration = 1 to repetitions
+  document = .jsondocument(payload)
+  if document.valid() <> 1 then return fail("document is invalid")
+
+  root = document.root()
+  if document.node_type(root) <> "object" then
+    return fail("document root is not an object")
+
+  head = document.member(root, "head")
+  if head <= 0 | document.node_type(head) <> "object" then
+    return fail("head is not an object")
+
+  operations = document.member(root, "operations")
+  if operations <= 0 | document.node_type(operations) <> "array" then
+    return fail("operations is not an array")
+
+  operations_count = document.node_count(operations)
+  if operations_count <> 156 then
+    return fail("expected 156 operations, got " || operations_count)
+  indexed_nodes = document.node_count()
+end
+
+say "benchmark=awfy_json repetitions="repetitions,
+    "fixture_bytes="binlength(payload) "operations="operations_count,
+    "indexed_nodes="indexed_nodes,
+    "adaptation=standard-library-indexed-document"
+say "PASS: Full AWFY Json"
+return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

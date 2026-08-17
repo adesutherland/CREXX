@@ -1,0 +1,8 @@
+fixture_bytes=25820
+fixture_sha256=8f84f5fdc609a6d7179089249212a39588030852719d951db2d178820b70a7d8
+staged_fixture_sha256=8f84f5fdc609a6d7179089249212a39588030852719d951db2d178820b70a7d8
+root_type=object
+head_type=object
+operations_type=array
+operations_count=156
+request_counter=4

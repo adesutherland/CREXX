@@ -44,6 +44,7 @@ those labels using the new product mapping.
 | `performance/PERF3-11-MIGRATION-WORKLIST.md` | Completed one-authority proof migration ledger and retained classification history for the migrated semantic/mechanical consumers |
 | `performance/PERF3-12B-WORKLIST.md` | Completed compound-tail route comparison, accepted production H1 proof, first Release verdict, broad closeout and fresh current-product Mac scorecard |
 | `performance/PERF3-13-WORKLIST.md` | Historical allocator, worker-foundation and concurrency implementation record; live concurrency work has moved to `concurrency/WORKLIST.md` |
+| `performance/POST-PERF3-WORKLIST.md` | Restart-safe control plane for Full AWFY Json, DeltaBlue/CD, Havlak, generic scalar-access proof and bounded compiler follow-ons |
 | `concurrency/` | Independent live control plane for tasks, channels, providers, endpoints and concurrent HTTP; historical Gate records are retained under `concurrency/history/` |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-27.md` | Team-facing PERF2-08/09 formal Mac scorecard, comparability vocabulary, exclusions and suggested successor direction |
@@ -87,6 +88,8 @@ those labels using the new product mapping.
 | `performance/evidence/2026-08-04-perf3-12b-b4-comparative-panel/` | Checksum-closed S0/S1/H1 route selection with a 36-pair both-VM H1 verdict and replayable rejected S1 fallback |
 | `performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/` | Accepted clean production H1 proof, exact structural result and mandatory first ordinary Release verdict |
 | `performance/evidence/2026-08-05-perf3-12b-mac-scorecard/` | Fresh clean merged-product Apple scorecard: 348/348 executions, no noise append, static/artifact identities and current aggregate ranking |
+| `performance/evidence/2026-08-17-postperf-01-awfy-json-compiler-repair-first-release-verdict/` | Accepted supported-shape string-to-binary inline-binding repair: clean control failure, candidate correctness, neutral compiler throughput and unchanged established images |
+| `performance/evidence/2026-08-17-postperf-01-full-awfy-json-qualification/` | Exact full-input AWFY Json cREXX reserve qualification, opt/no-opt product/concrete correctness, generated-code boundary and bounded process pilot |
 | `performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/` | Accepted Intel Linux GCC physical-doorbell PoC: focused stress/latency, handler and unchanged-dispatch proof, and an overall noisy/inconclusive E4 comparison on a stressed host |
 | `performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-clang-doorbell-poc/` | Accepted Intel Linux Clang repeat: focused stress/latency, generated-code proof, capped noisy/inconclusive E4 comparison and controlled GCC-versus-Clang build evidence |
 | `performance/evidence/2026-08-05-decimal-01-numctx-repair-verdict/` | Provisional focused decimal correctness repair: Debug/Release 9/9 plus 6/6 observable VM/provider cells; no timing or broad closeout |

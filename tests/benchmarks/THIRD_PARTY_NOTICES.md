@@ -12,10 +12,19 @@ The NBody port follows the Are We Fast Yet? version of the Computer Language
 Benchmarks Game workload. The expanded ports were reviewed against upstream commit
 `74306fec151070fd07157cefeacf19e7e0bcdc89`.
 
-The deterministic JSON fixture uses the RAP-style request/data shape found in
-the Are We Fast Yet? JSON workload, but it is a smaller capability probe and is
-not represented as a byte-for-byte copy of the upstream input or full upstream
-benchmark.
+The historical deterministic JSON fixture used by `json_parser.crexx`,
+`json_parse.crexx` and `json_query.crexx` has a smaller RAP-style request/data
+shape. It is a capability probe and is not represented as a byte-for-byte copy
+of the upstream input or full upstream benchmark.
+
+`fixtures/awfy_json_rap_minified.json` is different: it is the exact minified
+25,820-byte RAP payload embedded by the upstream Full Json workload at commit
+`74306fec151070fd07157cefeacf19e7e0bcdc89`, retained for the separately named
+`awfy_json.crexx` port. Its SHA-256 is
+`8f84f5fdc609a6d7179089249212a39588030852719d951db2d178820b70a7d8`.
+The cREXX port retains the upstream observable verification contract but uses
+the supported indexed `.jsondocument` representation and is labelled as an
+adaptation.
 
 MIT license used by the SOM-derived sources:
 

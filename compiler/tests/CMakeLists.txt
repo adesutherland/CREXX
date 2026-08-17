@@ -3470,6 +3470,17 @@ add_crexx_run_test(inline_test_imported_bif_block_expr_lifetime rexx_src/inline_
 add_crexx_run_test(attr_array_call_result_lifetime rexx_src/attr_array_call_result_lifetime.crexx)
 add_crexx_run_test(inline_test_complex_lhs_assign rexx_src/inline_test_complex_lhs_assign.crexx)
 add_crexx_run_test(inline_test_binary_arg_return rexx_src/inline_test_binary_arg_return.crexx)
+add_crexx_run_args_test(inline_binary_formal_string_conversion
+        rexx_src/inline_binary_formal_string_conversion.crexx ABC)
+add_test(NAME inline_binary_formal_string_conversion_shape
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_binary_formal_string_conversion.crexx
+                 -DINCLUDE_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_binary_formal_string_conversion_shape_ws
+                 -P ${CMAKE_SOURCE_DIR}/cmake/CheckInlineBinaryFormalConversion.cmake)
+set_tests_properties(inline_binary_formal_string_conversion_shape PROPERTIES
+        LABELS "compiler;inlining;binary;conversion;regression")
 add_crexx_run_test(inline_test_binary_class_attr_assign rexx_src/inline_test_binary_class_attr_assign.crexx)
 add_test(NAME inline_test_binary_class_attr_assign_shape
          COMMAND ${CMAKE_COMMAND}

@@ -46,6 +46,7 @@ engine cells.
 | `json-legacy` | `json_parser.crexx` | historical RAP-shaped capability probe | retained historical diagnostic | no |
 | `json-parse` | `json_parse.crexx` | v2 construct-and-validate fresh indexed document | cREXX parse control | no |
 | `json-query` | `json_query.crexx` | v2 parse-once indexed traversal | cREXX query control | no |
+| `awfy-json-full` | `awfy_json.crexx` plus exact 25,820-byte fixture | pinned AWFY Json full-input contract through cREXX indexed `.jsondocument` | post-PERF3 qualified `standard-library-indexed-document` reserve lane | no |
 | `base64-v1` | `base64_roundtrip.crexx` | historical RFC 4648 round trip | retained historical cell | no in v2 |
 | `base64-v2` | `base64_roundtrip_v2.crexx` plus v2 ooRexx/NetRexx ports | RFC 4648 with each runtime's fastest disclosed byte surface and arithmetic digit decode | new qualified-series candidate | yes, replacing only the v2 Base64 member |
 | `rexxcps` | `rexxcps_levelb.crexx` | RexxCPS 2.2d for cREXX | retained disclosed adaptation and native CPS | no; mandatory separate representative row |
@@ -69,6 +70,9 @@ new identity, so it must never be compared as though it were the v1 aggregate.
   three language implementations before any timing.
 - Keep JSON construction (`json-parse`) separate from parse-once traversal
   (`json-query`). Neither is a full AWFY Json port.
+- Keep Full AWFY Json separate from all three earlier JSON identities. Its
+  indexed standard-library representation is disclosed, and it remains
+  outside every aggregate.
 - Keep the canonical and hoisted Mandelbrot sources separate in every artifact
   name and table.
 - Formal timing remains ordinary profiling-off Release, two warmups and ten
@@ -76,7 +80,8 @@ new identity, so it must never be compared as though it were the v1 aggregate.
 - Retain raw samples, product/tool/source hashes, build settings, host state,
   lifecycle, RSS and artifact results under a new dated v2 evidence directory.
 
-Full AWFY Json, DeltaBlue, CD and Havlak are deliberately post-PERF3. They need
+Full AWFY Json completed its own post-PERF3 qualification on 2026-08-17 and is
+a reserve lane, not a promoted member. DeltaBlue, CD and Havlak still need
 their own provenance, equivalence and qualification gates before promotion.
 
 The first formal Apple ARM64 baseline is retained in

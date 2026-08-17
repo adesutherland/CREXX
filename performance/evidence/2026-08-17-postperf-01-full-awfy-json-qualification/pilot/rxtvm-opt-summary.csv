@@ -1,0 +1,2 @@
+benchmark,vm,mode,runs,min_ns,median_ns,mean_ns,max_ns,platform,crexx_version,vm_role,result_role
+awfy-json,rxtvm,opt,5,98471000,99979000,99831400,101011000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g110e298af8ea.dirty 20260817,concrete-engine-control,process-smoke

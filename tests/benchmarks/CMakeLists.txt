@@ -1,5 +1,11 @@
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/awfy_json_rap_minified.json
+        ${CMAKE_CURRENT_BINARY_DIR}/awfy_json_rap_minified.json
+        COPYONLY
+)
+
 add_custom_target(language_benchmarks ALL)
 
 function(crexx_add_language_benchmark NAME SOURCE SMOKE_ARG PASS_REGEX)
@@ -46,6 +52,18 @@ crexx_add_language_benchmark(benchmark_awfy_richards awfy_richards.crexx 1
         "PASS: AWFY Richards")
 crexx_add_language_benchmark(benchmark_awfy_queens awfy_queens.crexx 1
         "PASS: AWFY Queens")
+crexx_add_rexx_opt_matrix(
+        NAME benchmark_awfy_json
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/awfy_json.crexx
+        TARGET_GROUP language_benchmarks
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH} -a 1
+                ${CMAKE_CURRENT_BINARY_DIR}/awfy_json_rap_minified.json
+        TEST_LABELS "benchmark;language;standard-library-adaptation"
+        REQUIRED_OUTPUT_REGEX "PASS: Full AWFY Json"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|Failed|PANIC:"
+)
 crexx_add_language_benchmark(benchmark_json_parser json_parser.crexx 1
         "PASS: JSON Parser")
 crexx_add_language_benchmark(benchmark_json_parse json_parse.crexx 1
@@ -188,6 +206,7 @@ crexx_label_smoke_tests(
         benchmark_awfy_list_opt
         benchmark_awfy_richards_opt
         benchmark_awfy_queens_opt
+        benchmark_awfy_json_opt
         benchmark_awfy_nbody_opt
         benchmark_json_parser_opt
         benchmark_json_parse_opt

@@ -1,0 +1,11 @@
+build,surface,vm,mode,rc,fixture_bytes,operations,indexed_nodes,result
+Debug,benchmark,rxvm,noopt,0,25820,156,3392,PASS
+Debug,benchmark,rxvm,opt,0,25820,156,3392,PASS
+Debug,benchmark,rxtvm,noopt,0,25820,156,3392,PASS
+Debug,benchmark,rxtvm,opt,0,25820,156,3392,PASS
+Debug,benchmark,rxbvm,noopt,0,25820,156,3392,PASS
+Debug,benchmark,rxbvm,opt,0,25820,156,3392,PASS
+Release,benchmark,rxvm,noopt,0,25820,156,3392,PASS
+Release,benchmark,rxvm,opt,0,25820,156,3392,PASS
+Release,runner,rxvm,noopt,0,25820,156,3392,PASS
+Release,runner,rxvm,opt,0,25820,156,3392,PASS

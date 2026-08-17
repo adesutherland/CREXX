@@ -19,6 +19,7 @@ timed I/O in their kernels.
 | `awfy_storage.crexx` | Are We Fast Yet? / SOM | sustained tree allocation; disclosed cREXX node wrapper |
 | `awfy_list.crexx` | Are We Fast Yet? / SOM | linked-list recursion and explicit weak references |
 | `awfy_richards.crexx` | Are We Fast Yet? / Richards | scheduler queues, state transitions and a larger call graph |
+| `awfy_json.crexx` | Are We Fast Yet? / Json at pinned commit `74306fec151070fd07157cefeacf19e7e0bcdc89` | complete 25,820-byte RAP parse and verification through the indexed `rxjson` document surface |
 | `awfy_queens.crexx` | Are We Fast Yet? / SOM | recursive search, object attributes and boolean arrays |
 | `awfy_nbody.crexx` | Are We Fast Yet? / Benchmarks Game | floating-point object access and disclosed native `rxmath` square root |
 | `json_parser.crexx` | deterministic RAP-shaped JSON fixture | parser/text processing through the current `rxjson` surface |
@@ -45,6 +46,24 @@ The Are We Fast Yet? suite was published with the DLS 2016 paper
 “Cross-Language Compiler Benchmarking—Are We Fast Yet?” (DOI
 `10.1145/2989225.2989232`). Its porting rules prioritize deterministic,
 well-typed workloads and comparable code structure.
+
+### Full AWFY Json reserve lane
+
+`awfy_json.crexx` is the separately named full-input lane. Its fixture is the
+exact minified 25,820-byte RAP payload from the pinned upstream commit, with
+SHA-256
+`8f84f5fdc609a6d7179089249212a39588030852719d951db2d178820b70a7d8`.
+The immutable text is loaded once before the repeated kernel. Every iteration
+constructs a fresh document and verifies an object root, object member `head`,
+array member `operations` and exactly 156 operations.
+
+The cREXX implementation uses the supported immutable indexed
+`.jsondocument`, not AWFY's minimal-json object graph. It is labelled
+`standard-library-indexed-document`, remains outside every cross-runtime
+aggregate and must not replace `json_parser.crexx`, `json_parse.crexx` or
+`json_query.crexx` in historical evidence. The runtime fixture path also keeps
+the full parse outside compile-time constant folding; no separate opaque source
+is required.
 
 RexxCPS is different: it reconstructs a dynamic mix derived from about 2.5
 million lines of traced Rexx programs and reports clauses per second. Version
@@ -169,6 +188,11 @@ RexxCPS it additionally requires the child's
 `REXXCPS-PROVENANCE contract=canonical-default` marker, proving that the formal
 baseline path supplied no count override.
 
+The qualified Full AWFY Json reserve lane is available explicitly as
+`--benchmark awfy-json`; it is not part of the runner's historical default
+set. Each process-smoke sample performs 50 complete parse/verify iterations
+and supplies the exact build-tree fixture path.
+
 For a diagnostic sample stream, also request the serial samples:
 
 ```bash
@@ -249,9 +273,10 @@ cREXX references directly. `Storage` exposes the current array/object and
 nested-reference-container boundary; JSON exposes the absence of a full cREXX
 JSON object model. Those adaptations are never silently aggregated. The
 lifecycle lane is reported separately from steady-state workload aggregates.
-Queens and NBody now have separately named Tier B cREXX sources. Full AWFY
-Json, DeltaBlue, CD, Havlak, filesystem-I/O workloads and focused Classic-
-semantics probes remain post-PERF3 or reserve work.
+Queens and NBody have separately named Tier B cREXX sources. Full AWFY Json is
+a qualified, separately named post-PERF3 reserve lane; it does not change the
+v2 aggregate. DeltaBlue, CD, Havlak, filesystem-I/O workloads and focused
+Classic-semantics probes remain pending or reserve work.
 
 The confirmed capability gaps and audit candidates uncovered while porting are
 kept in `performance/capability-gaps.md` so they can be checked and considered

@@ -580,6 +580,23 @@ static int inline_formal_needs_isolated_copy(ASTNode *formal_target, ASTNode *pa
 }
 
 /*
+ * The isolated-copy shortcut operates on already-compatible register values.
+ * A string actual bound to a binary formal still needs the normal assignment
+ * emitter to insert the supported stobin promotion before the callee-private
+ * value is used.  This is the only scalar promotion admitted by an isolated
+ * binary formal; aggregate, object and reference bindings remain exact-shape.
+ */
+static int inline_isolated_binding_needs_typed_assignment(ASTNode *formal_target,
+                                                          ASTNode *bind_rhs) {
+    if (!formal_target || !bind_rhs) return 0;
+
+    return formal_target->value_dims == 0 &&
+           bind_rhs->value_dims == 0 &&
+           (formal_target->value_type == TP_BINARY || formal_target->target_type == TP_BINARY) &&
+           bind_rhs->value_type == TP_STRING;
+}
+
+/*
  * The normal call path permits a proved read-only numeric or binary formal to
  * share its incoming value. Preserve that fact at an inline site only for a
  * direct caller-local scalar with no optional/default, reference, aggregate,
@@ -2693,7 +2710,8 @@ static int inline_bind_call_arguments_impl(Context *context,
 
         if (!bind_lhs || !bind_rhs) INLINE_BIND_RETURN(0);
 
-        if (inline_formal_needs_isolated_copy(formal_target, param_arg)) {
+        if (inline_formal_needs_isolated_copy(formal_target, param_arg) &&
+            !inline_isolated_binding_needs_typed_assignment(formal_target, bind_rhs)) {
             ASTNode *bind_copy;
 
             bind_copy = rxcp_remap_create_register_copy_instr(context, inline_scope, "copy", bind_lhs, bind_rhs);
