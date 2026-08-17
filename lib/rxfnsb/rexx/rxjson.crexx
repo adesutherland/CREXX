@@ -322,7 +322,7 @@ jsondocument: class
     else value = integer_text as .int
     return 0
 
-  /** Decode a finite binary64 number; -4 reports overflow or underflow. */
+  /** Decode zero or a finite normal binary64 number; -4 includes subnormal underflow. */
   node_float: method = .int
     arg node = .int, expose value = .float
     value = 0 as .float
@@ -345,6 +345,8 @@ jsondocument: class
     minimum = "-1.7976931348623157e308" as .float
     if number > maximum | number < minimum then return -4
     if nonzero = 1 & number = 0 then return -4
+    smallest_normal = "2.2250738585072014e-308" as .float
+    if nonzero = 1 & number < smallest_normal & number > -smallest_normal then return -4
     value = number
     return 0
 

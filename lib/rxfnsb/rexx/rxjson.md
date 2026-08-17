@@ -125,7 +125,7 @@ coerce JSON null or a different JSON type:
 | `node_string(node, value)` | Decoded `.string` | `-1` invalid, `-2` wrong type. |
 | `node_boolean(node, value)` | `.int` `0` or `1` | `-1` invalid, `-2` wrong type. |
 | `node_int(node, value)` | Exact signed 64-bit `.int`; integral forms such as `1.0` and `1e3` are accepted. | `-1` invalid, `-2` wrong type, `-3` non-integral, `-4` range. |
-| `node_float(node, value)` | Finite binary64 `.float` | `-1` invalid, `-2` wrong type, `-4` overflow or underflow. |
+| `node_float(node, value)` | Zero or a finite normal binary64 `.float` | `-1` invalid, `-2` wrong type, `-4` overflow or underflow, including a nonzero subnormal result. |
 
 ### Explicit packed numeric projection
 

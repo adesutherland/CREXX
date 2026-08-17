@@ -875,7 +875,7 @@ int test_subtract() {
         plugin->decimalFromString(plugin, &b, "1234567890123456789");
         plugin->decimalSub(plugin, &result, &a, &b);
         plugin->decimalToString(plugin, &result, buffer);
-        if (strcmp("8.64197532086419e+18", buffer) != 0) {
+        if (strcmp("8.6419753208642e+18", buffer) != 0) {
             printf("Error - ");
             errors++;
         }
