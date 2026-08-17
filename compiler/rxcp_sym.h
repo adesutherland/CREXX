@@ -215,6 +215,10 @@ void ret_reg_later(Scope *scope, int reg);
 /* Return all deferred registers */
 void ret_reg_all_deferred(Scope *scope);
 
+/* Return deferred registers except for the listed registers, which remain
+ * deferred until a later statement boundary. */
+void ret_reg_all_deferred_except(Scope *scope, const int *registers, size_t count);
+
 /* Get number of free register from scope - returns the start of a sequence
  * n, n+1, n+2, ... n+number */
 int get_regs(Scope *scope, size_t number);

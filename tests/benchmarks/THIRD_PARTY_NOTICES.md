@@ -2,9 +2,9 @@
 
 ## Are We Fast Yet? / SOM-derived benchmarks
 
-The Sieve, Permute, Towers, Bounce, Storage, List, Richards and Queens ports
-are based on the SOM/Java benchmarks distributed by the Are We Fast Yet?
-project.
+The Sieve, Permute, Towers, Bounce, Storage, List, Richards, Queens and
+DeltaBlue ports are based on the SOM/Java benchmarks distributed by the Are We
+Fast Yet? project.
 Copyright (c)
 2001–2021, see the upstream project authors. The Mandelbrot port follows the
 Are We Fast Yet? version derived from the Computer Language Benchmarks Game.
@@ -25,6 +25,11 @@ of the upstream input or full upstream benchmark.
 The cREXX port retains the upstream observable verification contract but uses
 the supported indexed `.jsondocument` representation and is labelled as an
 adaptation.
+
+`awfy_deltablue.crexx` derives its chain/projection algorithms and deterministic
+assertions from the same pinned Java/SOM sources. Its stable integer handles,
+planner-owned typed arrays and tagged constraint representation are disclosed
+Level B adaptations for the language's value-copy object semantics.
 
 MIT license used by the SOM-derived sources:
 

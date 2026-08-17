@@ -364,6 +364,54 @@ static int get_call_window(ASTNode *call) {
 
 static int defer_reg_return(ASTNode* node);
 
+static ASTNode *block_expr_deferred_assignment_target(ASTNode *node) {
+    ASTNode *target;
+
+    if (!node || node->node_type != BLOCK_EXPR ||
+        !node->parent || node->parent->node_type != ASSIGN) return 0;
+    target = node->parent->child;
+    if (!target || target->sibling != node || !defer_reg_return(target)) return 0;
+    return target;
+}
+
+static ASTNode *node_statement_deferred_assignment_target(ASTNode *node) {
+    ASTNode *ancestor;
+
+    if (!node || !node->parent || node->parent->node_type != INSTRUCTIONS) return 0;
+    for (ancestor = node->parent->parent; ancestor; ancestor = ancestor->parent) {
+        ASTNode *target = block_expr_deferred_assignment_target(ancestor);
+        if (target) return target;
+    }
+    return 0;
+}
+
+static void return_statement_deferred_registers(ASTNode *node) {
+    ASTNode *target = node_statement_deferred_assignment_target(node);
+    int *protected_registers;
+    size_t protected_count = 0;
+    int i;
+
+    if (!target) {
+        ret_reg_all_deferred(node->scope);
+        return;
+    }
+
+    /* An indexed/property target is linked before its BLOCK_EXPR RHS is
+     * evaluated. Release the RHS statement's own deferred temporaries, but
+     * keep only the target destination and helper registers reserved until the
+     * enclosing assignment emits its unlink cleanup. */
+    protected_registers = malloc(sizeof(int) * (target->num_additional_registers + 1));
+    if (!protected_registers) return;
+    if (target->register_num >= 0) {
+        protected_registers[protected_count++] = target->register_num;
+    }
+    for (i = 0; i < target->num_additional_registers; i++) {
+        protected_registers[protected_count++] = target->additional_registers + i;
+    }
+    ret_reg_all_deferred_except(node->scope, protected_registers, protected_count);
+    free(protected_registers);
+}
+
 static int node_is_block_expr_leave(ASTNode *node) {
     ASTNode *parent;
 
@@ -1716,7 +1764,7 @@ walker_result register_walker(walker_direction direction,
         /* If this is a statement level node, return all deferred registers */
         if (node->parent && node->parent->node_type == INSTRUCTIONS &&
             !node_is_block_expr_leave(node)) {
-            ret_reg_all_deferred(node->scope);
+            return_statement_deferred_registers(node);
         }
 
         release_scoped_registers_for_node(node);

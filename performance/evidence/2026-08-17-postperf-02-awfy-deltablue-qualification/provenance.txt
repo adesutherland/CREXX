@@ -1,0 +1,34 @@
+Capture date: 2026-08-17
+Branch: develop
+Base commit: 00188b13ca519058cde31621b84b64aaecaf809a
+Dirty scope: uncommitted POSTPERF-02 DeltaBlue benchmark, focused compiler
+register-lifetime repair and regression, maintained runner mapping,
+documentation and retained evidence only.
+
+Host: Darwin 25.5.0 arm64
+OS: macOS 26.5.2
+CPU: Apple M5
+Logical CPUs: 10
+Power: AC attached
+Low-power mode: off
+Pre-pilot load averages: 2.12, 2.54, 2.61
+Post-pilot load averages: 1.67, 2.35, 2.54
+
+Generator: Ninja
+Build type: Release
+CREXX_VM_PROFILING: OFF
+C compiler version reported by CMake: AppleClang 21.0.0.21000101
+VM handler panel: profile-20
+Source/TRACE metadata: retained in process-smoke program and library modules
+Lifecycle: one new VM process per sample
+Warmups: 1 per cell
+Recorded samples: 5 per cell
+Execution policy: serial; opt rxvm, opt rxtvm, noopt rxtvm, noopt rxvm
+
+rxvm SHA-256: 0c9e006b82aa9172a1c221448783cc1235fd1502a127bd20dbc95fc789423b6a
+rxbvm SHA-256: 0c9e006b82aa9172a1c221448783cc1235fd1502a127bd20dbc95fc789423b6a
+rxtvm SHA-256: 4e3699cfd394d85e97ea398a2d707e456c8c9ec0622db65d97ddffb08503b2d6
+
+Interpretation boundary: bounded same-session process-smoke orientation only;
+not a formal baseline, aggregate, engine comparison, cross-language result,
+RSS result or cross-platform claim.

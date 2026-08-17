@@ -3468,6 +3468,17 @@ add_crexx_run_test(inline_test_array_return_temp rexx_src/inline_test_array_retu
 add_crexx_run_test(inline_test_block_expr_live_sibling rexx_src/inline_test_block_expr_live_sibling.crexx)
 add_crexx_run_test(inline_test_imported_bif_block_expr_lifetime rexx_src/inline_test_imported_bif_block_expr_lifetime.crexx)
 add_crexx_run_test(attr_array_call_result_lifetime rexx_src/attr_array_call_result_lifetime.crexx)
+add_crexx_run_test(inline_indexed_attr_factory_lifetime
+        rexx_src/inline_indexed_attr_factory_lifetime.crexx)
+add_test(NAME inline_indexed_attr_factory_lifetime_shape
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_indexed_attr_factory_lifetime.crexx
+                 -DINCLUDE_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_indexed_attr_factory_lifetime_shape_ws
+                 -P ${CMAKE_SOURCE_DIR}/cmake/CheckInlineIndexedAttrFactoryLifetime.cmake)
+set_tests_properties(inline_indexed_attr_factory_lifetime_shape PROPERTIES
+        LABELS "compiler;inlining;register-lifetime;regression")
 add_crexx_run_test(inline_test_complex_lhs_assign rexx_src/inline_test_complex_lhs_assign.crexx)
 add_crexx_run_test(inline_test_binary_arg_return rexx_src/inline_test_binary_arg_return.crexx)
 add_crexx_run_args_test(inline_binary_formal_string_conversion

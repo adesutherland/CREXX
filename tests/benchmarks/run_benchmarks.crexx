@@ -201,6 +201,7 @@ benchmark_base: procedure = .string
     when benchmark_name = "storage" then return "benchmark_awfy_storage"
     when benchmark_name = "list" then return "benchmark_awfy_list"
     when benchmark_name = "richards" then return "benchmark_awfy_richards"
+    when benchmark_name = "deltablue" then return "benchmark_awfy_deltablue"
     when benchmark_name = "awfy-json" then return "benchmark_awfy_json"
     when benchmark_name = "json" then return "benchmark_json_parser"
     when benchmark_name = "base64" then return "benchmark_base64_roundtrip"
@@ -225,6 +226,8 @@ benchmark_command: procedure = .string[]
     when benchmark_name = "storage" then command[5] = "10"
     when benchmark_name = "list" then command[5] = "100"
     when benchmark_name = "richards" then command[5] = "1"
+    /* Bounded reserve lane: complete chain and projection contracts. */
+    when benchmark_name = "deltablue" then command[5] = "500"
     /* Qualified reserve lane: exact fixture plus 50 complete parse/verify loops. */
     when benchmark_name = "awfy-json" then do
       command[5] = "50"

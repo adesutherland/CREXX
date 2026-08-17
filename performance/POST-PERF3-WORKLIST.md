@@ -17,7 +17,7 @@ mandatory first ordinary-Release verdict in `performance/AGENTS.md`.
 | ID | Stage | Status | Exit |
 | --- | --- | --- | --- |
 | POSTPERF-01 | Full AWFY Json | complete | Exact upstream payload and verification contract; opt/no-opt product and concrete-VM qualification; retained source/RXAS/RXBIN evidence; docs and local commit |
-| POSTPERF-02 | DeltaBlue and CD | active — source/design audit not started | Both pinned upstream ports qualified together because they share identity/container foundations; neither is silently promoted to Tier A |
+| POSTPERF-02 | DeltaBlue and CD | active — DeltaBlue qualification closeout; CD next | Both pinned upstream ports qualified together because they share identity/container foundations; neither is silently promoted to Tier A |
 | POSTPERF-03 | Havlak | pending | Pinned upstream port qualified after POSTPERF-02 foundations; retained as a separate large-graph lane |
 | POSTPERF-04 | Generic final/concrete scalar accessor proof | pending | Hand-equivalent ceiling and generic proof across the expanded suite; any production candidate gets a separate mandatory first Release verdict |
 | POSTPERF-05 | Bounded hoisting, register finalisation and late inlining | pending | Evidence ranks bounded consumers; select at most one production candidate at a time and apply the mandatory verdict gate |
@@ -114,13 +114,101 @@ qualification evidence is at
 
 ## POSTPERF-02 — DeltaBlue and CD
 
-Status: **active — no source or implementation change yet**.
+Status: **active — DeltaBlue qualification closeout; CD next**.
 
-Restart at the pinned upstream source/result audit for both workloads. Freeze
-their object-identity, collection and deterministic verification contracts
-before choosing shared cREXX foundations. Record language-required adaptations
-separately, preserve distinct benchmark identities, and do not promote either
-workload into Tier A as part of qualification.
+### Frozen source and result contracts
+
+- Upstream: `smarr/are-we-fast-yet` commit
+  `74306fec151070fd07157cefeacf19e7e0bcdc89`.
+- DeltaBlue source: `benchmarks/Java/src/DeltaBlue.java`,
+  `benchmarks/Java/src/deltablue/*.java` and the corresponding
+  `benchmarks/SOM/DeltaBlue/*.som` implementation.
+- DeltaBlue `innerBenchmarkLoop(n)` runs both `chainTest(n)` and
+  `projectionTest(n)`. The chain test propagates 100 successive edit values
+  through `n` equality constraints and checks the last variable each time.
+  The projection test checks source-to-destination propagation at 17/1170,
+  destination-to-source propagation at 1050/5, then every retained destination
+  after changing scale to 5 and offset to 2000. Assertion success, rather than
+  an aggregate checksum, is the upstream result contract.
+- CD source: `benchmarks/Java/src/CD.java`, `benchmarks/Java/src/cd/*.java`
+  and the corresponding `benchmarks/SOM/CD/*.som` implementation.
+- CD runs exactly 200 frames at time `frame / 10.0`. Its accepted collision
+  totals are 42 for 2 aircraft, 390 for 10, 4,305 for 100, 8,655 for 200,
+  10,830 for 250 and 14,484 for both 500 and 1,000 aircraft.
+
+### Frozen Level B adaptations
+
+- DeltaBlue lowers the upstream constraint class hierarchy to one tagged
+  concrete constraint record. Stable integer handles into planner-owned typed
+  arrays preserve variable/constraint graph identity despite Level B's
+  by-value object assignments. Variable adjacency lists store those handles;
+  they do not treat copied `.object` values as identity-bearing references.
+- CD retains a benchmark-private indexed red/black tree derived from the
+  upstream algorithm. This avoids silently replacing AWFY's tree with the
+  class-library AVL implementation and gives persistent state and voxel maps
+  stable node/value handles.
+- CD vector and motion records remain value objects. The existing `rxmath`
+  plugin is the disclosed native substrate for `sin`, `cos` and `sqrt`, matching
+  the already-labelled NBody math boundary.
+- Both remain reserve workloads outside Tier A and every common aggregate.
+
+### DeltaBlue mandatory first Release verdict — accepted
+
+DeltaBlue exposed a supported-shape `rxc` defect independently reduced to an
+indexed class-attribute assignment whose right-hand factory was inlined as a
+`BLOCK_EXPR`. The target destination and owner registers are linked before the
+right-hand block executes, but the block's internal statement boundary
+returned all deferred registers. The inlined factory then reused the live owner
+register and produced a cyclic/corrupt aggregate that crashed every VM while
+copying it.
+
+The candidate preserves the inline factory and the indexed assignment. It
+returns the right-hand statement's own deferred temporaries while retaining
+only the linked assignment target and helper registers until the outer
+assignment emits `unlinkn`. The focused structural regression rejects an owner
+write between `minlinkattr1` and its matching `unlinkn`.
+
+The ordinary profiling-off Release gate is retained at
+[`evidence/2026-08-17-postperf-02-deltablue-register-lifetime-first-release-verdict`](evidence/2026-08-17-postperf-02-deltablue-register-lifetime-first-release-verdict/README.md).
+The clean `00188b13c` control exits 139 for both the focused reproducer and
+DeltaBlue; the candidate passes optimized and unoptimized forms under `rxvm`,
+`rxtvm` and `rxbvm` (12/12). Ten established workload/tool RXAS images are
+byte-identical. Six alternating compiler pairs have identical 1.086667-second
+means at 0.01-second timer resolution. The recommendation is to accept this
+correctness repair, then complete proportional QA and DeltaBlue qualification
+before starting CD.
+Adrian accepted the verdict on 2026-08-17.
+
+### DeltaBlue closeout result
+
+Focused Debug and ordinary profiling-off Release selections pass 8/8 each.
+The finalized optimized/unoptimized by `rxvm`/`rxtvm`/`rxbvm` matrix passes
+6/6, explicit maintained-runner checks pass 4/4, and full Debug passes
+2,236/2,236 in 311.69 seconds. Final qualification evidence is at
+[`evidence/2026-08-17-postperf-02-awfy-deltablue-qualification`](evidence/2026-08-17-postperf-02-awfy-deltablue-qualification/README.md).
+
+The bounded size-500 process pilot records a material current optimizer
+boundary: optimized source RXAS is 4.250319x the no-opt instruction count, and
+optimized median process time is 18.323543x no-opt for product `rxvm` and
+16.810123x for `rxtvm`. The result is retained for the later generic scalar-
+access and bounded late-inlining/register-finalisation stages. DeltaBlue
+remains a reserve lane and changes no aggregate; CD is next.
+
+### Qualification checklist
+
+- [x] Freeze pinned Java/SOM source and exact deterministic result contracts.
+- [x] Audit Level B object, collection, identity and native-math boundaries.
+- [x] Freeze the stable-handle DeltaBlue and indexed-red/black-tree CD design.
+- [x] Implement and qualify DeltaBlue opt/no-opt smoke execution.
+- [ ] Implement and qualify CD opt/no-opt smoke execution.
+- [ ] Pass both products under `rxvm`, `rxtvm` and `rxbvm` in Debug and
+      profiling-off Release.
+- [ ] Retain source/RXAS/RXBIN hashes and structural/adaptation observations.
+- [ ] Take a bounded product/concrete pilot only after correctness; add neither
+      workload to the v2 common aggregate.
+- [ ] Update benchmark, third-party, portfolio and roadmap documentation.
+- [ ] Run focused Release QA, required broad Debug CTest and `git diff --check`.
+- [ ] Close POSTPERF-02 and commit locally before opening POSTPERF-03.
 
 ## Restart rule
 

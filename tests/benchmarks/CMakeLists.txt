@@ -53,6 +53,17 @@ crexx_add_language_benchmark(benchmark_awfy_richards awfy_richards.crexx 1
 crexx_add_language_benchmark(benchmark_awfy_queens awfy_queens.crexx 1
         "PASS: AWFY Queens")
 crexx_add_rexx_opt_matrix(
+        NAME benchmark_awfy_deltablue
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/awfy_deltablue.crexx
+        TARGET_GROUP language_benchmarks
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH} -a 10
+        TEST_LABELS "benchmark;language;stable-indexed-graph-adaptation"
+        REQUIRED_OUTPUT_REGEX "PASS: AWFY DeltaBlue"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|Failed|PANIC:"
+)
+crexx_add_rexx_opt_matrix(
         NAME benchmark_awfy_json
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/awfy_json.crexx
         TARGET_GROUP language_benchmarks
@@ -206,6 +217,7 @@ crexx_label_smoke_tests(
         benchmark_awfy_list_opt
         benchmark_awfy_richards_opt
         benchmark_awfy_queens_opt
+        benchmark_awfy_deltablue_opt
         benchmark_awfy_json_opt
         benchmark_awfy_nbody_opt
         benchmark_json_parser_opt
