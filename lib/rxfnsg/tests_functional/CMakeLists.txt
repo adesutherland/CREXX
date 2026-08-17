@@ -89,6 +89,11 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
     "ts_http_server_${_http_runner}_opt"
     PROPERTIES
       PASS_REGULAR_EXPRESSION "PASS: Level G HTTP server dispatched two bounded requests to task handlers"
+      # Each case creates request, client-owner and server-handler worker pools.
+      # Keep that topology isolated from compiler/runtime tests which launch
+      # their own child processes, while preserving parallel clients inside
+      # the tested VM.
+      RUN_SERIAL TRUE
       TIMEOUT 90
   )
   crexx_label_concurrency_tests(SP07
@@ -117,6 +122,9 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
     "ts_http_server_failures_${_http_runner}_opt"
     PROPERTIES
       PASS_REGULAR_EXPRESSION "PASS: Level G HTTP server bounds unusable and failed handlers"
+      # Keep the negative server topology under the same CTest isolation as the
+      # positive server integration cases above.
+      RUN_SERIAL TRUE
       TIMEOUT 90
   )
   crexx_label_concurrency_tests(SP07

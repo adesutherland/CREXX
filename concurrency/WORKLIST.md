@@ -236,6 +236,25 @@ Serial confirmation passed them in 1.82 and 12.67 seconds respectively. No
 RXVM source changed in this slice, so these are recorded as rebuild-load
 slowdowns rather than product failures.
 
+Linux qualification on 2026-08-17 reproduced the rotating
+`ts_http_server_*` timeout after a completed fresh build. Live process and
+socket inspection showed that bounded client work had already exited while the
+request-count-bounded server controller correctly remained available for a
+missing request. The server tests now use the CTest `RUN_SERIAL` property to
+isolate their multi-pool topology from compiler and runtime tests which launch
+their own child processes, while retaining the parallel clients exercised
+inside each VM instance.
+
+The repaired full Linux sweep also exposed rotating asynchronous parser-
+snapshot assertions in two syntax-highlighting cases. Those tests retain their
+parser `RESOURCE_LOCK` and now run serially with respect to other CTest work.
+The final syntax-highlighting matrix passed 72/72 and the complete sweep passed
+2,207/2,207.
+
+The complete local Linux repair-validation commands, logs, install/package
+inventories and digests are retained in
+[`2026-08-17-linux-harness-repair`](evidence/2026-08-17-linux-harness-repair/README.md).
+
 ## Historical evidence
 
 The former development plan and exact Mac closeout records are indexed in

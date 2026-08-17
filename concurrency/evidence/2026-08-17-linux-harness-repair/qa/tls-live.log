@@ -1,0 +1,76 @@
+UpdateCTestConfiguration  from :/home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build/DartConfiguration.tcl
+Parse Config file:/home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build/DartConfiguration.tcl
+Test project /home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added setup test linked_opt_runtime_artifacts_build required by fixture linked_opt_runtime_artifacts
+Added 1 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+    Start    1: linked_opt_runtime_artifacts_build
+
+1: Test command: /usr/bin/cmake "--build" "/home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build" "--target" "linked_opt_runtime_artifacts"
+1: Working Directory: /home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build
+1: Test timeout computed to be: 1800
+1: [0/2] Re-checking globbed directories...
+1: [1/2] Creating rxvm symlink to rxtvm
+1/5 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    0.39 sec
+test 1737
+    Start 1737: ts_http_tls_live_rxbvm_noopt
+
+1737: Test command: /usr/bin/cmake "-P" "/home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build/lib/rxfnsg/tests_functional/ts_http_tls_live_rxbvm_noopt_linked_runtime.cmake"
+1737: Working Directory: /home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build/lib/rxfnsg/tests_functional
+1737: Test timeout computed to be: 180
+1737: PASS: rxfnsg HTTP TLS trusted host and hostname mismatch verification
+2/5 Test #1737: ts_http_tls_live_rxbvm_noopt .........   Passed    2.32 sec
+test 1738
+    Start 1738: ts_http_tls_live_rxbvm_opt
+
+1738: Test command: /usr/bin/cmake "-P" "/home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build/lib/rxfnsg/tests_functional/ts_http_tls_live_rxbvm_opt_linked_runtime.cmake"
+1738: Working Directory: /home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build/lib/rxfnsg/tests_functional
+1738: Test timeout computed to be: 180
+1738: PASS: rxfnsg HTTP TLS trusted host and hostname mismatch verification
+3/5 Test #1738: ts_http_tls_live_rxbvm_opt ...........   Passed    2.27 sec
+test 1739
+    Start 1739: ts_http_tls_live_rxtvm_noopt
+
+1739: Test command: /usr/bin/cmake "-P" "/home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build/lib/rxfnsg/tests_functional/ts_http_tls_live_rxtvm_noopt_linked_runtime.cmake"
+1739: Working Directory: /home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build/lib/rxfnsg/tests_functional
+1739: Test timeout computed to be: 180
+1739: PASS: rxfnsg HTTP TLS trusted host and hostname mismatch verification
+4/5 Test #1739: ts_http_tls_live_rxtvm_noopt .........   Passed    2.11 sec
+test 1740
+    Start 1740: ts_http_tls_live_rxtvm_opt
+
+1740: Test command: /usr/bin/cmake "-P" "/home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build/lib/rxfnsg/tests_functional/ts_http_tls_live_rxtvm_opt_linked_runtime.cmake"
+1740: Working Directory: /home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build/lib/rxfnsg/tests_functional
+1740: Test timeout computed to be: 180
+1740: PASS: rxfnsg HTTP TLS trusted host and hostname mismatch verification
+5/5 Test #1740: ts_http_tls_live_rxtvm_opt ...........   Passed    2.13 sec
+
+The following tests passed:
+	linked_opt_runtime_artifacts_build
+	ts_http_tls_live_rxbvm_noopt
+	ts_http_tls_live_rxbvm_opt
+	ts_http_tls_live_rxtvm_noopt
+	ts_http_tls_live_rxtvm_opt
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+concurrency         =   8.83 sec*proc (4 tests)
+concurrency-sp07    =   8.83 sec*proc (4 tests)
+f1g                 =   8.83 sec*proc (4 tests)
+gate_f              =   8.83 sec*proc (4 tests)
+http                =   8.83 sec*proc (4 tests)
+levelg              =   8.83 sec*proc (4 tests)
+library             =   8.83 sec*proc (4 tests)
+linked              =   4.43 sec*proc (2 tests)
+linked_opt          =   4.39 sec*proc (2 tests)
+rxbvm               =   4.59 sec*proc (2 tests)
+rxtvm               =   4.24 sec*proc (2 tests)
+tls                 =   8.83 sec*proc (4 tests)
+
+Total Test time (real) =   9.32 sec

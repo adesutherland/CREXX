@@ -116,7 +116,11 @@ endif()
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
         set_tests_properties(${NAME} PROPERTIES
                 LABELS "compiler;syntax_highlighting;stage0"
-                RESOURCE_LOCK syntax_highlighting_parser)
+                # The fake editor takes an asynchronous parser snapshot. Keep
+                # the existing parser lock and also isolate that snapshot from
+                # compiler/runtime tests which launch CPU-heavy child processes.
+                RESOURCE_LOCK syntax_highlighting_parser
+                RUN_SERIAL TRUE)
     endfunction()
 endif()
 
