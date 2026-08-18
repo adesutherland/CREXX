@@ -136,6 +136,7 @@ static void inline_export_debug_eligibility_reject(Context *context,
 typedef struct {
     ASTNode *node;
     Symbol *symbol;
+    int quiet;
 } InlineStructuralEligibilityService;
 
 static void inline_summary_body_symbol_usage(ASTNode *node,
@@ -293,31 +294,39 @@ static int inline_structural_eligibility_service(Context *context, void *payload
     sym_clear_inline_summary(sym);
 
     if (inline_proc_has_procedure_expose(node)) {
-        inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                         "reject: procedure-level EXPOSE is not inlineable");
+        if (!service->quiet) {
+            inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                             "reject: procedure-level EXPOSE is not inlineable");
+        }
         sym->is_inlinable = 0;
         return 0;
     }
 
     if (inline_analyse_callable_eligibility(context, node, sym, 0, 0, &eligibility) != INLINE_ELIGIBILITY_OK) {
-        inline_debug_log_eligibility_reject(context, node, sym, &eligibility);
+        if (!service->quiet) {
+            inline_debug_log_eligibility_reject(context, node, sym, &eligibility);
+        }
         sym->is_inlinable = 0;
         return 0;
     }
 
     if (!inline_build_callable_summary(node, sym, &eligibility)) {
-        inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                         "reject: callable summary construction failed");
+        if (!service->quiet) {
+            inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                             "reject: callable summary construction failed");
+        }
         sym->is_inlinable = 0;
         return 0;
     }
 
-    inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                     "accept: nodes=%d returns=%d final_return=%d cutoff=%d",
-                     eligibility.check.node_count,
-                     eligibility.check.return_count,
-                     eligibility.return_shape.final_is_return,
-                     INLINE_MAX_NODES);
+    if (!service->quiet) {
+        inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                         "accept: nodes=%d returns=%d final_return=%d cutoff=%d",
+                         eligibility.check.node_count,
+                         eligibility.check.return_count,
+                         eligibility.return_shape.final_is_return,
+                         INLINE_MAX_NODES);
+    }
     sym->is_inlinable = 1;
     sym->ast_template = node;
     return 1;
@@ -325,7 +334,11 @@ static int inline_structural_eligibility_service(Context *context, void *payload
 
 /* Walker to identify inlinable procedures */
 walker_result identify_inlinable_walker(walker_direction direction, ASTNode *node, void *payload) {
-    Context *context = (Context *)payload;
+    InlineEligibilityWalkerPayload *eligibility_payload;
+    Context *context;
+
+    eligibility_payload = (InlineEligibilityWalkerPayload *)payload;
+    context = eligibility_payload ? eligibility_payload->context : NULL;
 
     if (direction == in) return result_normal;
 
@@ -355,6 +368,7 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
 
         service.node = node;
         service.symbol = sym;
+        service.quiet = eligibility_payload ? eligibility_payload->quiet : 0;
         (void)rxcp_remap_run_service(context,
                                      rxcp_inline_structural_eligibility_rule(),
                                      node,
@@ -366,21 +380,51 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
     return result_normal;
 }
 
-int rxcp_inline_pass(Context *context) {
+static void rxcp_inline_prepare_kind(Context *context, int quiet) {
+    InlineEligibilityWalkerPayload payload;
+
+    if (!context || !context->ast) return;
+
+    rxcp_inline_maybe_print_rule_summary(context);
+
+    payload.context = context;
+    payload.quiet = quiet;
+    context->current_scope = 0;
+    ast_wlkr(context->ast, identify_inlinable_walker, (void *)&payload);
+}
+
+void rxcp_inline_prepare(Context *context) {
+    rxcp_inline_prepare_kind(context, 0);
+}
+
+void rxcp_inline_prepare_quiet(Context *context) {
+    rxcp_inline_prepare_kind(context, 1);
+}
+
+static int rxcp_inline_pass_kind(Context *context, int exact_scalar_accessors_only) {
     InlineWalkerPayload payload;
 
     if (!context || !context->ast) return 0;
 
-    rxcp_inline_maybe_print_rule_summary(context);
-
-    context->current_scope = 0;
-    ast_wlkr(context->ast, identify_inlinable_walker, (void *)context);
-
     memset(&payload, 0, sizeof(payload));
     payload.context = context;
+    payload.exact_scalar_accessors_only = exact_scalar_accessors_only;
 
     context->current_scope = 0;
     ast_wlkr(context->ast, inline_procedure_walker, (void *)&payload);
 
     return payload.changed;
+}
+
+int rxcp_inline_scalar_accessor_pass(Context *context) {
+    return rxcp_inline_pass_kind(context, 1);
+}
+
+int rxcp_inline_prepared_pass(Context *context) {
+    return rxcp_inline_pass_kind(context, 0);
+}
+
+int rxcp_inline_pass(Context *context) {
+    rxcp_inline_prepare(context);
+    return rxcp_inline_prepared_pass(context);
 }

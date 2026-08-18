@@ -1,0 +1,324 @@
+/* POSTPERF-04 current accessor and hand-equivalent scalar controls. */
+options levelb comments_dash
+
+import rxfnsb
+namespace postperf04_scalar_access_compare
+
+arg argv = .string[]
+
+dimension = 100000
+iterations = 10
+if argv[0] >= 1 then dimension = argv[1] as .int
+if argv[0] >= 2 then iterations = argv[2] as .int
+if dimension < 1 then return fail("dimension must be positive")
+if iterations < 1 then return fail("iterations must be positive")
+
+scalar_reads = dimension * iterations
+
+int_direct_value = 7
+int_direct_sum = 0
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    int_direct_sum = int_direct_sum + int_direct_value
+  end
+end
+int_direct_read_us = elapsedUs(started)
+
+int_box = .ScalarIntBox(7)
+int_accessor_sum = 0
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    int_accessor_sum = int_accessor_sum + int_box.read()
+  end
+end
+int_accessor_read_us = elapsedUs(started)
+
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    int_direct_value = index
+  end
+end
+int_direct_write_us = elapsedUs(started)
+
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    call int_box.write(index)
+  end
+end
+int_accessor_write_us = elapsedUs(started)
+
+float_direct_value = 0.5 as .float
+float_direct_sum = 0 as .float
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    float_direct_sum = float_direct_sum + float_direct_value
+  end
+end
+float_direct_read_us = elapsedUs(started)
+
+float_box = .ScalarFloatBox(0.5)
+float_accessor_sum = 0 as .float
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    float_accessor_sum = float_accessor_sum + float_box.read()
+  end
+end
+float_accessor_read_us = elapsedUs(started)
+
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    float_direct_value = index as .float
+  end
+end
+float_direct_write_us = elapsedUs(started)
+
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    call float_box.write(index as .float)
+  end
+end
+float_accessor_write_us = elapsedUs(started)
+
+i64_direct = .binary
+call binresize i64_direct, dimension * 8
+do index = 1 to dimension
+  <at..i64>((index - 1) * 8) i64_direct = index
+end
+i64_probe = .PackedI64Probe(i64_direct)
+
+i64_direct_sum = 0
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    i64_direct_sum = i64_direct_sum + <at..i64>((index - 1) * 8) i64_direct
+  end
+end
+i64_direct_read_us = elapsedUs(started)
+
+i64_accessor_sum = 0
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    i64_accessor_sum = i64_accessor_sum + i64_probe.read(index)
+  end
+end
+i64_accessor_read_us = elapsedUs(started)
+
+i64_direct_write = .binary
+call binresize i64_direct_write, dimension * 8
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    <at..i64>((index - 1) * 8) i64_direct_write = index
+  end
+end
+i64_direct_write_us = elapsedUs(started)
+
+i64_accessor_write = .binary
+call binresize i64_accessor_write, dimension * 8
+i64_write_probe = .PackedI64Probe(i64_accessor_write)
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    call i64_write_probe.write(index, index)
+  end
+end
+i64_accessor_write_us = elapsedUs(started)
+
+f32_direct = .binary
+call binresize f32_direct, dimension * 4
+do index = 1 to dimension
+  <at..f32>((index - 1) * 4) f32_direct = 0.5
+end
+f32_probe = .PackedF32Probe(f32_direct)
+
+f32_direct_sum = 0 as .float
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    f32_direct_sum = f32_direct_sum + <at..f32>((index - 1) * 4) f32_direct
+  end
+end
+f32_direct_read_us = elapsedUs(started)
+
+f32_accessor_sum = 0 as .float
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    f32_accessor_sum = f32_accessor_sum + f32_probe.read(index)
+  end
+end
+f32_accessor_read_us = elapsedUs(started)
+
+f32_direct_write = .binary
+call binresize f32_direct_write, dimension * 4
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    <at..f32>((index - 1) * 4) f32_direct_write = index as .float
+  end
+end
+f32_direct_write_us = elapsedUs(started)
+
+f32_accessor_write = .binary
+call binresize f32_accessor_write, dimension * 4
+f32_write_probe = .PackedF32Probe(f32_accessor_write)
+started = time("us")
+do repetition = 1 to iterations
+  do index = 1 to dimension
+    call f32_write_probe.write(index, index as .float)
+  end
+end
+f32_accessor_write_us = elapsedUs(started)
+
+expected_int_scalar = scalar_reads * 7
+expected_float_scalar = scalar_reads * 0.5
+expected_i64 = (dimension * (dimension + 1) / 2) * iterations
+expected_f32 = dimension * iterations * 0.5
+
+if int_direct_sum <> expected_int_scalar | int_accessor_sum <> expected_int_scalar then
+  return fail("integer scalar read checksum")
+if int_direct_value <> dimension | int_box.read() <> dimension then
+  return fail("integer scalar write result")
+if float_direct_sum <> expected_float_scalar | float_accessor_sum <> expected_float_scalar then
+  return fail("float scalar read checksum")
+if float_direct_value <> dimension | float_box.read() <> dimension then
+  return fail("float scalar write result")
+if i64_direct_sum <> expected_i64 | i64_accessor_sum <> expected_i64 then
+  return fail("i64 read checksum")
+if <at..i64>((dimension - 1) * 8) i64_direct_write <> dimension then
+  return fail("i64 direct write result")
+if i64_write_probe.read(dimension) <> dimension then
+  return fail("i64 accessor write result")
+if f32_direct_sum <> expected_f32 | f32_accessor_sum <> expected_f32 then
+  return fail("f32 read checksum")
+if <at..f32>((dimension - 1) * 4) f32_direct_write <> dimension then
+  return fail("f32 direct write result")
+if f32_write_probe.read(dimension) <> dimension then
+  return fail("f32 accessor write result")
+
+isolation_source = .binary
+call binresize isolation_source, 8
+<at..i64>(0) isolation_source = 41
+isolation_probe = .PackedI64Probe(isolation_source)
+call isolation_probe.write(1, 42)
+if <at..i64>(0) isolation_source <> 41 then return fail("factory by-value isolation")
+isolation_bridge = isolation_probe.payload()
+<at..i64>(0) isolation_bridge = 43
+if isolation_probe.read(1) <> 42 then return fail("payload by-value isolation")
+if .ScalarIntBox(9).read() <> 9 then return fail("computed receiver read")
+
+say "benchmark=postperf04_scalar_access_compare"
+say "dimension="dimension
+say "iterations="iterations
+say "int_direct_read_us="int_direct_read_us
+say "int_accessor_read_us="int_accessor_read_us
+say "int_direct_write_us="int_direct_write_us
+say "int_accessor_write_us="int_accessor_write_us
+say "float_direct_read_us="float_direct_read_us
+say "float_accessor_read_us="float_accessor_read_us
+say "float_direct_write_us="float_direct_write_us
+say "float_accessor_write_us="float_accessor_write_us
+say "i64_direct_read_us="i64_direct_read_us
+say "i64_accessor_read_us="i64_accessor_read_us
+say "i64_direct_write_us="i64_direct_write_us
+say "i64_accessor_write_us="i64_accessor_write_us
+say "f32_direct_read_us="f32_direct_read_us
+say "f32_accessor_read_us="f32_accessor_read_us
+say "f32_direct_write_us="f32_direct_write_us
+say "f32_accessor_write_us="f32_accessor_write_us
+say "int_checksum="int_accessor_sum
+say "i64_checksum="i64_accessor_sum
+say "PASS: POSTPERF-04 scalar access compare"
+return 0
+
+elapsedUs: procedure = .int
+  arg started = .int
+  elapsed = time("us") - started
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1
+
+ScalarIntBox: class
+  value_ = .int
+
+  *: factory
+    arg value = .int
+    value_ = value
+    return
+
+  read: method = .int
+    return value_
+
+  write: method = .void
+    arg value = .int
+    value_ = value
+    return
+
+ScalarFloatBox: class
+  value_ = .float
+
+  *: factory
+    arg value = .float
+    value_ = value
+    return
+
+  read: method = .float
+    return value_
+
+  write: method = .void
+    arg value = .float
+    value_ = value
+    return
+
+PackedI64Probe: class
+  payload_ = .binary
+
+  *: factory
+    arg payload = .binary
+    payload_ = payload
+    return
+
+  read: method = .int
+    arg index = .int
+    return <at..i64>((index - 1) * 8) payload_
+
+  write: method = .void
+    arg index = .int, value = .int
+    <at..i64>((index - 1) * 8) payload_ = value
+    return
+
+  payload: method = .binary
+    return payload_
+
+PackedF32Probe: class
+  payload_ = .binary
+
+  *: factory
+    arg payload = .binary
+    payload_ = payload
+    return
+
+  read: method = .float
+    arg index = .int
+    return <at..f32>((index - 1) * 4) payload_
+
+  write: method = .void
+    arg index = .int, value = .float
+    <at..f32>((index - 1) * 4) payload_ = value
+    return
+
+  payload: method = .binary
+    return payload_

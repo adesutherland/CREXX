@@ -2199,6 +2199,46 @@ static int inline_bind_method_receiver(Context *context,
     return 1;
 }
 
+/* A normal method enters through an emitted ASSERTINITIALIZED before its body.
+ * Inlining must retain that signal boundary after receiver and argument
+ * evaluation; attribute operations alone can otherwise turn the required
+ * OBJECT_NOT_INITIALIZED signal into an incidental OUT_OF_RANGE signal. */
+static int inline_append_method_receiver_initialized_assert(Context *context,
+                                                            ASTNode *instr_list,
+                                                            Scope *inline_scope,
+                                                            ASTNode *proc_def,
+                                                            InlineCloneState *clone_state) {
+    Symbol *this_symbol;
+    ASTNode *receiver_ref;
+    ASTNode *assert_instr;
+
+    if (!context || !instr_list || !inline_scope || !proc_def || !clone_state) return 0;
+    if (!inline_callable_is_method(proc_def)) return 1;
+
+    this_symbol = inline_find_instance_symbol(proc_def, clone_state);
+    if (!this_symbol) return 0;
+
+    receiver_ref = rxcp_remap_create_symbol_node(context,
+                                                  inline_scope,
+                                                  proc_def,
+                                                  this_symbol,
+                                                  VAR_SYMBOL,
+                                                  1,
+                                                  0);
+    if (!receiver_ref) return 0;
+
+    assert_instr = rxcp_remap_create_assembler_instr(context,
+                                                      inline_scope,
+                                                      proc_def,
+                                                      "assertinitialized",
+                                                      receiver_ref,
+                                                      NULL,
+                                                      NULL);
+    if (!assert_instr) return 0;
+    add_ast(instr_list, assert_instr);
+    return 1;
+}
+
 static int inline_initialise_factory_instance(Context *context,
                                               ASTNode *instr_list,
                                               Scope *inline_scope,
@@ -2758,6 +2798,14 @@ static int inline_bind_call_arguments_impl(Context *context,
     }
 
     if (actual_arg || param_arg) INLINE_BIND_RETURN(0);
+
+    if (!inline_append_method_receiver_initialized_assert(context,
+                                                          instr_list,
+                                                          inline_scope,
+                                                          proc_def,
+                                                          clone_state)) {
+        INLINE_BIND_RETURN(0);
+    }
 
     INLINE_BIND_RETURN(1);
 #undef INLINE_BIND_RETURN

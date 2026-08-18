@@ -1,0 +1,37 @@
+options levelb
+namespace inline_scalar_accessors_dep expose scalarview intbox floatbox
+
+scalarview: interface
+  read: method = .int
+
+intbox: class implements .scalarview
+  value_ = .int
+
+  *: factory
+    arg value = .int
+    value_ = value
+    return
+
+  read: method = .int
+    return value_
+
+  write: method = .void
+    arg value = .int
+    value_ = value
+    return
+
+floatbox: class
+  value_ = .float
+
+  *: factory
+    arg value = .float
+    value_ = value
+    return
+
+  read: method = .float
+    return value_
+
+  write: method = .void
+    arg value = .float
+    value_ = value
+    return

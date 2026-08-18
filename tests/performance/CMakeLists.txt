@@ -375,6 +375,59 @@ set_tests_properties(
         FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
 )
 
+add_custom_target(performance_postperf04_scalar_access ALL)
+crexx_add_rexx_opt_matrix(
+        NAME postperf04_scalar_access_compare
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/postperf04_scalar_access_compare.crexx
+        TARGET_GROUP performance_postperf04_scalar_access
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH} -a 256 2
+        TEST_LABELS "performance;scalar-access;postperf04"
+)
+foreach(_crexx_mode IN ITEMS noopt opt)
+    set_tests_properties(postperf04_scalar_access_compare_${_crexx_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: POSTPERF-04 scalar access compare"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    )
+endforeach()
+_crexx_register_runtime_test(
+        NAME postperf04_scalar_access_compare_rxbvm_noopt
+        RUNNER rxbvm
+        PROGRAM postperf04_scalar_access_compare_noopt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH} -a 256 2
+        TEST_LABELS "performance;scalar-access;postperf04"
+)
+_crexx_register_runtime_test(
+        NAME postperf04_scalar_access_compare_rxbvm_opt
+        RUNNER rxbvm
+        PROGRAM postperf04_scalar_access_compare_opt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH} -a 256 2
+        TEST_LABELS "performance;scalar-access;postperf04"
+)
+set_tests_properties(
+        postperf04_scalar_access_compare_rxbvm_noopt
+        postperf04_scalar_access_compare_rxbvm_opt
+        PROPERTIES
+        PASS_REGULAR_EXPRESSION "PASS: POSTPERF-04 scalar access compare"
+        FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+)
+add_test(
+        NAME postperf04_scalar_access_codegen
+        COMMAND ${CMAKE_COMMAND}
+                -DOPT_IMAGE=${CMAKE_CURRENT_BINARY_DIR}/postperf04_scalar_access_compare_opt.rxas
+                -DNOOPT_IMAGE=${CMAKE_CURRENT_BINARY_DIR}/postperf04_scalar_access_compare_noopt.rxas
+                -DOPT_BINARY=${CMAKE_CURRENT_BINARY_DIR}/postperf04_scalar_access_compare_opt.rxbin
+                -DRXDAS=$<TARGET_FILE:rxdas>
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/check_postperf04_scalar_access_codegen.cmake
+)
+set_tests_properties(postperf04_scalar_access_codegen PROPERTIES
+        LABELS "performance;scalar-access;postperf04;codegen"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts
+)
+
 add_custom_target(performance_tinyexpr_dispatch ALL)
 crexx_add_rexx_opt_matrix(
         NAME tinyexpr_dispatch_compare

@@ -1,0 +1,193 @@
+* POSTPERF-04 M08 successful-guard component-SSA proof.
+
+direct_object_guards() .locals=3
+    setobjtype r0,"successful_guard_flow.box"
+    copy r1,r0
+    assertinitialized r1
+    asserttype r1,"successful_guard_flow.box"
+    asserttype r1,"successful_guard_flow.other"
+    ret
+
+direct_object_guard_after_attr_store() .locals=3
+    setattrs r0,1
+    setobjtype r0,"successful_guard_flow.box"
+    load r2,7
+    isetattr1 r0,1,r2
+    copy r1,r0
+    assertinitialized r1
+    ret
+
+direct_object_guard_after_igetunlink() .locals=4
+    setattrs r0,1
+    setobjtype r0,"successful_guard_flow.box"
+    linkattr1 r2,r0,1
+    igetunlink r3,r2
+    assertinitialized r0
+    ret
+
+direct_object_guard_after_same_register_igetunlink() .locals=3
+    setattrs r0,1
+    setobjtype r0,"successful_guard_flow.box"
+    linkattr1 r2,r0,1
+    igetunlink r2,r2
+    assertinitialized r0
+    ret
+
+phi_initialized_all_type() .locals=1
+    brt phi_initialized_all_type_else,a0
+    setobjtype r0,"successful_guard_flow.box"
+    br phi_initialized_all_type_join
+phi_initialized_all_type_else:
+    setobjtype r0,"successful_guard_flow.other"
+phi_initialized_all_type_join:
+    assertinitialized r0
+    ret
+
+phi_initialized_mixed_uninit() .locals=1
+    brt phi_initialized_mixed_uninit_else,a0
+    setobjtype r0,"successful_guard_flow.box"
+    br phi_initialized_mixed_uninit_join
+phi_initialized_mixed_uninit_else:
+    setobjuninit r0,"successful_guard_flow.box"
+phi_initialized_mixed_uninit_join:
+    assertinitialized r0
+    ret
+
+phi_type_same() .locals=1
+    brt phi_type_same_else,a0
+    setobjtype r0,"successful_guard_flow.box"
+    br phi_type_same_join
+phi_type_same_else:
+    setobjtype r0,"successful_guard_flow.box"
+phi_type_same_join:
+    asserttype r0,"successful_guard_flow.box"
+    ret
+
+phi_type_mixed() .locals=1
+    brt phi_type_mixed_else,a0
+    setobjtype r0,"successful_guard_flow.box"
+    br phi_type_mixed_join
+phi_type_mixed_else:
+    setobjtype r0,"successful_guard_flow.other"
+phi_type_mixed_join:
+    asserttype r0,"successful_guard_flow.box"
+    ret
+
+repeated_initialized_guard() .locals=0
+    sighalt "OBJECT_NOT_INITIALIZED"
+    assertinitialized a0
+    assertinitialized a0
+    ret
+
+mutated_initialized_guard() .locals=0
+    sighalt "OBJECT_NOT_INITIALIZED"
+    assertinitialized a0
+    setobjuninit a0,"successful_guard_flow.box"
+    assertinitialized a0
+    ret
+
+signal_path_initialized_guard() .locals=0
+    sigcalla skip_uninitialized(),"OBJECT_NOT_INITIALIZED"
+    assertinitialized a0
+    assertinitialized a0
+    ret
+
+repeated_type_guard() .locals=0
+    sighalt "CONVERSION_ERROR"
+    asserttype a0,"successful_guard_flow.box"
+    asserttype a0,"successful_guard_flow.box"
+    ret
+
+mutated_type_guard() .locals=0
+    sighalt "CONVERSION_ERROR"
+    asserttype a0,"successful_guard_flow.box"
+    setobjtype a0,"successful_guard_flow.other"
+    asserttype a0,"successful_guard_flow.box"
+    ret
+
+range_reg_int_int() .locals=0
+    sighalt "OUT_OF_RANGE"
+    ichkrng a0,0,10
+    ichkrng a0,0,10
+    ret
+
+range_reg_int_reg() .locals=0
+    sighalt "OUT_OF_RANGE"
+    ichkrng a0,0,a1
+    ichkrng a0,0,a1
+    ret
+
+range_reg_reg_reg() .locals=0
+    sighalt "OUT_OF_RANGE"
+    ichkrng a0,a1,a2
+    ichkrng a0,a1,a2
+    ret
+
+range_int_int_reg() .locals=0
+    sighalt "OUT_OF_RANGE"
+    ichkrng 5,0,a0
+    ichkrng 5,0,a0
+    ret
+
+range_int_reg_reg() .locals=0
+    sighalt "OUT_OF_RANGE"
+    ichkrng 5,a0,a1
+    ichkrng 5,a0,a1
+    ret
+
+range_subsumed() .locals=0
+    sighalt "OUT_OF_RANGE"
+    ichkrng a0,2,8
+    ichkrng a0,0,10
+    ret
+
+range_not_subsumed() .locals=0
+    sighalt "OUT_OF_RANGE"
+    ichkrng a0,0,10
+    ichkrng a0,2,8
+    ret
+
+range_mutated() .locals=0
+    sighalt "OUT_OF_RANGE"
+    ichkrng a0,0,10
+    inc a0
+    ichkrng a0,0,10
+    ret
+
+constant_integer_range() .locals=1
+    load r0,5
+    ichkrng r0,0,10
+    ret
+
+constant_integer_range_failure() .locals=1
+    load r0,11
+    ichkrng r0,0,10
+    ret
+
+binary_range_repeat() .locals=0
+    sighalt "OUT_OF_RANGE"
+    bcheckrange a0,a1,a2
+    bcheckrange a0,a1,a2
+    ret
+
+binary_range_mutated() .locals=1
+    sighalt "OUT_OF_RANGE"
+    bcheckrange a0,a1,a2
+    bcopy a0,r0
+    bcheckrange a0,a1,a2
+    ret
+
+constant_binary_range() .locals=3
+    load r1,0
+    load r2,0
+    bcheckrange a0,r1,r2
+    ret
+
+constant_binary_range_failure() .locals=3
+    load r1,1
+    load r2,0
+    bcheckrange a0,r1,r2
+    ret
+
+skip_uninitialized() .locals=0
+    ret "__rxsignal_skip"

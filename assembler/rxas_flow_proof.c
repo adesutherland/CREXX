@@ -12,6 +12,7 @@
 #include "rxas_flow_graph_internal.h"
 #include "rxasassm.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -526,6 +527,37 @@ static int flow_proof_success_edge_dominates(
     }
     return service->visit_marks[candidate->block_id] !=
            service->visit_generation;
+}
+
+/* An exact terminal policy makes the normal successor the only route from a
+ * successful guard to later code.  For branch/call/ignore or inherited policy
+ * the structural success-edge proof remains deliberately conservative: a
+ * failure continuation may re-enter before the candidate. */
+static int flow_proof_guard_success_dominates(
+        RxasFlowProofService *service,
+        const RxasFlowInstruction *generator,
+        const RxasFlowInstruction *candidate) {
+    RxasFlowPolicyFact policy;
+    if (generator && generator->signal.static_names &&
+        !strchr(generator->signal.static_names, '|') &&
+        rxas_flow_policy_at_instruction(
+                service->signal, service->metrics.epoch,
+                generator->id, 0, generator->signal.static_names,
+                &policy) &&
+        policy.state == RXAS_FLOW_POLICY_EXACT &&
+        (policy.effect == RXOP_POLICY_EFFECT_HALT ||
+         policy.effect == RXOP_POLICY_EFFECT_SILENT_HALT ||
+         policy.effect == RXOP_POLICY_EFFECT_RETURN))
+        return 1;
+    /* The generic proof below is block-based.  Entry at the generator's
+     * block therefore also reaches a same-block candidate without crossing
+     * the distinguished normal-success edge.  Reject this shape immediately
+     * instead of performing a reachability walk that cannot prove it. */
+    if (generator && candidate &&
+        generator->block_id == candidate->block_id)
+        return 0;
+    return flow_proof_success_edge_dominates(
+            service, generator, candidate);
 }
 
 static unsigned int flow_proof_dependency_for_effect(size_t effect) {
@@ -2184,6 +2216,582 @@ int rxas_flow_prove_repetition(
     }
     if (result->proved) service->metrics.repetition_proved++;
     else service->metrics.repetition_rejected++;
+    return 1;
+}
+
+typedef enum FlowProofGuardKind {
+    FLOW_PROOF_GUARD_NONE = 0,
+    FLOW_PROOF_GUARD_INITIALIZED,
+    FLOW_PROOF_GUARD_TYPE,
+    FLOW_PROOF_GUARD_INTEGER_RANGE,
+    FLOW_PROOF_GUARD_BINARY_RANGE
+} FlowProofGuardKind;
+
+static FlowProofGuardKind flow_proof_guard_kind(int opcode) {
+    if (opcode == OP_ASSERTINITIALIZED_REG)
+        return FLOW_PROOF_GUARD_INITIALIZED;
+    if (opcode == OP_ASSERTTYPE_REG_STRING)
+        return FLOW_PROOF_GUARD_TYPE;
+    if (opcode >= OP_ICHKRNG_REG_INT_INT &&
+        opcode <= OP_ICHKRNG_INT_REG_REG)
+        return FLOW_PROOF_GUARD_INTEGER_RANGE;
+    if (opcode == OP_BCHECKRANGE_REG_REG_REG)
+        return FLOW_PROOF_GUARD_BINARY_RANGE;
+    return FLOW_PROOF_GUARD_NONE;
+}
+
+static int flow_proof_guard_exact_shape(
+        const RxasFlowInstruction *instruction,
+        const instruction_queue *item, FlowProofGuardKind *kind) {
+    FlowProofGuardKind local_kind;
+    const Assembler_Token *literal;
+    if (!instruction || !instruction->op || !item) return 0;
+    local_kind = flow_proof_guard_kind(instruction->op->opcode);
+    literal = item->operandCount > 1 ? flow_proof_operand(item, 1) : 0;
+    if (local_kind == FLOW_PROOF_GUARD_NONE ||
+        (local_kind == FLOW_PROOF_GUARD_INITIALIZED &&
+         item->operandCount != 1) ||
+        (local_kind == FLOW_PROOF_GUARD_TYPE &&
+         (item->operandCount != 2 || !literal ||
+          literal->token_type != STRING)) ||
+        ((local_kind == FLOW_PROOF_GUARD_INTEGER_RANGE ||
+          local_kind == FLOW_PROOF_GUARD_BINARY_RANGE) &&
+         item->operandCount != 3) ||
+        instruction->effects.state != RXOP_EFFECT_CLASSIFIED ||
+        instruction->effects.writes != RXOP_OP_NONE ||
+        instruction->effects.kills != RXOP_OP_NONE ||
+        instruction->effects.branch_targets != RXOP_OP_NONE ||
+        instruction->effects.implicit != RXOP_IMPLICIT_NONE ||
+        instruction->effects.semantics != RXOP_SEM_NONE ||
+        instruction->effects.flow != FLOW_NEXT ||
+        !instruction->effects.optimizer_barrier ||
+        instruction->signal.state != RXOP_SIGNAL_STATE_KNOWN ||
+        instruction->signal.phase != RXOP_SIGNAL_PHASE_BEFORE_WRITES ||
+        instruction->signal.source != RXOP_SIGNAL_SOURCE_STATIC_NAMES ||
+        instruction->signal.dependencies != RXOP_SIGNAL_DEP_NONE ||
+        !(instruction->signal.properties &
+          RXOP_SIGNAL_PROP_SUCCESS_STABLE) ||
+        instruction->signal.failure_writes != RXOP_OP_NONE ||
+        instruction->signal.failure_component_writes !=
+                RXOP_COMPONENT_NONE ||
+        rxop_context_writes(instruction->op->opcode) !=
+                RXOP_CONTEXT_NONE)
+        return 0;
+    if (kind) *kind = local_kind;
+    return 1;
+}
+
+static FlowProofValueWalkResult flow_proof_guard_operand_equivalent(
+        RxasFlowProofService *service,
+        size_t generator_instruction, const Assembler_Token *generator_token,
+        size_t candidate_instruction, const Assembler_Token *candidate_token,
+        unsigned int component, RxasFlowComponentFact *generator_fact,
+        RxasFlowComponentFact *candidate_fact) {
+    RxasFlowRegister generator_register;
+    RxasFlowRegister candidate_register;
+    RxasFlowComponentFact local_generator_fact;
+    RxasFlowComponentFact local_candidate_fact;
+    if (!generator_fact) generator_fact = &local_generator_fact;
+    if (!candidate_fact) candidate_fact = &local_candidate_fact;
+    memset(generator_fact, 0, sizeof(*generator_fact));
+    memset(candidate_fact, 0, sizeof(*candidate_fact));
+    if (!generator_token || !candidate_token)
+        return FLOW_PROOF_VALUE_UNAVAILABLE;
+    if (generator_token->token_type != RREG &&
+        generator_token->token_type != AREG &&
+        generator_token->token_type != GREG)
+        return flow_proof_same_constant(
+                       generator_token, candidate_token)
+                ? FLOW_PROOF_VALUE_UNIQUE
+                : FLOW_PROOF_VALUE_MULTIPLE;
+    if (!flow_proof_register(generator_token, &generator_register) ||
+        !flow_proof_register(candidate_token, &candidate_register) ||
+        !rxas_flow_component_at_instruction(
+                service->ssa, service->metrics.epoch,
+                generator_instruction, 0, generator_register,
+                component, generator_fact) ||
+        !rxas_flow_component_at_instruction(
+                service->ssa, service->metrics.epoch,
+                candidate_instruction, 0, candidate_register,
+                component, candidate_fact) ||
+        generator_fact->value_id == RXAS_FLOW_ID_NONE ||
+        candidate_fact->value_id == RXAS_FLOW_ID_NONE)
+        return FLOW_PROOF_VALUE_UNAVAILABLE;
+    if (generator_fact->value_id == candidate_fact->value_id)
+        return FLOW_PROOF_VALUE_UNIQUE;
+    return flow_proof_equivalent_value_leaf_set(
+            service, generator_fact->value_id, candidate_fact->value_id);
+}
+
+static int flow_proof_guard_constant_token(
+        RxasFlowProofService *service, size_t instruction_id,
+        const Assembler_Token *operand, unsigned int component,
+        int expected_type, const Assembler_Token **constant,
+        size_t *defining_instruction) {
+    RxasFlowRegister reg;
+    RxasFlowComponentFact fact;
+    RxasFlowValueNode leaf;
+    size_t leaf_id;
+    FlowProofValueWalkResult walk;
+    if (!constant || !operand) return 0;
+    *constant = 0;
+    if (defining_instruction) *defining_instruction = RXAS_FLOW_ID_NONE;
+    if (operand->token_type != RREG && operand->token_type != AREG &&
+        operand->token_type != GREG) {
+        if (operand->token_type != expected_type) return 0;
+        *constant = operand;
+        return 1;
+    }
+    if (!flow_proof_register(operand, &reg) ||
+        !rxas_flow_component_at_instruction(
+                service->ssa, service->metrics.epoch,
+                instruction_id, 0, reg, component, &fact))
+        return 0;
+    walk = flow_proof_unique_value_leaf(
+            service, fact.value_id, &leaf_id, &leaf);
+    if (walk != FLOW_PROOF_VALUE_UNIQUE ||
+        leaf.kind != RXAS_FLOW_VALUE_CONSTANT ||
+        leaf.presence != RXAS_FLOW_COMPONENT_PRESENT ||
+        !leaf.constant_token ||
+        leaf.constant_token->token_type != expected_type)
+        return 0;
+    *constant = leaf.constant_token;
+    if (defining_instruction)
+        *defining_instruction = leaf.defining_instruction;
+    return 1;
+}
+
+/* Initialization/type is a semantic property, not identity of one producer.
+ * A loop or branch phi is proved when every reachable non-cyclic attributes
+ * leaf is an exact SETOBJTYPE write (and, for ASSERTTYPE, writes the required
+ * literal type). COPY nodes are transparent. */
+static FlowProofValueWalkResult flow_proof_guard_type_producer_leaves(
+        RxasFlowProofService *service, size_t value_id,
+        const instruction_queue *candidate_item,
+        FlowProofGuardKind candidate_kind, RxasFlowProofResult *result) {
+    RxasFlowValueNode first;
+    size_t head;
+    size_t tail;
+    size_t leaf_count;
+    if (!flow_proof_prepare_value_walk(service) ||
+        !rxas_flow_value_node(
+                service->ssa, service->metrics.epoch,
+                value_id, &first) || first.id >= service->value_capacity)
+        return FLOW_PROOF_VALUE_UNAVAILABLE;
+    service->value_generation++;
+    if (!service->value_generation) {
+        memset(service->value_marks, 0,
+               service->value_capacity * sizeof(*service->value_marks));
+        service->value_generation = 1;
+    }
+    head = 0;
+    tail = 0;
+    leaf_count = 0;
+    service->value_marks[first.id] = service->value_generation;
+    service->value_stack[tail++] = first.id;
+    while (head < tail) {
+        RxasFlowValueNode node;
+        size_t input;
+        value_id = service->value_stack[head++];
+        if (!rxas_flow_value_node(
+                    service->ssa, service->metrics.epoch,
+                    value_id, &node) || node.id >= service->value_capacity ||
+            !flow_proof_consume(service, 1))
+            return FLOW_PROOF_VALUE_UNAVAILABLE;
+        if (node.kind == RXAS_FLOW_VALUE_PHI) {
+            if (!node.input_count) return FLOW_PROOF_VALUE_UNAVAILABLE;
+            for (input = 0; input < node.input_count; input++) {
+                size_t input_id;
+                RxasFlowValueNode input_node;
+                input_id = rxas_flow_value_input(
+                        service->ssa, service->metrics.epoch,
+                        node.id, input);
+                if (input_id == RXAS_FLOW_ID_NONE ||
+                    !rxas_flow_value_node(
+                            service->ssa, service->metrics.epoch,
+                            input_id, &input_node) ||
+                    input_node.id >= service->value_capacity)
+                    return FLOW_PROOF_VALUE_UNAVAILABLE;
+                if (service->value_marks[input_node.id] ==
+                        service->value_generation)
+                    continue;
+                service->value_marks[input_node.id] =
+                        service->value_generation;
+                if (tail >= service->value_capacity)
+                    return FLOW_PROOF_VALUE_UNAVAILABLE;
+                service->value_stack[tail++] = input_node.id;
+            }
+            continue;
+        }
+        if (node.kind == RXAS_FLOW_VALUE_COPY) {
+            RxasFlowValueNode source;
+            if (node.source_value_id == RXAS_FLOW_ID_NONE ||
+                !rxas_flow_value_node(
+                        service->ssa, service->metrics.epoch,
+                        node.source_value_id, &source) ||
+                source.id >= service->value_capacity)
+                return FLOW_PROOF_VALUE_UNAVAILABLE;
+            if (service->value_marks[source.id] !=
+                    service->value_generation) {
+                service->value_marks[source.id] = service->value_generation;
+                if (tail >= service->value_capacity)
+                    return FLOW_PROOF_VALUE_UNAVAILABLE;
+                service->value_stack[tail++] = source.id;
+            }
+            continue;
+        }
+        {
+            const RxasFlowInstruction *producer;
+            const RxasFlowRecord *producer_record;
+            const instruction_queue *producer_item;
+            producer = node.defining_instruction == RXAS_FLOW_ID_NONE ? 0 :
+                    rxas_flow_procedure_instruction(
+                            service->procedure, service->metrics.epoch,
+                            node.defining_instruction);
+            producer_record = producer ? rxas_flow_procedure_record(
+                    service->procedure, service->metrics.epoch,
+                    producer->record_id) : 0;
+            producer_item = producer_record
+                    ? producer_record->queue_record : 0;
+            if (!producer || !producer->op || !producer_item ||
+                producer->op->opcode != OP_SETOBJTYPE_REG_STRING ||
+                producer_item->operandCount != 2 ||
+                producer->signal.state != RXOP_SIGNAL_STATE_NONE ||
+                rxop_component_writes(producer->op->opcode, 0) !=
+                        RXOP_COMPONENT_ATTRIBUTES ||
+                (candidate_kind == FLOW_PROOF_GUARD_TYPE &&
+                 !flow_proof_same_constant(
+                         flow_proof_operand(producer_item, 1),
+                         flow_proof_operand(candidate_item, 1))))
+                return FLOW_PROOF_VALUE_MULTIPLE;
+            leaf_count++;
+            if (leaf_count == 1) {
+                result->generator_instruction = producer->id;
+                result->result_value_id = node.id;
+                result->result_kind = node.kind;
+            }
+            else {
+                result->generator_instruction = RXAS_FLOW_ID_NONE;
+                result->result_value_id = RXAS_FLOW_ID_NONE;
+            }
+        }
+    }
+    return leaf_count ? FLOW_PROOF_VALUE_UNIQUE
+                      : FLOW_PROOF_VALUE_UNAVAILABLE;
+}
+
+static int flow_proof_guard_direct_producer(
+        RxasFlowProofService *service,
+        const RxasFlowInstruction *candidate,
+        const instruction_queue *candidate_item,
+        FlowProofGuardKind candidate_kind, RxasFlowProofResult *result) {
+    RxasFlowRegister candidate_register;
+    RxasFlowComponentFact candidate_fact;
+    size_t defining_instruction;
+    FlowProofValueWalkResult walk;
+    const Assembler_Token *first;
+    const Assembler_Token *second;
+    const Assembler_Token *third;
+    rxinteger value;
+    rxinteger lower;
+    rxinteger upper;
+    rxinteger offset_value;
+    rxinteger width_value;
+    size_t binary_length;
+    size_t offset;
+    size_t width;
+    if (candidate_kind == FLOW_PROOF_GUARD_INTEGER_RANGE) {
+        if (!flow_proof_guard_constant_token(
+                    service, candidate->id,
+                    flow_proof_operand(candidate_item, 0),
+                    RXOP_COMPONENT_INTEGER, INT, &first,
+                    &defining_instruction) ||
+            !flow_proof_guard_constant_token(
+                    service, candidate->id,
+                    flow_proof_operand(candidate_item, 1),
+                    RXOP_COMPONENT_INTEGER, INT, &second, 0) ||
+            !flow_proof_guard_constant_token(
+                    service, candidate->id,
+                    flow_proof_operand(candidate_item, 2),
+                    RXOP_COMPONENT_INTEGER, INT, &third, 0))
+            return 0;
+        value = first->token_value.integer;
+        lower = second->token_value.integer;
+        upper = third->token_value.integer;
+        if (value < lower || value > upper) return 0;
+        result->generator_instruction = defining_instruction;
+        return 1;
+    }
+    if (candidate_kind == FLOW_PROOF_GUARD_BINARY_RANGE) {
+        if (!flow_proof_guard_constant_token(
+                    service, candidate->id,
+                    flow_proof_operand(candidate_item, 1),
+                    RXOP_COMPONENT_INTEGER, INT, &second, 0) ||
+            !flow_proof_guard_constant_token(
+                    service, candidate->id,
+                    flow_proof_operand(candidate_item, 2),
+                    RXOP_COMPONENT_INTEGER, INT, &third, 0))
+            return 0;
+        offset_value = second->token_value.integer;
+        width_value = third->token_value.integer;
+        /* [0,0) is valid for every binary value, including empty values, so
+         * it needs no payload producer fact. */
+        if (offset_value == 0 && width_value == 0) return 1;
+        if (!flow_proof_guard_constant_token(
+                    service, candidate->id,
+                    flow_proof_operand(candidate_item, 0),
+                    RXOP_COMPONENT_BINARY, HEX, &first,
+                    &defining_instruction) ||
+            first->length < 2 || offset_value < 0 || width_value < 0 ||
+            (uintmax_t)offset_value > (uintmax_t)SIZE_MAX ||
+            (uintmax_t)width_value > (uintmax_t)SIZE_MAX)
+            return 0;
+        binary_length = (first->length - 2) / 2;
+        offset = (size_t)offset_value;
+        width = (size_t)width_value;
+        if (offset > binary_length || width > binary_length - offset)
+            return 0;
+        result->generator_instruction = defining_instruction;
+        return 1;
+    }
+    if (candidate_kind != FLOW_PROOF_GUARD_INITIALIZED &&
+        candidate_kind != FLOW_PROOF_GUARD_TYPE)
+        return 0;
+    if (!flow_proof_register(
+                flow_proof_operand(candidate_item, 0),
+                &candidate_register) ||
+        !rxas_flow_component_at_instruction(
+                service->ssa, service->metrics.epoch, candidate->id, 0,
+                candidate_register, RXOP_COMPONENT_ATTRIBUTES,
+                &candidate_fact))
+        return 0;
+    result->storage_id = candidate_fact.storage_id;
+    result->source_value_id = candidate_fact.value_id;
+    result->source_kind = candidate_fact.kind;
+    walk = flow_proof_guard_type_producer_leaves(
+            service, candidate_fact.value_id, candidate_item,
+            candidate_kind, result);
+    return walk == FLOW_PROOF_VALUE_UNIQUE;
+}
+
+static int flow_proof_guard_integer_bound_covers(
+        RxasFlowProofService *service,
+        size_t generator_instruction, const Assembler_Token *generator_token,
+        size_t candidate_instruction, const Assembler_Token *candidate_token,
+        int lower_bound) {
+    FlowProofValueWalkResult walk;
+    if (generator_token && candidate_token &&
+        generator_token->token_type == INT &&
+        candidate_token->token_type == INT)
+        return lower_bound
+                ? generator_token->token_value.integer >=
+                        candidate_token->token_value.integer
+                : generator_token->token_value.integer <=
+                        candidate_token->token_value.integer;
+    walk = flow_proof_guard_operand_equivalent(
+            service, generator_instruction, generator_token,
+            candidate_instruction, candidate_token,
+            RXOP_COMPONENT_INTEGER, 0, 0);
+    return walk == FLOW_PROOF_VALUE_UNIQUE;
+}
+
+int rxas_flow_successful_guard_key(
+        const RxasFlowProofService *const_service,
+        unsigned long expected_epoch, size_t instruction_id,
+        RxasFlowSuccessfulGuardKey *key) {
+    RxasFlowProofService *service;
+    const RxasFlowInstruction *instruction;
+    const RxasFlowRecord *record;
+    const instruction_queue *item;
+    const Assembler_Token *primary;
+    FlowProofGuardKind guard_kind;
+    RxasFlowRegister reg;
+    RxasFlowComponentFact fact;
+    RxasFlowValueNode leaf;
+    FlowProofValueWalkResult walk;
+    size_t leaf_id;
+    unsigned int component;
+    if (!key) return 0;
+    memset(key, 0, sizeof(*key));
+    if (!flow_proof_valid(const_service, expected_epoch) ||
+        !flow_proof_has_capabilities(
+                const_service, FLOW_PROOF_BASE_CAPABILITIES))
+        return 0;
+    service = (RxasFlowProofService *)const_service;
+    if (!flow_proof_consume(service, 1)) return 0;
+    instruction = rxas_flow_procedure_instruction(
+            service->procedure, expected_epoch, instruction_id);
+    record = instruction ? rxas_flow_procedure_record(
+            service->procedure, expected_epoch, instruction->record_id) : 0;
+    item = record ? record->queue_record : 0;
+    if (!flow_proof_guard_exact_shape(instruction, item, &guard_kind))
+        return 1;
+    key->family = (int)guard_kind;
+    primary = flow_proof_operand(item, 0);
+    if (guard_kind == FLOW_PROOF_GUARD_INTEGER_RANGE && primary &&
+        primary->token_type == INT) {
+        key->kind = RXAS_FLOW_GUARD_KEY_INTEGER;
+        key->integer_value = primary->token_value.integer;
+        return 1;
+    }
+    component = guard_kind == FLOW_PROOF_GUARD_INITIALIZED ||
+                guard_kind == FLOW_PROOF_GUARD_TYPE
+            ? RXOP_COMPONENT_ATTRIBUTES
+            : guard_kind == FLOW_PROOF_GUARD_BINARY_RANGE
+                    ? RXOP_COMPONENT_BINARY
+                    : RXOP_COMPONENT_INTEGER;
+    if (!flow_proof_register(primary, &reg) ||
+        !rxas_flow_component_at_instruction(
+                service->ssa, expected_epoch, instruction_id, 0,
+                reg, component, &fact))
+        return 1;
+    walk = flow_proof_unique_value_leaf(
+            service, fact.value_id, &leaf_id, &leaf);
+    if (walk != FLOW_PROOF_VALUE_UNIQUE) return 1;
+    if (component == RXOP_COMPONENT_INTEGER &&
+        leaf.kind == RXAS_FLOW_VALUE_CONSTANT && leaf.constant_token &&
+        leaf.constant_token->token_type == INT) {
+        key->kind = RXAS_FLOW_GUARD_KEY_INTEGER;
+        key->integer_value = leaf.constant_token->token_value.integer;
+        return 1;
+    }
+    key->kind = RXAS_FLOW_GUARD_KEY_VALUE;
+    key->value_id = leaf_id;
+    return 1;
+}
+
+int rxas_flow_prove_redundant_successful_guard(
+        const RxasFlowProofService *const_service,
+        unsigned long expected_epoch, size_t generator_instruction,
+        size_t candidate_instruction, RxasFlowProofResult *result) {
+    RxasFlowProofService *service;
+    const RxasFlowInstruction *generator;
+    const RxasFlowInstruction *candidate;
+    const RxasFlowRecord *generator_record;
+    const RxasFlowRecord *candidate_record;
+    const instruction_queue *generator_item;
+    const instruction_queue *candidate_item;
+    FlowProofGuardKind generator_kind;
+    FlowProofGuardKind candidate_kind;
+    FlowProofValueWalkResult walk;
+    size_t operand;
+    unsigned int component;
+    if (!result) return 0;
+    flow_proof_result_init(result, RXAS_FLOW_PROOF_STALE_EPOCH);
+    result->generator_instruction = generator_instruction;
+    result->candidate_instruction = candidate_instruction;
+    if (!flow_proof_query_available(
+                const_service, expected_epoch, result)) return 1;
+    service = (RxasFlowProofService *)const_service;
+    service->metrics.successful_guard_queries++;
+    if (!flow_proof_consume(service, 2)) {
+        result->reason = RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
+        goto complete;
+    }
+    candidate = rxas_flow_procedure_instruction(
+            service->procedure, expected_epoch, candidate_instruction);
+    candidate_record = candidate ? rxas_flow_procedure_record(
+            service->procedure, expected_epoch, candidate->record_id) : 0;
+    candidate_item = candidate_record ? candidate_record->queue_record : 0;
+    if (!flow_proof_guard_exact_shape(
+                candidate, candidate_item, &candidate_kind)) {
+        result->reason = RXAS_FLOW_PROOF_NOT_EXACT_SUCCESSFUL_GUARD;
+        goto complete;
+    }
+    if (generator_instruction == RXAS_FLOW_ID_NONE) {
+        if (flow_proof_guard_direct_producer(
+                    service, candidate, candidate_item,
+                    candidate_kind, result)) {
+            result->proved = 1;
+            result->reason = RXAS_FLOW_PROOF_PROVED;
+        }
+        else result->reason = RXAS_FLOW_PROOF_GUARD_NOT_COVERED;
+        goto complete;
+    }
+    generator = rxas_flow_procedure_instruction(
+            service->procedure, expected_epoch, generator_instruction);
+    generator_record = generator ? rxas_flow_procedure_record(
+            service->procedure, expected_epoch, generator->record_id) : 0;
+    generator_item = generator_record ? generator_record->queue_record : 0;
+    if (!flow_proof_guard_exact_shape(
+                generator, generator_item, &generator_kind) ||
+        generator_kind != candidate_kind) {
+        result->reason = RXAS_FLOW_PROOF_NOT_EXACT_SUCCESSFUL_GUARD;
+        goto complete;
+    }
+    if (candidate_kind == FLOW_PROOF_GUARD_TYPE &&
+        !flow_proof_same_constant(
+                flow_proof_operand(generator_item, 1),
+                flow_proof_operand(candidate_item, 1))) {
+        result->reason = RXAS_FLOW_PROOF_GUARD_NOT_COVERED;
+        goto complete;
+    }
+    if (candidate_kind == FLOW_PROOF_GUARD_INTEGER_RANGE) {
+        walk = flow_proof_guard_operand_equivalent(
+                service, generator_instruction,
+                flow_proof_operand(generator_item, 0),
+                candidate_instruction,
+                flow_proof_operand(candidate_item, 0),
+                RXOP_COMPONENT_INTEGER, 0, 0);
+        if (walk != FLOW_PROOF_VALUE_UNIQUE ||
+            !flow_proof_guard_integer_bound_covers(
+                    service, generator_instruction,
+                    flow_proof_operand(generator_item, 1),
+                    candidate_instruction,
+                    flow_proof_operand(candidate_item, 1), 1) ||
+            !flow_proof_guard_integer_bound_covers(
+                    service, generator_instruction,
+                    flow_proof_operand(generator_item, 2),
+                    candidate_instruction,
+                    flow_proof_operand(candidate_item, 2), 0)) {
+            result->reason = RXAS_FLOW_PROOF_GUARD_NOT_COVERED;
+            goto complete;
+        }
+    }
+    else {
+        for (operand = 0; operand < candidate_item->operandCount; operand++) {
+            if (candidate_kind == FLOW_PROOF_GUARD_TYPE && operand == 1)
+                continue;
+            component = candidate_kind == FLOW_PROOF_GUARD_BINARY_RANGE &&
+                        operand == 0
+                    ? RXOP_COMPONENT_BINARY
+                    : candidate_kind == FLOW_PROOF_GUARD_INITIALIZED ||
+                      candidate_kind == FLOW_PROOF_GUARD_TYPE
+                            ? RXOP_COMPONENT_ATTRIBUTES
+                            : RXOP_COMPONENT_INTEGER;
+            walk = flow_proof_guard_operand_equivalent(
+                    service, generator_instruction,
+                    flow_proof_operand(generator_item, operand),
+                    candidate_instruction,
+                    flow_proof_operand(candidate_item, operand),
+                    component, 0, 0);
+            if (walk != FLOW_PROOF_VALUE_UNIQUE) {
+                result->reason = RXAS_FLOW_PROOF_GUARD_NOT_COVERED;
+                goto complete;
+            }
+        }
+    }
+    /* Value coverage is normally much sparser than CFG dominance.  Establish
+     * it first so unrelated guards do not trigger a whole-graph success-edge
+     * walk.  No edit is planned until both proofs succeed. */
+    if (!flow_proof_instruction_dominates(service, generator, candidate)) {
+        result->reason = RXAS_FLOW_PROOF_NOT_DOMINATED;
+        goto complete;
+    }
+    if (!flow_proof_guard_success_dominates(
+                service, generator, candidate)) {
+        result->reason = RXAS_FLOW_PROOF_SUCCESS_EDGE_NOT_DOMINATING;
+        goto complete;
+    }
+    result->proved = 1;
+    result->reason = RXAS_FLOW_PROOF_PROVED;
+
+complete:
+    if (!result->proved &&
+        service->metrics.status == RXAS_FLOW_ANALYSIS_BUDGET_EXHAUSTED)
+        result->reason = RXAS_FLOW_PROOF_BUDGET_EXHAUSTED;
+    if (result->proved) service->metrics.successful_guard_proved++;
+    else service->metrics.successful_guard_rejected++;
     return 1;
 }
 
@@ -7392,6 +8000,10 @@ const char *rxas_flow_proof_reason_name(RxasFlowProofReason reason) {
         case RXAS_FLOW_PROOF_NOT_MUST_EXECUTE: return "not-must-execute";
         case RXAS_FLOW_PROOF_NOT_SPECULATABLE: return "not-speculatable";
         case RXAS_FLOW_PROOF_NOT_INVARIANT: return "not-invariant";
+        case RXAS_FLOW_PROOF_NOT_EXACT_SUCCESSFUL_GUARD:
+            return "not-exact-successful-guard";
+        case RXAS_FLOW_PROOF_GUARD_NOT_COVERED:
+            return "guard-not-covered";
     }
     return "invalid";
 }
@@ -7493,6 +8105,7 @@ int rxas_flow_proof_dump(const RxasFlowProofService *service,
             "joined-key-reuse=%llu/%llu rejected=%llu "
             "trace-deletions=%llu preheader=%llu "
             "string-literal-reuse=%llu/%llu rejected=%llu rewrites=%llu "
+            "successful-guard=%llu/%llu rejected=%llu "
             "success-edge=%llu loop=%llu ssa-bytes=%llu ssa-values=%llu "
             "ssa-storages=%llu\n",
             service->metrics.epoch,
@@ -7560,6 +8173,9 @@ int rxas_flow_proof_dump(const RxasFlowProofService *service,
                     service->metrics.string_literal_reuse_rejected,
             (unsigned long long)
                     service->metrics.string_literal_operand_rewrites,
+            (unsigned long long)service->metrics.successful_guard_proved,
+            (unsigned long long)service->metrics.successful_guard_queries,
+            (unsigned long long)service->metrics.successful_guard_rejected,
             (unsigned long long)service->metrics.success_edge_queries,
             (unsigned long long)service->metrics.loop_queries,
             (unsigned long long)(ssa_metrics

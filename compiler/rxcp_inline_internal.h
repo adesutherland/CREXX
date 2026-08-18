@@ -143,6 +143,12 @@ typedef enum {
 } InlineReferenceAccessorKind;
 
 typedef enum {
+    INLINE_SCALAR_ACCESSOR_NONE = 0,
+    INLINE_SCALAR_ACCESSOR_GETTER,
+    INLINE_SCALAR_ACCESSOR_SETTER
+} InlineScalarAccessorKind;
+
+typedef enum {
     INLINE_ELIGIBILITY_OK = 0,
     INLINE_ELIGIBILITY_MISSING_ARGS_OR_INSTRS,
     INLINE_ELIGIBILITY_MISSING_INSTRS,
@@ -181,7 +187,13 @@ typedef enum {
 typedef struct {
     Context *context;
     int changed;
+    int exact_scalar_accessors_only;
 } InlineWalkerPayload;
+
+typedef struct {
+    Context *context;
+    int quiet;
+} InlineEligibilityWalkerPayload;
 
 const char *inline_debug_push_remap_rule(const char *rule_id);
 void inline_debug_pop_remap_rule(const char *previous);
@@ -195,6 +207,7 @@ const RxcpRemapHooks *rxcp_inline_remap_trace_hooks(void);
 
 int inline_node_is_inlineable_call(ASTNode *node, Symbol **proc_sym_out);
 int inline_rhs_eager_operator_needs_left_capture(ASTNode *node);
+InlineScalarAccessorKind inline_exact_scalar_accessor_kind(ASTNode *callable);
 
 int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_node, Symbol *proc_sym);
 int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Symbol *proc_sym);

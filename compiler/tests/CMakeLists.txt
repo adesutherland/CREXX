@@ -3305,6 +3305,22 @@ set_tests_properties(inline_reference_accessors_import_opt PROPERTIES
         LABELS "linked_opt;reference;receiver;imports"
         FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 
+add_test(NAME inline_scalar_accessors_import_opt
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DDEP_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_scalar_accessors_dep.crexx
+                 -DMAIN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_scalar_accessors_main.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_scalar_accessors_import_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_scalar_accessors_import_opt.cmake)
+set_tests_properties(inline_scalar_accessors_import_opt PROPERTIES
+        LABELS "linked_opt;scalar-access;receiver;signals;interfaces;imports"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
 set(INLINE_COMPUTED_RECEIVER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_test_computed_receiver_copyback_opt_rewrites.cmake")
 set(INLINE_COMPUTED_RECEIVER_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_test_computed_receiver_copyback_opt_ws\")\n")
 string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")

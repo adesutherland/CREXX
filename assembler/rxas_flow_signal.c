@@ -1055,136 +1055,259 @@ static int flow_policy_fact_equal(const RxasFlowPolicyFact *left,
     return left->version_id == right->version_id;
 }
 
-/* Returns 1 for a fact, 2 for a pure phi-cycle with no external definition,
- * and 0 for invalid input.  Treating the cycle as deferred (rather than as an
- * immediate clobber) proves loop-invariant policies while still merging every
- * write that enters the cycle. */
-static int flow_signal_resolve_policy(
+static int flow_signal_policy_delegates(
+        const FlowPolicyVersion *version, const char *signal_name) {
+    return version && version->kind == FLOW_POLICY_WRITE &&
+           (!flow_signal_name_equal(version->name, signal_name) ||
+            version->effect == RXOP_POLICY_EFFECT_PUSH);
+}
+
+/* Evaluate one immutable policy version from the currently resolved inputs.
+ * An unresolved input is a deferred phi-cycle member.  Ignoring it while
+ * merging the external facts preserves the previous loop fixed-point rule;
+ * dependants are revisited if that input later resolves. */
+static int flow_signal_evaluate_policy(
         const RxasFlowSignalAnalysis *analysis, size_t version_id,
-        const char *signal_name, unsigned char *visiting,
-        RxasFlowPolicyFact *fact) {
+        const char *signal_name, const unsigned char *resolved,
+        const RxasFlowPolicyFact *facts, RxasFlowPolicyFact *fact) {
     const FlowPolicyVersion *version;
-    int result;
+    size_t input_index;
+    int have_fact;
     if (version_id >= analysis->policy_version_count) return 0;
-    if (visiting[version_id]) return 2;
-    visiting[version_id] = 1;
     version = &analysis->policy_versions[version_id];
     memset(fact, 0, sizeof(*fact));
     fact->version_id = version_id;
     fact->defining_instruction = RXAS_FLOW_ID_NONE;
     if (version->kind == FLOW_POLICY_ENTRY) {
         fact->state = RXAS_FLOW_POLICY_INHERITED_UNKNOWN;
-        result = 1;
+        return 1;
     }
-    else if (version->kind == FLOW_POLICY_CLOBBER) {
+    if (version->kind == FLOW_POLICY_CLOBBER) {
         fact->state = RXAS_FLOW_POLICY_CLOBBERED;
-        result = 1;
+        return 1;
     }
-    else if (version->kind == FLOW_POLICY_WRITE) {
-        if (!flow_signal_name_equal(version->name, signal_name))
-            result = flow_signal_resolve_policy(
-                    analysis, version->parent, signal_name, visiting, fact);
-        else if (version->effect == RXOP_POLICY_EFFECT_PUSH)
-            result = flow_signal_resolve_policy(
-                    analysis, version->parent, signal_name, visiting, fact);
-        else if (version->effect == RXOP_POLICY_EFFECT_POP) {
+    if (version->kind == FLOW_POLICY_WRITE) {
+        if (flow_signal_policy_delegates(version, signal_name)) {
+            if (version->parent >= analysis->policy_version_count ||
+                !resolved[version->parent])
+                return 0;
+            *fact = facts[version->parent];
+            return 1;
+        }
+        if (version->effect == RXOP_POLICY_EFFECT_POP) {
             fact->state = RXAS_FLOW_POLICY_STACK_UNKNOWN;
             fact->effect = version->effect;
             fact->defining_instruction = version->instruction_id;
-            result = 1;
+            return 1;
         }
-        else if (version->effect ==
-                 RXOP_POLICY_EFFECT_BREAKPOINT_ENABLE_EXISTING) {
+        if (version->effect ==
+            RXOP_POLICY_EFFECT_BREAKPOINT_ENABLE_EXISTING) {
             fact->state = RXAS_FLOW_POLICY_MERGED_UNKNOWN;
             fact->effect = version->effect;
             fact->defining_instruction = version->instruction_id;
-            result = 1;
+            return 1;
         }
-        else {
-            fact->state = RXAS_FLOW_POLICY_EXACT;
-            fact->effect = version->effect;
-            fact->defining_instruction = version->instruction_id;
-            result = 1;
-        }
+        fact->state = RXAS_FLOW_POLICY_EXACT;
+        fact->effect = version->effect;
+        fact->defining_instruction = version->instruction_id;
+        return 1;
     }
-    else {
-        RxasFlowPolicyFact merged;
-        int have_fact;
-        int saw_cycle;
-        size_t input_index;
-        have_fact = 0;
-        saw_cycle = 0;
-        memset(&merged, 0, sizeof(merged));
-        for (input_index = 0; input_index < version->input_count;
-             input_index++) {
-            RxasFlowPolicyFact input_fact;
-            size_t input_version;
-            int input_result;
-            input_version = analysis->policy_phi_inputs[
-                    version->input_offset + input_index];
-            input_result = flow_signal_resolve_policy(
-                    analysis, input_version, signal_name, visiting,
-                    &input_fact);
-            if (input_result == 2) {
-                saw_cycle = 1;
-                continue;
-            }
-            if (!input_result) {
-                visiting[version_id] = 0;
-                return 0;
-            }
-            if (!have_fact) {
-                merged = input_fact;
-                have_fact = 1;
-            }
-            else if (!flow_policy_fact_equal(&merged, &input_fact)) {
-                fact->state = RXAS_FLOW_POLICY_MERGED_UNKNOWN;
-                fact->version_id = version_id;
-                result = 1;
-                visiting[version_id] = 0;
-                return result;
-            }
+    if (version->kind != FLOW_POLICY_PHI) return 0;
+    have_fact = 0;
+    for (input_index = 0; input_index < version->input_count;
+         input_index++) {
+        size_t input_version;
+        input_version = analysis->policy_phi_inputs[
+                version->input_offset + input_index];
+        if (input_version >= analysis->policy_version_count) return 0;
+        if (!resolved[input_version]) continue;
+        if (!have_fact) {
+            *fact = facts[input_version];
+            have_fact = 1;
         }
-        if (!have_fact && saw_cycle) result = 2;
-        else if (!have_fact) {
+        else if (!flow_policy_fact_equal(fact, &facts[input_version])) {
+            memset(fact, 0, sizeof(*fact));
             fact->state = RXAS_FLOW_POLICY_MERGED_UNKNOWN;
-            result = 1;
-        }
-        else {
-            *fact = merged;
-            if (fact->state == RXAS_FLOW_POLICY_EXACT &&
-                flow_policy_effect_is_constant(fact->effect)) {
-                fact->version_id = version_id;
-                fact->defining_instruction = RXAS_FLOW_ID_NONE;
-            }
-            result = 1;
+            fact->version_id = version_id;
+            fact->defining_instruction = RXAS_FLOW_ID_NONE;
+            return 1;
         }
     }
-    visiting[version_id] = 0;
-    return result;
+    if (!have_fact) return 0;
+    if (fact->state == RXAS_FLOW_POLICY_EXACT &&
+        flow_policy_effect_is_constant(fact->effect)) {
+        fact->version_id = version_id;
+        fact->defining_instruction = RXAS_FLOW_ID_NONE;
+    }
+    return 1;
 }
 
 static int flow_signal_policy_query(
         const RxasFlowSignalAnalysis *analysis, size_t version_id,
         const char *signal_name, RxasFlowPolicyFact *fact) {
-    unsigned char *visiting;
-    int result;
+    RxasFlowPolicyFact *facts;
+    unsigned char *queued;
+    unsigned char *resolved;
+    size_t *dependency_counts;
+    size_t *dependency_offsets;
+    size_t *dependency_cursors;
+    size_t *dependants;
+    size_t *queue;
+    size_t dependency_count;
+    size_t head;
+    size_t tail;
+    size_t queued_count;
+    size_t version_count;
+    size_t current;
+    size_t dependant;
+    size_t offset;
+    size_t work;
+    size_t work_limit;
+    int ok;
     if (!signal_name || !fact || version_id >= analysis->policy_version_count)
         return 0;
-    visiting = calloc(analysis->policy_version_count
-                              ? analysis->policy_version_count : 1, 1);
-    if (!visiting) return 0;
-    result = flow_signal_resolve_policy(
-            analysis, version_id, signal_name, visiting, fact);
-    free(visiting);
-    if (result == 2) {
+    version_count = analysis->policy_version_count;
+    facts = calloc(version_count, sizeof(*facts));
+    queued = calloc(version_count, 1);
+    resolved = calloc(version_count, 1);
+    dependency_counts = calloc(version_count, sizeof(*dependency_counts));
+    dependency_offsets = calloc(version_count + 1,
+                                sizeof(*dependency_offsets));
+    dependency_cursors = calloc(version_count, sizeof(*dependency_cursors));
+    queue = calloc(version_count, sizeof(*queue));
+    dependants = 0;
+    ok = facts && queued && resolved && dependency_counts &&
+         dependency_offsets && dependency_cursors && queue;
+    dependency_count = 0;
+    if (!ok) goto complete;
+
+    for (current = 0; current < version_count; current++) {
+        const FlowPolicyVersion *version;
+        version = &analysis->policy_versions[current];
+        if (flow_signal_policy_delegates(version, signal_name)) {
+            if (version->parent >= version_count ||
+                dependency_counts[version->parent] == (size_t)-1 ||
+                dependency_count == (size_t)-1) {
+                ok = 0;
+                goto complete;
+            }
+            dependency_counts[version->parent]++;
+            dependency_count++;
+        }
+        else if (version->kind == FLOW_POLICY_PHI) {
+            size_t input_index;
+            for (input_index = 0; input_index < version->input_count;
+                 input_index++) {
+                size_t input_version;
+                input_version = analysis->policy_phi_inputs[
+                        version->input_offset + input_index];
+                if (input_version >= version_count ||
+                    dependency_counts[input_version] == (size_t)-1 ||
+                    dependency_count == (size_t)-1) {
+                    ok = 0;
+                    goto complete;
+                }
+                dependency_counts[input_version]++;
+                dependency_count++;
+            }
+        }
+    }
+    dependants = calloc(dependency_count ? dependency_count : 1,
+                        sizeof(*dependants));
+    if (!dependants) {
+        ok = 0;
+        goto complete;
+    }
+    for (current = 0; current < version_count; current++) {
+        if (dependency_offsets[current] >
+            (size_t)-1 - dependency_counts[current]) {
+            ok = 0;
+            goto complete;
+        }
+        dependency_offsets[current + 1] =
+                dependency_offsets[current] + dependency_counts[current];
+        dependency_cursors[current] = dependency_offsets[current];
+    }
+    for (current = 0; current < version_count; current++) {
+        const FlowPolicyVersion *version;
+        version = &analysis->policy_versions[current];
+        if (flow_signal_policy_delegates(version, signal_name)) {
+            dependants[dependency_cursors[version->parent]++] = current;
+        }
+        else if (version->kind == FLOW_POLICY_PHI) {
+            size_t input_index;
+            for (input_index = 0; input_index < version->input_count;
+                 input_index++) {
+                size_t input_version;
+                input_version = analysis->policy_phi_inputs[
+                        version->input_offset + input_index];
+                dependants[dependency_cursors[input_version]++] = current;
+            }
+        }
+    }
+
+    head = 0;
+    tail = 0;
+    queued_count = version_count;
+    for (current = 0; current < version_count; current++) {
+        queue[current] = current;
+        queued[current] = 1;
+    }
+    if (version_count > ((size_t)-1) - dependency_count - 1 ||
+        version_count + dependency_count + 1 > (size_t)-1 / 8) {
+        ok = 0;
+        goto complete;
+    }
+    work_limit = (version_count + dependency_count + 1) * 8;
+    work = 0;
+    while (queued_count) {
+        RxasFlowPolicyFact next_fact;
+        int next_resolved;
+        int changed;
+        if (++work > work_limit) {
+            ok = 0;
+            goto complete;
+        }
+        current = queue[head];
+        head = (head + 1) % version_count;
+        queued_count--;
+        queued[current] = 0;
+        next_resolved = flow_signal_evaluate_policy(
+                analysis, current, signal_name, resolved, facts,
+                &next_fact);
+        changed = next_resolved &&
+                  (!resolved[current] ||
+                   !flow_policy_fact_equal(&facts[current], &next_fact));
+        if (!changed) continue;
+        resolved[current] = 1;
+        facts[current] = next_fact;
+        for (offset = dependency_offsets[current];
+             offset < dependency_offsets[current + 1]; offset++) {
+            dependant = dependants[offset];
+            if (queued[dependant]) continue;
+            queue[tail] = dependant;
+            tail = (tail + 1) % version_count;
+            queued[dependant] = 1;
+            queued_count++;
+        }
+    }
+    if (resolved[version_id]) *fact = facts[version_id];
+    else {
         memset(fact, 0, sizeof(*fact));
         fact->state = RXAS_FLOW_POLICY_MERGED_UNKNOWN;
         fact->version_id = version_id;
         fact->defining_instruction = RXAS_FLOW_ID_NONE;
-        result = 1;
     }
-    return result == 1;
+complete:
+    free(facts);
+    free(queued);
+    free(resolved);
+    free(dependency_counts);
+    free(dependency_offsets);
+    free(dependency_cursors);
+    free(dependants);
+    free(queue);
+    return ok;
 }
 
 int rxas_flow_policy_at_instruction(

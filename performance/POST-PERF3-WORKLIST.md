@@ -1,6 +1,6 @@
 # Post-PERF3 performance worklist
 
-Status: **active — POSTPERF-04 generic scalar-access proof**
+Status: **active — POSTPERF-05 bounded hoisting, register finalisation and late inlining**
 
 Started: 2026-08-17
 
@@ -19,8 +19,8 @@ mandatory first ordinary-Release verdict in `performance/AGENTS.md`.
 | POSTPERF-01 | Full AWFY Json | complete | Exact upstream payload and verification contract; opt/no-opt product and concrete-VM qualification; retained source/RXAS/RXBIN evidence; docs and local commit |
 | POSTPERF-02 | DeltaBlue and CD | complete | Both pinned upstream ports qualified with stable indexed identity/container adaptations; neither is promoted to Tier A or any aggregate |
 | POSTPERF-03 | Havlak | complete | Pinned upstream port qualified after POSTPERF-02 foundations; retained as a separate large-graph lane |
-| POSTPERF-04 | Generic final/concrete scalar accessor proof | active | Hand-equivalent ceiling and generic proof across the expanded suite; any production candidate gets a separate mandatory first Release verdict |
-| POSTPERF-05 | Bounded hoisting, register finalisation and late inlining | pending | Evidence ranks bounded consumers; select at most one production candidate at a time and apply the mandatory verdict gate |
+| POSTPERF-04 | Generic final/concrete scalar accessor proof | complete | G1 plus four-family RXAS guard proof accepted; 266/266 verdict processes and 2,249/2,249 final Debug tests pass; accepted assembler lifecycle trade-off retained |
+| POSTPERF-05 | Bounded hoisting, register finalisation and late inlining | active next | Evidence ranks bounded consumers; select at most one production candidate at a time and apply the mandatory verdict gate |
 
 ## Standing boundaries
 
@@ -310,41 +310,183 @@ decision input.
 The generic final/concrete scalar-access proof remains the stage owner. Havlak
 adds the following bounded decision input; it is not production authorization.
 
-### `POSTPERF-04-PACKED-01` — aligned native `rxinteger` read
+### Numbered proof plan
 
-Hypothesis: current `<at..i64>` sequential reads lose to normal `.int[]`
-because `BGETI64` repeats byte-range validation and raw signed conversion while
-the source loop also advances a separate byte offset. The canonical
-little-endian binary contract is compile-time selected on the current Mac; it
-does not perform a runtime endian test.
+1. Recreate the CRI-13 concrete packed-wrapper getter/setter on the current
+   compiler and retain current call/inlining/generated-code attribution.
+2. Add normal `.int`/`.float` scalar-attribute controls so the result is not
+   binary-, JSON- or numeric-width-specific. Compare ordinary accessors with an
+   exact hand-equivalent direct ceiling.
+3. Prove the semantic matrix: receiver initialization and evaluate-once
+   identity, direct versus computed receiver, concrete versus interface
+   dispatch, writable receiver copyback and by-value isolation, bounds and
+   signals, source/TRACE identity, optimized/no-opt, source/binary imports and
+   both concrete VMs.
+4. Retain current `<at..i64>`/`<at..f32>` direct and wrapper forms as controls
+   for generic accessor overhead. Record their current byte-addressed cost and
+   generated code without redesigning binary storage, indexing or syntax in
+   this stage.
+5. Rank the generic production approaches from retained correctness,
+   generated-code and ordinary profiling-off Release evidence. Stop before a
+   production edit if no approach reaches the machine ceiling or if public
+   syntax, RXBIN, ABI or architecture must change.
 
-Compare these forms before selecting any production edit:
+### Generic accessor design selection
 
-1. Status quo `BGETI64` with canonical little-endian, range and signed
-   conversion contracts.
-2. Compile-time native signed-64 conversion when `rxinteger` is proved
-   8-byte two's-complement, retaining ordinary range validation.
-3. Compiler-selected aligned-native access when buffer-base alignment,
-   `offset mod 8 = 0` and host representation are proved. Treat bounds proof
-   and loop hoisting as a separate, composable fact.
-4. An explicitly selectable aligned `rxinteger` accessor or view. Check base
-   alignment, total extent, element bounds and compatible signed-64 host
-   representation once, then admit direct indexed reads/writes without
-   per-element endian or signed conversion. Its backing store may be `.binary`
-   or a future packed-integer container; the proof must not assume the storage
-   decision. Public syntax remains open.
-5. An unchecked public native-endian/native-width array is not selected. It
-   would require a separate language/safety decision.
+Compare these approaches before any production compiler edit:
 
-The machine-level ceiling is one proved aligned 64-bit load into the result
-register plus loop arithmetic; the C implementation must remain alias-safe
-(for example a `memcpy` form that the compiler lowers to that load). Preserve
-the existing portable fallback and signal behavior for every unproved site.
-Adrian selected the aligned `rxinteger` path for inclusion in the proof on
-2026-08-17, but not its syntax or implementation. Any production candidate
-must first pass the mandatory focused correctness and ordinary profiling-off
-Release verdict; canonical RXBIN, public ABI and source semantics remain
-unchanged unless Adrian separately approves an architecture decision.
+1. **G0 — status quo.** Preserve the ordinary resolved method call or current
+   generic inliner output. This is the correctness baseline.
+2. **G1 — exact accessor lowering.** For a mathematically recognized
+   monomorphic scalar getter/setter, lower the already-proved receiver and
+   attribute operation directly while preserving initialization, evaluate-once
+   and copyback/signal/TRACE contracts. The proof must be type-generic; the
+   operation may not name JSON, vectors or a numeric width.
+3. **G2 — generic inliner/result finalisation.** Improve receiver/formal/result
+   placement so the ordinary inliner reaches the same direct ceiling without a
+   separate accessor rewrite. Prefer this if it is equally fast and its proof
+   remains bounded.
+4. **G3 — new public or private accessor opcode.** Retain only as a comparison
+   if existing attribute/link/copy operations cannot reach the ceiling. No
+   opcode is selected, and any RXBIN or architecture change requires a separate
+   Adrian decision.
+
+### Opening proof and provisional selection
+
+The current optimized scalar-control image is 130,880 bytes (about 757 RXAS
+instructions), versus 118,945 bytes (about 707 instructions) without compiler
+optimization. The ordinary eight-pass inliner reaches the hot `.int` getter
+and setter and the hot `.float` getter, but exhausts its traversal before the
+hot `.float` setter and both packed controls. The inlined integer getter emits
+`linkattr1` plus `igetunlink`; the float getter emits
+`linkattr1`/`fcopy`/`unlink`; the integer setter reaches `isetattr1`; and the
+float setter remains an ordinary call. This is a traversal-budget result, not
+evidence that endian-aware packed access is critical.
+
+A bounded G2 comparison raised the global pass ceiling from 8 to 32 in an
+isolated compiler. It removes the later hot calls using the existing generic
+machinery, but grows the image to 161,493 bytes (about 924 instructions),
+continues to inline unrelated bodies and still leaves non-hot calls. That G2
+form is rejected: one counter currently conflates nesting depth with progress
+over independent sites.
+
+G1 is the provisional production choice. Recognize only exact monomorphic
+register-scalar methods: a getter is one final return of one receiver-owned
+scalar attribute; a setter is one required by-value scalar formal assigned to
+the same-typed receiver attribute followed by a void return. Boolean, integer
+and float share the rule; the POSTPERF-04 verdict must cover integer and float
+reads and writes together. Exact accessors receive a dedicated terminating
+rewrite lane before the ordinary bounded inliner. Every successful rewrite
+removes one exact accessor call and its body introduces no call, so this lane
+does not need a raised global fixed-point ceiling. It deliberately reuses the
+existing call-site validation, receiver capture, initialization, copyback,
+signal, source/TRACE and source/binary-template machinery. Packed `i64`/`f32`,
+strings, decimals, binary values, arrays, references, objects and non-exact
+method bodies remain on the ordinary path.
+
+G3 is not selected. Existing attribute/link/copy operations are sufficient to
+test the generic call-removal result without changing RXAS, RXBIN, the VM ABI
+or public language semantics. Any later single-instruction float-attribute
+form would be a separately approved architecture candidate, not part of this
+stage.
+
+The expected machine ceiling for a getter is one proved receiver-owned scalar
+load into the consumer result; for a setter it is one proved scalar store plus
+only the copyback required by the language's receiver ownership. Allocation,
+selector lookup, a per-element call, general recursive copy, repeated receiver
+initialization or attribute search fails the ceiling.
+
+### Qualification checklist
+
+- [x] Retain the current CRI-13 wrapper reproduction and a current live target
+      in the expanded benchmark suite.
+- [x] Retain normal scalar and packed f32/i64 hand-equivalent ceilings.
+- [x] Complete the receiver/dispatch/copyback/signal/TRACE/import semantic
+      matrix in optimized and no-opt forms under both concrete VMs.
+- [x] Retain the current packed `i64`/`f32` direct-versus-wrapper control and
+      transfer its separate typed-binary design questions to `BINARY-01`.
+- [x] Retain generated-code, dynamic-count where useful, exact commands, raw
+      Release samples and interpretation boundaries.
+- [x] Select, reject or defer G1/G2/G3 before any production edit.
+- [x] If a production edit is selected, run minimum focused correctness and
+      the mandatory first profiling-off Release verdict, report it to Adrian
+      and stop for direction.
+- [x] After an accepted verdict only, complete proportional QA, documentation
+      and a local commit before POSTPERF-05.
+
+### Packed controls and transferred `BINARY-01`
+
+POSTPERF-04 uses the existing `<at..i64>` and `<at..f32>` byte-addressed forms
+only as direct-versus-wrapper controls for the generic scalar-access proof. It
+may diagnose repeated range/conversion/offset cost, but it does not change the
+binary-memory language, storage invariant, instructions or runtime in this
+stage.
+
+The broader decision has transferred to central-roadmap item `BINARY-01` and
+does not block POSTPERF-04 or POSTPERF-05. Its decided direction is that
+`.binary` storage bases are aligned for supported native scalar payloads and a
+normal native typed route is indexed in whole elements. A separate raw route
+owns byte positions, fixed encodings and endian conversion.
+
+The byte/interchange route is separate and explicit. It owns zero-based byte
+positions, fixed encoded widths, selected endianness, conversion and boundary
+checks for files, protocols and wire formats. Encoded `.f32` remains distinct
+from native `.float`: it necessarily converts between binary32 storage and the
+VM's binary64 value.
+
+Resolve the following `BINARY-01` language decisions as one coherent decision
+before a production edit:
+
+1. **Element origin.** Select zero-based typed indexing, matching C and the
+   present raw-offset origin, or one-based typed indexing, matching cREXX arrays
+   and the rule that index 2 naturally denotes the second value. Element-size
+   scaling is decided; the origin is not.
+2. **Syntax ownership.** Compare retaining `<at..type>` for raw byte access and
+   adding a native-element spelling with repurposing `<at..type>` as the normal
+   native-element form and introducing a deliberately explicit raw/endian
+   spelling. The second option is a source-breaking change but may produce the
+   more coherent language.
+3. **Migration policy.** If `<at..type>` changes meaning, decide between a hard
+   pre-release break, a version/options-controlled transition, or a diagnostic
+   migration period. Do not silently reinterpret existing source.
+4. **Raw format expression.** The raw route must make byte position, encoded
+   width and endian policy unambiguous. Exact spelling remains open; the current
+   zero-based canonical-little-endian behaviour is the semantic compatibility
+   control, not a commitment to retain its syntax.
+
+Current packed-control hypothesis: `<at..i64>` sequential reads lose to normal
+`.int[]` because `BGETI64` repeats byte-range validation and raw signed
+conversion while the source loop advances a separate byte offset. The current
+canonical little-endian contract is compile-time selected on this Mac and does
+not perform a runtime endian test. POSTPERF-04 records that evidence only.
+
+### Closure verdict
+
+Adrian accepted G1 plus the four-family RXAS guard proof. All 266 first-verdict
+processes pass; no integrated accessor median reaches the 3% adverse guard and
+float writes improve by 32.75-35.41%. The final selected RXBIN is 42,518 bytes,
+2.07% above G0 and below both artifact guards. Complete Debug qualification is
+2,249/2,249 and the accepted Release RXBIN reproduces byte-for-byte.
+
+Broad QA also fixed an exponential signal-policy reverse resolver with a
+bounded worklist. The corrected assembler retains a formally adverse
+`httpcodec` lifecycle median of +8.104172% (about 17.5 ms) versus the retained
+pre-guard assembler. Adrian explicitly accepted that compile-time trade-off to
+retain the runtime result and close the stage. Evidence:
+[`2026-08-18-postperf-04-generic-scalar-access-first-release-verdict`](evidence/2026-08-18-postperf-04-generic-scalar-access-first-release-verdict/README.md).
+
+## POSTPERF-05 — bounded hoisting, register finalisation and late inlining
+
+Status: **active next; no production candidate selected**.
+
+Open this as one significant, evidence-ranked optimizer stage rather than a
+sequence of tiny edits. Reassess the expanded portfolio and retained PERF3
+lessons together, then choose one coherent bounded candidate spanning hoisting,
+register finalisation and late-inlining interactions. Hoisting must be examined
+early because it can materially change the code shape consumed by later guard,
+register and inline decisions. Keep RXC and RXAS ownership explicit, preserve
+signal/TRACE/debug identity, and stop the first selected production edit at the
+mandatory ordinary-Release verdict.
 
 ## Restart rule
 

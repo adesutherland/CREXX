@@ -97,6 +97,11 @@ typedef struct flow_stats {
     size_t redundant_loads_removed;
     size_t redundant_initializations_removed;
     size_t redundant_conversions_removed;
+    size_t successful_guards_removed;
+    size_t successful_guard_proof_queries;
+    size_t successful_guard_proof_proved;
+    size_t successful_guard_proof_rejected;
+    size_t successful_guard_proof_unavailable;
     size_t constant_proof_queries;
     size_t constant_proof_proved;
     size_t constant_proof_rejected;
@@ -476,6 +481,31 @@ static int flow_is_compare_opcode(int opcode) {
            (opcode >= OP_FEQ_REG_REG_REG && opcode <= OP_FLTE_REG_FLOAT_REG) ||
            (opcode >= OP_DEQ_REG_REG_REG && opcode <= OP_DLTE_REG_DECIMAL_REG) ||
            (opcode >= OP_BINEQ_REG_REG_REG && opcode <= OP_BINNE_REG_REG_BINARY);
+}
+
+static int flow_successful_guard_family(int opcode) {
+    if (opcode == OP_ASSERTINITIALIZED_REG) return 1;
+    if (opcode == OP_ASSERTTYPE_REG_STRING) return 2;
+    if (opcode >= OP_ICHKRNG_REG_INT_INT &&
+        opcode <= OP_ICHKRNG_INT_REG_REG) return 3;
+    if (opcode == OP_BCHECKRANGE_REG_REG_REG) return 4;
+    return 0;
+}
+
+typedef struct flow_successful_guard_entry {
+    RxasFlowSuccessfulGuardKey key;
+    size_t instruction_id;
+} flow_successful_guard_entry;
+
+static int flow_successful_guard_keys_equal(
+        const RxasFlowSuccessfulGuardKey *left,
+        const RxasFlowSuccessfulGuardKey *right) {
+    if (!left || !right || left->kind == RXAS_FLOW_GUARD_KEY_NONE ||
+        left->kind != right->kind || left->family != right->family)
+        return 0;
+    if (left->kind == RXAS_FLOW_GUARD_KEY_INTEGER)
+        return left->integer_value == right->integer_value;
+    return left->value_id == right->value_id;
 }
 
 static void flow_debug_accept(const flow_graph *graph, size_t node_index,
@@ -3700,6 +3730,144 @@ static size_t flow_remove_redundant_conversions(flow_graph *graph,
     return flow_remove_redundant_derivations(graph, stats, session);
 }
 
+/* M08 turns a successfully completed exact guard into a sparse fact.  A
+ * later guard may be deleted only when the immutable CFG proves that the
+ * earlier normal-success edge dominates it and component SSA proves every
+ * observed operand unchanged. ASSERTINITIALIZED/ASSERTTYPE may additionally
+ * be covered by their exact dominating SETOBJTYPE producer. */
+static size_t flow_remove_redundant_successful_guards(
+        flow_graph *graph, flow_stats *stats,
+        flow_proof_session *session) {
+    const RxasFlowProofService *proof;
+    const RxasFlowRecord *candidate_record;
+    RxasFlowProofResult proof_result;
+    RxasFlowSuccessfulGuardKey candidate_key;
+    flow_successful_guard_entry *guards;
+    size_t guard_count;
+    size_t candidate_index;
+    size_t generator_index;
+    size_t removed;
+    int family;
+    int query_available;
+    removed = 0;
+    proof = flow_proof_session_require(
+            session, graph, RXAS_PASS_M08_SUCCESSFUL_GUARD);
+    if (!proof) {
+        stats->successful_guard_proof_unavailable++;
+        return 0;
+    }
+    if (graph->item_count > (size_t)-1 / sizeof(*guards)) {
+        stats->successful_guard_proof_unavailable++;
+        return 0;
+    }
+    guards = calloc(graph->item_count, sizeof(*guards));
+    if (!guards)
+        RX_PANIC_OOM("calloc RXAS successful-guard registry",
+                     graph->item_count * sizeof(*guards), 0);
+    guard_count = 0;
+    for (candidate_index = 0;
+         candidate_index < graph->item_count; candidate_index++) {
+        if (graph->items[candidate_index].instrType != OP_CODE ||
+            !graph->nodes[candidate_index].reachable ||
+            !graph->nodes[candidate_index].op ||
+            !(family = flow_successful_guard_family(
+                    graph->nodes[candidate_index].op->opcode)) ||
+            !flow_record_matches_epoch(graph, candidate_index))
+            continue;
+        candidate_record = rxas_flow_procedure_record(
+                session->procedure, session->epoch, candidate_index);
+        if (!candidate_record ||
+            candidate_record->instruction_id == RXAS_FLOW_ID_NONE)
+            continue;
+
+        memset(&candidate_key, 0, sizeof(candidate_key));
+        if (!rxas_flow_successful_guard_key(
+                    proof, session->epoch,
+                    candidate_record->instruction_id, &candidate_key)) {
+            stats->successful_guard_proof_unavailable++;
+            free(guards);
+            return removed;
+        }
+
+        memset(&proof_result, 0, sizeof(proof_result));
+        query_available =
+                rxas_flow_prove_redundant_successful_guard(
+                        proof, session->epoch, RXAS_FLOW_ID_NONE,
+                        candidate_record->instruction_id, &proof_result) &&
+                !flow_proof_reason_unavailable(proof_result.reason);
+        stats->successful_guard_proof_queries++;
+        if (!query_available) {
+            stats->successful_guard_proof_unavailable++;
+            free(guards);
+            return removed;
+        }
+        if (!proof_result.proved &&
+            candidate_key.kind != RXAS_FLOW_GUARD_KEY_NONE) {
+            for (generator_index = guard_count;
+                 generator_index; ) {
+                const flow_successful_guard_entry *generator;
+                generator = &guards[--generator_index];
+                if (!flow_successful_guard_keys_equal(
+                            &generator->key, &candidate_key))
+                    continue;
+                memset(&proof_result, 0, sizeof(proof_result));
+                query_available =
+                        rxas_flow_prove_redundant_successful_guard(
+                                proof, session->epoch,
+                                generator->instruction_id,
+                                candidate_record->instruction_id,
+                                &proof_result) &&
+                        !flow_proof_reason_unavailable(
+                                proof_result.reason);
+                stats->successful_guard_proof_queries++;
+                if (!query_available) {
+                    stats->successful_guard_proof_unavailable++;
+                    free(guards);
+                    return removed;
+                }
+                if (proof_result.proved) break;
+            }
+        }
+        if (candidate_key.kind != RXAS_FLOW_GUARD_KEY_NONE) {
+            guards[guard_count].key = candidate_key;
+            guards[guard_count].instruction_id =
+                    candidate_record->instruction_id;
+            guard_count++;
+        }
+        if (!proof_result.proved) {
+            stats->successful_guard_proof_rejected++;
+            if (graph->context->debug_mode)
+                fprintf(stderr,
+                        "PERF3 successful-guard-proof procedure=%s "
+                        "candidate=%llu:%s proved=0 reason=%s "
+                        "generator=%llu source=%llu result=%llu "
+                        "source-kind=%d result-kind=%d\n",
+                        graph->context->current_proc_name
+                                ? graph->context->current_proc_name
+                                : "(directives)",
+                        (unsigned long long)candidate_index,
+                        graph->nodes[candidate_index].op->mnemonic,
+                        rxas_flow_proof_reason_name(
+                                proof_result.reason),
+                        (unsigned long long)
+                                proof_result.generator_instruction,
+                        (unsigned long long)proof_result.source_value_id,
+                        (unsigned long long)proof_result.result_value_id,
+                        (int)proof_result.source_kind,
+                        (int)proof_result.result_kind);
+            continue;
+        }
+        if (!flow_delete_record(graph, candidate_index)) continue;
+        flow_debug_accept(graph, candidate_index,
+                          "successful-guard-component-ssa", 0);
+        stats->successful_guard_proof_proved++;
+        stats->successful_guards_removed++;
+        removed++;
+    }
+    free(guards);
+    return removed;
+}
+
 static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
                                size_t before_instructions, size_t after_instructions) {
     if (!graph->context->debug_mode) return;
@@ -3708,7 +3876,9 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             "unreachable=%llu dead=%llu typed-copy=%llu "
             "local-single-use-copy=%llu compare-prep=%llu "
             "full-copy=%llu redundant-load=%llu redundant-init=%llu "
-            "redundant-conversion=%llu producer-forward=%llu "
+            "redundant-conversion=%llu successful-guard=%llu "
+            "guard-proof=%llu/%llu rejected=%llu unavailable=%llu "
+            "producer-forward=%llu "
             "swap-roundtrip=%llu "
             "compare-branch=%llu trace-delete=%llu redirects=%llu "
             "constant-proof=%llu/%llu rejected=%llu unavailable=%llu "
@@ -3743,6 +3913,11 @@ static void flow_debug_summary(const flow_graph *graph, const flow_stats *stats,
             (unsigned long long)stats->redundant_loads_removed,
             (unsigned long long)stats->redundant_initializations_removed,
             (unsigned long long)stats->redundant_conversions_removed,
+            (unsigned long long)stats->successful_guards_removed,
+            (unsigned long long)stats->successful_guard_proof_proved,
+            (unsigned long long)stats->successful_guard_proof_queries,
+            (unsigned long long)stats->successful_guard_proof_rejected,
+            (unsigned long long)stats->successful_guard_proof_unavailable,
             (unsigned long long)stats->producer_destinations_forwarded,
             (unsigned long long)stats->swap_round_trip_instructions_removed,
             (unsigned long long)stats->compare_branches_fused,
@@ -3993,6 +4168,8 @@ static int flow_has_semantic_candidates(
            rxas_optimisation_has_candidates(
                    census, RXAS_PASS_H02_STRING_LITERAL_REUSE) ||
            rxas_optimisation_has_candidates(
+                   census, RXAS_PASS_M08_SUCCESSFUL_GUARD) ||
+           rxas_optimisation_has_candidates(
                    census, RXAS_PASS_M02_CONSTANT) ||
            rxas_optimisation_has_candidates(
                    census, RXAS_PASS_M03_ABSENT) ||
@@ -4066,6 +4243,10 @@ static size_t flow_apply_semantic_epoch(
     if (allow_ssa && rxas_optimisation_has_candidates(
             census, RXAS_PASS_M04_SELF_COPY))
         planned += flow_remove_redundant_self_copies(
+                graph, stats, session);
+    if (allow_ssa && rxas_optimisation_has_candidates(
+            census, RXAS_PASS_M08_SUCCESSFUL_GUARD))
+        planned += flow_remove_redundant_successful_guards(
                 graph, stats, session);
     if (allow_ssa && rxas_optimisation_has_candidates(
             census, RXAS_PASS_K02_K03_LINKED_READ))

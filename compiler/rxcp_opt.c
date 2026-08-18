@@ -2510,9 +2510,34 @@ void optimise(Context *context) {
     /* Inlining Pass */
     if (context->optimise) {
         int inline_pass;
+        int scalar_accessor_changed;
+        int scalar_accessor_pass_changed;
+
+        /* Exact register-scalar accessors are independent of the general
+         * nesting-depth budget.  A successful rewrite removes one exact
+         * accessor call and its recognized body contains no call, so this
+         * fixed point is strictly decreasing and terminates without raising
+         * INLINE_MAX_PASSES for unrelated bodies. */
+        rxcp_inline_prepare(context);
+        scalar_accessor_changed = 0;
+        while ((scalar_accessor_pass_changed =
+                    rxcp_inline_scalar_accessor_pass(context)) != 0) {
+            scalar_accessor_changed = 1;
+        }
+        if (scalar_accessor_changed) {
+            /* Scalar rewrites can occur inside another callable's template.
+             * Refresh its summary before general inlining, but do not emit a
+             * duplicate debug eligibility census for this internal refresh. */
+            rxcp_inline_prepare_quiet(context);
+        }
 
         for (inline_pass = 0; inline_pass < INLINE_MAX_PASSES; inline_pass++) {
-            if (!rxcp_inline_pass(context)) break;
+            int changed;
+
+            changed = inline_pass == 0 ?
+                      rxcp_inline_prepared_pass(context) :
+                      rxcp_inline_pass(context);
+            if (!changed) break;
         }
 
         rxcp_inline_prune(context, context->ast);

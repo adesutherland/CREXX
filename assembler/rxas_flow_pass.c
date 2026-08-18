@@ -47,7 +47,9 @@ static const RxasOptimisationPassDescriptor pass_descriptors[] = {
     {RXAS_PASS_H01_JOINED_KEY_REUSE, "H01-joined-key-reuse", RXAS_OPT_OWNER_SSA,
      CAP_SEMANTIC_USE | RXAS_FLOW_CAP_LOOPS},
     {RXAS_PASS_H02_STRING_LITERAL_REUSE, "H02-string-literal-reuse",
-     RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_USE | RXAS_FLOW_CAP_LOOPS}
+     RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_USE | RXAS_FLOW_CAP_LOOPS},
+    {RXAS_PASS_M08_SUCCESSFUL_GUARD, "M08-successful-guard",
+     RXAS_OPT_OWNER_SSA, CAP_SEMANTIC_BASE}
 };
 
 static int pass_is_string_literal_load(
@@ -124,6 +126,14 @@ static int pass_is_branch_thread_candidate(int opcode) {
 static int pass_is_compare_candidate(int opcode) {
     return rxop_compare_branch_fusion(opcode, OP_BRT_ID_REG, 0) ||
            rxop_compare_branch_fusion(opcode, OP_BRF_ID_REG, 0);
+}
+
+static int pass_is_successful_guard_candidate(int opcode) {
+    return opcode == OP_ASSERTINITIALIZED_REG ||
+           opcode == OP_ASSERTTYPE_REG_STRING ||
+           (opcode >= OP_ICHKRNG_REG_INT_INT &&
+            opcode <= OP_ICHKRNG_INT_REG_REG) ||
+           opcode == OP_BCHECKRANGE_REG_REG_REG;
 }
 
 static int pass_is_scalar_constant_candidate(
@@ -242,6 +252,8 @@ int rxas_optimisation_census(Assembler_Context *context,
             pass_add_candidate(census, RXAS_PASS_K02_K03_LINKED_READ);
         if (pass_is_compare_candidate(opcode))
             pass_add_candidate(census, RXAS_PASS_K04_COMPARE_BRANCH);
+        if (pass_is_successful_guard_candidate(opcode))
+            pass_add_candidate(census, RXAS_PASS_M08_SUCCESSFUL_GUARD);
         if (pass_is_branch_thread_candidate(opcode))
             pass_add_candidate(census, RXAS_PASS_K05_BRANCH_THREAD);
         if (opcode == OP_CONCAT_REG_STRING_REG)

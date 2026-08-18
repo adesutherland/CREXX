@@ -80,7 +80,9 @@ typedef enum RxasFlowProofReason {
     RXAS_FLOW_PROOF_IRREDUCIBLE_LOOP,
     RXAS_FLOW_PROOF_NOT_MUST_EXECUTE,
     RXAS_FLOW_PROOF_NOT_SPECULATABLE,
-    RXAS_FLOW_PROOF_NOT_INVARIANT
+    RXAS_FLOW_PROOF_NOT_INVARIANT,
+    RXAS_FLOW_PROOF_NOT_EXACT_SUCCESSFUL_GUARD,
+    RXAS_FLOW_PROOF_GUARD_NOT_COVERED
 } RxasFlowProofReason;
 
 typedef struct RxasFlowProofResult {
@@ -155,6 +157,9 @@ typedef struct RxasFlowProofMetrics {
     size_t string_literal_reuse_proved;
     size_t string_literal_reuse_rejected;
     size_t string_literal_operand_rewrites;
+    size_t successful_guard_queries;
+    size_t successful_guard_proved;
+    size_t successful_guard_rejected;
     size_t success_edge_queries;
     size_t loop_queries;
 } RxasFlowProofMetrics;
@@ -164,6 +169,22 @@ typedef struct RxasFlowRepetitionKey {
     RxOpValueDerivation derivation;
     size_t storage_id;
 } RxasFlowRepetitionKey;
+
+typedef enum RxasFlowSuccessfulGuardKeyKind {
+    RXAS_FLOW_GUARD_KEY_NONE = 0,
+    RXAS_FLOW_GUARD_KEY_VALUE,
+    RXAS_FLOW_GUARD_KEY_INTEGER
+} RxasFlowSuccessfulGuardKeyKind;
+
+/* Sparse primary-value key used only to select possible earlier guards.  The
+ * full guard proof remains authoritative for type/bounds, dominance, signal
+ * continuation and every component value. */
+typedef struct RxasFlowSuccessfulGuardKey {
+    RxasFlowSuccessfulGuardKeyKind kind;
+    int family;
+    size_t value_id;
+    rxinteger integer_value;
+} RxasFlowSuccessfulGuardKey;
 
 typedef struct RxasFlowOperandRewrite {
     size_t record_id;
@@ -432,6 +453,15 @@ int rxas_flow_prove_redundant_absent_write(
 int rxas_flow_prove_redundant_self_copy(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t candidate_instruction, RxasFlowProofResult *result);
+int rxas_flow_successful_guard_key(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        size_t instruction_id, RxasFlowSuccessfulGuardKey *key);
+/* A generator of RXAS_FLOW_ID_NONE asks for a direct exact producer proof;
+ * otherwise the generator is an earlier successfully completed guard. */
+int rxas_flow_prove_redundant_successful_guard(
+        const RxasFlowProofService *service, unsigned long expected_epoch,
+        size_t generator_instruction, size_t candidate_instruction,
+        RxasFlowProofResult *result);
 int rxas_flow_prove_typed_copy_redirect(
         const RxasFlowProofService *service, unsigned long expected_epoch,
         size_t candidate_instruction, RxasFlowTypedCopyPlan *plan);

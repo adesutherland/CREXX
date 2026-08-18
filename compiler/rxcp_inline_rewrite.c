@@ -2005,6 +2005,111 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
     return result_normal;
 }
 
+static int inline_is_exact_register_scalar(ValueType type) {
+    return type == TP_BOOLEAN || type == TP_INTEGER || type == TP_FLOAT;
+}
+
+/* POSTPERF-04 exact scalar accessors receive a traversal lane of their own.
+ * Keep this recognition deliberately structural and type-generic: the getter
+ * returns one receiver-owned register scalar, while the setter copies one
+ * required by-value register scalar into the same-typed receiver attribute.
+ * The ordinary inline transaction still owns receiver evaluation,
+ * initialization, formal capture, copyback, signals and source/TRACE identity.
+ */
+InlineScalarAccessorKind inline_exact_scalar_accessor_kind(ASTNode *callable) {
+    ASTNode *args;
+    ASTNode *instrs;
+    ASTNode *first;
+
+    if (!callable || !inline_callable_is_method(callable)) {
+        return INLINE_SCALAR_ACCESSOR_NONE;
+    }
+
+    args = ast_chld(callable, ARGS, 0);
+    instrs = ast_chld(callable, INSTRUCTIONS, 0);
+    if (!args || !instrs || !(first = instrs->child)) {
+        return INLINE_SCALAR_ACCESSOR_NONE;
+    }
+
+    if (!args->child && callable->value_dims == 0 &&
+        inline_is_exact_register_scalar(callable->value_type)) {
+        ASTNode *result;
+        Symbol *attribute;
+
+        if (first->node_type != RETURN || first->sibling) {
+            return INLINE_SCALAR_ACCESSOR_NONE;
+        }
+        result = first->child;
+        if (!result || result->sibling || result->child ||
+            result->node_type != VAR_SYMBOL || result->value_dims != 0 ||
+            result->value_type != callable->value_type || !result->symbolNode) {
+            return INLINE_SCALAR_ACCESSOR_NONE;
+        }
+        attribute = result->symbolNode->symbol;
+        if (!attribute || attribute->type != callable->value_type ||
+            attribute->value_dims != 0 ||
+            !inline_symbol_is_class_attribute(attribute)) {
+            return INLINE_SCALAR_ACCESSOR_NONE;
+        }
+        return INLINE_SCALAR_ACCESSOR_GETTER;
+    }
+
+    if (callable->value_type == TP_VOID && callable->value_dims == 0 &&
+        args->child && !args->child->sibling) {
+        ASTNode *arg;
+        ASTNode *formal_target;
+        ASTNode *assignment;
+        ASTNode *final_return;
+        ASTNode *lhs;
+        ASTNode *rhs;
+        Symbol *formal_symbol;
+        Symbol *attribute;
+
+        arg = args->child;
+        formal_target = inline_formal_target(arg);
+        if (arg->is_ref_arg || arg->is_opt_arg || arg->is_varg ||
+            !formal_target || formal_target->value_dims != 0 ||
+            !inline_is_exact_register_scalar(formal_target->value_type) ||
+            !formal_target->symbolNode) {
+            return INLINE_SCALAR_ACCESSOR_NONE;
+        }
+
+        assignment = first;
+        final_return = assignment->sibling;
+        if (assignment->node_type != ASSIGN || !final_return ||
+            final_return->sibling || final_return->node_type != RETURN ||
+            final_return->child) {
+            return INLINE_SCALAR_ACCESSOR_NONE;
+        }
+
+        lhs = assignment->child;
+        rhs = lhs ? lhs->sibling : NULL;
+        if (!lhs || !rhs || rhs->sibling || lhs->child || rhs->child ||
+            lhs->node_type != VAR_TARGET || rhs->node_type != VAR_SYMBOL ||
+            lhs->value_dims != 0 || rhs->value_dims != 0 ||
+            lhs->value_type != formal_target->value_type ||
+            rhs->value_type != formal_target->value_type ||
+            !lhs->symbolNode || !rhs->symbolNode) {
+            return INLINE_SCALAR_ACCESSOR_NONE;
+        }
+
+        formal_symbol = formal_target->symbolNode->symbol;
+        attribute = lhs->symbolNode->symbol;
+        if (!formal_symbol || !attribute ||
+            rhs->symbolNode->symbol != formal_symbol ||
+            formal_symbol->type != formal_target->value_type ||
+            formal_symbol->value_dims != 0 ||
+            attribute->type != formal_target->value_type ||
+            attribute->value_dims != 0 ||
+            !inline_symbol_is_class_attribute(attribute)) {
+            return INLINE_SCALAR_ACCESSOR_NONE;
+        }
+        return INLINE_SCALAR_ACCESSOR_SETTER;
+    }
+
+    return INLINE_SCALAR_ACCESSOR_NONE;
+}
+
 /* Reference values are weak alias descriptors.  The general reference AST
  * surface still needs full lifetime/alias proof, but these two method bodies
  * have no such ambiguity: the getter copies one receiver-owned descriptor to

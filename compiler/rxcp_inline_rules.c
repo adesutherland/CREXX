@@ -226,6 +226,13 @@ static RxcpRemapResult inline_remap_apply_selector_rule(const RxcpRemapRule *rul
         }
     }
 
+    if (payload && payload->exact_scalar_accessors_only &&
+        (!match.symbol || !match.symbol->ast_template ||
+         inline_exact_scalar_accessor_kind(match.symbol->ast_template) ==
+             INLINE_SCALAR_ACCESSOR_NONE)) {
+        return RXCP_REMAP_NO_MATCH;
+    }
+
     if (rule->guards) {
         for (i = 0; rule->guards[i].fn; i++) {
             if (!rule->guards[i].fn(context, &match)) {
