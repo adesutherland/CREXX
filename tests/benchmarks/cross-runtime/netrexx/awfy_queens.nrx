@@ -1,0 +1,79 @@
+/*
+ * Decimal-semantics NetRexx port of the Are We Fast Yet? Queens benchmark.
+ * Derived from upstream commit 74306fec151070fd07157cefeacf19e7e0bcdc89
+ * under the SOM MIT license; see ../../THIRD_PARTY_NOTICES.md.
+ */
+options nobinary decimal
+
+class awfy_queens
+
+  method main(args=String[]) static
+    repetitions=1
+    if args.length>=1 then repetitions=Rexx args[0]
+    if repetitions<1 then do
+      say 'FAIL: repetitions must be positive'
+      exit 1
+    end
+
+    result=0
+    loop iteration=1 to repetitions
+      result=QueensBenchmark().run()
+      if \result then do
+        say 'FAIL: eight-queens search did not find a placement'
+        exit 1
+      end
+    end
+
+    say 'benchmark=awfy_queens repetitions='repetitions 'result='result
+    say 'PASS: AWFY Queens NetRexx decimal port'
+
+class QueensBenchmark
+  properties private
+    freeMaxs=Rexx[16]
+    freeRows=Rexx[8]
+    freeMins=Rexx[16]
+    queenRows=Rexx[8]
+
+  method QueensBenchmark()
+    reset()
+
+  method reset() private
+    loop i=0 to 15
+      freeMaxs[i]=1
+      freeMins[i]=1
+    end
+    loop i=0 to 7
+      freeRows[i]=1
+      queenRows[i]=-1
+    end
+
+  method run() returns Rexx
+    result=1
+    loop i=1 to 10 while result
+      result=queens()
+    end
+    return result
+
+  method queens() private returns Rexx
+    reset()
+    return placeQueen(0)
+
+  method placeQueen(column=Rexx) private returns Rexx
+    loop row=0 to 7
+      if rowColumnFree(row,column) then do
+        queenRows[row]=column
+        setRowColumn(row,column,0)
+        if column=7 then return 1
+        if placeQueen(column+1) then return 1
+        setRowColumn(row,column,1)
+      end
+    end
+    return 0
+
+  method rowColumnFree(row=Rexx,column=Rexx) private returns Rexx
+    return freeRows[row] & freeMaxs[column+row] & freeMins[column-row+7]
+
+  method setRowColumn(row=Rexx,column=Rexx,value=Rexx) private
+    freeRows[row]=value
+    freeMaxs[column+row]=value
+    freeMins[column-row+7]=value

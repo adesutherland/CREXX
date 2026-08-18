@@ -536,6 +536,109 @@ static int inline_block_expr_owned_return_register(ASTNode *node,
     return 1;
 }
 
+static int block_expr_scope_is_generated_lifetime_boundary(Scope *scope) {
+    Scope *current;
+
+    for (current = scope; current; current = current->parent) {
+        if (current->type != SCOPE_PROCEDURE) continue;
+        if (!current->name) return 0;
+        return strncmp(current->name, "__inline", 8) == 0 ||
+               strncmp(current->name, "__rxtrace", 9) == 0;
+    }
+    return 0;
+}
+
+/* Match the runtime-affecting portion of scope cleanup emitted by
+ * rxcp_emit_flow.c.  Metadata-only cleanup cannot damage a BLOCK_EXPR result
+ * and should not force an otherwise unnecessary result-register reservation. */
+static int block_expr_scope_has_runtime_cleanup(Scope *scope) {
+    Symbol **symbols;
+    size_t i;
+    int has_cleanup = 0;
+
+    if (!scope || scope->type != SCOPE_LOCAL) return 0;
+    if (scp_dereference_symbol_count(scope) != 0) return 1;
+
+    symbols = scp_syms(scope);
+    if (!symbols) return 0;
+    for (i = 0; symbols[i]; i++) {
+        Symbol *symbol = symbols[i];
+
+        if (!symbol || symbol->symbol_type != VARIABLE_SYMBOL ||
+            symbol->inline_value_alias || symbol->exposed || symbol->is_arg ||
+            symbol->is_ref_arg || symbol->is_this || symbol->is_factory ||
+            symbol->register_type != 'r' || symbol->register_num < 0 ||
+            (symbol->name && strncmp(symbol->name, "__inline", 8) == 0)) {
+            continue;
+        }
+
+        if (block_expr_scope_is_generated_lifetime_boundary(symbol->scope) ||
+            symbol->has_reference_target || symbol->value_dims != 0) {
+            has_cleanup = 1;
+            break;
+        }
+
+        switch (symbol->type) {
+            case TP_BOOLEAN:
+            case TP_INTEGER:
+            case TP_FLOAT:
+            case TP_DECIMAL:
+            case TP_STRING:
+                break;
+            default:
+                has_cleanup = 1;
+                break;
+        }
+        if (has_cleanup) break;
+    }
+    free(symbols);
+    return has_cleanup;
+}
+
+static int block_expr_has_crossed_cleanup_exit(ASTNode *node,
+                                               ASTNode *block_expr) {
+    ASTNode *child;
+
+    if (!node || !block_expr) return 0;
+    if (node->node_type == LEAVE_WITH && node->association == block_expr) {
+        ASTNode *ancestor;
+
+        for (ancestor = node->parent;
+             ancestor && ancestor != block_expr;
+             ancestor = ancestor->parent) {
+            ASTNode *repeat = ancestor->node_type == DO ?
+                              ast_chdn(ancestor, 0) : 0;
+
+            if ((repeat && repeat->node_type == REPEAT) ||
+                (ancestor->scope &&
+                 ancestor->scope->defining_node == ancestor &&
+                 block_expr_scope_has_runtime_cleanup(ancestor->scope))) {
+                return 1;
+            }
+        }
+    }
+
+    for (child = node->child; child; child = child->sibling) {
+        if (block_expr_has_crossed_cleanup_exit(child, block_expr)) return 1;
+    }
+    return 0;
+}
+
+static void assign_block_expr_result_register(ASTNode *node) {
+    if (!node || node->node_type != BLOCK_EXPR ||
+        node->register_num != UNSET_REGISTER) return;
+
+    if (!inline_block_expr_assignment_target_register(node,
+                                                      &node->register_num,
+                                                      &node->register_type) &&
+        !inline_block_expr_owned_return_register(node,
+                                                 &node->register_num,
+                                                 &node->register_type)) {
+        node->register_num = get_reg(node->scope);
+        node->register_type = 'r';
+    }
+}
+
 static int scope_assigns_named_registers(Scope *scope) {
     ASTNode *owner;
 
@@ -888,9 +991,20 @@ walker_result register_walker(walker_direction direction,
 
             case DO:
             case SIGNAL_BLOCK:
-            case BLOCK_EXPR:
             case INSTRUCTIONS:
                 assign_scoped_registers_for_node(node, payload);
+                break;
+
+            case BLOCK_EXPR:
+                assign_scoped_registers_for_node(node, payload);
+                /* A block result written by an early exit must remain distinct
+                 * from any linked repeat-expression register cleaned up on
+                 * that path. Reserve it before allocating the loop subtree;
+                 * ordinary block expressions retain the established late
+                 * allocation and register reuse. */
+                if (block_expr_has_crossed_cleanup_exit(node, node)) {
+                    assign_block_expr_result_register(node);
+                }
                 break;
 
             case ARGS:
@@ -1689,15 +1803,7 @@ walker_result register_walker(walker_direction direction,
                 break;
 
             case BLOCK_EXPR:
-                if (!inline_block_expr_assignment_target_register(node,
-                                                                  &node->register_num,
-                                                                  &node->register_type) &&
-                    !inline_block_expr_owned_return_register(node,
-                                                             &node->register_num,
-                                                             &node->register_type)) {
-                    node->register_num = get_reg(node->scope);
-                    node->register_type = 'r';
-                }
+                assign_block_expr_result_register(node);
                 break;
 
             case IF:

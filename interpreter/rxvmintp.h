@@ -215,6 +215,7 @@ typedef struct interrupt_entry {
     size_t jump;                    /* Address to jump to */
     stack_frame *frame;             /* Frame that owns branch/jump handlers */
     size_t value_register;          /* Destination register for branch handlers with a signal object */
+    struct interrupt_saved_entry *stack_marker; /* Saved-handler stack at branch scope entry */
 } interrupt_entry;
 
 typedef struct interrupt_saved_entry {

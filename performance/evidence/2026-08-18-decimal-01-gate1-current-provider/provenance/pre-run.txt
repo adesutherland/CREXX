@@ -1,0 +1,16 @@
+timestamp=2026-08-18T16:26:52+01:00
+source_commit=0fe5618eb858758d5f01da9dc65331d677605565
+source_scope=clean detached worktree
+build_type=Release
+vm_profiling=OFF
+vm_handler_panel=profile-20
+host=Darwin arm64 Apple M5
+logical_cpus=10
+power=AC attached battery 80 percent not charging
+low_power_mode=0
+thermal_warning=none
+performance_warning=none
+load_average=1.75 2.13 2.18
+cpu_idle_percent=82.26
+competing_performance_processes=none
+formal_sampling=two warmups ten serial rotated observations per cell

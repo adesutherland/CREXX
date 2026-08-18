@@ -539,9 +539,15 @@ static int node_owns_recyclable_scope(ASTNode *node) {
     return 1;
 }
 
+typedef struct meta_scope_clear_payload {
+    ASTNode *node;
+    OutputFragment *output;
+} meta_scope_clear_payload;
+
 static void meta_clear_scoped_symbol(Symbol *symbol, void *payload) {
-    ASTNode* node = (ASTNode*)payload;
-    OutputFragment *output = node->output;
+    meta_scope_clear_payload *clear = (meta_scope_clear_payload*)payload;
+    ASTNode *node = clear->node;
+    OutputFragment *output = clear->output;
     char* buffer;
     char* symbol_fqn;
 
@@ -557,9 +563,13 @@ static void meta_clear_scoped_symbol(Symbol *symbol, void *payload) {
     free(buffer);
 }
 
-void clear_scope_variable_metadata(ASTNode *node) {
-    if (!node_owns_recyclable_scope(node)) return;
-    scp_4all(node->scope, meta_clear_scoped_symbol, node);
+void clear_scope_variable_metadata(OutputFragment *output, ASTNode *node) {
+    meta_scope_clear_payload payload;
+
+    if (!output || !node_owns_recyclable_scope(node)) return;
+    payload.node = node;
+    payload.output = output;
+    scp_4all(node->scope, meta_clear_scoped_symbol, &payload);
 }
 
 /* Clear all variable metadata */

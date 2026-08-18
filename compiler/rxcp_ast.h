@@ -130,6 +130,7 @@ struct ASTNode {
     OutputFragment *loopstartchecks; /* Begin Loop exit checks */
     OutputFragment *loopinc;         /* Loop increments */
     OutputFragment *loopendchecks;   /* End Loop exit checks */
+    OutputFragment *branch_cleanup;  /* Detached cleanup copy for non-local control transfers */
     char is_duplicate_warning;
 };
 

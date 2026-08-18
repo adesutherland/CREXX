@@ -325,11 +325,11 @@ static int flow_symbol_is_reference_lifetime_free_scalar(Symbol *symbol) {
     }
 }
 
-void emit_scope_reference_lifetimes(ASTNode *node) {
+void emit_scope_reference_lifetimes(OutputFragment *output, ASTNode *node) {
     Symbol **symbols;
     size_t i;
 
-    if (!node || !node->output || !flow_scope_owns_recyclable_registers(node)) return;
+    if (!output || !node || !flow_scope_owns_recyclable_registers(node)) return;
 
     symbols = scp_syms(node->scope);
     if (!symbols) return;
@@ -341,7 +341,7 @@ void emit_scope_reference_lifetimes(ASTNode *node) {
         if (!flow_symbol_owns_scope_lifetime(symbol)) continue;
         if (flow_symbol_is_reference_lifetime_free_scalar(symbol)) continue;
         line = mprintf("   endlife %c%d\n", symbol->register_type, symbol->register_num);
-        output_append_text(node->output, line);
+        output_append_text(output, line);
         free(line);
     }
 
@@ -452,6 +452,95 @@ static void signal_emit_unwind_for_control(OutputFragment *output,
     }
 }
 
+static void flow_append_output_copy(OutputFragment *output,
+                                    OutputFragment *source) {
+    if (!output || !source) return;
+    while (source->before) source = source->before;
+    for (; source; source = source->after) {
+        if (source->output) output_append_text(output, source->output);
+    }
+}
+
+/* A structured exit may bypass the normal end of one or more lexical scopes
+ * and counted loops.  Their cleanup cannot be moved into the exit path because
+ * the ordinary fall-through path still needs it, so reproduce it for every
+ * crossed ancestor.  The target itself is excluded: LEAVE branches to its
+ * normal end cleanup, ITERATE keeps the target loop active, and LEAVE_WITH
+ * branches to the block-expression cleanup label. */
+static void flow_emit_crossed_cleanups(OutputFragment *output,
+                                       ASTNode *node,
+                                       ASTNode *stop_before) {
+    ASTNode *ancestor;
+
+    if (!output || !node) return;
+    for (ancestor = node->parent;
+         ancestor && ancestor != stop_before;
+         ancestor = ancestor->parent) {
+        if (ancestor->node_type == DO) {
+            ASTNode *repeat = ast_chdn(ancestor, 0);
+            if (repeat && repeat->node_type == REPEAT && repeat->cleanup) {
+                flow_append_output_copy(output, repeat->cleanup);
+            }
+        }
+
+        if (flow_scope_owns_cleanup(ancestor)) {
+            flow_emit_scope_dereference_unlinks(output, ancestor->scope);
+            emit_scope_reference_lifetimes(output, ancestor);
+            clear_scope_variable_metadata(output, ancestor);
+        }
+    }
+}
+
+/* A runtime SIGNAL can originate at any instruction in a protected body, so
+ * its handler cannot use the single-ancestor path available to an explicit
+ * LEAVE.  Restore every register that any descendant scope may have linked,
+ * then end descendant reference lifetimes after all pointer mappings are back
+ * at their base storage.  Repeating an unlink or lifetime release for an
+ * inactive/reused sibling scope is intentionally harmless. */
+static void flow_emit_descendant_unlinks(OutputFragment *output,
+                                         ASTNode *node) {
+    ASTNode *child;
+
+    if (!output || !node) return;
+    if (node->node_type == DO) {
+        if (node->branch_cleanup) {
+            flow_append_output_copy(output, node->branch_cleanup);
+        }
+    }
+    if (flow_scope_owns_cleanup(node)) {
+        flow_emit_scope_dereference_unlinks(output, node->scope);
+    }
+    for (child = node->child; child; child = child->sibling) {
+        flow_emit_descendant_unlinks(output, child);
+    }
+}
+
+static void flow_emit_descendant_lifetimes(OutputFragment *output,
+                                           ASTNode *node) {
+    ASTNode *child;
+
+    if (!output || !node) return;
+    if (flow_scope_owns_cleanup(node)) {
+        emit_scope_reference_lifetimes(output, node);
+    }
+    for (child = node->child; child; child = child->sibling) {
+        flow_emit_descendant_lifetimes(output, child);
+    }
+}
+
+static void flow_emit_descendant_metadata_clear(OutputFragment *output,
+                                                ASTNode *node) {
+    ASTNode *child;
+
+    if (!output || !node) return;
+    if (flow_scope_owns_cleanup(node)) {
+        clear_scope_variable_metadata(output, node);
+    }
+    for (child = node->child; child; child = child->sibling) {
+        flow_emit_descendant_metadata_clear(output, child);
+    }
+}
+
 void emit_flow(ASTNode *node, void *pl) {
     walker_payload *payload = (walker_payload*) pl;
     ASTNode *child1, *child2, *child3, *n;
@@ -498,8 +587,8 @@ void emit_flow(ASTNode *node, void *pl) {
             }
             if (flow_scope_owns_cleanup(node)) {
                 flow_emit_scope_dereference_unlinks(node->output, node->scope);
-                emit_scope_reference_lifetimes(node);
-                clear_scope_variable_metadata(node);
+                emit_scope_reference_lifetimes(node->output, node);
+                clear_scope_variable_metadata(node->output, node);
             }
             comment_meta = get_reporting_metalines(node);
             if (comment_meta[0]) output_prepend_text(comment_meta, node->output);
@@ -521,6 +610,27 @@ void emit_flow(ASTNode *node, void *pl) {
             handler_index = 0;
             while (handler) {
                 signal_emit_names handler_names = {0};
+
+                signal_emit_collect_names(handler->child, &handler_names);
+                for (j = 0; j < (int)handler_names.count; j++) {
+                    temp1 = mprintf("   sigpush \"%s\"\n", handler_names.items[j]);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    signal_emit_names_add(&installed, handler_names.items[j]);
+                }
+                signal_emit_names_free(&handler_names);
+                handler = ast_nsib(handler);
+                handler_index++;
+            }
+
+            /* Register the branches only after every saved handler is on the
+             * stack.  The VM records this common top as the block boundary, so
+             * a runtime branch can discard nested registrations without also
+             * discarding another name owned by this SIGNAL_BLOCK. */
+            handler = child2;
+            handler_index = 0;
+            while (handler) {
+                signal_emit_names handler_names = {0};
                 ASTNode *binding = signal_handler_binding_target(handler);
 
                 signal_emit_collect_names(handler->child, &handler_names);
@@ -532,11 +642,6 @@ void emit_flow(ASTNode *node, void *pl) {
                         binding_register = binding->symbolNode->symbol->register_num;
                         binding_register_type = binding->symbolNode->symbol->register_type;
                     }
-
-                    temp1 = mprintf("   sigpush \"%s\"\n", handler_names.items[j]);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                    signal_emit_names_add(&installed, handler_names.items[j]);
 
                     if (binding) {
                         temp1 = mprintf("   sigbrv l%dsignalhandler%zu,%c%d,\"%s\"\n",
@@ -577,6 +682,9 @@ void emit_flow(ASTNode *node, void *pl) {
                 free(temp1);
 
                 signal_emit_pop_names(node->output, &installed);
+                flow_emit_descendant_unlinks(node->output, child1);
+                flow_emit_descendant_lifetimes(node->output, child1);
+                flow_emit_descendant_metadata_clear(node->output, child1);
                 if (handler_body && handler_body->output) output_concat(node->output, handler_body->output);
                 if (handler_body && handler_body->cleanup) output_concat(node->output, handler_body->cleanup);
 
@@ -593,8 +701,8 @@ void emit_flow(ASTNode *node, void *pl) {
             free(temp1);
             if (flow_scope_owns_cleanup(node)) {
                 flow_emit_scope_dereference_unlinks(node->output, node->scope);
-                emit_scope_reference_lifetimes(node);
-                clear_scope_variable_metadata(node);
+                emit_scope_reference_lifetimes(node->output, node);
+                clear_scope_variable_metadata(node->output, node);
             }
             signal_emit_names_free(&installed);
             break;
@@ -774,11 +882,17 @@ void emit_flow(ASTNode *node, void *pl) {
             temp1 = mprintf("   br l%ddostart\nl%ddoend:\n",
                             node->node_number, node->node_number);
             output_append_text(node->output, temp1);
-            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            if (child1->cleanup) {
+                /* Keep a detached copy for SIGNAL handlers emitted after this
+                 * loop has already been joined into its parent's output chain. */
+                if (!node->branch_cleanup) node->branch_cleanup = output_f();
+                flow_append_output_copy(node->branch_cleanup, child1->cleanup);
+                output_concat(node->output, child1->cleanup);
+            }
             if (flow_scope_owns_cleanup(node)) {
                 flow_emit_scope_dereference_unlinks(node->output, node->scope);
-                emit_scope_reference_lifetimes(node);
-                clear_scope_variable_metadata(node);
+                emit_scope_reference_lifetimes(node->output, node);
+                clear_scope_variable_metadata(node->output, node);
             }
             free(temp1);
             free(comment_meta);
@@ -1109,6 +1223,8 @@ void emit_flow(ASTNode *node, void *pl) {
             /* Add Variable Metadata */
             add_variable_metadata(node);
 
+            flow_emit_crossed_cleanups(node->output, node,
+                                       node->association);
             signal_emit_unwind_for_control(node->output, node,
                                            node->association);
 
@@ -1164,6 +1280,8 @@ void emit_flow(ASTNode *node, void *pl) {
             }
 
             if (node->association) {
+                flow_emit_crossed_cleanups(node->output, node,
+                                           node->association);
                 signal_emit_unwind_for_control(node->output, node,
                                                node->association);
                 temp1 = mprintf("   br l%dbexprend\n",
@@ -1184,6 +1302,8 @@ void emit_flow(ASTNode *node, void *pl) {
             /* Add Variable Metadata */
             add_variable_metadata(node);
 
+            flow_emit_crossed_cleanups(node->output, node,
+                                       node->association);
             temp1 = mprintf("   br l%ddoinc\n",
                             node->association->node_number);
             output_append_text(node->output, temp1);

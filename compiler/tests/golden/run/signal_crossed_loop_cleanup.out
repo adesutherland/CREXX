@@ -1,0 +1,2 @@
+result=154 limit=2
+PASS: signal cleans crossed loop

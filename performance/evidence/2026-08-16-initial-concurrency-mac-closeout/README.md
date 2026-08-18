@@ -33,8 +33,15 @@ median -1.156%, interval -3.652% to +1.684%.
 Because the power log records battery use from before the first timing block
 through the final confirmation, these numbers are diagnostic observations,
 not a governed performance verdict. The earlier accepted AC-power task and
-single-thread baselines remain authoritative. A quiet AC replay of this exact
-manifest is still required to finish QA-B performance evidence.
+single-thread baselines remain authoritative.
+
+**2026-08-18 disposition:** Adrian waived an unchanged quiet-AC replay as
+unnecessary. Mac correctness, sanitizer, stress, Release, install and package
+proof pass; this diagnostic found no confirmed adverse guard; and later
+concurrency production changes carried clean single-thread Release guards. The
+battery samples remain diagnostic and are not promoted. Reopen timing only for
+a relevant source change, a concrete evidence inconsistency or a new governed
+performance question.
 
 ## Product shape
 

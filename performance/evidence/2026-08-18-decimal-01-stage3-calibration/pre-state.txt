@@ -1,0 +1,96 @@
+utc=2026-08-18T17:54:22Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+ProductName:		macOS
+ProductVersion:		26.5.2
+BuildVersion:		25F84
+Mac17,3
+10
+25769803776
+{ 1.96 1.48 1.61 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+CREXX_VM_PROFILING=OFF
+4909 /bin/zsh -c set -e
+evidence_root="performance/evidence/2026-08-18-decimal-01-stage3-calibration"
+mkdir -p "$evidence_root"
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  uname -a
+  sw_vers
+  sysctl -n hw.model hw.logicalcpu hw.memsize
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g custom
+  pmset -g therm
+  printf 'CREXX_VM_PROFILING='; sed -n 's/^CREXX_VM_PROFILING:BOOL=//p' cmake-build-release-decimal-stage3/CMakeCache.txt
+  pgrep -fal '(^|/)(rxvm|rxtvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|cmake|ninja|ctest' || true
+  ps -Ao pid,%cpu,%mem,command | sort -k2 -nr | head -20
+  shasum -a 256 \
+    cmake-build-release/bin/crexx \
+    performance/tools/run_cross_runtime_matrix.crexx \
+    performance/manifests/decimal-01-d2-grid-calibration-mac-v1.txt \
+    performance/manifests/decimal-01-d3-decquad-calibration-mac-v1.txt \
+    performance/manifests/decimal-01-d3-decquad-core-calibration-mac-v1.txt \
+    cmake-build-release-decimal-stage3/bin/rxvm_mc_decimal.rxvmplugin \
+    cmake-build-release-decimal-stage3/bin/rxvm_decquad_decimal.rxvmplugin
+} > "$evidence_root/pre-state.txt" 2>&1
+sed -n '1,100p' "$evidence_root/pre-state.txt"
+  553  34.7  0.2 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds
+67651  21.2  4.2 /Applications/ChatGPT.app/Contents/Resources/codex -c features.code_mode_host=true app-server --analytics-default-enabled
+67632   5.0  0.7 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/151.0.7922.76/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service) --type=gpu-process --user-data-dir=/Users/adrian/Library/Application Support/Codex --start-stack-profiler --gpu-preferences=WAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAAQAAAAAAAAAADAAAAAAAAADgAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAoAAAAAAAAAAgAAAAAAAAADAAAAAEAAAAAAAAAAAAAAAgAAAAAAAAACAAAAAAAAAA= --shared-files --metrics-shmem-handle=1752395122,r,8915760799986291992,7202264115354638638,262144 --field-trial-handle=1718379636,r,11020521882076313039,8471531495406070395,262144 --enable-features=OwlHistory,OwlPrinting,ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,OwlExtensions,OwlOpenAIGoLinks --variations-seed-version --pseudonymization-salt-handle=1935764596,r,15094304488280246836,18437363677183915220,4 --trace-process-track-uuid=3190708988185955192 --seatbelt-client=43
+67664   4.0  7.9 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/151.0.7922.76/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer) --type=renderer --user-data-dir=/Users/adrian/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --start-stack-profiler --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-GB --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=5 --time-ticks-at-unix-epoch=-1784157951368621 --launch-time-ticks=2451675802208 --shared-files --metrics-shmem-handle=1752395122,r,8247509665184802842,14486552589890810062,2097152 --field-trial-handle=1718379636,r,11020521882076313039,8471531495406070395,262144 --enable-features=OwlHistory,OwlPrinting,ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,OwlExtensions,OwlOpenAIGoLinks --variations-seed-version --pseudonymization-salt-handle=1935764596,r,15094304488280246836,18437363677183915220,4 --trace-process-track-uuid=3190708990997080739 --seatbelt-client=100
+67620   3.9  2.2 /Applications/ChatGPT.app/Contents/MacOS/ChatGPT
+72123   3.1  0.1 /Applications/ChatGPT.app/Contents/Resources/codex-code-mode-host
+  598   0.8  0.5 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer -daemon
+ 4909   0.7  0.0 /bin/zsh -c set -e\012evidence_root="performance/evidence/2026-08-18-decimal-01-stage3-calibration"\012mkdir -p "$evidence_root"\012{\012  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'\012  uname -a\012  sw_vers\012  sysctl -n hw.model hw.logicalcpu hw.memsize\012  sysctl -n vm.loadavg\012  pmset -g batt\012  pmset -g custom\012  pmset -g therm\012  printf 'CREXX_VM_PROFILING='; sed -n 's/^CREXX_VM_PROFILING:BOOL=//p' cmake-build-release-decimal-stage3/CMakeCache.txt\012  pgrep -fal '(^|/)(rxvm|rxtvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|cmake|ninja|ctest' || true\012  ps -Ao pid,%cpu,%mem,command | sort -k2 -nr | head -20\012  shasum -a 256 \\012    cmake-build-release/bin/crexx \\012    performance/tools/run_cross_runtime_matrix.crexx \\012    performance/manifests/decimal-01-d2-grid-calibration-mac-v1.txt \\012    performance/manifests/decimal-01-d3-decquad-calibration-mac-v1.txt \\012    performance/manifests/decimal-01-d3-decquad-core-calibration-mac-v1.txt \\012    cmake-build-release-decimal-stage3/bin/rxvm_mc_decimal.rxvmplugin \\012    cmake-build-release-decimal-stage3/bin/rxvm_decquad_decimal.rxvmplugin\012} > "$evidence_root/pre-state.txt" 2>&1\012sed -n '1,100p' "$evidence_root/pre-state.txt"
+ 1535   0.1  0.7 /System/Library/CoreServices/Finder.app/Contents/MacOS/Finder
+    1   0.1  0.1 /sbin/launchd
+99703   0.0  0.0 /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+99276   0.0  0.0 /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+99070   0.0  0.0 /System/Library/CoreServices/osanalyticshelper server-init
+98870   0.0  0.0 /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+98044   0.0  0.1 /System/Library/PrivateFrameworks/JetCore.framework/Support/jetpackassetd
+97411   0.0  0.0 /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+97031   0.0  0.1 /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+96867   0.0  0.0 /Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl
+96816   0.0  0.0 /usr/libexec/intelligentroutingd
+96110   0.0  0.0 /usr/libexec/nesessionmanager
+1eab80cc9f6f20842009f80eb1024e66367e173595fd424f729a00c9b21d5e37  cmake-build-release/bin/crexx
+51a4c7982c3a4d31a00b36e991d069a411a61db1d49d51bf0d4c6e2811fa1633  performance/tools/run_cross_runtime_matrix.crexx
+5361f2be6416aaf48fbeab9f7459b0b494c7c0bf524a8a5a6fb8860e59316ce9  performance/manifests/decimal-01-d2-grid-calibration-mac-v1.txt
+3dfed4d3cfdde14ec319df6592dc666ede35bc2899d19812ed2099cfc20f45d8  performance/manifests/decimal-01-d3-decquad-calibration-mac-v1.txt
+961ca6d3946b8a2a8a8a64921fee2190b87ddbf234d222cbaba06ca86d101b1d  performance/manifests/decimal-01-d3-decquad-core-calibration-mac-v1.txt
+c7d028c2e612f0f92adf138ae252b1e5ed3bf70e14e1d9e0be7f34a6366a5d31  cmake-build-release-decimal-stage3/bin/rxvm_mc_decimal.rxvmplugin
+0e68332e6e0a781f66a1ef638daf73979f3418363abf898e8c7e5e374c895300  cmake-build-release-decimal-stage3/bin/rxvm_decquad_decimal.rxvmplugin

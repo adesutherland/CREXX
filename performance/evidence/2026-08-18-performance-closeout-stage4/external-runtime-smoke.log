@@ -1,0 +1,325 @@
+BEGIN cell=oorexx-sieve
+benchmark=awfy_sieve repetitions=1 result=669
+PASS: AWFY Sieve Classic port
+END PASS
+BEGIN cell=oorexx-permute
+benchmark=awfy_permute repetitions=1 result=8660
+PASS: AWFY Permute Classic procedural port
+END PASS
+BEGIN cell=oorexx-bounce
+benchmark=awfy_bounce repetitions=1 result=1331
+PASS: AWFY Bounce ooRexx object port
+END PASS
+BEGIN cell=oorexx-richards
+benchmark=awfy_richards repetitions=1 queue_packets=23246 holds=9297
+PASS: AWFY Richards ooRexx port
+END PASS
+BEGIN cell=oorexx-towers
+benchmark=awfy_towers repetitions=1 result=8191
+PASS: AWFY Towers ooRexx object port
+END PASS
+BEGIN cell=oorexx-storage
+benchmark=awfy_storage repetitions=1 result=5461
+PASS: AWFY Storage ooRexx object port
+END PASS
+BEGIN cell=oorexx-list
+benchmark=awfy_list repetitions=1 result=10
+PASS: AWFY List ooRexx object port
+END PASS
+BEGIN cell=oorexx-json
+benchmark=awfy_json repetitions=1 fixture_bytes=25820 operations=156 adaptation=standard-library-dom
+PASS: Full AWFY Json ooRexx standard-library port
+END PASS
+BEGIN cell=oorexx-queens
+benchmark=awfy_queens repetitions=1 result=1
+PASS: AWFY Queens ooRexx object port
+END PASS
+BEGIN cell=oorexx-nbody
+benchmark=awfy_nbody steps=1 energy=-0.169074954025067552
+PASS: AWFY NBody ooRexx decimal/native-math port
+END PASS
+BEGIN cell=oorexx-base64
+benchmark=base64_roundtrip_v2 repetitions=1 encoded_length=1368 checksum=130560
+PASS: Base64 Roundtrip v2 ooRexx port
+END PASS
+BEGIN cell=oorexx-rexxcps
+----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+ REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+       System is: DARWIN
+        Averaged: 500 x 100 iterations of 1000 clauses (over 1.3s)
+
+     Performance: 39478380 REXX clauses per second
+
+END PASS
+BEGIN cell=regina-rexxcps
+----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+ REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+       System is: UNIX
+        Averaged: 400 x 100 iterations of 1000 clauses (over 1.2s)
+
+     Performance: 32625948 REXX clauses per second
+
+END PASS
+BEGIN cell=netrexx-sieve
+benchmark=awfy_sieve repetitions=1 result=669
+PASS: AWFY Sieve NetRexx decimal port
+END PASS
+BEGIN cell=netrexx-permute
+benchmark=awfy_permute repetitions=1 result=8660
+PASS: AWFY Permute NetRexx decimal port
+END PASS
+BEGIN cell=netrexx-bounce
+benchmark=awfy_bounce repetitions=1 result=1331
+PASS: AWFY Bounce NetRexx decimal port
+END PASS
+BEGIN cell=netrexx-richards
+benchmark=awfy_richards repetitions=1 queue_packets=23246 holds=9297
+PASS: AWFY Richards NetRexx decimal port
+END PASS
+BEGIN cell=netrexx-queens
+benchmark=awfy_queens repetitions=1 result=1
+PASS: AWFY Queens NetRexx decimal port
+END PASS
+BEGIN cell=netrexx-rexxcps
+----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+ NetRexx version is: NetRexx 5.10 20 Mar 2026
+          System is: Java
+          Averaging: 100 measures of 400 iterations
+                       of 1000 clauses (over 0.855903543    s)
+
+Total (full DOs): 0.855903543 secs (average of 100 measures of 400 iterations)
+Time for one iteration (1000 clauses) was: 0.00002139406025 seconds
+
+     Performance: 46_741_946 NetRexx clauses per second
+                ( 46.742E+6 cps)
+
+PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+END PASS
+BEGIN cell=java-Bounce
+Starting Bounce benchmark ...
+Bounce: iterations=1 runtime: 1094us
+Bounce: iterations=1 average: 1094us total: 1094us
+
+
+Total Runtime: 1094us
+END PASS
+BEGIN cell=python-Bounce
+Starting Bounce benchmark ...
+Bounce: iterations=1 runtime: 436us
+Bounce: iterations=1 average: 436us total: 436us
+
+
+Total Runtime: 436us
+END PASS
+BEGIN cell=java-CD
+Starting CD benchmark ...
+CD: iterations=1 runtime: 5274us
+CD: iterations=1 average: 5274us total: 5274us
+
+
+Total Runtime: 5274us
+END PASS
+BEGIN cell=python-CD
+Starting CD benchmark ...
+CD: iterations=1 runtime: 3052us
+CD: iterations=1 average: 3052us total: 3052us
+
+
+Total Runtime: 3052us
+END PASS
+BEGIN cell=java-DeltaBlue
+Starting DeltaBlue benchmark ...
+DeltaBlue: iterations=1 runtime: 7066us
+DeltaBlue: iterations=1 average: 7066us total: 7066us
+
+
+Total Runtime: 7066us
+END PASS
+BEGIN cell=python-DeltaBlue
+Starting DeltaBlue benchmark ...
+DeltaBlue: iterations=1 runtime: 147us
+DeltaBlue: iterations=1 average: 147us total: 147us
+
+
+Total Runtime: 147us
+END PASS
+BEGIN cell=java-Havlak
+Starting Havlak benchmark ...
+Havlak: iterations=1 runtime: 91341us
+Havlak: iterations=1 average: 91341us total: 91341us
+
+
+Total Runtime: 91341us
+END PASS
+BEGIN cell=python-Havlak
+Starting Havlak benchmark ...
+Havlak: iterations=1 runtime: 1368134us
+Havlak: iterations=1 average: 1368134us total: 1368134us
+
+
+Total Runtime: 1368134us
+END PASS
+BEGIN cell=java-Json
+Starting Json benchmark ...
+Json: iterations=1 runtime: 3712us
+Json: iterations=1 average: 3712us total: 3712us
+
+
+Total Runtime: 3712us
+END PASS
+BEGIN cell=python-Json
+Starting Json benchmark ...
+Json: iterations=1 runtime: 4030us
+Json: iterations=1 average: 4030us total: 4030us
+
+
+Total Runtime: 4030us
+END PASS
+BEGIN cell=java-List
+Starting List benchmark ...
+List: iterations=1 runtime: 294us
+List: iterations=1 average: 294us total: 294us
+
+
+Total Runtime: 294us
+END PASS
+BEGIN cell=python-List
+Starting List benchmark ...
+List: iterations=1 runtime: 301us
+List: iterations=1 average: 301us total: 301us
+
+
+Total Runtime: 301us
+END PASS
+BEGIN cell=java-Mandelbrot
+Starting Mandelbrot benchmark ...
+Mandelbrot: iterations=1 runtime: 2us
+Mandelbrot: iterations=1 average: 2us total: 2us
+
+
+Total Runtime: 2us
+END PASS
+BEGIN cell=python-Mandelbrot
+Starting Mandelbrot benchmark ...
+Mandelbrot: iterations=1 runtime: 3us
+Mandelbrot: iterations=1 average: 3us total: 3us
+
+
+Total Runtime: 3us
+END PASS
+BEGIN cell=java-NBody
+Starting NBody benchmark ...
+NBody: iterations=1 runtime: 263us
+NBody: iterations=1 average: 263us total: 263us
+
+
+Total Runtime: 263us
+END PASS
+BEGIN cell=python-NBody
+Starting NBody benchmark ...
+NBody: iterations=1 runtime: 16us
+NBody: iterations=1 average: 16us total: 16us
+
+
+Total Runtime: 16us
+END PASS
+BEGIN cell=java-Permute
+Starting Permute benchmark ...
+Permute: iterations=1 runtime: 143us
+Permute: iterations=1 average: 143us total: 143us
+
+
+Total Runtime: 143us
+END PASS
+BEGIN cell=python-Permute
+Starting Permute benchmark ...
+Permute: iterations=1 runtime: 632us
+Permute: iterations=1 average: 632us total: 632us
+
+
+Total Runtime: 632us
+END PASS
+BEGIN cell=java-Queens
+Starting Queens benchmark ...
+Queens: iterations=1 runtime: 229us
+Queens: iterations=1 average: 229us total: 229us
+
+
+Total Runtime: 229us
+END PASS
+BEGIN cell=python-Queens
+Starting Queens benchmark ...
+Queens: iterations=1 runtime: 423us
+Queens: iterations=1 average: 423us total: 423us
+
+
+Total Runtime: 423us
+END PASS
+BEGIN cell=java-Richards
+Starting Richards benchmark ...
+Richards: iterations=1 runtime: 5742us
+Richards: iterations=1 average: 5742us total: 5742us
+
+
+Total Runtime: 5742us
+END PASS
+BEGIN cell=python-Richards
+Starting Richards benchmark ...
+Richards: iterations=1 runtime: 17940us
+Richards: iterations=1 average: 17940us total: 17940us
+
+
+Total Runtime: 17940us
+END PASS
+BEGIN cell=java-Sieve
+Starting Sieve benchmark ...
+Sieve: iterations=1 runtime: 164us
+Sieve: iterations=1 average: 164us total: 164us
+
+
+Total Runtime: 164us
+END PASS
+BEGIN cell=python-Sieve
+Starting Sieve benchmark ...
+Sieve: iterations=1 runtime: 236us
+Sieve: iterations=1 average: 236us total: 236us
+
+
+Total Runtime: 236us
+END PASS
+BEGIN cell=java-Storage
+Starting Storage benchmark ...
+Storage: iterations=1 runtime: 1672us
+Storage: iterations=1 average: 1672us total: 1672us
+
+
+Total Runtime: 1672us
+END PASS
+BEGIN cell=python-Storage
+Starting Storage benchmark ...
+Storage: iterations=1 runtime: 827us
+Storage: iterations=1 average: 827us total: 827us
+
+
+Total Runtime: 827us
+END PASS
+BEGIN cell=java-Towers
+Starting Towers benchmark ...
+Towers: iterations=1 runtime: 449us
+Towers: iterations=1 average: 449us total: 449us
+
+
+Total Runtime: 449us
+END PASS
+BEGIN cell=python-Towers
+Starting Towers benchmark ...
+Towers: iterations=1 runtime: 986us
+Towers: iterations=1 average: 986us total: 986us
+
+
+Total Runtime: 986us
+END PASS
+BEGIN cell=oorexx-mandelbrot-500-negative
+FAIL: expected 191, got 255
+END EXPECTED-NOT-COMPARABLE rc=1
+PASS positive_cells=47 expected_negative_cells=1

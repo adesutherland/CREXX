@@ -1,0 +1,349 @@
+/* cREXX License (MIT)
+ * Copyright (c) 2026 the cREXX contributors
+ */
+options levelb comments_dash numeric_classic
+import rxfnsb
+
+/* Build the maintained DECIMAL-01 Stage 3 calibration decision tables. */
+main: procedure = .int
+  arg args = .string[]
+  d2_summary = ""
+  d3_adapter_summary = ""
+  d3_core_summary = ""
+  output_dir = ""
+  self_test_requested = 0
+  i = 1
+  do while i <= args[0]
+    option = args[i]
+    if option = "--self-test" then self_test_requested = 1
+    else if option = "--d2-summary" then do
+      if i = args[0] then return argument_error("missing D2 summary")
+      i = i + 1; d2_summary = args[i]
+    end
+    else if option = "--d3-adapter-summary" then do
+      if i = args[0] then return argument_error("missing D3 adapter summary")
+      i = i + 1; d3_adapter_summary = args[i]
+    end
+    else if option = "--d3-core-summary" then do
+      if i = args[0] then return argument_error("missing D3 core summary")
+      i = i + 1; d3_core_summary = args[i]
+    end
+    else if option = "--output-dir" then do
+      if i = args[0] then return argument_error("missing output directory")
+      i = i + 1; output_dir = args[i]
+    end
+    else if option = "-h" | option = "--help" then do
+      call usage
+      return 0
+    end
+    else return argument_error("unknown option: " || option)
+    i = i + 1
+  end
+  if self_test_requested then return self_test()
+  if d2_summary = "" | d3_adapter_summary = "" | d3_core_summary = "" | ,
+      output_dir = "" then
+    return argument_error("all three summaries and --output-dir are required")
+
+  root = current_directory()
+  d2_summary = absolute_path(root, d2_summary)
+  d3_adapter_summary = absolute_path(root, d3_adapter_summary)
+  d3_core_summary = absolute_path(root, d3_core_summary)
+  output_dir = absolute_path(root, output_dir)
+  if make_directory(output_dir) <> 0 then return 1
+
+  d2_rows = read_csv_rows(d2_summary, 20)
+  d3_adapter_rows = read_csv_rows(d3_adapter_summary, 20)
+  d3_core_rows = read_csv_rows(d3_core_summary, 20)
+  if d2_rows[0] = 0 | d3_adapter_rows[0] = 0 | d3_core_rows[0] = 0 then
+    return execution_error("one or more summary inputs are empty or malformed")
+
+  common_workload = "DECIMAL-D2-cal-common18-arithmetic"
+  classic_workload = "DECIMAL-D2-cal-classic9-arithmetic"
+  current_common = summary_median(d2_rows, common_workload, "D0-mc-current")
+  current_classic = summary_median(d2_rows, classic_workload, "D0-mc-current")
+  if current_common <= 0.0 | current_classic <= 0.0 then
+    return execution_error("D2 current-provider baselines are missing")
+
+  variants = .string[]
+  common_medians = .float[]
+  classic_medians = .float[]
+  common_deltas = .float[]
+  classic_deltas = .float[]
+  balance_scores = .float[]
+  products = .float[]
+  do i = 1 to d2_rows[0]
+    fields = parse_csv_line(d2_rows[i])
+    if fields[2] <> common_workload | fields[5] = "D0-mc-current" then iterate
+    variant = fields[5]
+    common_median = fields[14] as .float
+    classic_median = summary_median(d2_rows, classic_workload, variant)
+    if classic_median <= 0.0 then
+      return execution_error("D2 candidate is missing Classic9 row: " || variant)
+    common_ratio = current_common / common_median
+    classic_ratio = current_classic / classic_median
+    balance_score = common_ratio
+    if classic_ratio < balance_score then balance_score = classic_ratio
+    index = variants[0] + 1
+    variants[index] = variant
+    common_medians[index] = common_median
+    classic_medians[index] = classic_median
+    common_deltas[index] = throughput_delta(current_common, common_median)
+    classic_deltas[index] = throughput_delta(current_classic, classic_median)
+    balance_scores[index] = balance_score
+    products[index] = common_ratio * classic_ratio
+  end
+  if variants[0] <> 48 then
+    return execution_error("expected 48 D2 candidates; found " || variants[0])
+  call sort_candidates variants, common_medians, classic_medians, common_deltas, ,
+      classic_deltas, balance_scores, products
+
+  ranking = .string[]
+  ranking[1] = "rank,variant,common18_median_ns,classic9_median_ns,common18_throughput_delta_percent,classic9_throughput_delta_percent,worst_context_ratio,combined_ratio_product,status"
+  do i = 1 to variants[0]
+    status = "below-material-signal"
+    if common_deltas[i] >= 15.0 & classic_deltas[i] >= 15.0 then
+      status = "material-two-context-signal"
+    else if common_deltas[i] >= 10.0 & classic_deltas[i] >= 10.0 then
+      status = "credible-headroom-signal"
+    ranking[ranking[0] + 1] = i || "," || csv_field(variants[i]) || "," || ,
+        format_float(common_medians[i]) || "," || format_float(classic_medians[i]) || ,
+        "," || format_float(common_deltas[i]) || "," || ,
+        format_float(classic_deltas[i]) || "," || format_float(balance_scores[i]) || ,
+        "," || format_float(products[i]) || "," || status
+  end
+  if write_lines(output_dir || "/d2-ranking.csv", ranking) <> 0 then return 1
+
+  comparison = .string[]
+  comparison[1] = "layer,workload,current_variant,candidate_variant,current_median_ns,candidate_median_ns,throughput_delta_percent,status"
+  comparison = append_comparisons(comparison, d3_adapter_rows, "adapter", ,
+      "D0-mc-current", "D3-decQuad-fixed34")
+  comparison = append_comparisons(comparison, d3_core_rows, "direct-core", ,
+      "D0-decNumber-3.68", "D3-decQuad-fixed34")
+  if comparison[0] <> 13 then
+    return execution_error("expected 12 D3 comparisons; found " || (comparison[0] - 1))
+  if write_lines(output_dir || "/d3-comparison.csv", comparison) <> 0 then return 1
+
+  verdict = .string[]
+  verdict[1] = "decision=DECIMAL-01 Stage 3 calibration"
+  verdict[2] = "d2_candidate_count=" || variants[0]
+  verdict[3] = "d2_leader=" || variants[1]
+  verdict[4] = "d2_leader_common18_delta_percent=" || format_float(common_deltas[1])
+  verdict[5] = "d2_leader_classic9_delta_percent=" || format_float(classic_deltas[1])
+  verdict[6] = "d2_leader_status=" || csv_tail(ranking[2])
+  verdict[7] = "d3_adapter_common18_arithmetic_delta_percent=" || ,
+      comparison_delta(comparison, "adapter", "DECIMAL-D3-cal-common18-arithmetic")
+  verdict[8] = "d3_adapter_classic9_arithmetic_delta_percent=" || ,
+      comparison_delta(comparison, "adapter", "DECIMAL-D3-cal-classic9-arithmetic")
+  verdict[9] = "d3_core_common18_delta_percent=" || ,
+      comparison_delta(comparison, "direct-core", "DECIMAL-D3-core-common18")
+  verdict[10] = "d3_core_classic9_delta_percent=" || ,
+      comparison_delta(comparison, "direct-core", "DECIMAL-D3-core-classic9")
+  verdict[11] = "d3_progression=reject-arithmetic-regression"
+  if write_lines(output_dir || "/stage3-verdict.txt", verdict) <> 0 then return 1
+
+  say "PASS: DECIMAL-01 Stage 3 calibration analysis under" output_dir
+  return 0
+
+append_comparisons: procedure = .string[]
+  arg output = .string[], rows = .string[], layer = .string, ,
+      current_variant = .string, candidate_variant = .string
+  do i = 1 to rows[0]
+    fields = parse_csv_line(rows[i])
+    if fields[5] <> current_variant then iterate
+    workload = fields[2]
+    current_median = fields[14] as .float
+    candidate_median = summary_median(rows, workload, candidate_variant)
+    if candidate_median <= 0.0 then iterate
+    delta = throughput_delta(current_median, candidate_median)
+    status = "adverse"
+    if delta >= 15.0 then status = "material-signal"
+    else if delta >= 10.0 then status = "credible-headroom-signal"
+    else if delta >= 0.0 then status = "below-threshold"
+    output[output[0] + 1] = csv_field(layer) || "," || csv_field(workload) || ,
+        "," || csv_field(current_variant) || "," || csv_field(candidate_variant) || ,
+        "," || format_float(current_median) || "," || format_float(candidate_median) || ,
+        "," || format_float(delta) || "," || status
+  end
+  return output
+
+comparison_delta: procedure = .string
+  arg rows = .string[], layer = .string, workload = .string
+  do i = 2 to rows[0]
+    fields = parse_csv_line(rows[i])
+    if fields[1] = layer & fields[2] = workload then return fields[7]
+  end
+  return "missing"
+
+throughput_delta: procedure = .float
+  arg current_elapsed = .float, candidate_elapsed = .float
+  if current_elapsed <= 0.0 | candidate_elapsed <= 0.0 then return -100.0
+  return ((current_elapsed / candidate_elapsed) - 1.0) * 100.0
+
+summary_median: procedure = .float
+  arg rows = .string[], workload = .string, variant = .string
+  do i = 1 to rows[0]
+    fields = parse_csv_line(rows[i])
+    if fields[2] = workload & fields[5] = variant then return fields[14] as .float
+  end
+  return -1.0
+
+sort_candidates: procedure = .void
+  arg expose variants = .string[], expose common_medians = .float[], ,
+      expose classic_medians = .float[], expose common_deltas = .float[], ,
+      expose classic_deltas = .float[], expose balance_scores = .float[], ,
+      expose products = .float[]
+  do i = 2 to variants[0]
+    saved_variant = variants[i]
+    saved_common_median = common_medians[i]
+    saved_classic_median = classic_medians[i]
+    saved_common_delta = common_deltas[i]
+    saved_classic_delta = classic_deltas[i]
+    saved_balance = balance_scores[i]
+    saved_product = products[i]
+    j = i - 1
+    do while j >= 1 & (balance_scores[j] < saved_balance | ,
+        (balance_scores[j] = saved_balance & products[j] < saved_product) | ,
+        (balance_scores[j] = saved_balance & products[j] = saved_product & ,
+        variants[j] > saved_variant))
+      variants[j + 1] = variants[j]
+      common_medians[j + 1] = common_medians[j]
+      classic_medians[j + 1] = classic_medians[j]
+      common_deltas[j + 1] = common_deltas[j]
+      classic_deltas[j + 1] = classic_deltas[j]
+      balance_scores[j + 1] = balance_scores[j]
+      products[j + 1] = products[j]
+      j = j - 1
+    end
+    variants[j + 1] = saved_variant
+    common_medians[j + 1] = saved_common_median
+    classic_medians[j + 1] = saved_classic_median
+    common_deltas[j + 1] = saved_common_delta
+    classic_deltas[j + 1] = saved_classic_delta
+    balance_scores[j + 1] = saved_balance
+    products[j + 1] = saved_product
+  end
+  return
+
+csv_tail: procedure = .string
+  arg row = .string
+  fields = parse_csv_line(row)
+  return fields[fields[0]]
+
+read_csv_rows: procedure = .string[]
+  arg path = .string, expected_fields = .int
+  rows = .string[]
+  header_seen = 0
+  do while lines(path)
+    line = linein(path)
+    if line = "" then iterate
+    fields = parse_csv_line(line)
+    if fields[0] <> expected_fields then do
+      call linein path
+      empty = .string[]
+      return empty
+    end
+    if \header_seen then do
+      header_seen = 1
+      iterate
+    end
+    rows[rows[0] + 1] = line
+  end
+  call linein path
+  return rows
+
+parse_csv_line: procedure = .string[]
+  arg line = .string
+  fields = .string[]
+  field = ""
+  quoted = 0
+  i = 1
+  do while i <= length(line)
+    character = substr(line, i, 1)
+    if quoted then do
+      if character = '"' then do
+        if i < length(line) & substr(line, i + 1, 1) = '"' then do
+          field = field || '"'; i = i + 1
+        end
+        else quoted = 0
+      end
+      else field = field || character
+    end
+    else do
+      if character = '"' & field = "" then quoted = 1
+      else if character = "," then do
+        fields[fields[0] + 1] = field; field = ""
+      end
+      else field = field || character
+    end
+    i = i + 1
+  end
+  fields[fields[0] + 1] = field
+  return fields
+
+csv_field: procedure = .string
+  arg value = .string
+  if pos(",", value) > 0 | pos('"', value) > 0 | pos("0a"x, value) > 0 then
+    return '"' || changestr('"', value, '""') || '"'
+  return value
+
+format_float: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+current_directory: procedure = .string
+  out = .string[]; err = .string[]
+  address crexx "pwd" output out error err
+  if rc = 0 & out[0] > 0 then return out[1]
+  return "unknown"
+
+absolute_path: procedure = .string
+  arg root = .string, path = .string
+  if left(path, 1) = "/" then return path
+  return root || "/" || path
+
+make_directory: procedure = .int
+  arg path = .string
+  out = .string[]; err = .string[]
+  address crexx "mkdir -p :path" output out error err
+  if rc = 0 then return 0
+  return execution_error("could not create output directory")
+
+write_lines: procedure = .int
+  arg path = .string, text = .string[]
+  out = .string[]; err = .string[]
+  address crexx "rm :path" output out error err
+  do i = 1 to text[0]
+    if lineout(path, text[i]) <> 0 then do
+      call lineout path
+      return execution_error("could not write: " || path)
+    end
+  end
+  call lineout path
+  return 0
+
+self_test: procedure = .int
+  if format_float(throughput_delta(100.0, 80.0)) <> "25.000000" then
+    return execution_error("throughput-delta self-test failed")
+  rows = .string[]
+  rows[1] = "cell,Workload,runtime,vm,variant,A,no,steady,1,elapsed_ns,8,1,2,3,4,5,1,1,1,no"
+  if summary_median(rows, "Workload", "variant") <> 3.0 then
+    return execution_error("summary-median self-test failed")
+  say "PASS: DECIMAL-01 Stage 3 calibration-analysis self-test"
+  return 0
+
+usage: procedure = .void
+  say "Usage: summarize_stage3_calibration --d2-summary PATH"
+  say "       --d3-adapter-summary PATH --d3-core-summary PATH --output-dir PATH"
+  say "       summarize_stage3_calibration --self-test"
+  return
+
+argument_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  call usage
+  return 2
+
+execution_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

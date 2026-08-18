@@ -1,0 +1,1 @@
+PASS: compact cross-runtime timing matrix retained under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-08-18-decimal-01-libmpdec-screen/l1

@@ -1,0 +1,39 @@
+options levelb comments_dash
+
+main: procedure = .int
+  probe = .SignalLoopCleanup()
+  result = probe.run()
+  say "result="result "limit="probe.limit()
+  if result <> 154 | probe.limit() <> 2 then return 1
+  say "PASS: signal cleans crossed loop"
+  return 0
+
+SignalLoopCleanup: class
+  limit_ = .int
+
+  *: factory
+    limit_ = 2
+    return
+
+  run: method = .int
+    caught = 0
+    after = .int
+    do
+      do index = 1 to limit_
+        data = '01'x as .binary
+        ignored = <at..binary>(2, 1) data
+      end
+    on signal out_of_range
+      caught = 1
+    end
+    do
+      first = caught + 6
+      second = first + caught
+      third = second + caught
+      fourth = third + caught
+      after = first + second + third + fourth
+    end
+    return caught * 100 + limit_ * 10 + after
+
+  limit: method = .int
+    return limit_

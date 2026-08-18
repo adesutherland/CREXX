@@ -17,6 +17,10 @@
  * 74306fec151070fd07157cefeacf19e7e0bcdc89. Stable integer handles lower
  * basic-block, loop and union-find identity into typed arrays while retaining
  * the upstream CFG construction, Havlak/Tarjan algorithm and result contract.
+ * Graph adjacency uses insertion-ordered edge-index arrays and per-pass
+ * predecessor containers are allocated lazily. This is an ordinary Level B
+ * spelling of the same graph work and avoids constructing thousands of empty
+ * value-container objects.
  */
 options levelb comments_dash
 
@@ -236,11 +240,15 @@ HavlakProgram: class
   node_count_ = .int
   node_present_ = .int[]
   start_node_ = .int
-  in_edges_ = .HIntList[]
-  out_edges_ = .HIntList[]
+  first_in_edge_ = .int[]
+  last_in_edge_ = .int[]
+  first_out_edge_ = .int[]
+  last_out_edge_ = .int[]
   edge_count_ = .int
   edge_from_ = .int[]
   edge_to_ = .int[]
+  next_in_edge_ = .int[]
+  next_out_edge_ = .int[]
 
   main_lsg_ = .HLoopGraph
   temp_lsg_ = .HLoopGraph
@@ -254,7 +262,9 @@ HavlakProgram: class
   uf_block_ = .int[]
   uf_loop_ = .int[]
   non_back_preds_ = .HIntSet[]
+  non_back_present_ = .int[]
   back_preds_ = .HIntList[]
+  back_present_ = .int[]
 
   *: factory
     node_count_ = 0
@@ -266,8 +276,10 @@ HavlakProgram: class
     node_count_ = 1
     start_node_ = 1
     node_present_[1] = 1
-    in_edges_[1] = .HIntList()
-    out_edges_[1] = .HIntList()
+    first_in_edge_[1] = 0
+    last_in_edge_[1] = 0
+    first_out_edge_[1] = 0
+    last_out_edge_[1] = 0
     return
 
   run: method = .int[]
@@ -293,8 +305,10 @@ HavlakProgram: class
     if handle > node_count_ then do
       do index = node_count_ + 1 to handle
         node_present_[index] = 0
-        in_edges_[index] = .HIntList()
-        out_edges_[index] = .HIntList()
+        first_in_edge_[index] = 0
+        last_in_edge_[index] = 0
+        first_out_edge_[index] = 0
+        last_out_edge_[index] = 0
       end
       node_count_ = handle
     end
@@ -308,15 +322,17 @@ HavlakProgram: class
     arg from_name = .int, to_name = .int
     from = createNode(from_name)
     destination = createNode(to_name)
-    out_ref = reference out_edges_[from]
-    out = dereference out_ref
-    call out.append(destination)
-    in_ref = reference in_edges_[destination]
-    incoming = dereference in_ref
-    call incoming.append(from)
     edge_count_ = edge_count_ + 1
     edge_from_[edge_count_] = from
     edge_to_[edge_count_] = destination
+    next_out_edge_[edge_count_] = 0
+    if first_out_edge_[from] = 0 then first_out_edge_[from] = edge_count_
+    else next_out_edge_[last_out_edge_[from]] = edge_count_
+    last_out_edge_[from] = edge_count_
+    next_in_edge_[edge_count_] = 0
+    if first_in_edge_[destination] = 0 then first_in_edge_[destination] = edge_count_
+    else next_in_edge_[last_in_edge_[destination]] = edge_count_
+    last_in_edge_[destination] = edge_count_
     return
 
   buildDiamond: method = .int
@@ -391,17 +407,23 @@ HavlakProgram: class
     uf_loop_[current] = 0
     number_[block] = current
     last_id = current
-    outgoing = out_edges_[block]
-    do index = 1 to outgoing.size()
-      target = outgoing.get(index)
+    edge = first_out_edge_[block]
+    do while edge <> 0
+      target = edge_to_[edge]
+      next_edge = next_out_edge_[edge]
       if number_[target] = 0 then
         last_id = doDFS(target, last_id + 1)
+      edge = next_edge
     end
     last_[current] = last_id
     return last_id
 
   addBackPred: method = .void
     arg header = .int, predecessor = .int
+    if \back_present_[header] then do
+      back_preds_[header] = .HIntList()
+      back_present_[header] = 1
+    end
     list_ref = reference back_preds_[header]
     list = dereference list_ref
     call list.append(predecessor)
@@ -409,6 +431,10 @@ HavlakProgram: class
 
   addNonBackPred: method = .void
     arg header = .int, predecessor = .int
+    if \non_back_present_[header] then do
+      non_back_preds_[header] = .HIntSet()
+      non_back_present_[header] = 1
+    end
     set_ref = reference non_back_preds_[header]
     set = dereference set_ref
     call set.add(predecessor)
@@ -463,8 +489,8 @@ HavlakProgram: class
       uf_parent_[index] = index
       uf_block_[index] = 0
       uf_loop_[index] = 0
-      non_back_preds_[index] = .HIntSet()
-      back_preds_[index] = .HIntList()
+      non_back_present_[index] = 0
+      back_present_[index] = 0
     end
 
     last_node = doDFS(start_node_, 1)
@@ -475,14 +501,16 @@ HavlakProgram: class
       node_w = uf_block_[w]
       if node_w = 0 then type_[w] = 5
       else do
-        incoming = in_edges_[node_w]
-        do edge = 1 to incoming.size()
-          predecessor_block = incoming.get(edge)
+        incoming_edge = first_in_edge_[node_w]
+        do while incoming_edge <> 0
+          predecessor_block = edge_from_[incoming_edge]
+          next_incoming_edge = next_in_edge_[incoming_edge]
           v = number_[predecessor_block]
           if v <> 0 then do
             if isAncestor(w, v) then call addBackPred(w, v)
             else call addNonBackPred(w, v)
           end
+          incoming_edge = next_incoming_edge
         end
       end
     end
@@ -492,11 +520,13 @@ HavlakProgram: class
       node_pool = .HIntList()
       node_w = uf_block_[w]
       if node_w <> 0 then do
-        backs = back_preds_[w]
-        do index = 1 to backs.size()
-          v = backs.get(index)
-          if v <> w then call node_pool.append(findSet(v))
-          else type_[w] = 3
+        if back_present_[w] then do
+          backs = back_preds_[w]
+          do index = 1 to backs.size()
+            v = backs.get(index)
+            if v <> w then call node_pool.append(findSet(v))
+            else type_[w] = 3
+          end
         end
 
         work_list = .HIntList()
@@ -507,19 +537,21 @@ HavlakProgram: class
 
         do while \work_list.isEmpty()
           x = work_list.removeFirst()
-          non_backs = non_back_preds_[x]
-          if non_backs.size() > 32768 then return
-          do index = 1 to non_backs.size()
-            y = non_backs.get(index)
-            ydash = findSet(y)
-            if \isAncestor(w, ydash) then do
-              type_[w] = 4
-              call addNonBackPred(w, ydash)
-            end
-            else do
-              if ydash <> w & \node_pool.contains(ydash) then do
-                call work_list.append(ydash)
-                call node_pool.append(ydash)
+          if non_back_present_[x] then do
+            non_backs = non_back_preds_[x]
+            if non_backs.size() > 32768 then return
+            do index = 1 to non_backs.size()
+              y = non_backs.get(index)
+              ydash = findSet(y)
+              if \isAncestor(w, ydash) then do
+                type_[w] = 4
+                call addNonBackPred(w, ydash)
+              end
+              else do
+                if ydash <> w & \node_pool.contains(ydash) then do
+                  call work_list.append(ydash)
+                  call node_pool.append(ydash)
+                end
               end
             end
           end

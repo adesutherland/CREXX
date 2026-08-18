@@ -1,0 +1,51 @@
+utc=2026-08-18T16:59:34Z
+{ 2.06 2.43 2.36 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+79932 /bin/zsh -c evidence_root=/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-08-18-decimal-01-libmpdec-screen
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g custom
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxtvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|ctest|cmake --build|ninja|make( |$)' || true
+  shasum -a 256 cmake-build-release-mpd/bin/rxvm_mc_decimal.rxvmplugin cmake-build-release-mpd/bin/rxvm_mpd_decimal.rxvmplugin cmake-build-release-mpd/bin/mpd_decimal_core_comparison performance/manifests/decimal-01-libmpdec-arithmetic-double-check-mac-v1.txt
+} >"$evidence_root/double-check-pre-state.txt" 2>&1
+cmake-build-release/bin/crexx performance/tools/run_cross_runtime_matrix.crexx --nocolour --nokeep --args --manifest performance/manifests/decimal-01-libmpdec-arithmetic-double-check-mac-v1.txt --output-dir "$evidence_root/double-check" --measurement timing --warmups 1 --runs 4 >"$evidence_root/double-check-driver.stdout.txt" 2>"$evidence_root/double-check-driver.stderr.txt"
+c7d028c2e612f0f92adf138ae252b1e5ed3bf70e14e1d9e0be7f34a6366a5d31  cmake-build-release-mpd/bin/rxvm_mc_decimal.rxvmplugin
+3c76832a2a83229230223e5a837130a2d374ed47d320d226e2a678ec42b5787c  cmake-build-release-mpd/bin/rxvm_mpd_decimal.rxvmplugin
+6aca6b209ee90ad59ae5cc8268719346af17a9e6d7ce1a13655367db646b7e29  cmake-build-release-mpd/bin/mpd_decimal_core_comparison
+03bcb4642435f35f85f844faf7e9674f2f93f1c4c1d51c3c52917182889e50a8  performance/manifests/decimal-01-libmpdec-arithmetic-double-check-mac-v1.txt

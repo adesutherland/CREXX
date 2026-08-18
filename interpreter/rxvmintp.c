@@ -4331,6 +4331,27 @@ static rxsignal_pop_result rxsignal_pop_handler(stack_frame *frame, unsigned cha
     return RXSIGNAL_POP_NOT_FOUND;
 }
 
+/* Restore handler registrations installed after the branch target's protected
+ * block was entered.  The target block's own saved entries remain in place;
+ * generated handler entry code pops those after control reaches the label. */
+static int rxsignal_unwind_handler_stack_to(
+        stack_frame *frame, interrupt_saved_entry *marker) {
+    interrupt_saved_entry *saved;
+
+    if (!frame) return marker == 0;
+    while (frame->interrupt_stack != marker) {
+        saved = frame->interrupt_stack;
+        if (!saved) return 0;
+        if (!rxsignal_ensure_private_interrupt_table(frame)) return 0;
+        frame->interrupt_stack = saved->next;
+        frame->interrupt_table[saved->signal - 1] = saved->entry;
+        rxsignal_apply_native_interrupt_mode(
+                saved->signal, &frame->interrupt_table[saved->signal - 1]);
+        (void)rxvm_memory_release(saved);
+    }
+    return 1;
+}
+
 static void rxsignal_clear_handler_stack(stack_frame *frame) {
     interrupt_saved_entry *saved;
 
@@ -4577,6 +4598,7 @@ RX_INLINE stack_frame *frame_f(
             this->interrupt_table[i].jump = 0;
             this->interrupt_table[i].frame = 0;
             this->interrupt_table[i].value_register = 0;
+            this->interrupt_table[i].stack_marker = 0;
         }
 
         /* Set up the default interrupt mask */
@@ -6302,6 +6324,12 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
             VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame
                                                        RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
+            {
+                int stack_restored = rxsignal_unwind_handler_stack_to(
+                        current_frame, signal_handler.stack_marker);
+                assert(stack_restored);
+                (void)stack_restored;
+            }
             VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
             pc = next_pc;
             // Fall through to CALL
@@ -6402,6 +6430,12 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
             VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame
                                                        RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
+            {
+                int stack_restored = rxsignal_unwind_handler_stack_to(
+                        current_frame, signal_handler.stack_marker);
+                assert(stack_restored);
+                (void)stack_restored;
+            }
             VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
             RXVM_SELECTED_DISPATCH();
 
@@ -6415,6 +6449,12 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
             VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame
                                                        RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
+            {
+                int stack_restored = rxsignal_unwind_handler_stack_to(
+                        current_frame, signal_handler.stack_marker);
+                assert(stack_restored);
+                (void)stack_restored;
+            }
             rxsignal_populate_raw_interrupt(interrupt_arg,
                                             last_interrupt,
                                             last_interrupted_module[last_interrupt],

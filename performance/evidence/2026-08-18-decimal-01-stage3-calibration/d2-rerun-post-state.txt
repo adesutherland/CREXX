@@ -1,0 +1,36 @@
+utc=2026-08-18T18:09:50Z
+{ 1.41 1.59 1.64 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+7460 /bin/zsh -c set -e
+evidence_root="performance/evidence/2026-08-18-decimal-01-stage3-calibration"
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal 'XProtectRemediator|(^|/)(rxvm|rxtvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|cmake|ninja|ctest' || true
+  ps -Ao pid,%cpu,%mem,command | sort -k2 -nr | head -15
+} > "$evidence_root/d2-rerun-post-state.txt" 2>&1
+sed -n '1,30p' "$evidence_root/d2-grid/capture-manifest.json"
+printf 'samples='; awk 'END {print NR-1}' "$evidence_root/d2-grid/samples.csv"
+printf 'failed='; awk -F, 'NR>1 && $18 != "pass" {n++} END {print n+0}' "$evidence_root/d2-grid/samples.csv"
+sed -n '1,100p' "$evidence_root/d2-rerun-post-state.txt"
+    1  26.6  0.1 /sbin/launchd
+67651  16.8  4.2 /Applications/ChatGPT.app/Contents/Resources/codex -c features.code_mode_host=true app-server --analytics-default-enabled
+67664  16.3  7.6 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/151.0.7922.76/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer) --type=renderer --user-data-dir=/Users/adrian/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --start-stack-profiler --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-GB --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=5 --time-ticks-at-unix-epoch=-1784157951368621 --launch-time-ticks=2451675802208 --shared-files --metrics-shmem-handle=1752395122,r,8247509665184802842,14486552589890810062,2097152 --field-trial-handle=1718379636,r,11020521882076313039,8471531495406070395,262144 --enable-features=OwlHistory,OwlPrinting,ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,OwlExtensions,OwlOpenAIGoLinks --variations-seed-version --pseudonymization-salt-handle=1935764596,r,15094304488280246836,18437363677183915220,4 --trace-process-track-uuid=3190708990997080739 --seatbelt-client=100
+67632  15.3  0.7 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/151.0.7922.76/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service) --type=gpu-process --user-data-dir=/Users/adrian/Library/Application Support/Codex --start-stack-profiler --gpu-preferences=WAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAAQAAAAAAAAAADAAAAAAAAADgAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAoAAAAAAAAAAgAAAAAAAAADAAAAAEAAAAAAAAAAAAAAAgAAAAAAAAACAAAAAAAAAA= --shared-files --metrics-shmem-handle=1752395122,r,8915760799986291992,7202264115354638638,262144 --field-trial-handle=1718379636,r,11020521882076313039,8471531495406070395,262144 --enable-features=OwlHistory,OwlPrinting,ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,OwlExtensions,OwlOpenAIGoLinks --variations-seed-version --pseudonymization-salt-handle=1935764596,r,15094304488280246836,18437363677183915220,4 --trace-process-track-uuid=3190708988185955192 --seatbelt-client=43
+67620   6.1  2.2 /Applications/ChatGPT.app/Contents/MacOS/ChatGPT
+72123   2.6  0.1 /Applications/ChatGPT.app/Contents/Resources/codex-code-mode-host
+  753   2.5  0.0 /usr/libexec/sysmond
+  598   1.7  0.5 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer -daemon
+ 7460   0.7  0.0 /bin/zsh -c set -e\012evidence_root="performance/evidence/2026-08-18-decimal-01-stage3-calibration"\012{\012  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'\012  sysctl -n vm.loadavg\012  pmset -g batt\012  pmset -g therm\012  pgrep -fal 'XProtectRemediator|(^|/)(rxvm|rxtvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|cmake|ninja|ctest' || true\012  ps -Ao pid,%cpu,%mem,command | sort -k2 -nr | head -15\012} > "$evidence_root/d2-rerun-post-state.txt" 2>&1\012sed -n '1,30p' "$evidence_root/d2-grid/capture-manifest.json"\012printf 'samples='; awk 'END {print NR-1}' "$evidence_root/d2-grid/samples.csv"\012printf 'failed='; awk -F, 'NR>1 && $18 != "pass" {n++} END {print n+0}' "$evidence_root/d2-grid/samples.csv"\012sed -n '1,100p' "$evidence_root/d2-rerun-post-state.txt"
+  743   0.6  0.1 /usr/libexec/searchpartyd
+  903   0.3  0.1 /usr/libexec/trustd --agent
+  611   0.3  0.1 /usr/sbin/mDNSResponder
+  591   0.3  0.0 /usr/sbin/notifyd
+  565   0.2  0.1 /usr/libexec/opendirectoryd
+  524   0.2  0.3 /usr/libexec/logd

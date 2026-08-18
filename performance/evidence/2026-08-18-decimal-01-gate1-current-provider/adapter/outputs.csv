@@ -1,0 +1,481 @@
+sample_id,stream,line_number,text
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-db-classic9-arithmetic-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-L1-arithmetic-adapter-mc-classic9-arithmetic-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-db-common18-arithmetic-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-L1-arithmetic-adapter-mc-common18-arithmetic-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=75000000
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=75000000
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=75000000
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=75000000
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=75000000
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=75000000
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=75000000
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=75000000
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=75000000
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=75000000
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=75000000
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=75000000
+timing-DECIMAL-L1-conversion-adapter-db-classic9-conversion-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-classic9-conversion-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-db-common18-conversion-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=6000000 checksum=73500000
+timing-DECIMAL-L1-conversion-adapter-mc-common18-conversion-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-classic9-compare-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-classic9-compare-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-db-common18-compare-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=50000000 checksum=350000000
+timing-DECIMAL-L1-compare-adapter-mc-common18-compare-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-classic9-copy-clear-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-classic9-copy-clear-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=480000000
+timing-DECIMAL-L1-copy-clear-adapter-db-common18-copy-clear-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-L1-copy-clear-adapter-mc-common18-copy-clear-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=15000000000
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=15000000000
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-warmup-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-warmup-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=15000000000
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=15000000000
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=15000000000
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=15000000000
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=15000000000
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=15000000000
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=15000000000
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=15000000000
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=15000000000
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-db-classic9-sync-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-L1-sync-adapter-mc-classic9-sync-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_db_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=15000000000
+timing-DECIMAL-L1-sync-adapter-db-common18-sync-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-L1-sync-adapter-mc-common18-sync-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload

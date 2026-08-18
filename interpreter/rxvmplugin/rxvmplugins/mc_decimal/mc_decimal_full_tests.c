@@ -1188,10 +1188,12 @@ int test_decimalRound() {
 // Main function
 int main(int argc, char *argv[]) {
     int errors = 0;
+    const char *provider_name = argc > 1 ? argv[1] : "rxvm_mc_decimal";
 
     // Load the plugin
-    printf("mc_decimal_test2 - Loading Dynamic Plugin\n");
-    if (load_rxvmplugin(".", "rxvm_mc_decimal") != 0) {
+    printf("decimal contract tests - Loading Dynamic Plugin %s\n",
+           provider_name);
+    if (load_rxvmplugin(".", (char *)provider_name) != 0) {
         printf("Unable to load the rxvmplugin plugin\n");
         return 1;
     }

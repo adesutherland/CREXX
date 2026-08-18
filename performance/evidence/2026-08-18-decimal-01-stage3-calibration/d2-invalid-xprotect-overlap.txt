@@ -1,0 +1,5 @@
+utc=2026-08-18T18:01:35Z
+invalid_reason=XProtectRemediatorAdload started 2026-08-18T18:00:31Z before capture completed 2026-08-18T18:00:42Z
+  PID STARTED                      ELAPSED  %CPU %MEM COMMAND
+85ca5b5831da7705e00f25cccbdd3caaab19379b3ed78b0f4521b2bf8aaa5094  performance/evidence/2026-08-18-decimal-01-stage3-calibration/d2-grid-invalid-xprotect-overlap/samples.csv
+52f7f2ba3825020b237a9121d2bb51b8cb25fea04d26341741bc8db5ef52b5d0  performance/evidence/2026-08-18-decimal-01-stage3-calibration/d2-grid-invalid-xprotect-overlap/summary.csv

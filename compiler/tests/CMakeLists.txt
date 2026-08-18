@@ -3354,6 +3354,39 @@ add_test(NAME inline_test_computed_receiver_copyback_opt_rewrites
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(inline_test_computed_receiver_copyback_opt_rewrites PROPERTIES LABELS "linked_opt")
 
+add_test(NAME inline_loop_bound_early_return_cleanup_opt_rewrites
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_test_loop_bound_early_return_cleanup.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_loop_bound_early_return_cleanup_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_loop_bound_early_return_cleanup.cmake)
+set_tests_properties(inline_loop_bound_early_return_cleanup_opt_rewrites PROPERTIES
+        LABELS "compiler;inlining;correctness;linked_opt"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(NAME structured_exit_crossed_loop_cleanup_opt_rewrites
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/structured_exit_crossed_loop_cleanup.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/structured_exit_crossed_loop_cleanup_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_structured_exit_crossed_loop_cleanup.cmake)
+set_tests_properties(structured_exit_crossed_loop_cleanup_opt_rewrites PROPERTIES
+        LABELS "compiler;flow;correctness;linked_opt"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(NAME signal_crossed_loop_cleanup_opt_rewrites
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/signal_crossed_loop_cleanup.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/signal_crossed_loop_cleanup_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_signal_crossed_loop_cleanup.cmake)
+set_tests_properties(signal_crossed_loop_cleanup_opt_rewrites PROPERTIES
+        LABELS "compiler;flow;signals;correctness;linked_opt"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
 add_crexx_run_args_test(test_parse_arg_filename rexx_src/test_parse_arg_filename.crexx demo.rexx)
 add_crexx_run_args_test(implicit_main_arg_compat rexx_src/implicit_main_arg_compat.crexx alpha beta)
 add_crexx_run_args_test(arg_compat_no_vargs rexx_src/arg_compat_no_vargs.crexx alpha beta)
@@ -3453,6 +3486,10 @@ add_crexx_run_test(inline_test_member_receiver_expr rexx_src/inline_test_member_
 add_crexx_run_test(inline_test_named_factory_selector rexx_src/inline_test_named_factory_selector.crexx)
 add_crexx_run_test(inline_test_factory_arg_scope rexx_src/inline_test_factory_arg_scope.crexx)
 add_crexx_run_test(inline_test_computed_receiver_copyback rexx_src/inline_test_computed_receiver_copyback.crexx)
+add_crexx_run_test(inline_test_loop_bound_early_return_cleanup rexx_src/inline_test_loop_bound_early_return_cleanup.crexx)
+add_crexx_run_test(structured_exit_crossed_loop_cleanup rexx_src/structured_exit_crossed_loop_cleanup.crexx)
+add_crexx_run_test(signal_crossed_loop_cleanup rexx_src/signal_crossed_loop_cleanup.crexx)
+add_crexx_run_test(signal_nested_handler_unwind rexx_src/signal_nested_handler_unwind.crexx)
 add_crexx_run_test(inline_test_mutating_method_scalar_attr_return rexx_src/inline_test_mutating_method_scalar_attr_return.crexx)
 add_test(NAME inline_late_profitability_guard
          COMMAND ${CMAKE_COMMAND}
