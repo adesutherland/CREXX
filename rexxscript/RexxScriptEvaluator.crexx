@@ -126,6 +126,7 @@ rexxscriptcoreevaluator: class
     dbgtrace=debug
     if debug then call header statements
     call _seed_vars(seed_names, seed_values)
+    statements = qstripcomment('/*','*/',statements)
 
     statement_count = 0
     start = 1
@@ -139,9 +140,12 @@ rexxscriptcoreevaluator: class
       else do
         if ch == "'" | ch == '"' then quote = ch
         else if ch == ";" then do
-          statement_count = statement_count + 1
-          statement_texts[statement_count] = substr(statements, start, i - start)
-          statement_numbers[statement_count] = stmtno || ""
+          text = strip(substr(statements, start, i - start))
+          if text <> "" then do
+            statement_count = statement_count + 1
+            statement_texts[statement_count] = text
+            statement_numbers[statement_count] = stmtno || ""
+          end
           start = i + 1
           stmtno = stmtno + 1
         end
@@ -154,9 +158,12 @@ rexxscriptcoreevaluator: class
       return _build_result(error_message)
     end
 
-    statement_count = statement_count + 1
-    statement_texts[statement_count] = substr(statements, start)
-    statement_numbers[statement_count] = stmtno || ""
+    text = strip(substr(statements, start))
+    if text <> "" then do
+      statement_count = statement_count + 1
+      statement_texts[statement_count] = text
+      statement_numbers[statement_count] = stmtno || ""
+    end
 
     do i = 1 to statement_count
       text = strip(statement_texts[i])
@@ -311,6 +318,16 @@ rexxscriptcoreevaluator: class
        output_lines[output_count] = '@.main@'eval_value
        return 1
     end
+    if _starts_keyword(text, ".MCALL") = 1 then do
+           expr = strip(substr(text, 7))
+           if left(expr,2) \='##' then expr = '##'expr
+           if expr == "" then return _set_error("missing_expression", "missing .MCALL expression", stmtno, 1)
+           expr=_modify_var_symbol(expr)
+           if _eval_expression(expr, stmtno) = 0 then return 0
+           output_count = output_count + 1
+           output_lines[output_count] = '@.main@'eval_value
+           return 1
+        end
     if _starts_keyword(text, ".TAIL") = 1 then do
        expr = strip(substr(text, 6))
        if expr == "" then return _set_error("missing_expression", "missing .TAIL expression", stmtno, 1)
@@ -588,7 +605,7 @@ rexxscriptcoreevaluator: class
     end
 
     eq = _find_assignment(text)
-    if eq = 0 then return _set_error("unknown_statement", "unknown statement", stmtno, 1)
+    if eq = 0 then return _set_error("unknown_statement", "unknown statement '" text"'", stmtno, 1)
     name = strip(substr(text, 1, eq - 1))
     expr = strip(substr(text, eq + 1))
     if _is_identifier(name) = 0 then return _set_error("invalid_assignment", "invalid assignment target", stmtno, 1)

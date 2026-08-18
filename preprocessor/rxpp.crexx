@@ -201,16 +201,33 @@ RXPPPassOne: procedure = .int
   i=fsearch(source,1,"##CFLAG","","",which)   ## pickup CFLAG
   if i>0 then flagsset=early_flag_pick_up(i)
 
-  linx=arrayfind('options levelb',source,1,0)  /* search for string in array (Case insensitive) */
-  if linx>0 then stype.linx='X'            /* Skip line */
-  linx=arrayfind('import rxfnsb',source,1,0)   /* search for string in array (Case insensitive) */
-  if linx>0 then stype.linx='X'            /* Skip line */
-  linx=arrayfind('/* REXX */',source,1,0)      /* search for string in array (Case insensitive) */
-  if linx>0 then stype.linx='X'            /* Skip line */
-  call insert_source 1,10                 /* generated RXPP header has no original source line */
+  level='levelb'
+  linx=arrayfind('options levelg',source,1,0)
+  if linx>0 then do
+      stype.linx='X'
+      level='levelg'
+  end
+  else do
+      linx=arrayfind('options levelb',source,1,0)
+      if linx>0 then stype.linx='X'
+  end
+  linx=arrayfind('import rxfnsb',source,1,0)
+  if linx>0 then stype.linx='X'
+
+  linx=arrayfind('/* REXX */',source,1,0)
+  if linx>0 then stype.linx='X'
+  else do
+     linx=arrayfind('/* RXPP */',source,1,0)
+     if linx>0 then do
+        stype.linx='X'
+        source[linx]=''
+     end
+  end
+  call insert_source 1,10
+
   source.1='/* RXPP */'
-  source.2='options levelb'
-  if rxpp_srcmap_enabled() then source.2='options levelb srcmap'
+  source.2='options' level
+  if rxpp_srcmap_enabled() then source.2='options' level 'srcmap'
   source.3='import rxfnsb'
   source.4='/* reserved for namespace definition */'
   rexxlines=rexxlines+3
@@ -327,9 +344,10 @@ RXPPPassThree: procedure
      else source.4='namespace 'rxmodule' expose 'globaldef
   end
   do while lineNo<source.0
-     lineNo=Lineno+1
+      lineNo=Lineno+1
      curLino=LineNo           ## save into global current LineNo
      line = source.lineNo
+     uline=upper(strip(line))
      if stype.LineNo='X' then iterate    ## suppress any ##ELSE ##ENDIF
      if pos('/* reserved',line)>0 then iterate
   	 else if stype.LineNo='D' then do
@@ -387,29 +405,44 @@ RXPPPassThree: procedure
        call writeLine printGen(line,3)            ## printgen: prints pre-processor line with appropriate suffix comment
    	 end
      else if strip(line) \='' then do
-   	    newline = expandRecursive(line,lineNo)
-   	    call writeline newline
+       if left(uline,7)='##BLANK' then do
+           call writeline ' '
+           iterate
+       end
+       newline = expandRecursive(line,lineNo)
+       if pos('##EMIT',upper(word(newline,1)))>0 then do   /* allow a macro call ##EMIT */
+          /* Sections are complete only after preceding macros expand. */
+          call cmd_emit lineNo,newline
+          if pos(' ndef',cflags)>0 then iterate      ## ndef    : suppress original definition, just output expanded result
+          call writeLine printGen(line,5)            ## printgen: prints pre-processor line with appropriate suffix comment
+       end
+       if stype.LineNo='D' & pos(' ndef',cflags)>0 then iterate
+       call writeline newline
    	 end
   end
   call writeline ''
   if verbose then say 'CRX0300I ['time('l')'] Pre-Compiled REXX generated '
 return
 /* ------------------------------------------------------------------
- * Early_flag_pick_up: Reads ##CFLAG early and updates runtime flags used during subsequent passes.
+ * Early_flag_pick_up Reads ##CFLAG early and updates runtime flags used during subsequent passes.
  * ------------------------------------------------------------------
  */
 early_flag_pick_up: procedure=.int
   arg i=.int
   if i=0 then return 0
-  source.i=lower(source.i)
-  cflags=' '||subword(source.i,2)   ## add blank to later search for ' flags', this avoids unwanted hit of e.g. 1buf in n1buf
-  call setvar 'cflags',cflags
-  source.i='/* 'source.i' */'
-  if pos(' 1buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 1'
-  if pos(' iflink',cflags)>0 then do
-     if verbose then say "Pre Source Expansion Pass 1"
-     if verbose then say "-------------------------------------------------------"
+
+  line = lower(strip(source.i))
+
+  if left(line, 2) = '/*' & right(line, 2) = '*/' then do
+     line = strip(substr(line, 3, length(line) - 4))
+     already_wrapped = 1
   end
+  else already_wrapped = 0
+
+  cflags = ' ' || subword(line, 2)
+  call setvar 'cflags', cflags
+
+  if \already_wrapped then source.i = '/* ' || line || ' */'
 return 1
 /* ------------------------------------------------------------------
  * Output Begin Blocks for information (not into code)
@@ -628,6 +661,7 @@ CMD_macro: procedure=.int
         if upper(word(line,1))='##MEND' then leave
         scriptMacro.macname=scriptMacro.macname||line'; '
      end
+     scriptMacro.macname=qstripcomment('/*','*/',scriptMacro.macname)
 return i
 
 /* ------------------------------------------------------------------
