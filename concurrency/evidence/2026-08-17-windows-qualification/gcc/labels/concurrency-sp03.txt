@@ -1,0 +1,15 @@
+Test project C:/crexx-qa/windows-gcc-2b793c81e-build
+  Test    #1: linked_opt_runtime_artifacts_build
+  Test    #2: rxgraph_unit
+  Test  #511: gate_f_task_method_import_rxbvm_noopt
+  Test  #512: gate_f_task_method_import_rxbvm_opt
+  Test  #513: gate_f_task_method_import_rxtvm_noopt
+  Test  #514: gate_f_task_method_import_rxtvm_opt
+  Test #1066: rxlink_format_check
+  Test #1096: rxvmchannel_provider_registry
+  Test #1097: rxvmbyteendpoint_substrate
+  Test #1098: rxvmchannel_byte_provider
+  Test #1696: testConcurrency_noopt
+  Test #1697: testConcurrency_opt
+
+Total Tests: 12

@@ -101,7 +101,7 @@ typedef struct shelldata {
     unsigned char timed_out;
 } SHELLDATA;
 
-#ifdef _WIN32
+#if defined(_MSC_VER)
 #define RXSPAWN_THREAD_LOCAL __declspec(thread)
 #else
 #define RXSPAWN_THREAD_LOCAL __thread

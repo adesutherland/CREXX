@@ -1,0 +1,47 @@
+Internal ctest changing into directory: C:/crexx-qa/windows-msvc-2b793c81e-build
+Test project C:/crexx-qa/windows-msvc-2b793c81e-build
+  Test  #854: e2_active_context_isolation
+  Test #1011: rxvmmemory_allocator
+  Test #1012: rxvmworker_lifecycle
+  Test #1016: rxvmactive_isolation
+  Test #1017: rxvmplugin_context_ownership
+  Test #1018: rxpa_static_catalogue_replay
+  Test #1019: rxpa_static_session_lifecycle
+  Test #1020: rxpa_session_factory_failure_rollback
+  Test #1021: rxpa_session_manifest_fail_closed
+  Test #1022: rxpa_rxmath_static_mixed_policy
+  Test #1023: rxpa_legacy_call_serialization
+  Test #1024: rxpa_process_reentrant_overlap
+  Test #1025: rxpa_legacy_recursive_reentry
+  Test #1026: rxpa_branch_free_load_binding
+  Test #1027: rxpa_bound_legacy_serialization
+  Test #1028: rxpa_legacy_transition_quiescence
+  Test #1157: program_generation_control-rxvml
+  Test #1158: program_generation_control-rxbvml
+  Test #1159: persistent_worker_executor-rxvml
+  Test #1160: persistent_worker_executor-rxvml-doorbell-stress
+  Test #1161: persistent_worker_executor-rxvml-sparse-owner
+  Test #1162: persistent_worker_executor-rxvml-sparse-owner-stress
+  Test #1163: persistent_worker_executor-rxvml-sparse-progress
+  Test #1164: persistent_worker_executor-rxvml-native-return
+  Test #1165: persistent_worker_executor-rxvml-e6-worker-topology-w8
+  Test #1174: persistent_worker_executor-rxvml-doorbell-fallback
+  Test #1175: persistent_worker_executor-rxvml-fallback
+  Test #1176: persistent_worker_executor-rxvml-fallback-stress
+  Test #1177: persistent_worker_executor-rxvml-sparse-progress-fallback
+  Test #1178: persistent_worker_executor-rxbvml
+  Test #1179: persistent_worker_executor-rxbvml-doorbell-stress
+  Test #1180: persistent_worker_executor-rxbvml-sparse-owner
+  Test #1181: persistent_worker_executor-rxbvml-sparse-owner-stress
+  Test #1182: persistent_worker_executor-rxbvml-sparse-progress
+  Test #1183: persistent_worker_executor-rxbvml-native-return
+  Test #1184: persistent_worker_executor-rxbvml-e6-worker-topology-w8
+  Test #1193: persistent_worker_executor-rxbvml-doorbell-fallback
+  Test #1194: persistent_worker_executor-rxbvml-fallback
+  Test #1195: persistent_worker_executor-rxbvml-fallback-stress
+  Test #1196: persistent_worker_executor-rxbvml-sparse-progress-fallback
+  Test #2008: rxpa_process_reentrant_manifest
+  Test #2009: rxpa_invalid_manifest_is_legacy
+  Test #2010: rxpa_dynamic_context_ownership
+
+Total Tests: 43

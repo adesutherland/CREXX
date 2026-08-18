@@ -1,0 +1,24 @@
+**********************
+PowerShell transcript start
+Start time: 20260817194143
+Username: LAPTOP-73HRR6SD\adria
+RunAs User: LAPTOP-73HRR6SD\adria
+Configuration Name: 
+Machine: LAPTOP-73HRR6SD (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Users\adria\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.dll -Command try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}
+$env:PATH='C:\msys64\ucrt64\bin;'+$env:PATH; $env:CC='gcc.exe'; $env:CXX='g++.exe'; $env:OPENSSL_ROOT_DIR='C:\msys64\ucrt64'; $env:CMAKE_PREFIX_PATH='C:\msys64\ucrt64'; $env:PKG_CONFIG_PATH='C:\msys64\ucrt64\lib\pkgconfig'; foreach($p in @('C:\crexx-qa\windows-gcc-2b793c81e-build','C:\crexx-qa\windows-gcc-2b793c81e-evidence','C:\crexx-qa\windows-gcc-2b793c81e-evidence-artifacts')){ if(Test-Path -LiteralPath $p){ throw "Expected fresh path: $p" } }; if(@(git status --porcelain=v1 --untracked-files=all).Count -ne 0){ throw 'checkout is not clean' }; & .\concurrency\qa\run-windows-qualification.ps1 -ExpectedCommit 2b793c81e0987f627ab72e3c4e505ae5c6a95abe -BuildDirectory 'C:\crexx-qa\windows-gcc-2b793c81e-build' -EvidenceDirectory 'C:\crexx-qa\windows-gcc-2b793c81e-evidence' -BuildJobs 2 -TestJobs 2 *> 'C:\crexx-qa\windows-gcc-2b793c81e-runner-console.log'
+Process ID: 7764
+PSVersion: 7.6.4
+PSEdition: Core
+GitCommitId: 7.6.4
+OS: Microsoft Windows 10.0.26200
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+**********************
+PowerShell transcript end
+End time: 20260817201904
+**********************

@@ -1,0 +1,14 @@
+Internal ctest changing into directory: C:/crexx-qa/windows-msvc-2b793c81e-build
+Test project C:/crexx-qa/windows-msvc-2b793c81e-build
+  Test  #337: gate_f_channel_contract
+  Test #1013: rxvmchannel_provider_registry
+  Test #1082: rxasdispatchcontract-rxbvm
+  Test #1097: gate_f_channel_local_rxbvm
+  Test #1100: retired_process_opcode_466_rxbvm
+  Test #1101: retired_process_opcode_467_rxbvm
+  Test #1102: retired_process_opcode_468_rxbvm
+  Test #1103: retired_process_opcode_469_rxbvm
+  Test #1104: retired_process_opcode_470_rxbvm
+  Test #1105: retired_process_opcode_471_rxbvm
+
+Total Tests: 10

@@ -50,9 +50,6 @@ say @5+9{@12+1{3@}*@12+1{3@}@}
 @1+23{say @12+7{"value"@} @21+2{16@}@}
 @"__INPUT_FILE__"
 @9l"##EMITSCRIPT"
-/* ##EMITSCRIPT */
-@"__INPUT_FILE__"
-@9l"##EMITSCRIPT"
    @1+12{say "scripted"@}
 ]=])
 string(REPLACE "__INPUT_FILE__" "${INPUT_FILE}" expected_out "${expected_out}")

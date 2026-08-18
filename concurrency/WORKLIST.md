@@ -1,6 +1,7 @@
 # cREXX concurrency worklist
 
-Status date: 2026-08-16  
+Status date: 2026-08-17
+
 Branch: `develop`  
 Frozen feature baseline: `b6a16dc3a`
 
@@ -17,19 +18,19 @@ stages and performance evidence are linked rather than reproduced here.
 | CONC-01 | execution-owned VM state and worker lifecycle | complete | locally qualified; native-carrier evidence exists on Mac, Linux and Windows | retain as foundation; portable public surface is tracked by CONC-11 |
 | CONC-02 | RXAS/RXBIN channel contract | complete | both VMs locally qualified | maintain opcode, feature, effect, signal and malformed-image conformance |
 | CONC-03 | canonical `ChannelValue` and typed transfer | complete | locally qualified and documented | retain canonical validation and receiver-ownership coverage |
-| CONC-04 | local-thread and isolated-process task providers | complete | Mac qualified; four-platform Actions matrix green | complete native Linux/Windows public conformance under CONC-11 |
+| CONC-04 | local-thread and isolated-process task providers | complete | Mac and native Windows qualified; four-platform Actions matrix green | complete formal native Linux conformance under CONC-11 |
 | CONC-05 | Level B pool/scope/task/channel/endpoint classes | implemented | locally qualified with RexxDoc, generated API reference and direct task-context endpoint coverage | retain explicit unsupported-operation and endpoint reconstruction assertions |
 | CONC-06 | Level G task and `DO PARALLEL` language surface | complete | locally qualified, Level G-gated and documented with checked examples | retain positive/negative compiler and runtime coverage |
 | CONC-07 | reusable byte endpoints, child processes and ADDRESS redirects | complete | locally qualified | retain cross-platform endpoint/process regression coverage |
-| CONC-08 | bounded concurrent HTTP/TLS client | complete | Mac qualified and documented; published as initial with four-platform Actions green | complete native-host conformance under CONC-11 |
+| CONC-08 | bounded concurrent HTTP/TLS client | complete | Mac and native Windows qualified and documented; published as initial with four-platform Actions green | complete formal native Linux conformance under CONC-11 |
 | CONC-09 | sealed task-binding validation cache | complete | locally qualified and performance-guard clean | retain cache miss/hit and ordinary single-thread regression coverage |
-| CONC-10 | enduring documentation | complete | locally checked with generated API, examples, links and broad Debug regression | maintain references with implementation; native-host qualification remains CONC-11 |
-| CONC-11 | solution-point QA, portable conformance and initial publication | active | initial publication and four-platform Actions/CodeQL pass; QA-A and Mac correctness/sanitizer/install closeout pass, while the Mac AC replay and native Linux/Windows executions remain | complete QA-B through QA-D in `QA-CLOSEOUT.md` |
+| CONC-10 | enduring documentation | complete | locally checked with generated API, examples, links and broad Debug regression; Windows install/package qualified | maintain references with implementation; remaining native-host qualification is CONC-11 |
+| CONC-11 | solution-point QA, portable conformance and initial publication | active | initial publication and four-platform Actions/CodeQL pass; QA-A, Mac correctness/sanitizer/install and three-compiler Windows QA-D pass; quiet Mac AC and formal Linux QA-C remain | complete QA-B and QA-C in `QA-CLOSEOUT.md` |
 | CONC-12 | services, actors, events and projections | post-Release-1 proposal | `.taskscope.ask` is unsupported | require separate design approval after concurrency closure |
 | CONC-13 | open-host and extension providers | post-Release-1 proposal | provider type `3` and public plugin ABI unavailable | require separate design approval after concurrency closure |
 | CONC-14 | pool saturation telemetry | post-Release-1 proposal | `queued()` and `running()` are unsupported | require separate semantics and portability approval |
 | CONC-15 | stabilization and transfer tuning | evidence-led follow-up only | binding cache complete; wider payload/copy comparisons are not closure requirements | act only on a defect or governed performance finding |
-| CONC-16 | HTTP implementation rationalisation and server | complete | one private Level B core and one public Level G client/server are Mac-qualified; Release guard clean | retain the architecture and take portable/server follow-ups through CONC-11 and new approved work |
+| CONC-16 | HTTP implementation rationalisation and server | complete | one private Level B core and one public Level G client/server are Mac- and Windows-qualified; Release guard clean | retain the architecture and take remaining portable/server follow-ups through CONC-11 and new approved work |
 
 The evidence behind each status is reconciled in
 [`IMPLEMENTATION-STATUS.md`](IMPLEMENTATION-STATUS.md). A declaration by itself
@@ -122,9 +123,10 @@ in CONC-11.
 ## CONC-11 solution-point QA, portable conformance and publication
 
 The frozen implementation is reviewed and qualified through QA-A to QA-E in
-[`QA-CLOSEOUT.md`](QA-CLOSEOUT.md). Linux and Windows are validation hosts:
-failures are reduced and repaired on the primary Mac development host, then
-the corrected frozen candidate is replayed on the affected platform.
+[`QA-CLOSEOUT.md`](QA-CLOSEOUT.md). Linux and Windows normally act as
+validation hosts. During QA-D Adrian explicitly directed bounded Windows-side
+repairs; each repaired candidate was committed and the affected matrix was
+replayed from fresh directories at a clean exact commit.
 
 The exact clean-commit runners and expected-result rules are versioned in
 [`qa/`](qa/). They configure fresh out-of-tree builds, enable live HTTP/TLS
@@ -132,6 +134,17 @@ verification, execute the maintained labels plus stress and broad CTest, and
 prove installed and extracted-package toolchains without editing the target
 checkout. The next-agent execution and independent review brief is
 [`qa/INDEPENDENT-REVIEW-PROMPT.md`](qa/INDEPENDENT-REVIEW-PROMPT.md).
+
+### Native Windows QA-D evidence
+
+QA-D completed on 2026-08-17 at exact commit
+`2b793c81e0987f627ab72e3c4e505ae5c6a95abe`. MSVC passed 137/137 concurrency
+tests and 2,076/2,076 complete CTest cases. Clang and GCC each passed 194/194
+concurrency tests and 2,220/2,220 complete cases. All three SCHANNEL lanes also
+passed live trusted/mismatch TLS, 20 stress repetitions, install smoke and
+extracted-ZIP smoke; Clang and GCC proved both VM executables, while MSVC proved
+its supported portable `rxbvm` product. The retained record is
+[`2026-08-17-windows-qualification`](evidence/2026-08-17-windows-qualification/README.md).
 
 - [ ] Build the ordinary product and concurrency libraries on supported Linux,
   Windows and Mac toolchains.
@@ -212,8 +225,9 @@ favourable. All 48 recorded server scenarios passed. Exact commands, raw
 samples, artifact checks and limitations are retained in
 [`2026-08-16-conc-16-http-server-first-release-verdict`](../performance/evidence/2026-08-16-conc-16-http-server-first-release-verdict/).
 
-Remaining HTTP work is not an unfinished part of CONC-16. Linux/Windows and
-package qualification belong to CONC-11. Server TLS, a readiness primitive,
+Remaining HTTP work is not an unfinished part of CONC-16. Windows package
+qualification is complete; formal Linux qualification remains in CONC-11.
+Server TLS, a readiness primitive,
 detached/background lifecycle, server request/response streaming, HTTP/2 and
 WebSockets require separately approved proposals.
 
@@ -235,6 +249,25 @@ the concurrent generated-artifact rebuild: `ts_http_server_rxtvm_opt` at its
 Serial confirmation passed them in 1.82 and 12.67 seconds respectively. No
 RXVM source changed in this slice, so these are recorded as rebuild-load
 slowdowns rather than product failures.
+
+Linux qualification on 2026-08-17 reproduced the rotating
+`ts_http_server_*` timeout after a completed fresh build. Live process and
+socket inspection showed that bounded client work had already exited while the
+request-count-bounded server controller correctly remained available for a
+missing request. The server tests now use the CTest `RUN_SERIAL` property to
+isolate their multi-pool topology from compiler and runtime tests which launch
+their own child processes, while retaining the parallel clients exercised
+inside each VM instance.
+
+The repaired full Linux sweep also exposed rotating asynchronous parser-
+snapshot assertions in two syntax-highlighting cases. Those tests retain their
+parser `RESOURCE_LOCK` and now run serially with respect to other CTest work.
+The final syntax-highlighting matrix passed 72/72 and the complete sweep passed
+2,207/2,207.
+
+The complete local Linux repair-validation commands, logs, install/package
+inventories and digests are retained in
+[`2026-08-17-linux-harness-repair`](evidence/2026-08-17-linux-harness-repair/README.md).
 
 ## Historical evidence
 

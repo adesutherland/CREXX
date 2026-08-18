@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
+#include <errno.h>
 
 #ifndef _WIN32
 #include <libgen.h>
@@ -17,7 +18,6 @@
  #include <sys/time.h>
  #include <sys/wait.h>
  #include <sys/sysctl.h>
- #include <errno.h>
  #include <unistd.h>        // For POSIX systems (Linux/macOS)
 #define max(a,b)             \
   ({			     \
@@ -43,7 +43,6 @@
   #include <pwd.h>
   #include <unistd.h>
   #include <sys/stat.h>
-  #include <errno.h>
   #include <time.h>
 #endif
 

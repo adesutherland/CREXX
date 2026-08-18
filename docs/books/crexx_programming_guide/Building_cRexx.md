@@ -75,8 +75,9 @@ git clone https://github.com/adesutherland/CREXX.git
 This will give you a CREXX subdirectory in the current directory,
 containing the source of cRexx and its dependencies. This is the
 `develop' branch, which is the one you would normally want to use. All
-of these are written in the C99 version of the C programming language,
-which should be widely supported by C compilers on most platforms.
+The sources use C90 or C99 where sufficient. The concurrency-enabled
+interpreter requires C11 atomics, which are supported by the documented GCC,
+Clang and Visual Studio 2022 toolchains.
 
 Make a new subdirectory in the current directory (not in CREXX, but in
 the one that contains it), like `crexx-build'.

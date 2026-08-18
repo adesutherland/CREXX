@@ -26,6 +26,7 @@
 typedef CRITICAL_SECTION process_mutex;
 typedef CONDITION_VARIABLE process_condition;
 typedef HANDLE process_thread;
+typedef DWORD (WINAPI *process_thread_entry)(void *);
 #define PROCESS_THREAD_RETURN DWORD WINAPI
 static int process_mutex_init(process_mutex *mutex) {
     InitializeCriticalSection(mutex);
@@ -71,6 +72,7 @@ static int process_condition_wait(process_condition *condition,
 typedef pthread_mutex_t process_mutex;
 typedef pthread_cond_t process_condition;
 typedef pthread_t process_thread;
+typedef void *(*process_thread_entry)(void *);
 #define PROCESS_THREAD_RETURN void *
 static int process_mutex_init(process_mutex *mutex) {
     return pthread_mutex_init(mutex, 0) == 0;
@@ -252,7 +254,7 @@ static char *process_strdup(const char *text) {
 }
 
 static int process_thread_start(process_thread *thread,
-                                PROCESS_THREAD_RETURN (*entry)(void *),
+                                process_thread_entry entry,
                                 void *argument) {
 #if defined(_WIN32)
     *thread = CreateThread(0, 0, entry, argument, 0, 0);

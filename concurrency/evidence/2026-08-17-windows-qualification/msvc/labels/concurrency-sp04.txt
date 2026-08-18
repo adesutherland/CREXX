@@ -1,0 +1,23 @@
+Internal ctest changing into directory: C:/crexx-qa/windows-msvc-2b793c81e-build
+Test project C:/crexx-qa/windows-msvc-2b793c81e-build
+  Test    #1: linked_opt_runtime_artifacts_build
+  Test  #435: test_address_redirect_run_noopt
+  Test  #436: test_address_redirect_run_opt
+  Test #1013: rxvmchannel_provider_registry
+  Test #1014: rxvmbyteendpoint_substrate
+  Test #1015: rxvmchannel_byte_provider
+  Test #1097: gate_f_channel_local_rxbvm
+  Test #1098: rxvmchannel_process_crash_replacement
+  Test #1099: gate_f_channel_process_rxbvm
+  Test #1228: ts_address_array_lifecycle_noopt
+  Test #1229: ts_address_array_lifecycle_opt
+  Test #1230: ts_address_spawn_transfer_noopt
+  Test #1231: ts_address_spawn_transfer_opt
+  Test #1478: ts_address_array_lifecycle_rxbvm_noopt
+  Test #1479: ts_address_array_lifecycle_rxbvm_opt
+  Test #1480: ts_address_spawn_transfer_rxbvm_noopt
+  Test #1481: ts_address_spawn_transfer_rxbvm_opt
+  Test #1594: testTaskContextEndpoint_rxbvm_noopt
+  Test #1595: testTaskContextEndpoint_rxbvm_opt
+
+Total Tests: 19

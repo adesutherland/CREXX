@@ -128,7 +128,7 @@ $headCommit = (git rev-parse HEAD).Trim()
 if ($headCommit -ne $ExpectedCommit) {
     throw "HEAD $headCommit does not match expected commit $ExpectedCommit"
 }
-if ((git status --porcelain --untracked-files=all).Count -ne 0) {
+if (@(git status --porcelain --untracked-files=all).Count -ne 0) {
     throw 'qualification checkout is not clean'
 }
 
@@ -291,7 +291,7 @@ try {
         ForEach-Object Line |
         Add-Content -LiteralPath (Join-Path $evidenceFull 'provenance.txt')
 
-    if ((git -C $repositoryRoot status --porcelain --untracked-files=all).Count -ne 0) {
+    if (@(git -C $repositoryRoot status --porcelain --untracked-files=all).Count -ne 0) {
         throw 'qualification changed the checkout'
     }
 
