@@ -1346,6 +1346,35 @@ static int flow_copy_path_uses_unmaterialized_source(
     return 0;
 }
 
+/* A copy store can be removed only after its target reads have been redirected
+ * to the copy source. On the next fixed-point pass the physical target still
+ * contains its older value, so the ordinary must-copy state deliberately
+ * describes that preserved storage. Do not let that older equality replace a
+ * read already redirected to the source of the reaching skipped definition. */
+static int flow_read_uses_reaching_skipped_copy_source(
+        const RxcpFlowProcedure *procedure,
+        const RxcpFlowBlock *use_block,
+        int value,
+        const Symbol *substitute) {
+    size_t definition;
+
+    if (!procedure || !use_block || value < 0 || !substitute) return 0;
+    for (definition = 0;
+         definition < procedure->definition_count;
+         definition++) {
+        const RxcpFlowDefinition *candidate = &procedure->definitions[definition];
+
+        if (candidate->value != (size_t)value || candidate->copy_source < 0 ||
+            !bits_has(&use_block->reaching_in, definition) ||
+            !candidate->anchor || !candidate->anchor->flow_skip_assignment_store ||
+            (size_t)candidate->copy_source >= procedure->value_count) {
+            continue;
+        }
+        if (procedure->values[candidate->copy_source].symbol == substitute) return 1;
+    }
+    return 0;
+}
+
 static int flow_mark_copy_reads(RxcpFlowProcedure *procedure,
                                 RxcpFlowBlock *block,
                                 ASTNode *node,
@@ -1379,7 +1408,12 @@ static int flow_mark_copy_reads(RxcpFlowProcedure *procedure,
                  * established only after that source definition was skipped.
                  * A copy made before the skipped write is deliberately still
                  * allowed: it denotes the preserved old physical value. */
-                if (!flow_copy_path_uses_unmaterialized_source(
+                if (!flow_read_uses_reaching_skipped_copy_source(
+                        procedure,
+                        block,
+                        value,
+                        node->flow_substitute_symbol) &&
+                    !flow_copy_path_uses_unmaterialized_source(
                         procedure, block, state, value)) {
                     node->flow_substitute_symbol = replacement;
                     changed = 1;

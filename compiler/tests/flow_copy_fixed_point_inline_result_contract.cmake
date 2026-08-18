@@ -28,12 +28,14 @@ function(assert_instruction_count pattern expected description)
     endif()
 endfunction()
 
-# The correction must preserve the supported nested-inline shape. Only the
-# genuinely recursive method remains a call in the optimized image.
-assert_instruction_count("\n[ \t]+call[0-9]* [^\n]*\\.run\\(\\)" 0
-                         "run method must remain inlined")
-assert_instruction_count("\n[ \t]+call[0-9]* [^\n]*\\.answer\\(\\)" 0
-                         "answer method must remain inlined")
+# POSTPERF-05 deliberately retains these larger sites when their final cleaned
+# expansion is not better than the executable call plus body. The paired
+# optimized/noopt runtime test remains the stale-result correctness proof; this
+# structural contract prevents fixed-point oscillation back to expansion.
+assert_instruction_count("\n[ \t]+call[0-9]* [^\n]*\\.run\\(\\)" 1
+                         "run method must retain the bounded call fallback")
+assert_instruction_count("\n[ \t]+call[0-9]* [^\n]*\\.answer\\(\\)" 1
+                         "answer method must retain the bounded call fallback")
 string(REGEX MATCHALL
        "\n[ \t]+call[0-9]* [^\n]*\\.recursiveanswer\\(\\)"
        recursive_calls "${rxas}")

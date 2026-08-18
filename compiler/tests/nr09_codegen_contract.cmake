@@ -126,7 +126,10 @@ foreach(image IN ITEMS permute_noopt permute_opt)
 endforeach()
 assert_count(permute_noopt "\n[ \t]+linksetattrslinkadd " 4
              "permute_noopt promoted link/setattrs/link/add units")
-assert_count(permute_opt "\n[ \t]+linksetattrslinkadd " 20
+# POSTPERF-05 stops recursive expansion once the cleaned site no longer beats
+# the bounded call-plus-body reference. The retained two-level shape has twelve
+# promoted units rather than the former recursively unrolled twenty.
+assert_count(permute_opt "\n[ \t]+linksetattrslinkadd " 12
              "permute_opt promoted link/setattrs/link/add units")
 assert_count(permute_noopt "\n[ \t]+setlinkattr1 " 0
              "permute_noopt unpromoted link/setattrs/link/add prefixes")

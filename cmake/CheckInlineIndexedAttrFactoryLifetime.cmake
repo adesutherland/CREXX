@@ -28,7 +28,9 @@ endif()
 file(READ "${output_base}.rxas" rxas)
 if(rxas MATCHES
    "call[0-9]*[^\n]*inline_indexed_attr_factory_lifetime\\.lifetimepool\\.add\\(\\)")
-  message(FATAL_ERROR "optimized lifetime probe retained add() call")
+  set(profitability_shape "bounded ordinary-call")
+else()
+  set(profitability_shape "inlined")
 endif()
 
 string(FIND "${rxas}" "items_[item_id] = .LifetimeItem()" marker_start)
@@ -59,4 +61,4 @@ if(protected_window MATCHES
 endif()
 
 message(STATUS
-  "indexed aggregate owner ${owner} remains reserved through factory evaluation")
+  "${profitability_shape} indexed aggregate owner ${owner} remains reserved through factory evaluation")

@@ -491,6 +491,26 @@ static int inline_expansion_cost_is_strict_improvement(const InlineExpansionCost
     return strict;
 }
 
+static int inline_expansion_cost_build_executable_reference(
+    const InlineExpansionPlan *plan,
+    InlineExpansionCost *reference) {
+    const InlineCallableSummary *summary;
+
+    if (!plan || !reference || !plan->original_call_cost.valid ||
+        !plan->callee_symbol || !(summary = plan->callee_symbol->inline_summary)) {
+        return 0;
+    }
+
+    *reference = plan->original_call_cost;
+    reference->structural_nodes += summary->structural_nodes;
+    reference->assignments += summary->assignments;
+    reference->branches += summary->branches;
+    reference->calls += summary->calls;
+    reference->inline_temp_definitions += summary->inline_temp_definitions;
+    reference->valid = reference->structural_nodes > 0;
+    return reference->valid;
+}
+
 static void inline_expansion_plan_init(InlineExpansionPlan *plan,
                                        ASTNode *original_call,
                                        ASTNode *replacement_target,
@@ -784,6 +804,9 @@ static int inline_candidate_cleanup_fixed_point(Context *context,
 static int inline_expansion_plan_commit(Context *context,
                                         InlineExpansionPlan *plan,
                                         ASTNode *candidate_root) {
+    int exact_scalar_accessor;
+    int tiny_callable;
+
     if (!plan || !plan->original_call || !plan->replacement_target ||
         !candidate_root || plan->committed) {
         inline_debug_fail_closed(context,
@@ -803,6 +826,30 @@ static int inline_expansion_plan_commit(Context *context,
                                  plan->callee_symbol,
                                  "failed to cost final inline candidate");
         return 0;
+    }
+
+    /* Preserve the dedicated POSTPERF-04 scalar-accessor proof and ordinary
+     * tiny-call win. Larger supported callables remain semantically eligible,
+     * but their cleaned detached site must beat the executable call plus the
+     * body summary before register allocation can see the expanded shape. */
+    exact_scalar_accessor = plan->callee_symbol && plan->callee_symbol->ast_template &&
+                            inline_exact_scalar_accessor_kind(plan->callee_symbol->ast_template) !=
+                                INLINE_SCALAR_ACCESSOR_NONE;
+    tiny_callable = plan->callee_symbol && plan->callee_symbol->inline_summary &&
+                    plan->callee_symbol->inline_summary->structural_nodes <= 20;
+    if (!exact_scalar_accessor && !tiny_callable) {
+        InlineExpansionCost executable_reference;
+
+        if (!inline_expansion_cost_build_executable_reference(plan, &executable_reference)) {
+            inline_debug_fail_closed(context,
+                                     plan->original_call,
+                                     plan->callee_symbol,
+                                     "failed to build call-plus-body inline profitability reference");
+            return 0;
+        }
+        plan->reference_candidate_cost = executable_reference;
+        plan->cleanup_delta.valid = 0;
+        plan->profitability_required = 1;
     }
     if (plan->profitability_required && plan->cleanup_delta.valid) {
         plan->reference_candidate_cost = plan->final_candidate_cost;

@@ -1,0 +1,79 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/26 Test    #1: linked_opt_runtime_artifacts_build ....   Passed    0.09 sec
+      Start 2021: benchmark_awfy_havlak_noopt
+      Start 2022: benchmark_awfy_havlak_opt
+      Start  608: inline_scalar_accessors_import_opt
+      Start  648: inline_test1_run_noopt
+      Start 2014: benchmark_awfy_richards_opt
+      Start  649: inline_test1_run_opt
+      Start 2039: benchmark_rexxcps_levelb_noopt
+      Start  789: inline_test_class_methods_run_noopt
+      Start  790: inline_test_class_methods_run_opt
+      Start 2013: benchmark_awfy_richards_noopt
+ 2/26 Test #2014: benchmark_awfy_richards_opt ...........   Passed    0.15 sec
+      Start 2040: benchmark_rexxcps_levelb_opt
+ 3/26 Test #2013: benchmark_awfy_richards_noopt .........   Passed    0.26 sec
+      Start 2011: benchmark_awfy_list_noopt
+ 4/26 Test #2011: benchmark_awfy_list_noopt .............   Passed    0.10 sec
+      Start 2019: benchmark_awfy_cd_noopt
+ 5/26 Test #2019: benchmark_awfy_cd_noopt ...............   Passed    0.13 sec
+      Start 1997: benchmark_awfy_sieve_noopt
+ 6/26 Test #1997: benchmark_awfy_sieve_noopt ............   Passed    0.09 sec
+      Start 2023: benchmark_awfy_json_noopt
+ 7/26 Test #2023: benchmark_awfy_json_noopt .............   Passed    0.11 sec
+      Start 2017: benchmark_awfy_deltablue_noopt
+ 8/26 Test #2017: benchmark_awfy_deltablue_noopt ........   Passed    0.13 sec
+      Start 2020: benchmark_awfy_cd_opt
+ 9/26 Test  #649: inline_test1_run_opt ..................   Passed    0.83 sec
+      Start 2012: benchmark_awfy_list_opt
+10/26 Test  #789: inline_test_class_methods_run_noopt ...   Passed    0.84 sec
+      Start 2024: benchmark_awfy_json_opt
+11/26 Test  #648: inline_test1_run_noopt ................   Passed    0.85 sec
+      Start 2018: benchmark_awfy_deltablue_opt
+12/26 Test #2012: benchmark_awfy_list_opt ...............   Passed    0.08 sec
+      Start 1998: benchmark_awfy_sieve_opt
+13/26 Test  #790: inline_test_class_methods_run_opt .....   Passed    0.92 sec
+      Start   23: rxc_binary_literal_load
+14/26 Test #2020: benchmark_awfy_cd_opt .................   Passed    0.13 sec
+      Start  630: binary_literal_load_run_noopt
+15/26 Test #2018: benchmark_awfy_deltablue_opt ..........   Passed    0.10 sec
+      Start  631: binary_literal_load_run_opt
+16/26 Test #2024: benchmark_awfy_json_opt ...............   Passed    0.11 sec
+      Start  702: inline_late_profitability_guard
+17/26 Test #1998: benchmark_awfy_sieve_opt ..............   Passed    0.08 sec
+18/26 Test #2040: benchmark_rexxcps_levelb_opt ..........   Passed    1.54 sec
+19/26 Test  #631: binary_literal_load_run_opt ...........   Passed    1.10 sec
+20/26 Test #2039: benchmark_rexxcps_levelb_noopt ........   Passed    2.09 sec
+21/26 Test  #630: binary_literal_load_run_noopt .........   Passed    1.14 sec
+22/26 Test   #23: rxc_binary_literal_load ...............   Passed    1.89 sec
+23/26 Test  #702: inline_late_profitability_guard .......   Passed    2.33 sec
+24/26 Test  #608: inline_scalar_accessors_import_opt ....   Passed    3.71 sec
+25/26 Test #2022: benchmark_awfy_havlak_opt .............   Passed   58.37 sec
+26/26 Test #2021: benchmark_awfy_havlak_noopt ...........   Passed   67.63 sec
+
+100% tests passed, 0 tests failed out of 26
+
+Label Time Summary:
+benchmark                            = 131.09 sec*proc (16 tests)
+compiler                             =   2.33 sec*proc (1 test)
+imports                              =   3.71 sec*proc (1 test)
+indexed-red-black-tree-adaptation    =   0.26 sec*proc (2 tests)
+inlining                             =   2.33 sec*proc (1 test)
+interfaces                           =   3.71 sec*proc (1 test)
+language                             = 131.09 sec*proc (16 tests)
+linked_opt                           =  67.12 sec*proc (12 tests)
+native-math-control                  =   0.26 sec*proc (2 tests)
+noncanonical                         =   3.62 sec*proc (2 tests)
+performance                          =   2.33 sec*proc (1 test)
+receiver                             =   3.71 sec*proc (1 test)
+regression                           =   2.33 sec*proc (1 test)
+rexxcps-smoke                        =   3.62 sec*proc (2 tests)
+scalar-access                        =   3.71 sec*proc (1 test)
+signals                              =   3.71 sec*proc (1 test)
+smoke                                =  60.55 sec*proc (8 tests)
+stable-indexed-cfg-adaptation        = 126.00 sec*proc (2 tests)
+stable-indexed-graph-adaptation      =   0.22 sec*proc (2 tests)
+standard-library-adaptation          =   0.23 sec*proc (2 tests)
+
+Total Test time (real) =  67.76 sec

@@ -1,0 +1,160 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/56 Test    #1: linked_opt_runtime_artifacts_build .....................   Passed    0.09 sec
+      Start 2022: benchmark_awfy_havlak_noopt
+      Start 2023: benchmark_awfy_havlak_opt
+      Start  351: perf2_04_certified_call
+      Start  347: nr09_codegen_contract
+      Start  103: 18_array_class_opt
+      Start  604: inline_receiver_production_ladder_opt
+      Start  603: inline_receiver_detached_guard_opt
+      Start   23: rxc_binary_literal_load
+      Start 2041: benchmark_rexxcps_levelb_opt
+      Start  631: binary_literal_load_run_opt
+ 2/56 Test  #103: 18_array_class_opt .....................................   Passed    0.27 sec
+      Start  630: binary_literal_load_run_noopt
+ 3/56 Test  #631: binary_literal_load_run_opt ............................   Passed    0.31 sec
+      Start  338: inline_test_block_expr_live_sibling_opt
+ 4/56 Test   #23: rxc_binary_literal_load ................................   Passed    0.50 sec
+      Start 2040: benchmark_rexxcps_levelb_noopt
+ 5/56 Test  #338: inline_test_block_expr_live_sibling_opt ................   Passed    0.23 sec
+      Start  226: inline_test2_opt
+ 6/56 Test  #604: inline_receiver_production_ladder_opt ..................   Passed    0.56 sec
+      Start  316: inline_test_array_multi_return_expr_opt
+ 7/56 Test  #630: binary_literal_load_run_noopt ..........................   Passed    0.29 sec
+      Start   77: select_dispatch_mixed_opt
+ 8/56 Test  #316: inline_test_array_multi_return_expr_opt ................   Passed    0.25 sec
+      Start  212: object_reference_regression_opt
+ 9/56 Test   #77: select_dispatch_mixed_opt ..............................   Passed    0.25 sec
+      Start  216: basic_strings_opt
+10/56 Test  #226: inline_test2_opt .......................................   Passed    0.28 sec
+      Start  340: inline_test_class_methods_opt
+11/56 Test  #603: inline_receiver_detached_guard_opt .....................   Passed    0.92 sec
+      Start  223: inline_test1_noopt
+12/56 Test  #212: object_reference_regression_opt ........................   Passed    0.26 sec
+      Start   73: select_dispatch_integer_opt
+13/56 Test  #216: basic_strings_opt ......................................   Passed    0.25 sec
+      Start  339: inline_test_class_methods_noopt
+14/56 Test  #340: inline_test_class_methods_opt ..........................   Passed    0.27 sec
+      Start   81: select_dispatch_strings_opt
+15/56 Test #2041: benchmark_rexxcps_levelb_opt ...........................   Passed    1.11 sec
+      Start   75: select_dispatch_fallback_opt
+16/56 Test  #223: inline_test1_noopt .....................................   Passed    0.28 sec
+      Start  318: inline_test_array_multi_return_assign_opt
+17/56 Test  #339: inline_test_class_methods_noopt ........................   Passed    0.28 sec
+      Start  224: inline_test1_opt
+18/56 Test   #73: select_dispatch_integer_opt ............................   Passed    0.30 sec
+      Start   79: select_dispatch_general_opt
+19/56 Test   #81: select_dispatch_strings_opt ............................   Passed    0.29 sec
+      Start 1756: ts_http_policy_rxtvm_noopt
+20/56 Test   #75: select_dispatch_fallback_opt ...........................   Passed    0.30 sec
+      Start 1754: ts_http_policy_rxbvm_noopt
+21/56 Test  #318: inline_test_array_multi_return_assign_opt ..............   Passed    0.30 sec
+      Start 1755: ts_http_policy_rxbvm_opt
+22/56 Test  #224: inline_test1_opt .......................................   Passed    0.30 sec
+      Start 1757: ts_http_policy_rxtvm_opt
+23/56 Test   #79: select_dispatch_general_opt ............................   Passed    0.29 sec
+      Start  602: inline_receiver_nested_this_direct_placement_opt
+24/56 Test #2040: benchmark_rexxcps_levelb_noopt .........................   Passed    1.21 sec
+      Start 2110: decimal_gate1_classic9_opt_rxas_noopt_rxas_integrity
+25/56 Test  #602: inline_receiver_nested_this_direct_placement_opt .......   Passed    0.46 sec
+      Start 2109: decimal_gate1_classic9_opt_rxas_integrity
+26/56 Test #2110: decimal_gate1_classic9_opt_rxas_noopt_rxas_integrity ...   Passed    0.43 sec
+      Start 2086: decimal_gate1_common18_opt_rxas_integrity
+27/56 Test #2109: decimal_gate1_classic9_opt_rxas_integrity ..............   Passed    0.08 sec
+      Start 2087: decimal_gate1_common18_opt_rxas_noopt_rxas_integrity
+28/56 Test #2086: decimal_gate1_common18_opt_rxas_integrity ..............   Passed    0.07 sec
+      Start  608: inline_scalar_accessors_import_opt
+29/56 Test #2087: decimal_gate1_common18_opt_rxas_noopt_rxas_integrity ...   Passed    0.08 sec
+      Start  705: flow_copy_fixed_point_inline_result_contract
+30/56 Test  #705: flow_copy_fixed_point_inline_result_contract ...........   Passed    0.42 sec
+      Start  776: inline_indexed_attr_factory_lifetime_shape
+31/56 Test #1756: ts_http_policy_rxtvm_noopt .............................   Passed    1.69 sec
+      Start 2085: decimal_gate1_common18_noopt_rxas_integrity
+32/56 Test  #776: inline_indexed_attr_factory_lifetime_shape .............   Passed    0.40 sec
+      Start 2108: decimal_gate1_classic9_noopt_rxas_integrity
+33/56 Test #1754: ts_http_policy_rxbvm_noopt .............................   Passed    1.73 sec
+      Start 2015: benchmark_awfy_richards_opt
+34/56 Test #2085: decimal_gate1_common18_noopt_rxas_integrity ............   Passed    0.08 sec
+      Start 2012: benchmark_awfy_list_noopt
+35/56 Test #2108: decimal_gate1_classic9_noopt_rxas_integrity ............   Passed    0.08 sec
+      Start 2013: benchmark_awfy_list_opt
+36/56 Test #2012: benchmark_awfy_list_noopt ..............................   Passed    0.03 sec
+      Start 1999: benchmark_awfy_sieve_opt
+37/56 Test #1755: ts_http_policy_rxbvm_opt ...............................   Passed    1.71 sec
+      Start 1998: benchmark_awfy_sieve_noopt
+38/56 Test #2013: benchmark_awfy_list_opt ................................   Passed    0.05 sec
+      Start 2019: benchmark_awfy_deltablue_opt
+39/56 Test #1998: benchmark_awfy_sieve_noopt .............................   Passed    0.03 sec
+      Start 2014: benchmark_awfy_richards_noopt
+40/56 Test #2015: benchmark_awfy_richards_opt ............................   Passed    0.09 sec
+      Start 2021: benchmark_awfy_cd_opt
+41/56 Test #1999: benchmark_awfy_sieve_opt ...............................   Passed    0.05 sec
+      Start 2018: benchmark_awfy_deltablue_noopt
+42/56 Test #2018: benchmark_awfy_deltablue_noopt .........................   Passed    0.03 sec
+      Start 2025: benchmark_awfy_json_opt
+43/56 Test #2019: benchmark_awfy_deltablue_opt ...........................   Passed    0.05 sec
+      Start 2020: benchmark_awfy_cd_noopt
+44/56 Test #2021: benchmark_awfy_cd_opt ..................................   Passed    0.06 sec
+      Start 2024: benchmark_awfy_json_noopt
+45/56 Test #2014: benchmark_awfy_richards_noopt ..........................   Passed    0.08 sec
+      Start  702: inline_late_profitability_guard
+46/56 Test #2020: benchmark_awfy_cd_noopt ................................   Passed    0.04 sec
+      Start 1758: ts_http_policy_skipped_copy_reassignment_shape
+47/56 Test #2024: benchmark_awfy_json_noopt ..............................   Passed    0.03 sec
+48/56 Test #2025: benchmark_awfy_json_opt ................................   Passed    0.06 sec
+49/56 Test #1758: ts_http_policy_skipped_copy_reassignment_shape .........   Passed    0.01 sec
+50/56 Test #1757: ts_http_policy_rxtvm_opt ...............................   Passed    1.70 sec
+51/56 Test  #608: inline_scalar_accessors_import_opt .....................   Passed    1.66 sec
+52/56 Test  #347: nr09_codegen_contract ..................................   Passed    3.87 sec
+53/56 Test  #702: inline_late_profitability_guard ........................   Passed    0.79 sec
+54/56 Test  #351: perf2_04_certified_call ................................   Passed    5.23 sec
+55/56 Test #2023: benchmark_awfy_havlak_opt ..............................   Passed   42.23 sec
+56/56 Test #2022: benchmark_awfy_havlak_noopt ............................   Passed   46.38 sec
+
+100% tests passed, 0 tests failed out of 56
+
+Label Time Summary:
+benchmark                            =  91.55 sec*proc (16 tests)
+compiler                             =  10.73 sec*proc (6 tests)
+concurrency                          =   6.83 sec*proc (4 tests)
+concurrency-sp07                     =   6.83 sec*proc (4 tests)
+concurrency-sp08                     =   6.83 sec*proc (4 tests)
+constants                            =   5.23 sec*proc (1 test)
+decimal                              =   0.82 sec*proc (6 tests)
+decimal01                            =   0.82 sec*proc (6 tests)
+f1g                                  =   6.83 sec*proc (4 tests)
+flow                                 =   0.43 sec*proc (2 tests)
+gate1                                =   0.82 sec*proc (6 tests)
+gate_f                               =   6.83 sec*proc (4 tests)
+http                                 =   6.84 sec*proc (5 tests)
+imports                              =   6.89 sec*proc (2 tests)
+indexed-red-black-tree-adaptation    =   0.10 sec*proc (2 tests)
+inlining                             =   1.19 sec*proc (2 tests)
+interfaces                           =   1.66 sec*proc (1 test)
+language                             =  91.55 sec*proc (16 tests)
+levelg                               =   6.83 sec*proc (4 tests)
+library                              =   6.83 sec*proc (4 tests)
+linked                               =   3.42 sec*proc (2 tests)
+linked_opt                           =  51.04 sec*proc (16 tests)
+native-math-control                  =   0.10 sec*proc (2 tests)
+noncanonical                         =   2.32 sec*proc (2 tests)
+optimizer-integrity                  =   0.82 sec*proc (6 tests)
+perf2_04                             =   5.23 sec*proc (1 test)
+performance                          =  11.14 sec*proc (10 tests)
+policy                               =   6.83 sec*proc (4 tests)
+qualification                        =   0.82 sec*proc (6 tests)
+receiver                             =   3.60 sec*proc (4 tests)
+register-lifetime                    =   0.40 sec*proc (1 test)
+regression                           =   1.20 sec*proc (3 tests)
+rexxcps-smoke                        =   2.32 sec*proc (2 tests)
+rxbvm                                =   3.44 sec*proc (2 tests)
+rxtvm                                =   3.39 sec*proc (2 tests)
+scalar-access                        =   1.66 sec*proc (1 test)
+signals                              =   1.66 sec*proc (1 test)
+smoke                                =  43.71 sec*proc (8 tests)
+stable-indexed-cfg-adaptation        =  88.61 sec*proc (2 tests)
+stable-indexed-graph-adaptation      =   0.08 sec*proc (2 tests)
+standard-library-adaptation          =   0.10 sec*proc (2 tests)
+
+Total Test time (real) =  46.50 sec

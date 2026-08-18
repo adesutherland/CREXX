@@ -270,6 +270,19 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
     "ts_http_policy_${_http_runner}_opt")
 endforeach()
 
+add_test(
+  NAME ts_http_policy_skipped_copy_reassignment_shape
+  COMMAND ${CMAKE_COMMAND}
+          -DRXAS_SOURCE=${CMAKE_CURRENT_BINARY_DIR}/ts_http_policy_rxtvm_opt.rxas
+          -P ${CMAKE_SOURCE_DIR}/cmake/CheckFlowSkippedCopyReassignment.cmake
+)
+set_tests_properties(
+  ts_http_policy_skipped_copy_reassignment_shape
+  PROPERTIES
+    LABELS "compiler;flow;regression;http;linked_opt"
+    FIXTURES_REQUIRED linked_opt_runtime_artifacts
+)
+
 add_custom_target(ts_http_codec)
 add_dependencies(testrxfnsg ts_http_codec)
 

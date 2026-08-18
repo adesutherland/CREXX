@@ -1,6 +1,6 @@
 # Post-PERF3 performance worklist
 
-Status: **active — POSTPERF-05 bounded hoisting, register finalisation and late inlining**
+Status: **complete — POSTPERF-01 through POSTPERF-05 closed locally**
 
 Started: 2026-08-17
 
@@ -20,7 +20,7 @@ mandatory first ordinary-Release verdict in `performance/AGENTS.md`.
 | POSTPERF-02 | DeltaBlue and CD | complete | Both pinned upstream ports qualified with stable indexed identity/container adaptations; neither is promoted to Tier A or any aggregate |
 | POSTPERF-03 | Havlak | complete | Pinned upstream port qualified after POSTPERF-02 foundations; retained as a separate large-graph lane |
 | POSTPERF-04 | Generic final/concrete scalar accessor proof | complete | G1 plus four-family RXAS guard proof accepted; 266/266 verdict processes and 2,249/2,249 final Debug tests pass; accepted assembler lifecycle trade-off retained |
-| POSTPERF-05 | Bounded hoisting, register finalisation and late inlining | active next | Evidence ranks bounded consumers; select at most one production candidate at a time and apply the mandatory verdict gate |
+| POSTPERF-05 | Bounded hoisting, register finalisation and late inlining | complete | H1-T20 bounded late-profitability accepted; 2,251/2,251 final Debug tests and 56/56 focused Release tests pass; exact accepted images retained |
 
 ## Standing boundaries
 
@@ -477,20 +477,144 @@ retain the runtime result and close the stage. Evidence:
 
 ## POSTPERF-05 — bounded hoisting, register finalisation and late inlining
 
-Status: **active next; no production candidate selected**.
+Status: **complete; H1-T20 bounded hybrid late-profitability accepted and
+qualified**.
 
-Open this as one significant, evidence-ranked optimizer stage rather than a
-sequence of tiny edits. Reassess the expanded portfolio and retained PERF3
-lessons together, then choose one coherent bounded candidate spanning hoisting,
-register finalisation and late-inlining interactions. Hoisting must be examined
-early because it can materially change the code shape consumed by later guard,
-register and inline decisions. Keep RXC and RXAS ownership explicit, preserve
-signal/TRACE/debug identity, and stop the first selected production edit at the
-mandatory ordinary-Release verdict.
+This was executed as one significant, evidence-ranked optimizer stage rather
+than a sequence of tiny edits. The expanded portfolio and retained PERF3
+lessons selected a coherent bounded RXC late-profitability candidate after
+considering hoisting, register finalisation and late-inlining interactions.
+The implementation kept RXC and RXAS ownership explicit, preserved
+signal/TRACE/debug identity, and stopped at the mandatory ordinary-Release
+verdict before broad closeout.
+
+### Opening evidence and ownership
+
+Fresh schema-5 counts on the qualified DeltaBlue and CD reserve lanes show that
+the current optimized images execute fewer bytecode instructions and calls than
+their no-opt controls, but admit much more inline binding/copy and register
+storage:
+
+- DeltaBlue at bounded size 10 falls from 142,316 to 134,086 executed
+  instructions and 6,138 to 2,066 calls, while value slots rise 3,970 to
+  32,360 and the largest frame block rises 6,632 to 40,232 bytes;
+- CD at bounded size 10 falls from 10,178,179 to 9,396,634 instructions and
+  539,518 to 114,175 calls, but adds 320,294 generic copies, 193,667 float
+  copies and 192,336 integer copies.
+
+The current detached inline transaction costs the final candidate, but it uses
+that cost only to prove candidate-local cleanup improved the pre-cleanup
+candidate. It does not compare the final expanded site with the retained call
+plus the validated callable body. This makes the qualified optimized/no-opt
+reversal an inlining placement/profitability problem first. Pure register-number
+compaction cannot remove live copied values, and wholesale late RXAS inlining
+would change ownership before a bounded RXC proof has been exhausted.
+
+RXC therefore owns the first candidate. Existing pre-inline constant folding
+and semantic summaries provide the early/hoisting side of the decision; the
+detached transaction provides the late site-specific cleanup and fallback;
+register allocation occurs only after a candidate has passed the final cost
+gate. RXAS remains responsible for its existing mechanical and proved flow
+rewrites and gains no inlining or public-format responsibility in H1.
+
+### Design selection
+
+| Design | Benefit | Principal cost/risk | Disposition |
+| --- | --- | --- | --- |
+| H0 current early inlining | Retains all current supported inline shapes | Final expanded site is never compared with the executable call-plus-body reference; qualified reserve lanes expand badly | status-quo control |
+| H1 bounded hybrid late-profitability | Retains early semantic eligibility and constant work, then compares the cleaned detached candidate with original call plus the validated callable summary before register allocation | Conservative static multi-metric model may retain calls whose dynamic context could win | **selected isolated proof** |
+| H2 final register-number compaction only | Can remove numeric gaps after all rewrites | Cannot remove live inline copies or high simultaneous storage; current compiler allocation is already reuse-aware | audit as a zero/secondary result, not the first production candidate |
+| H3 late RXAS inlining or two RXAS epochs | Can use exact RXAS instruction, signal and call-window facts | Requires transported semantic intent, cloning and metadata/source ownership plus an architecture selection | defer unless H1 cannot recover the qualified lanes |
+| H4 disable general inlining | Establishes a useful scalar-only ceiling/control | Discards accepted Richards/List/accessor wins and is not a production policy | isolated control only |
+
+H1's reference is the sum of the original call-site AST cost and the callable
+summary body cost. The final detached candidate must be no worse in structural
+nodes, assignments, branches, nested calls or inline temporaries, and must be
+strictly better in at least one dimension. The ordinary call remains attached
+until this proof succeeds, so a rejection is site-local rather than a
+whole-callable ban. Exact scalar accessors retain their dedicated proved path;
+the general gate may not undo POSTPERF-04.
+
+The isolated comparison selected a 20-node validated-body floor. A callable at
+or below that floor retains the current early inline path because the complete
+body is within the bounded call/frame cost envelope; a larger callable must
+pass H1's final site-specific call-plus-body comparison. The zero-floor H1
+control was rejected because it lost the accepted List path and moved RexxCPS
+adversely. A 40-node floor was also rejected: it recovered materially less on
+DeltaBlue, CD and Richards and moved RexxCPS adversely.
+
+The bounded five-observation/three-observation pilot is orientation, not the
+mandatory Release verdict. On product `rxvm`, H1-T20 moved DeltaBlue size 500
+from a 2.51 s median to 0.44 s, CD size 10 from 0.15 s to 0.08 s and Richards
+size 20 from 2.13 s to 0.32 s. List RXAS was byte-identical and canonical
+RexxCPS retained a 1.38 s median. H1-T40 recorded 1.89 s, 0.14 s, 1.94 s and
+1.39 s respectively, so it is not the selected fallback.
+
+### H1 execution and verdict gate
+
+1. Compare H0, H1 and H4 on identical DeltaBlue/CD inputs and established
+   inline-win/zero-change guards; audit RXAS instructions, copies, calls,
+   `.locals`, image size and deterministic profile counts.
+2. Add focused structural and opt/no-opt runtime regressions for an admitted
+   small site and a rejected expansion-heavy site.
+3. After the minimum focused checks pass, freeze H1, build the ordinary
+   profiling-off Release product and run the smallest decisive end-to-end
+   comparison against retained valid H0 evidence, with the accepted product as
+   a same-session control where required.
+4. Report and stop. Broad CTest, documentation closeout and commit follow only
+   if Adrian accepts the first Release verdict.
+
+### Accepted verdict and closeout
+
+Adrian accepted H1-T20 after the capped paired Release comparison. Median
+elapsed changes versus exact H0 were -82.3060%/-82.4190% for DeltaBlue,
+-47.2985%/-47.1455% for CD, -83.9321%/-84.5985% for Richards and
+-2.5006%/-5.0658% for List on `rxtvm`/`rxbvm`. Sieve
+(+0.1756%/-0.0459%) and RexxCPS (+0.2316%/-0.0882%) remained
+noisy/inconclusive at the approved 36-pair ceiling, with no paired median at
+the 3% adverse guard.
+
+The selected policy preserves the exact POSTPERF-04 scalar-accessor path and
+ordinary validated callables of at most 20 structural nodes. Larger supported
+call sites must be no worse in structural nodes, assignments, branches,
+nested calls and inline temporaries, and strictly better in at least one of
+those dimensions, than the executable original call plus callable-body
+summary. A loss retains the ordinary call locally; it does not ban the
+callable or change the supported semantic shape.
+
+Static Release products confirm that this removes expansion rather than
+moving work into the VM: DeltaBlue falls from 7,009 to 2,111 RXAS
+instructions, CD 5,593 to 2,304, Richards 1,872 to 883, Havlak 2,730 to
+1,428 and RexxCPS 1,403 to 865. List remains byte-identical; Sieve grows by
+321 RXBIN bytes, below the 4 KiB guard. The compiler-produced library falls
+from 907,207 to 719,809 bytes.
+
+Closeout uncovered and corrected two independent RXC defects rather than
+weakening the selected policy:
+
+- binary and decimal constants returned from retained calls now keep an
+  allocated register and emit `load` before `ret`; only RXAS-supported direct
+  boolean/integer/float/string control operands bypass a register;
+- the NR-26 copy fixed point now preserves a deeper read substitution when its
+  reaching copy store was deliberately skipped, instead of replacing it on a
+  later pass with an older physical-target equality. The optimized HTTP
+  reassignment regression proves that `read_request` consumes the newly
+  accepted client.
+
+Structural tests were updated to accept the intentional site-local ordinary
+call fallback while retaining their receiver, result, lifetime and decimal
+integrity proofs. Final closeout passes 36/36 combined focused Debug tests,
+the full Debug suite at 2,251/2,251, and 56/56 focused Release tests. A fresh
+post-defect Release rebuild is byte-identical to all 17 frozen H1 benchmark
+RXAS/RXBIN and library artefacts, so the accepted timing verdict remains
+applicable. Evidence:
+[`2026-08-18-postperf-05-bounded-late-profitability-first-release-verdict`](evidence/2026-08-18-postperf-05-bounded-late-profitability-first-release-verdict/README.md).
 
 ## Restart rule
 
 On restart, read this file, `performance/AGENTS.md`,
-`performance/PERFORMANCE-GOVERNANCE.md`, and the current `git status`. Resume
-the first unchecked item in the active stage. Do not infer completion from an
-unretained pilot or from source that merely compiles.
+`performance/PERFORMANCE-GOVERNANCE.md`, and the current `git status`. The
+approved five-stage post-PERF3 sequence has no active item after POSTPERF-05;
+new production performance work requires a separately selected roadmap gate.
+Do not infer new authorization from an unretained pilot or from source that
+merely compiles.

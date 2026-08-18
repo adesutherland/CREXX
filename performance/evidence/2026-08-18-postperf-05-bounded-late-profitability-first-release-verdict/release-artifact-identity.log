@@ -1,0 +1,20 @@
+POSTPERF-05 accepted H1 Release artefact identity check
+Rebuilt after the fixed-point skipped-copy correction.
+MATCH benchmark_awfy_cd_opt.rxas
+MATCH benchmark_awfy_cd_opt.rxbin
+MATCH benchmark_awfy_deltablue_opt.rxas
+MATCH benchmark_awfy_deltablue_opt.rxbin
+MATCH benchmark_awfy_havlak_opt.rxas
+MATCH benchmark_awfy_havlak_opt.rxbin
+MATCH benchmark_awfy_json_opt.rxas
+MATCH benchmark_awfy_json_opt.rxbin
+MATCH benchmark_awfy_list_opt.rxas
+MATCH benchmark_awfy_list_opt.rxbin
+MATCH benchmark_awfy_richards_opt.rxas
+MATCH benchmark_awfy_richards_opt.rxbin
+MATCH benchmark_awfy_sieve_opt.rxas
+MATCH benchmark_awfy_sieve_opt.rxbin
+MATCH benchmark_rexxcps_levelb_opt.rxas
+MATCH benchmark_rexxcps_levelb_opt.rxbin
+MATCH library.rxbin
+checked=17 mismatches=0

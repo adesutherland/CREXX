@@ -1,0 +1,39 @@
+options levelb
+namespace inline_late_profitability_guard
+
+main: procedure = .int
+  probe = .Probe(10)
+  small = addone(4)
+  large = probe.updateandsum(2, 3)
+  if small <> 5 | large <> 30 | probe.current() <> 15 then do
+    say "FAIL: late inline profitability" small large probe.current()
+    return 1
+  end
+  say "PASS: late inline profitability"
+  return 0
+
+addone: procedure = .int
+  arg value = .int
+  return value + 1
+
+Probe: class
+  stored = .int
+
+  *: factory
+    arg initial = .int
+    stored = initial
+    return
+
+  current: method = .int
+    return stored
+
+  updateandsum: method = .int
+    arg first = .int, second = .int
+    stored = stored + first
+    stored = stored + second
+    step1 = stored + 1
+    step2 = step1 + 2
+    step3 = step2 + 3
+    step4 = step3 + 4
+    step5 = step4 + 5
+    return step5

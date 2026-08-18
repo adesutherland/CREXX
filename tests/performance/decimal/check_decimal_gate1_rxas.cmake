@@ -44,10 +44,11 @@ function(_require_minimum MNEMONIC MINIMUM)
     endif()
 endfunction()
 
-# These conservative floors are satisfied by both current opt and no-opt
-# images. They prove every timed kernel family still contains runtime provider
-# work without pinning harmless register allocation or inlining changes.
-_require_minimum(stod 18)
+# These conservative floors prove every timed kernel family still contains
+# runtime provider work without pinning harmless register allocation or
+# inlining changes. POSTPERF-05 removes seven duplicated STOD instructions by
+# retaining bounded kernel calls; eleven remain in the callable bodies.
+_require_minimum(stod 11)
 _require_minimum(dtos 6)
 _require_minimum(dadd 4)
 _require_minimum(dsub 2)

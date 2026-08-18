@@ -18,1004 +18,287 @@
 .meta "object_reference_regression.smallpayload.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=39
+main() .locals=11
    .meta "object_reference_regression.main"="b" ".int" main() ""
-   .srcstep 156 156 17 "object_reference_regression.crexx" 3 1 23 "main: procedure = .int"
+   .srcstep 17 17 17 "object_reference_regression.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
-   .srcstep 26 26 17 "object_reference_regression.crexx" 4 3 34 "  payload = .LargePayload(\"seed\")"
-   .meta "object_reference_regression.main.t_values"="b" ".string[64]" r2
-   .srcstep 1 1 17 "object_reference_regression.crexx" 67 5 26 "    t_values = .string[64]"
-   null r2
-   .srcstep 2 2 6 "object_reference_regression.crexx" 65 3 13 "  *: factory"
-   setattrs r3,12
-   .srcstep 3 3 6 "object_reference_regression.crexx" 65 3 13 "  *: factory"
-   setobjtype r3,"object_reference_regression.largepayload"
-   .srcstep 4 4 17 "object_reference_regression.crexx" 68 5 17 "    name = label"
-   load r5,"seed"
-   .traceevent "L" 4 "R" "S" "r" 5 4 4 0 "" ""
-   linkattr1 r4,r3,10
-   scopy r4,r5
-   unlink r4
-   .srcstep 9 9 17 "object_reference_regression.crexx" 69 5 7 "    do i = 1 to 40"
-   .srcstep 5 5 17 "object_reference_regression.crexx" 69 8 13 "    do i = 1 to 40"
-   load r4,1
-   .traceevent "L" 4 "R" "I" "r" 4 5 5 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 4 5 5 0 "i" ""
-   .srcstep 6 6 17 "object_reference_regression.crexx" 69 14 19 "    do i = 1 to 40"
-   load r6,40
-   .traceevent "L" 4 "R" "I" "r" 6 0 0 0 "" ""
-l417dostart:
-   .srcstep 6 6 17 "object_reference_regression.crexx" 69 14 19 "    do i = 1 to 40"
-   igt r7,r4,r6
-   brt l417doend,r7
-   .srcstep 8 8 17 "object_reference_regression.crexx" 70 7 38 "      t_values[i] = label || \":\" || i"
-   .traceevent "V" 6 "R" "I" "r" 4 8 8 0 "i" ""
-   .traceevent "C" 4 "R" "I" "r" 4 8 8 0 "t_values" ""
-   setlinkattr1 r8,r2,64,r4
-   itos r4
-   .traceevent "V" 6 "R" "S" "r" 4 8 8 0 "i" ""
-   concat r9,"seed:",r4
-   .traceevent "O" 4 "R" "S" "r" 9 8 8 0 "" ""
-   scopy r8,r9
-   .traceevent "A" 6 "R" "S" "r" 8 8 8 0 "t_values" ""
-   unlink r8
-l417doinc:
-   .srcstep 7 7 17 "object_reference_regression.crexx" 69 8 9 "    do i = 1 to 40"
-   inc r4
-   .srcstep 10 10 17 "object_reference_regression.crexx" 71 5 8 "    end"
-   br l417dostart
-l417doend:
-   .srcstep 11 11 17 "object_reference_regression.crexx" 72 5 22 "    values = t_values"
-   .traceevent "V" 6 "R" "S" "r" 2 11 11 0 "t_values" ""
-   linkattr1 r9,r3,11
-   copy r9,r2
-   unlink r9
-   .srcstep 16 16 17 "object_reference_regression.crexx" 73 5 45 "    child = .SmallPayload(label || \":child\")"
-   .srcstep 12 12 6 "object_reference_regression.crexx" 39 3 13 "  *: factory"
-   setattrs r10,2
-   .srcstep 13 13 6 "object_reference_regression.crexx" 39 3 13 "  *: factory"
-   setobjtype r10,"object_reference_regression.smallpayload"
-   .srcstep 14 14 17 "object_reference_regression.crexx" 41 5 17 "    name = label"
-   load r8,"seed:child"
-   .traceevent "L" 4 "R" "S" "r" 8 14 14 0 "" ""
-   linkattr1 r9,r10,1
-   scopy r9,r8
-   unlink r9
-   .srcstep 15 15 33 "object_reference_regression.crexx" 42 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 10 15 15 0 "§factory" ""
-   linkattr1 r9,r3,1
-   copy r9,r10
-   unlink r9
-   .srcstep 17 17 17 "object_reference_regression.crexx" 74 5 29 "    marker1 = label || \":m1\""
-   load r7,"seed:m1"
-   .traceevent "L" 4 "R" "S" "r" 7 17 17 0 "" ""
-   linkattr1 r9,r3,2
-   scopy r9,r7
-   unlink r9
-   .srcstep 18 18 17 "object_reference_regression.crexx" 75 5 29 "    marker2 = label || \":m2\""
-   load r7,"seed:m2"
-   .traceevent "L" 4 "R" "S" "r" 7 18 18 0 "" ""
-   linkattr1 r9,r3,3
-   scopy r9,r7
-   unlink r9
-   .srcstep 19 19 17 "object_reference_regression.crexx" 76 5 29 "    marker3 = label || \":m3\""
-   load r7,"seed:m3"
-   .traceevent "L" 4 "R" "S" "r" 7 19 19 0 "" ""
-   linkattr1 r9,r3,4
-   scopy r9,r7
-   unlink r9
-   .srcstep 20 20 17 "object_reference_regression.crexx" 77 5 29 "    marker4 = label || \":m4\""
-   load r7,"seed:m4"
-   .traceevent "L" 4 "R" "S" "r" 7 20 20 0 "" ""
-   linkattr1 r9,r3,5
-   scopy r9,r7
-   unlink r9
-   .srcstep 21 21 17 "object_reference_regression.crexx" 78 5 29 "    marker5 = label || \":m5\""
-   load r7,"seed:m5"
-   .traceevent "L" 4 "R" "S" "r" 7 21 21 0 "" ""
-   linkattr1 r9,r3,6
-   scopy r9,r7
-   unlink r9
-   .srcstep 22 22 17 "object_reference_regression.crexx" 79 5 29 "    marker6 = label || \":m6\""
-   load r7,"seed:m6"
-   .traceevent "L" 4 "R" "S" "r" 7 22 22 0 "" ""
-   linkattr1 r9,r3,7
-   scopy r9,r7
-   unlink r9
-   .srcstep 23 23 17 "object_reference_regression.crexx" 80 5 29 "    marker7 = label || \":m7\""
-   load r7,"seed:m7"
-   .traceevent "L" 4 "R" "S" "r" 7 23 23 0 "" ""
-   linkattr1 r9,r3,8
-   scopy r9,r7
-   unlink r9
-   .srcstep 24 24 17 "object_reference_regression.crexx" 81 5 29 "    marker8 = label || \":m8\""
-   load r7,"seed:m8"
-   .traceevent "L" 4 "R" "S" "r" 7 24 24 0 "" ""
-   linkattr1 r9,r3,9
-   scopy r9,r7
-   unlink r9
-   .srcstep 25 25 33 "object_reference_regression.crexx" 82 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 3 25 25 0 "§factory" ""
-   copy r1,r3
-   .traceevent "A" 6 "R" "O" "r" 1 25 25 0 "payload" ""
-   .srcstep 35 35 17 "object_reference_regression.crexx" 6 3 44 "  say \"factory-summary=\" || payload.summary()"
+   .srcstep 1 1 17 "object_reference_regression.crexx" 4 3 34 "  payload = .LargePayload(\"seed\")"
    .meta "object_reference_regression.main.payload"="b" ".largepayload" r1
-   .srcstep 34 34 17 "object_reference_regression.crexx" 6 29 36 "  say \"factory-summary=\" || payload.summary()"
-   .srcstep 27 27 33 "object_reference_regression.crexx" 6 29 36 "  say \"factory-summary=\" || payload.summary()"
-   .traceevent "V" 6 "R" "O" "r" 1 27 27 0 "payload" ""
-   .traceevent "A" 6 "R" "O" "r" 1 27 27 0 "§this" ""
-   .srcstep 28 28 6 "object_reference_regression.crexx" 95 3 28 "  summary: method = .string"
-   .traceevent "V" 6 "R" "O" "r" 1 35 35 0 "§this" ""
-   assertinitialized r1
-   .srcstep 32 32 17 "object_reference_regression.crexx" 96 5 31 "    child_name = child.getName()"
-   .srcstep 29 29 33 "object_reference_regression.crexx" 96 18 23 "    child_name = child.getName()"
-   linkattr1 r7,r1,1
-   .traceevent "V" 6 "R" "O" "r" 7 29 29 0 "child" ""
-   copy r11,r7
-   .traceevent "A" 6 "R" "O" "r" 11 29 29 0 "§this" ""
-   unlink r7
-   .srcstep 30 30 6 "object_reference_regression.crexx" 44 3 28 "  getName: method = .string"
-   .traceevent "V" 6 "R" "O" "r" 11 35 35 0 "§this" ""
-   assertinitialized r11
-   .srcstep 31 31 33 "object_reference_regression.crexx" 45 5 11 "    return name"
-   linkattr1 r7,r11,1
-   .traceevent "V" 6 "R" "S" "r" 7 31 31 0 "name" ""
-   copy r9,r7
-   .traceevent "A" 6 "R" "S" "r" 9 31 31 0 "child_name" ""
-   unlink r7
-   .srcstep 33 33 17 "object_reference_regression.crexx" 97 5 96 "    return name || \"|\" || values[1] || \"|\" || values[40] || \"|\" || child_name || \"|\" || marker8"
-   linkattr1 r7,r1,10
-   .traceevent "V" 6 "R" "S" "r" 7 35 35 0 "name" ""
-   concat r6,r7,"|"
-   unlink r7
-   .traceevent "O" 4 "R" "S" "r" 6 35 35 0 "" ""
-   linkattr1 r12,r1,11
-   minlinkattr1 r4,r12,1
-   .traceevent "V" 6 "R" "S" "r" 4 35 35 0 "values" ""
-   concat r6,r6,r4
-   unlinkn r4,r12
-   .traceevent "O" 4 "R" "S" "r" 6 35 35 0 "" ""
-   concat r6,r6,"|"
-   .traceevent "O" 4 "R" "S" "r" 6 35 35 0 "" ""
-   linkattr1 r14,r1,11
-   minlinkattr1 r13,r14,40
-   .traceevent "V" 6 "R" "S" "r" 13 35 35 0 "values" ""
-   concat r6,r6,r13
-   unlinkn r13,r14
-   .traceevent "O" 4 "R" "S" "r" 6 35 35 0 "" ""
-   concat r6,r6,"|"
-   .traceevent "O" 4 "R" "S" "r" 6 35 35 0 "" ""
-   .traceevent "V" 6 "R" "S" "r" 9 35 35 0 "child_name" ""
-   concat r6,r6,r9
-   .traceevent "O" 4 "R" "S" "r" 6 35 35 0 "" ""
-   concat r6,r6,"|"
-   .traceevent "O" 4 "R" "S" "r" 6 35 35 0 "" ""
-   linkattr1 r15,r1,9
-   .traceevent "V" 6 "R" "S" "r" 15 35 35 0 "marker8" ""
-   concat r6,r6,r15
-   unlink r15
-   .traceevent "O" 4 "R" "S" "r" 6 35 35 0 "" ""
-   scopy r16,r6
-   br l753bexprend
-l753bexprend:
-   concat r16,"factory-summary=",r16
-   .traceevent "O" 4 "R" "S" "r" 16 35 35 0 "" ""
-   say r16
-   .srcstep 49 49 17 "object_reference_regression.crexx" 7 3 40 "  say \"factory-check=\" || payload.check()"
-   .srcstep 48 48 17 "object_reference_regression.crexx" 7 27 34 "  say \"factory-check=\" || payload.check()"
-   .srcstep 36 36 33 "object_reference_regression.crexx" 7 27 34 "  say \"factory-check=\" || payload.check()"
-   .traceevent "V" 6 "R" "O" "r" 1 36 36 0 "payload" ""
-   .traceevent "A" 6 "R" "O" "r" 1 36 36 0 "§this" ""
-   .srcstep 37 37 6 "object_reference_regression.crexx" 99 3 26 "  check: method = .string"
-   .traceevent "V" 6 "R" "O" "r" 1 49 49 0 "§this" ""
-   assertinitialized r1
-   .srcstep 39 39 17 "object_reference_regression.crexx" 100 5 35 "    if values[17] \\= name || \":17\" then return \"bad-17\""
-   linkattr1 r15,r1,11
-   minlinkattr1 r16,r15,17
-   .traceevent "V" 6 "R" "S" "r" 16 39 39 0 "values" ""
-   linkattr1 r14,r1,10
-   .traceevent "V" 6 "R" "S" "r" 14 39 39 0 "name" ""
-   concat r13,r14,":17"
-   unlink r14
-   .traceevent "O" 4 "R" "S" "r" 13 39 39 0 "" ""
-   rne r13,r16,r13
-   unlinkn r16,r15
-   .traceevent "O" 4 "R" "B" "r" 13 39 39 0 "" ""
-   brf l796iffalse,r13
-   .srcstep 40 40 17 "object_reference_regression.crexx" 100 36 40 "    if values[17] \\= name || \":17\" then return \"bad-17\""
-   .srcstep 38 38 17 "object_reference_regression.crexx" 100 41 56 "    if values[17] \\= name || \":17\" then return \"bad-17\""
-   load r12,"bad-17"
-   .traceevent "L" 4 "R" "S" "r" 12 49 49 0 "" ""
-   scopy r15,r12
-   br l789bexprend
-l796iffalse:
-   .srcstep 42 42 17 "object_reference_regression.crexx" 101 5 32 "    if marker1 \\= name || \":m1\" then return \"bad-m1\""
-   linkattr1 r16,r1,2
-   .traceevent "V" 6 "R" "S" "r" 16 42 42 0 "marker1" ""
-   linkattr1 r15,r1,10
-   .traceevent "V" 6 "R" "S" "r" 15 42 42 0 "name" ""
-   concat r14,r15,":m1"
-   unlink r15
-   .traceevent "O" 4 "R" "S" "r" 14 42 42 0 "" ""
-   rne r14,r16,r14
-   unlink r16
-   .traceevent "O" 4 "R" "B" "r" 14 42 42 0 "" ""
-   brf l805iffalse,r14
-   .srcstep 43 43 17 "object_reference_regression.crexx" 101 33 37 "    if marker1 \\= name || \":m1\" then return \"bad-m1\""
-   .srcstep 41 41 17 "object_reference_regression.crexx" 101 38 53 "    if marker1 \\= name || \":m1\" then return \"bad-m1\""
-   load r13,"bad-m1"
-   .traceevent "L" 4 "R" "S" "r" 13 49 49 0 "" ""
-   scopy r15,r13
-   br l789bexprend
-l805iffalse:
-   .srcstep 45 45 17 "object_reference_regression.crexx" 102 5 32 "    if marker8 \\= name || \":m8\" then return \"bad-m8\""
-   linkattr1 r16,r1,9
-   .traceevent "V" 6 "R" "S" "r" 16 45 45 0 "marker8" ""
-   linkattr1 r15,r1,10
-   .traceevent "V" 6 "R" "S" "r" 15 45 45 0 "name" ""
-   concat r14,r15,":m8"
-   unlink r15
-   .traceevent "O" 4 "R" "S" "r" 14 45 45 0 "" ""
-   rne r14,r16,r14
-   unlink r16
-   .traceevent "O" 4 "R" "B" "r" 14 45 45 0 "" ""
-   brf l813iffalse,r14
-   .srcstep 46 46 17 "object_reference_regression.crexx" 102 33 37 "    if marker8 \\= name || \":m8\" then return \"bad-m8\""
-   .srcstep 44 44 17 "object_reference_regression.crexx" 102 38 53 "    if marker8 \\= name || \":m8\" then return \"bad-m8\""
-   load r13,"bad-m8"
-   .traceevent "L" 4 "R" "S" "r" 13 49 49 0 "" ""
-   scopy r15,r13
-   br l789bexprend
-l813iffalse:
-   .srcstep 47 47 17 "object_reference_regression.crexx" 103 5 16 "    return \"ok\""
-   load r16,"ok"
-   .traceevent "L" 4 "R" "S" "r" 16 49 49 0 "" ""
-   scopy r15,r16
-   br l789bexprend
-l789bexprend:
-   concat r15,"factory-check=",r15
-   .traceevent "O" 4 "R" "S" "r" 15 49 49 0 "" ""
-   say r15
-   .srcstep 76 76 17 "object_reference_regression.crexx" 9 3 45 "  call replacePayloadRef(payload, \"rebound\")"
-   .srcstep 75 75 17 "object_reference_regression.crexx" 23 3 30 "  item = .LargePayload(label)"
-   .meta "object_reference_regression.main.t_values"="b" ".string[64]" r18
-   .srcstep 50 50 17 "object_reference_regression.crexx" 67 5 26 "    t_values = .string[64]"
-   null r18
-   .srcstep 51 51 6 "object_reference_regression.crexx" 65 3 13 "  *: factory"
-   setattrs r19,12
-   .srcstep 52 52 6 "object_reference_regression.crexx" 65 3 13 "  *: factory"
-   setobjtype r19,"object_reference_regression.largepayload"
-   .srcstep 53 53 17 "object_reference_regression.crexx" 68 5 17 "    name = label"
-   load r15,"rebound"
-   .traceevent "L" 4 "R" "S" "r" 15 53 53 0 "" ""
-   linkattr1 r16,r19,10
-   scopy r16,r15
-   unlink r16
-   .srcstep 58 58 17 "object_reference_regression.crexx" 69 5 7 "    do i = 1 to 40"
-   .srcstep 54 54 17 "object_reference_regression.crexx" 69 8 13 "    do i = 1 to 40"
-   load r16,1
-   .traceevent "L" 4 "R" "I" "r" 16 54 54 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 16 54 54 0 "i" ""
-   .srcstep 55 55 17 "object_reference_regression.crexx" 69 14 19 "    do i = 1 to 40"
-   load r14,40
-   .traceevent "L" 4 "R" "I" "r" 14 0 0 0 "" ""
-l846dostart:
-   .srcstep 55 55 17 "object_reference_regression.crexx" 69 14 19 "    do i = 1 to 40"
-   igt r13,r16,r14
-   brt l846doend,r13
-   .srcstep 57 57 17 "object_reference_regression.crexx" 70 7 38 "      t_values[i] = label || \":\" || i"
-   .traceevent "V" 6 "R" "I" "r" 16 57 57 0 "i" ""
-   .traceevent "C" 4 "R" "I" "r" 16 57 57 0 "t_values" ""
-   setlinkattr1 r12,r18,64,r16
-   itos r16
-   .traceevent "V" 6 "R" "S" "r" 16 57 57 0 "i" ""
-   concat r9,"rebound:",r16
-   .traceevent "O" 4 "R" "S" "r" 9 57 57 0 "" ""
-   scopy r12,r9
-   .traceevent "A" 6 "R" "S" "r" 12 57 57 0 "t_values" ""
-   unlink r12
-l846doinc:
-   .srcstep 56 56 17 "object_reference_regression.crexx" 69 8 9 "    do i = 1 to 40"
-   inc r16
-   .srcstep 59 59 17 "object_reference_regression.crexx" 71 5 8 "    end"
-   br l846dostart
-l846doend:
-   .srcstep 60 60 17 "object_reference_regression.crexx" 72 5 22 "    values = t_values"
-   .traceevent "V" 6 "R" "S" "r" 18 60 60 0 "t_values" ""
-   linkattr1 r16,r19,11
-   copy r16,r18
-   unlink r16
-   .srcstep 65 65 17 "object_reference_regression.crexx" 73 5 45 "    child = .SmallPayload(label || \":child\")"
-   .srcstep 61 61 6 "object_reference_regression.crexx" 39 3 13 "  *: factory"
-   setattrs r20,2
-   .srcstep 62 62 6 "object_reference_regression.crexx" 39 3 13 "  *: factory"
-   setobjtype r20,"object_reference_regression.smallpayload"
-   .srcstep 63 63 17 "object_reference_regression.crexx" 41 5 17 "    name = label"
-   load r14,"rebound:child"
-   .traceevent "L" 4 "R" "S" "r" 14 63 63 0 "" ""
-   linkattr1 r16,r20,1
-   scopy r16,r14
-   unlink r16
-   .srcstep 64 64 33 "object_reference_regression.crexx" 42 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 20 64 64 0 "§factory" ""
-   linkattr1 r16,r19,1
-   copy r16,r20
-   unlink r16
-   .srcstep 66 66 17 "object_reference_regression.crexx" 74 5 29 "    marker1 = label || \":m1\""
-   load r13,"rebound:m1"
-   .traceevent "L" 4 "R" "S" "r" 13 66 66 0 "" ""
-   linkattr1 r16,r19,2
-   scopy r16,r13
-   unlink r16
-   .srcstep 67 67 17 "object_reference_regression.crexx" 75 5 29 "    marker2 = label || \":m2\""
-   load r13,"rebound:m2"
-   .traceevent "L" 4 "R" "S" "r" 13 67 67 0 "" ""
-   linkattr1 r16,r19,3
-   scopy r16,r13
-   unlink r16
-   .srcstep 68 68 17 "object_reference_regression.crexx" 76 5 29 "    marker3 = label || \":m3\""
-   load r13,"rebound:m3"
-   .traceevent "L" 4 "R" "S" "r" 13 68 68 0 "" ""
-   linkattr1 r16,r19,4
-   scopy r16,r13
-   unlink r16
-   .srcstep 69 69 17 "object_reference_regression.crexx" 77 5 29 "    marker4 = label || \":m4\""
-   load r13,"rebound:m4"
-   .traceevent "L" 4 "R" "S" "r" 13 69 69 0 "" ""
-   linkattr1 r16,r19,5
-   scopy r16,r13
-   unlink r16
-   .srcstep 70 70 17 "object_reference_regression.crexx" 78 5 29 "    marker5 = label || \":m5\""
-   load r13,"rebound:m5"
-   .traceevent "L" 4 "R" "S" "r" 13 70 70 0 "" ""
-   linkattr1 r16,r19,6
-   scopy r16,r13
-   unlink r16
-   .srcstep 71 71 17 "object_reference_regression.crexx" 79 5 29 "    marker6 = label || \":m6\""
-   load r13,"rebound:m6"
-   .traceevent "L" 4 "R" "S" "r" 13 71 71 0 "" ""
-   linkattr1 r16,r19,7
-   scopy r16,r13
-   unlink r16
-   .srcstep 72 72 17 "object_reference_regression.crexx" 80 5 29 "    marker7 = label || \":m7\""
-   load r13,"rebound:m7"
-   .traceevent "L" 4 "R" "S" "r" 13 72 72 0 "" ""
-   linkattr1 r16,r19,8
-   scopy r16,r13
-   unlink r16
-   .srcstep 73 73 17 "object_reference_regression.crexx" 81 5 29 "    marker8 = label || \":m8\""
-   load r13,"rebound:m8"
-   .traceevent "L" 4 "R" "S" "r" 13 73 73 0 "" ""
-   linkattr1 r16,r19,9
-   scopy r16,r13
-   unlink r16
-   .srcstep 74 74 33 "object_reference_regression.crexx" 82 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 19 74 74 0 "§factory" ""
-   copy r1,r19
-   .traceevent "A" 6 "R" "O" "r" 1 74 74 0 "payload" ""
-   .srcstep 85 85 17 "object_reference_regression.crexx" 10 3 39 "  say \"ref-rebind=\" || payload.summary()"
-   .srcstep 84 84 17 "object_reference_regression.crexx" 10 24 31 "  say \"ref-rebind=\" || payload.summary()"
-   .srcstep 77 77 33 "object_reference_regression.crexx" 10 24 31 "  say \"ref-rebind=\" || payload.summary()"
-   .traceevent "V" 6 "R" "O" "r" 1 77 77 0 "payload" ""
-   .traceevent "A" 6 "R" "O" "r" 1 77 77 0 "§this" ""
-   .srcstep 78 78 6 "object_reference_regression.crexx" 95 3 28 "  summary: method = .string"
-   .traceevent "V" 6 "R" "O" "r" 1 85 85 0 "§this" ""
-   assertinitialized r1
-   .srcstep 82 82 17 "object_reference_regression.crexx" 96 5 31 "    child_name = child.getName()"
-   .srcstep 79 79 33 "object_reference_regression.crexx" 96 18 23 "    child_name = child.getName()"
-   linkattr1 r13,r1,1
-   .traceevent "V" 6 "R" "O" "r" 13 79 79 0 "child" ""
-   copy r21,r13
-   .traceevent "A" 6 "R" "O" "r" 21 79 79 0 "§this" ""
-   unlink r13
-   .srcstep 80 80 6 "object_reference_regression.crexx" 44 3 28 "  getName: method = .string"
-   .traceevent "V" 6 "R" "O" "r" 21 85 85 0 "§this" ""
-   assertinitialized r21
-   .srcstep 81 81 33 "object_reference_regression.crexx" 45 5 11 "    return name"
-   linkattr1 r13,r21,1
-   .traceevent "V" 6 "R" "S" "r" 13 81 81 0 "name" ""
-   copy r16,r13
-   .traceevent "A" 6 "R" "S" "r" 16 81 81 0 "child_name" ""
-   unlink r13
-   .srcstep 83 83 17 "object_reference_regression.crexx" 97 5 96 "    return name || \"|\" || values[1] || \"|\" || values[40] || \"|\" || child_name || \"|\" || marker8"
-   linkattr1 r13,r1,10
-   .traceevent "V" 6 "R" "S" "r" 13 85 85 0 "name" ""
-   concat r12,r13,"|"
-   unlink r13
-   .traceevent "O" 4 "R" "S" "r" 12 85 85 0 "" ""
-   linkattr1 r7,r1,11
-   minlinkattr1 r9,r7,1
-   .traceevent "V" 6 "R" "S" "r" 9 85 85 0 "values" ""
-   concat r12,r12,r9
-   unlinkn r9,r7
-   .traceevent "O" 4 "R" "S" "r" 12 85 85 0 "" ""
-   concat r12,r12,"|"
-   .traceevent "O" 4 "R" "S" "r" 12 85 85 0 "" ""
-   linkattr1 r4,r1,11
-   minlinkattr1 r6,r4,40
-   .traceevent "V" 6 "R" "S" "r" 6 85 85 0 "values" ""
-   concat r12,r12,r6
-   unlinkn r6,r4
-   .traceevent "O" 4 "R" "S" "r" 12 85 85 0 "" ""
-   concat r12,r12,"|"
-   .traceevent "O" 4 "R" "S" "r" 12 85 85 0 "" ""
-   .traceevent "V" 6 "R" "S" "r" 16 85 85 0 "child_name" ""
-   concat r12,r12,r16
-   .traceevent "O" 4 "R" "S" "r" 12 85 85 0 "" ""
-   concat r12,r12,"|"
-   .traceevent "O" 4 "R" "S" "r" 12 85 85 0 "" ""
-   linkattr1 r22,r1,9
-   .traceevent "V" 6 "R" "S" "r" 22 85 85 0 "marker8" ""
-   concat r12,r12,r22
-   unlink r22
-   .traceevent "O" 4 "R" "S" "r" 12 85 85 0 "" ""
-   scopy r23,r12
-   br l1005bexprend
-l1005bexprend:
-   concat r23,"ref-rebind=",r23
-   .traceevent "O" 4 "R" "S" "r" 23 85 85 0 "" ""
-   say r23
-   .srcstep 98 98 17 "object_reference_regression.crexx" 12 3 44 "  call mutatePayloadRef(payload, \"mutated\")"
-   .srcstep 97 97 17 "object_reference_regression.crexx" 28 3 26 "  call item.rename(label)"
-   .meta "object_reference_regression.main.t_values"="b" ".string[*]" r25
-   .srcstep 86 86 17 "object_reference_regression.crexx" 86 5 22 "    t_values = values"
-   null r25
-   .srcstep 87 87 33 "object_reference_regression.crexx" 28 8 12 "  call item.rename(label)"
-   .traceevent "V" 6 "R" "O" "r" 1 87 87 0 "payload" ""
-   copy r26,r1
-   .traceevent "A" 6 "R" "O" "r" 26 87 87 0 "§this" ""
-   .srcstep 88 88 6 "object_reference_regression.crexx" 84 3 25 "  rename: method = .void"
-   .traceevent "V" 6 "R" "O" "r" 26 0 0 0 "§this" ""
-   assertinitialized r26
-   .srcstep 89 89 17 "object_reference_regression.crexx" 86 5 22 "    t_values = values"
-   linkattr1 r23,r26,11
-   .traceevent "V" 6 "R" "S" "r" 23 89 89 0 "values" ""
-   copy r25,r23
-   .traceevent "A" 6 "R" "S" "r" 25 89 89 0 "t_values" ""
-   unlink r23
-   .srcstep 90 90 17 "object_reference_regression.crexx" 87 5 17 "    name = label"
-   load r22,"mutated"
-   .traceevent "L" 4 "R" "S" "r" 22 90 90 0 "" ""
-   linkattr1 r23,r26,10
-   scopy r23,r22
-   unlink r23
-   .srcstep 91 91 17 "object_reference_regression.crexx" 88 5 32 "    t_values[1] = label || \":1\""
-   minlinkattr1 r23,r25,1
-   load r16,"mutated:1"
-   .traceevent "L" 4 "R" "S" "r" 16 91 91 0 "" ""
-   scopy r23,r16
-   .traceevent "A" 6 "R" "S" "r" 23 91 91 0 "t_values" ""
-   unlink r23
-   .srcstep 92 92 17 "object_reference_regression.crexx" 89 5 34 "    t_values[40] = label || \":40\""
-   minlinkattr1 r23,r25,40
-   load r16,"mutated:40"
-   .traceevent "L" 4 "R" "S" "r" 16 92 92 0 "" ""
-   scopy r23,r16
-   .traceevent "A" 6 "R" "S" "r" 23 92 92 0 "t_values" ""
-   unlink r23
-   .srcstep 93 93 17 "object_reference_regression.crexx" 90 5 22 "    values = t_values"
-   .traceevent "V" 6 "R" "S" "r" 25 93 93 0 "t_values" ""
-   linkattr1 r23,r26,11
-   copy r23,r25
-   unlink r23
-   .srcstep 94 94 17 "object_reference_regression.crexx" 91 5 42 "    call child.setName(label || \":child\")"
-   linkattr1 r23,r26,1
-   .traceevent "V" 6 "R" "O" "r" 23 94 94 0 "child" ""
-   load r29,"mutated:child"
-   .traceevent "L" 4 "R" "S" "r" 29 94 94 0 "" ""
-   settp r23,256
-   settp r29,768
-   call2 r16,§object_reference_regression.smallpayload.setname(),r23,r29
-   unlink r23
-   .traceevent "F" 4 "R" "V" "r" 16 94 94 0 "setname" ""
-   .srcstep 95 95 17 "object_reference_regression.crexx" 92 5 29 "    marker8 = label || \":m8\""
-   load r28,"mutated:m8"
-   .traceevent "L" 4 "R" "S" "r" 28 95 95 0 "" ""
-   linkattr1 r29,r26,9
-   scopy r29,r28
-   unlink r29
-   .srcstep 96 96 6 "object_reference_regression.crexx" 28 8 26 "  call item.rename(label)"
-   .traceevent "V" 6 "R" "O" "r" 26 0 0 0 "§this" ""
-   copy r1,r26
-   .srcstep 107 107 17 "object_reference_regression.crexx" 13 3 39 "  say \"ref-mutate=\" || payload.summary()"
-   .srcstep 106 106 17 "object_reference_regression.crexx" 13 24 31 "  say \"ref-mutate=\" || payload.summary()"
-   .srcstep 99 99 33 "object_reference_regression.crexx" 13 24 31 "  say \"ref-mutate=\" || payload.summary()"
-   .traceevent "V" 6 "R" "O" "r" 1 99 99 0 "payload" ""
-   .traceevent "A" 6 "R" "O" "r" 1 99 99 0 "§this" ""
-   .srcstep 100 100 6 "object_reference_regression.crexx" 95 3 28 "  summary: method = .string"
-   .traceevent "V" 6 "R" "O" "r" 1 107 107 0 "§this" ""
-   assertinitialized r1
-   .srcstep 104 104 17 "object_reference_regression.crexx" 96 5 31 "    child_name = child.getName()"
-   .srcstep 101 101 33 "object_reference_regression.crexx" 96 18 23 "    child_name = child.getName()"
-   linkattr1 r28,r1,1
-   .traceevent "V" 6 "R" "O" "r" 28 101 101 0 "child" ""
-   copy r30,r28
-   .traceevent "A" 6 "R" "O" "r" 30 101 101 0 "§this" ""
-   unlink r28
-   .srcstep 102 102 6 "object_reference_regression.crexx" 44 3 28 "  getName: method = .string"
-   .traceevent "V" 6 "R" "O" "r" 30 107 107 0 "§this" ""
-   assertinitialized r30
-   .srcstep 103 103 33 "object_reference_regression.crexx" 45 5 11 "    return name"
-   linkattr1 r28,r30,1
-   .traceevent "V" 6 "R" "S" "r" 28 103 103 0 "name" ""
-   copy r29,r28
-   .traceevent "A" 6 "R" "S" "r" 29 103 103 0 "child_name" ""
-   unlink r28
-   .srcstep 105 105 17 "object_reference_regression.crexx" 97 5 96 "    return name || \"|\" || values[1] || \"|\" || values[40] || \"|\" || child_name || \"|\" || marker8"
-   linkattr1 r28,r1,10
-   .traceevent "V" 6 "R" "S" "r" 28 107 107 0 "name" ""
-   concat r27,r28,"|"
-   unlink r28
-   .traceevent "O" 4 "R" "S" "r" 27 107 107 0 "" ""
-   linkattr1 r12,r1,11
-   minlinkattr1 r13,r12,1
-   .traceevent "V" 6 "R" "S" "r" 13 107 107 0 "values" ""
-   concat r27,r27,r13
-   unlinkn r13,r12
-   .traceevent "O" 4 "R" "S" "r" 27 107 107 0 "" ""
-   concat r27,r27,"|"
-   .traceevent "O" 4 "R" "S" "r" 27 107 107 0 "" ""
-   linkattr1 r7,r1,11
-   minlinkattr1 r9,r7,40
-   .traceevent "V" 6 "R" "S" "r" 9 107 107 0 "values" ""
-   concat r27,r27,r9
-   unlinkn r9,r7
-   .traceevent "O" 4 "R" "S" "r" 27 107 107 0 "" ""
-   concat r27,r27,"|"
-   .traceevent "O" 4 "R" "S" "r" 27 107 107 0 "" ""
-   .traceevent "V" 6 "R" "S" "r" 29 107 107 0 "child_name" ""
-   concat r27,r27,r29
-   .traceevent "O" 4 "R" "S" "r" 27 107 107 0 "" ""
-   concat r27,r27,"|"
-   .traceevent "O" 4 "R" "S" "r" 27 107 107 0 "" ""
-   linkattr1 r6,r1,9
-   .traceevent "V" 6 "R" "S" "r" 6 107 107 0 "marker8" ""
-   concat r27,r27,r6
-   unlink r6
-   .traceevent "O" 4 "R" "S" "r" 27 107 107 0 "" ""
-   scopy r4,r27
-   br l1089bexprend
-l1089bexprend:
-   concat r29,"ref-mutate=",r4
-   .traceevent "O" 4 "R" "S" "r" 29 107 107 0 "" ""
-   say r29
-   .srcstep 144 144 17 "object_reference_regression.crexx" 15 3 56 "  local_summary = replacePayloadLocal(payload, \"local\")"
-   .srcstep 108 108 6 "object_reference_regression.crexx" 32 7 11 "  arg item = .LargePayload, label = .string"
+   load r4,"seed"
+   .traceevent "L" 4 "R" "S" "r" 4 1 1 0 "" ""
+   settp r4,768
+   call1 r1,§object_reference_regression.largepayload.§factory(),r4
+   .traceevent "F" 4 "R" "O" "r" 1 1 1 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 1 1 0 "payload" ""
+   .srcstep 2 2 17 "object_reference_regression.crexx" 6 3 44 "  say \"factory-summary=\" || payload.summary()"
+   .traceevent "V" 6 "R" "O" "r" 1 2 2 0 "payload" ""
+   settp r1,256
+   call1 r4,§object_reference_regression.largepayload.summary(),r1
+   .traceevent "F" 4 "R" "S" "r" 4 2 2 0 "summary" ""
+   concat r4,"factory-summary=",r4
+   .traceevent "O" 4 "R" "S" "r" 4 2 2 0 "" ""
+   say r4
+   .srcstep 3 3 17 "object_reference_regression.crexx" 7 3 40 "  say \"factory-check=\" || payload.check()"
+   .traceevent "V" 6 "R" "O" "r" 1 3 3 0 "payload" ""
+   settp r1,256
+   call1 r4,§object_reference_regression.largepayload.check(),r1
+   .traceevent "F" 4 "R" "S" "r" 4 3 3 0 "check" ""
+   concat r4,"factory-check=",r4
+   .traceevent "O" 4 "R" "S" "r" 4 3 3 0 "" ""
+   say r4
+   .srcstep 5 5 17 "object_reference_regression.crexx" 9 3 45 "  call replacePayloadRef(payload, \"rebound\")"
+   .srcstep 4 4 17 "object_reference_regression.crexx" 23 3 30 "  item = .LargePayload(label)"
+   load r4,"rebound"
+   .traceevent "L" 4 "R" "S" "r" 4 4 4 0 "" ""
+   settp r4,256
+   call1 r1,§object_reference_regression.largepayload.§factory(),r4
+   .traceevent "F" 4 "R" "O" "r" 1 4 4 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 4 4 0 "payload" ""
+   .srcstep 6 6 17 "object_reference_regression.crexx" 10 3 39 "  say \"ref-rebind=\" || payload.summary()"
+   .traceevent "V" 6 "R" "O" "r" 1 6 6 0 "payload" ""
+   settp r1,256
+   call1 r4,§object_reference_regression.largepayload.summary(),r1
+   .traceevent "F" 4 "R" "S" "r" 4 6 6 0 "summary" ""
+   concat r4,"ref-rebind=",r4
+   .traceevent "O" 4 "R" "S" "r" 4 6 6 0 "" ""
+   say r4
+   .srcstep 8 8 17 "object_reference_regression.crexx" 12 3 44 "  call mutatePayloadRef(payload, \"mutated\")"
+   .srcstep 7 7 17 "object_reference_regression.crexx" 28 3 26 "  call item.rename(label)"
+   .traceevent "V" 6 "R" "O" "r" 1 7 7 0 "payload" ""
+   load r9,"mutated"
+   .traceevent "L" 4 "R" "S" "r" 9 7 7 0 "" ""
+   settp r1,256
+   settp r9,256
+   call2 r4,§object_reference_regression.largepayload.rename(),r1,r9
+   .traceevent "F" 4 "R" "V" "r" 4 7 7 0 "rename" ""
+   .srcstep 9 9 17 "object_reference_regression.crexx" 13 3 39 "  say \"ref-mutate=\" || payload.summary()"
+   .traceevent "V" 6 "R" "O" "r" 1 9 9 0 "payload" ""
+   settp r1,256
+   call1 r9,§object_reference_regression.largepayload.summary(),r1
+   .traceevent "F" 4 "R" "S" "r" 9 9 9 0 "summary" ""
+   concat r9,"ref-mutate=",r9
+   .traceevent "O" 4 "R" "S" "r" 9 9 9 0 "" ""
+   say r9
+   .srcstep 13 13 17 "object_reference_regression.crexx" 15 3 56 "  local_summary = replacePayloadLocal(payload, \"local\")"
+   .srcstep 10 10 6 "object_reference_regression.crexx" 32 7 11 "  arg item = .LargePayload, label = .string"
    .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "payload" ""
-   copy r31,r1
-   .srcstep 134 134 17 "object_reference_regression.crexx" 33 3 30 "  item = .LargePayload(label)"
-   .meta "object_reference_regression.main.t_values"="b" ".string[64]" r32
-   .srcstep 109 109 17 "object_reference_regression.crexx" 67 5 26 "    t_values = .string[64]"
-   null r32
-   .srcstep 110 110 6 "object_reference_regression.crexx" 65 3 13 "  *: factory"
-   setattrs r33,12
-   .srcstep 111 111 6 "object_reference_regression.crexx" 65 3 13 "  *: factory"
-   setobjtype r33,"object_reference_regression.largepayload"
-   .srcstep 112 112 17 "object_reference_regression.crexx" 68 5 17 "    name = label"
-   load r28,"local"
-   .traceevent "L" 4 "R" "S" "r" 28 112 112 0 "" ""
-   linkattr1 r29,r33,10
-   scopy r29,r28
-   unlink r29
-   .srcstep 117 117 17 "object_reference_regression.crexx" 69 5 7 "    do i = 1 to 40"
-   .srcstep 113 113 17 "object_reference_regression.crexx" 69 8 13 "    do i = 1 to 40"
-   load r29,1
-   .traceevent "L" 4 "R" "I" "r" 29 113 113 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 29 113 113 0 "i" ""
-   .srcstep 114 114 17 "object_reference_regression.crexx" 69 14 19 "    do i = 1 to 40"
-   load r27,40
-   .traceevent "L" 4 "R" "I" "r" 27 0 0 0 "" ""
-l1154dostart:
-   .srcstep 114 114 17 "object_reference_regression.crexx" 69 14 19 "    do i = 1 to 40"
-   igt r13,r29,r27
-   brt l1154doend,r13
-   .srcstep 116 116 17 "object_reference_regression.crexx" 70 7 38 "      t_values[i] = label || \":\" || i"
-   .traceevent "V" 6 "R" "I" "r" 29 116 116 0 "i" ""
-   .traceevent "C" 4 "R" "I" "r" 29 116 116 0 "t_values" ""
-   setlinkattr1 r12,r32,64,r29
-   itos r29
-   .traceevent "V" 6 "R" "S" "r" 29 116 116 0 "i" ""
-   concat r9,"local:",r29
-   .traceevent "O" 4 "R" "S" "r" 9 116 116 0 "" ""
-   scopy r12,r9
-   .traceevent "A" 6 "R" "S" "r" 12 116 116 0 "t_values" ""
-   unlink r12
-l1154doinc:
-   .srcstep 115 115 17 "object_reference_regression.crexx" 69 8 9 "    do i = 1 to 40"
-   inc r29
-   .srcstep 118 118 17 "object_reference_regression.crexx" 71 5 8 "    end"
-   br l1154dostart
-l1154doend:
-   .srcstep 119 119 17 "object_reference_regression.crexx" 72 5 22 "    values = t_values"
-   .traceevent "V" 6 "R" "S" "r" 32 119 119 0 "t_values" ""
-   linkattr1 r29,r33,11
-   copy r29,r32
-   unlink r29
-   .srcstep 124 124 17 "object_reference_regression.crexx" 73 5 45 "    child = .SmallPayload(label || \":child\")"
-   .srcstep 120 120 6 "object_reference_regression.crexx" 39 3 13 "  *: factory"
-   setattrs r34,2
-   .srcstep 121 121 6 "object_reference_regression.crexx" 39 3 13 "  *: factory"
-   setobjtype r34,"object_reference_regression.smallpayload"
-   .srcstep 122 122 17 "object_reference_regression.crexx" 41 5 17 "    name = label"
-   load r27,"local:child"
-   .traceevent "L" 4 "R" "S" "r" 27 122 122 0 "" ""
-   linkattr1 r29,r34,1
-   scopy r29,r27
-   unlink r29
-   .srcstep 123 123 33 "object_reference_regression.crexx" 42 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 34 123 123 0 "§factory" ""
-   linkattr1 r29,r33,1
-   copy r29,r34
-   unlink r29
-   .srcstep 125 125 17 "object_reference_regression.crexx" 74 5 29 "    marker1 = label || \":m1\""
-   load r13,"local:m1"
-   .traceevent "L" 4 "R" "S" "r" 13 125 125 0 "" ""
-   linkattr1 r29,r33,2
-   scopy r29,r13
-   unlink r29
-   .srcstep 126 126 17 "object_reference_regression.crexx" 75 5 29 "    marker2 = label || \":m2\""
-   load r13,"local:m2"
-   .traceevent "L" 4 "R" "S" "r" 13 126 126 0 "" ""
-   linkattr1 r29,r33,3
-   scopy r29,r13
-   unlink r29
-   .srcstep 127 127 17 "object_reference_regression.crexx" 76 5 29 "    marker3 = label || \":m3\""
-   load r13,"local:m3"
-   .traceevent "L" 4 "R" "S" "r" 13 127 127 0 "" ""
-   linkattr1 r29,r33,4
-   scopy r29,r13
-   unlink r29
-   .srcstep 128 128 17 "object_reference_regression.crexx" 77 5 29 "    marker4 = label || \":m4\""
-   load r13,"local:m4"
-   .traceevent "L" 4 "R" "S" "r" 13 128 128 0 "" ""
-   linkattr1 r29,r33,5
-   scopy r29,r13
-   unlink r29
-   .srcstep 129 129 17 "object_reference_regression.crexx" 78 5 29 "    marker5 = label || \":m5\""
-   load r13,"local:m5"
-   .traceevent "L" 4 "R" "S" "r" 13 129 129 0 "" ""
-   linkattr1 r29,r33,6
-   scopy r29,r13
-   unlink r29
-   .srcstep 130 130 17 "object_reference_regression.crexx" 79 5 29 "    marker6 = label || \":m6\""
-   load r13,"local:m6"
-   .traceevent "L" 4 "R" "S" "r" 13 130 130 0 "" ""
-   linkattr1 r29,r33,7
-   scopy r29,r13
-   unlink r29
-   .srcstep 131 131 17 "object_reference_regression.crexx" 80 5 29 "    marker7 = label || \":m7\""
-   load r13,"local:m7"
-   .traceevent "L" 4 "R" "S" "r" 13 131 131 0 "" ""
-   linkattr1 r29,r33,8
-   scopy r29,r13
-   unlink r29
-   .srcstep 132 132 17 "object_reference_regression.crexx" 81 5 29 "    marker8 = label || \":m8\""
-   load r13,"local:m8"
-   .traceevent "L" 4 "R" "S" "r" 13 132 132 0 "" ""
-   linkattr1 r29,r33,9
-   scopy r29,r13
-   unlink r29
-   .srcstep 133 133 33 "object_reference_regression.crexx" 82 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 33 133 133 0 "§factory" ""
-   copy r31,r33
-   .traceevent "A" 6 "R" "O" "r" 31 133 133 0 "item" ""
-   .srcstep 143 143 33 "object_reference_regression.crexx" 34 3 9 "  return item.summary()"
-   .srcstep 142 142 17 "object_reference_regression.crexx" 34 10 14 "  return item.summary()"
-   .srcstep 135 135 33 "object_reference_regression.crexx" 34 10 14 "  return item.summary()"
-   .traceevent "V" 6 "R" "O" "r" 31 135 135 0 "item" ""
-   .traceevent "A" 6 "R" "O" "r" 31 135 135 0 "§this" ""
-   .srcstep 136 136 6 "object_reference_regression.crexx" 95 3 28 "  summary: method = .string"
-   .traceevent "V" 6 "R" "O" "r" 31 143 143 0 "§this" ""
-   assertinitialized r31
-   .srcstep 140 140 17 "object_reference_regression.crexx" 96 5 31 "    child_name = child.getName()"
-   .srcstep 137 137 33 "object_reference_regression.crexx" 96 18 23 "    child_name = child.getName()"
-   linkattr1 r13,r31,1
-   .traceevent "V" 6 "R" "O" "r" 13 137 137 0 "child" ""
-   copy r35,r13
-   .traceevent "A" 6 "R" "O" "r" 35 137 137 0 "§this" ""
-   unlink r13
-   .srcstep 138 138 6 "object_reference_regression.crexx" 44 3 28 "  getName: method = .string"
-   .traceevent "V" 6 "R" "O" "r" 35 143 143 0 "§this" ""
-   assertinitialized r35
-   .srcstep 139 139 33 "object_reference_regression.crexx" 45 5 11 "    return name"
-   linkattr1 r13,r35,1
-   .traceevent "V" 6 "R" "S" "r" 13 139 139 0 "name" ""
-   copy r29,r13
-   .traceevent "A" 6 "R" "S" "r" 29 139 139 0 "child_name" ""
-   unlink r13
-   .srcstep 141 141 17 "object_reference_regression.crexx" 97 5 96 "    return name || \"|\" || values[1] || \"|\" || values[40] || \"|\" || child_name || \"|\" || marker8"
-   linkattr1 r13,r31,10
-   .traceevent "V" 6 "R" "S" "r" 13 143 143 0 "name" ""
-   concat r12,r13,"|"
-   unlink r13
-   .traceevent "O" 4 "R" "S" "r" 12 143 143 0 "" ""
-   linkattr1 r7,r31,11
-   minlinkattr1 r9,r7,1
-   .traceevent "V" 6 "R" "S" "r" 9 143 143 0 "values" ""
-   concat r12,r12,r9
-   unlinkn r9,r7
-   .traceevent "O" 4 "R" "S" "r" 12 143 143 0 "" ""
-   concat r12,r12,"|"
-   .traceevent "O" 4 "R" "S" "r" 12 143 143 0 "" ""
-   linkattr1 r4,r31,11
-   minlinkattr1 r6,r4,40
-   .traceevent "V" 6 "R" "S" "r" 6 143 143 0 "values" ""
-   concat r12,r12,r6
-   unlinkn r6,r4
-   .traceevent "O" 4 "R" "S" "r" 12 143 143 0 "" ""
-   concat r12,r12,"|"
-   .traceevent "O" 4 "R" "S" "r" 12 143 143 0 "" ""
-   .traceevent "V" 6 "R" "S" "r" 29 143 143 0 "child_name" ""
-   concat r12,r12,r29
-   .traceevent "O" 4 "R" "S" "r" 12 143 143 0 "" ""
-   concat r12,r12,"|"
-   .traceevent "O" 4 "R" "S" "r" 12 143 143 0 "" ""
-   linkattr1 r36,r31,9
-   .traceevent "V" 6 "R" "S" "r" 36 143 143 0 "marker8" ""
-   concat r12,r12,r36
-   unlink r36
-   .traceevent "O" 4 "R" "S" "r" 12 143 143 0 "" ""
-   scopy r0,r12
-   br l1237bexprend
-l1237bexprend:
-   .traceevent "A" 6 "R" "S" "r" 0 143 143 0 "local_summary" ""
-   .srcstep 145 145 17 "object_reference_regression.crexx" 16 3 40 "  say \"local-replace=\" || local_summary"
-   .meta "object_reference_regression.main.local_summary"="b" ".string" r0
-   .traceevent "V" 6 "R" "S" "r" 0 145 145 0 "local_summary" ""
-   concat r36,"local-replace=",r0
-   .traceevent "O" 4 "R" "S" "r" 36 145 145 0 "" ""
-   say r36
-   .srcstep 154 154 17 "object_reference_regression.crexx" 17 3 40 "  say \"local-after=\" || payload.summary()"
-   .srcstep 153 153 17 "object_reference_regression.crexx" 17 25 32 "  say \"local-after=\" || payload.summary()"
-   .srcstep 146 146 33 "object_reference_regression.crexx" 17 25 32 "  say \"local-after=\" || payload.summary()"
-   .traceevent "V" 6 "R" "O" "r" 1 146 146 0 "payload" ""
-   .traceevent "A" 6 "R" "O" "r" 1 146 146 0 "§this" ""
-   .srcstep 147 147 6 "object_reference_regression.crexx" 95 3 28 "  summary: method = .string"
-   .traceevent "V" 6 "R" "O" "r" 1 154 154 0 "§this" ""
-   assertinitialized r1
-   .srcstep 151 151 17 "object_reference_regression.crexx" 96 5 31 "    child_name = child.getName()"
-   .srcstep 148 148 33 "object_reference_regression.crexx" 96 18 23 "    child_name = child.getName()"
-   linkattr1 r29,r1,1
-   .traceevent "V" 6 "R" "O" "r" 29 148 148 0 "child" ""
-   copy r37,r29
-   .traceevent "A" 6 "R" "O" "r" 37 148 148 0 "§this" ""
-   unlink r29
-   .srcstep 149 149 6 "object_reference_regression.crexx" 44 3 28 "  getName: method = .string"
-   .traceevent "V" 6 "R" "O" "r" 37 154 154 0 "§this" ""
-   assertinitialized r37
-   .srcstep 150 150 33 "object_reference_regression.crexx" 45 5 11 "    return name"
-   linkattr1 r29,r37,1
-   .traceevent "V" 6 "R" "S" "r" 29 150 150 0 "name" ""
-   copy r36,r29
-   .traceevent "A" 6 "R" "S" "r" 36 150 150 0 "child_name" ""
-   unlink r29
-   .srcstep 152 152 17 "object_reference_regression.crexx" 97 5 96 "    return name || \"|\" || values[1] || \"|\" || values[40] || \"|\" || child_name || \"|\" || marker8"
-   linkattr1 r29,r1,10
-   .traceevent "V" 6 "R" "S" "r" 29 154 154 0 "name" ""
-   concat r13,r29,"|"
-   unlink r29
-   .traceevent "O" 4 "R" "S" "r" 13 154 154 0 "" ""
-   linkattr1 r9,r1,11
-   minlinkattr1 r12,r9,1
-   .traceevent "V" 6 "R" "S" "r" 12 154 154 0 "values" ""
-   concat r13,r13,r12
-   unlinkn r12,r9
-   .traceevent "O" 4 "R" "S" "r" 13 154 154 0 "" ""
-   concat r13,r13,"|"
-   .traceevent "O" 4 "R" "S" "r" 13 154 154 0 "" ""
-   linkattr1 r6,r1,11
-   minlinkattr1 r7,r6,40
-   .traceevent "V" 6 "R" "S" "r" 7 154 154 0 "values" ""
-   concat r13,r13,r7
-   unlinkn r7,r6
-   .traceevent "O" 4 "R" "S" "r" 13 154 154 0 "" ""
-   concat r13,r13,"|"
-   .traceevent "O" 4 "R" "S" "r" 13 154 154 0 "" ""
-   .traceevent "V" 6 "R" "S" "r" 36 154 154 0 "child_name" ""
-   concat r13,r13,r36
-   .traceevent "O" 4 "R" "S" "r" 13 154 154 0 "" ""
-   concat r13,r13,"|"
-   .traceevent "O" 4 "R" "S" "r" 13 154 154 0 "" ""
-   linkattr1 r4,r1,9
-   .traceevent "V" 6 "R" "S" "r" 4 154 154 0 "marker8" ""
-   concat r13,r13,r4
-   unlink r4
-   .traceevent "O" 4 "R" "S" "r" 13 154 154 0 "" ""
-   scopy r38,r13
-   br l1273bexprend
-l1273bexprend:
-   concat r38,"local-after=",r38
-   .traceevent "O" 4 "R" "S" "r" 38 154 154 0 "" ""
-   say r38
-   .srcstep 155 155 17 "object_reference_regression.crexx" 19 3 11 "  return 0"
+   copy r10,r1
+   .srcstep 11 11 17 "object_reference_regression.crexx" 33 3 30 "  item = .LargePayload(label)"
+   load r9,"local"
+   .traceevent "L" 4 "R" "S" "r" 9 11 11 0 "" ""
+   settp r9,256
+   call1 r10,§object_reference_regression.largepayload.§factory(),r9
+   .traceevent "F" 4 "R" "O" "r" 10 11 11 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 10 11 11 0 "item" ""
+   .srcstep 12 12 33 "object_reference_regression.crexx" 34 3 9 "  return item.summary()"
+   .traceevent "V" 6 "R" "O" "r" 10 12 12 0 "item" ""
+   settp r10,256
+   call1 r2,§object_reference_regression.largepayload.summary(),r10
+   .traceevent "F" 4 "R" "S" "r" 2 12 12 0 "summary" ""
+   .traceevent "A" 6 "R" "S" "r" 2 12 12 0 "local_summary" ""
+   .srcstep 14 14 17 "object_reference_regression.crexx" 16 3 40 "  say \"local-replace=\" || local_summary"
+   .meta "object_reference_regression.main.local_summary"="b" ".string" r2
+   .traceevent "V" 6 "R" "S" "r" 2 14 14 0 "local_summary" ""
+   concat r9,"local-replace=",r2
+   .traceevent "O" 4 "R" "S" "r" 9 14 14 0 "" ""
+   say r9
+   .srcstep 15 15 17 "object_reference_regression.crexx" 17 3 40 "  say \"local-after=\" || payload.summary()"
+   .traceevent "V" 6 "R" "O" "r" 1 15 15 0 "payload" ""
+   settp r1,256
+   call1 r9,§object_reference_regression.largepayload.summary(),r1
+   .traceevent "F" 4 "R" "S" "r" 9 15 15 0 "summary" ""
+   concat r9,"local-after=",r9
+   .traceevent "O" 4 "R" "S" "r" 9 15 15 0 "" ""
+   say r9
+   .srcstep 16 16 17 "object_reference_regression.crexx" 19 3 11 "  return 0"
    ret 0
    .meta "object_reference_regression.main.local_summary"
    .meta "object_reference_regression.main.payload"
 
 §object_reference_regression.smallpayload.§factory() .locals=3
    .meta "object_reference_regression.smallpayload.§factory"="b" ".object_reference_regression..smallpayload" §object_reference_regression.smallpayload.§factory() "label=.string"
-   .srcstep 246 246 17 "object_reference_regression.crexx" 39 3 13 "  *: factory"
+   .srcstep 33 33 17 "object_reference_regression.crexx" 39 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"object_reference_regression.smallpayload"
    numsci 18,1,1
-   .srcstep 243 243 17 "object_reference_regression.crexx" 40 9 24 "    arg label = .string"
+   .srcstep 30 30 17 "object_reference_regression.crexx" 40 9 24 "    arg label = .string"
    .meta "object_reference_regression.smallpayload.§factory.label"="b" ".string" a1
    .meta "object_reference_regression.smallpayload.§factory.§factory"="b" ".smallpayload" r1
-   .srcstep 244 244 17 "object_reference_regression.crexx" 41 5 17 "    name = label"
-   .traceevent "V" 6 "R" "S" "a" 1 244 244 0 "label" ""
+   .srcstep 31 31 17 "object_reference_regression.crexx" 41 5 17 "    name = label"
+   .traceevent "V" 6 "R" "S" "a" 1 31 31 0 "label" ""
    linkattr1 r2,r1,1
    scopy r2,a1
    unlink r2
-   .srcstep 245 245 17 "object_reference_regression.crexx" 42 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 1 245 245 0 "§factory" ""
+   .srcstep 32 32 17 "object_reference_regression.crexx" 42 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 32 32 0 "§factory" ""
    ret r1
    .meta "object_reference_regression.smallpayload.§factory.label"
    .meta "object_reference_regression.smallpayload.§factory.§factory"
 
 §object_reference_regression.smallpayload.getname() .locals=2
    .meta "object_reference_regression.smallpayload.getname"="b" ".string" §object_reference_regression.smallpayload.getname() ""
-   .srcstep 248 248 17 "object_reference_regression.crexx" 44 3 28 "  getName: method = .string"
+   .srcstep 35 35 17 "object_reference_regression.crexx" 44 3 28 "  getName: method = .string"
    assertinitialized a1
    numsci 18,1,1
-   .srcstep 247 247 17 "object_reference_regression.crexx" 45 5 16 "    return name"
+   .srcstep 34 34 17 "object_reference_regression.crexx" 45 5 16 "    return name"
    .meta "object_reference_regression.smallpayload.getname.§this"="b" ".smallpayload" a1
    linkattr1 r1,a1,1
-   .traceevent "V" 6 "R" "S" "r" 1 247 247 0 "name" ""
+   .traceevent "V" 6 "R" "S" "r" 1 34 34 0 "name" ""
    ret r1
    .meta "object_reference_regression.smallpayload.getname.§this"
 
 §object_reference_regression.smallpayload.setname() .locals=3
    .meta "object_reference_regression.smallpayload.setname"="b" ".void" §object_reference_regression.smallpayload.setname() "label=.string"
-   .srcstep 252 252 17 "object_reference_regression.crexx" 47 3 26 "  setName: method = .void"
+   .srcstep 39 39 17 "object_reference_regression.crexx" 47 3 26 "  setName: method = .void"
    assertinitialized a1
    numsci 18,1,1
-   .srcstep 249 249 17 "object_reference_regression.crexx" 48 9 24 "    arg label = .string"
+   .srcstep 36 36 17 "object_reference_regression.crexx" 48 9 24 "    arg label = .string"
    .meta "object_reference_regression.smallpayload.setname.label"="b" ".string" a2
    .meta "object_reference_regression.smallpayload.setname.§this"="b" ".smallpayload" a1
-   .srcstep 250 250 17 "object_reference_regression.crexx" 49 5 17 "    name = label"
-   .traceevent "V" 6 "R" "S" "a" 2 250 250 0 "label" ""
+   .srcstep 37 37 17 "object_reference_regression.crexx" 49 5 17 "    name = label"
+   .traceevent "V" 6 "R" "S" "a" 2 37 37 0 "label" ""
    linkattr1 r2,a1,1
    scopy r2,a2
    unlink r2
-   .srcstep 251 251 17 "object_reference_regression.crexx" 50 5 11 "    return"
+   .srcstep 38 38 17 "object_reference_regression.crexx" 50 5 11 "    return"
    ret
    .meta "object_reference_regression.smallpayload.setname.label"
    .meta "object_reference_regression.smallpayload.setname.§this"
 
 §object_reference_regression.largepayload.§factory() .locals=10
    .meta "object_reference_regression.largepayload.§factory"="b" ".object_reference_regression..largepayload" §object_reference_regression.largepayload.§factory() "label=.string"
-   .srcstep 278 278 17 "object_reference_regression.crexx" 65 3 13 "  *: factory"
+   .srcstep 65 65 17 "object_reference_regression.crexx" 65 3 13 "  *: factory"
    setattrs r2,12
    setobjtype r2,"object_reference_regression.largepayload"
    numsci 18,1,1
-   .srcstep 253 253 17 "object_reference_regression.crexx" 66 9 24 "    arg label = .string"
+   .srcstep 40 40 17 "object_reference_regression.crexx" 66 9 24 "    arg label = .string"
    .meta "object_reference_regression.largepayload.§factory.label"="b" ".string" a1
    .meta "object_reference_regression.largepayload.§factory.§factory"="b" ".largepayload" r2
    .meta "object_reference_regression.largepayload.§factory.t_values"="b" ".string[64]" r1
-   .srcstep 254 254 17 "object_reference_regression.crexx" 67 5 26 "    t_values = .string[64]"
+   .srcstep 41 41 17 "object_reference_regression.crexx" 67 5 26 "    t_values = .string[64]"
    null r1
-   .srcstep 255 255 17 "object_reference_regression.crexx" 68 5 17 "    name = label"
-   .traceevent "V" 6 "R" "S" "a" 1 255 255 0 "label" ""
+   .srcstep 42 42 17 "object_reference_regression.crexx" 68 5 17 "    name = label"
+   .traceevent "V" 6 "R" "S" "a" 1 42 42 0 "label" ""
    linkattr1 r3,r2,10
    scopy r3,a1
    unlink r3
-   .srcstep 260 260 17 "object_reference_regression.crexx" 69 5 7 "    do i = 1 to 40"
-   .srcstep 256 256 17 "object_reference_regression.crexx" 69 8 13 "    do i = 1 to 40"
+   .srcstep 47 47 17 "object_reference_regression.crexx" 69 5 7 "    do i = 1 to 40"
+   .srcstep 43 43 17 "object_reference_regression.crexx" 69 8 13 "    do i = 1 to 40"
    .meta "object_reference_regression.largepayload.§factory.i"="b" ".int" r3
    load r3,1
-   .traceevent "L" 4 "R" "I" "r" 3 256 256 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 256 256 0 "i" ""
-   .srcstep 257 257 17 "object_reference_regression.crexx" 69 14 19 "    do i = 1 to 40"
+   .traceevent "L" 4 "R" "I" "r" 3 43 43 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 43 43 0 "i" ""
+   .srcstep 44 44 17 "object_reference_regression.crexx" 69 14 19 "    do i = 1 to 40"
    load r4,40
    .traceevent "L" 4 "R" "I" "r" 4 0 0 0 "" ""
 l191dostart:
-   .srcstep 257 257 17 "object_reference_regression.crexx" 69 14 19 "    do i = 1 to 40"
+   .srcstep 44 44 17 "object_reference_regression.crexx" 69 14 19 "    do i = 1 to 40"
    igt r5,r3,r4
    brt l191doend,r5
-   .srcstep 259 259 17 "object_reference_regression.crexx" 70 7 38 "      t_values[i] = label || \":\" || i"
-   .traceevent "V" 6 "R" "I" "r" 3 259 259 0 "i" ""
-   .traceevent "C" 4 "R" "I" "r" 3 259 259 0 "t_values" ""
+   .srcstep 46 46 17 "object_reference_regression.crexx" 70 7 38 "      t_values[i] = label || \":\" || i"
+   .traceevent "V" 6 "R" "I" "r" 3 46 46 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 3 46 46 0 "t_values" ""
    setlinkattr1 r6,r1,64,r3
-   .traceevent "V" 6 "R" "S" "a" 1 259 259 0 "label" ""
+   .traceevent "V" 6 "R" "S" "a" 1 46 46 0 "label" ""
    concat r7,a1,":"
-   .traceevent "O" 4 "R" "S" "r" 7 259 259 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 7 46 46 0 "" ""
    itos r3
-   .traceevent "V" 6 "R" "S" "r" 3 259 259 0 "i" ""
+   .traceevent "V" 6 "R" "S" "r" 3 46 46 0 "i" ""
    concat r7,r7,r3
-   .traceevent "O" 4 "R" "S" "r" 7 259 259 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 7 46 46 0 "" ""
    scopy r6,r7
-   .traceevent "A" 6 "R" "S" "r" 6 259 259 0 "t_values" ""
+   .traceevent "A" 6 "R" "S" "r" 6 46 46 0 "t_values" ""
    unlink r6
 l191doinc:
-   .srcstep 258 258 17 "object_reference_regression.crexx" 69 8 9 "    do i = 1 to 40"
+   .srcstep 45 45 17 "object_reference_regression.crexx" 69 8 9 "    do i = 1 to 40"
    inc r3
-   .srcstep 261 261 17 "object_reference_regression.crexx" 71 5 8 "    end"
+   .srcstep 48 48 17 "object_reference_regression.crexx" 71 5 8 "    end"
    br l191dostart
 l191doend:
    .meta "object_reference_regression.largepayload.§factory.i"
-   .srcstep 262 262 17 "object_reference_regression.crexx" 72 5 22 "    values = t_values"
-   .traceevent "V" 6 "R" "S" "r" 1 262 262 0 "t_values" ""
+   .srcstep 49 49 17 "object_reference_regression.crexx" 72 5 22 "    values = t_values"
+   .traceevent "V" 6 "R" "S" "r" 1 49 49 0 "t_values" ""
    linkattr1 r7,r2,11
    copy r7,r1
    unlink r7
-   .srcstep 268 268 17 "object_reference_regression.crexx" 73 5 45 "    child = .SmallPayload(label || \":child\")"
-   .srcstep 263 263 6 "object_reference_regression.crexx" 39 3 13 "  *: factory"
+   .srcstep 55 55 17 "object_reference_regression.crexx" 73 5 45 "    child = .SmallPayload(label || \":child\")"
+   .srcstep 50 50 6 "object_reference_regression.crexx" 39 3 13 "  *: factory"
    setattrs r9,2
-   .srcstep 264 264 6 "object_reference_regression.crexx" 39 3 13 "  *: factory"
+   .srcstep 51 51 6 "object_reference_regression.crexx" 39 3 13 "  *: factory"
    setobjtype r9,"object_reference_regression.smallpayload"
-   .srcstep 265 265 33 "object_reference_regression.crexx" 40 9 14 "    arg label = .string"
-   .traceevent "V" 6 "R" "S" "a" 1 265 265 0 "label" ""
+   .srcstep 52 52 33 "object_reference_regression.crexx" 40 9 14 "    arg label = .string"
+   .traceevent "V" 6 "R" "S" "a" 1 52 52 0 "label" ""
    concat r8,a1,":child"
-   .traceevent "O" 4 "R" "S" "r" 8 265 265 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 8 265 265 0 "label" ""
-   .srcstep 266 266 17 "object_reference_regression.crexx" 41 5 17 "    name = label"
-   .traceevent "V" 6 "R" "S" "r" 8 266 266 0 "label" ""
+   .traceevent "O" 4 "R" "S" "r" 8 52 52 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 8 52 52 0 "label" ""
+   .srcstep 53 53 17 "object_reference_regression.crexx" 41 5 17 "    name = label"
+   .traceevent "V" 6 "R" "S" "r" 8 53 53 0 "label" ""
    linkattr1 r7,r9,1
    scopy r7,r8
    unlink r7
-   .srcstep 267 267 33 "object_reference_regression.crexx" 42 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 9 267 267 0 "§factory" ""
+   .srcstep 54 54 33 "object_reference_regression.crexx" 42 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 9 54 54 0 "§factory" ""
    linkattr1 r7,r2,1
    copy r7,r9
    unlink r7
-   .srcstep 269 269 17 "object_reference_regression.crexx" 74 5 29 "    marker1 = label || \":m1\""
-   .traceevent "V" 6 "R" "S" "a" 1 269 269 0 "label" ""
+   .srcstep 56 56 17 "object_reference_regression.crexx" 74 5 29 "    marker1 = label || \":m1\""
+   .traceevent "V" 6 "R" "S" "a" 1 56 56 0 "label" ""
    concat r6,a1,":m1"
-   .traceevent "O" 4 "R" "S" "r" 6 269 269 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 6 56 56 0 "" ""
    linkattr1 r7,r2,2
    scopy r7,r6
    unlink r7
-   .srcstep 270 270 17 "object_reference_regression.crexx" 75 5 29 "    marker2 = label || \":m2\""
-   .traceevent "V" 6 "R" "S" "a" 1 270 270 0 "label" ""
+   .srcstep 57 57 17 "object_reference_regression.crexx" 75 5 29 "    marker2 = label || \":m2\""
+   .traceevent "V" 6 "R" "S" "a" 1 57 57 0 "label" ""
    concat r6,a1,":m2"
-   .traceevent "O" 4 "R" "S" "r" 6 270 270 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 6 57 57 0 "" ""
    linkattr1 r7,r2,3
    scopy r7,r6
    unlink r7
-   .srcstep 271 271 17 "object_reference_regression.crexx" 76 5 29 "    marker3 = label || \":m3\""
-   .traceevent "V" 6 "R" "S" "a" 1 271 271 0 "label" ""
+   .srcstep 58 58 17 "object_reference_regression.crexx" 76 5 29 "    marker3 = label || \":m3\""
+   .traceevent "V" 6 "R" "S" "a" 1 58 58 0 "label" ""
    concat r6,a1,":m3"
-   .traceevent "O" 4 "R" "S" "r" 6 271 271 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 6 58 58 0 "" ""
    linkattr1 r7,r2,4
    scopy r7,r6
    unlink r7
-   .srcstep 272 272 17 "object_reference_regression.crexx" 77 5 29 "    marker4 = label || \":m4\""
-   .traceevent "V" 6 "R" "S" "a" 1 272 272 0 "label" ""
+   .srcstep 59 59 17 "object_reference_regression.crexx" 77 5 29 "    marker4 = label || \":m4\""
+   .traceevent "V" 6 "R" "S" "a" 1 59 59 0 "label" ""
    concat r6,a1,":m4"
-   .traceevent "O" 4 "R" "S" "r" 6 272 272 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 6 59 59 0 "" ""
    linkattr1 r7,r2,5
    scopy r7,r6
    unlink r7
-   .srcstep 273 273 17 "object_reference_regression.crexx" 78 5 29 "    marker5 = label || \":m5\""
-   .traceevent "V" 6 "R" "S" "a" 1 273 273 0 "label" ""
+   .srcstep 60 60 17 "object_reference_regression.crexx" 78 5 29 "    marker5 = label || \":m5\""
+   .traceevent "V" 6 "R" "S" "a" 1 60 60 0 "label" ""
    concat r6,a1,":m5"
-   .traceevent "O" 4 "R" "S" "r" 6 273 273 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 6 60 60 0 "" ""
    linkattr1 r7,r2,6
    scopy r7,r6
    unlink r7
-   .srcstep 274 274 17 "object_reference_regression.crexx" 79 5 29 "    marker6 = label || \":m6\""
-   .traceevent "V" 6 "R" "S" "a" 1 274 274 0 "label" ""
+   .srcstep 61 61 17 "object_reference_regression.crexx" 79 5 29 "    marker6 = label || \":m6\""
+   .traceevent "V" 6 "R" "S" "a" 1 61 61 0 "label" ""
    concat r6,a1,":m6"
-   .traceevent "O" 4 "R" "S" "r" 6 274 274 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 6 61 61 0 "" ""
    linkattr1 r7,r2,7
    scopy r7,r6
    unlink r7
-   .srcstep 275 275 17 "object_reference_regression.crexx" 80 5 29 "    marker7 = label || \":m7\""
-   .traceevent "V" 6 "R" "S" "a" 1 275 275 0 "label" ""
+   .srcstep 62 62 17 "object_reference_regression.crexx" 80 5 29 "    marker7 = label || \":m7\""
+   .traceevent "V" 6 "R" "S" "a" 1 62 62 0 "label" ""
    concat r6,a1,":m7"
-   .traceevent "O" 4 "R" "S" "r" 6 275 275 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 6 62 62 0 "" ""
    linkattr1 r7,r2,8
    scopy r7,r6
    unlink r7
-   .srcstep 276 276 17 "object_reference_regression.crexx" 81 5 29 "    marker8 = label || \":m8\""
-   .traceevent "V" 6 "R" "S" "a" 1 276 276 0 "label" ""
+   .srcstep 63 63 17 "object_reference_regression.crexx" 81 5 29 "    marker8 = label || \":m8\""
+   .traceevent "V" 6 "R" "S" "a" 1 63 63 0 "label" ""
    concat r6,a1,":m8"
-   .traceevent "O" 4 "R" "S" "r" 6 276 276 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 6 63 63 0 "" ""
    linkattr1 r7,r2,9
    scopy r7,r6
    unlink r7
-   .srcstep 277 277 17 "object_reference_regression.crexx" 82 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 2 277 277 0 "§factory" ""
+   .srcstep 64 64 17 "object_reference_regression.crexx" 82 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 2 64 64 0 "§factory" ""
    ret r2
    .meta "object_reference_regression.largepayload.§factory.label"
    .meta "object_reference_regression.largepayload.§factory.t_values"
@@ -1023,66 +306,66 @@ l191doend:
 
 §object_reference_regression.largepayload.rename() .locals=8
    .meta "object_reference_regression.largepayload.rename"="b" ".void" §object_reference_regression.largepayload.rename() "label=.string"
-   .srcstep 289 289 17 "object_reference_regression.crexx" 84 3 25 "  rename: method = .void"
+   .srcstep 76 76 17 "object_reference_regression.crexx" 84 3 25 "  rename: method = .void"
    assertinitialized a1
    numsci 18,1,1
-   .srcstep 279 279 17 "object_reference_regression.crexx" 85 9 24 "    arg label = .string"
+   .srcstep 66 66 17 "object_reference_regression.crexx" 85 9 24 "    arg label = .string"
    .meta "object_reference_regression.largepayload.rename.label"="b" ".string" a2
    .meta "object_reference_regression.largepayload.rename.§this"="b" ".largepayload" a1
    .meta "object_reference_regression.largepayload.rename.t_values"="b" ".string[*]" r1
-   .srcstep 280 280 17 "object_reference_regression.crexx" 86 5 22 "    t_values = values"
+   .srcstep 67 67 17 "object_reference_regression.crexx" 86 5 22 "    t_values = values"
    null r1
-   .srcstep 281 281 17 "object_reference_regression.crexx" 86 5 22 "    t_values = values"
+   .srcstep 68 68 17 "object_reference_regression.crexx" 86 5 22 "    t_values = values"
    linkattr1 r3,a1,11
-   .traceevent "V" 6 "R" "S" "r" 3 281 281 0 "values" ""
+   .traceevent "V" 6 "R" "S" "r" 3 68 68 0 "values" ""
    copy r1,r3
-   .traceevent "A" 6 "R" "S" "r" 1 281 281 0 "t_values" ""
+   .traceevent "A" 6 "R" "S" "r" 1 68 68 0 "t_values" ""
    unlink r3
-   .srcstep 282 282 17 "object_reference_regression.crexx" 87 5 17 "    name = label"
-   .traceevent "V" 6 "R" "S" "a" 2 282 282 0 "label" ""
+   .srcstep 69 69 17 "object_reference_regression.crexx" 87 5 17 "    name = label"
+   .traceevent "V" 6 "R" "S" "a" 2 69 69 0 "label" ""
    linkattr1 r3,a1,10
    scopy r3,a2
    unlink r3
-   .srcstep 283 283 17 "object_reference_regression.crexx" 88 5 32 "    t_values[1] = label || \":1\""
+   .srcstep 70 70 17 "object_reference_regression.crexx" 88 5 32 "    t_values[1] = label || \":1\""
    minlinkattr1 r3,r1,1
-   .traceevent "V" 6 "R" "S" "a" 2 283 283 0 "label" ""
+   .traceevent "V" 6 "R" "S" "a" 2 70 70 0 "label" ""
    concat r4,a2,":1"
-   .traceevent "O" 4 "R" "S" "r" 4 283 283 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 4 70 70 0 "" ""
    scopy r3,r4
-   .traceevent "A" 6 "R" "S" "r" 3 283 283 0 "t_values" ""
+   .traceevent "A" 6 "R" "S" "r" 3 70 70 0 "t_values" ""
    unlink r3
-   .srcstep 284 284 17 "object_reference_regression.crexx" 89 5 34 "    t_values[40] = label || \":40\""
+   .srcstep 71 71 17 "object_reference_regression.crexx" 89 5 34 "    t_values[40] = label || \":40\""
    minlinkattr1 r4,r1,40
-   .traceevent "V" 6 "R" "S" "a" 2 284 284 0 "label" ""
+   .traceevent "V" 6 "R" "S" "a" 2 71 71 0 "label" ""
    concat r3,a2,":40"
-   .traceevent "O" 4 "R" "S" "r" 3 284 284 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 3 71 71 0 "" ""
    scopy r4,r3
-   .traceevent "A" 6 "R" "S" "r" 4 284 284 0 "t_values" ""
+   .traceevent "A" 6 "R" "S" "r" 4 71 71 0 "t_values" ""
    unlink r4
-   .srcstep 285 285 17 "object_reference_regression.crexx" 90 5 22 "    values = t_values"
-   .traceevent "V" 6 "R" "S" "r" 1 285 285 0 "t_values" ""
+   .srcstep 72 72 17 "object_reference_regression.crexx" 90 5 22 "    values = t_values"
+   .traceevent "V" 6 "R" "S" "r" 1 72 72 0 "t_values" ""
    linkattr1 r4,a1,11
    copy r4,r1
    unlink r4
-   .srcstep 286 286 17 "object_reference_regression.crexx" 91 5 42 "    call child.setName(label || \":child\")"
+   .srcstep 73 73 17 "object_reference_regression.crexx" 91 5 42 "    call child.setName(label || \":child\")"
    linkattr1 r6,a1,1
-   .traceevent "V" 6 "R" "O" "r" 6 286 286 0 "child" ""
-   .traceevent "V" 6 "R" "S" "a" 2 286 286 0 "label" ""
+   .traceevent "V" 6 "R" "O" "r" 6 73 73 0 "child" ""
+   .traceevent "V" 6 "R" "S" "a" 2 73 73 0 "label" ""
    concat r5,a2,":child"
-   .traceevent "O" 4 "R" "S" "r" 5 286 286 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 5 73 73 0 "" ""
    settp r6,256
    settp r5,768
    call2 r7,§object_reference_regression.smallpayload.setname(),r6,r5
    unlink r6
-   .traceevent "F" 4 "R" "V" "r" 7 286 286 0 "setname" ""
-   .srcstep 287 287 17 "object_reference_regression.crexx" 92 5 29 "    marker8 = label || \":m8\""
-   .traceevent "V" 6 "R" "S" "a" 2 287 287 0 "label" ""
+   .traceevent "F" 4 "R" "V" "r" 7 73 73 0 "setname" ""
+   .srcstep 74 74 17 "object_reference_regression.crexx" 92 5 29 "    marker8 = label || \":m8\""
+   .traceevent "V" 6 "R" "S" "a" 2 74 74 0 "label" ""
    concat r4,a2,":m8"
-   .traceevent "O" 4 "R" "S" "r" 4 287 287 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 4 74 74 0 "" ""
    linkattr1 r5,a1,9
    scopy r5,r4
    unlink r5
-   .srcstep 288 288 17 "object_reference_regression.crexx" 93 5 11 "    return"
+   .srcstep 75 75 17 "object_reference_regression.crexx" 93 5 11 "    return"
    ret
    .meta "object_reference_regression.largepayload.rename.label"
    .meta "object_reference_regression.largepayload.rename.t_values"
@@ -1090,118 +373,118 @@ l191doend:
 
 §object_reference_regression.largepayload.summary() .locals=10
    .meta "object_reference_regression.largepayload.summary"="b" ".string" §object_reference_regression.largepayload.summary() ""
-   .srcstep 295 295 17 "object_reference_regression.crexx" 95 3 28 "  summary: method = .string"
+   .srcstep 82 82 17 "object_reference_regression.crexx" 95 3 28 "  summary: method = .string"
    assertinitialized a1
    numsci 18,1,1
-   .srcstep 293 293 17 "object_reference_regression.crexx" 96 5 31 "    child_name = child.getName()"
-   .srcstep 290 290 33 "object_reference_regression.crexx" 96 18 23 "    child_name = child.getName()"
+   .srcstep 80 80 17 "object_reference_regression.crexx" 96 5 31 "    child_name = child.getName()"
+   .srcstep 77 77 33 "object_reference_regression.crexx" 96 18 23 "    child_name = child.getName()"
    linkattr1 r3,a1,1
-   .traceevent "V" 6 "R" "O" "r" 3 290 290 0 "child" ""
+   .traceevent "V" 6 "R" "O" "r" 3 77 77 0 "child" ""
    copy r2,r3
-   .traceevent "A" 6 "R" "O" "r" 2 290 290 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 2 77 77 0 "§this" ""
    unlink r3
-   .srcstep 291 291 6 "object_reference_regression.crexx" 44 3 28 "  getName: method = .string"
+   .srcstep 78 78 6 "object_reference_regression.crexx" 44 3 28 "  getName: method = .string"
    .traceevent "V" 6 "R" "O" "r" 2 0 0 0 "§this" ""
    assertinitialized r2
-   .srcstep 292 292 33 "object_reference_regression.crexx" 45 5 11 "    return name"
+   .srcstep 79 79 33 "object_reference_regression.crexx" 45 5 11 "    return name"
    linkattr1 r3,r2,1
-   .traceevent "V" 6 "R" "S" "r" 3 292 292 0 "name" ""
+   .traceevent "V" 6 "R" "S" "r" 3 79 79 0 "name" ""
    copy r0,r3
-   .traceevent "A" 6 "R" "S" "r" 0 292 292 0 "child_name" ""
+   .traceevent "A" 6 "R" "S" "r" 0 79 79 0 "child_name" ""
    unlink r3
-   .srcstep 294 294 17 "object_reference_regression.crexx" 97 5 96 "    return name || \"|\" || values[1] || \"|\" || values[40] || \"|\" || child_name || \"|\" || marker8"
+   .srcstep 81 81 17 "object_reference_regression.crexx" 97 5 96 "    return name || \"|\" || values[1] || \"|\" || values[40] || \"|\" || child_name || \"|\" || marker8"
    .meta "object_reference_regression.largepayload.summary.child_name"="b" ".string" r0
    .meta "object_reference_regression.largepayload.summary.§this"="b" ".largepayload" a1
    linkattr1 r3,a1,10
-   .traceevent "V" 6 "R" "S" "r" 3 294 294 0 "name" ""
+   .traceevent "V" 6 "R" "S" "r" 3 81 81 0 "name" ""
    concat r4,r3,"|"
    unlink r3
-   .traceevent "O" 4 "R" "S" "r" 4 294 294 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 4 81 81 0 "" ""
    linkattr1 r6,a1,11
    minlinkattr1 r5,r6,1
-   .traceevent "V" 6 "R" "S" "r" 5 294 294 0 "values" ""
+   .traceevent "V" 6 "R" "S" "r" 5 81 81 0 "values" ""
    concat r4,r4,r5
    unlinkn r5,r6
-   .traceevent "O" 4 "R" "S" "r" 4 294 294 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 4 81 81 0 "" ""
    concat r4,r4,"|"
-   .traceevent "O" 4 "R" "S" "r" 4 294 294 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 4 81 81 0 "" ""
    linkattr1 r8,a1,11
    minlinkattr1 r7,r8,40
-   .traceevent "V" 6 "R" "S" "r" 7 294 294 0 "values" ""
+   .traceevent "V" 6 "R" "S" "r" 7 81 81 0 "values" ""
    concat r4,r4,r7
    unlinkn r7,r8
-   .traceevent "O" 4 "R" "S" "r" 4 294 294 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 4 81 81 0 "" ""
    concat r4,r4,"|"
-   .traceevent "O" 4 "R" "S" "r" 4 294 294 0 "" ""
-   .traceevent "V" 6 "R" "S" "r" 0 294 294 0 "child_name" ""
+   .traceevent "O" 4 "R" "S" "r" 4 81 81 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 0 81 81 0 "child_name" ""
    concat r4,r4,r0
-   .traceevent "O" 4 "R" "S" "r" 4 294 294 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 4 81 81 0 "" ""
    concat r4,r4,"|"
-   .traceevent "O" 4 "R" "S" "r" 4 294 294 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 4 81 81 0 "" ""
    linkattr1 r9,a1,9
-   .traceevent "V" 6 "R" "S" "r" 9 294 294 0 "marker8" ""
+   .traceevent "V" 6 "R" "S" "r" 9 81 81 0 "marker8" ""
    concat r4,r4,r9
    unlink r9
-   .traceevent "O" 4 "R" "S" "r" 4 294 294 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 4 81 81 0 "" ""
    ret r4
    .meta "object_reference_regression.largepayload.summary.child_name"
    .meta "object_reference_regression.largepayload.summary.§this"
 
 §object_reference_regression.largepayload.check() .locals=5
    .meta "object_reference_regression.largepayload.check"="b" ".string" §object_reference_regression.largepayload.check() ""
-   .srcstep 306 306 17 "object_reference_regression.crexx" 99 3 26 "  check: method = .string"
+   .srcstep 93 93 17 "object_reference_regression.crexx" 99 3 26 "  check: method = .string"
    assertinitialized a1
    numsci 18,1,1
-   .srcstep 297 297 17 "object_reference_regression.crexx" 100 5 35 "    if values[17] \\= name || \":17\" then return \"bad-17\""
+   .srcstep 84 84 17 "object_reference_regression.crexx" 100 5 35 "    if values[17] \\= name || \":17\" then return \"bad-17\""
    linkattr1 r2,a1,11
    minlinkattr1 r1,r2,17
-   .traceevent "V" 6 "R" "S" "r" 1 297 297 0 "values" ""
+   .traceevent "V" 6 "R" "S" "r" 1 84 84 0 "values" ""
    linkattr1 r3,a1,10
-   .traceevent "V" 6 "R" "S" "r" 3 297 297 0 "name" ""
+   .traceevent "V" 6 "R" "S" "r" 3 84 84 0 "name" ""
    concat r4,r3,":17"
    unlink r3
-   .traceevent "O" 4 "R" "S" "r" 4 297 297 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 4 84 84 0 "" ""
    rne r4,r1,r4
    unlinkn r1,r2
-   .traceevent "O" 4 "R" "B" "r" 4 297 297 0 "" ""
+   .traceevent "O" 4 "R" "B" "r" 4 84 84 0 "" ""
    brf l335iffalse,r4
-   .srcstep 298 298 17 "object_reference_regression.crexx" 100 36 40 "    if values[17] \\= name || \":17\" then return \"bad-17\""
-   .srcstep 296 296 17 "object_reference_regression.crexx" 100 41 56 "    if values[17] \\= name || \":17\" then return \"bad-17\""
+   .srcstep 85 85 17 "object_reference_regression.crexx" 100 36 40 "    if values[17] \\= name || \":17\" then return \"bad-17\""
+   .srcstep 83 83 17 "object_reference_regression.crexx" 100 41 56 "    if values[17] \\= name || \":17\" then return \"bad-17\""
    .meta "object_reference_regression.largepayload.check.§this"="b" ".largepayload" a1
    ret "bad-17"
 l335iffalse:
-   .srcstep 300 300 17 "object_reference_regression.crexx" 101 5 32 "    if marker1 \\= name || \":m1\" then return \"bad-m1\""
+   .srcstep 87 87 17 "object_reference_regression.crexx" 101 5 32 "    if marker1 \\= name || \":m1\" then return \"bad-m1\""
    linkattr1 r4,a1,2
-   .traceevent "V" 6 "R" "S" "r" 4 300 300 0 "marker1" ""
+   .traceevent "V" 6 "R" "S" "r" 4 87 87 0 "marker1" ""
    linkattr1 r3,a1,10
-   .traceevent "V" 6 "R" "S" "r" 3 300 300 0 "name" ""
+   .traceevent "V" 6 "R" "S" "r" 3 87 87 0 "name" ""
    concat r2,r3,":m1"
    unlink r3
-   .traceevent "O" 4 "R" "S" "r" 2 300 300 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 2 87 87 0 "" ""
    rne r2,r4,r2
    unlink r4
-   .traceevent "O" 4 "R" "B" "r" 2 300 300 0 "" ""
+   .traceevent "O" 4 "R" "B" "r" 2 87 87 0 "" ""
    brf l343iffalse,r2
-   .srcstep 301 301 17 "object_reference_regression.crexx" 101 33 37 "    if marker1 \\= name || \":m1\" then return \"bad-m1\""
-   .srcstep 299 299 17 "object_reference_regression.crexx" 101 38 53 "    if marker1 \\= name || \":m1\" then return \"bad-m1\""
+   .srcstep 88 88 17 "object_reference_regression.crexx" 101 33 37 "    if marker1 \\= name || \":m1\" then return \"bad-m1\""
+   .srcstep 86 86 17 "object_reference_regression.crexx" 101 38 53 "    if marker1 \\= name || \":m1\" then return \"bad-m1\""
    ret "bad-m1"
 l343iffalse:
-   .srcstep 303 303 17 "object_reference_regression.crexx" 102 5 32 "    if marker8 \\= name || \":m8\" then return \"bad-m8\""
+   .srcstep 90 90 17 "object_reference_regression.crexx" 102 5 32 "    if marker8 \\= name || \":m8\" then return \"bad-m8\""
    linkattr1 r4,a1,9
-   .traceevent "V" 6 "R" "S" "r" 4 303 303 0 "marker8" ""
+   .traceevent "V" 6 "R" "S" "r" 4 90 90 0 "marker8" ""
    linkattr1 r3,a1,10
-   .traceevent "V" 6 "R" "S" "r" 3 303 303 0 "name" ""
+   .traceevent "V" 6 "R" "S" "r" 3 90 90 0 "name" ""
    concat r2,r3,":m8"
    unlink r3
-   .traceevent "O" 4 "R" "S" "r" 2 303 303 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 2 90 90 0 "" ""
    rne r2,r4,r2
    unlink r4
-   .traceevent "O" 4 "R" "B" "r" 2 303 303 0 "" ""
+   .traceevent "O" 4 "R" "B" "r" 2 90 90 0 "" ""
    brf l351iffalse,r2
-   .srcstep 304 304 17 "object_reference_regression.crexx" 102 33 37 "    if marker8 \\= name || \":m8\" then return \"bad-m8\""
-   .srcstep 302 302 17 "object_reference_regression.crexx" 102 38 53 "    if marker8 \\= name || \":m8\" then return \"bad-m8\""
+   .srcstep 91 91 17 "object_reference_regression.crexx" 102 33 37 "    if marker8 \\= name || \":m8\" then return \"bad-m8\""
+   .srcstep 89 89 17 "object_reference_regression.crexx" 102 38 53 "    if marker8 \\= name || \":m8\" then return \"bad-m8\""
    ret "bad-m8"
 l351iffalse:
-   .srcstep 305 305 17 "object_reference_regression.crexx" 103 5 16 "    return \"ok\""
+   .srcstep 92 92 17 "object_reference_regression.crexx" 103 5 16 "    return \"ok\""
    ret "ok"
    .meta "object_reference_regression.largepayload.check.§this"

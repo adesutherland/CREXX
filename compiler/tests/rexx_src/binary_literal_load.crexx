@@ -16,6 +16,11 @@ main: procedure = .int
   idx1 = 1
   idx2 = 2
 
+  returned_binary = binary_constant_return(1)
+  if returned_binary <> 'aabb'x as .binary then return 1
+  returned_decimal = decimal_constant_return(1)
+  if returned_decimal <> 12.5d then return 2
+
   data = '00 ff	41'x
   assembler blen len,data
   assembler getbyte b0,data,idx0
@@ -69,3 +74,13 @@ main: procedure = .int
 
   say "ok"
   return 0
+
+binary_constant_return: procedure = .binary
+  arg depth = .int
+  if depth > 0 then return binary_constant_return(depth - 1)
+  return 'aabb'x as .binary
+
+decimal_constant_return: procedure = .decimal
+  arg depth = .int
+  if depth > 0 then return decimal_constant_return(depth - 1)
+  return 12.5d

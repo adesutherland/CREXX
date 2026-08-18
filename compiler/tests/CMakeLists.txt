@@ -493,6 +493,18 @@ string(APPEND RXC_BINARY_LITERAL_LOAD_CONTENT
        "if(NOT opt_rxas_out MATCHES [=[load r[0-9]+,\"AB\"]=])\n"
        "  message(FATAL_ERROR \"Optimized binary-to-string constant cast did not fold to a string load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
        "endif()\n"
+       "if(opt_rxas_out MATCHES [=[ret[ \\t]+0x]=])\n"
+       "  message(FATAL_ERROR \"Optimized binary constant return used an unsupported RXAS immediate operand.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
+       "endif()\n"
+       "if(opt_rxas_out MATCHES [=[ret[ \\t]+[-+0-9.]+d]=])\n"
+       "  message(FATAL_ERROR \"Optimized decimal constant return used an unsupported RXAS immediate operand.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
+       "endif()\n"
+       "if(NOT opt_rxas_out MATCHES [=[load r[0-9]+,0xaabb]=])\n"
+       "  message(FATAL_ERROR \"Optimized binary constant return was not materialized in a register.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
+       "endif()\n"
+       "if(NOT opt_rxas_out MATCHES [=[load r[0-9]+,12\\.5d]=])\n"
+       "  message(FATAL_ERROR \"Optimized decimal constant return was not materialized in a register.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
+       "endif()\n"
        "if(opt_rxas_out MATCHES [=[0x3078]=])\n"
        "  message(FATAL_ERROR \"Optimized binary constants were re-encoded as ASCII hex text.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
        "endif()\n")
@@ -3438,6 +3450,20 @@ add_crexx_run_test(inline_test_named_factory_selector rexx_src/inline_test_named
 add_crexx_run_test(inline_test_factory_arg_scope rexx_src/inline_test_factory_arg_scope.crexx)
 add_crexx_run_test(inline_test_computed_receiver_copyback rexx_src/inline_test_computed_receiver_copyback.crexx)
 add_crexx_run_test(inline_test_mutating_method_scalar_attr_return rexx_src/inline_test_mutating_method_scalar_attr_return.crexx)
+add_test(NAME inline_late_profitability_guard
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_late_profitability_guard.crexx
+                 -DINCLUDE_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_late_profitability_guard_ws
+                 -P ${CMAKE_SOURCE_DIR}/cmake/CheckInlineLateProfitability.cmake)
+set_tests_properties(inline_late_profitability_guard PROPERTIES
+        LABELS "compiler;inlining;performance;regression"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 add_crexx_run_test(flow_copy_fixed_point_inline_result rexx_src/flow_copy_fixed_point_inline_result.crexx)
 add_test(
         NAME flow_copy_fixed_point_inline_result_contract

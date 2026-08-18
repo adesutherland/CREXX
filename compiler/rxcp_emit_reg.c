@@ -593,6 +593,24 @@ static int symbol_uses_scoped_register(Symbol *symbol) {
     return symbol_has_recyclable_local_storage_type(symbol);
 }
 
+/* RXAS has immediate SAY/RETURN forms only for integer, float and string
+ * operands.  Other constants (notably binary and decimal values) must retain
+ * their allocated register so the expression emitter materialises them with
+ * LOAD before the control instruction consumes the register. */
+static int constant_has_direct_control_operand(ASTNode *node) {
+    if (!node || !is_constant(node)) return 0;
+
+    switch (node->target_type) {
+        case TP_BOOLEAN:
+        case TP_INTEGER:
+        case TP_FLOAT:
+        case TP_STRING:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
 static void assign_symbol_registers_worker(Symbol *symbol, void *payload) {
     walker_payload *pl = (walker_payload*)payload;
     if (symbol->symbol_type == VARIABLE_SYMBOL) {
@@ -1002,9 +1020,11 @@ walker_result register_walker(walker_direction direction,
             case SAY:
             case RETURN:
                 /*
-                 * We do not need a register as we can handle a constant directly
+                 * RXAS can handle only its supported immediate operand types
+                 * directly.  Binary, decimal and other values need a register.
                  */
-                if (child1 && is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                if (constant_has_direct_control_operand(child1))
+                    child1->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
 
