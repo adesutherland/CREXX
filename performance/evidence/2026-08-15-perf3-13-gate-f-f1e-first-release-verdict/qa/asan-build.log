@@ -1,0 +1,85 @@
+ASan run directory: cmake-build-debugasan/asan-logs/20260815-040349-build
+==> build
+    log: cmake-build-debugasan/asan-logs/20260815-040349-build/build.log
+==> build passed
+[ 95%] Generating ts_stem_noopt.rxbin
+[ 95%] Built target ts_stem_noopt_artifact
+[ 95%] Built target ts_stem_opt_artifact
+[ 95%] Built target ts_stem
+[ 95%] Generating ts_rxjson_opt.rxbin
+[ 95%] Generating ts_rxjson_noopt.rxbin
+[ 95%] Built target ts_rxjson_noopt_artifact
+[ 95%] Built target ts_rxjson_opt_artifact
+[ 95%] Generating ts_rxjson_document_opt.rxbin
+[ 95%] Built target ts_rxjson
+[ 95%] Generating ts_rxjson_document_noopt.rxbin
+[ 95%] Built target ts_rxjson_document_noopt_artifact
+[ 95%] Built target ts_rxjson_document_opt_artifact
+[ 95%] Generating ts_rxjson_numeric_projection_noopt.rxbin
+[ 95%] Built target ts_rxjson_document
+[ 96%] Generating ts_rxjson_numeric_projection_opt.rxbin
+[ 96%] Built target ts_rxjson_numeric_projection_noopt_artifact
+[ 96%] Built target ts_rxjson_numeric_projection_opt_artifact
+[ 96%] Generating ts_rxjson_noisy_contract_opt.rxbin
+[ 96%] Built target ts_rxjson_numeric_projection
+[ 96%] Generating ts_rxjson_noisy_contract_noopt.rxbin
+[ 96%] Built target ts_rxjson_noisy_contract_noopt_artifact
+[ 96%] Built target ts_rxjson_noisy_contract_opt_artifact
+[ 96%] Generating ts_rxsocket_noopt.rxbin
+[ 96%] Generating ts_rxsocket_opt.rxbin
+[ 96%] Built target ts_rxjson_noisy_contract
+[ 96%] Built target ts_rxsocket_noopt_artifact
+[ 96%] Built target ts_rxsocket_opt_artifact
+[ 96%] Built target ts_rxsocket
+[ 96%] Generating ts_socket_tls_live_noopt.rxbin
+[ 97%] Generating ts_socket_tls_live_opt.rxbin
+[ 97%] Built target ts_socket_tls_live_noopt_artifact
+[ 97%] Built target ts_socket_tls_live_opt_artifact
+[ 97%] Built target ts_socket_tls_live
+[ 97%] Generating ts_rxhttp_opt.rxbin
+[ 97%] Generating ts_rxhttp_noopt.rxbin
+[ 97%] Built target ts_rxhttp_noopt_artifact
+[ 97%] Built target ts_rxhttp_opt_artifact
+[ 97%] Built target ts_rxhttp
+[ 97%] Built target testbifs
+[ 97%] Building C object crexx_driver/CMakeFiles/crexx.dir/crexx.c.o
+[ 97%] Linking C executable ../bin/crexx
+[ 97%] Built target crexx
+[ 97%] Compiling dynamic interface contract ...
+[ 97%] Compiling dynamic interface provider ...
+[ 97%] Compiling dynamic interface host ...
+[ 97%] Built target dynamic_interface_fixture_bin
+[ 97%] Building C object preprocessor/CMakeFiles/rxpp.dir/rxpp.c.o
+[ 97%] Linking C executable ../bin/rxpp
+[ 97%] Built target rxpp
+[ 97%] Generating map_test.crexx
+[ 97%] Generating id_test.crexx
+[ 97%] Generating recv390_test.crexx
+[ 97%] Generating recv390_test.crexx
+[ 97%] Generating treemap_test.crexx
+[ 97%] Generating map_test.crexx
+[ 97%] Generating id_test.crexx
+[ 97%] Generating treemap_test.crexx
+[ 98%] Linking C executable ../bin/rxpp-sh
+[ 98%] Built target rxpp_sh
+[ 98%] Generating treemap_test_opt.rxbin
+[ 98%] Generating treemap_test_noopt.rxbin
+[ 98%] Generating id_test_noopt.rxbin
+[ 98%] Generating map_test_opt.rxbin
+[ 98%] Generating recv390_test_noopt.rxbin
+[ 98%] Generating id_test_opt.rxbin
+[ 98%] Generating recv390_test_opt.rxbin
+[100%] Generating map_test_noopt.rxbin
+[100%] Built target treemap_test_opt_artifact
+[100%] Built target treemap_test_noopt_artifact
+[100%] Built target id_test_noopt_artifact
+[100%] Built target rxpa_treemap_test
+[100%] Built target recv390_test_noopt_artifact
+[100%] Built target map_test_noopt_artifact
+[100%] Built target map_test_opt_artifact
+[100%] Built target id_test_opt_artifact
+[100%] Built target rxpa_map_test
+[100%] Built target rxpa_id_test
+[100%] Built target recv390_test_opt_artifact
+[100%] Built target rxpa_recv390_test
+ASan run complete: cmake-build-debugasan/asan-logs/20260815-040349-build

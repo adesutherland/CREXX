@@ -1,0 +1,11 @@
+options levelb
+
+namespace gate_f_task_factory_target_levelb
+
+work: class
+  *: factory
+    return
+
+main: procedure
+  target = task .work()
+  return

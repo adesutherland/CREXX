@@ -1,0 +1,27 @@
+utc=2026-08-15T23:32:27Z
+branch=develop
+base_commit=cd2453e357a30b8f2103be13a983acda1fef7a41
+candidate_state=final audited F1g-D working tree before local slice commit
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+cpu=Apple M5
+logical_cpus=10
+cmake=4.3.2
+CMAKE_BUILD_TYPE=Release
+CREXX_VM_HANDLER_PANEL=profile-20
+CREXX_VM_PROFILING=OFF
+power=AC attached
+thermal=No thermal or performance warning recorded
+load_average_after_qa=13.39 33.05 20.85
+
+22ea81c29d4423a496e7c6ad51bcd5bc4fef1170dc9db59266728f136cc3f418  /tmp/crexx-gate-f-f1g-d-control-cd2453e35/rxbvm
+3e30b39d560f302c650ad7588bcd2a99c77944c47a2dbcb91da3e69e5b774fdd  /tmp/crexx-gate-f-f1g-d-control-cd2453e35/rxtvm
+5f8067335dee03044ba346bb4b6fddb02c171a8e841706a7b6b7d8a015ad5409  cmake-build-release/bin/rxbvm
+44f0e941485a26853cde84105e530ac109bfc45aba9ab25426272fe9cda6e80a  cmake-build-release/bin/rxtvm
+2c56bee7e3e4b12f3bff7d99f4abcd312868b60084723e32022e9784fdd8df8b  cmake-build-release/bin/library.rxbin
+87e57024db101222166d51bc0d89e14dce198747116248843a03c28a0d0090ca  cmake-build-release/bin/rxfnsg.rxbin
+408fc5975db10329d39db5e7ed4ee092584f0a62ee932e51d76d7ab3adce5f95  cmake-build-release/lib/rxfnsg/rexx/http.rxbin
+ec0e0ab516e1af525f3bc3859cd82b27d4a0bf49c5404c66c30a968517b70e63  cmake-build-release/lib/rxfnsg/rexx/httpcodec.rxbin
+d77ff2571965f498809449fbfd0a294e2389614a79206bc1f9a31074a700e72e  cmake-build-release/interpreter/test_gate_f_channel_benchmark.rxbin
+a9db0e5dc96ab05fd3b78471fedc4bb641555d8b5c209ae33b1a2f80e8dc9d06  cmake-build-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin
+e7e24bdbd42f41d957bc0213d375423491748bee60e6898e2b4c32d1890b7a8f  cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin
+c119a20e1c1e1104fb12e6146891a1e57fad4b916286106f7b5298daa7c56710  performance/tools/run_cross_runtime_matrix.crexx

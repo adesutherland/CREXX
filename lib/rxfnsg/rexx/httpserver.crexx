@@ -1,0 +1,613 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * Bounded clear-text Level G HTTP/1.1 server. The controller owns every socket
+ * and submits only complete immutable request records to sealed task targets.
+ *
+ * @docType runtime-module
+ */
+options levelg
+
+namespace rxfnsg expose httprequest httpservice httpserver
+import rxfnsb
+import rxsocket
+import concurrency
+import _rxhttpcore
+import _rxsysb
+
+_http_server_failure: procedure
+  arg message = .string
+  call raise "HTTP_SERVER_ERROR", message, ""
+  return
+
+/** Immutable buffered request passed to one HTTP service task. */
+httprequest: class
+  _verb = .string
+  _target = .string
+  _headers = .string
+  _body = .binary
+  _remote = .string
+  _reply_reference = .binary
+
+  /** Construct a controller-owned inbound request value. */
+  inbound: factory
+    arg verb = .string, target = .string, headers = .string, body = .binary, remote = .string
+    if http_method_valid(verb) = 0 | http_request_target_valid(target) = 0 then call _http_server_failure "HTTP request method or target is invalid"
+    if http_header_count(headers) > 256 | binlength(headers as .binary) > 262144 then call _http_server_failure "HTTP request headers exceed the absolute safety ceiling"
+    _verb = verb
+    _target = target
+    _headers = headers
+    _body = body
+    _remote = remote
+    _reply_reference = ''x as .binary
+    return
+
+  /** Construct a server-routed request with a private response endpoint. */
+  routed: factory
+    arg verb = .string, target = .string, headers = .string, body = .binary, remote = .string, reply_reference = .binary
+    if http_method_valid(verb) = 0 | http_request_target_valid(target) = 0 then call _http_server_failure "HTTP request method or target is invalid"
+    if http_header_count(headers) > 256 | binlength(headers as .binary) > 262144 then call _http_server_failure "HTTP request headers exceed the absolute safety ceiling"
+    if binlength(reply_reference) <> 92 then call _http_server_failure "HTTP response endpoint reference is noncanonical"
+    _verb = verb
+    _target = target
+    _headers = headers
+    _body = body
+    _remote = remote
+    _reply_reference = reply_reference
+    return
+
+  /** Reconstruct one request inside its handler task. */
+  from_channel: factory
+    arg encoded = .channelvalue
+    _body = encoded.field("body").as_binary()
+    _headers = encoded.field("headers").as_string()
+    _verb = encoded.field("verb").as_string()
+    _remote = encoded.field("remote").as_string()
+    _reply_reference = encoded.field("replyReference").as_binary()
+    _target = encoded.field("target").as_string()
+    if http_method_valid(_verb) = 0 | http_request_target_valid(_target) = 0 then call _http_server_failure "Transferred HTTP request method or target is invalid"
+    if http_header_count(_headers) > 256 | binlength(_headers as .binary) > 262144 | binlength(_body) > 8388608 then call _http_server_failure "Transferred HTTP request exceeds the absolute safety ceiling"
+    return
+
+  /** Encode the complete request; no socket or live VM value crosses. */
+  to_channel: method = .channelvalue
+    names = .string[]
+    values = .channelvalue[]
+    names[1] = "body"
+    values[1] = .channelvalue.binary_value(_body)
+    names[2] = "headers"
+    values[2] = .channelvalue.string_value(_headers)
+    names[3] = "remote"
+    values[3] = .channelvalue.string_value(_remote)
+    names[4] = "replyReference"
+    values[4] = .channelvalue.binary_value(_reply_reference)
+    names[5] = "target"
+    values[5] = .channelvalue.string_value(_target)
+    names[6] = "verb"
+    values[6] = .channelvalue.string_value(_verb)
+    return .channelvalue.record_value("crexx.http.request", 1, names, values)
+
+  /** @return uppercase request method */
+  verb: method = .string
+    return _verb
+
+  /** @return origin-form request target including any query */
+  target: method = .string
+    return _target
+
+  /** @return buffered request body as text */
+  body: method = .string
+    return _body as .string
+
+  /** @return buffered request body bytes */
+  body_bytes: method = .binary
+    return _body
+
+  /** Case-insensitive inbound header lookup. */
+  header: method = .string
+    arg name = .string
+    return http_header_value(_headers, name)
+
+  /** @return raw validated request header fields */
+  headers: method = .string
+    return _headers
+
+  /** @return numeric peer endpoint text reported by the socket layer */
+  remote: method = .string
+    return _remote
+
+  /** @return true only for requests routed by `.httpserver` */
+  routed_reply: method = .boolean
+    return binlength(_reply_reference) = 92
+
+  /** @return exact private response endpoint reference */
+  reply_reference: method = .binary
+    return _reply_reference
+
+/** Typed handler contract layered over the canonical `.taskwork` ABI.
+ * A service class implements both `.httpservice` and `.taskwork`; its explicit
+ * one-line `run` bridge casts `self` to `.httpservice` and calls `dispatch`.
+ */
+httpservice: interface
+  /** Handle one complete request inside a worker task. */
+  handle: method = .httpresponse
+    arg request = .httprequest, context = .taskcontext
+
+  /** Default ChannelValue adapter shared by every service implementation. */
+  dispatch: method = .channelvalue
+    arg encoded = .channelvalue, context = .taskcontext
+    request = .httprequest.from_channel(encoded)
+    response = handle(request, context)
+    if request.routed_reply() then do
+      if response.streaming() then response = .httpresponse.text(500, "HTTP services must return a buffered response")
+      transport_status = response.transport_status()
+      response_status = response.status()
+      response_headers = response.header_wire()
+      response_body = response.body_bytes()
+      response_error = response.error()
+      response_attempts = response.attempts()
+      response_redirects = response.redirects()
+      response_ambiguous = response.ambiguous_outcome()
+      built = http_response_wire_value(transport_status, response_status, response_headers, response_body, response_error, response_attempts, response_redirects, response_ambiguous)
+      response_wire = built.bytes()
+      reply = .byteendpoint.from_encoded_reference(request.reply_reference())
+      write_completion = reply.start_write(response_wire, 5000).wait(5000)
+      published = write_completion.available() & write_completion.succeeded()
+      if published then published = write_completion.value().as_integer() = binlength(response_wire)
+      if published = 0 then call reply.cancel(.channelvalue.string_value("HTTP service response publication failed"))
+      else call reply.half_close(2)
+      call reply.close()
+    end
+    return response.to_channel()
+
+/** Controller-owned bounded clear-text HTTP/1.1 server. */
+httpserver: class
+  _host = .string
+  _port = .int
+  _listener = .int
+  _pacer_reader = .int
+  _pacer_writer = .int
+  _workers = .int
+  _admission = .int
+  _maximum_connections = .int
+  _maximum_header_bytes = .int
+  _maximum_headers = .int
+  _maximum_body_bytes = .int
+  _pool = .taskpool
+  _scope = .taskscope
+  _active = .boolean[]
+  _busy = .boolean[]
+  _close_after = .boolean[]
+  _methods = .string[]
+  _pending = .binary[]
+  _sockets = .int[]
+  _tasks = .task[]
+  _reply_endpoints = .byteendpoint[]
+  _started_us = .int[]
+  _request_started_us = .int[]
+  _handler_timeout = .int
+  _request_timeout = .int
+  _submitted = .int
+  _served = .int
+  _scans = .int
+  _idle_scans = .int
+  _closed = .boolean
+  _serving = .boolean
+
+  /** Bind a bounded local server and its handler pool.
+   * @param host numeric or resolvable bind host
+   * @param port bind port, or zero for an ephemeral port
+   * @param workers maximum concurrent handler tasks
+   * @param admission maximum accepted or queued handler tasks
+   * @param connections maximum controller-owned accepted sockets
+   * @param maximum_header_bytes per-request header ceiling
+   * @param maximum_headers per-request field-count ceiling
+   * @param maximum_body_bytes per-request buffered body ceiling
+   * @param handler_timeout maximum handler task time in milliseconds
+   * @param request_timeout maximum time to receive one complete request
+   * @return listening server; call `close` when serving is complete
+   */
+  local: factory
+    arg host = .string, port = .int, workers = 4, admission = 64, connections = 64, maximum_header_bytes = 65536, maximum_headers = 100, maximum_body_bytes = 8388608, handler_timeout = 30000, request_timeout = 30000
+    if host = "" | port < 0 | port > 65535 then call _http_server_failure "HTTP server bind endpoint is invalid"
+    if workers < 1 | workers > 256 then call _http_server_failure "HTTP server workers must be 1..256"
+    if admission < workers | admission > 65535 then call _http_server_failure "HTTP server admission must be workers..65535"
+    if connections < 1 | connections > 65535 then call _http_server_failure "HTTP server connections must be 1..65535"
+    if maximum_header_bytes < 1024 | maximum_header_bytes > 262144 then call _http_server_failure "HTTP server header ceiling must be 1024..262144"
+    if maximum_headers < 1 | maximum_headers > 256 then call _http_server_failure "HTTP server header count must be 1..256"
+    if maximum_body_bytes < 0 | maximum_body_bytes > 8388608 then call _http_server_failure "HTTP server body ceiling must be 0..8388608"
+    if handler_timeout < 1 | handler_timeout > 600000 then call _http_server_failure "HTTP server handler timeout must be 1..600000"
+    if request_timeout < 1 | request_timeout > 600000 then call _http_server_failure "HTTP server request timeout must be 1..600000"
+    _host = host
+    _workers = workers
+    _admission = admission
+    _maximum_connections = connections
+    _maximum_header_bytes = maximum_header_bytes
+    _maximum_headers = maximum_headers
+    _maximum_body_bytes = maximum_body_bytes
+    _handler_timeout = handler_timeout
+    _request_timeout = request_timeout
+    _listener = socketcreate()
+    if _listener < 0 then call _http_server_failure "HTTP server socket creation failed"
+    if socketblocking(_listener, 0) <> 0 then call _http_server_failure "HTTP server listener nonblocking setup failed: " || socketerror(_listener)
+    if socketbind(_listener, host, port) <> 0 then call _http_server_failure "HTTP server bind failed: " || socketerror(_listener)
+    if socketlisten(_listener, connections) <> 0 then call _http_server_failure "HTTP server listen failed: " || socketerror(_listener)
+    local_endpoint = socketlocal(_listener)
+    colon = lastpos(":", local_endpoint)
+    port_text = substr(local_endpoint, colon + 1)
+    if colon = 0 | datatype(port_text, "W") = 0 then call _http_server_failure "HTTP server cannot determine its bound port"
+    _port = port_text
+    pacer_listener = socketcreate()
+    if pacer_listener < 0 then call _http_server_failure "HTTP server pacer socket creation failed"
+    if socketbind(pacer_listener, "127.0.0.1", 0) <> 0 then call _http_server_failure "HTTP server pacer bind failed: " || socketerror(pacer_listener)
+    if socketlisten(pacer_listener, 1) <> 0 then call _http_server_failure "HTTP server pacer listen failed: " || socketerror(pacer_listener)
+    pacer_endpoint = socketlocal(pacer_listener)
+    pacer_colon = lastpos(":", pacer_endpoint)
+    pacer_port_text = substr(pacer_endpoint, pacer_colon + 1)
+    if pacer_colon = 0 | datatype(pacer_port_text, "W") = 0 then call _http_server_failure "HTTP server cannot determine its pacer port"
+    _pacer_writer = socketcreate()
+    if _pacer_writer < 0 then call _http_server_failure "HTTP server pacer writer creation failed"
+    if sockettimeout(_pacer_writer, 1000) <> 0 | socketconnect(_pacer_writer, "127.0.0.1", pacer_port_text) <> 0 then call _http_server_failure "HTTP server pacer connect failed"
+    _pacer_reader = socketaccept(pacer_listener)
+    if _pacer_reader < 0 then call _http_server_failure "HTTP server pacer accept failed: " || socketerror(pacer_listener)
+    drop_status = socketclose(pacer_listener)
+    if socketblocking(_pacer_reader, 1) <> 0 | sockettimeout(_pacer_reader, 1) <> 0 then call _http_server_failure "HTTP server pacer timeout setup failed"
+    _pool = .taskpool.local(workers, admission)
+    _scope = .taskscope.collectall(_pool, -1)
+    active = .boolean[]
+    busy = .boolean[]
+    close_after = .boolean[]
+    methods = .string[]
+    pending = .binary[]
+    sockets = .int[]
+    tasks = .task[]
+    reply_endpoints = .byteendpoint[]
+    started_us = .int[]
+    request_started_us = .int[]
+    do slot = 1 to connections
+      active[slot] = 0
+      busy[slot] = 0
+      close_after[slot] = 0
+      methods[slot] = ""
+      pending[slot] = ''x as .binary
+      sockets[slot] = -1
+      started_us[slot] = 0
+      request_started_us[slot] = 0
+    end
+    _active = active
+    _busy = busy
+    _close_after = close_after
+    _methods = methods
+    _pending = pending
+    _sockets = sockets
+    _tasks = tasks
+    _reply_endpoints = reply_endpoints
+    _started_us = started_us
+    _request_started_us = request_started_us
+    _submitted = 0
+    _served = 0
+    _scans = 0
+    _idle_scans = 0
+    _closed = 0
+    _serving = 0
+    return
+
+  _close_slot: method = .void
+    arg slot = .int
+    if _busy[slot] then do
+      reply_endpoint = _reply_endpoints[slot]
+      call reply_endpoint.cancel(.channelvalue.string_value("HTTP connection closed"))
+      call reply_endpoint.close()
+    end
+    if _active[slot] then drop_status = socketclose(_sockets[slot])
+    _active[slot] = 0
+    _busy[slot] = 0
+    _close_after[slot] = 0
+    _methods[slot] = ""
+    _pending[slot] = ''x as .binary
+    _sockets[slot] = -1
+    _request_started_us[slot] = 0
+    return
+
+  _first_free_slot: method = .int
+    do slot = 1 to _maximum_connections
+      if _active[slot] = 0 then return slot
+    end
+    return 0
+
+  _complete_slot: method = .boolean
+    arg slot = .int, stop_after = .int
+    wire = ''x as .binary
+    reply_capacity = _maximum_body_bytes + _maximum_header_bytes + 65536
+    reply_endpoint = _reply_endpoints[slot]
+    reply_read = reply_endpoint.start_read(reply_capacity, 0)
+    completion = reply_read.wait(5)
+    available = completion.available()
+    if available & completion.succeeded() = 0 then do
+      poll_status = completion.error_code()
+      if poll_status = 2 | poll_status = 3 | poll_status = 10 | poll_status = 11 then available = 0
+    end
+    now_us = time("us")
+    elapsed_us = now_us - _started_us[slot]
+    if elapsed_us < 0 then elapsed_us = elapsed_us + 86400000000
+    timed_out = available = 0 & elapsed_us >= _handler_timeout * 1000
+    if available = 0 & timed_out = 0 then return 0
+    keep_alive = _close_after[slot] = 0
+    if stop_after >= 0 & _served + 1 >= stop_after then keep_alive = 0
+    if timed_out then do
+      task_child = _tasks[slot]
+      reply_endpoint = _reply_endpoints[slot]
+      call task_child.cancel(.channelvalue.string_value("HTTP service handler deadline exceeded"))
+      call reply_endpoint.cancel(.channelvalue.string_value("HTTP service handler deadline exceeded"))
+      error_headers = "Content-Type: text/plain; charset=utf-8" || "0d0a"x
+      built = http_build_response(504, error_headers, "HTTP service handler deadline exceeded" as .binary, 0, 1)
+      wire = built.bytes()
+      keep_alive = 0
+    end
+    else if completion.succeeded() then do
+      response_frame = completion.value().as_binary()
+      frame_valid = binlength(response_frame) >= 64
+      if frame_valid then do
+        header_length = <at..int>(40) response_frame
+        body_length = <at..int>(48) response_frame
+        error_length = <at..int>(56) response_frame
+        frame_valid = header_length >= 0 & body_length >= 0 & error_length >= 0
+        if frame_valid then frame_valid = 64 + header_length + body_length + error_length = binlength(response_frame)
+      end
+      if frame_valid = 0 then do
+        error_headers = "Content-Type: text/plain; charset=utf-8" || "0d0a"x
+        built = http_build_response(500, error_headers, "HTTP service returned an invalid response frame" as .binary, 0, 1)
+        wire = built.bytes()
+        keep_alive = 0
+      end
+      else do
+        response = .httpresponse.from_wire(response_frame)
+        response_headers = response.header_wire()
+        response_body = response.body_bytes()
+        response_within_limits = http_header_count(response_headers) <= _maximum_headers
+        response_within_limits = response_within_limits & binlength(response_headers as .binary) <= _maximum_header_bytes
+        response_within_limits = response_within_limits & binlength(response_body) <= _maximum_body_bytes
+        if response.streaming() | response.transport_status() <> 0 | response_within_limits = 0 then do
+          error_headers = "Content-Type: text/plain; charset=utf-8" || "0d0a"x
+          built = http_build_response(500, error_headers, "HTTP service returned an unusable response" as .binary, 0, 1)
+          wire = built.bytes()
+          keep_alive = 0
+        end
+        else do
+          response_status = response.status()
+          send_body = _methods[slot] <> "HEAD"
+          built = http_build_response(response_status, response_headers, response_body, keep_alive, send_body)
+          wire = built.bytes()
+        end
+      end
+      if binlength(wire) = 0 then do
+        error_headers = "Content-Type: text/plain; charset=utf-8" || "0d0a"x
+        built = http_build_response(500, error_headers, "HTTP service returned invalid response fields" as .binary, 0, 1)
+        wire = built.bytes()
+        keep_alive = 0
+      end
+    end
+    else do
+      error_headers = "Content-Type: text/plain; charset=utf-8" || "0d0a"x
+      built = http_build_response(500, error_headers, "HTTP service task failed" as .binary, 0, 1)
+      wire = built.bytes()
+      keep_alive = 0
+    end
+    call reply_endpoint.close()
+    sent = 1
+    if socketblocking(_sockets[slot], 1) <> 0 then sent = 0
+    if sent & sockettimeout(_sockets[slot], 5000) <> 0 then sent = 0
+    offset = 0
+    total = binlength(wire)
+    do while sent & offset < total
+      chunk = binsubstr(wire, offset + 1, total - offset)
+      sent_count = socketsendb(_sockets[slot], chunk)
+      if sent_count <= 0 then sent = 0
+      else offset = offset + sent_count
+    end
+    if sent & keep_alive then do
+      if socketblocking(_sockets[slot], 0) <> 0 then sent = 0
+      else _request_started_us[slot] = time("us")
+    end
+    _served = _served + 1
+    _busy[slot] = 0
+    if keep_alive = 0 | sent = 0 then call _close_slot slot
+    return 1
+
+  _read_slot: method = .boolean
+    arg slot = .int, target = .tasktarget, stop_after = .int
+    chunk = socketrecvb(_sockets[slot], 8192)
+    state = socketstatus(_sockets[slot])
+    activity = 0
+    if state = 0 & binlength(chunk) > 0 then do
+      call binappend _pending[slot], chunk
+      activity = 1
+    end
+    else if state = 1 | state < 0 then do
+      call _close_slot slot
+      return 1
+    end
+    else if state <> 2 & state <> 3 & state <> 0 then do
+      call _close_slot slot
+      return 1
+    end
+    if _active[slot] = 0 | _busy[slot] then return activity
+    if stop_after >= 0 & _submitted >= stop_after then return activity
+    parsed = http_parse_request(_pending[slot], _maximum_header_bytes, _maximum_headers, _maximum_body_bytes)
+    if parsed.state() = 0 then do
+      now_us = time("us")
+      elapsed_us = now_us - _request_started_us[slot]
+      if elapsed_us < 0 then elapsed_us = elapsed_us + 86400000000
+      if elapsed_us < _request_timeout * 1000 then return activity
+      error_headers = "Content-Type: text/plain; charset=utf-8" || "0d0a"x
+      built = http_build_response(408, error_headers, "HTTP request deadline exceeded" as .binary, 0, 1)
+      wire = built.bytes()
+      sent = 1
+      if socketblocking(_sockets[slot], 1) <> 0 then sent = 0
+      if sent & sockettimeout(_sockets[slot], 5000) <> 0 then sent = 0
+      offset = 0
+      total = binlength(wire)
+      do while sent & offset < total
+        chunk = binsubstr(wire, offset + 1, total - offset)
+        sent_count = socketsendb(_sockets[slot], chunk)
+        if sent_count <= 0 then sent = 0
+        else offset = offset + sent_count
+      end
+      call _close_slot slot
+      return 1
+    end
+    if parsed.state() = 2 then do
+      error_headers = "Content-Type: text/plain; charset=utf-8" || "0d0a"x
+      error_status = parsed.status()
+      error_body = parsed.error() as .binary
+      built = http_build_response(error_status, error_headers, error_body, 0, 1)
+      wire = built.bytes()
+      sent = 1
+      if socketblocking(_sockets[slot], 1) <> 0 then sent = 0
+      if sent & sockettimeout(_sockets[slot], 5000) <> 0 then sent = 0
+      offset = 0
+      total = binlength(wire)
+      do while sent & offset < total
+        chunk = binsubstr(wire, offset + 1, total - offset)
+        sent_count = socketsendb(_sockets[slot], chunk)
+        if sent_count <= 0 then sent = 0
+        else offset = offset + sent_count
+      end
+      call _close_slot slot
+      return 1
+    end
+    reply_capacity = _maximum_body_bytes + _maximum_header_bytes + 65536
+    reply_endpoint = .byteendpoint.memory(3, reply_capacity)
+    reply_reference = reply_endpoint.provider_reference().encode()
+    request = .httprequest.routed(parsed.verb(), parsed.target(), parsed.headers(), parsed.body(), socketpeer(_sockets[slot]), reply_reference)
+    _tasks[slot] = _scope.submit(target, request.to_channel())
+    _reply_endpoints[slot] = reply_endpoint
+    _started_us[slot] = time("us")
+    _methods[slot] = parsed.verb()
+    _close_after[slot] = parsed.keep_alive() = 0
+    _busy[slot] = 1
+    _submitted = _submitted + 1
+    consumed = parsed.consumed()
+    if consumed >= binlength(_pending[slot]) then _pending[slot] = ''x as .binary
+    else _pending[slot] = binsubstr(_pending[slot], consumed + 1)
+    return 1
+
+  /** Serve complete requests through one sealed `.httpservice .taskwork` target.
+   * This call owns the controller loop. A negative request count serves until
+   * the process/controller is stopped; a non-negative count is useful for
+   * bounded hosts and tests.
+   * @param target sealed taskwork factory implementing the HTTP service bridge
+   * @param maximum_requests requests to complete, or -1 for no count limit
+   * @return number of completed requests across this server lifetime
+   */
+  serve: method = .int
+    arg target = .tasktarget, maximum_requests = -1
+    if _closed then call _http_server_failure "HTTP server is closed"
+    if _serving then call _http_server_failure "HTTP server is already serving"
+    if maximum_requests < -1 then call _http_server_failure "HTTP server request limit must be -1 or greater"
+    _serving = 1
+    start_served = _served
+    limit = -1
+    if maximum_requests >= 0 then limit = _submitted + maximum_requests
+    do while limit < 0 | _served < limit
+      _scans = _scans + 1
+      activity = 0
+      free_slot = _first_free_slot()
+      if free_slot > 0 & (limit < 0 | _submitted < limit) then do
+        accepted = socketaccept(_listener)
+        listener_state = socketstatus(_listener)
+        if listener_state = 0 & accepted >= 0 then do
+          _active[free_slot] = 1
+          _busy[free_slot] = 0
+          _close_after[free_slot] = 0
+          _methods[free_slot] = ""
+          _pending[free_slot] = ''x as .binary
+          _sockets[free_slot] = accepted
+          _request_started_us[free_slot] = time("us")
+          if socketblocking(accepted, 0) <> 0 then call _close_slot free_slot
+          else do
+            nodelay_status = socketnodelay(accepted, 1)
+            activity = 1
+          end
+        end
+        else if listener_state <> 2 & listener_state <> 3 then do
+          _serving = 0
+          call _http_server_failure "HTTP server accept failed: " || socketerror(_listener)
+        end
+      end
+      do slot = 1 to _maximum_connections
+        if _active[slot] then do
+          if _busy[slot] then activity = _complete_slot(slot, limit) | activity
+          if _active[slot] & _busy[slot] = 0 then activity = _read_slot(slot, target, limit) | activity
+        end
+      end
+      if activity = 0 then do
+        _idle_scans = _idle_scans + 1
+        idle_bytes = socketrecvb(_pacer_reader, 1)
+      end
+    end
+    do slot = 1 to _maximum_connections
+      if _active[slot] then call _close_slot slot
+    end
+    _serving = 0
+    return _served - start_served
+
+  /** Release listener, task scope and handler pool after `serve` returns. */
+  close: method = .void
+    if _closed then return
+    if _serving then call _http_server_failure "HTTP server cannot close while serve is active"
+    do slot = 1 to _maximum_connections
+      if _active[slot] then call _close_slot slot
+    end
+    drop_status = socketclose(_listener)
+    drop_status = socketclose(_pacer_writer)
+    drop_status = socketclose(_pacer_reader)
+    handler_scope = _scope
+    handler_pool = _pool
+    completed = handler_scope.join()
+    call handler_scope.close()
+    call handler_pool.close()
+    _closed = 1
+    return
+
+  /** @return bound host supplied to `local` */
+  host: method = .string
+    return _host
+
+  /** @return effective bound port, including an allocated ephemeral port */
+  port: method = .int
+    return _port
+
+  /** @return cumulative completed request count */
+  served: method = .int
+    return _served
+
+  /** @return controller scan count for diagnostics */
+  scans: method = .int
+    return _scans
+
+  /** @return scans with no accept/read/dispatch/completion activity */
+  idle_scans: method = .int
+    return _idle_scans

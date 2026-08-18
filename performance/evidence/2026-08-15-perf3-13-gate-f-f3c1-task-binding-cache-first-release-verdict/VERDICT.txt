@@ -1,0 +1,35 @@
+PERF3-13 Gate F F3C1 first Release verdict
+Date: 2026-08-15
+Branch: develop
+Accepted control source: 7108a9c5f (completed F1f product)
+Candidate: frozen F3C1 working-tree implementation before its local slice commit
+Host: Darwin 25.5.0 arm64, 10 logical CPUs, AC power, no thermal or performance warning
+Build: ordinary profiling-off Release, profile-20 handler panel
+
+Exact retained controls:
+- rxbvm sha256 a47c32bded25ef20924ccb1919d43d61734fc4118ee5c3d9af763cfb7fe2c00b, 1,379,048 bytes
+- rxtvm sha256 9d549eca1b956cdb9238740cbbfd14c312f96ed58cfa1e82c4ef00ef9d242be2, 1,379,176 bytes
+
+Frozen candidates:
+- rxbvm sha256 0b46867f13175464722ab23f51b1376859b6881eea84d17452d8e87368e2d8ae, 1,379,128 bytes
+- rxtvm sha256 5e9339948c38ac8fcdd26dce60cfd2630190d6613385917e7f3d833d223e3394, 1,379,240 bytes
+- size delta: +80 bytes for rxbvm and +64 bytes for rxtvm
+- the complete post-verdict Release rebuild reproduced both candidate hashes
+
+RXBIN compatibility:
+- one identical sealed benchmark image was used for both products
+- image sha256 d77ff2571965f498809449fbfd0a294e2389614a79206bc1f9a31074a700e72e, 2,629 bytes
+- F3C1 changes no RXAS, RXBIN, linker or public library contract
+
+Balanced 12-pair means, candidate versus accepted:
+- rxbvml channel latency: +39.076017%, 95% CI [+34.905501%, +43.246532%], clear favorable, no guard hit
+- rxbvml channel throughput: -0.099356%, 95% CI [-2.370832%, +2.172121%], noisy, no guard hit
+- rxtvml channel latency: +40.340609%, 95% CI [+35.688073%, +44.993144%], clear favorable, no guard hit
+- rxtvml channel throughput: +1.551257%, 95% CI [+0.745655%, +2.356860%], clear favorable, no guard hit
+
+Verdict: accept F3C1. The bounded worker-local cache recovers the repeated
+sealed-binding validation cost while preserving first-miss validation and all
+public contracts. Both latency cells are clearly favorable, rxtvml throughput
+is clearly favorable and rxbvml throughput is inconclusive without a guard
+hit. Ordinary single-thread product behavior is measured separately in the
+post-commit portfolio requested by Adrian.

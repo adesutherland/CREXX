@@ -1,0 +1,158 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/62 Test    #1: linked_opt_runtime_artifacts_build ......   Passed    1.08 sec
+      Start  508: gate_f_levelg_rxbvm_noopt
+      Start 1709: ts_http_policy_rxbvm_noopt
+      Start 1711: ts_http_policy_rxtvm_noopt
+      Start 1698: ts_http_streaming_rxbvm_opt
+      Start 1704: ts_http_crexx_rag_rxtvm_opt
+      Start 1697: ts_http_streaming_rxbvm_noopt
+      Start 1710: ts_http_policy_rxbvm_opt
+      Start 1712: ts_http_policy_rxtvm_opt
+      Start 1702: ts_http_crexx_rag_rxbvm_opt
+      Start 1700: ts_http_streaming_rxtvm_opt
+      Start 1699: ts_http_streaming_rxtvm_noopt
+      Start 1701: ts_http_crexx_rag_rxbvm_noopt
+      Start 1703: ts_http_crexx_rag_rxtvm_noopt
+      Start  542: signal_control_unwind_rxtvm_noopt
+      Start  543: signal_control_unwind_rxtvm_opt
+      Start 1706: ts_http_tls_live_rxbvm_opt
+      Start 1708: ts_http_tls_live_rxtvm_opt
+      Start  541: signal_control_unwind_rxbvm_opt
+      Start  539: gate_f_contextual_levelb
+      Start  540: signal_control_unwind_rxbvm_noopt
+ 2/62 Test  #541: signal_control_unwind_rxbvm_opt .........   Passed    0.77 sec
+ 3/62 Test  #539: gate_f_contextual_levelb ................   Passed    0.75 sec
+      Start  521: gate_f_pending_mutation
+      Start  522: gate_f_pending_return
+ 4/62 Test  #540: signal_control_unwind_rxbvm_noopt .......   Passed    0.75 sec
+      Start  523: gate_f_pending_reference
+ 5/62 Test #1706: ts_http_tls_live_rxbvm_opt ..............   Passed    0.85 sec
+      Start  520: gate_f_bad_scope
+ 6/62 Test  #542: signal_control_unwind_rxtvm_noopt .......   Passed    1.02 sec
+ 7/62 Test  #543: signal_control_unwind_rxtvm_opt .........   Passed    1.02 sec
+      Start  535: gate_f_taskwork_required
+      Start  524: gate_f_nested_task_wait
+ 8/62 Test #1698: ts_http_streaming_rxbvm_opt .............   Passed    1.07 sec
+      Start 1705: ts_http_tls_live_rxbvm_noopt
+ 9/62 Test #1697: ts_http_streaming_rxbvm_noopt ...........   Passed    1.07 sec
+      Start  529: gate_f_scope_reused
+10/62 Test #1702: ts_http_crexx_rag_rxbvm_opt .............   Passed    1.13 sec
+      Start  528: gate_f_dynamic_task_target
+11/62 Test #1701: ts_http_crexx_rag_rxbvm_noopt ...........   Passed    1.13 sec
+      Start 1696: ts_http_pooled_rxtvm_opt
+12/62 Test #1708: ts_http_tls_live_rxtvm_opt ..............   Passed    1.16 sec
+      Start 1694: ts_http_pooled_rxbvm_opt
+13/62 Test  #521: gate_f_pending_mutation .................   Passed    0.44 sec
+      Start  536: gate_f_taskwork_factory_arg
+14/62 Test  #523: gate_f_pending_reference ................   Passed    0.51 sec
+      Start 1707: ts_http_tls_live_rxtvm_noopt
+15/62 Test #1699: ts_http_streaming_rxtvm_noopt ...........   Passed    1.33 sec
+      Start  537: gate_f_task_object_result_required
+16/62 Test #1700: ts_http_streaming_rxtvm_opt .............   Passed    1.34 sec
+      Start  507: gate_f_levelb_contract
+17/62 Test #1704: ts_http_crexx_rag_rxtvm_opt .............   Passed    1.35 sec
+      Start  538: gate_f_task_interface_result
+18/62 Test #1703: ts_http_crexx_rag_rxtvm_noopt ...........   Passed    1.42 sec
+      Start 1693: ts_http_pooled_rxbvm_noopt
+19/62 Test  #522: gate_f_pending_return ...................   Passed    0.66 sec
+      Start 1695: ts_http_pooled_rxtvm_noopt
+20/62 Test  #508: gate_f_levelg_rxbvm_noopt ...............   Passed    1.49 sec
+      Start  515: gate_f_task_method_import_rxtvm_opt
+21/62 Test  #520: gate_f_bad_scope ........................   Passed    0.65 sec
+      Start  530: gate_f_task_levelb
+22/62 Test  #530: gate_f_task_levelb ......................   Passed    0.08 sec
+      Start  532: gate_f_parallel_expr_levelb
+23/62 Test #1710: ts_http_policy_rxbvm_opt ................   Passed    1.68 sec
+      Start 1713: ts_http_codec_rxbvm_noopt
+24/62 Test  #532: gate_f_parallel_expr_levelb .............   Passed    0.08 sec
+      Start  527: gate_f_task_receiver
+25/62 Test #1709: ts_http_policy_rxbvm_noopt ..............   Passed    1.69 sec
+      Start  533: gate_f_task_target_levelb
+26/62 Test  #527: gate_f_task_receiver ....................   Passed    0.07 sec
+      Start  525: gate_f_task_exposed_arg
+27/62 Test  #533: gate_f_task_target_levelb ...............   Passed    0.07 sec
+      Start  534: gate_f_task_factory_target_levelb
+28/62 Test #1713: ts_http_codec_rxbvm_noopt ...............   Passed    0.09 sec
+      Start  531: gate_f_parallel_levelb
+29/62 Test  #525: gate_f_task_exposed_arg .................   Passed    0.08 sec
+      Start  526: gate_f_task_reference_arg
+30/62 Test #1712: ts_http_policy_rxtvm_opt ................   Passed    1.83 sec
+      Start 1715: ts_http_codec_rxtvm_noopt
+31/62 Test  #534: gate_f_task_factory_target_levelb .......   Passed    0.08 sec
+      Start 1714: ts_http_codec_rxbvm_opt
+32/62 Test  #531: gate_f_parallel_levelb ..................   Passed    0.07 sec
+      Start 1716: ts_http_codec_rxtvm_opt
+33/62 Test #1711: ts_http_policy_rxtvm_noopt ..............   Passed    1.88 sec
+34/62 Test #1714: ts_http_codec_rxbvm_opt .................   Passed    0.05 sec
+35/62 Test #1716: ts_http_codec_rxtvm_opt .................   Passed    0.05 sec
+36/62 Test  #526: gate_f_task_reference_arg ...............   Passed    0.08 sec
+37/62 Test #1715: ts_http_codec_rxtvm_noopt ...............   Passed    0.08 sec
+38/62 Test  #529: gate_f_scope_reused .....................   Passed    0.86 sec
+39/62 Test  #535: gate_f_taskwork_required ................   Passed    0.92 sec
+40/62 Test  #524: gate_f_nested_task_wait .................   Passed    0.92 sec
+41/62 Test  #528: gate_f_dynamic_task_target ..............   Passed    0.83 sec
+42/62 Test  #536: gate_f_taskwork_factory_arg .............   Passed    0.74 sec
+43/62 Test #1705: ts_http_tls_live_rxbvm_noopt ............   Passed    0.91 sec
+44/62 Test  #537: gate_f_task_object_result_required ......   Passed    0.65 sec
+45/62 Test  #538: gate_f_task_interface_result ............   Passed    0.64 sec
+46/62 Test  #507: gate_f_levelb_contract ..................   Passed    0.66 sec
+47/62 Test #1707: ts_http_tls_live_rxtvm_noopt ............   Passed    0.72 sec
+48/62 Test #1694: ts_http_pooled_rxbvm_opt ................   Passed    0.95 sec
+49/62 Test #1696: ts_http_pooled_rxtvm_opt ................   Passed    1.00 sec
+50/62 Test #1695: ts_http_pooled_rxtvm_noopt ..............   Passed    0.71 sec
+51/62 Test #1693: ts_http_pooled_rxbvm_noopt ..............   Passed    0.73 sec
+52/62 Test  #515: gate_f_task_method_import_rxtvm_opt .....   Passed    1.65 sec
+      Start  513: gate_f_task_method_import_rxbvm_opt
+53/62 Test  #513: gate_f_task_method_import_rxbvm_opt .....   Passed    1.24 sec
+      Start  512: gate_f_task_method_import_rxbvm_noopt
+54/62 Test  #512: gate_f_task_method_import_rxbvm_noopt ...   Passed    1.09 sec
+      Start  511: gate_f_levelg_rxtvm_opt
+55/62 Test  #511: gate_f_levelg_rxtvm_opt .................   Passed    0.81 sec
+      Start  514: gate_f_task_method_import_rxtvm_noopt
+56/62 Test  #514: gate_f_task_method_import_rxtvm_noopt ...   Passed    1.08 sec
+      Start  509: gate_f_levelg_rxbvm_opt
+57/62 Test  #509: gate_f_levelg_rxbvm_opt .................   Passed    0.79 sec
+      Start  517: gate_f_taskwork_import_rxbvm_opt
+58/62 Test  #517: gate_f_taskwork_import_rxbvm_opt ........   Passed    0.68 sec
+      Start  516: gate_f_taskwork_import_rxbvm_noopt
+59/62 Test  #516: gate_f_taskwork_import_rxbvm_noopt ......   Passed    0.66 sec
+      Start  519: gate_f_taskwork_import_rxtvm_opt
+60/62 Test  #519: gate_f_taskwork_import_rxtvm_opt ........   Passed    0.67 sec
+      Start  518: gate_f_taskwork_import_rxtvm_noopt
+61/62 Test  #518: gate_f_taskwork_import_rxtvm_noopt ......   Passed    0.65 sec
+      Start  510: gate_f_levelg_rxtvm_noopt
+62/62 Test  #510: gate_f_levelg_rxtvm_noopt ...............   Passed    0.63 sec
+
+100% tests passed, 0 tests failed out of 62
+
+Label Time Summary:
+compiler        =  24.85 sec*proc (37 tests)
+compression     =   5.29 sec*proc (8 tests)
+concurrency     =  21.28 sec*proc (33 tests)
+contextual      =   0.75 sec*proc (1 test)
+control_flow    =   3.57 sec*proc (4 tests)
+crexx_rag       =   5.03 sec*proc (4 tests)
+f1f             =  20.62 sec*proc (32 tests)
+f1g             =  24.20 sec*proc (24 tests)
+gate_f          =  49.05 sec*proc (61 tests)
+http            =  24.20 sec*proc (24 tests)
+import          =   7.72 sec*proc (8 tests)
+levelb          =   1.41 sec*proc (2 tests)
+levelg          =  44.07 sec*proc (55 tests)
+library         =  24.20 sec*proc (24 tests)
+linked          =  23.03 sec*proc (22 tests)
+linked_opt      =  12.45 sec*proc (12 tests)
+method          =   5.05 sec*proc (4 tests)
+negative        =   8.43 sec*proc (19 tests)
+noopt           =   7.38 sec*proc (8 tests)
+opt             =   7.63 sec*proc (8 tests)
+policy          =   7.07 sec*proc (4 tests)
+rxbvm           =  18.81 sec*proc (20 tests)
+rxtvm           =  20.40 sec*proc (20 tests)
+signals         =   3.57 sec*proc (4 tests)
+streaming       =   4.81 sec*proc (4 tests)
+taskwork        =   2.67 sec*proc (4 tests)
+tls             =   3.63 sec*proc (4 tests)
+
+Total Test time (real) =  12.56 sec

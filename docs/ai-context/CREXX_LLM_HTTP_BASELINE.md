@@ -1,89 +1,85 @@
-# cREXX LLM/HTTP Baseline Status
+# cREXX LLM and HTTP architecture
 
-Status date: 2026-05-01
+Status date: 2026-08-16
 
-This note captures the first LLM integration baseline after bringing core
-socket communication into the VM, adding a reusable HTTP layer above
-`rxsocket`, and adding client TLS for hosted providers.
+This note records the current transport boundary for Level G LLM providers.
+It supersedes the May 2026 baseline that used the former public Level B
+`rxhttp` convenience client.
 
-## Baseline Scope
+## Current layering
 
-- Level B `rxjson` provides string-oriented JSON validation, quoting, path
-  lookup, object construction, and array construction.
-- Level B `rxsocket` exposes the VM core TCP socket opcodes through a stable
-  Rexx API.
-- Level B `rxhttp` provides a reusable HTTP client over `rxsocket`.
-  It handles UTF-8 byte `Content-Length`, HTTP/1.1 chunked transfer decoding,
-  header lookup, non-2xx response bodies, and raw/body diagnostics.
-- `rxhttp` supports additional caller-supplied request headers, allowing
-  provider authentication headers without duplicating HTTP framing logic.
-- Level G `rxfnsg` provides the first class-shaped LLM interface and concrete
-  provider classes.
-- `rxfnsg.llm` currently selects the local Ollama provider and posts to
-  `/api/generate` with `stream:false`.
-- `rxfnsg.openai`, `rxfnsg.anthropic`, and `rxfnsg.gemini` are Rexx
-  implementations for hosted providers using `rxhttp` over VM TLS sockets.
-- `demos/llm/ollama_generate.crexx` demonstrates calling a local Ollama model
-  through `rxfnsg`, `rxhttp`, `rxjson`, and the core socket VM support.
-- `demos/llm/openai_generate.crexx`, `anthropic_generate.crexx`, and
-  `gemini_generate.crexx` read API keys from environment variables and call
-  hosted providers over HTTPS.
+- Level B `rxjson` supplies the focused string-oriented JSON helpers.
+- Level B `rxsocket` exposes VM-managed TCP sockets and verified client TLS.
+- Private Level B `_rxhttpcore` supplies binary HTTP framing, parsing and
+  bounded gzip/zlib/raw-DEFLATE codecs. It is not a user client.
+- Public Level G `.httpclient` owns HTTP policy, bounded admission, reusable
+  single-owner connections and typed responses.
+- Public Level G `.httpserver` owns accepted sockets and dispatches complete
+  request values to `.httpservice .taskwork` targets.
+- Level G `.ollama`, `.openai`, `.anthropic` and `.gemini` all use the public
+  `.httpclient` and the same private core.
 
-## Verified Locally
+There is deliberately no second public Level B HTTP client. HTTP remains a
+Rexx library over sockets, tasks, channels and endpoints; it is not an RXAS
+instruction or a channel-provider type.
 
-The following commands passed locally on macOS:
+## LLM provider behavior
 
-```sh
-cmake --build cmake-build-debug --target library rxfnsg testbifs testrxfnsg -- -j2
-ctest --test-dir cmake-build-debug -R 'ts_rxhttp|ts_socket_tls_live|ts_llm_ollama|ts_llm_providers' --output-on-failure
-cmake --build cmake-build-debug --target rxvme rxbvme crexx -- -j2
-./cmake-build-debug/bin/crexx -lrxfnsg demos/llm/ollama_generate.crexx
-```
+`.llm(...)` selects the local Ollama implementation. Ollama posts JSON to
+`/api/generate` with `stream:false`. Hosted providers construct their own JSON
+and authentication headers, use verified HTTPS and obtain keys from the
+provider-specific environment variables documented in
+`lib/rxfnsg/rexx/llm.md`.
 
-The live Ollama check was run against `gemma4:latest` on
-`http://localhost:11434`.
+Every provider owns a bounded `.httpclient` connection pool and exposes
+`close()`. Diagnostic methods retain the decoded provider JSON, HTTP status and
+a reconstructed HTTP response view; they do not expose a live socket or a
+shared mutable HTTP object.
 
-## CI Expectations
+## Deterministic QA
 
-The hosted CI validation should rely on synthetic tests that do not require
-Ollama or external network access:
+Ordinary automated validation is synthetic and does not require external
+services or secrets:
 
-- `ts_rxsocket`: socket loopback and status coverage
-- `ts_socket_tls_live`: default-skipped live TLS handshake smoke; set
-  `CREXX_TLS_LIVE_SMOKE=1` to enable it on a runner with network access
-- `ts_rxjson`: JSON helper coverage
-- `ts_rxhttp`: HTTP framing, byte lengths, chunked transfer, headers, error
-  statuses, and truncated response coverage
-- `ts_llm_ollama`: Ollama request/body extraction and provider JSON handling
-  using fake HTTP responses
-- `ts_llm_providers`: OpenAI, Anthropic, and Gemini request/header/body
-  construction plus synthetic response/error parsing, without secrets or
-  external network access
+- `ts_llm_ollama`: Ollama request/body extraction and provider JSON behavior;
+- `ts_llm_providers`: OpenAI, Anthropic and Gemini request/header/body behavior;
+- `ts_http_pooled`: connection ownership, reuse and admission;
+- `ts_http_policy`: headers, redirects, retries, idempotency and ambiguity;
+- `ts_http_streaming`: bounded fixed/chunked requests and response streams;
+- `ts_http_codec`: bounded response decoding and malformed inputs;
+- `ts_http_crexx_rag`: concurrent generation/embedding shapes required by
+  `crexx-rag`;
+- `ts_http_server`: task-service dispatch, parallel clients, binary bodies,
+  malformed requests, pipelining boundaries and request deadlines;
+- `ts_http_server_failures`: raised handlers and unusable response limits; and
+- `address_llm_provider`: a normally linked ADDRESS-provider/host image whose
+  transient LLM providers are closed after each helper call.
 
-## Known Limits
+These fixtures run across `rxbvm` and `rxtvm`, optimized and unoptimized where
+the matrix applies. Live TLS and provider demos are opt-in checks because they
+depend on network, trust-store, local-model or secret state.
 
-- Client TLS exists below the VM-managed socket API as
-  `socketconnecttls(sock, host, port)`. Fresh macOS builds default to
-  `CREXX_ENABLE_TLS=NETWORK` to use Network.framework, Security.framework,
-  CoreFoundation.framework, and the system trust store. Fresh Linux/Unix builds
-  default to `CREXX_ENABLE_TLS=OPENSSL`; Windows builds default to
-  `CREXX_ENABLE_TLS=SCHANNEL` to use SChannel/SSPI and the Windows trust store.
-- `rxhttp` intentionally sends `Accept-Encoding: identity`; compressed response
-  bodies are not supported yet.
-- Redirects, cookies, proxies, persistent connections, and chunk trailers are
-  not implemented in this baseline.
-- `rxjson` is still a focused helper library rather than a full JSON object
-  model. Escaped non-ASCII `\uXXXX` values are accepted, but full Unicode
-  unescape fidelity remains future work.
-- Live LLM demos are manual smoke tests, not CI dependencies. CI should use
-  synthetic provider tests unless a secret-bearing workflow explicitly opts in.
+## Platform and protocol boundaries
 
-## Next Work
+Client TLS uses the configured VM socket backend: Network.framework on Apple
+platforms, OpenSSL on supported non-Windows Unix-like platforms and SChannel on
+Windows. A build without TLS support fails an HTTPS request rather than
+downgrading it.
 
-- Validate hosted provider demos manually on Windows, Linux, and macOS with
-  real keys.
-- Add a secret-gated GitHub smoke workflow only after deciding which provider
-  should be the canonical CI canary.
-- Add a richer LLM demo/library surface after the CI socket/HTTP/TLS baseline is
-  stable.
-- Expand `rxjson` only where real provider responses expose gaps.
+The client supports bounded buffered and streaming requests, buffered
+compression decoding and explicit retry/redirect/ambiguous-outcome policy.
+The initial server is clear-text and buffered. Server TLS, HTTP/2, WebSockets,
+detached/background lifecycle and streaming handlers require later proposals.
+
+Portable Linux/Windows and package qualification remain open in
+`concurrency/WORKLIST.md`; Mac implementation evidence alone is not a release
+or portability claim.
+
+## Historical baseline
+
+The superseded May 2026 arrangement proved VM sockets, TLS, JSON and the first
+LLM providers with a synchronous connection-close client. That evidence remains
+useful provenance, but its two-client architecture is not the current source
+contract. Use `docs/ai-context/CREXX_CONCURRENCY.md`, the
+[HTTP client/server guide](../books/crexx_library_reference/concurrent_http.md)
+and current source/tests for implementation decisions.

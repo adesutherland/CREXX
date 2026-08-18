@@ -1,0 +1,30 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 212: object_reference_regression_opt
+1/9 Test #212: object_reference_regression_opt ..................   Passed    0.98 sec
+    Start 338: inline_test_block_expr_live_sibling_opt
+2/9 Test #338: inline_test_block_expr_live_sibling_opt ..........   Passed    0.59 sec
+    Start 389: object_reference_regression_run_noopt
+3/9 Test #389: object_reference_regression_run_noopt ............   Passed    0.75 sec
+    Start 390: object_reference_regression_run_opt
+4/9 Test #390: object_reference_regression_run_opt ..............   Passed    0.74 sec
+    Start 724: inline_test_block_expr_live_sibling_run_noopt
+5/9 Test #724: inline_test_block_expr_live_sibling_run_noopt ....   Passed    0.74 sec
+    Start 725: inline_test_block_expr_live_sibling_run_opt
+6/9 Test #725: inline_test_block_expr_live_sibling_run_opt ......   Passed    0.66 sec
+    Start 734: inline_test_binary_class_attr_assign_run_noopt
+7/9 Test #734: inline_test_binary_class_attr_assign_run_noopt ...   Passed    0.74 sec
+    Start 735: inline_test_binary_class_attr_assign_run_opt
+8/9 Test #735: inline_test_binary_class_attr_assign_run_opt .....   Passed    0.66 sec
+    Start 736: inline_test_binary_class_attr_assign_shape
+9/9 Test #736: inline_test_binary_class_attr_assign_shape .......   Passed    0.61 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Label Time Summary:
+binary        =   0.61 sec*proc (1 test)
+compiler      =   0.61 sec*proc (1 test)
+inlining      =   0.61 sec*proc (1 test)
+linked_opt    =   2.07 sec*proc (3 tests)
+regression    =   0.61 sec*proc (1 test)
+
+Total Test time (real) =   6.51 sec

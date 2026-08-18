@@ -68,9 +68,11 @@ enum rxbin007_feature_flags {
     RXBIN007_FEATURE_FIXED_CALLS = 1u << 0,
     RXBIN007_FEATURE_FROZEN_PARSE = 1u << 1,
     RXBIN007_FEATURE_NATIVE_STEM = 1u << 2,
+    RXBIN007_FEATURE_CHANNELS = 1u << 3,
     RXBIN007_SUPPORTED_FEATURES = RXBIN007_FEATURE_FIXED_CALLS |
                                    RXBIN007_FEATURE_FROZEN_PARSE |
-                                   RXBIN007_FEATURE_NATIVE_STEM
+                                   RXBIN007_FEATURE_NATIVE_STEM |
+                                   RXBIN007_FEATURE_CHANNELS
 };
 
 typedef struct bin_space bin_space;
@@ -115,7 +117,7 @@ enum const_pool_type {
     STRING_CONST, BINARY_CONST, DECIMAL_CONST, FLOAT_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
     META_FUNC, META_REG, META_CONST, META_CLEAR,
     META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER, META_INLINE, META_SOURCE_STEP,
-    META_TRACE_EVENT
+    META_TRACE_EVENT, META_TASK_TARGET
 };
 
 /* cREXX chameleon entry in the constant pool
@@ -316,6 +318,16 @@ typedef struct meta_inline_constant {
     size_t symbol;
     size_t payload;
 } meta_inline_constant;
+
+/* Compiler-owned relocation from a binary placeholder to a sealed semantic
+ * graph task binding. The RXBIN writer re-materializes the binding after the
+ * final graph has been built, including after rxlink graph reconstruction. */
+typedef struct meta_task_target_constant {
+    meta_entry base;
+    size_t symbol;
+    size_t binding;
+    uint32_t kind;
+} meta_task_target_constant;
 
 enum rxbin_section_flags {
     RXBIN_SECTION_INST_PACKED = 1u << 0,

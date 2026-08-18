@@ -1,0 +1,59 @@
+PERF3-13 Gate F F1c Mac closeout
+
+Selected implementation
+  - Complete canonical RXCV validation/encoding for all approved scalar,
+    array and record tags, limits, ordering, flags and canonical NaN.
+  - Typed executor register images/results addressed by semantic callable ID;
+    no live VM value or procedure-name string crosses a worker boundary.
+  - Runtime-owned private provider registration with operation validation,
+    duplicate failure atomicity, lifetime pins and GF-B09 fake-provider proof.
+  - Core local provider capabilities 0x000f: bounded admission, cancellation,
+    provider-owned deadlines and completion-order observation.
+  - Structured pool/scope lifecycle with fail-fast/collect-all policy,
+    backpressure, nonblocking/finite waits, cancellation, exactly one terminal
+    completion, drain/cancel close and deterministic teardown.
+  - Executable Level B classes for pools, scopes, tasks, targets/work/context,
+    completions, channels/requests, ChannelValue/codec, endpoint/service
+    contracts and transfer buffers. Their bridge contains only the five RXAS
+    operations.
+
+Explicit current boundary
+  - Process provider type 2 is reserved and reports provider unavailable.
+  - taskscope.ask, taskcontext.endpoint, taskwork kind-3 dispatch and provider
+    pool statistics report UNSUPPORTED_OPERATION (status 19).
+  - Concrete byte endpoints/child processes are F1d; isolated process pools are
+    F1e; Level G task/DO PARALLEL lowering is F1f; concurrent HTTP is F1g.
+
+Compiler/toolchain repairs found through Level B development
+  - CHANNEL_ERROR and TASK_FAILURE are now registered compiler/VM signals and
+    have focused optimized/unoptimized regressions.
+  - Aggregate/binary class-attribute inlining now preserves the optimized
+    inlined body while using normal link/copy/unlink copyback. The structural
+    regression asserts that both calls remain inlined. Broad fail-close is not
+    the final fix for a representable inline shape.
+  - Repository guidance now requires library changes to exercise rxc, rxas,
+    rxlink and rxvm, and requires inliner repairs to preserve supported shape
+    unless equivalence cannot be proved.
+
+QA
+  Focused Debug full-toolchain matrix: 18/18 passed.
+  Dedicated final inliner matrix: 9/9 passed.
+  Full Debug CTest: 2,095/2,095 passed in 305.74 seconds.
+  Focused Apple ASan: 36/36 passed with leak detection disabled.
+  Focused ordinary Release: 20/20 passed.
+  Debug lifecycle/provider/channel subset: 100 consecutive passes per test.
+  Release lifecycle/provider/channel subset: 100 consecutive passes per test.
+  Final complete Debug and ordinary Release builds: passed.
+
+Sanitizer boundary
+  The first leak-enabled run was retained and proves that this macOS ASan
+  runtime aborts with "detect_leaks is not supported on this platform". The
+  identical project runner then passed with leak detection disabled. Runtime
+  allocation census and deterministic teardown checks remained active. This
+  is not a claim of LeakSanitizer coverage; leak-enabled proof remains a Linux
+  qualification item.
+
+Disposition
+  F1c is complete on Mac and ready for a local commit. No push or public plugin
+  ABI is part of this closeout. F1d is next under the already approved
+  overnight sequence.

@@ -1,0 +1,17 @@
+options levelg
+namespace gate_f_task_object_result_required
+
+work: task = .badbox
+  return .badbox(42)
+
+main: procedure = .int
+  answer = work()
+  return 0
+
+badbox: class
+  _answer = .int
+
+  *: factory
+    arg answer = .int
+    _answer = answer
+    return

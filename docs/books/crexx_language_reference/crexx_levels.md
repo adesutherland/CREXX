@@ -18,7 +18,8 @@ that a compiler feature is implemented and tested.
 - Levels E and N are planned DSLSH syntax-highlighting targets for
   Object Rexx and NetRexx source, not as languages that cRexx intends to compile
   or run
-- Levels D, G, and L are the cRexx direction for future language work
+- Level G has an implemented initial task/parallel surface and libraries;
+  Levels D and L remain directions for future language work
 
 ## Level B: Current cRexx
 
@@ -49,7 +50,7 @@ different:
 | Level C | Classic Rexx compatibility. | Not a release compiler language yet. A dedicated DSLSH syntax-highlighting / parser-mode front end now exists as the first concrete compatibility slice. |
 | Level D | A cRexx-compatible extension direction above Classic Rexx. | Direction only. Not a release language yet. |
 | Level E | Object Rexx / ooRexx relationship point. | Planned only as a DSLSH syntax-highlighting target. cRexx does not plan to compile or run ooRexx as Level E. |
-| Level G | General-purpose modern cRexx direction built on Level B. | Directional, with some real library work such as `rxfnsg`; not the baseline user language for this release. |
+| Level G | General-purpose modern cRexx built on Level B. | Initial task declarations, ordinary-call task expressions, `DO PARALLEL`, concurrency classes and concurrent HTTP are implemented behind `OPTIONS LEVELG`; Level G is not the stable baseline language for this release. |
 | Level L | Language-engineering cRexx direction for parser, grammar, AST, and symbol-table work. | Directional, with an initial `rxfnsl` generated-output proving demo; not a release language yet.|
 | Level N | NetRexx relationship point: Rexx-family syntax with Java/JVM integration. | Planned only as a DSLSH syntax-highlighting target. cRexx does not plan to compile or run NetRexx as Level N.|
 
@@ -75,8 +76,15 @@ library/runtime configuration does not require a compiler or lowering change.
 Per-value `RexxValue` flags describe text/binary validity but do not select the
 profile. See [Unicode](unicode.md) for the exact contracts.
 
-Level G owns grapheme-aware and richer Unicode services above the Level B
-codepoint contract. The
+Level G already owns the initial structured-concurrency surface above
+Level B. Its syntax is enabled only by `OPTIONS LEVELG` and lowers through the
+public Level B concurrency classes. See
+[Concurrent programming](../crexx_programming_guide/concurrency.md)
+for checked examples and [Tasks and parallel execution](concurrency.md)
+for the formal source rules.
+
+Level G also owns future grapheme-aware and richer Unicode services above the
+Level B codepoint contract. The
 VM reserves private status bits for normalization-form cache knowledge, but NFC,
 NFD, NFKC, and NFKD bits should only be assigned meaning when Level G APIs set
 and consume them. `utf8proc` is the preferred first implementation candidate for

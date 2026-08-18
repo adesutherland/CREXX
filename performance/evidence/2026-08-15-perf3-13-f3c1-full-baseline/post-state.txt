@@ -1,0 +1,64 @@
+utc=2026-08-15T14:30:58Z
+branch=develop
+commit=9e7d600c8108be9c3f1f568e6bd5b7109e4bf62b
+ M performance/ROADMAP.md
+?? performance/evidence/2026-08-15-perf3-13-f3c1-full-baseline/
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+Apple M5
+10
+cmake version 4.3.2
+CMAKE_BUILD_TYPE:STRING=Release
+CREXX_VM_HANDLER_PANEL:STRING=profile-20
+CREXX_VM_PROFILING:BOOL=OFF
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+15:30  up 32 days,  8:38, 1 user, load averages: 1.24 1.22 1.34
+86506 67651 Ss         00:00 /bin/zsh -c {\012  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'\012  printf 'branch='; git branch --show-current\012  printf 'commit='; git rev-parse HEAD\012  git status --short\012  uname -a\012  sysctl -n machdep.cpu.brand_string\012  sysctl -n hw.logicalcpu\012  cmake --version | head -1\012  rg '^(CMAKE_BUILD_TYPE|CREXX_VM_PROFILING|CREXX_VM_HANDLER_PANEL):' cmake-build-release/CMakeCache.txt\012  pmset -g batt\012  pmset -g custom\012  pmset -g therm\012  uptime\012  ps -axo pid,ppid,stat,etime,command | rg '(^|/)(cmake|ctest|ninja|rxbvm|rxtvm|rxvm)( |$)' || true\012  shasum -a 256 /tmp/crexx-gate-f-cache-control-7108a9c5f/rxbvm /tmp/crexx-gate-f-cache-control-7108a9c5f/rxtvm cmake-build-release/bin/rxbvm cmake-build-release/bin/rxtvm cmake-build-release/bin/library.rxbin cmake-build-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin cmake-build-release/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin cmake-build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin cmake-build-release/tests/benchmarks/benchmark_awfy_towers_opt.rxbin cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin performance/tools/run_cross_runtime_matrix.crexx performance/evidence/2026-08-15-perf3-13-f3c1-full-baseline/manifest.txt performance/evidence/2026-08-15-perf3-13-f3c1-full-baseline/summarize_paired_36.crexx performance/evidence/2026-08-15-perf3-13-f3c1-full-baseline/summarize_common_five_36.crexx\012} > /tmp/crexx-f3c1-baseline-final-post-state.txt 2>&1\012cp /tmp/crexx-f3c1-baseline-final-post-state.txt performance/evidence/2026-08-15-perf3-13-f3c1-full-baseline/post-state.txt\012sed -n '1,90p' /tmp/crexx-f3c1-baseline-final-post-state.txt
+a47c32bded25ef20924ccb1919d43d61734fc4118ee5c3d9af763cfb7fe2c00b  /tmp/crexx-gate-f-cache-control-7108a9c5f/rxbvm
+9d549eca1b956cdb9238740cbbfd14c312f96ed58cfa1e82c4ef00ef9d242be2  /tmp/crexx-gate-f-cache-control-7108a9c5f/rxtvm
+0b46867f13175464722ab23f51b1376859b6881eea84d17452d8e87368e2d8ae  cmake-build-release/bin/rxbvm
+5e9339948c38ac8fcdd26dce60cfd2630190d6613385917e7f3d833d223e3394  cmake-build-release/bin/rxtvm
+2c56bee7e3e4b12f3bff7d99f4abcd312868b60084723e32022e9784fdd8df8b  cmake-build-release/bin/library.rxbin
+a9db0e5dc96ab05fd3b78471fedc4bb641555d8b5c209ae33b1a2f80e8dc9d06  cmake-build-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin
+714cd35e4c4353d3d5d6beba170c9437b71d398c21c5f78381092b657d1e5ed0  cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin
+ded1ae2832085f61f3ac90e4100a1e35041284642a899ab8f931389bbb552554  cmake-build-release/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin
+ea2d6e93788c7574b77a29899a2aac7bd0f2bf5f0d4e5d84dbc2a0934ea74ed7  cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin
+e902a76f3bc6af13a80525030dcbed8e4a5787f1bb4f8abefcb0105fc412a343  cmake-build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin
+46d9742173ddb6bc2545669529d159ad234b559544d35a9bb900ff025e913d67  cmake-build-release/tests/benchmarks/benchmark_awfy_towers_opt.rxbin
+e7e24bdbd42f41d957bc0213d375423491748bee60e6898e2b4c32d1890b7a8f  cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin
+c119a20e1c1e1104fb12e6146891a1e57fad4b916286106f7b5298daa7c56710  performance/tools/run_cross_runtime_matrix.crexx
+b232a3f7bb7d75fab455f70f05b7d7bb2a6836bbda603785f3ce596ead3a39c4  performance/evidence/2026-08-15-perf3-13-f3c1-full-baseline/manifest.txt
+7ae20d9813a1fde086429f03b2b223d3786b1e9c446fe0732197c27559256fef  performance/evidence/2026-08-15-perf3-13-f3c1-full-baseline/summarize_paired_36.crexx
+74d37c635dd125a6da2bc35ea927acb639c6ed3f24156002523da1638a721c1c  performance/evidence/2026-08-15-perf3-13-f3c1-full-baseline/summarize_common_five_36.crexx

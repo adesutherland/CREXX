@@ -1,0 +1,41 @@
+Internal ctest changing into directory: C:/crexx-qa/windows-msvc-2b793c81e-build
+Test project C:/crexx-qa/windows-msvc-2b793c81e-build
+  Test    #1: linked_opt_runtime_artifacts_build
+  Test  #500: gate_f_levelg_rxbvm_noopt
+  Test  #501: gate_f_levelg_rxbvm_opt
+  Test  #502: gate_f_task_method_import_rxbvm_noopt
+  Test  #503: gate_f_task_method_import_rxbvm_opt
+  Test  #504: gate_f_taskwork_import_rxbvm_noopt
+  Test  #505: gate_f_taskwork_import_rxbvm_opt
+  Test  #506: gate_f_bad_scope
+  Test  #507: gate_f_pending_mutation
+  Test  #508: gate_f_pending_return
+  Test  #509: gate_f_pending_reference
+  Test  #510: gate_f_nested_task_wait
+  Test  #511: gate_f_task_exposed_arg
+  Test  #512: gate_f_task_reference_arg
+  Test  #513: gate_f_task_receiver
+  Test  #514: gate_f_dynamic_task_target
+  Test  #515: gate_f_scope_reused
+  Test  #516: gate_f_task_levelb
+  Test  #517: gate_f_parallel_levelb
+  Test  #518: gate_f_parallel_expr_levelb
+  Test  #519: gate_f_task_target_levelb
+  Test  #520: gate_f_task_factory_target_levelb
+  Test  #521: gate_f_taskwork_required
+  Test  #522: gate_f_taskwork_factory_arg
+  Test  #523: gate_f_task_object_result_required
+  Test  #524: gate_f_task_interface_result
+  Test  #525: gate_f_contextual_levelb
+  Test  #526: signal_control_unwind_rxbvm_noopt
+  Test  #527: signal_control_unwind_rxbvm_opt
+  Test #1586: docs_concurrency_basic_rxbvm_noopt
+  Test #1587: docs_concurrency_basic_rxbvm_opt
+  Test #1588: docs_concurrency_providers_rxbvm_noopt
+  Test #1589: docs_concurrency_providers_rxbvm_opt
+  Test #1590: docs_concurrency_transferable_objects_rxbvm_noopt
+  Test #1591: docs_concurrency_transferable_objects_rxbvm_opt
+  Test #1592: docs_concurrency_taskwork_rxbvm_noopt
+  Test #1593: docs_concurrency_taskwork_rxbvm_opt
+
+Total Tests: 37

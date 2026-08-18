@@ -1,0 +1,451 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(linked_opt_runtime_artifacts_build\|rxgraph_unit\|import_discovery_snapshot\|gate_f_channel_contract\|test_address_redirect_run_noopt\|test_address_redirect_run_opt\|gate_f_levelb_contract\|gate_f_levelg_rxbvm_noopt\|gate_f_levelg_rxbvm_opt\|gate_f_levelg_rxtvm_noopt\|gate_f_levelg_rxtvm_opt\|gate_f_task_method_import_rxbvm_noopt\|gate_f_task_method_import_rxbvm_opt\|gate_f_task_method_import_rxtvm_noopt\|gate_f_task_method_import_rxtvm_opt\|gate_f_taskwork_import_rxbvm_noopt\|gate_f_taskwork_import_rxbvm_opt\|gate_f_taskwork_import_rxtvm_noopt\|gate_f_taskwork_import_rxtvm_opt\|gate_f_bad_scope\|gate_f_pending_mutation\|gate_f_pending_return\|gate_f_pending_reference\|gate_f_nested_task_wait\|gate_f_task_exposed_arg\|gate_f_task_reference_arg\|gate_f_task_receiver\|gate_f_dynamic_task_target\|gate_f_scope_reused\|gate_f_task_levelb\|gate_f_parallel_levelb\|gate_f_parallel_expr_levelb\|gate_f_task_target_levelb\|gate_f_task_factory_target_levelb\|gate_f_taskwork_required\|gate_f_taskwork_factory_arg\|gate_f_task_object_result_required\|gate_f_task_interface_result\|gate_f_contextual_levelb\|signal_control_unwind_rxbvm_noopt\|signal_control_unwind_rxbvm_opt\|signal_control_unwind_rxtvm_noopt\|signal_control_unwind_rxtvm_opt\|address_llm_provider\|e2_active_context_isolation\|rxlink_format_check\|rxvmmemory_allocator\|rxvmworker_lifecycle\|rxvmchannel_provider_registry\|rxvmbyteendpoint_substrate\|rxvmchannel_byte_provider\|rxvmactive_isolation\|rxvmplugin_context_ownership\|rxpa_static_catalogue_replay\|rxpa_static_session_lifecycle\|rxpa_session_factory_failure_rollback\|rxpa_session_manifest_fail_closed\|rxpa_rxmath_static_mixed_policy\|rxpa_legacy_call_serialization\|rxpa_process_reentrant_overlap\|rxpa_legacy_recursive_reentry\|rxpa_branch_free_load_binding\|rxpa_bound_legacy_serialization\|rxpa_legacy_transition_quiescence\|rxasdispatchcontract-rxbvm\|rxasdispatchcontract-rxtvm\|gate_f_channel_local_rxbvm\|gate_f_channel_local_rxtvm\|rxvmchannel_process_crash_replacement\|gate_f_channel_process_rxbvm\|gate_f_channel_process_rxtvm\|retired_process_opcode_466_rxbvm\|retired_process_opcode_466_rxtvm\|retired_process_opcode_467_rxbvm\|retired_process_opcode_467_rxtvm\|retired_process_opcode_468_rxbvm\|retired_process_opcode_468_rxtvm\|retired_process_opcode_469_rxbvm\|retired_process_opcode_469_rxtvm\|retired_process_opcode_470_rxbvm\|retired_process_opcode_470_rxtvm\|retired_process_opcode_471_rxbvm\|retired_process_opcode_471_rxtvm\|program_generation_control-rxvml\|program_generation_control-rxbvml\|program_generation_control-rxtvml\|persistent_worker_executor-rxvml\|persistent_worker_executor-rxvml-doorbell-stress\|persistent_worker_executor-rxvml-sparse-owner\|persistent_worker_executor-rxvml-sparse-owner-stress\|persistent_worker_executor-rxvml-sparse-progress\|persistent_worker_executor-rxvml-native-return\|persistent_worker_executor-rxbvml\|persistent_worker_executor-rxbvml-doorbell-stress\|persistent_worker_executor-rxbvml-sparse-owner\|persistent_worker_executor-rxbvml-sparse-owner-stress\|persistent_worker_executor-rxbvml-sparse-progress\|persistent_worker_executor-rxbvml-native-return\|persistent_worker_executor-rxtvml\|persistent_worker_executor-rxtvml-doorbell-stress\|persistent_worker_executor-rxtvml-sparse-owner\|persistent_worker_executor-rxtvml-sparse-owner-stress\|persistent_worker_executor-rxtvml-sparse-progress\|persistent_worker_executor-rxtvml-native-return\|ts_address_array_lifecycle_noopt\|ts_address_array_lifecycle_opt\|ts_address_spawn_transfer_noopt\|ts_address_spawn_transfer_opt\|ts_address_array_lifecycle_rxbvm_noopt\|ts_address_array_lifecycle_rxbvm_opt\|ts_address_spawn_transfer_rxbvm_noopt\|ts_address_spawn_transfer_rxbvm_opt\|ts_address_spawn_transfer_rxtvm_noopt\|ts_address_spawn_transfer_rxtvm_opt\|classlib_rexxdoc_coverage\|rexx_api_doc_exposed_regression\|gate_f_levelb_bridge_inspection\|testConcurrency_noopt\|testConcurrency_opt\|docs_concurrency_basic_rxbvm_noopt\|docs_concurrency_basic_rxbvm_opt\|docs_concurrency_basic_rxtvm_noopt\|docs_concurrency_basic_rxtvm_opt\|docs_concurrency_providers_rxbvm_noopt\|docs_concurrency_providers_rxbvm_opt\|docs_concurrency_providers_rxtvm_noopt\|docs_concurrency_providers_rxtvm_opt\|docs_concurrency_transferable_objects_rxbvm_noopt\|docs_concurrency_transferable_objects_rxbvm_opt\|docs_concurrency_transferable_objects_rxtvm_noopt\|docs_concurrency_transferable_objects_rxtvm_opt\|docs_concurrency_taskwork_rxbvm_noopt\|docs_concurrency_taskwork_rxbvm_opt\|docs_concurrency_taskwork_rxtvm_noopt\|docs_concurrency_taskwork_rxtvm_opt\|testTaskContextEndpoint_rxbvm_noopt\|testTaskContextEndpoint_rxbvm_opt\|testTaskContextEndpoint_rxtvm_noopt\|testTaskContextEndpoint_rxtvm_opt\|ts_http_service_contract_noopt\|ts_http_service_contract_opt\|ts_llm_ollama_noopt\|ts_llm_ollama_opt\|ts_llm_providers_noopt\|ts_llm_providers_opt\|ts_http_server_rxbvm_noopt\|ts_http_server_rxbvm_opt\|ts_http_server_rxtvm_noopt\|ts_http_server_rxtvm_opt\|ts_http_server_failures_rxbvm_noopt\|ts_http_server_failures_rxbvm_opt\|ts_http_server_failures_rxtvm_noopt\|ts_http_server_failures_rxtvm_opt\|ts_http_pooled_rxbvm_noopt\|ts_http_pooled_rxbvm_opt\|ts_http_pooled_rxtvm_noopt\|ts_http_pooled_rxtvm_opt\|ts_http_streaming_rxbvm_noopt\|ts_http_streaming_rxbvm_opt\|ts_http_streaming_rxtvm_noopt\|ts_http_streaming_rxtvm_opt\|ts_http_crexx_rag_rxbvm_noopt\|ts_http_crexx_rag_rxbvm_opt\|ts_http_crexx_rag_rxtvm_noopt\|ts_http_crexx_rag_rxtvm_opt\|ts_http_tls_live_rxbvm_noopt\|ts_http_tls_live_rxbvm_opt\|ts_http_tls_live_rxtvm_noopt\|ts_http_tls_live_rxtvm_opt\|ts_http_policy_rxbvm_noopt\|ts_http_policy_rxbvm_opt\|ts_http_policy_rxtvm_noopt\|ts_http_policy_rxtvm_opt\|ts_http_codec_rxbvm_noopt\|ts_http_codec_rxbvm_opt\|ts_http_codec_rxtvm_noopt\|ts_http_codec_rxtvm_opt\|rxpa_process_reentrant_manifest\|rxpa_invalid_manifest_is_legacy\|rxpa_dynamic_context_ownership\)\$ --parallel 8
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+        Start    1: linked_opt_runtime_artifacts_build
+  1/180 Test    #1: linked_opt_runtime_artifacts_build ......................   Passed   44.10 sec
+        Start  515: gate_f_task_method_import_rxtvm_opt
+        Start 1639: classlib_rexxdoc_coverage
+        Start  444: test_address_redirect_run_opt
+        Start  443: test_address_redirect_run_noopt
+        Start 1716: ts_http_server_rxtvm_noopt
+        Start 1715: ts_http_server_rxbvm_opt
+        Start 1714: ts_http_server_rxbvm_noopt
+        Start 1717: ts_http_server_rxtvm_opt
+  2/180 Test  #444: test_address_redirect_run_opt ...........................   Passed    5.76 sec
+        Start 1721: ts_http_server_failures_rxtvm_opt
+  3/180 Test  #443: test_address_redirect_run_noopt .........................   Passed    6.24 sec
+        Start 1718: ts_http_server_failures_rxbvm_noopt
+  4/180 Test #1639: classlib_rexxdoc_coverage ...............................   Passed    6.62 sec
+        Start 1719: ts_http_server_failures_rxbvm_opt
+  5/180 Test #1717: ts_http_server_rxtvm_opt ................................   Passed    8.36 sec
+        Start 1720: ts_http_server_failures_rxtvm_noopt
+  6/180 Test #1716: ts_http_server_rxtvm_noopt ..............................   Passed    8.42 sec
+        Start 1731: ts_http_crexx_rag_rxbvm_opt
+  7/180 Test #1715: ts_http_server_rxbvm_opt ................................   Passed    8.98 sec
+        Start 1727: ts_http_streaming_rxbvm_opt
+  8/180 Test #1714: ts_http_server_rxbvm_noopt ..............................   Passed    9.17 sec
+        Start 1726: ts_http_streaming_rxbvm_noopt
+  9/180 Test #1721: ts_http_server_failures_rxtvm_opt .......................   Passed    9.02 sec
+        Start 1733: ts_http_crexx_rag_rxtvm_opt
+ 10/180 Test #1731: ts_http_crexx_rag_rxbvm_opt .............................   Passed    6.37 sec
+        Start 1732: ts_http_crexx_rag_rxtvm_noopt
+ 11/180 Test #1718: ts_http_server_failures_rxbvm_noopt .....................   Passed    8.96 sec
+        Start 1730: ts_http_crexx_rag_rxbvm_noopt
+ 12/180 Test #1727: ts_http_streaming_rxbvm_opt .............................   Passed    6.55 sec
+        Start 1729: ts_http_streaming_rxtvm_opt
+ 13/180 Test #1726: ts_http_streaming_rxbvm_noopt ...........................   Passed    6.46 sec
+        Start 1728: ts_http_streaming_rxtvm_noopt
+ 14/180 Test #1719: ts_http_server_failures_rxbvm_opt .......................   Passed    9.15 sec
+        Start 1738: ts_http_policy_rxbvm_noopt
+ 15/180 Test #1720: ts_http_server_failures_rxtvm_noopt .....................   Passed    8.75 sec
+        Start 1740: ts_http_policy_rxtvm_noopt
+ 16/180 Test #1732: ts_http_crexx_rag_rxtvm_noopt ...........................   Passed    6.00 sec
+        Start 1741: ts_http_policy_rxtvm_opt
+ 17/180 Test #1733: ts_http_crexx_rag_rxtvm_opt .............................   Passed    6.05 sec
+        Start 1739: ts_http_policy_rxbvm_opt
+ 18/180 Test #1730: ts_http_crexx_rag_rxbvm_noopt ...........................   Passed    5.96 sec
+        Start  931: address_llm_provider
+ 19/180 Test #1729: ts_http_streaming_rxtvm_opt .............................   Passed    6.11 sec
+        Start 1679: testConcurrency_noopt
+ 20/180 Test #1728: ts_http_streaming_rxtvm_noopt ...........................   Passed    6.16 sec
+        Start 1742: ts_http_codec_rxbvm_noopt
+ 21/180 Test #1742: ts_http_codec_rxbvm_noopt ...............................   Passed    1.04 sec
+        Start 1744: ts_http_codec_rxtvm_noopt
+ 22/180 Test #1744: ts_http_codec_rxtvm_noopt ...............................   Passed    1.04 sec
+        Start 1724: ts_http_pooled_rxtvm_noopt
+ 23/180 Test #1738: ts_http_policy_rxbvm_noopt ..............................   Passed    9.84 sec
+        Start 1725: ts_http_pooled_rxtvm_opt
+ 24/180 Test #1740: ts_http_policy_rxtvm_noopt ..............................   Passed   10.07 sec
+        Start 1723: ts_http_pooled_rxbvm_opt
+ 25/180 Test #1724: ts_http_pooled_rxtvm_noopt ..............................   Passed    7.11 sec
+        Start 1722: ts_http_pooled_rxbvm_noopt
+ 26/180 Test #1739: ts_http_policy_rxbvm_opt ................................   Passed   11.35 sec
+        Start 1737: ts_http_tls_live_rxtvm_opt
+ 27/180 Test #1741: ts_http_policy_rxtvm_opt ................................   Passed   11.43 sec
+        Start 1736: ts_http_tls_live_rxtvm_noopt
+ 28/180 Test #1725: ts_http_pooled_rxtvm_opt ................................   Passed    7.35 sec
+        Start 1735: ts_http_tls_live_rxbvm_opt
+ 29/180 Test #1723: ts_http_pooled_rxbvm_opt ................................   Passed    7.10 sec
+        Start 1734: ts_http_tls_live_rxbvm_noopt
+ 30/180 Test #1679: testConcurrency_noopt ...................................   Passed   14.35 sec
+        Start 1711: ts_llm_ollama_opt
+ 31/180 Test #1722: ts_http_pooled_rxbvm_noopt ..............................   Passed    6.43 sec
+        Start 1713: ts_llm_providers_opt
+ 32/180 Test #1737: ts_http_tls_live_rxtvm_opt ..............................   Passed    5.26 sec
+        Start 2137: rxpa_invalid_manifest_is_legacy
+ 33/180 Test #1736: ts_http_tls_live_rxtvm_noopt ............................   Passed    5.25 sec
+        Start 1680: testConcurrency_opt
+ 34/180 Test #1735: ts_http_tls_live_rxbvm_opt ..............................   Passed    5.19 sec
+        Start 1710: ts_llm_ollama_noopt
+ 35/180 Test #2137: rxpa_invalid_manifest_is_legacy .........................   Passed    0.91 sec
+        Start 1712: ts_llm_providers_noopt
+ 36/180 Test #1734: ts_http_tls_live_rxbvm_noopt ............................   Passed    5.19 sec
+        Start  537: gate_f_task_object_result_required
+ 37/180 Test  #515: gate_f_task_method_import_rxtvm_opt .....................   Passed   41.46 sec
+        Start  513: gate_f_task_method_import_rxbvm_opt
+ 38/180 Test #1711: ts_llm_ollama_opt .......................................   Passed    6.29 sec
+        Start  538: gate_f_task_interface_result
+ 39/180 Test #1680: testConcurrency_opt .....................................   Passed    5.84 sec
+        Start 1745: ts_http_codec_rxtvm_opt
+ 40/180 Test #1745: ts_http_codec_rxtvm_opt .................................   Passed    1.63 sec
+        Start  935: e2_active_context_isolation
+ 41/180 Test #1713: ts_llm_providers_opt ....................................   Passed    8.02 sec
+        Start 2136: rxpa_process_reentrant_manifest
+ 42/180 Test  #537: gate_f_task_object_result_required ......................   Passed    6.13 sec
+        Start 1743: ts_http_codec_rxbvm_opt
+ 43/180 Test #2136: rxpa_process_reentrant_manifest .........................   Passed    0.22 sec
+        Start 1103: rxpa_static_session_lifecycle
+ 44/180 Test #1103: rxpa_static_session_lifecycle ...........................   Passed    0.31 sec
+        Start 1067: rxlink_format_check
+ 45/180 Test #1067: rxlink_format_check .....................................   Passed    0.75 sec
+        Start 1102: rxpa_static_catalogue_replay
+ 46/180 Test #1102: rxpa_static_catalogue_replay ............................   Passed    0.24 sec
+        Start 1105: rxpa_session_manifest_fail_closed
+ 47/180 Test #1743: ts_http_codec_rxbvm_opt .................................   Passed    1.47 sec
+        Start    2: rxgraph_unit
+ 48/180 Test #1105: rxpa_session_manifest_fail_closed .......................   Passed    0.23 sec
+        Start 1104: rxpa_session_factory_failure_rollback
+ 49/180 Test #1104: rxpa_session_factory_failure_rollback ...................   Passed    0.22 sec
+        Start 2138: rxpa_dynamic_context_ownership
+ 50/180 Test #2138: rxpa_dynamic_context_ownership ..........................   Passed    0.24 sec
+        Start  539: gate_f_contextual_levelb
+ 51/180 Test    #2: rxgraph_unit ............................................   Passed    0.68 sec
+        Start  529: gate_f_scope_reused
+ 52/180 Test  #935: e2_active_context_isolation .............................   Passed    3.27 sec
+        Start  521: gate_f_pending_mutation
+ 53/180 Test #1710: ts_llm_ollama_noopt .....................................   Passed   10.63 sec
+        Start  536: gate_f_taskwork_factory_arg
+ 54/180 Test  #538: gate_f_task_interface_result ............................   Passed    6.52 sec
+        Start  522: gate_f_pending_return
+ 55/180 Test  #529: gate_f_scope_reused .....................................   Passed    5.49 sec
+        Start  520: gate_f_bad_scope
+ 56/180 Test  #521: gate_f_pending_mutation .................................   Passed    5.46 sec
+        Start  524: gate_f_nested_task_wait
+ 57/180 Test  #536: gate_f_taskwork_factory_arg .............................   Passed    5.32 sec
+        Start  528: gate_f_dynamic_task_target
+ 58/180 Test  #522: gate_f_pending_return ...................................   Passed    5.35 sec
+        Start  523: gate_f_pending_reference
+ 59/180 Test  #539: gate_f_contextual_levelb ................................   Passed    6.58 sec
+        Start  535: gate_f_taskwork_required
+ 60/180 Test  #520: gate_f_bad_scope ........................................   Passed    5.33 sec
+        Start 1582: ts_address_spawn_transfer_rxtvm_opt
+ 61/180 Test  #524: gate_f_nested_task_wait .................................   Passed    5.41 sec
+        Start 1581: ts_address_spawn_transfer_rxtvm_noopt
+ 62/180 Test  #523: gate_f_pending_reference ................................   Passed    5.39 sec
+        Start 1580: ts_address_spawn_transfer_rxbvm_opt
+ 63/180 Test  #528: gate_f_dynamic_task_target ..............................   Passed    5.49 sec
+        Start 1332: ts_address_spawn_transfer_opt
+ 64/180 Test  #535: gate_f_taskwork_required ................................   Passed    5.41 sec
+        Start 1579: ts_address_spawn_transfer_rxbvm_noopt
+ 65/180 Test #1712: ts_llm_providers_noopt ..................................   Passed   22.20 sec
+        Start 1331: ts_address_spawn_transfer_noopt
+ 66/180 Test  #931: address_llm_provider ....................................   Passed   45.47 sec
+        Start 1111: rxpa_bound_legacy_serialization
+ 67/180 Test #1582: ts_address_spawn_transfer_rxtvm_opt .....................   Passed    8.19 sec
+        Start 1107: rxpa_legacy_call_serialization
+ 68/180 Test #1111: rxpa_bound_legacy_serialization .........................   Passed    0.29 sec
+        Start  507: gate_f_levelb_contract
+ 69/180 Test #1581: ts_address_spawn_transfer_rxtvm_noopt ...................   Passed    7.94 sec
+        Start 1184: rxvmchannel_process_crash_replacement
+ 70/180 Test #1107: rxpa_legacy_call_serialization ..........................   Passed    0.28 sec
+        Start 1108: rxpa_process_reentrant_overlap
+ 71/180 Test #1108: rxpa_process_reentrant_overlap ..........................   Passed    0.22 sec
+        Start 1112: rxpa_legacy_transition_quiescence
+ 72/180 Test #1579: ts_address_spawn_transfer_rxbvm_noopt ...................   Passed    7.84 sec
+        Start 1166: rxasdispatchcontract-rxbvm
+ 73/180 Test #1112: rxpa_legacy_transition_quiescence .......................   Passed    0.23 sec
+        Start 1167: rxasdispatchcontract-rxtvm
+ 74/180 Test #1580: ts_address_spawn_transfer_rxbvm_opt .....................   Passed    8.03 sec
+        Start  532: gate_f_parallel_expr_levelb
+ 75/180 Test #1166: rxasdispatchcontract-rxbvm ..............................   Passed    0.18 sec
+        Start  534: gate_f_task_factory_target_levelb
+ 76/180 Test #1167: rxasdispatchcontract-rxtvm ..............................   Passed    0.19 sec
+        Start  526: gate_f_task_reference_arg
+ 77/180 Test #1332: ts_address_spawn_transfer_opt ...........................   Passed    8.26 sec
+        Start  525: gate_f_task_exposed_arg
+ 78/180 Test #1331: ts_address_spawn_transfer_noopt .........................   Passed    7.65 sec
+        Start  527: gate_f_task_receiver
+ 79/180 Test  #532: gate_f_parallel_expr_levelb .............................   Passed    1.49 sec
+        Start  533: gate_f_task_target_levelb
+ 80/180 Test  #534: gate_f_task_factory_target_levelb .......................   Passed    1.47 sec
+        Start  530: gate_f_task_levelb
+ 81/180 Test  #526: gate_f_task_reference_arg ...............................   Passed    1.51 sec
+        Start  531: gate_f_parallel_levelb
+ 82/180 Test  #525: gate_f_task_exposed_arg .................................   Passed    1.52 sec
+        Start 1099: rxvmchannel_byte_provider
+ 83/180 Test  #527: gate_f_task_receiver ....................................   Passed    1.59 sec
+        Start  345: gate_f_channel_contract
+ 84/180 Test #1184: rxvmchannel_process_crash_replacement ...................   Passed    3.02 sec
+        Start 1186: gate_f_channel_process_rxtvm
+ 85/180 Test  #533: gate_f_task_target_levelb ...............................   Passed    1.80 sec
+        Start 1185: gate_f_channel_process_rxbvm
+ 86/180 Test  #530: gate_f_task_levelb ......................................   Passed    1.78 sec
+        Start 1253: persistent_worker_executor-rxvml
+ 87/180 Test  #531: gate_f_parallel_levelb ..................................   Passed    1.78 sec
+        Start 1267: persistent_worker_executor-rxbvml
+ 88/180 Test #1099: rxvmchannel_byte_provider ...............................   Passed    2.00 sec
+        Start 1281: persistent_worker_executor-rxtvml
+ 89/180 Test #1186: gate_f_channel_process_rxtvm ............................   Passed    1.46 sec
+        Start 1109: rxpa_legacy_recursive_reentry
+ 90/180 Test #1109: rxpa_legacy_recursive_reentry ...........................   Passed    0.16 sec
+        Start 1106: rxpa_rxmath_static_mixed_policy
+ 91/180 Test #1106: rxpa_rxmath_static_mixed_policy .........................   Passed    0.18 sec
+        Start 1110: rxpa_branch_free_load_binding
+ 92/180 Test #1110: rxpa_branch_free_load_binding ...........................   Passed    0.20 sec
+        Start 1098: rxvmbyteendpoint_substrate
+ 93/180 Test  #345: gate_f_channel_contract .................................   Passed    2.32 sec
+        Start 1250: program_generation_control-rxvml
+ 94/180 Test  #507: gate_f_levelb_contract ..................................   Passed    5.20 sec
+        Start 1097: rxvmchannel_provider_registry
+ 95/180 Test #1185: gate_f_channel_process_rxbvm ............................   Passed    1.28 sec
+        Start 1252: program_generation_control-rxtvml
+ 96/180 Test #1253: persistent_worker_executor-rxvml ........................   Passed    1.46 sec
+        Start 1251: program_generation_control-rxbvml
+ 97/180 Test #1267: persistent_worker_executor-rxbvml .......................   Passed    1.77 sec
+        Start 1255: persistent_worker_executor-rxvml-sparse-owner
+ 98/180 Test #1098: rxvmbyteendpoint_substrate ..............................   Passed    1.03 sec
+        Start 1283: persistent_worker_executor-rxtvml-sparse-owner
+ 99/180 Test #1281: persistent_worker_executor-rxtvml .......................   Passed    1.96 sec
+        Start 1578: ts_address_array_lifecycle_rxbvm_opt
+100/180 Test #1255: persistent_worker_executor-rxvml-sparse-owner ...........   Passed    0.76 sec
+        Start 1100: rxvmactive_isolation
+101/180 Test #1250: program_generation_control-rxvml ........................   Passed    1.51 sec
+        Start 1269: persistent_worker_executor-rxbvml-sparse-owner
+102/180 Test #1283: persistent_worker_executor-rxtvml-sparse-owner ..........   Passed    0.84 sec
+        Start 1577: ts_address_array_lifecycle_rxbvm_noopt
+103/180 Test #1097: rxvmchannel_provider_registry ...........................   Passed    2.03 sec
+        Start 1258: persistent_worker_executor-rxvml-native-return
+104/180 Test #1578: ts_address_array_lifecycle_rxbvm_opt ....................   Passed    0.96 sec
+        Start 1187: retired_process_opcode_466_rxbvm
+105/180 Test #1258: persistent_worker_executor-rxvml-native-return ..........   Passed    0.28 sec
+        Start 1194: retired_process_opcode_469_rxtvm
+106/180 Test #1269: persistent_worker_executor-rxbvml-sparse-owner ..........   Passed    0.84 sec
+        Start 1195: retired_process_opcode_470_rxbvm
+107/180 Test #1187: retired_process_opcode_466_rxbvm ........................   Passed    0.18 sec
+        Start 1191: retired_process_opcode_468_rxbvm
+108/180 Test #1194: retired_process_opcode_469_rxtvm ........................   Passed    0.18 sec
+        Start 1198: retired_process_opcode_471_rxtvm
+109/180 Test #1195: retired_process_opcode_470_rxbvm ........................   Passed    0.17 sec
+        Start 1193: retired_process_opcode_469_rxbvm
+110/180 Test #1577: ts_address_array_lifecycle_rxbvm_noopt ..................   Passed    0.69 sec
+        Start 1188: retired_process_opcode_466_rxtvm
+111/180 Test #1191: retired_process_opcode_468_rxbvm ........................   Passed    0.17 sec
+        Start 1190: retired_process_opcode_467_rxtvm
+112/180 Test #1252: program_generation_control-rxtvml .......................   Passed    2.57 sec
+        Start 1189: retired_process_opcode_467_rxbvm
+113/180 Test #1198: retired_process_opcode_471_rxtvm ........................   Passed    0.17 sec
+        Start 1197: retired_process_opcode_471_rxbvm
+114/180 Test #1193: retired_process_opcode_469_rxbvm ........................   Passed    0.18 sec
+        Start 1192: retired_process_opcode_468_rxtvm
+115/180 Test #1190: retired_process_opcode_467_rxtvm ........................   Passed    0.17 sec
+        Start 1196: retired_process_opcode_470_rxtvm
+116/180 Test #1188: retired_process_opcode_466_rxtvm ........................   Passed    0.18 sec
+        Start 1330: ts_address_array_lifecycle_opt
+117/180 Test #1189: retired_process_opcode_467_rxbvm ........................   Passed    0.18 sec
+        Start 1329: ts_address_array_lifecycle_noopt
+118/180 Test #1197: retired_process_opcode_471_rxbvm ........................   Passed    0.19 sec
+        Start 1286: persistent_worker_executor-rxtvml-native-return
+119/180 Test #1192: retired_process_opcode_468_rxtvm ........................   Passed    0.19 sec
+        Start 1272: persistent_worker_executor-rxbvml-native-return
+120/180 Test #1196: retired_process_opcode_470_rxtvm ........................   Passed    0.19 sec
+        Start 1256: persistent_worker_executor-rxvml-sparse-owner-stress
+121/180 Test #1256: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.20 sec
+        Start 1254: persistent_worker_executor-rxvml-doorbell-stress
+122/180 Test #1286: persistent_worker_executor-rxtvml-native-return .........   Passed    0.28 sec
+        Start 1257: persistent_worker_executor-rxvml-sparse-progress
+123/180 Test #1272: persistent_worker_executor-rxbvml-native-return .........   Passed    0.31 sec
+        Start 1183: gate_f_channel_local_rxtvm
+124/180 Test #1251: program_generation_control-rxbvml .......................   Passed    2.97 sec
+        Start 1182: gate_f_channel_local_rxbvm
+125/180 Test #1254: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.20 sec
+        Start 1284: persistent_worker_executor-rxtvml-sparse-owner-stress
+126/180 Test #1257: persistent_worker_executor-rxvml-sparse-progress ........   Passed    0.19 sec
+        Start 1270: persistent_worker_executor-rxbvml-sparse-owner-stress
+127/180 Test #1183: gate_f_channel_local_rxtvm ..............................   Passed    0.23 sec
+        Start 1095: rxvmmemory_allocator
+128/180 Test #1182: gate_f_channel_local_rxbvm ..............................   Passed    0.22 sec
+        Start 1282: persistent_worker_executor-rxtvml-doorbell-stress
+129/180 Test #1284: persistent_worker_executor-rxtvml-sparse-owner-stress ...   Passed    0.23 sec
+        Start 1268: persistent_worker_executor-rxbvml-doorbell-stress
+130/180 Test #1329: ts_address_array_lifecycle_noopt ........................   Passed    0.74 sec
+        Start 1285: persistent_worker_executor-rxtvml-sparse-progress
+131/180 Test #1270: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.22 sec
+        Start 1271: persistent_worker_executor-rxbvml-sparse-progress
+132/180 Test #1282: persistent_worker_executor-rxtvml-doorbell-stress .......   Passed    0.21 sec
+        Start 1096: rxvmworker_lifecycle
+133/180 Test #1095: rxvmmemory_allocator ....................................   Passed    0.25 sec
+        Start 1641: gate_f_levelb_bridge_inspection
+134/180 Test #1641: gate_f_levelb_bridge_inspection .........................   Passed    0.02 sec
+        Start   11: import_discovery_snapshot
+135/180 Test #1285: persistent_worker_executor-rxtvml-sparse-progress .......   Passed    0.20 sec
+        Start  540: signal_control_unwind_rxbvm_noopt
+136/180 Test #1268: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.22 sec
+        Start  541: signal_control_unwind_rxbvm_opt
+137/180 Test #1271: persistent_worker_executor-rxbvml-sparse-progress .......   Passed    0.19 sec
+        Start  542: signal_control_unwind_rxtvm_noopt
+138/180 Test #1330: ts_address_array_lifecycle_opt ..........................   Passed    1.06 sec
+        Start  543: signal_control_unwind_rxtvm_opt
+139/180 Test #1096: rxvmworker_lifecycle ....................................   Passed    0.17 sec
+        Start 1101: rxvmplugin_context_ownership
+140/180 Test #1100: rxvmactive_isolation ....................................   Passed    2.41 sec
+        Start 1640: rexx_api_doc_exposed_regression
+141/180 Test   #11: import_discovery_snapshot ...............................   Passed    1.61 sec
+        Start 1687: docs_concurrency_basic_rxbvm_noopt
+142/180 Test #1101: rxvmplugin_context_ownership ............................   Passed    1.95 sec
+        Start 1688: docs_concurrency_basic_rxbvm_opt
+143/180 Test  #543: signal_control_unwind_rxtvm_opt .........................   Passed    5.49 sec
+        Start 1689: docs_concurrency_basic_rxtvm_noopt
+144/180 Test  #541: signal_control_unwind_rxbvm_opt .........................   Passed    5.53 sec
+        Start 1690: docs_concurrency_basic_rxtvm_opt
+145/180 Test  #540: signal_control_unwind_rxbvm_noopt .......................   Passed    5.56 sec
+        Start 1691: docs_concurrency_providers_rxbvm_noopt
+146/180 Test  #542: signal_control_unwind_rxtvm_noopt .......................   Passed    5.54 sec
+        Start 1692: docs_concurrency_providers_rxbvm_opt
+147/180 Test #1687: docs_concurrency_basic_rxbvm_noopt ......................   Passed    4.19 sec
+        Start 1693: docs_concurrency_providers_rxtvm_noopt
+148/180 Test #1688: docs_concurrency_basic_rxbvm_opt ........................   Passed    4.12 sec
+        Start 1694: docs_concurrency_providers_rxtvm_opt
+149/180 Test #1689: docs_concurrency_basic_rxtvm_noopt ......................   Passed    4.10 sec
+        Start 1695: docs_concurrency_transferable_objects_rxbvm_noopt
+150/180 Test #1690: docs_concurrency_basic_rxtvm_opt ........................   Passed    4.12 sec
+        Start 1696: docs_concurrency_transferable_objects_rxbvm_opt
+151/180 Test  #513: gate_f_task_method_import_rxbvm_opt .....................   Passed   44.29 sec
+        Start  512: gate_f_task_method_import_rxbvm_noopt
+152/180 Test #1692: docs_concurrency_providers_rxbvm_opt ....................   Passed    5.36 sec
+        Start 1697: docs_concurrency_transferable_objects_rxtvm_noopt
+153/180 Test #1691: docs_concurrency_providers_rxbvm_noopt ..................   Passed    5.39 sec
+        Start 1698: docs_concurrency_transferable_objects_rxtvm_opt
+154/180 Test #1693: docs_concurrency_providers_rxtvm_noopt ..................   Passed    5.38 sec
+        Start 1699: docs_concurrency_taskwork_rxbvm_noopt
+155/180 Test #1694: docs_concurrency_providers_rxtvm_opt ....................   Passed    5.49 sec
+        Start 1700: docs_concurrency_taskwork_rxbvm_opt
+156/180 Test #1695: docs_concurrency_transferable_objects_rxbvm_noopt .......   Passed    3.94 sec
+        Start 1701: docs_concurrency_taskwork_rxtvm_noopt
+157/180 Test #1696: docs_concurrency_transferable_objects_rxbvm_opt .........   Passed    3.93 sec
+        Start 1702: docs_concurrency_taskwork_rxtvm_opt
+158/180 Test #1698: docs_concurrency_transferable_objects_rxtvm_opt .........   Passed    4.27 sec
+        Start 1703: testTaskContextEndpoint_rxbvm_noopt
+159/180 Test #1697: docs_concurrency_transferable_objects_rxtvm_noopt .......   Passed    4.34 sec
+        Start 1704: testTaskContextEndpoint_rxbvm_opt
+160/180 Test #1699: docs_concurrency_taskwork_rxbvm_noopt ...................   Passed    5.67 sec
+        Start 1705: testTaskContextEndpoint_rxtvm_noopt
+161/180 Test #1700: docs_concurrency_taskwork_rxbvm_opt .....................   Passed    5.65 sec
+        Start 1706: testTaskContextEndpoint_rxtvm_opt
+162/180 Test #1702: docs_concurrency_taskwork_rxtvm_opt .....................   Passed    5.69 sec
+        Start 1708: ts_http_service_contract_noopt
+163/180 Test #1701: docs_concurrency_taskwork_rxtvm_noopt ...................   Passed    5.78 sec
+        Start 1709: ts_http_service_contract_opt
+164/180 Test #1703: testTaskContextEndpoint_rxbvm_noopt .....................   Passed    4.19 sec
+165/180 Test #1704: testTaskContextEndpoint_rxbvm_opt .......................   Passed    4.17 sec
+166/180 Test #1705: testTaskContextEndpoint_rxtvm_noopt .....................   Passed    4.02 sec
+167/180 Test #1706: testTaskContextEndpoint_rxtvm_opt .......................   Passed    3.77 sec
+168/180 Test #1709: ts_http_service_contract_opt ............................   Passed    4.73 sec
+169/180 Test #1708: ts_http_service_contract_noopt ..........................   Passed    5.30 sec
+170/180 Test  #512: gate_f_task_method_import_rxbvm_noopt ...................   Passed   28.18 sec
+        Start  514: gate_f_task_method_import_rxtvm_noopt
+171/180 Test #1640: rexx_api_doc_exposed_regression .........................   Passed   48.14 sec
+172/180 Test  #514: gate_f_task_method_import_rxtvm_noopt ...................   Passed   18.01 sec
+        Start  511: gate_f_levelg_rxtvm_opt
+173/180 Test  #511: gate_f_levelg_rxtvm_opt .................................   Passed   11.67 sec
+        Start  509: gate_f_levelg_rxbvm_opt
+174/180 Test  #509: gate_f_levelg_rxbvm_opt .................................   Passed   11.68 sec
+        Start  510: gate_f_levelg_rxtvm_noopt
+175/180 Test  #510: gate_f_levelg_rxtvm_noopt ...............................   Passed   10.67 sec
+        Start  508: gate_f_levelg_rxbvm_noopt
+176/180 Test  #508: gate_f_levelg_rxbvm_noopt ...............................   Passed   10.57 sec
+        Start  517: gate_f_taskwork_import_rxbvm_opt
+177/180 Test  #517: gate_f_taskwork_import_rxbvm_opt ........................   Passed    9.71 sec
+        Start  519: gate_f_taskwork_import_rxtvm_opt
+178/180 Test  #519: gate_f_taskwork_import_rxtvm_opt ........................   Passed    9.81 sec
+        Start  516: gate_f_taskwork_import_rxbvm_noopt
+179/180 Test  #516: gate_f_taskwork_import_rxbvm_noopt ......................   Passed    9.55 sec
+        Start  518: gate_f_taskwork_import_rxtvm_noopt
+180/180 Test  #518: gate_f_taskwork_import_rxtvm_noopt ......................   Passed    9.65 sec
+
+100% tests passed, 0 tests failed out of 180
+
+Label Time Summary:
+byte-endpoint         =   3.03 sec*proc (2 tests)
+channels              =  13.60 sec*proc (9 tests)
+classlib              =  70.93 sec*proc (7 tests)
+compatibility         =   2.13 sec*proc (12 tests)
+compiler              = 376.06 sec*proc (41 tests)
+compression           =  29.55 sec*proc (8 tests)
+concurrency           = 923.64 sec*proc (179 tests)
+concurrency-sp01      =  30.99 sec*proc (41 tests)
+concurrency-sp02      =   7.30 sec*proc (18 tests)
+concurrency-sp03      = 158.62 sec*proc (11 tests)
+concurrency-sp04      =  90.78 sec*proc (24 tests)
+concurrency-sp05      =  41.56 sec*proc (8 tests)
+concurrency-sp06      = 395.62 sec*proc (52 tests)
+concurrency-sp07      = 319.82 sec*proc (39 tests)
+concurrency-sp08      = 282.54 sec*proc (49 tests)
+concurrency-sp09      = 132.21 sec*proc (19 tests)
+concurrency-stress    =   1.28 sec*proc (6 tests)
+contextual            =   6.58 sec*proc (1 test)
+control_flow          =  22.12 sec*proc (4 tests)
+crash                 =   3.02 sec*proc (1 test)
+crexx_rag             =  24.38 sec*proc (4 tests)
+decimal               =   1.95 sec*proc (1 test)
+dispatch              =   0.38 sec*proc (2 tests)
+docs                  = 132.19 sec*proc (18 tests)
+e4a                   =   7.04 sec*proc (3 tests)
+e4b                   =   7.04 sec*proc (3 tests)
+e5                    =  10.35 sec*proc (18 tests)
+endpoint              =  16.15 sec*proc (4 tests)
+f1c                   =   2.47 sec*proc (3 tests)
+f1d                   =   5.16 sec*proc (14 tests)
+f1e                   =   5.77 sec*proc (3 tests)
+f1f                   = 296.06 sec*proc (32 tests)
+f1g                   = 146.38 sec*proc (24 tests)
+failure               =  35.88 sec*proc (4 tests)
+fallback              =   4.53 sec*proc (12 tests)
+gate-e                =  17.39 sec*proc (21 tests)
+gate-f                =  15.74 sec*proc (22 tests)
+gate_f                = 469.76 sec*proc (61 tests)
+http                  = 217.19 sec*proc (32 tests)
+import                = 170.66 sec*proc (8 tests)
+imports               =   1.61 sec*proc (1 test)
+industrial            =  10.35 sec*proc (18 tests)
+inspection            =   0.02 sec*proc (1 test)
+interpreter           =  39.89 sec*proc (61 tests)
+levelb                =  11.78 sec*proc (2 tests)
+levelg                = 600.26 sec*proc (83 tests)
+library               = 217.19 sec*proc (32 tests)
+lifecycle             =   9.40 sec*proc (15 tests)
+linked                = 414.69 sec*proc (48 tests)
+linked_opt            = 215.06 sec*proc (36 tests)
+macos                 =  10.35 sec*proc (18 tests)
+memory                =   0.42 sec*proc (2 tests)
+method                = 131.94 sec*proc (4 tests)
+native                =   0.87 sec*proc (3 tests)
+negative              =  74.22 sec*proc (19 tests)
+noopt                 =  97.74 sec*proc (8 tests)
+opt                   = 139.64 sec*proc (8 tests)
+perf3                 =  28.67 sec*proc (29 tests)
+performance           =   2.32 sec*proc (1 test)
+plugins               =   5.89 sec*proc (15 tests)
+policy                =  42.69 sec*proc (4 tests)
+private               =  10.35 sec*proc (18 tests)
+process               =   5.77 sec*proc (3 tests)
+provider-reference    =   2.00 sec*proc (1 test)
+provider-registry     =   2.03 sec*proc (1 test)
+race                  =   1.28 sec*proc (6 tests)
+rxas                  =   4.83 sec*proc (15 tests)
+rxbin                 =   2.32 sec*proc (1 test)
+rxbvm                 = 280.89 sec*proc (34 tests)
+rxpa                  =   3.94 sec*proc (14 tests)
+rxtvm                 = 267.27 sec*proc (34 tests)
+server                =  70.81 sec*proc (8 tests)
+signals               =  24.53 sec*proc (5 tests)
+smoke                 =  22.94 sec*proc (2 tests)
+sparse                =   4.53 sec*proc (12 tests)
+stage3                =  48.74 sec*proc (2 tests)
+streaming             =  25.28 sec*proc (4 tests)
+taskcontext           =  16.15 sec*proc (4 tests)
+taskwork              =  38.72 sec*proc (4 tests)
+tls                   =  20.88 sec*proc (4 tests)
+worker                =   8.47 sec*proc (17 tests)
+
+Total Test time (real) = 259.42 sec

@@ -1,0 +1,11 @@
+options levelg
+namespace gate_f_nested_task_wait
+
+inner: task = .int
+  return 1
+
+outer: task = .int
+  return inner()
+
+main: procedure = .int
+  return outer()

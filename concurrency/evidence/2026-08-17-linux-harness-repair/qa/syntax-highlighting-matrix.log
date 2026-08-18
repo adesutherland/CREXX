@@ -1,0 +1,161 @@
+Test project /home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build
+      Start  947: highlight_editor_diagnostics
+      Start 1309: rxpp_sh_srcmap
+      Start 1310: rxpp_sh_default_lookup
+      Start 1311: rxpp_sh_tokens
+      Start  946: source_semantics
+      Start   12: rxc_help_syntaxhighlight
+ 1/72 Test   #12: rxc_help_syntaxhighlight ......................................   Passed    0.12 sec
+ 2/72 Test  #946: source_semantics ..............................................   Passed    0.75 sec
+ 3/72 Test #1311: rxpp_sh_tokens ................................................   Passed    3.25 sec
+ 4/72 Test #1309: rxpp_sh_srcmap ................................................   Passed    4.06 sec
+ 5/72 Test #1310: rxpp_sh_default_lookup ........................................   Passed    4.27 sec
+ 6/72 Test  #947: highlight_editor_diagnostics ..................................   Passed    7.16 sec
+      Start  832: syntaxhighlight_address_keywords
+ 7/72 Test  #832: syntaxhighlight_address_keywords ..............................   Passed    1.48 sec
+      Start  828: syntaxhighlight_srcmap_generated
+ 8/72 Test  #828: syntaxhighlight_srcmap_generated ..............................   Passed    1.77 sec
+      Start  829: syntaxhighlight_compound_names
+ 9/72 Test  #829: syntaxhighlight_compound_names ................................   Passed    1.73 sec
+      Start  835: syntaxhighlight_top_level_statements
+10/72 Test  #835: syntaxhighlight_top_level_statements ..........................   Passed    1.74 sec
+      Start  831: syntaxhighlight_exit_keyword
+11/72 Test  #831: syntaxhighlight_exit_keyword ..................................   Passed    1.36 sec
+      Start  826: syntaxhighlight_root_file
+12/72 Test  #826: syntaxhighlight_root_file .....................................   Passed    1.51 sec
+      Start  833: syntaxhighlight_parse_keywords
+13/72 Test  #833: syntaxhighlight_parse_keywords ................................   Passed    1.87 sec
+      Start  887: syntaxhighlight_block_comment
+14/72 Test  #887: syntaxhighlight_block_comment .................................   Passed    1.40 sec
+      Start  890: syntaxhighlight_comments_dash
+15/72 Test  #890: syntaxhighlight_comments_dash .................................   Passed    1.65 sec
+      Start  874: syntaxhighlight_levelc_loose_when
+16/72 Test  #874: syntaxhighlight_levelc_loose_when .............................   Passed    0.58 sec
+      Start  834: syntaxhighlight_trace_keywords
+17/72 Test  #834: syntaxhighlight_trace_keywords ................................   Passed    2.11 sec
+      Start  844: syntaxhighlight_levelc_labels_validation
+18/72 Test  #844: syntaxhighlight_levelc_labels_validation ......................   Passed    0.47 sec
+      Start  841: syntaxhighlight_levelc_instruction_bad_forms
+19/72 Test  #841: syntaxhighlight_levelc_instruction_bad_forms ..................   Passed    0.56 sec
+      Start  861: syntaxhighlight_levelc_do_keyword_variables
+20/72 Test  #861: syntaxhighlight_levelc_do_keyword_variables ...................   Passed    0.47 sec
+      Start  847: syntaxhighlight_levelc_deep_validation_ok
+21/72 Test  #847: syntaxhighlight_levelc_deep_validation_ok .....................   Passed    0.58 sec
+      Start  863: syntaxhighlight_levelc_do_conditions_leave
+22/72 Test  #863: syntaxhighlight_levelc_do_conditions_leave ....................   Passed    0.46 sec
+      Start  865: syntaxhighlight_levelc_do_end_uncontrolled_symbol
+23/72 Test  #865: syntaxhighlight_levelc_do_end_uncontrolled_symbol .............   Passed    0.49 sec
+      Start  854: syntaxhighlight_levelc_if_missing_then
+24/72 Test  #854: syntaxhighlight_levelc_if_missing_then ........................   Passed    0.46 sec
+      Start  875: syntaxhighlight_levelc_loose_otherwise
+25/72 Test  #875: syntaxhighlight_levelc_loose_otherwise ........................   Passed    0.50 sec
+      Start  945: highlight_cache
+26/72 Test  #945: highlight_cache ...............................................   Passed    2.60 sec
+      Start  876: syntaxhighlight_levelc_loose_end
+27/72 Test  #876: syntaxhighlight_levelc_loose_end ..............................   Passed    0.48 sec
+      Start  852: syntaxhighlight_levelc_labels_literals
+28/72 Test  #852: syntaxhighlight_levelc_labels_literals ........................   Passed    0.51 sec
+      Start  873: syntaxhighlight_levelc_select_missing_end
+29/72 Test  #873: syntaxhighlight_levelc_select_missing_end .....................   Passed    0.50 sec
+      Start  877: syntaxhighlight_levelc_when_missing_then
+30/72 Test  #877: syntaxhighlight_levelc_when_missing_then ......................   Passed    0.50 sec
+      Start  853: syntaxhighlight_levelc_then_boundary
+31/72 Test  #853: syntaxhighlight_levelc_then_boundary ..........................   Passed    0.64 sec
+      Start  842: syntaxhighlight_levelc_instruction_recovery_boundaries
+32/72 Test  #842: syntaxhighlight_levelc_instruction_recovery_boundaries ........   Passed    0.61 sec
+      Start  840: syntaxhighlight_levelc_implicit_command_warning
+33/72 Test  #840: syntaxhighlight_levelc_implicit_command_warning ...............   Passed    0.47 sec
+      Start  860: syntaxhighlight_levelc_select_do_otherwise_upper
+34/72 Test  #860: syntaxhighlight_levelc_select_do_otherwise_upper ..............   Passed    0.50 sec
+      Start  849: syntaxhighlight_levelc_parse_templates
+35/72 Test  #849: syntaxhighlight_levelc_parse_templates ........................   Passed    0.50 sec
+      Start  851: syntaxhighlight_levelc_if_else
+36/72 Test  #851: syntaxhighlight_levelc_if_else ................................   Passed    0.50 sec
+      Start  882: syntaxhighlight_levelc_expression_bad_trailing_compare
+37/72 Test  #882: syntaxhighlight_levelc_expression_bad_trailing_compare ........   Passed    0.50 sec
+      Start  856: syntaxhighlight_levelc_loose_else
+38/72 Test  #856: syntaxhighlight_levelc_loose_else .............................   Passed    0.62 sec
+      Start  857: syntaxhighlight_levelc_multiline_if_else
+39/72 Test  #857: syntaxhighlight_levelc_multiline_if_else ......................   Passed    0.45 sec
+      Start  883: syntaxhighlight_levelc_expression_bad_trailing_operator
+40/72 Test  #883: syntaxhighlight_levelc_expression_bad_trailing_operator .......   Passed    0.61 sec
+      Start  845: syntaxhighlight_levelc_numeric_validation
+41/72 Test  #845: syntaxhighlight_levelc_numeric_validation .....................   Passed    0.47 sec
+      Start  839: syntaxhighlight_levelc_command_instructions
+42/72 Test  #839: syntaxhighlight_levelc_command_instructions ...................   Passed    0.48 sec
+      Start  848: syntaxhighlight_levelc_simple_instruction_keyword_variables
+43/72 Test  #848: syntaxhighlight_levelc_simple_instruction_keyword_variables ...   Passed    0.49 sec
+      Start  871: syntaxhighlight_levelc_select_keyword_variables
+44/72 Test  #871: syntaxhighlight_levelc_select_keyword_variables ...............   Passed    0.45 sec
+      Start  868: syntaxhighlight_levelc_iterate_bad_target
+45/72 Test  #868: syntaxhighlight_levelc_iterate_bad_target .....................   Passed    0.48 sec
+      Start  827: syntaxhighlight_syntax_error
+46/72 Test  #827: syntaxhighlight_syntax_error ..................................   Passed    0.58 sec
+      Start  864: syntaxhighlight_levelc_do_end_bad_symbol
+47/72 Test  #864: syntaxhighlight_levelc_do_end_bad_symbol ......................   Passed    0.52 sec
+      Start  859: syntaxhighlight_levelc_select_do_otherwise
+48/72 Test  #859: syntaxhighlight_levelc_select_do_otherwise ....................   Passed    0.63 sec
+      Start  850: syntaxhighlight_levelc_parse_bad_forms
+49/72 Test  #850: syntaxhighlight_levelc_parse_bad_forms ........................   Passed    0.45 sec
+      Start  837: syntaxhighlight_levelc_keyword_variables
+50/72 Test  #837: syntaxhighlight_levelc_keyword_variables ......................   Passed    0.46 sec
+      Start  878: syntaxhighlight_levelc_expression_precedence
+51/72 Test  #878: syntaxhighlight_levelc_expression_precedence ..................   Passed    0.46 sec
+      Start  880: syntaxhighlight_levelc_expression_bad_comma
+52/72 Test  #880: syntaxhighlight_levelc_expression_bad_comma ...................   Passed    0.46 sec
+      Start  858: syntaxhighlight_levelc_select_when_otherwise
+53/72 Test  #858: syntaxhighlight_levelc_select_when_otherwise ..................   Passed    0.53 sec
+      Start  862: syntaxhighlight_levelc_do_control
+54/72 Test  #862: syntaxhighlight_levelc_do_control .............................   Passed    0.62 sec
+      Start  855: syntaxhighlight_levelc_loose_then
+55/72 Test  #855: syntaxhighlight_levelc_loose_then .............................   Passed    0.49 sec
+      Start  836: syntaxhighlight_levelc_tracer
+56/72 Test  #836: syntaxhighlight_levelc_tracer .................................   Passed    0.58 sec
+      Start  838: syntaxhighlight_levelc_simple_instructions
+57/72 Test  #838: syntaxhighlight_levelc_simple_instructions ....................   Passed    0.46 sec
+      Start  869: syntaxhighlight_levelc_do_forever_bad_tail
+58/72 Test  #869: syntaxhighlight_levelc_do_forever_bad_tail ....................   Passed    0.46 sec
+      Start  881: syntaxhighlight_levelc_expression_bad_rparen
+59/72 Test  #881: syntaxhighlight_levelc_expression_bad_rparen ..................   Passed    0.46 sec
+      Start  846: syntaxhighlight_levelc_deep_validation
+60/72 Test  #846: syntaxhighlight_levelc_deep_validation ........................   Passed    0.47 sec
+      Start  872: syntaxhighlight_levelc_select_missing_when
+61/72 Test  #872: syntaxhighlight_levelc_select_missing_when ....................   Passed    0.48 sec
+      Start  843: syntaxhighlight_levelc_instruction_tail_bad_forms
+62/72 Test  #843: syntaxhighlight_levelc_instruction_tail_bad_forms .............   Passed    0.61 sec
+      Start  866: syntaxhighlight_levelc_select_end_symbol
+63/72 Test  #866: syntaxhighlight_levelc_select_end_symbol ......................   Passed    0.48 sec
+      Start  879: syntaxhighlight_levelc_expression_comparisons
+64/72 Test  #879: syntaxhighlight_levelc_expression_comparisons .................   Passed    0.57 sec
+      Start  830: syntaxhighlight_structure_nodes
+65/72 Test  #830: syntaxhighlight_structure_nodes ...............................   Passed    1.44 sec
+      Start  867: syntaxhighlight_levelc_leave_outside_loop
+66/72 Test  #867: syntaxhighlight_levelc_leave_outside_loop .....................   Passed    0.47 sec
+      Start  884: syntaxhighlight_levelc_expression_bad_prefix_operator
+67/72 Test  #884: syntaxhighlight_levelc_expression_bad_prefix_operator .........   Passed    0.46 sec
+      Start  870: syntaxhighlight_levelc_do_invalid_initial_to
+68/72 Test  #870: syntaxhighlight_levelc_do_invalid_initial_to ..................   Passed    0.65 sec
+      Start  888: syntaxhighlight_comment_only
+69/72 Test  #888: syntaxhighlight_comment_only ..................................   Passed    0.47 sec
+      Start  889: syntaxhighlight_empty
+70/72 Test  #889: syntaxhighlight_empty .........................................   Passed    0.59 sec
+      Start  885: syntaxhighlight_levelc_expression_bad_leading_operator
+71/72 Test  #885: syntaxhighlight_levelc_expression_bad_leading_operator ........   Passed    0.47 sec
+      Start  886: syntaxhighlight_levelc_expression_bad_paren
+72/72 Test  #886: syntaxhighlight_levelc_expression_bad_paren ...................   Passed    0.49 sec
+
+100% tests passed, 0 tests failed out of 72
+
+Label Time Summary:
+compiler               =  56.35 sec*proc (69 tests)
+levelc                 =  26.04 sec*proc (51 tests)
+preprocessor           =  11.59 sec*proc (3 tests)
+smoke                  =   6.23 sec*proc (4 tests)
+srcmap                 =   8.33 sec*proc (2 tests)
+stage0                 =  17.96 sec*proc (13 tests)
+stage1                 =  27.78 sec*proc (52 tests)
+stage4                 =   2.60 sec*proc (1 test)
+stage5                 =   7.90 sec*proc (2 tests)
+syntax_highlighting    =  67.94 sec*proc (72 tests)
+
+Total Test time (real) =  55.63 sec

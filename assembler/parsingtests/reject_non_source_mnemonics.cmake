@@ -46,6 +46,18 @@ expect_rxas_reject(dllparms "dllparms r0,r1,r2" "invalid instruction mnemonic")
 expect_rxas_reject(reserved "reserved" "invalid instruction mnemonic")
 expect_rxas_reject(reserved_514 "reserved_514" "invalid instruction mnemonic")
 
+# Gate F retires the pre-release process and redirect instructions.  Their
+# numeric slots remain reserved for stale-image diagnostics, but neither the
+# old names nor the reserved names are legal source mnemonics.
+expect_rxas_reject(spawn "spawn r0,r1,r2" "invalid instruction mnemonic")
+expect_rxas_reject(redir2str "redir2str r0,r1" "invalid instruction mnemonic")
+expect_rxas_reject(redir2arr "redir2arr r0,r1" "invalid instruction mnemonic")
+expect_rxas_reject(str2redir "str2redir r0,r1" "invalid instruction mnemonic")
+expect_rxas_reject(arr2redir "arr2redir r0,r1" "invalid instruction mnemonic")
+expect_rxas_reject(nullredir "nullredir r0" "invalid instruction mnemonic")
+expect_rxas_reject(reserved_466 "reserved_466" "invalid instruction mnemonic")
+expect_rxas_reject(reserved_471 "reserved_471" "invalid instruction mnemonic")
+
 # Cursor-bearing source mnemonics were deliberately retired by the cursorless
 # value redesign. Keep this list explicit so a stale spelling cannot silently
 # return through an unrelated opcode-table edit.

@@ -198,7 +198,9 @@ int rexbscan(Context* s) {
     'CALL' { RET(TK_CALL); }
     'CLASS' { RET(TK_CLASS); }
     'CONSTANT' { RET(TK_CONSTANT); }
+    'TASK' { RET(TK_TASK); }
     'DO' { RET(TK_DO); }
+    'PARALLEL' { RET(TK_PARALLEL); }
     'LOOP' { RET(TK_LOOP); }
     'IMPLEMENTS' { RET(TK_IMPLEMENTS); }
     'INTERFACE' { RET(TK_INTERFACE); }
@@ -270,6 +272,7 @@ int rexbscan(Context* s) {
     'VOID' { RET(TK_VOID); }
     'WHILE' { RET(TK_WHILE); }
     'WITH' { RET(TK_WITH); }
+    'USING' { RET(TK_USING); }
     namedfactory / "(" { RET(TK_CLASS_FACTORY); }
     class { RET(TK_CLASS_TYPE); }
     float { RET(TK_FLOAT); }

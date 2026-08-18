@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
+
 set(CLSS
   StringIterable
   StringIterator
@@ -46,6 +48,7 @@ set(CLSS
   StringTreeSetIterator
   Qfind
   Scanlex
+  Concurrency
 )
 
 set(CLASSLIB_NATIVE_CLSS
@@ -333,5 +336,32 @@ add_test(
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 set_tests_properties(classlib_rexxdoc_coverage PROPERTIES LABELS "docs;classlib")
+crexx_label_concurrency_tests(SP09 classlib_rexxdoc_coverage)
+
+add_test(
+  NAME rexx_api_doc_exposed_regression
+  COMMAND ${CMAKE_COMMAND}
+    -DRXC=$<TARGET_FILE:rxc>
+    -DRXAS=$<TARGET_FILE:rxas>
+    -DRXVM=${CREXX_RXVM_EXECUTABLE}
+    -DLIBRARY=${CMAKE_BINARY_DIR}/bin
+    -DSOURCE=${CMAKE_SOURCE_DIR}/tools/rexxDoc/rexxApiDoc.crexx
+    -DFIXTURE=${CMAKE_SOURCE_DIR}/tools/rexxDoc/tests/rexx_api_doc_exposed_fixture.crexx
+    -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/rexx_api_doc_test
+    -P ${CMAKE_SOURCE_DIR}/tools/rexxDoc/tests/check_rexx_api_doc.cmake
+)
+set_tests_properties(rexx_api_doc_exposed_regression PROPERTIES LABELS "docs;classlib")
+crexx_label_concurrency_tests(SP09 rexx_api_doc_exposed_regression)
+
+add_test(
+  NAME gate_f_levelb_bridge_inspection
+  COMMAND ${CMAKE_COMMAND}
+    -DSOURCE_FILE=${CMAKE_CURRENT_SOURCE_DIR}/Concurrency.crexx
+    -P ${CMAKE_SOURCE_DIR}/cmake/CheckGateFLevelBBridge.cmake
+)
+set_tests_properties(gate_f_levelb_bridge_inspection
+  PROPERTIES LABELS "gate-f;classlib;inspection")
+crexx_label_concurrency_tests(SP05 gate_f_levelb_bridge_inspection)
+crexx_label_concurrency_tests(SP09 gate_f_levelb_bridge_inspection)
 
 add_subdirectory(tests_functional)

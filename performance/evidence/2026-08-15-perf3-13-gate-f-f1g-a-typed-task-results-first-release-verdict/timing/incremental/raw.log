@@ -1,0 +1,312 @@
+channel phase=warmup round=0 position=1 vm=rxbvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7616
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 81181
+PASS: Gate F F1b channel benchmark
+channel phase=warmup round=0 position=2 vm=rxbvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7278
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 90777
+PASS: Gate F F1b channel benchmark
+channel phase=warmup round=0 position=3 vm=rxtvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7747
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 92275
+PASS: Gate F F1b channel benchmark
+channel phase=warmup round=0 position=4 vm=rxtvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7756
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 91776
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=1 position=5 vm=rxbvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7059
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 81232
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=1 position=6 vm=rxbvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7150
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 80967
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=1 position=7 vm=rxtvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7210
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 91502
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=1 position=8 vm=rxtvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7334
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 93221
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=2 position=9 vm=rxtvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7252
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 92021
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=2 position=10 vm=rxtvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7472
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 92930
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=2 position=11 vm=rxbvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7131
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 87507
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=2 position=12 vm=rxbvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7940
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 81461
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=3 position=13 vm=rxbvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7576
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 80759
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=3 position=14 vm=rxbvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7531
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 80715
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=3 position=15 vm=rxtvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7403
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 93626
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=3 position=16 vm=rxtvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7206
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 91930
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=4 position=17 vm=rxtvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7064
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 93848
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=4 position=18 vm=rxtvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7357
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 94060
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=4 position=19 vm=rxbvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7356
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 81017
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=4 position=20 vm=rxbvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7448
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 80744
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=5 position=21 vm=rxbvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7477
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 82339
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=5 position=22 vm=rxbvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7595
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 79023
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=5 position=23 vm=rxtvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7346
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 93039
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=5 position=24 vm=rxtvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7494
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 92471
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=6 position=25 vm=rxtvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7191
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 95762
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=6 position=26 vm=rxtvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7459
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 93359
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=6 position=27 vm=rxbvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7242
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 81351
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=6 position=28 vm=rxbvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7440
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 91994
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=7 position=29 vm=rxbvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7411
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 80812
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=7 position=30 vm=rxbvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7451
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 81812
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=7 position=31 vm=rxtvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7610
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 96081
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=7 position=32 vm=rxtvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7552
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 93039
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=8 position=33 vm=rxtvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7253
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 135300
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=8 position=34 vm=rxtvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7148
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 93101
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=8 position=35 vm=rxbvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7167
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 80816
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=8 position=36 vm=rxbvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7139
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 81933
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=9 position=37 vm=rxbvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7364
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 81142
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=9 position=38 vm=rxbvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7580
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 81310
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=9 position=39 vm=rxtvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7458
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 94347
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=9 position=40 vm=rxtvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7413
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 94539
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=10 position=41 vm=rxtvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 8012
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 95045
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=10 position=42 vm=rxtvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7170
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 94724
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=10 position=43 vm=rxbvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7218
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 80952
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=10 position=44 vm=rxbvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7615
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 82089
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=11 position=45 vm=rxbvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7395
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 84824
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=11 position=46 vm=rxbvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7474
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 84670
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=11 position=47 vm=rxtvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7568
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 96409
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=11 position=48 vm=rxtvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7271
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 94631
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=12 position=49 vm=rxtvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7319
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 94784
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=12 position=50 vm=rxtvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7418
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 96469
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=12 position=51 vm=rxbvml variant=candidate
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7418
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 81654
+PASS: Gate F F1b channel benchmark
+channel phase=recorded round=12 position=52 vm=rxbvml variant=accepted
+GF_CHANNEL_LATENCY_JOBS: 1024
+GF_CHANNEL_LATENCY_US: 7391
+GF_CHANNEL_THROUGHPUT_JOBS: 256
+GF_CHANNEL_THROUGHPUT_US: 80798
+PASS: Gate F F1b channel benchmark

@@ -1,56 +1,14 @@
 # Arrays, Attributes, References, And Objects
 
 These instructions manage attribute-backed arrays and objects, live register
-and attribute bindings, first-class storage references, process redirect
-endpoints, and runtime object type/initialization metadata.
+and attribute bindings, first-class storage references, and runtime object
+type/initialization metadata.
 
 Attribute counts and bulk edits distinguish zero-based forms from the `*1`
 one-based forms. `link*` instructions rebind storage pointers rather than
 copying payloads; `unlink*` restores retained base storage without copy-back.
 Reference values track storage lifetime and raise `REFERENCE_INVALID` when a
 raising operation encounters a dead target.
-
-## `arr2redir`
-
-Create a process-input redirect whose producer reads strings from an
-attribute-backed array.
-
-### Forms
-
-| Opcode | Form | Effect |
-| --- | --- | --- |
-| `0x01d6` | `arr2redir rRedirect,rArray` | Feed array elements to a child-process input pipe. |
-
-### Operands And Semantics
-
-`rRedirect` is cleared and receives a VM-native redirect endpoint retaining a
-pointer to `rArray`. The redirect must be passed to `spawn`, normally inside
-its input/output/error redirect array, so process cleanup closes the pipe and
-worker resources. The source array must remain live while the redirect runs.
-
-### Signals
-
-The constructor itself raises no VM signal. Allocation or pipe setup failure is
-recorded in, or may leave absent, the endpoint and is reported by `spawn`.
-
-### Example
-
-This example is assembly-tested because a redirect is only safely executed as
-part of a complete `spawn` lifecycle.
-
-<!-- rxas-example name="redirect-arr2redir" test="assemble" -->
-```rxas
-.globals=0
-
-main() .locals=2
-    setattrs r1,0
-    arr2redir r0,r1
-    ret
-```
-
-### Related
-
-`str2redir`, `redir2arr`, `nullredir`, `spawn`.
 
 ## `assertinitialized`
 
@@ -764,120 +722,6 @@ main() .locals=2
 
 `deref`, `linkref`, `unref`.
 
-## `nullredir`
-
-Create a bidirectional process redirect endpoint backed by the platform null
-device.
-
-### Forms
-
-| Opcode | Form | Effect |
-| --- | --- | --- |
-| `0x01d7` | `nullredir rRedirect` | Open `/dev/null` or Windows `NUL` for child I/O. |
-
-### Operands And Semantics
-
-The destination is cleared and receives a native redirect payload with read and
-write handles. Pass it to `spawn` for normal handle cleanup; copying the value
-shares the reference-counted endpoint cell.
-
-### Signals
-
-The constructor raises no VM signal. OS open or allocation failure is retained
-as redirect state, or leaves no endpoint, for later `spawn` handling.
-
-### Example
-
-<!-- rxas-example name="redirect-nullredir" test="assemble" -->
-```rxas
-.globals=0
-
-main() .locals=1
-    nullredir r0
-    ret
-```
-
-### Related
-
-`redir2str`, `str2redir`, `spawn`.
-
-## `redir2arr`
-
-Create a process-output redirect that appends captured output to an
-attribute-backed array.
-
-### Forms
-
-| Opcode | Form | Effect |
-| --- | --- | --- |
-| `0x01d4` | `redir2arr rRedirect,rArray` | Capture child output into array elements. |
-
-### Operands And Semantics
-
-The destination is cleared and receives a native output endpoint retaining the
-array register. Its reader worker grows the array as output arrives. The array
-must stay live, and the redirect must be consumed by `spawn` for synchronized
-cleanup.
-
-### Signals
-
-Construction raises no VM signal. Endpoint setup errors are deferred to the
-redirect/`spawn` error path.
-
-### Example
-
-<!-- rxas-example name="redirect-redir2arr" test="assemble" -->
-```rxas
-.globals=0
-
-main() .locals=2
-    setattrs r1,0
-    redir2arr r0,r1
-    ret
-```
-
-### Related
-
-`redir2str`, `arr2redir`, `spawn`.
-
-## `redir2str`
-
-Create a process-output redirect that appends captured bytes to a string.
-
-### Forms
-
-| Opcode | Form | Effect |
-| --- | --- | --- |
-| `0x01d3` | `redir2str rRedirect,rString` | Capture child output into `rString`. |
-
-### Operands And Semantics
-
-`rRedirect` is cleared and receives a native output endpoint retaining
-`rString`. The reader worker appends output to the existing logical string.
-Keep the string live and pass the endpoint to `spawn` so the worker and pipe
-are closed and joined.
-
-### Signals
-
-Construction raises no VM signal. Allocation or pipe errors are reported by
-the later `spawn` operation.
-
-### Example
-
-<!-- rxas-example name="redirect-redir2str" test="assemble" -->
-```rxas
-.globals=0
-
-main() .locals=2
-    load r1,""
-    redir2str r0,r1
-    ret
-```
-
-### Related
-
-`redir2arr`, `str2redir`, `spawn`.
-
 ## `refvalid`
 
 Probe whether a reference payload still names live storage.
@@ -1433,44 +1277,6 @@ main() .locals=5
 ### Related
 
 `stemget`, `stemkeyat`, `stemreset`, `stemsize`.
-
-## `str2redir`
-
-Create a process-input redirect whose producer reads bytes from a string.
-
-### Forms
-
-| Opcode | Form | Effect |
-| --- | --- | --- |
-| `0x01d5` | `str2redir rRedirect,rString` | Feed `rString` to a child-process input pipe. |
-
-### Operands And Semantics
-
-The destination is cleared and receives a native input endpoint retaining
-`rString`. The source must remain live while the worker writes it. Pass the
-endpoint to `spawn` so the pipe, thread, and reference-counted endpoint cell are
-cleaned up.
-
-### Signals
-
-Construction raises no VM signal. Setup errors are held in redirect state or
-leave the endpoint absent and are surfaced by `spawn`.
-
-### Example
-
-<!-- rxas-example name="redirect-str2redir" test="assemble" -->
-```rxas
-.globals=0
-
-main() .locals=2
-    load r1,"input"
-    str2redir r0,r1
-    ret
-```
-
-### Related
-
-`arr2redir`, `redir2str`, `spawn`.
 
 ## `unlink`
 

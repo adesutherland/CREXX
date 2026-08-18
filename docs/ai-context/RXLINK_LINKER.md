@@ -80,6 +80,22 @@ Selectors match by:
 
 The linker preserves the metadata chain in output because the VM and tooling still consume it at runtime.
 
+Task metadata is also runtime contract metadata. `.task1`, `.task2` and
+`.task3` entries carry an 80-byte sealed binding containing image digest,
+callable id, signature digest and the optional adapter callable slot. Because
+RXLINK rebuilds and renumbers the semantic graph, it must regenerate these
+bindings from the linked graph rather than copy module-local bytes. Kind `2`
+relocates the receiver `from_channel` factory and kind `3` relocates the
+`.taskwork.run` method. Missing, malformed, stale or signature-incompatible
+bindings fail the link; they are never weakened to procedure-name dispatch.
+An imported task call contains the deterministic 80-byte relocation
+placeholder but does not duplicate the defining module's `META_TASK_TARGET`.
+The RXBIN writer therefore reseals both the metadata binding and every matching
+placeholder constant across all selected constant pools. This is required for
+separately compiled task-method clients: copying the defining module's old seal
+would retain the wrong final graph digest, while leaving the use-site
+placeholder would fail the `RXTB` magic check.
+
 ## Constant-Pool Rewriting
 
 Leaf constants are deduplicated across selected modules when their serialized bytes match:
@@ -134,6 +150,7 @@ It intentionally does not remove runtime contract metadata such as:
 - `META_INTERFACE`
 - `META_IMPLEMENTS`
 - `META_MEMBER`
+- sealed `.task1`/`.task2`/`.task3` bindings
 
 That keeps interface/class dispatch and metadata-aware tooling behaviour stable while still removing source text/file path payloads and source-level TRACE value metadata.
 

@@ -514,7 +514,8 @@ static void prepare_array_statement_types(Context *context, ASTNode *node, int v
 static ASTNode *find_enclosing_block_expr(ASTNode *node) {
     if (node) node = node->parent;
     while (node) {
-        if (node->node_type == BLOCK_EXPR) return node;
+        if (node->node_type == BLOCK_EXPR ||
+            node->node_type == PARALLEL_BLOCK_EXPR) return node;
         node = node->parent;
     }
     return 0;
@@ -2761,7 +2762,8 @@ walker_result type_safety_walker(walker_direction direction,
                 if (child1) set_node_target_type(context, child1, TP_STRING);
                 break;
 
-            case BLOCK_EXPR: {
+            case BLOCK_EXPR:
+            case PARALLEL_BLOCK_EXPR: {
                 ASTNode *n = node->child;
                 ASTNode *matched_leave = 0;
                 ASTNode *first_typed_leave = 0;
@@ -2778,7 +2780,8 @@ walker_result type_safety_walker(walker_direction direction,
                         }
                     }
 
-                    if (n->child && n->node_type != BLOCK_EXPR) {
+                    if (n->child && n->node_type != BLOCK_EXPR &&
+                        n->node_type != PARALLEL_BLOCK_EXPR) {
                         n = n->child;
                     } else if (n == node) {
                         break;

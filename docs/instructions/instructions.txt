@@ -373,7 +373,15 @@
 0x018e dsex       {REG}                Decimal op1 = -op1 (sign change)
 0x018f dextr      {REG,REG,REG}        op3 decimal extracted to op1 string coefficient and op2 int decimal exponent
 0x0190 decplnm    {REG,REG,REG}        Get Decimal Plugin Name op1=name op2=description op3=version
+0x0191 call1      {REG,FUNC,REG}       Direct bytecode call with one explicit argument register
+0x0192 call2      {REG,FUNC,REG,REG}   Direct bytecode call with two explicit argument registers
+0x0193 call3      {REG,FUNC,REG,REG,REG} Direct bytecode call with three explicit argument registers
+0x0194 call4      {REG,FUNC,REG,REG,REG,REG} Direct bytecode call with four explicit argument registers
+0x0195 parsewords3 {REG,REG,REG,REG}    Parse three blank-delimited fields directly into op1-op3 from string op4
 0x0196 isetattr1  {REG,INT,REG}        Copy integer op3 directly into one-based attribute op2 of op1
+0x0198 parsepos2  {REG,REG,REG,INT}    Parse op1 as a fixed prefix and op2 as the next word from string op3 using character split op4
+0x0199 parsewords3d {REG,REG,REG,REG}    Parse three blank-delimited words into op1-op3 from string op4 and discard the remaining tail
+0x019a parseplan  {REG,REG,STRING}     Execute a compact frozen PARSE plan into result vector op1 from string op2 using descriptor op3
 0x019c linksetattrslinkadd {REG,REG,INT,INT,REG,REG,INT} Link/set attributes then link a nested one-based index
 0x019f setlinkiload {REG,REG,INT,REG,REG,INT} Set/link an attribute and load an independent integer register
 0x01a6 iloadsetunlinkn {REG,REG,INT,REG} Load op1, store through alias op2, then unlink op2 and op4
@@ -393,12 +401,6 @@
 0x01cf getenv     {REG,STRING}         get environment variable, op1=env[op2]
 0x01d0 irand      {REG,REG}            random number random, op1=irand(op2)
 0x01d1 irand      {REG,INT}            random number random, op1=irand(op2)
-0x01d2 spawn      {REG,REG,REG}        Spawn Process op1 = exec op2 redirect op3
-0x01d3 redir2str  {REG,REG}            Redirect op1 -> string op2
-0x01d4 redir2arr  {REG,REG}            Redirect op1 -> array op2
-0x01d5 str2redir  {REG,REG}            Redirect op1 <- string op2
-0x01d6 arr2redir  {REG,REG}            Redirect op1 <- array op2
-0x01d7 nullredir  {REG}                Redirect op1 = to/from null
 0x01d8 fopen      {REG,REG,REG}        op1 file*(int) = fopen filename op2(string) mode op3(string)
 0x01d9 fclose     {REG,REG}            op1 rc(int) = fclose op2 file*(int)
 0x01da fflush     {REG,REG}            op1 rc(int) = fflush op2 file*(int)
@@ -556,3 +558,27 @@
 0x0274 bcmps      {REG,REG,STRING}     Compare zero-terminated UTF-8 string from binary register op2 at offset op1 with string constant op3
 0x0275 bcmps      {REG,BINARY,REG}     Compare zero-terminated UTF-8 string from binary constant op2 at offset op1 with string register op3
 0x0276 bcmps      {REG,BINARY,STRING}  Compare zero-terminated UTF-8 string from binary constant op2 at offset op1 with string constant op3
+0x0277 jumps      {REG,BINARY}         Jump through table op2 using string register op1
+0x0278 jumpb      {REG,BINARY}         Jump through table op2 using binary register op1
+0x0279 jumpbs     {REG,REG,BINARY}     Jump through fixed-width table op3 using binary register op1 at byte offset op2
+0x027a jumpi      {REG,BINARY}         Jump through table op2 using integer register op1
+0x027b jumpr      {REG,BINARY}         Jump through table op2 using blank-padded Rexx string register op1
+0x027c jumpn      {REG,BINARY}         Jump through table op2 using numeric string register op1
+0x027d bineq      {REG,REG,REG}        Whole binary equals op1=(op2==op3)
+0x027e bineq      {REG,REG,BINARY}     Whole binary equals op1=(op2==op3)
+0x027f binne      {REG,REG,REG}        Whole binary not equals op1=(op2!=op3)
+0x0280 binne      {REG,REG,BINARY}     Whole binary not equals op1=(op2!=op3)
+0x0281 steminit   {REG}                Initialize the private native stem representation in op1
+0x0282 stemget    {REG,REG,REG}        Get op1=op2[op3] from a native stem
+0x0283 stemset    {REG,REG,REG}        Set native stem op1[op2]=op3
+0x0284 stemreset  {REG,REG}            Set native stem op1 default to op2 and advance its generation
+0x0285 stemget2   {REG,REG,REG,REG}    Get op1=op2[op3||'.'||op4] without materializing the key
+0x0286 stemset2   {REG,REG,REG,REG}    Set op1[op2||'.'||op3]=op4 and materialize only a new key
+0x0287 stemsize   {REG,REG}            Return the stored entry count op1 for native stem op2
+0x0288 stemkeyat  {REG,REG,REG}        Return insertion-order key op3 from native stem op2 into op1
+0x0289 stemvalueat {REG,REG,REG}        Return generation-aware insertion-order value op3 from native stem op2 into op1
+0x028a chanopen   {REG,REG,REG,REG,REG} Open provider channel op1=status op2=channel op3=provider type op4=required capabilities op5=configuration
+0x028b chanstart  {REG,REG,REG,REG,REG} Start channel operation op1=status op2=ticket op3=channel op4=envelope op5=wait microseconds
+0x028c chanwait   {REG,REG,REG,REG}    Wait for channel completion op1=status op2=completion op3=channel op4=wait microseconds
+0x028d chancancel {REG,REG,REG,REG}    Cancel channel ticket op1=status op2=channel op3=ticket op4=reason
+0x028e chanclose  {REG,REG,REG}        Close channel op1=status op2=channel op3=mode

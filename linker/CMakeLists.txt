@@ -4,6 +4,7 @@ project(Linker C)
 
 set(CMAKE_C_STANDARD 99)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 
 add_executable(rxlink rxlinkmain.c ../binutils/include/rxbin.h ../binutils/include/rxsignature.h)
 target_link_libraries(rxlink rxbin platform)
@@ -194,6 +195,7 @@ add_custom_command(TARGET test_linked_format POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E rm -f ${CMAKE_BINARY_DIR}/bin/test_linked_format)
 add_dependencies(test_linked_format tests_linked_success_artifact tests_linked_inline_artifact tests_linked_stripped_artifact tests_record_stream_combo_artifact)
 add_test(NAME rxlink_format_check COMMAND test_linked_format WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+crexx_label_concurrency_tests(SP03 rxlink_format_check)
 
 add_test(
         NAME rxlink_duplicate_provider_error

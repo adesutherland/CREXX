@@ -1,0 +1,208 @@
+/*
+ * Bounded pooled concurrent HTTP proof.
+ *
+ * The loopback server is itself taskwork so the controller can exercise the
+ * public Level G task syntax while the server blocks in accept/recv.  One
+ * client connection owner must serve all four requests over one socket.
+ */
+options levelg
+
+namespace ts_http_pooled
+import rxfnsb
+import rxsocket
+import concurrency
+import rxfnsg
+
+endpoint_write: procedure = .int
+  arg endpoint = .byteendpoint, bytes = .binary
+  completion = endpoint.start_write(bytes, -1).wait(-1)
+  if completion.succeeded() = 0 then return -1
+  return completion.value().as_integer()
+
+endpoint_read_exact: procedure = .binary
+  arg endpoint = .byteendpoint, expected = .int
+  result = ''x as .binary
+  do while binlength(result) < expected
+    completion = endpoint.start_read(expected - binlength(result), -1).wait(-1)
+    if completion.succeeded() = 0 then return ''x as .binary
+    chunk = completion.value().as_binary()
+    if binlength(chunk) > 0 then result = binconcat(result, chunk)
+    if completion.details().field("eof").as_boolean() then leave
+  end
+  return result
+
+body_start: procedure = .int
+  arg request = .string
+  boundary = pos("0d0a0d0a"x, request)
+  if boundary > 0 then return boundary + 4
+  return 0
+
+content_length: procedure = .int
+  arg headers = .string
+  marker = "CONTENT-LENGTH:"
+  upper_headers = translate(headers)
+  start = pos(marker, upper_headers)
+  if start = 0 then return 0
+  start = start + length(marker)
+  finish = pos("0d0a"x, headers, start)
+  if finish = 0 then return -1
+  value = strip(substr(headers, start, finish - start))
+  if datatype(value, "W") = 0 then return -1
+  return value
+
+read_request: procedure = .string
+  arg socket = .int
+  request = ""
+  start = 0
+  do while start = 0
+    chunk = socketrecv(socket, 4096)
+    if length(chunk) = 0 then return ""
+    request = request || chunk
+    start = body_start(request)
+  end
+  wanted = content_length(left(request, start - 1))
+  if wanted < 0 then return ""
+  do while binlength(substr(request, start) as .binary) < wanted
+    chunk = socketrecv(socket, 4096)
+    if length(chunk) = 0 then return ""
+    request = request || chunk
+  end
+  return request
+
+pooled_http_server: class implements .taskwork
+  _ready_reference = .channelvalue
+
+  *: factory
+    arg ready_reference = .channelvalue
+    _ready_reference = ready_reference
+    return
+
+  run: method = .channelvalue
+    arg ignored = .channelvalue, context = .taskcontext
+    ready = .byteendpoint.from_reference(_ready_reference)
+    server = socketcreate()
+    if server <= 0 then return .channelvalue.integer_value(-1)
+
+    if socketbind(server, "127.0.0.1", 0) <> 0 then return .channelvalue.integer_value(-2)
+    local = socketlocal(server)
+    port_text = substr(local, lastpos(":", local) + 1)
+    if datatype(port_text, "W") = 0 then return .channelvalue.integer_value(-3)
+    port = port_text
+    if sockettimeout(server, 10000) <> 0 then return .channelvalue.integer_value(-4)
+    if socketlisten(server, 4) <> 0 then return .channelvalue.integer_value(-5)
+
+    port_wire = '0000000000000000'x as .binary
+    <at..int>(0) port_wire = port
+    if endpoint_write(ready, port_wire) <> 8 then return .channelvalue.integer_value(-6)
+    call ready.half_close(2)
+    call ready.close()
+
+    client = socketaccept(server)
+    if client <= 0 then return .channelvalue.integer_value(-7)
+    if sockettimeout(client, 10000) <> 0 then return .channelvalue.integer_value(-8)
+
+    requests = 0
+    saw_get = 0
+    saw_post_two = 0
+    saw_put = 0
+    saw_post_four = 0
+    do request_index = 1 to 4
+      request = read_request(client)
+      if request = "" then return .channelvalue.integer_value(-10 - request_index)
+      if left(request, 9) = "GET /one " then saw_get = saw_get + 1
+      else if left(request, 10) = "POST /two " then saw_post_two = saw_post_two + 1
+      else if left(request, 11) = "PUT /three " then saw_put = saw_put + 1
+      else if left(request, 11) = "POST /four " then saw_post_four = saw_post_four + 1
+      else return .channelvalue.integer_value(-30)
+      requests = requests + 1
+      response_body = "pooled-reply-" || request_index
+      if request_index = 4 then connection = "close"
+      else connection = "keep-alive"
+      crlf = "0d0a"x
+      if request_index = 2 then response = "HTTP/1.1 200 OK" || crlf || ,
+                 "Content-Type: text/plain" || crlf || ,
+                 "Transfer-Encoding: chunked" || crlf || ,
+                 "X-Test-Request: " || request_index || crlf || ,
+                 "Connection: " || connection || crlf || crlf || ,
+                 "e" || crlf || response_body || crlf || "0" || crlf || crlf
+      else response = "HTTP/1.1 200 OK" || crlf || ,
+                 "Content-Type: text/plain" || crlf || ,
+                 "Content-Length: " || binlength(response_body as .binary) || crlf || ,
+                 "X-Test-Request: " || request_index || crlf || ,
+                 "Connection: " || connection || crlf || crlf || response_body
+      if socketsend(client, response) <> binlength(response as .binary) then return .channelvalue.integer_value(-20 - request_index)
+    end
+
+    drop_rc = socketclose(client)
+    drop_rc = socketclose(server)
+    if saw_get <> 1 | saw_post_two <> 1 | saw_put <> 1 | saw_post_four <> 1 then return .channelvalue.integer_value(-31)
+    return .channelvalue.integer_value(100 + requests)
+
+check_response: procedure = .int
+  arg response = .httpresponse
+  if response.transport_status() <> 0 then do
+    say "HTTP transport failure:" response.transport_status() response.error()
+    return 1
+  end
+  if response.status() <> 200 then return 2
+  if response.succeeded() = 0 then return 3
+  if left(response.body(), 13) <> "pooled-reply-" then return 4
+  if response.body_bytes() as .string <> response.body() then return 6
+  if response.header("Content-Type") <> "text/plain" then return 5
+  return 0
+
+main: procedure = .int
+  errors = 0
+  ready = .byteendpoint.memory(3, 8)
+  server_pool = .taskpool.local(1, 1)
+  server_scope = .taskscope.collectall(server_pool, 60000)
+  server_target = task .pooled_http_server(ready.provider_reference())
+  server_child = server_scope.submit(server_target, .channelvalue.null_value())
+  port_wire = endpoint_read_exact(ready, 8)
+  if binlength(port_wire) <> 8 then do
+    say "FAIL: pooled HTTP server did not publish its port"
+    return 1
+  end
+  port = <at..int>(0) port_wire
+  call ready.close()
+
+  client = .httpclient.pooled("http://127.0.0.1:" || port, 1, 4, 1048576)
+  request_pool = .taskpool.local(2, 4)
+  headers = .httpheaders.media_type("text/plain")
+
+  first_scope = .taskscope.failfast(request_pool, 60000)
+  do parallel using first_scope
+    first = client.get("/one", headers)
+    second = client.post("/two", "two", headers)
+  end
+  errors = errors + check_response(first)
+  errors = errors + check_response(second)
+
+  second_scope = .taskscope.failfast(request_pool, 60000)
+  do parallel using second_scope
+    third = client.request("PUT", "/three", "three" as .binary, headers)
+    fourth = client.post("/four", "four", headers)
+  end
+  errors = errors + check_response(third)
+  errors = errors + check_response(fourth)
+
+  call request_pool.close()
+  call client.close()
+  server_completion = server_child.wait(-1)
+  call server_scope.finish()
+  call server_pool.close()
+  if server_completion.succeeded() = 0 then do
+    say "FAIL: pooled HTTP server task:" server_completion.error_code() server_completion.message()
+    errors = errors + 1
+  end
+  else if server_completion.value().as_integer() <> 104 then do
+    say "FAIL: expected one connection and four requests, got" server_completion.value().as_integer()
+    errors = errors + 1
+  end
+
+  if errors <> 0 then do
+    say "FAIL: rxfnsg pooled HTTP" errors
+    return 1
+  end
+  say "PASS: rxfnsg pooled HTTP reused one owned connection for four task requests"
+  return 0

@@ -1,0 +1,44 @@
+PERF3-13 Gate F F1f first Release verdict
+Date: 2026-08-15
+Branch: develop
+Accepted control source: 3d9f484e2 (F1e closeout product)
+Candidate: frozen F1f working-tree implementation before its local slice commit
+Host: Darwin 25.5.0 arm64, 10 logical CPUs, AC power, no thermal or performance warning
+Build: ordinary profiling-off Release
+
+Exact retained controls:
+- rxbvm sha256 09d7ce9ae7225ff557ad390e4fae7498408f84e63c5d573914e845b460f29671, 1,361,720 bytes
+- rxtvm sha256 9d0309cc35508ddd213d654e60469dd2faad511e51db49608da488c52b92c7ab, 1,361,848 bytes
+
+Frozen candidates:
+- rxbvm sha256 a47c32bded25ef20924ccb1919d43d61734fc4118ee5c3d9af763cfb7fe2c00b, 1,379,048 bytes
+- rxtvm sha256 9d549eca1b956cdb9238740cbbfd14c312f96ed58cfa1e82c4ef00ef9d242be2, 1,379,176 bytes
+- size delta: +17,328 bytes for each VM
+
+RXBIN compatibility:
+- accepted benchmark image sha256 b49d02d78b4afb0f214daa7dc37ad1aa5b38f65759bf7781b3a342ddc15562a8, 2,341 bytes
+- candidate benchmark image sha256 d77ff2571965f498809449fbfd0a294e2389614a79206bc1f9a31074a700e72e, 2,629 bytes
+- the source workload and timed loops are identical; the accepted image omits
+  F1f .task1 metadata and uses the pre-F1f zero binding accepted by the F1e
+  executable, while the candidate image seals the same two callables before
+  either timer starts
+
+Initial balanced 12-pair means, candidate versus accepted:
+- rxbvml channel latency: -23.126716%, 95% CI [-30.992478%, -15.260954%], clear adverse, guard hit
+- rxbvml channel throughput: +3.067994%, 95% CI [+0.920912%, +5.215076%], clear favorable, no guard hit
+- rxtvml channel latency: -26.789720%, 95% CI [-29.211087%, -24.368353%], clear adverse, guard hit
+- rxtvml channel throughput: -0.201147%, 95% CI [-1.056224%, +0.653929%], noisy, no guard hit
+
+Unchanged confirmation, balanced 12-pair means:
+- rxbvml channel latency: -26.318621%, 95% CI [-29.720115%, -22.917126%], clear adverse, guard hit
+- rxbvml channel throughput: +0.799146%, 95% CI [-0.943291%, +2.541583%], noisy, no guard hit
+- rxtvml channel latency: -28.291208%, 95% CI [-29.599138%, -26.983279%], clear adverse, guard hit
+- rxtvml channel throughput: +0.263749%, 95% CI [-1.788936%, +2.316435%], noisy, no guard hit
+
+Verdict: F1f has a confirmed tiny-task latency regression and no confirmed
+throughput regression. The changed shape most likely responsible is validation
+of the 80-byte sealed image/callable/signature/adapter binding on every task
+submission. Adrian explicitly directed the unattended sequence to retain and
+record a confirmed slowdown, accept the necessary binary-shape relay, and
+continue; hot-loop and slow-instruction tuning is deferred to F3/release
+hardening after the instruction and public surface work is stable.

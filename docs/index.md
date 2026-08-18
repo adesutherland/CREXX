@@ -23,7 +23,11 @@ designs.
 ## Language
 
 - [Language reference](books/crexx_language_reference/about.md)
+- [Concurrency language reference](books/crexx_language_reference/concurrency.md)
 - [Level B tutorial](books/crexx_programming_guide/levelb_tutorial.md)
+- [Concurrent programming](books/crexx_programming_guide/concurrency.md)
+- [Concurrency classes](books/crexx_library_reference/concurrency.md)
+- [Concurrent HTTP client and server](books/crexx_library_reference/concurrent_http.md)
 - [Language levels](books/crexx_language_reference/crexx_levels.md)
 - [Data types](books/crexx_language_reference/data_types.md)
 - [Statements](books/crexx_language_reference/statements.md)
@@ -54,6 +58,7 @@ designs.
 - [Instruction characteristics](books/crexx_vm_spec/instruction_characteristics.md)
 - [Platform considerations](books/crexx_vm_spec/platform_considerations.md)
 - [Current architecture notes](ai-context/CREXX_ARCHITECTURE.md)
+- [Concurrency architecture and maintainer reference](ai-context/CREXX_CONCURRENCY.md)
 - [Assembler internals](ai-context/RXAS_ASSEMBLER.md)
 - [Linker internals](ai-context/RXLINK_LINKER.md)
 - [Interpreter internals](ai-context/RXVM_INTERPRETER.md)

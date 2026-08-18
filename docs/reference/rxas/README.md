@@ -49,8 +49,8 @@ no missing, unknown, or duplicate mnemonic headings.
 - [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md): 46 mnemonics
 - [Strings And Characters](instructions/06-strings-and-characters.md): 31 mnemonics
 - [Binary Memory](instructions/07-binary-memory.md): 41 mnemonics
-- [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md): 41 mnemonics
-- [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md): 44 mnemonics
+- [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md): 36 mnemonics
+- [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md): 48 mnemonics
 - [Signals, Breakpoints, And Runtime](instructions/10-signals-breakpoints-and-runtime.md): 19 mnemonics
 - [Metadata And Introspection](instructions/11-metadata-and-introspection.md): 23 mnemonics
 - [Large And Fused Instructions](instructions/12-large-instructions.md): 29 mnemonics

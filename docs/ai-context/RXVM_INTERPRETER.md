@@ -410,8 +410,8 @@ receive a pointer from this allocator family. Injected or foreign allocators
 retain an explicit requested-capacity contract instead of being probed for
 slab metadata.
 
-The EF-0 spawn path uses that independent-domain option. A redirect reader or
-writer receives a private libc-owned single-shot completion, not an RXVM
+Structured child-process redirection uses that independent-domain option. A
+redirect reader or writer receives a private libc-owned single-shot completion, not an RXVM
 worker, register or `value *`. String and line-array input is flattened into an
 immutable byte snapshot before its writer starts. stdout and stderr readers
 grow separate byte buffers, publish exactly one terminal state, and may finish
@@ -423,12 +423,12 @@ request paths use the same join-before-destruction contract. POSIX uses
 close-on-exec completion descriptors and Windows uses private non-inheritable
 handle duplicates; neither platform hands a parent worker to an I/O thread.
 
-The current Gate E E1 execution product still creates one logical worker, but
-its ownership shell is now explicit. `rxvm_runtime` owns the memory context and
-central whole-slab depot. The embedded `rxvm_worker` in `rxvm_context` owns the
-allocator arena, thread identity and lifecycle. The compatibility CLI and
-RXVML paths each create one runtime/worker pair, so no public execution or pool
-API has changed.
+`rxvm_runtime` owns the memory context and central whole-slab depot. Each
+`rxvm_context` embeds one `rxvm_worker`, which owns its allocator arena, thread
+identity and lifecycle. The compatibility CLI and ordinary RXVML paths create
+one runtime/worker pair. Channel providers create additional isolated contexts
+over a shared sealed program generation; they do not share registers, globals
+or other writable execution state.
 
 The worker lifecycle is idle, running, draining and stopped. Only the owning
 thread may start/end execution or begin teardown. Nested RXVML calls on that
@@ -438,11 +438,10 @@ Teardown is permitted only from idle, moves through draining, destroys the
 worker arena, unregisters it from the runtime and then destroys the now-empty
 runtime domain. Debug teardown continues to abort on any live allocation.
 
-Gate E2 appends a worker-owned active-state record to `rxvm_context`, preserving
-the offsets of earlier context members. This is not a guarantee that the C
-compiler will retain an identical flattened-core stack/register layout; the
-direct execution slot is deliberately local to `run()` and the accepted E2
-verdict records the resulting code-layout effect. A checked thread-local
+The worker-owned active-state record in `rxvm_context` preserves the offsets of
+earlier context members. This is not a guarantee that the C compiler will
+retain an identical flattened-core stack/register layout; the direct execution
+slot is deliberately local to `run()`. A checked thread-local
 locator identifies the owning context during execution and native load
 callbacks, but the mutable RXVML/RXPA binding, RXPA copy-out pool, SAY route and
 CREXX command state live in the context. Its active interrupt field points to
@@ -453,13 +452,12 @@ designates its main VM context as the sole OS-addressable interrupt target.
 POSIX signal and Windows console callbacks map the event and set a bit in that
 context's own pending word; they do not create a second queue or make every
 worker poll process-global state. Other contexts retain only their local word.
-Any later propagation to multiple workers is explicit Gate F communication
-performed outside the raw OS callback.
+Propagation to multiple workers uses explicit channel communication outside
+the raw OS callback.
 
-This shell is a prerequisite for, not proof of, multi-threaded VM execution.
-Later Gate E slices give every worker its own stack/register set, frame
+Every concurrently executing worker has its own stack/register set, frame
 recycler, module globals, native/plugin instances, reference/socket registries
-and procedure-affine state before creating concurrent worker threads.
+and procedure-affine state.
 `move_value()` is currently an owner-local operation:
 moving its pointers into another worker would leave them owned by the source
 arena and later fail the ownership check. Cross-worker communication must
@@ -467,31 +465,31 @@ therefore copy into receiver-owned storage, use an explicitly transferable
 immutable buffer, or transfer ownership of a whole suitably isolated block at
 a defined safe point. Process and cross-host channels must use a versioned
 serialized envelope. None may expose a raw `value` or silently mutate a
-register owned by another worker. The preferred future Rexx-visible envelope
+register owned by another worker. The Rexx-visible envelope
 is register-centric: one logical typed scalar or binary register image may
 contain ordered child-register images. That `ChannelValue` is a transport
 description, never the internal `value`; the receiver materializes it into its
 own register tree. Large binary content may later select immutable chunks or a
 bounded stream capability beneath the same logical surface.
 
-Gate F keeps channel mechanism below messaging policy. The VM may provide
+The channel contract keeps mechanism below messaging policy. The VM provides
 bounded submission/completion queues, wait/wakeup, cancellation, terminal
 status and receiver-owned `ChannelValue` materialization. Event buses,
 publish/subscribe topics, routing, fan-out, replay, retained delivery and
 acknowledgement belong to Rexx worker classes or RXAS libraries built on that
 substrate; they are not VM instructions or VM-owned global state.
 
-Cross-host channels must use an open, versioned wire protocol that a non-Rexx
-actor can implement without CREXX headers or RXVM knowledge. Its eventual
+Any future cross-host channel must use an open, versioned wire protocol that a
+non-Rexx actor can implement without CREXX headers or RXVM knowledge. Its eventual
 specification must cover framing and types, capability negotiation, endpoint
 and correlation identity, ordering/delivery guarantees, deadlines and
 cancellation, terminal errors, streaming/chunking, flow control, extensibility
 and security hooks. No raw `value`, `proc_runtime *`, native pointer or
 process-local opcode/handler identity may cross that boundary. The encoding and
-network transport remain Gate F decisions after the local ownership and channel
-contract is accepted.
+network transport remain future design and publication work; provider type `3`
+does not currently advertise such a transport.
 
-Gate E3b-P1 makes the existing RXPA surface safe for multiple live VM contexts
+The RXPA runtime makes the existing surface safe for multiple live VM contexts
 without changing its initializer or procedure signature. Static constructor
 registrations are retained as an owned, synchronized process catalogue and are
 replayed into a distinct native module for every VM; the first VM no longer
@@ -520,18 +518,18 @@ legacy dynamic plugins copy the helper table into the DSO-static
 statics.
 
 Native-payload `copy` and `finalize` operations remain serialized even when the
-originating procedure plugin is process-reentrant. Gate E3b-P2 adds a separate
-optional versioned query for per-procedure policy and per-VM sessions while
+originating procedure plugin is process-reentrant. The runtime also provides a
+separate optional versioned query for per-procedure policy and per-VM sessions while
 leaving the installed initializer and call ABI unchanged. Procedure invokers
 remain load-bound; session-affine calls enter the VM-owned session selected at
 load, and old hosts continue through the plugin's default session. The public
 author contract and opt-in macros are documented in
 `docs/ai-context/CREXX_LIBS.md`.
 
-### Gate E4 sealed program generations
+### Sealed Program Generations
 
-Gate E4a retains two fully independent loads of the same RXBIN as the
-correctness control before any program storage is shared. The focused internal
+Correctness tests retain two fully independent loads of the same RXBIN as the
+control for shared program storage. The focused internal
 control runs against the compiler-selected `rxvml`, explicit switch-dispatch
 `rxbvml` and, where supported, a test-only direct-threaded RXVML executable. It
 proves byte-equivalent but pointer-distinct canonical instruction cells and
@@ -558,12 +556,12 @@ The audit classifies the current storage as follows:
 - prepared execution images remain local because they contain direct
   `proc_runtime *` operands and either process-local handler addresses or
   VM-private opcodes;
-- native modules remain outside the first sharing slice. E3's process catalogue
+- native modules remain outside the first sharing slice. The process catalogue
   and DSO/factory metadata can be retained by a runtime, but per-VM procedure
   policy, sessions, payload lifetime and plugin/module overlays stay local.
 
-Gate E4b implements that selected direction behind an internal bytecode-only
-API. An `rxvm_runtime` may own one synchronized program catalogue containing
+The internal bytecode-only API implements that model. An `rxvm_runtime` may own
+one synchronized program catalogue containing
 reference-counted, append-only `rxvm_program_generation` records. Sealing
 adopts the complete validated bytecode prefix from one worker VM. Attaching
 another worker VM materializes new local `module` overlays over the same
@@ -582,26 +580,26 @@ contains it is gone. Catalogue and reference-count synchronization is confined
 to cold lifecycle operations. No instruction handler or dispatch iteration
 acquires a generation lock.
 
-Native/plugin modules are rejected by this first seal operation and continue
-to use the E3 catalogue, DSO, procedure-policy and per-VM session lifetimes.
+Native/plugin modules are rejected by the seal operation and continue to use
+the process catalogue, DSO, procedure-policy and per-VM session lifetimes.
 Ordinary public `rxvm_create()` contexts still create their own one-worker
-runtime. The shared-runtime context factory and generation operations are
-internal foundations for E5; E4 adds no public worker/thread/channel API and no
-RXAS, RXBIN, plugin ABI or canonical-image change. Sharing the current `module`
-or prepared image behind locks, mutating a published generation in place, and
+runtime. The shared-runtime context factory and generation operations remain
+internal and are used by core providers rather than exposed as a public worker
+API. They add no RXPA threading ABI or canonical-image change. Sharing the
+current `module` or prepared image behind locks, mutating a published generation in place, and
 treating a raw file mapping as the complete solution remain rejected.
 
-### Gate E5 native doorbell and sparse fallback
+### Native Doorbell and Sparse Interrupt Fallback
 
-The private macOS PoC proves prompt foreign-thread cancellation without adding
-a poll, worker-count test, targetability branch, atomic read or loop selector to
-the accepted E4 dispatch edge. A test-only persistent executor gives each
-worker its own context and E4 sealed-generation overlay. A producer publishes
+The macOS implementation provides prompt foreign-thread cancellation without
+adding a poll, worker-count test, targetability branch, atomic read or loop
+selector to the ordinary dispatch edge. A persistent executor gives each
+worker its own context and sealed-generation overlay. A producer publishes
 the request state under the request mutex and uses `pthread_kill()` with private
 `SIGURG` to ring the selected worker. The signal handler performs only a
 bounded lookup of a pre-registered worker stack range and ORs `RXSIGNAL_CANCEL`
 into that worker's existing execution-local `sig_atomic_t` interrupt word. The
-next ordinary E4 dispatch check enters the existing cold interrupt route.
+next ordinary dispatch check enters the existing cold interrupt route.
 
 The executor blocks the private signal while a worker is idle, while
 `rxvm_signal_enter_execution()` publishes its current stack-local interrupt
@@ -613,16 +611,14 @@ the rejected TLS form emitted a Mach-O TLV resolver call. The retained fixed
 64-slot stack-range scan has no handler call, allocation, log, lock or runtime
 graph traversal.
 
-This is a physical-delivery proof, not an installed executor, public worker
-API, portable signal backend or completed cancellation protocol. Direct
-`CANCEL` is a stand-in for the industrial design: production must first publish
-a correlated mailbox event and generation, then use one internal doorbell bit
-to enter the cold route, validate the active request, drain all published work
-and preserve `KILL`/shutdown priority.
+This physical-delivery mechanism is internal, not a public worker API. A
+provider first publishes a correlated request and generation, then uses one
+internal doorbell bit to enter the cold route, validate the active request,
+drain published work and preserve `KILL`/shutdown priority.
 
 The portable owner model distinguishes targetability from native-delivery
-capability. Non-targetable/local contexts always use the unchanged E4 owner.
-Targetable workers use that same E4 owner when POSIX thread signals or Windows
+capability. Non-targetable/local contexts always use the direct owner.
+Targetable workers use that same owner when POSIX thread signals or Windows
 special APCs provide prompt native delivery. Only a targetable worker without
 native delivery selects a second owner, immutably and before its execution
 image is prepared; an executing worker never changes owners.
@@ -639,7 +635,7 @@ classification and provenance are recorded in
 `performance/PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md` and must be kept aligned
 with `rxops.h` and private execution-image rewrites.
 
-The Windows 11 PoC now qualifies this owner under MinGW GCC, MSVC and Clang
+Windows 11 qualification covers this owner under MinGW GCC, MSVC and Clang
 with the MSVC ABI. The exact sparse fixture covers conditional, counted and
 indirect backedges plus every bytecode return form; the persistent-worker
 fixture covers unconditional-loop and recursive-call cancellation, worker
@@ -655,7 +651,7 @@ and an indeterminate value selects the sparse owner and is dereferenced on
 request entry. `test_rxvmactive` deliberately poisons the context before
 initialization to enforce this invariant.
 
-### Gate E6 allocator ownership and private scale qualification
+### Allocator Ownership and Scale Qualification
 
 Every allocation owned by an `rxvm_memory_worker` is confined to the thread
 that created that worker. Standard-slab, oversized-extent, value-array and
@@ -671,14 +667,125 @@ is confined to rejected operations. Successful owner-local allocation and free
 remain lock-free, retain one empty slab per active class locally and return
 additional empty slabs through the existing synchronized depot policy.
 
-Gate E6 selected this strict C0 policy after measuring and rejecting automatic
-owner-idle slab reclaim and a test-only owner-drained remote-free queue. Live VM
+The strict owner-local policy was selected after measuring and rejecting
+automatic owner-idle slab reclaim and a test-only owner-drained remote-free queue. Live VM
 values and worker storage still never cross workers; normal transfer must
 materialize receiver-owned data or use a separately owned immutable/moved
-buffer. The private executor permanently qualifies compute and allocation
+buffer. The executor qualification covers compute and allocation
 churn at one, two, four and eight workers on each available concrete VM and
-asserts that the requested maximum concurrency is reached. This adds no public
-worker/channel API, RXAS/RXBIN instruction, plugin ABI or scheduling contract.
+asserts that the requested maximum concurrency is reached. This allocator
+policy adds no public worker/channel API, plugin ABI or scheduling contract.
+
+### Channel, Level B and Level G Task Substrate
+
+The public RXAS channel boundary is implemented without exposing a
+public RXPA threading ABI. Opcodes `650..654` implement `chanopen`,
+`chanstart`, `chanwait`, `chancancel` and `chanclose` in the shared VM core, so
+`rxbvm` and `rxtvm` execute the same logical behavior. They require RXBIN 007
+feature bit `1 << 3`, return operation statuses rather than VM signals, remain
+opaque optimizer barriers and are outlined/cold under profile-20.
+
+Each `rxvm_context` owns a generation-checked table of channel and ticket
+capabilities. Handles encode their execution owner, kind, slot and generation;
+wrong-owner, wrong-kind and stale uses are rejected. They are local authority,
+not transferable `ChannelValue`. Context teardown cancel-closes every live
+channel, joins its workers and releases all tickets/requests before the runtime
+provider state and sealed generation are destroyed.
+
+The runtime-owned provider registry validates complete private descriptors,
+rejects duplicate names/codes atomically, pins provider/module lifetime and is
+seeded with the core type `1` local-thread descriptor. An internal fake
+extension fixture proves register/open/operate/close/unload sequencing without
+publishing a plugin ABI. `chanopen` validates its canonical RXCV pool
+configuration, required capabilities and the controller's sealed bytecode-only
+program generation, then creates an attached executor over that same
+generation. A program containing native/plugin modules may still execute
+normally, but local `chanopen` reports provider unavailability when the image
+cannot be sealed for attached workers. This avoids making ordinary native
+program startup depend on channel eligibility.
+
+The core type `1` provider advertises bounded admission, cancellation,
+provider-owned deadlines and completion-order observation. Task envelopes name
+a semantic-graph callable ID and carry typed copied register images; they never
+carry a procedure-name string, live `value`, reference, frame, native payload
+or worker pointer. Completion is encoded into receiver-owned canonical RXCV binary and is
+marked observed only after controller-worker-owned storage has been allocated
+and populated. Encoding or allocation failure therefore leaves the terminal
+completion available for a later wait. Queue-full/backpressure,
+finite/nonblocking waits, queued/running cancellation, fail-fast/collect-all
+scopes, terminal observation, drain/cancel close and deterministic teardown are
+implemented. RXCV validation and encoding cover null/boolean, integer, float,
+decimal, string, binary, ordered arrays and schema-tagged records with
+canonical limits/order/flags/NaN.
+
+`lib/classlib/Concurrency.crexx` supplies the executable Level B pool, scope,
+task, target, context, completion, channel, value/codec, endpoint,
+service-reference and transfer-buffer surface. Inspection proves its runtime
+bridge is only the five channel instructions.
+
+Core provider type `4` implements bounded C-owned byte endpoints and
+type `5` as structured child-process execution. Endpoint storage owns copied
+bytes, backpressure, cancellation, EOF and half-close state; background I/O
+never retains a live Rexx register/value. Execution-local CSPRNG references
+carry validated direction rights and resolve through the type `4` registry,
+not through native payloads or transferable OS handles. The child provider
+snapshots command/arguments, logical working directory, merged environment,
+CREXX bindings and three optional endpoint references before launch. POSIX
+children use process groups and Windows children use jobs for bounded
+termination. Controller-mode CREXX execution remains synchronous where it
+must preserve command-environment state.
+
+The certified ADDRESS exit and `_address.crexx` now adapt classic string/array
+redirects onto these two providers and apply captured output only on the
+controlling execution. The retired source mnemonics `spawn`, `redir2str`,
+`redir2arr`, `str2redir`, `arr2redir` and `nullredir` are rejected; numeric
+slots `466..471` are reserved handlers that halt stale RXBIN with
+`UNKNOWN_INSTRUCTION`.
+
+Provider type `2`, `crexx.core.isolated-process`, uses capability mask
+`0x010f`. Opening a process pool writes the controller's sealed bytecode-only
+generation to a provider-owned temporary RXBIN archive. Each distinct semantic
+graph remains its own concatenated 007 container, with modules from that graph
+written together, so numeric callable/member identities are preserved. Native
+modules make the generation ineligible rather than being exposed through a
+new process ABI.
+
+The provider owns a bounded set of warm child VMs and a bounded admitted
+request count. Its private version-1 protocol uses
+`READY`/`INVOKE`/`STARTED`/`RESULT`/`CANCEL`/`SHUTDOWN` frames carrying the same
+canonical RXCV task/completion documents as the local provider. A worker
+process may be reused, but every request creates a fresh executor and context;
+module globals and other live VM state therefore do not spill between tasks.
+Cancellation/deadline first interrupts cooperatively and then may terminate
+only the isolated process after a 250 ms grace. Pre-`STARTED` loss is
+`TRANSPORT_LOST`, post-`STARTED` loss is `UNKNOWN_OUTCOME`, terminal publication
+is exactly once and a dead worker is replaced. Private POSIX protocol writes
+contain `SIGPIPE` locally instead of changing the host's process-wide signal
+disposition. Pool teardown joins all provider threads/processes and removes
+the temporary snapshot.
+
+Local and process dispatch validate an 80-byte sealed binding.
+Kind `1` identifies a task procedure, kind `2` reconstructs a transferable
+receiver through its sealed `from_channel` factory, and kind `3` constructs a
+receiver-side `.taskwork` factory target and invokes its sealed `run` method.
+The binding cache keeps that first-use check and caches only successful
+resolution within the validating executor worker. The worker graph binding lazily retains the
+immutable graph digest, and a fixed four-set, two-way cache uses the complete
+binding plus requested result mode to retain worker-local procedure/adapter
+pointers. A miss follows the unchanged validator; failures are never cached,
+collisions only evict, and worker/context teardown invalidates every entry.
+Task arguments/results and factory arguments remain receiver-materialized
+RXCV; no live VM value crosses. For a typed object result, the executor invokes
+the sealed result class's `to_channel()` method, canonicalizes the returned
+`.channelvalue`, and publishes that document. The controller-side compiler
+lowering reconstructs a new object with the same class's `from_channel`
+factory. Level G task/parallel syntax lowers through the
+Level B classes and is accepted only under `OPTIONS LEVELG`. Concurrent HTTP is
+implemented as a Level G Rexx library above the same channel and endpoint
+substrate. Unsupported Level B operations report status `19` rather than
+simulating success. A public provider-plugin ABI and provider type `3` remain
+reserved. The exact current/future boundary is recorded in the
+[concurrency implementation status matrix](../../concurrency/IMPLEMENTATION-STATUS.md).
 
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed
 strictly by the VM frames. There is no automated background Garbage Collector
@@ -1336,22 +1443,21 @@ shape:
   reviewed host-bound, reserved and sentinel classes callable.
 
 Every handler has one central tier rather than one definition per panel. Both
-private fused handlers enter at the 5% tier. The current 56-handler
-`NEVER` class covers sockets, console I/O, clocks/environment access,
-spawn/redirection, file I/O and dynamic module loading. It is a reviewed code-
+private fused handlers enter at the 5% tier. The current 55-handler
+`NEVER` class covers provider channels, sockets, console I/O,
+clocks/environment access, file I/O and dynamic module loading. It is a reviewed code-
 placement attribute: literal `all-inline` deliberately ignores it to remain
 the exact equivalence control, while every profile and `max-eligible` honors
 it. A later profile can justify an explicit tier change, but a percentage
 threshold cannot silently override it.
 
-The frozen R2 percentage denominator of 588 non-reserved public opcode slots
-included the owner-internal `INTERRUPT` target, which has no handler definition.
-The implementation actually controls 589 non-reserved public-plus-private
-definitions (587 public handlers plus two private). The candidate totals are
-31, 61, 90, 120 and 175 for the nominal 5%, 10%, 15%, 20% and 30% panels; three
-top-176 host operations remain callable. `max-eligible` is 531/589 (90.15%),
-or 531/587 (90.46%) after excluding the two sentinels as well. `INTERRUPT` has
-an explicit owner-only, always-inline tier.
+The current table has 584 source-visible public handlers, two private fused
+handlers, 68 reserved opcode handlers, two reserved sentinels and the
+owner-internal `INTERRUPT` target. The candidate totals remain 31, 61, 90, 120
+and 175 for the nominal 5%, 10%, 15%, 20% and 30% panels; three top-176 host
+operations remain callable. `max-eligible` is 531/586 (90.61%) across the
+normal public-plus-private handlers. `INTERRUPT` has an explicit owner-only,
+always-inline tier.
 
 The panel setting changes no RXAS/RXBIN encoding or public/plugin ABI. Adrian
 selected common `profile-20` as the provisional product default after the R5

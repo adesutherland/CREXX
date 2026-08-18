@@ -1,0 +1,94 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/35 Test    #1: linked_opt_runtime_artifacts_build ....   Passed    0.08 sec
+      Start 1729: ts_http_crexx_rag_rxtvm_opt
+      Start 1728: ts_http_crexx_rag_rxtvm_noopt
+      Start 1710: ts_http_server_rxbvm_noopt
+      Start 1711: ts_http_server_rxbvm_opt
+      Start 1713: ts_http_server_rxtvm_opt
+      Start 1712: ts_http_server_rxtvm_noopt
+      Start 1736: ts_http_policy_rxtvm_noopt
+      Start 1734: ts_http_policy_rxbvm_noopt
+      Start 1725: ts_http_streaming_rxtvm_opt
+      Start 1724: ts_http_streaming_rxtvm_noopt
+      Start 1723: ts_http_streaming_rxbvm_opt
+      Start 1726: ts_http_crexx_rag_rxbvm_noopt
+      Start 1722: ts_http_streaming_rxbvm_noopt
+      Start 1727: ts_http_crexx_rag_rxbvm_opt
+      Start 1737: ts_http_policy_rxtvm_opt
+      Start 1735: ts_http_policy_rxbvm_opt
+      Start 1705: ts_http_service_contract_opt
+      Start 1721: ts_http_pooled_rxtvm_opt
+      Start 1719: ts_http_pooled_rxbvm_opt
+      Start 1720: ts_http_pooled_rxtvm_noopt
+ 2/35 Test #1726: ts_http_crexx_rag_rxbvm_noopt .........   Passed    0.94 sec
+      Start 1709: ts_llm_providers_opt
+ 3/35 Test #1728: ts_http_crexx_rag_rxtvm_noopt .........   Passed    0.96 sec
+      Start 1707: ts_llm_ollama_opt
+ 4/35 Test #1724: ts_http_streaming_rxtvm_noopt .........   Passed    1.03 sec
+      Start 1706: ts_llm_ollama_noopt
+ 5/35 Test #1719: ts_http_pooled_rxbvm_opt ..............   Passed    1.04 sec
+      Start 1708: ts_llm_providers_noopt
+ 6/35 Test #1725: ts_http_streaming_rxtvm_opt ...........   Passed    1.18 sec
+      Start 1704: ts_http_service_contract_noopt
+ 7/35 Test #1729: ts_http_crexx_rag_rxtvm_opt ...........   Passed    1.18 sec
+      Start 1738: ts_http_codec_rxbvm_noopt
+ 8/35 Test #1738: ts_http_codec_rxbvm_noopt .............   Passed    0.05 sec
+      Start 1740: ts_http_codec_rxtvm_noopt
+ 9/35 Test #1727: ts_http_crexx_rag_rxbvm_opt ...........   Passed    1.23 sec
+      Start 1741: ts_http_codec_rxtvm_opt
+10/35 Test #1741: ts_http_codec_rxtvm_opt ...............   Passed    0.05 sec
+      Start 1739: ts_http_codec_rxbvm_opt
+11/35 Test #1740: ts_http_codec_rxtvm_noopt .............   Passed    0.05 sec
+      Start 1718: ts_http_pooled_rxbvm_noopt
+12/35 Test #1722: ts_http_streaming_rxbvm_noopt .........   Passed    1.28 sec
+      Start 1714: ts_http_server_failures_rxbvm_noopt
+13/35 Test #1739: ts_http_codec_rxbvm_opt ...............   Passed    0.06 sec
+      Start 1715: ts_http_server_failures_rxbvm_opt
+14/35 Test #1723: ts_http_streaming_rxbvm_opt ...........   Passed    1.41 sec
+      Start 1716: ts_http_server_failures_rxtvm_noopt
+15/35 Test #1713: ts_http_server_rxtvm_opt ..............   Passed    1.49 sec
+      Start 1717: ts_http_server_failures_rxtvm_opt
+16/35 Test #1711: ts_http_server_rxbvm_opt ..............   Passed    1.54 sec
+17/35 Test #1705: ts_http_service_contract_opt ..........   Passed    1.55 sec
+18/35 Test #1721: ts_http_pooled_rxtvm_opt ..............   Passed    1.61 sec
+19/35 Test #1736: ts_http_policy_rxtvm_noopt ............   Passed    1.65 sec
+20/35 Test #1704: ts_http_service_contract_noopt ........   Passed    0.47 sec
+21/35 Test #1706: ts_llm_ollama_noopt ...................   Passed    0.64 sec
+22/35 Test #1712: ts_http_server_rxtvm_noopt ............   Passed    1.67 sec
+23/35 Test #1720: ts_http_pooled_rxtvm_noopt ............   Passed    1.65 sec
+24/35 Test #1710: ts_http_server_rxbvm_noopt ............   Passed    1.76 sec
+25/35 Test #1737: ts_http_policy_rxtvm_opt ..............   Passed    1.86 sec
+26/35 Test #1734: ts_http_policy_rxbvm_noopt ............   Passed    1.90 sec
+27/35 Test #1735: ts_http_policy_rxbvm_opt ..............   Passed    1.90 sec
+28/35 Test #1708: ts_llm_providers_noopt ................   Passed    0.86 sec
+29/35 Test #1707: ts_llm_ollama_opt .....................   Passed    1.10 sec
+30/35 Test #1718: ts_http_pooled_rxbvm_noopt ............   Passed    0.86 sec
+31/35 Test #1709: ts_llm_providers_opt ..................   Passed    1.23 sec
+32/35 Test #1714: ts_http_server_failures_rxbvm_noopt ...   Passed    1.12 sec
+33/35 Test #1716: ts_http_server_failures_rxtvm_noopt ...   Passed    1.00 sec
+34/35 Test #1715: ts_http_server_failures_rxbvm_opt .....   Passed    1.09 sec
+35/35 Test #1717: ts_http_server_failures_rxtvm_opt .....   Passed    0.94 sec
+
+100% tests passed, 0 tests failed out of 35
+
+Label Time Summary:
+compression    =   4.51 sec*proc (8 tests)
+concurrency    =  10.62 sec*proc (8 tests)
+crexx_rag      =   4.31 sec*proc (4 tests)
+f1g            =  21.90 sec*proc (20 tests)
+failure        =   4.15 sec*proc (4 tests)
+gate_f         =  21.90 sec*proc (20 tests)
+http           =  32.51 sec*proc (28 tests)
+levelg         =  32.51 sec*proc (28 tests)
+library        =  32.51 sec*proc (28 tests)
+linked         =  15.93 sec*proc (14 tests)
+linked_opt     =  20.47 sec*proc (17 tests)
+policy         =   7.31 sec*proc (4 tests)
+rxbvm          =  16.18 sec*proc (14 tests)
+rxtvm          =  16.34 sec*proc (14 tests)
+server         =  10.62 sec*proc (8 tests)
+smoke          =   0.86 sec*proc (1 test)
+streaming      =   4.90 sec*proc (4 tests)
+
+Total Test time (real) =   2.55 sec

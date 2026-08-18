@@ -142,7 +142,6 @@ set(BIFS
 		stem
 		rxjson
 		rxsocket
-		rxhttp
 		wordrep
 		rxqueue
 		afterword

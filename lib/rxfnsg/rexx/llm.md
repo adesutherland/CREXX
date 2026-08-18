@@ -1,14 +1,13 @@
 # cREXX Level G LLM Library
 
-`llm.rexx` is the first Level G LLM integration layer. Level G is an overlay on
-the Level B foundation here: this module is `options levelg`, lives in the
-`rxfnsg` namespace, and builds as `rxfnsg.rxbin`, while deliberately importing
-and depending on the Level B `rxfnsb`, `rxjson`, and `rxhttp` libraries.
+`llm.rexx` is the Level G LLM integration layer. Level G is an overlay on the
+Level B foundation here: this module is `options levelg`, lives in the
+`rxfnsg` namespace, and builds as `rxfnsg.rxbin`. It uses the public Level G
+`.httpclient` and the private `_rxhttpcore` framing/parser shared with it.
 
 The first provider targets local Ollama. Hosted OpenAI, Anthropic/Claude, and
-Gemini providers are also implemented in Rexx code and use the reusable Level B
-`rxhttp` client for HTTP framing, TLS transport, and JSON helpers from
-`rxjson`.
+Gemini providers are also implemented in Rexx code and use the reusable Level G
+HTTP owner pool for HTTP framing and TLS transport, plus `rxjson` for JSON.
 
 ## Import
 
@@ -58,7 +57,8 @@ Primary methods:
   values for local socket/protocol errors
 - `error() = .string`: last diagnostic message
 - `lastJson() = .string`: last decoded provider JSON body
-- `lastHttp() = .string`: last raw HTTP response
+- `lastHttp() = .string`: reconstructed response head and decoded body for diagnostics
+- `close()`: closes the provider's bounded HTTP connection-owner pool
 
 Helper methods, public for tests and diagnostics:
 
@@ -85,9 +85,11 @@ client = .llm("gemma4:latest")
 answer = client.generate("Reply with one short sentence.")
 if client.status() <> 0 then do
   say client.error()
+  call client.close()
   exit 1
 end
 say answer
+call client.close()
 ```
 
 ## Ollama Contract
@@ -96,8 +98,8 @@ The implementation posts to `/api/generate` with `stream:false`. Ollama serves
 the local API at `http://localhost:11434/api`, and local access does not require
 authentication. The response text is read from the `response` field in the JSON
 body. HTTP framing, including byte-counted `Content-Length` and chunked
-responses, is handled by `rxhttp` before the decoded body is passed to
-`rxjson`.
+responses, is handled by the shared HTTP core before the decoded body is passed
+to `rxjson`.
 
 ## Hosted Provider Contracts
 

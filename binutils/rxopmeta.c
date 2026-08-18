@@ -215,6 +215,29 @@ int rxop_effect_branch_target_operand(const RxOpEffects *effects, size_t operand
 }
 
 unsigned int rxop_component_reads(int opcode, size_t operand_index) {
+    if (opcode == OP_CHANOPEN_REG_REG_REG_REG_REG) {
+        if (operand_index == 4) return RXOP_COMPONENT_BINARY;
+        if (operand_index >= 2) return RXOP_COMPONENT_INTEGER;
+        return RXOP_COMPONENT_ALL;
+    }
+    if (opcode == OP_CHANSTART_REG_REG_REG_REG_REG) {
+        if (operand_index == 3) return RXOP_COMPONENT_BINARY;
+        if (operand_index >= 2) return RXOP_COMPONENT_INTEGER;
+        return RXOP_COMPONENT_ALL;
+    }
+    if (opcode == OP_CHANWAIT_REG_REG_REG_REG) {
+        if (operand_index >= 2) return RXOP_COMPONENT_INTEGER;
+        return RXOP_COMPONENT_ALL;
+    }
+    if (opcode == OP_CHANCANCEL_REG_REG_REG_REG) {
+        if (operand_index == 3) return RXOP_COMPONENT_BINARY;
+        if (operand_index >= 1) return RXOP_COMPONENT_INTEGER;
+        return RXOP_COMPONENT_ALL;
+    }
+    if (opcode == OP_CHANCLOSE_REG_REG_REG) {
+        if (operand_index >= 1) return RXOP_COMPONENT_INTEGER;
+        return RXOP_COMPONENT_ALL;
+    }
     if (opcode == OP_COPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_ALL;
     if (opcode == OP_ICOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_INTEGER;
     if (opcode == OP_FCOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_FLOAT;
@@ -469,6 +492,19 @@ int rxop_same_storage_copy_is_noop(int opcode) {
 /* NONE means the opcode-effects inventory proves a register write but the
  * component changed by that write is not yet exact. */
 unsigned int rxop_component_writes(int opcode, size_t operand_index) {
+    if (opcode == OP_CHANOPEN_REG_REG_REG_REG_REG ||
+        opcode == OP_CHANSTART_REG_REG_REG_REG_REG)
+        return operand_index < 2 ? RXOP_COMPONENT_INTEGER
+                                 : RXOP_COMPONENT_NONE;
+    if (opcode == OP_CHANWAIT_REG_REG_REG_REG) {
+        if (operand_index == 0) return RXOP_COMPONENT_INTEGER;
+        if (operand_index == 1) return RXOP_COMPONENT_BINARY;
+        return RXOP_COMPONENT_NONE;
+    }
+    if (opcode == OP_CHANCANCEL_REG_REG_REG_REG ||
+        opcode == OP_CHANCLOSE_REG_REG_REG)
+        return operand_index == 0 ? RXOP_COMPONENT_INTEGER
+                                  : RXOP_COMPONENT_NONE;
     if (opcode == OP_NULLN_REG_REG || opcode == OP_NULLN_REG_REG_REG ||
         opcode == OP_NULLN_REG_REG_REG_REG)
         return RXOP_COMPONENT_ALL;
@@ -550,6 +586,16 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
 }
 
 unsigned int rxop_component_clears(int opcode, size_t operand_index) {
+    if (opcode == OP_CHANOPEN_REG_REG_REG_REG_REG ||
+        opcode == OP_CHANSTART_REG_REG_REG_REG_REG ||
+        opcode == OP_CHANWAIT_REG_REG_REG_REG ||
+        opcode == OP_CHANCANCEL_REG_REG_REG_REG ||
+        opcode == OP_CHANCLOSE_REG_REG_REG) {
+        if (rxop_component_writes(opcode, operand_index) != RXOP_COMPONENT_NONE)
+            return RXOP_COMPONENT_REFERENCE |
+                   RXOP_COMPONENT_NATIVE_PAYLOAD;
+        return RXOP_COMPONENT_NONE;
+    }
     if (operand_index != 0) return RXOP_COMPONENT_NONE;
     /* set_int(), set_float(), and native-stem string extraction release a
      * reference payload and finalize any host-owned native payload before

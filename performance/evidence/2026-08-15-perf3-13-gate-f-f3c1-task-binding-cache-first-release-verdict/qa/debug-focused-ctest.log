@@ -1,0 +1,43 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start 1248: program_generation_control-rxvml
+      Start 1249: program_generation_control-rxbvml
+      Start 1250: program_generation_control-rxtvml
+      Start  345: gate_f_channel_contract
+      Start 1182: rxvmchannel_process_crash_replacement
+      Start 1184: gate_f_channel_process_rxtvm
+      Start 1183: gate_f_channel_process_rxbvm
+      Start    2: rxgraph_unit
+      Start 1181: gate_f_channel_local_rxtvm
+      Start 1180: gate_f_channel_local_rxbvm
+ 1/10 Test #1249: program_generation_control-rxbvml .......   Passed    0.01 sec
+ 2/10 Test #1248: program_generation_control-rxvml ........   Passed    0.01 sec
+ 3/10 Test #1250: program_generation_control-rxtvml .......   Passed    0.01 sec
+ 4/10 Test  #345: gate_f_channel_contract .................   Passed    0.02 sec
+ 5/10 Test #1181: gate_f_channel_local_rxtvm ..............   Passed    0.51 sec
+ 6/10 Test #1180: gate_f_channel_local_rxbvm ..............   Passed    0.71 sec
+ 7/10 Test #1184: gate_f_channel_process_rxtvm ............   Passed    0.82 sec
+ 8/10 Test    #2: rxgraph_unit ............................   Passed    0.87 sec
+ 9/10 Test #1182: rxvmchannel_process_crash_replacement ...   Passed    1.01 sec
+10/10 Test #1183: gate_f_channel_process_rxbvm ............   Passed    1.03 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Label Time Summary:
+channels       =   4.10 sec*proc (6 tests)
+compiler       =   0.02 sec*proc (1 test)
+crash          =   1.01 sec*proc (1 test)
+e4a            =   0.02 sec*proc (3 tests)
+e4b            =   0.02 sec*proc (3 tests)
+f1c            =   1.22 sec*proc (2 tests)
+f1e            =   2.86 sec*proc (3 tests)
+gate-e         =   0.02 sec*proc (3 tests)
+gate-f         =   4.10 sec*proc (6 tests)
+interpreter    =   4.10 sec*proc (8 tests)
+lifecycle      =   4.08 sec*proc (5 tests)
+perf3          =   4.10 sec*proc (8 tests)
+performance    =   0.02 sec*proc (1 test)
+process        =   2.86 sec*proc (3 tests)
+rxas           =   0.02 sec*proc (1 test)
+rxbin          =   0.02 sec*proc (1 test)
+
+Total Test time (real) =   1.07 sec

@@ -1,0 +1,55 @@
+options levelg comments_dash
+namespace concurrency_transferable_objects
+
+numberbox: class
+  _value = .int
+
+  *: factory
+    arg value = .int
+    _value = value
+    return
+
+  from_channel: factory
+    arg encoded = .channelvalue
+    _value = encoded.as_integer()
+    return
+
+  to_channel: method = .channelvalue
+    return .channelvalue.integer_value(_value)
+
+  value: method = .int
+    return _value
+
+calculator: class
+  _base = .int
+
+  *: factory
+    arg base = .int
+    _base = base
+    return
+
+  from_channel: factory
+    arg encoded = .channelvalue
+    _base = encoded.as_integer()
+    return
+
+  to_channel: method = .channelvalue
+    return .channelvalue.integer_value(_base)
+
+  add: task = .numberbox
+    arg amount = .numberbox
+    return .numberbox(_base + amount.value())
+
+main: procedure = .int
+  calculator = .calculator(40)
+
+  pool = .taskpool.local(2, 8)
+  scope = .taskscope.collectall(pool, 60000)
+  answer = do parallel using scope
+    leave with calculator.add(.numberbox(2))
+  end
+  call pool.close()
+
+  if answer.value() <> 42 then return 1
+  say "PASS: transferable concurrency object example"
+  return 0

@@ -2,8 +2,14 @@
 
 Date opened: 2026-08-05
 
-Status: **Gate E E6 C0 ownership/scale selection accepted and Mac QA closed;
-Gate F public design recorded; Gate F implementation remains closed**
+Status: **allocator/worker-foundation and dated concurrency implementation
+record retained; live concurrency scope and publication status moved to
+[`concurrency/WORKLIST.md`](../concurrency/WORKLIST.md)**
+
+The M6/Gate F material below is historical development provenance. Do not add
+new concurrency work here. Performance measurements and retained evidence stay
+under `performance/`; product capability, portability and publication work are
+owned by the concurrency workspace.
 
 ## Current Gate E continuation
 
@@ -2749,10 +2755,26 @@ and
 
 EF-0 is accepted and locally complete for the private spawn
 completion/transfer subset above. The full transport-neutral M6 programme
-remains closed until the Gate E worker model and E6 scale/reclamation policy
-have been selected. The approved design direction is normative in
-[`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md); recording it does not
-open Gate F implementation.
+was closed until the Gate E worker model and E6 scale/reclamation policy were
+selected. Those prerequisites are complete. Adrian approved the user model and
+staged Gate F implementation on 2026-08-14. The normative design is
+[`PERF3-13-GATE-F-DESIGN.md`](../concurrency/history/PERF3-13-GATE-F-DESIGN.md); the contract-first
+slices and verdict stops are in
+[`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](../concurrency/history/PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
+
+The approachable F0 terminology, conceptual machine, approved Rexx task
+surface, complete Level B control layer and industrial HTTP consumer are now
+recorded in
+[`PERF3-13-GATE-F-USER-GUIDE.md`](../concurrency/history/PERF3-13-GATE-F-USER-GUIDE.md). It records
+typed task declarations and methods, independent task calls within expressions,
+`DO PARALLEL`, `.taskwork`/`.taskcontext`, controller-side failure projection
+and class-configured pools/scopes. Adrian selected the low-level layering on
+2026-08-14: public Level B classes wrap mandatory transport-neutral RXAS
+channel instructions implemented by RXVM over the Gate E executor/provider
+substrate. There is no RXPA task path, hidden native-payload contract or public
+angle-bracket task-intrinsic family. F0-S has locked the exact instruction,
+class and provider contract before the first opcode/runtime edit in
+[`PERF3-13-GATE-F-AI-SPEC.md`](../concurrency/history/PERF3-13-GATE-F-AI-SPEC.md).
 
 The public model is structured task scopes, stateless task targets, stateful
 service/actor references, bounded channels, receiver-materialized
@@ -2763,29 +2785,213 @@ procedure-name strings or live VM object/reference storage.
 
 The VM/provider substrate owns bounded queue mechanics, wait/wakeup,
 cancellation/deadline delivery, terminal completion and receiver-owned value
-materialization. Level B/G libraries own task/service policy, typed proxies,
-events, topics, fan-out, retention, replay, persistence and projections.
+materialization. Reusable bounded byte endpoints replace spawn-only redirect
+plumbing and serve child I/O, process transport and HTTP streaming. Level B/G
+libraries own task/service policy, typed proxies, events, topics, fan-out,
+retention, replay, persistence and projections.
 Logical global mutable state uses a single-owner service identity; event hubs
 produce explicitly eventually consistent projections rather than transparent
 shared objects.
 
-Gate F is surface-first and staged:
+Gate F is contract-first and staged:
 
-- [ ] **F0:** compile-check Level B interfaces/examples; lock task-target,
-  `ChannelValue`, envelope, completion, scope/service lifecycle and provider
-  conformance contracts; stop for approval before implementation.
-- [ ] **F1:** prove the same Level B/RXPA contract over in-process and isolated
-  process providers; publish only as experimental after portable conformance
-  and the mandatory Release verdict.
+- [x] **F0 user model:** Adrian approved the user guide and staged
+  implementation on 2026-08-14.
+- [x] **F0-S:** derive the maintainer/AI specification and coherence matrix;
+  compile-check Level B interface/factory/method declarations; lock
+  task-target, `ChannelValue`, envelope, completion,
+  scope/service lifecycle, HTTP and provider conformance contracts; lock the
+  exact RXAS/RXBIN signatures, value/capability types, effects, signals,
+  provider type/capability codes, reusable byte-endpoint/child-process
+  migration, feature/version gate, diagnostics and both-VM behavior. The exact
+  contract and vectors are in
+  [`PERF3-13-GATE-F-AI-SPEC.md`](../concurrency/history/PERF3-13-GATE-F-AI-SPEC.md); the declaration
+  oracle is
+  [`gate_f_levelb_contract.crexx`](../compiler/tests/rexx_src/gate_f_levelb_contract.crexx).
+- [x] **F1a:** add RXBIN channel feature bit `1 << 3`, public opcodes
+  `650..654`, exact effect/signal/optimizer metadata, RXAS/RXDAS round trips and
+  malformed/feature/duplicate-output validation.
+- [x] **F1b minimum local provider:** implement both-VM channel handlers,
+  execution-local generation-checked capabilities, a runtime-owned core type
+  `1` descriptor, attached Gate E workers, the integer/string RXCV fixture,
+  bounded admission, cancellation, completion ordering and deterministic
+  teardown. Adrian accepted the first Release verdict and the Mac closeout is
+  complete. Evidence:
+  [`F1a/F1b first Release verdict and closeout`](evidence/2026-08-14-perf3-13-gate-f-f1ab-first-release-verdict/).
+- [x] **F1c complete local values/lifecycle and Level B surface:** implement
+  canonical full RXCV, typed register images, provider-owned deadlines/scopes,
+  private provider registration and fake-provider `GF-B09`; add the explicit
+  pool/scope/task/completion/channel/value/transfer Level B classes over only
+  the five RXAS operations. Mac closeout passes full Debug 2,095/2,095,
+  focused Apple ASan 36/36, focused Release 20/20 and 100-repeat Debug/Release
+  lifecycle stress. The confirmed `rxtvml` executor guard slowdown is recorded
+  for F3 hot-loop hardening under Adrian's overnight continuation direction.
+  Evidence:
+  [`F1c first Release verdict and closeout`](evidence/2026-08-14-perf3-13-gate-f-f1c-first-release-verdict/).
+- [x] **F1d reusable redirects and child-process integration:** implement the
+  bounded C-owned byte-endpoint substrate and core provider types `4` and `5`;
+  snapshot child command/environment/bindings/streams; migrate ADDRESS and its
+  compiler exit to the five common channel operations; retire the six
+  pre-release spawn/redirect mnemonics while reserving slots `466..471`; and
+  repair the supported nested-inline block-owner shape exposed by compiling
+  the Level B controller. Mac closeout passes focused Debug 60/60, complete
+  Debug 2,112/2,112, focused Apple ASan 60/60, focused Release 63/63 and
+  100-repeat endpoint/provider/ADDRESS stress. Two unchanged 12-pair Release
+  panels have no adverse-mean guard hit and no clearly adverse interval;
+  channel cells remain noisy, so the verdict records no confirmed F1d
+  regression and makes no improvement claim. Evidence:
+  [`F1d first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f1d-first-release-verdict/).
+- [x] **F1e isolated-process provider:** implement core type `2` and capability
+  mask `0x010f` behind the same five channel operations and canonical RXCV
+  task/completion schemas. The provider snapshots only bytecode generations,
+  preserves distinct semantic graphs as concatenated RXBIN 007 containers,
+  uses bounded warm worker processes with one fresh executor/VM per request,
+  provides exactly-once cancel/deadline/crash completion and replacement, and
+  owns deterministic pipe/process/snapshot teardown. Mac closeout passes full
+  Debug 2,115/2,115, focused Release 106/106, focused Apple ASan 106/106,
+  100-repeat high-risk regression stress, 1,500 concurrent process/SIGPIPE
+  executions and 300 post-audit process repetitions including fail-fast.
+  Two unchanged paired Release panels have no confirmed regression or guard
+  hit; no improvement is claimed. Evidence:
+  [`F1e first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f1e-first-release-verdict/).
+- [x] **F1f gated Level G lowering and sealed task bindings:** implement task
+  procedures/methods, explicit targets, task expressions and both `DO
+  PARALLEL` forms only under Level G; preserve contextual Level B identifiers,
+  synchronous self-recursion, short circuit and structured cleanup; implement
+  kind-1 procedure, kind-2 receiver and kind-3 `.taskwork` factory dispatch
+  through relocatable 80-byte bindings. Imported-library QA exercises `rxc`,
+  `rxas`, `rxlink`, optimized/unoptimized images and both VMs. Mac closeout
+  passes Debug 2,149/2,149, Release Gate F 35/35 and Apple ASan 136/136. The
+  unchanged Release confirmation records accepted/deferred tiny-task latency
+  costs of -26.318621% `rxbvml` and -28.291208% `rxtvml`; throughput is
+  inconclusive and F3 owns later tuning. Evidence:
+  [`F1f first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f1f-first-release-verdict/).
+- [ ] **F1:** implement the mandatory instructions in both VMs, wrap them with
+  the Level B classes, and prove the same contract over in-process and isolated
+  process providers; implement reusable byte-endpoint and child-process
+  providers while retiring the selected pre-release spawn/redirect RXAS;
+  lower the approved core Level G task syntax only through that Level B
+  contract; deliver the concurrent HTTP/TLS consumer; publish only as
+  experimental after portable conformance and the mandatory Release verdicts.
+- [x] **F1g-A typed object task results:** carry a concrete result class through
+  immediate and pending Level G lowering, publish only its canonical RXCV from
+  the worker, and reconstruct controller-owned state through `from_channel`.
+  Preserve imported task-method kind and Level G gating, reseal imported
+  use-site placeholders against the final linked graph, and assert the actual
+  RXAS task-lowered shape across optimized/unoptimized `rxbvm`/`rxtvm` runs.
+  This foundation adds no syntax, opcode or provider type. Evidence:
+  [`F1g-A first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f1g-a-typed-task-results-first-release-verdict/).
+- [x] **F1g-B bounded HTTP connection ownership and reuse:** add the Level G
+  `.httpclient.pooled` transferable proxy and independent `.httpresponse`, use
+  fixed canonical admission descriptors over type-4 endpoints, and keep each
+  reusable socket inside one long-lived `.taskwork` owner. The pure-cREXX
+  loopback fixture proves one accepted connection serves four task-method
+  requests across optimized/unoptimized `rxbvm`/`rxtvm`; 100-repeat Release
+  stress executes 400 clients/1,600 requests, full Debug passes 2,155/2,155 and
+  focused Apple ASan passes 146/146. No VM/compiler C source, opcode or RXBIN
+  shape changes. Evidence:
+  [`F1g-B first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f1g-b-pooled-http-owner-first-release-verdict/).
+- [x] **F1g-C bounded HTTP policy and verified TLS:** replace the provisional
+  content-type argument with transferable `.httpheaders`, add immutable-copy
+  `.httppolicy` configuration, safe authority/request/header validation,
+  explicit same-origin 307/308 and idempotency-key retry rules, attempt/
+  redirect/ambiguity diagnostics, bounded response/request/header handling and
+  live trusted-host/hostname-mismatch TLS proof. A socket regression now keeps
+  timeout/EOF/would-block statuses from being mistaken for received bytes. The
+  ordinary single-thread Release verdict is guard-clean across Sieve and
+  RexxCPS on both VMs. Explicit streams, compressed decoding and the
+  `crexx-rag` fixture were completed by F1g-D. Evidence:
+  [`F1g-C first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f1g-c-http-policy-first-release-verdict/).
+- [x] **F1g-D bounded streaming, compression and crexx-rag integration:** add
+  fixed/chunked request and response byte-endpoint streams, bounded pure-Level-B
+  gzip/deflate decoding and concurrent generation/embedding acceptance. Close
+  typed task arguments with receiver reconstruction while retaining the
+  primitive fast path and direct `.taskwork` request semantics. Final Mac QA
+  passes Debug 2,175/2,175, Release Gate F 62/62 and focused ASan 39/39 after a
+  complete sanitizer build. Exact-final task and Sieve/RexxCPS Release panels
+  have no 3% guard hit. Evidence:
+  [`F1g-D first Release verdict and local closeout`](evidence/2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict/).
 - [ ] **F2:** prove the open cross-host protocol with a non-Rexx actor, exercise
-  compute/I/O/process providers and add Level G typed service/event libraries.
-- [ ] **F3:** profile the accepted source surface and add only an
-  evidence-selected transport-neutral RXAS subset, if any, with full RXBIN,
-  effect, signal, optimizer, tracing and both-VM semantics.
+  compute/I/O/process providers and add higher Level G typed service/event
+  libraries.
+- [ ] **F3:** profile and stabilize the accepted Level B-over-RXAS surface;
+  optimize only proved common paths while preserving the mandatory
+  transport-neutral instruction roles and their complete RXBIN, effect,
+  signal, optimizer, tracing and both-VM semantics.
 
-The candidate RXAS roles remain `chanstart`, `chanwait`, `chancancel` and
-`chanclose`, with only start/wait presumed potentially essential. No opcode or
-encoding is approved. Provider-specific opcode families remain rejected.
+### F3C1 — sealed task-binding validation cache
+
+Status: **complete and accepted 2026-08-15; broader task-launch and ordinary
+single-thread portfolio follows as separate baseline evidence**.
+
+F1f's retained tiny-task result attributes a confirmed 26.3-28.3% latency loss
+primarily to validation of the same linker-sealed task binding for every
+submission. The current validator serializes and hashes the complete immutable
+semantic graph, checks the callable signature and adapter, then resolves the
+same worker-owned procedure pointers again on every invocation.
+
+The compared implementation shapes are:
+
+1. **Eager whole-program task-plan preparation — rejected for F3C1.** RXBIN
+   does not carry a complete indexed catalogue of runtime-created
+   `.tasktarget` instances. Enumerating constants would add loader work and
+   retain plans for targets a worker may never execute. It would also widen
+   the loader/task-target boundary merely to remove repeated work.
+2. **Unbounded or growing lazy map — rejected for F3C1.** First-use resolution
+   is natural, but a growing table adds allocation/failure policy, permits
+   input-driven memory growth and makes lookup/teardown cost depend on the
+   number of distinct submitted bindings.
+3. **Lazy worker-graph digest plus bounded per-worker plan cache — selected.**
+   The first task-binding miss computes and retains the immutable graph digest
+   in that worker's graph binding; ordinary non-task contexts pay no digest
+   preparation cost. Each executor worker owns a small fixed, set-associative
+   plan cache keyed by the complete 80-byte binding and the request's result
+   mode. A miss runs the unchanged validation/resolution path and only a
+   successful result is installed. A hit loads the already resolved procedure,
+   receiver/factory adapter, task kind and inferred result contract without
+   graph traversal, parsing, allocation or hashing.
+
+Ownership and invalidation are structural: graph digests live in worker-owned
+bindings over immutable `RxGraph`; resolved plans live only in the same
+executor worker and may contain only that worker context's `proc_runtime *`
+values. Worker/context teardown drops the complete cache. No plan crosses a
+worker or process, no negative result is cached, and a distinct binding always
+takes the full validator. Cache collisions replace an old successful plan and
+affect performance only.
+
+F3C1 retains the F1f RXBIN and public contracts unchanged. Its minimum gate is
+focused sealed-binding/local/process correctness followed immediately by a
+paired ordinary profiling-off Release comparison against committed F1f
+`7108a9c5f`, using the identical sealed benchmark image. The later baseline
+reports task launch separately from ordinary single-thread product behavior.
+
+The selected cache passes 10/10 focused Debug, 2,149/2,149 full Debug, 35/35
+focused Release Gate F and 136/136 focused Apple ASan tests. In the balanced
+12-pair profiling-off Release verdict, tiny-task latency improves +39.076017%
+on `rxbvml` and +40.340609% on `rxtvml`; `rxtvml` throughput improves
++1.551257%, while `rxbvml` throughput is inconclusive and no cell hits the 3%
+adverse guard. The candidate adds 80 bytes to `rxbvm` and 64 bytes to `rxtvm`.
+Evidence:
+[`F3C1 first Release verdict and closeout`](evidence/2026-08-15-perf3-13-gate-f-f3c1-task-binding-cache-first-release-verdict/).
+
+The separate post-commit full baseline preserves task launch as the result
+above and tests ordinary product behavior against the exact retained pre-cache
+VMs. Across Sieve, Permute, Bounce, Richards, Base64, Towers and canonical
+RexxCPS, 1,036/1,036 processes pass through the governed 36-pair ceiling. The
+common-five higher-is-better geometric mean is clearly favorable at
++1.055583% on `rxtvm` and +0.939592% on product `rxbvm`. `rxtvm` Towers
+(+0.986414% elapsed) and RexxCPS (-1.012927% rate) are clear small adverse
+observations below the 3% guard; no individual or aggregate guard fires.
+Evidence:
+[`F3C1 full task-launch and single-thread baseline`](evidence/2026-08-15-perf3-13-f3c1-full-baseline/).
+
+The mandatory conceptual RXAS roles are `chanopen`, `chanstart`, `chanwait`,
+`chancancel` and `chanclose`. `chanopen` separates one provider type code from
+required-capability flags and versioned configuration. Core types cover local
+task, isolated worker process, open host, byte endpoint and child process; a
+registered extension range is reserved for future RXVM plugins. F0-S fixes
+opcodes `650..654`; `chanstart` and `chanwait` take a relative microsecond wait
+budget. Provider-specific opcode families remain rejected.
 
 ## Approval gates
 
@@ -2846,12 +3052,40 @@ encoding is approved. Provider-specific opcode families remain rejected.
    Debug/Apple-ASan/Release 49/49, complete Debug and Release builds, and full
    Debug CTest 2,080/2,080; C1 and C2 are removed. The full gate still stops
    before any public pool/channel semantics.
-7. **Gate F — public design direction recorded 2026-08-13; full M6 start
-   closed.** The approved surface and sequencing are recorded in
-   [`PERF3-13-GATE-F-DESIGN.md`](PERF3-13-GATE-F-DESIGN.md). After Gate E/E6
-   selection, F0 first compile-checks and freezes the Level B semantic contract;
-   implementation begins only after its separate approval. Level B/RXPA and
-   local/process conformance precede Level G and cross-host work. RXAS remains
-   a final evidence gate, not an entry requirement.
+7. **Gate F — public design recorded 2026-08-13; user model and staged
+   implementation approved 2026-08-14; F0-S through F1g-D implementation and
+   Mac QA complete 2026-08-15; portable publication evidence pending.** The
+   approved ownership
+   surface and sequencing are recorded in
+   [`PERF3-13-GATE-F-DESIGN.md`](../concurrency/history/PERF3-13-GATE-F-DESIGN.md). After Gate E/E6
+   selection, Adrian approved the user-facing model in
+   [`PERF3-13-GATE-F-USER-GUIDE.md`](../concurrency/history/PERF3-13-GATE-F-USER-GUIDE.md) and the
+   staged execution in
+   [`PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md`](../concurrency/history/PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md).
+   F0-S produced the maintainer/AI contract, coherence matrix, compile-checked
+   Level B declarations and exact RXAS/RXBIN/provider contract. F1a-F1f now
+   implement the five opcodes, complete both-VM local provider, full RXCV,
+   lifecycle/private registry contract, executable Level B classes, reusable
+   byte endpoints, structured child processes and ADDRESS migration; the old
+   process/redirect mnemonics are retired with their numeric slots reserved.
+   The measured computed-goto code-layout cost remains recorded for final
+   hot-loop hardening after the surface stabilizes. The isolated-process
+   provider preserves bytecode-only program identity across fresh task
+   executions. F1f adds the Level G-gated task/parallel surface and sealed
+   task-procedure, receiver and `.taskwork` factory bindings. F3C1 then
+   recovers the repeated sealed-binding validation cost with a bounded
+   worker-local resolved-plan cache while preserving first-miss validation and
+   the public contract. F1g-A closes codec-backed typed task results
+   for the approved independent `.httpresponse`; F1g-B adds the bounded
+   connection-owner and reuse slice over existing tasks and type-4 endpoints;
+   F1g-C adds safe headers, bounded request policy, verified TLS, explicit
+   replay/redirect rules and ambiguity/failure diagnostics. F1g-D completes
+   fixed/chunked streaming, bounded gzip/deflate decoding, typed task
+   arguments and concurrent crexx-rag integration. None adds an HTTP opcode or
+   provider type.
+   Level B-over-RXAS local/process/endpoint conformance precedes cross-host
+   work; every production slice stops at its first Release verdict. F3 profiles
+   and stabilizes the mandatory instruction boundary rather than deciding
+   whether it exists.
 
 Approval of one gate does not approve the next.

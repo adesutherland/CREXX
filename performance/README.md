@@ -43,8 +43,8 @@ those labels using the new product mapping.
 | `performance/PERF3-11-WORKLIST.md` | Completed scalable RXAS graph/signal/component-SSA programme through K04e, with future-capability and RXC-to-RXAS architecture-transfer ledgers retained |
 | `performance/PERF3-11-MIGRATION-WORKLIST.md` | Completed one-authority proof migration ledger and retained classification history for the migrated semantic/mechanical consumers |
 | `performance/PERF3-12B-WORKLIST.md` | Completed compound-tail route comparison, accepted production H1 proof, first Release verdict, broad closeout and fresh current-product Mac scorecard |
-| `performance/PERF3-13-WORKLIST.md` | Live Gate E worker-ownership, multithreading and Gate F approval control plane |
-| `performance/PERF3-13-GATE-F-DESIGN.md` | Normative future public concurrency surface: task scopes, services/actors, channels, transferable values, immutable binary and Level B-before-RXAS sequencing |
+| `performance/PERF3-13-WORKLIST.md` | Historical allocator, worker-foundation and concurrency implementation record; live concurrency work has moved to `concurrency/WORKLIST.md` |
+| `concurrency/` | Independent live control plane for tasks, channels, providers, endpoints and concurrent HTTP; historical Gate records are retained under `concurrency/history/` |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-27.md` | Team-facing PERF2-08/09 formal Mac scorecard, comparability vocabulary, exclusions and suggested successor direction |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-30.md` | Short team-facing Windows scorecard, explained Linux/Windows RexxCPS split and ooRexx MSVC note |

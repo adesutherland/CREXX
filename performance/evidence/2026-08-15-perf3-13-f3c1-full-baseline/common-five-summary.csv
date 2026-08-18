@@ -1,0 +1,3 @@
+aggregate,vm,metric,pairs,control_median,candidate_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total,guard_hit
+common-five,rxtvm,higher_is_better_geomean_ratio,12,1.000000,1.020332,-1.619673,0.923186,2.033223,2.306196,4.124176,1.653305,0.740671,2.565940,clear_favorable,11,12,no
+common-five,rxbvm,higher_is_better_geomean_ratio,12,1.000000,1.013214,-3.655624,-0.090159,1.321422,3.451711,4.155877,1.291488,-0.341275,2.924252,noisy_inconclusive,8,12,no

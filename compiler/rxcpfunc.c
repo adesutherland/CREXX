@@ -846,6 +846,11 @@ static int add_func(Context *context, imported_func *func) {
             return 1;
         }
 
+        if (func->is_task_callable != existing_func->is_task_callable) {
+            add_inconsistent_duplicate(existing_func, func);
+            return 1;
+        }
+
         /* Both should have the same type */
         if (!metadata_type_strings_equivalent(context, func->type, existing_func->type)) {
             add_inconsistent_duplicate(existing_func, func);
@@ -1505,6 +1510,16 @@ static void append_class_attribute_stub_lines(ASTNode *contract_node, char **buf
     }
 }
 
+static int contract_has_task_method(ASTNode *contract_node) {
+    ASTNode *member;
+
+    if (!contract_node) return 0;
+    for (member = contract_node->child; member; member = member->sibling) {
+        if (member->node_type == METHOD && member->is_task_callable) return 1;
+    }
+    return 0;
+}
+
 /* Build a minimal contract stub source for an exposed class or interface */
 static char* generate_contract_stub_source(ASTNode *contract_node,
                                            char **implements_fqnames,
@@ -1541,7 +1556,10 @@ static char* generate_contract_stub_source(ASTNode *contract_node,
     const char *cls_name = fq + dot + 1;
 
     /* Start stub source */
-    buffer = mprintf("options levelb\nnamespace %s\n", ns);
+    buffer = mprintf("options %s\nnamespace %s\n",
+                     contract_has_task_method(contract_node)
+                            ? "levelg" : "levelb",
+                     ns);
     if (contract_node->node_type == CLASS_DEF) {
         if (implements_count) {
             size_t i;
@@ -1607,7 +1625,9 @@ static char* generate_contract_stub_source(ASTNode *contract_node,
             /* Return type (default .void added by grammar) */
             char *rtype = callable_effective_return_type(m);
 
-            char *tmp = mprintf("%s  %s: method = %s\n", buffer, mname, rtype);
+            char *tmp = mprintf("%s  %s: %s = %s\n", buffer, mname,
+                                m->is_task_callable ? "task" : "method",
+                                rtype);
             free(buffer);
             buffer = tmp;
 
@@ -1663,7 +1683,8 @@ static void register_source_import_member_inline_payloads(Context *context, ASTN
                 type,
                 args,
                 impl && *impl ? impl : 0,
-                0);
+                0,
+                member->is_task_callable);
 
         if (type) free(type);
         if (args) free(args);
@@ -1744,7 +1765,8 @@ static walker_result procedure_signature_walker(walker_direction direction,
 
                 if ( !type_node || !args_node || error_in_node(type_node) || error_in_node(args_node) ) {
                     /* Error in the syntax of the important function */
-                    func = rximpf_f(context, node->file_name, fqname, "b", 0, 0, 0, 0);
+                    func = rximpf_f(context, node->file_name, fqname, "b", 0, 0, 0, 0,
+                                    node->is_task_callable);
                     if (func) func->error_state = "SYNTAX_ERROR_IN_IMPORT_DECL";
                 }
 
@@ -1761,7 +1783,8 @@ static walker_result procedure_signature_walker(walker_direction direction,
                                     type,
                                     args,
                                     impl && *impl ? impl : 0,
-                                    0);
+                                    0,
+                                    node->is_task_callable);
 
                     /* Check Type <> unknown */
                     if ( !type || strcmp(type, ".unknown") == 0 ) {
@@ -1812,6 +1835,7 @@ typedef struct class_meta_agg {
     size_t implements_count;
     char **default_method_names;
     size_t default_method_count;
+    char has_task_methods;
     struct class_meta_agg *next;
 } class_meta_agg;
 
@@ -1855,6 +1879,7 @@ static class_meta_agg* agg_find_or_add(class_meta_agg **head, const char *fq, No
     n->implements_count = 0;
     n->default_method_names = 0;
     n->default_method_count = 0;
+    n->has_task_methods = 0;
     n->next = *head;
     *head = n;
     return n;
@@ -2046,19 +2071,25 @@ static void import_class_meta_aggs(Context *context, char *full_file_name, class
         if (a->contract_type == CLASS_DEF || (a->methods && *a->methods)) {
             char *stub_source;
             if (a->contract_type == INTERFACE_DEF) {
-                stub_source = mprintf("options levelb\nnamespace %s\n%s: interface\n%s",
+                stub_source = mprintf("options %s\nnamespace %s\n%s: interface\n%s",
+                                      a->has_task_methods ? "levelg" : "levelb",
                                       a->ns,
                                       a->name,
                                       a->methods ? a->methods : "");
             } else {
                 /* Implements metadata is kept as FQNs on imported_class; source stubs only provide members. */
-                stub_source = mprintf("options levelb\nnamespace %s\n%s: class\n%s%s",
+                stub_source = mprintf("options %s\nnamespace %s\n%s: class\n%s%s",
+                                      a->has_task_methods ? "levelg" : "levelb",
                                       a->ns,
                                       a->name,
                                       a->attributes ? a->attributes : "",
                                       a->methods ? a->methods : "");
             }
-            Context *stub_ctx = parseRexx(context, context->location, full_file_name, LEVELB, context->debug_mode, stub_source, strlen(stub_source));
+            Context *stub_ctx = parseRexx(context, context->location,
+                                          full_file_name,
+                                          a->has_task_methods ? LEVELG : LEVELB,
+                                          context->debug_mode, stub_source,
+                                          strlen(stub_source));
             if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
                 remove_import_stub_implicit_main(stub_ctx);
                 if (a->contract_type == INTERFACE_DEF) {
@@ -2139,6 +2170,26 @@ static char *get_inline_payload_for_symbol(void *constant, int meta_head, const 
     return 0;
 }
 
+static int has_task_target_for_symbol(void *constant, int meta_head, const char *symbol) {
+    meta_entry *entry;
+    int i;
+
+    if (!constant || !symbol) return 0;
+    i = meta_head;
+    while (i != -1) {
+        entry = (meta_entry *)((unsigned char *)constant + (size_t)i);
+        if (entry->base.type == META_TASK_TARGET) {
+            meta_task_target_constant *target = (meta_task_target_constant *)entry;
+            char *target_symbol = get_const_string(constant, target->symbol);
+            int matched = target_symbol && strcmp(target_symbol, symbol) == 0;
+            free(target_symbol);
+            if (matched) return 1;
+        }
+        i = entry->next;
+    }
+    return 0;
+}
+
 static void read_constant_pool_for_functions(Context *context, char *full_file_name, void* constant, size_t constant_size, int meta_head) {
     chameleon_constant *entry;
     int i;
@@ -2180,60 +2231,73 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                     type = get_const_string(constant, mentry->type);
                     args = get_const_string(constant, mentry->args);
                     inline_payload = get_inline_payload_for_symbol(constant, meta_head, meta_symbol ? meta_symbol : fqname);
+                    {
+                        int is_task_callable = has_task_target_for_symbol(
+                                constant, meta_head,
+                                meta_symbol ? meta_symbol : fqname);
 
-                    /* Always register as importable function (methods too) */
-                    rximpf_f(context, full_file_name, fqname, option, type, args, inline_payload, 0);
+                        /* Always register as importable function (methods too). */
+                        rximpf_f(context, full_file_name, fqname, option, type,
+                                 args, inline_payload, 0, is_task_callable);
 
-                    /* If this looks like a class method (fqname contains namespace.class.method) then
-                     * accumulate a signature line for later class stub synthesis */
-                    if (fqname) {
-                        char *class_fq = 0;
-                        char *factory_member = 0;
-                        if (parse_class_factory_fqname(fqname, &class_fq, &factory_member)) {
-                            class_meta_agg *agg = agg_find_or_add(&class_aggs, class_fq, CLASS_DEF);
-                            if (args && *args) {
-                                char *ln = mprintf("  %s: factory\n  arg %s\n", factory_member, args);
-                                agg_append_line(agg, ln);
-                                free(ln);
+                        /* If this looks like a class method (fqname contains
+                         * namespace.class.method) then accumulate a signature
+                         * line for later class stub synthesis. */
+                        if (fqname) {
+                            char *class_fq = 0;
+                            char *factory_member = 0;
+                            if (parse_class_factory_fqname(fqname, &class_fq, &factory_member)) {
+                                class_meta_agg *agg = agg_find_or_add(&class_aggs, class_fq, CLASS_DEF);
+                                if (args && *args) {
+                                    char *ln = mprintf("  %s: factory\n  arg %s\n", factory_member, args);
+                                    agg_append_line(agg, ln);
+                                    free(ln);
+                                } else {
+                                    char *ln = mprintf("  %s: factory\n", factory_member);
+                                    agg_append_line(agg, ln);
+                                    free(ln);
+                                }
+                                free(factory_member);
+                                free(class_fq);
                             } else {
-                                char *ln = mprintf("  %s: factory\n", factory_member);
-                                agg_append_line(agg, ln);
-                                free(ln);
-                            }
-                            free(factory_member);
-                            free(class_fq);
-                        } else {
-                            const char *last_dot = strrchr(fqname, '.');
-                            if (last_dot) {
-                                /* Ensure there is at least another dot before last to separate namespace and class */
-                                size_t class_len = (size_t)(last_dot - fqname);
-                                if (memchr(fqname, '.', class_len) != 0) {
-                                    class_fq = malloc(class_len + 1);
-                                    memcpy(class_fq, fqname, class_len);
-                                    class_fq[class_len] = 0;
-                                    class_meta_agg *agg = agg_find(class_aggs, class_fq);
+                                const char *last_dot = strrchr(fqname, '.');
+                                if (last_dot) {
+                                    /* Ensure there is at least another dot before last to separate namespace and class */
+                                    size_t class_len = (size_t)(last_dot - fqname);
+                                    if (memchr(fqname, '.', class_len) != 0) {
+                                        class_fq = malloc(class_len + 1);
+                                        memcpy(class_fq, fqname, class_len);
+                                        class_fq[class_len] = 0;
+                                        class_meta_agg *agg = agg_find(class_aggs, class_fq);
 
-                                    if (!agg || agg->contract_type != INTERFACE_DEF) {
-                                        if (!agg) agg = agg_find_or_add(&class_aggs, class_fq, CLASS_DEF);
+                                        if (!agg || agg->contract_type != INTERFACE_DEF) {
+                                            if (!agg) agg = agg_find_or_add(&class_aggs, class_fq, CLASS_DEF);
+                                            if (is_task_callable) agg->has_task_methods = 1;
 
-                                        /* method name is after last dot */
-                                        const char *mname = last_dot + 1;
-                                        if (type && *type) {
-                                            char *ln = mprintf("  %s: method = %s\n", mname, type);
-                                            agg_append_line(agg, ln);
-                                            free(ln);
-                                        } else {
-                                            char *ln = mprintf("  %s: method\n", mname);
-                                            agg_append_line(agg, ln);
-                                            free(ln);
+                                            /* method name is after last dot */
+                                            const char *mname = last_dot + 1;
+                                            if (type && *type) {
+                                                char *ln = mprintf("  %s: %s = %s\n",
+                                                                   mname,
+                                                                   is_task_callable ? "task" : "method",
+                                                                   type);
+                                                agg_append_line(agg, ln);
+                                                free(ln);
+                                            } else {
+                                                char *ln = mprintf("  %s: %s\n",
+                                                                   mname,
+                                                                   is_task_callable ? "task" : "method");
+                                                agg_append_line(agg, ln);
+                                                free(ln);
+                                            }
+                                            if (args && *args) {
+                                                char *ln2 = mprintf("  arg %s\n", args);
+                                                agg_append_line(agg, ln2);
+                                                free(ln2);
+                                            }
                                         }
-                                        if (args && *args) {
-                                            char *ln2 = mprintf("  arg %s\n", args);
-                                            agg_append_line(agg, ln2);
-                                            free(ln2);
-                                        }
+                                        free(class_fq);
                                     }
-                                    free(class_fq);
                                 }
                             }
                         }
@@ -2338,7 +2402,15 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                 if (strcmp(kind, "factory") == 0) {
                     ln = mprintf("  %s: factory\n", member);
                 } else {
-                    ln = mprintf("  %s: method = %s\n", member, type_str ? type_str : ".void");
+                    char *member_symbol = mprintf("%s.%s", owner, member);
+                    int is_task_callable = member_symbol &&
+                            has_task_target_for_symbol(constant, meta_head,
+                                                       member_symbol);
+                    if (is_task_callable) agg->has_task_methods = 1;
+                    ln = mprintf("  %s: %s = %s\n", member,
+                                 is_task_callable ? "task" : "method",
+                                 type_str ? type_str : ".void");
+                    free(member_symbol);
                     if (strstr(kind, "final")) {
                         agg_add_default_method(agg, member);
                     }
@@ -2367,7 +2439,7 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                 option = get_const_string(constant, mentry->option);
                 type = get_const_string(constant, mentry->type);
 
-                rximpf_f(context, full_file_name, fqname, option, type, "", "", 1);
+                rximpf_f(context, full_file_name, fqname, option, type, "", "", 1, 0);
 
                 if (option) {
                     free(option);
@@ -2538,7 +2610,7 @@ void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char*
             free_rxpa_metadata_list(&plugin_being_loaded_metadata);
         }
         if (plugin_being_loaded_context->debug_mode >= 2) printf("Importing Procedures - Loading %s\n", name);
-        rximpf_f(plugin_being_loaded_context, plugin_being_loaded, name, option, type, args, 0, 0);
+        rximpf_f(plugin_being_loaded_context, plugin_being_loaded, name, option, type, args, 0, 0, 0);
     }
     else {
         // Add to the list of statically linked functions
@@ -2861,7 +2933,7 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
         if (symbols[i]->symbol_type == VARIABLE_SYMBOL && symbols[i]->exposed) {
             /* import symbol */
             char* fqname = sym_frnm(symbols[i]);
-            rximpf_f(parent_context, file_name, fqname, 0, type_nm(symbols[i]->type), 0, 0, 1);
+            rximpf_f(parent_context, file_name, fqname, 0, type_nm(symbols[i]->type), 0, 0, 1, 0);
             free(fqname);
         }
     }
@@ -3102,7 +3174,7 @@ static int load_another_file(Context *context) {
         while (static_func) {
             rximpf_f(context, "statically-linked",
                      static_func->name, static_func->option, static_func->type,
-                     static_func->args, 0, 0);
+                     static_func->args, 0, 0, 0);
             static_func = static_func->next;
         }
 
@@ -3540,8 +3612,20 @@ void sym_imva(Context *context, Symbol *symbol) {
 }
 
 /* imported_func factory - returns null if the function is not in an applicable namespace or is a duplicate */
+static void mark_imported_task_callable(ASTNode *node) {
+    ASTNode *current;
+
+    for (current = node; current; current = current->sibling) {
+        if (current->node_type == PROCEDURE) {
+            current->is_task_callable = 1;
+            return;
+        }
+        if (current->child) mark_imported_task_callable(current->child);
+    }
+}
+
 imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *options, char *type, char *args,
-                        char *implementation, char is_variable)  {
+                        char *implementation, char is_variable, char is_task_callable)  {
     imported_func *func;
     char *buffer;
     char *name;
@@ -3561,6 +3645,7 @@ imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *o
     func = malloc(sizeof(imported_func));
     func->context = 0;
     func->is_variable = is_variable; /* Is a function or a Variable */
+    func->is_task_callable = is_task_callable;
     func->duplicate = 0;
     func->error_state = 0;
     func->error_field = 0;
@@ -3658,6 +3743,9 @@ imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *o
                         func->error_field = "arguments";
                     }
                     func->error_detail = "invalid Level B declaration";
+                }
+                if (!func->error_state && func->is_task_callable) {
+                    mark_imported_task_callable(func->context->ast);
                 }
             }
         }

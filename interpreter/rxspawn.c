@@ -61,8 +61,10 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include <time.h>
 
 #include "rxvmintp.h"
+#include "rxvmbyteendpoint.h"
 #include "rxvmvars.h"
 #include "rxcrexxcmd.h"
 
@@ -76,6 +78,7 @@ typedef struct shelldata {
     int waitThreadRC;
 #ifdef _WIN32
     PROCESS_INFORMATION ChildProcessInfo;
+    HANDLE ChildJob;
 #else
     int ChildProcessPID;
 #endif
@@ -88,7 +91,36 @@ typedef struct shelldata {
     char **environment;
     value* variables;
     value* crexx_bindings;
+    const char *const *crexx_binding_snapshot;
+    size_t crexx_binding_snapshot_count;
+    const atomic_uchar *cancelled;
+    atomic_uchar *input_stopped;
+    atomic_uchar *output_stopped;
+    uint64_t deadline_microseconds;
+    unsigned char terminated;
+    unsigned char timed_out;
 } SHELLDATA;
+
+#if defined(_MSC_VER)
+#define RXSPAWN_THREAD_LOCAL __declspec(thread)
+#else
+#define RXSPAWN_THREAD_LOCAL __thread
+#endif
+
+typedef struct rxspawn_snapshot_override {
+    const char *working_directory;
+    const char *const *environment;
+    const char *const *crexx_bindings;
+    size_t crexx_binding_count;
+    const atomic_uchar *cancelled;
+    atomic_uchar *input_stopped;
+    atomic_uchar *output_stopped;
+    uint64_t deadline_microseconds;
+    int *termination_reason;
+} RXSPAWN_SNAPSHOT_OVERRIDE;
+
+static RXSPAWN_THREAD_LOCAL const RXSPAWN_SNAPSHOT_OVERRIDE
+        *rxspawn_thread_snapshot;
 
 #ifdef _WIN32
 typedef HANDLE REDIRECT_IO_HANDLE;
@@ -103,7 +135,9 @@ enum {
     REDIRECT_TRANSFER_INPUT_STRING = 1,
     REDIRECT_TRANSFER_INPUT_ARRAY = 2,
     REDIRECT_TRANSFER_OUTPUT_STRING = 3,
-    REDIRECT_TRANSFER_OUTPUT_ARRAY = 4
+    REDIRECT_TRANSFER_OUTPUT_ARRAY = 4,
+    REDIRECT_TRANSFER_ENDPOINT_INPUT = 5,
+    REDIRECT_TRANSFER_ENDPOINT_OUTPUT = 6
 };
 
 enum {
@@ -123,6 +157,8 @@ typedef struct redirect_completion {
     char *bytes;
     size_t length;
     size_t capacity;
+    rxvm_byte_endpoint *endpoint;
+    const atomic_uchar *cancelled;
     int errorCode;
     int lastError;
     int errorSource;
@@ -207,6 +243,9 @@ static int redirect_completion_append(REDIRECT_COMPLETION *completion,
                                       const char *bytes, size_t length);
 static void redirect_completion_publish(REDIRECT_COMPLETION *completion,
                                         unsigned char terminal_state);
+static int redirect_pipe_start(REDIRECT *redirect,
+                               REDIRECT_COMPLETION *completion,
+                               int output_from_child);
 static void collect_redirect_thread_context(REDIRECT *redirect);
 static int join_redirect_thread(REDIRECT *redirect);
 #ifndef _WIN32
@@ -246,6 +285,37 @@ static int crexxcmd_close_output_redirect(REDIRECT *redirect);
 static int crexxcmd_close_input_redirect(REDIRECT *redirect);
 static char *copy_value_string(value *string_value);
 
+static const RXSPAWN_SNAPSHOT_OVERRIDE *crexxcmd_enter_parent_snapshot(
+        const SHELLDATA *parent_data,
+        RXSPAWN_SNAPSHOT_OVERRIDE *snapshot,
+        int *termination_reason) {
+    const RXSPAWN_SNAPSHOT_OVERRIDE *previous = rxspawn_thread_snapshot;
+
+    if (!parent_data || !snapshot) return previous;
+    snapshot->working_directory = parent_data->working_directory;
+    snapshot->environment = (const char *const *)parent_data->environment;
+    snapshot->crexx_bindings = parent_data->crexx_binding_snapshot;
+    snapshot->crexx_binding_count = parent_data->crexx_binding_snapshot_count;
+    snapshot->cancelled = parent_data->cancelled;
+    snapshot->input_stopped = parent_data->input_stopped;
+    snapshot->output_stopped = parent_data->output_stopped;
+    snapshot->deadline_microseconds = parent_data->deadline_microseconds;
+    snapshot->termination_reason = termination_reason;
+    if (termination_reason) *termination_reason = 0;
+    rxspawn_thread_snapshot = snapshot;
+    return previous;
+}
+
+static void crexxcmd_leave_parent_snapshot(
+        SHELLDATA *parent_data,
+        const RXSPAWN_SNAPSHOT_OVERRIDE *previous,
+        int termination_reason) {
+    rxspawn_thread_snapshot = previous;
+    if (!parent_data || termination_reason == 0) return;
+    parent_data->terminated = 1u;
+    if (termination_reason == 2) parent_data->timed_out = 1u;
+}
+
 static const rxvm_native_payload_ops redirect_endpoint_payload_ops = {
     "rxsysb.redirect_endpoint",
     redirect_endpoint_payload_copy,
@@ -283,6 +353,101 @@ static char *copy_string_external(const char *text) {
     char *copy = malloc(length + 1u);
     if (copy) memcpy(copy, text, length + 1u);
     return copy;
+}
+
+static int rxspawn_copy_process_snapshot(
+        const RXSPAWN_SNAPSHOT_OVERRIDE *snapshot,
+        char **working_directory,
+        char ***environment) {
+    size_t count = 0u;
+    char **copy = NULL;
+    if (working_directory) *working_directory = NULL;
+    if (environment) *environment = NULL;
+    if (!snapshot) return -1;
+    if (snapshot->working_directory && working_directory) {
+        *working_directory = copy_string_external(
+                snapshot->working_directory);
+        if (!*working_directory) return -1;
+    }
+    if (snapshot->environment) {
+        while (snapshot->environment[count]) count++;
+        copy = (char **)calloc(count + 1u, sizeof(*copy));
+        if (!copy) goto failed;
+        for (count = 0u; snapshot->environment[count]; count++) {
+            copy[count] = copy_string_external(snapshot->environment[count]);
+            if (!copy[count]) goto failed;
+        }
+    }
+    if (environment) *environment = copy;
+    else rxcrexxcmd_process_snapshot_free(NULL, copy);
+    return 0;
+
+failed:
+    rxcrexxcmd_process_snapshot_free(
+            working_directory ? *working_directory : NULL, copy);
+    if (working_directory) *working_directory = NULL;
+    return -1;
+}
+
+static uint64_t rxspawn_monotonic_microseconds(void) {
+#ifdef _WIN32
+    return (uint64_t)GetTickCount64() * UINT64_C(1000);
+#else
+    struct timespec now;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return 0u;
+    return (uint64_t)now.tv_sec * UINT64_C(1000000) +
+           (uint64_t)now.tv_nsec / UINT64_C(1000);
+#endif
+}
+
+static void rxspawn_stop_redirect_io(SHELLDATA *data, int stop_outputs) {
+    REDIRECT *redirects[3];
+    size_t index;
+    if (!data) return;
+    redirects[0] = data->pInput;
+    redirects[1] = data->pOutput;
+    redirects[2] = data->pError;
+    /* Snapshot stop flags belong to the byte-endpoint adapters that were
+     * installed by the child provider. A nested CREXX run also inherits the
+     * snapshot while using ordinary local capture redirects; it must not
+     * cancel its parent's endpoint merely because those local pipes close. */
+    if (data->input_stopped && redirects[0] && redirects[0]->completion &&
+        redirects[0]->completion->endpoint) {
+        atomic_store_explicit(
+                data->input_stopped, 1u, memory_order_release);
+    }
+    if (stop_outputs && data->output_stopped &&
+        ((redirects[1] && redirects[1]->completion &&
+          redirects[1]->completion->endpoint) ||
+         (redirects[2] && redirects[2]->completion &&
+          redirects[2]->completion->endpoint))) {
+        atomic_store_explicit(
+                data->output_stopped, 1u, memory_order_release);
+    }
+    for (index = 0u; index < 3u; index++) {
+        REDIRECT_COMPLETION *completion = redirects[index]
+                ? redirects[index]->completion : NULL;
+        if (completion && completion->endpoint &&
+            (index == 0u || stop_outputs)) {
+            rxvm_byte_endpoint_wake(completion->endpoint);
+        }
+    }
+}
+
+static int rxspawn_stop_requested(SHELLDATA *data) {
+    if (!data) return 0;
+    if (data->cancelled && atomic_load_explicit(
+            data->cancelled, memory_order_acquire)) {
+        rxspawn_stop_redirect_io(data, 1);
+        return 1;
+    }
+    if (data->deadline_microseconds &&
+        rxspawn_monotonic_microseconds() >= data->deadline_microseconds) {
+        data->timed_out = 1u;
+        rxspawn_stop_redirect_io(data, 1);
+        return 1;
+    }
+    return 0;
 }
 
 static char *copy_string(const char *text) {
@@ -868,13 +1033,143 @@ static int value_string_to_size(value *string_value, size_t *out) {
     return 0;
 }
 
+static int snapshot_string_iequals(const char *left, const char *right) {
+    if (!left || !right) return 0;
+    while (*left || *right) {
+        if (tolower((unsigned char)*left) !=
+            tolower((unsigned char)*right)) return 0;
+        if (*left) left++;
+        if (*right) right++;
+    }
+    return 1;
+}
+
+static int snapshot_string_to_size(const char *text, size_t *out) {
+    char *end = NULL;
+    unsigned long long parsed;
+    if (out) *out = 0u;
+    if (!text || !*text) return -1;
+    errno = 0;
+    parsed = strtoull(text, &end, 10);
+    if (errno || !end || *end || parsed > SIZE_MAX) return -1;
+    if (out) *out = (size_t)parsed;
+    return 0;
+}
+
+static int snapshot_binding_get(const SHELLDATA *data,
+                                const char *name,
+                                char **out_value) {
+    size_t index = 0u;
+    if (out_value) *out_value = NULL;
+    if (!data || !name) return 0;
+    while (index < data->crexx_binding_snapshot_count) {
+        const char *kind;
+        const char *binding_name;
+        const char *value;
+        size_t count;
+        if (index + 2u >= data->crexx_binding_snapshot_count) return 0;
+        kind = data->crexx_binding_snapshot[index];
+        binding_name = data->crexx_binding_snapshot[index + 1u];
+        value = data->crexx_binding_snapshot[index + 2u];
+        if (snapshot_string_iequals(kind, "VAR")) {
+            if (snapshot_string_iequals(binding_name, name)) {
+                if (out_value) {
+                    *out_value = copy_string_external(value ? value : "");
+                    if (!*out_value) return -1;
+                }
+                return 1;
+            }
+            index += 3u;
+        } else if (snapshot_string_iequals(kind, "STEM")) {
+            if (snapshot_string_to_size(value, &count) != 0 ||
+                count > data->crexx_binding_snapshot_count - index - 3u) {
+                return 0;
+            }
+            index += 3u + count;
+        } else return 0;
+    }
+    return 0;
+}
+
+static int snapshot_stem_count(const SHELLDATA *data,
+                               const char *name,
+                               size_t *out_count) {
+    size_t index = 0u;
+    if (out_count) *out_count = 0u;
+    if (!data || !name) return 0;
+    while (index < data->crexx_binding_snapshot_count) {
+        const char *kind;
+        const char *binding_name;
+        const char *value;
+        size_t count;
+        if (index + 2u >= data->crexx_binding_snapshot_count) return 0;
+        kind = data->crexx_binding_snapshot[index];
+        binding_name = data->crexx_binding_snapshot[index + 1u];
+        value = data->crexx_binding_snapshot[index + 2u];
+        if (snapshot_string_iequals(kind, "VAR")) index += 3u;
+        else if (snapshot_string_iequals(kind, "STEM")) {
+            if (snapshot_string_to_size(value, &count) != 0 ||
+                count > data->crexx_binding_snapshot_count - index - 3u) {
+                return 0;
+            }
+            if (snapshot_string_iequals(binding_name, name)) {
+                if (out_count) *out_count = count;
+                return 1;
+            }
+            index += 3u + count;
+        } else return 0;
+    }
+    return 0;
+}
+
+static int snapshot_stem_value(const SHELLDATA *data,
+                               const char *name,
+                               size_t wanted,
+                               char **out_value) {
+    size_t index = 0u;
+    if (out_value) *out_value = NULL;
+    if (!data || !name || wanted == 0u) return 0;
+    while (index < data->crexx_binding_snapshot_count) {
+        const char *kind;
+        const char *binding_name;
+        const char *value;
+        size_t count;
+        if (index + 2u >= data->crexx_binding_snapshot_count) return 0;
+        kind = data->crexx_binding_snapshot[index];
+        binding_name = data->crexx_binding_snapshot[index + 1u];
+        value = data->crexx_binding_snapshot[index + 2u];
+        if (snapshot_string_iequals(kind, "VAR")) index += 3u;
+        else if (snapshot_string_iequals(kind, "STEM")) {
+            if (snapshot_string_to_size(value, &count) != 0 ||
+                count > data->crexx_binding_snapshot_count - index - 3u) {
+                return 0;
+            }
+            if (snapshot_string_iequals(binding_name, name)) {
+                if (wanted > count) return 0;
+                if (out_value) {
+                    value = data->crexx_binding_snapshot[index + 2u + wanted];
+                    *out_value = copy_string_external(value ? value : "");
+                    if (!*out_value) return -1;
+                }
+                return 1;
+            }
+            index += 3u + count;
+        } else return 0;
+    }
+    return 0;
+}
+
 static int crexxcmd_get_binding(void *userdata, const char *name, char **out_value) {
     SHELLDATA *data = (SHELLDATA *)userdata;
     value *bindings;
     size_t i;
 
     if (out_value) *out_value = NULL;
-    if (!data || !data->crexx_bindings || !name) return 0;
+    if (!data || !name) return 0;
+    if (data->crexx_binding_snapshot) {
+        return snapshot_binding_get(data, name, out_value);
+    }
+    if (!data->crexx_bindings) return 0;
 
     bindings = data->crexx_bindings;
     i = 0;
@@ -907,7 +1202,11 @@ static int crexxcmd_get_stem_count(void *userdata, const char *name, size_t *out
     size_t i;
 
     if (out_count) *out_count = 0;
-    if (!data || !data->crexx_bindings || !name) return 0;
+    if (!data || !name) return 0;
+    if (data->crexx_binding_snapshot) {
+        return snapshot_stem_count(data, name, out_count);
+    }
+    if (!data->crexx_bindings) return 0;
 
     bindings = data->crexx_bindings;
     i = 0;
@@ -937,7 +1236,11 @@ static int crexxcmd_get_stem_value(void *userdata, const char *name, size_t inde
     size_t i;
 
     if (out_value) *out_value = NULL;
-    if (!data || !data->crexx_bindings || !name || index == 0) return 0;
+    if (!data || !name || index == 0) return 0;
+    if (data->crexx_binding_snapshot) {
+        return snapshot_stem_value(data, name, index, out_value);
+    }
+    if (!data->crexx_bindings) return 0;
 
     bindings = data->crexx_bindings;
     i = 0;
@@ -1001,9 +1304,133 @@ static int redirect_completion_restrict_child_inheritance(
 #endif
 }
 
+/* Build one child pipe and transfer the parent end to its C-only I/O owner.
+ * The caller supplies either a byte-endpoint transfer or an immutable legacy
+ * snapshot/capture completion. No VM value is reachable from the I/O thread. */
+static int redirect_pipe_start(REDIRECT *redirect,
+                               REDIRECT_COMPLETION *completion,
+                               int output_from_child) {
+    if (!redirect || !completion) return -1;
+#ifdef _WIN32
+    {
+        SECURITY_ATTRIBUTES attributes;
+        HANDLE read_handle = INVALID_HANDLE_VALUE;
+        HANDLE write_handle = INVALID_HANDLE_VALUE;
+        HANDLE parent_temporary;
+        HANDLE child_handle;
+        HANDLE parent_duplicate = INVALID_HANDLE_VALUE;
+        DWORD thread_id;
+        attributes.nLength = sizeof(attributes);
+        attributes.lpSecurityDescriptor = NULL;
+        attributes.bInheritHandle = TRUE;
+        if (!CreatePipe(&read_handle, &write_handle, &attributes, 0)) {
+            redirect->lastError = (int)GetLastError();
+            goto failed;
+        }
+        child_handle = output_from_child ? write_handle : read_handle;
+        parent_temporary = output_from_child ? read_handle : write_handle;
+        if (!DuplicateHandle(GetCurrentProcess(), parent_temporary,
+                             GetCurrentProcess(), &parent_duplicate,
+                             0, FALSE, DUPLICATE_SAME_ACCESS)) {
+            redirect->lastError = (int)GetLastError();
+            goto failed;
+        }
+        if (!CloseHandle(parent_temporary)) {
+            redirect->lastError = (int)GetLastError();
+            goto failed;
+        }
+        if (output_from_child) {
+            read_handle = INVALID_HANDLE_VALUE;
+            redirect->hWrite = child_handle;
+        } else {
+            write_handle = INVALID_HANDLE_VALUE;
+            redirect->hRead = child_handle;
+        }
+        completion->io_handle = parent_duplicate;
+        parent_duplicate = INVALID_HANDLE_VALUE;
+        completion->terminal_state = REDIRECT_COMPLETION_RUNNING;
+        redirect->completion = completion;
+        redirect->thread = CreateThread(
+                NULL, 0,
+                output_from_child ? OutputCaptureThread : InputSnapshotThread,
+                completion, 0, &thread_id);
+        if (!redirect->thread) {
+            redirect->lastError = (int)GetLastError();
+            goto failed;
+        }
+        redirect->has_thread = 1;
+        return 0;
+
+failed:
+        redirect->errorCode = 1;
+        redirect->errorSource = 5;
+        if (read_handle != INVALID_HANDLE_VALUE) CloseHandle(read_handle);
+        if (write_handle != INVALID_HANDLE_VALUE) CloseHandle(write_handle);
+        if (parent_duplicate != INVALID_HANDLE_VALUE) {
+            CloseHandle(parent_duplicate);
+        }
+        redirect->hRead = INVALID_HANDLE_VALUE;
+        redirect->hWrite = INVALID_HANDLE_VALUE;
+        redirect->completion = NULL;
+        return -1;
+    }
+#else
+    {
+        int handles[2];
+        int create_rc;
+        if (pipe(handles) != 0) {
+            redirect->errorCode = 1;
+            redirect->lastError = errno;
+            redirect->errorSource = 5;
+            return -1;
+        }
+        if (output_from_child) {
+            completion->io_handle = handles[0];
+            redirect->hWrite = handles[1];
+        } else {
+            redirect->hRead = handles[0];
+            completion->io_handle = handles[1];
+        }
+        if (redirect_completion_restrict_child_inheritance(completion) != 0) {
+            redirect->errorCode = 1;
+            redirect->lastError = errno;
+            redirect->errorSource = 8;
+            close(handles[0]);
+            close(handles[1]);
+            redirect->hRead = -1;
+            redirect->hWrite = -1;
+            completion->io_handle = -1;
+            return -1;
+        }
+        completion->terminal_state = REDIRECT_COMPLETION_RUNNING;
+        redirect->completion = completion;
+        create_rc = pthread_create(
+                &redirect->thread, NULL,
+                output_from_child ? OutputCaptureThread : InputSnapshotThread,
+                completion);
+        if (create_rc != 0) {
+            redirect->errorCode = 1;
+            redirect->lastError = create_rc;
+            redirect->errorSource = 5;
+            if (redirect->hRead != -1) close(redirect->hRead);
+            if (redirect->hWrite != -1) close(redirect->hWrite);
+            redirect->hRead = -1;
+            redirect->hWrite = -1;
+            redirect_completion_close_handle(completion);
+            redirect->completion = NULL;
+            return -1;
+        }
+        redirect->has_thread = 1;
+        return 0;
+    }
+#endif
+}
+
 static void redirect_completion_destroy(REDIRECT_COMPLETION *completion) {
     if (!completion) return;
     redirect_completion_close_handle(completion);
+    rxvm_byte_endpoint_release(completion->endpoint);
+    completion->endpoint = NULL;
     free(completion->bytes);
     completion->bytes = NULL;
     free(completion);
@@ -1061,7 +1488,11 @@ static int redirect_completion_copy_to_receiver(REDIRECT *redirect,
     if (!redirect || !completion || completion->consumed) return 0;
     completion->consumed = 1;
     if (completion->transfer_mode == REDIRECT_TRANSFER_INPUT_STRING ||
-        completion->transfer_mode == REDIRECT_TRANSFER_INPUT_ARRAY) return 0;
+        completion->transfer_mode == REDIRECT_TRANSFER_INPUT_ARRAY ||
+        completion->transfer_mode == REDIRECT_TRANSFER_ENDPOINT_INPUT ||
+        completion->transfer_mode == REDIRECT_TRANSFER_ENDPOINT_OUTPUT) {
+        return 0;
+    }
     if (!redirect->receiver ||
         rxvm_memory_current_worker() != redirect->receiver_worker) {
         completion->errorCode = 1;
@@ -1492,6 +1923,9 @@ static int crexxcmd_run_path(void *userdata,
     REDIRECT *pErr;
     int spawn_rc;
     char *spawn_error;
+    RXSPAWN_SNAPSHOT_OVERRIDE nested_snapshot;
+    const RXSPAWN_SNAPSHOT_OVERRIDE *previous_snapshot;
+    int termination_reason = 0;
 
     if (out_text) *out_text = NULL;
     if (err_text) *err_text = NULL;
@@ -1515,12 +1949,16 @@ static int crexxcmd_run_path(void *userdata,
     pOut = rxspawn_redirect_from_value(&output_redirect);
     pErr = rxspawn_redirect_from_value(&error_redirect);
     spawn_error = NULL;
+    previous_snapshot = crexxcmd_enter_parent_snapshot(
+            parent_data, &nested_snapshot, &termination_reason);
     spawn_rc = shellspawn(command, pIn, pOut, pErr,
                           parent_data ? parent_data->variables : NULL,
                           NULL,
                           SHELLSPAWN_MODE_PATH,
                           command_rc,
                           &spawn_error);
+    crexxcmd_leave_parent_snapshot(
+            parent_data, previous_snapshot, termination_reason);
 
     if (out_text) *out_text = copy_value_string(&output_value);
     if (err_text) *err_text = copy_value_string(&error_value);
@@ -1558,6 +1996,9 @@ static int crexxcmd_run_argv(void *userdata,
     REDIRECT *pErr;
     int spawn_rc;
     char *spawn_error;
+    RXSPAWN_SNAPSHOT_OVERRIDE nested_snapshot;
+    const RXSPAWN_SNAPSHOT_OVERRIDE *previous_snapshot;
+    int termination_reason = 0;
 
     if (out_text) *out_text = NULL;
     if (err_text) *err_text = NULL;
@@ -1581,6 +2022,8 @@ static int crexxcmd_run_argv(void *userdata,
     pOut = rxspawn_redirect_from_value(&output_redirect);
     pErr = rxspawn_redirect_from_value(&error_redirect);
     spawn_error = NULL;
+    previous_snapshot = crexxcmd_enter_parent_snapshot(
+            parent_data, &nested_snapshot, &termination_reason);
     spawn_rc = spawn_argv_capture(argv,
                                   argc,
                                   pIn,
@@ -1589,6 +2032,8 @@ static int crexxcmd_run_argv(void *userdata,
                                   parent_data ? parent_data->variables : NULL,
                                   command_rc,
                                   &spawn_error);
+    crexxcmd_leave_parent_snapshot(
+            parent_data, previous_snapshot, termination_reason);
 
     if (out_text) *out_text = copy_value_string(&output_value);
     if (err_text) *err_text = copy_value_string(&error_value);
@@ -1692,6 +2137,7 @@ int shellspawn (const char *command,
     data.waitThreadErrorText = 0;
 #ifdef _WIN32
     ZeroMemory(&data.ChildProcessInfo, sizeof(PROCESS_INFORMATION));
+    data.ChildJob = NULL;
 #else
     data.ChildProcessPID = 0;
 #endif
@@ -1708,9 +2154,27 @@ int shellspawn (const char *command,
     data.waitThreadRC = 0;
     data.variables = variables;
     data.crexx_bindings = crexx_bindings;
+    data.crexx_binding_snapshot = rxspawn_thread_snapshot
+            ? rxspawn_thread_snapshot->crexx_bindings : NULL;
+    data.crexx_binding_snapshot_count = rxspawn_thread_snapshot
+            ? rxspawn_thread_snapshot->crexx_binding_count : 0u;
+    data.cancelled = rxspawn_thread_snapshot
+            ? rxspawn_thread_snapshot->cancelled : NULL;
+    data.input_stopped = rxspawn_thread_snapshot
+            ? rxspawn_thread_snapshot->input_stopped : NULL;
+    data.output_stopped = rxspawn_thread_snapshot
+            ? rxspawn_thread_snapshot->output_stopped : NULL;
+    data.deadline_microseconds = rxspawn_thread_snapshot
+            ? rxspawn_thread_snapshot->deadline_microseconds : 0u;
+    data.terminated = 0u;
+    data.timed_out = 0u;
 
-    if (rxcrexxcmd_active_process_snapshot(&data.working_directory,
-                                           &data.environment) != 0) {
+    if ((rxspawn_thread_snapshot
+             ? rxspawn_copy_process_snapshot(
+                   rxspawn_thread_snapshot, &data.working_directory,
+                   &data.environment)
+             : rxcrexxcmd_active_process_snapshot(
+                   &data.working_directory, &data.environment)) != 0) {
         Error("Failure spawn environment snapshot", errorText);
         CleanUp(&data);
         return SHELLSPAWN_FAILURE;
@@ -1851,6 +2315,11 @@ int shellspawn (const char *command,
 
     /* Wait fot it to complete */
     WaitForProcess(&data);
+    if (rxspawn_thread_snapshot &&
+        rxspawn_thread_snapshot->termination_reason) {
+        *rxspawn_thread_snapshot->termination_reason = data.terminated
+                ? (data.timed_out ? 2 : 1) : 0;
+    }
 
     // Handle any waitThread errors
     if (data.waitThreadRC) {
@@ -1886,6 +2355,7 @@ static int spawn_argv_capture(const char *const *argv,
     data.waitThreadErrorText = 0;
 #ifdef _WIN32
     ZeroMemory(&data.ChildProcessInfo, sizeof(PROCESS_INFORMATION));
+    data.ChildJob = NULL;
 #else
     data.ChildProcessPID = 0;
 #endif
@@ -1902,9 +2372,25 @@ static int spawn_argv_capture(const char *const *argv,
     data.waitThreadRC = 0;
     data.variables = variables;
     data.crexx_bindings = NULL;
+    data.crexx_binding_snapshot = NULL;
+    data.crexx_binding_snapshot_count = 0u;
+    data.cancelled = rxspawn_thread_snapshot
+            ? rxspawn_thread_snapshot->cancelled : NULL;
+    data.input_stopped = rxspawn_thread_snapshot
+            ? rxspawn_thread_snapshot->input_stopped : NULL;
+    data.output_stopped = rxspawn_thread_snapshot
+            ? rxspawn_thread_snapshot->output_stopped : NULL;
+    data.deadline_microseconds = rxspawn_thread_snapshot
+            ? rxspawn_thread_snapshot->deadline_microseconds : 0u;
+    data.terminated = 0u;
+    data.timed_out = 0u;
 
-    if (rxcrexxcmd_active_process_snapshot(&data.working_directory,
-                                           &data.environment) != 0) {
+    if ((rxspawn_thread_snapshot
+             ? rxspawn_copy_process_snapshot(
+                   rxspawn_thread_snapshot, &data.working_directory,
+                   &data.environment)
+             : rxcrexxcmd_active_process_snapshot(
+                   &data.working_directory, &data.environment)) != 0) {
         Error("Failure spawn environment snapshot", errorText);
         CleanUp(&data);
         return SHELLSPAWN_FAILURE;
@@ -1976,6 +2462,11 @@ static int spawn_argv_capture(const char *const *argv,
     }
 
     WaitForProcess(&data);
+    if (rxspawn_thread_snapshot &&
+        rxspawn_thread_snapshot->termination_reason) {
+        *rxspawn_thread_snapshot->termination_reason = data.terminated
+                ? (data.timed_out ? 2 : 1) : 0;
+    }
 
     if (data.waitThreadRC) {
         appendTextOutput(errorText, data.waitThreadErrorText);
@@ -1986,6 +2477,108 @@ static int spawn_argv_capture(const char *const *argv,
     if (rc) *rc = (int)data.ChildProcessRC;
     CleanUp(&data);
     return SHELLSPAWN_OK;
+}
+
+static uint64_t rxspawn_deadline_from_wait(int64_t wait_microseconds) {
+    uint64_t now;
+    uint64_t duration;
+    if (wait_microseconds <= 0) return 0u;
+    now = rxspawn_monotonic_microseconds();
+    duration = (uint64_t)wait_microseconds;
+    return duration > UINT64_MAX - now ? UINT64_MAX : now + duration;
+}
+
+int shellspawn_snapshot(const char *command,
+                        REDIRECT *pIn,
+                        REDIRECT *pOut,
+                        REDIRECT *pErr,
+                        const char *working_directory,
+                        const char *const *environment,
+                        int mode,
+                        int64_t wait_microseconds,
+                        const atomic_uchar *cancelled,
+                        atomic_uchar *input_stopped,
+                        atomic_uchar *output_stopped,
+                        int *termination_reason,
+                        int *rc,
+                        char **errorText) {
+    return shellspawn_snapshot_bindings(
+            command, pIn, pOut, pErr, working_directory, environment,
+            NULL, 0u, mode, wait_microseconds, cancelled,
+            input_stopped, output_stopped,
+            termination_reason, rc, errorText);
+}
+
+int shellspawn_snapshot_bindings(const char *command,
+                                 REDIRECT *pIn,
+                                 REDIRECT *pOut,
+                                 REDIRECT *pErr,
+                                 const char *working_directory,
+                                 const char *const *environment,
+                                 const char *const *crexx_bindings,
+                                 size_t crexx_binding_count,
+                                 int mode,
+                                 int64_t wait_microseconds,
+                                 const atomic_uchar *cancelled,
+                                 atomic_uchar *input_stopped,
+                                 atomic_uchar *output_stopped,
+                                 int *termination_reason,
+                                 int *rc,
+                                 char **errorText) {
+    RXSPAWN_SNAPSHOT_OVERRIDE snapshot;
+    const RXSPAWN_SNAPSHOT_OVERRIDE *previous = rxspawn_thread_snapshot;
+    int result;
+    snapshot.working_directory = working_directory;
+    snapshot.environment = environment;
+    snapshot.crexx_bindings = crexx_bindings;
+    snapshot.crexx_binding_count = crexx_binding_count;
+    snapshot.cancelled = cancelled;
+    snapshot.input_stopped = input_stopped;
+    snapshot.output_stopped = output_stopped;
+    snapshot.deadline_microseconds =
+            rxspawn_deadline_from_wait(wait_microseconds);
+    snapshot.termination_reason = termination_reason;
+    if (termination_reason) *termination_reason = 0;
+    rxspawn_thread_snapshot = &snapshot;
+    result = shellspawn(command, pIn, pOut, pErr, NULL, NULL,
+                        mode, rc, errorText);
+    rxspawn_thread_snapshot = previous;
+    return result;
+}
+
+int shellspawn_argv_snapshot(const char *const *argv,
+                             int argc,
+                             REDIRECT *pIn,
+                             REDIRECT *pOut,
+                             REDIRECT *pErr,
+                             const char *working_directory,
+                             const char *const *environment,
+                             int64_t wait_microseconds,
+                             const atomic_uchar *cancelled,
+                             atomic_uchar *input_stopped,
+                             atomic_uchar *output_stopped,
+                             int *termination_reason,
+                             int *rc,
+                             char **errorText) {
+    RXSPAWN_SNAPSHOT_OVERRIDE snapshot;
+    const RXSPAWN_SNAPSHOT_OVERRIDE *previous = rxspawn_thread_snapshot;
+    int result;
+    snapshot.working_directory = working_directory;
+    snapshot.environment = environment;
+    snapshot.crexx_bindings = NULL;
+    snapshot.crexx_binding_count = 0u;
+    snapshot.cancelled = cancelled;
+    snapshot.input_stopped = input_stopped;
+    snapshot.output_stopped = output_stopped;
+    snapshot.deadline_microseconds =
+            rxspawn_deadline_from_wait(wait_microseconds);
+    snapshot.termination_reason = termination_reason;
+    if (termination_reason) *termination_reason = 0;
+    rxspawn_thread_snapshot = &snapshot;
+    result = spawn_argv_capture(
+            argv, argc, pIn, pOut, pErr, NULL, rc, errorText);
+    rxspawn_thread_snapshot = previous;
+    return result;
 }
 
 /* Create a null redirect pipe */
@@ -2193,7 +2786,30 @@ void redirectOutput(value* redirect_reg, value* string_reg, unsigned char transf
     redirect->has_thread = 1;
 }
 
-/* Capture raw bytes only. Join publishes them to the receiver VM thread. */
+static int redirect_capture_chunk(REDIRECT_COMPLETION *completion,
+                                  const char *bytes,
+                                  size_t length) {
+    if (completion->transfer_mode == REDIRECT_TRANSFER_ENDPOINT_OUTPUT) {
+        size_t accepted = 0u;
+        rxvm_channel_status status = rxvm_byte_endpoint_write(
+                completion->endpoint, bytes, length, -1,
+                completion->cancelled, &accepted);
+        if (status == RXVM_CHANNEL_OK && accepted == length) return 0;
+        if (status == RXVM_CHANNEL_ALREADY_TERMINAL ||
+            status == RXVM_CHANNEL_CLOSED) return 1;
+        completion->errorCode = 1;
+        completion->lastError = status;
+        completion->errorSource = 14;
+        return -1;
+    }
+    if (redirect_completion_append(completion, bytes, length) == 0) return 0;
+    completion->errorCode = 1;
+    completion->errorSource = 4;
+    return -1;
+}
+
+/* Capture raw bytes only. Legacy joins publish them to the receiver VM
+ * thread; byte-endpoint mode streams directly into bounded C-owned storage. */
 THREAD_RETURN OutputCaptureThread(void* lpvThreadParam)
 {
     REDIRECT_COMPLETION *completion = (REDIRECT_COMPLETION *)lpvThreadParam;
@@ -2213,12 +2829,16 @@ THREAD_RETURN OutputCaptureThread(void* lpvThreadParam)
             break;
         }
         if (bytes_read == 0) break;
-        if (!capture_failed &&
-            redirect_completion_append(completion, buffer, (size_t)bytes_read) != 0) {
+        if (!capture_failed) {
+            int capture_rc = redirect_capture_chunk(
+                    completion, buffer, (size_t)bytes_read);
+            if (capture_rc > 0) break;
+            if (capture_rc < 0) {
             /* Continue draining so allocation failure cannot deadlock the child. */
-            capture_failed = 1;
-            completion->errorCode = 1;
-            completion->errorSource = 4;
+                if (completion->transfer_mode ==
+                        REDIRECT_TRANSFER_ENDPOINT_OUTPUT) break;
+                capture_failed = 1;
+            }
         }
     }
 #else
@@ -2232,17 +2852,25 @@ THREAD_RETURN OutputCaptureThread(void* lpvThreadParam)
             completion->errorSource = 3;
             break;
         }
-        if (!capture_failed &&
-            redirect_completion_append(completion, buffer, (size_t)bytes_read) != 0) {
+        if (!capture_failed) {
+            int capture_rc = redirect_capture_chunk(
+                    completion, buffer, (size_t)bytes_read);
+            if (capture_rc > 0) break;
+            if (capture_rc < 0) {
             /* Continue draining so allocation failure cannot deadlock the child. */
-            capture_failed = 1;
-            completion->errorCode = 1;
-            completion->errorSource = 4;
+                if (completion->transfer_mode ==
+                        REDIRECT_TRANSFER_ENDPOINT_OUTPUT) break;
+                capture_failed = 1;
+            }
         }
     }
 #endif
 
     redirect_completion_close_handle(completion);
+    if (completion->transfer_mode == REDIRECT_TRANSFER_ENDPOINT_OUTPUT) {
+        (void)rxvm_byte_endpoint_half_close(
+                completion->endpoint, RXVM_BYTE_ENDPOINT_WRITE);
+    }
     redirect_completion_publish(completion,
         completion->errorCode ? REDIRECT_COMPLETION_FAILED
                               : REDIRECT_COMPLETION_SUCCEEDED);
@@ -2461,7 +3089,47 @@ void redirectInput(value* redirect_reg, value* string_reg, unsigned char transfe
     redirect->has_thread = 1;
 }
 
-/* Write an immutable snapshot only; this thread has no VM state. */
+static int redirect_write_chunk_to_child(REDIRECT_COMPLETION *completion,
+                                         const unsigned char *bytes,
+                                         size_t length) {
+    size_t total = 0u;
+    while (total < length) {
+#ifdef _WIN32
+        size_t remaining = length - total;
+        DWORD request = remaining > (size_t)0x7fffffffu
+                ? (DWORD)0x7fffffffu : (DWORD)remaining;
+        DWORD written = 0u;
+        if (!WriteFile(completion->io_handle, bytes + total,
+                       request, &written, NULL)) {
+            DWORD error = GetLastError();
+            if (error == ERROR_NO_DATA || error == ERROR_BROKEN_PIPE) return 1;
+            completion->errorCode = 1;
+            completion->lastError = (int)error;
+            completion->errorSource = 7;
+            return -1;
+        }
+        if (!written) return 1;
+        total += (size_t)written;
+#else
+        ssize_t written = write(
+                completion->io_handle, bytes + total, length - total);
+        if (written == -1) {
+            if (errno == EINTR) continue;
+            if (errno == EPIPE) return 1;
+            completion->errorCode = 1;
+            completion->lastError = errno;
+            completion->errorSource = 7;
+            return -1;
+        }
+        if (!written) return 1;
+        total += (size_t)written;
+#endif
+    }
+    return 0;
+}
+
+/* Write an immutable snapshot or stream a C-owned byte endpoint. This thread
+ * has no VM value, object, register or worker-state pointer. */
 THREAD_RETURN InputSnapshotThread(void* lpvThreadParam)
 {
     REDIRECT_COMPLETION *completion = (REDIRECT_COMPLETION *)lpvThreadParam;
@@ -2479,6 +3147,33 @@ THREAD_RETURN InputSnapshotThread(void* lpvThreadParam)
         completion->errorSource = 6;
     }
 #endif
+
+    if (completion->transfer_mode == REDIRECT_TRANSFER_ENDPOINT_INPUT) {
+        while (!completion->errorCode) {
+            unsigned char bytes[4096];
+            size_t length = 0u;
+            int eof = 0;
+            rxvm_channel_status status = rxvm_byte_endpoint_read(
+                    completion->endpoint, bytes, sizeof(bytes), -1,
+                    completion->cancelled, &length, &eof);
+            if (status == RXVM_CHANNEL_ALREADY_TERMINAL ||
+                status == RXVM_CHANNEL_CLOSED) break;
+            if (status != RXVM_CHANNEL_OK) {
+                completion->errorCode = 1;
+                completion->lastError = status;
+                completion->errorSource = 15;
+                break;
+            }
+            if (length && redirect_write_chunk_to_child(
+                    completion, bytes, length) != 0) break;
+            if (eof) break;
+        }
+        redirect_completion_close_handle(completion);
+        redirect_completion_publish(completion,
+            completion->errorCode ? REDIRECT_COMPLETION_FAILED
+                                  : REDIRECT_COMPLETION_SUCCEEDED);
+        return 0;
+    }
 
 #ifdef _WIN32
     while (!completion->errorCode && total < completion->length) {
@@ -2521,6 +3216,76 @@ THREAD_RETURN InputSnapshotThread(void* lpvThreadParam)
         completion->errorCode ? REDIRECT_COMPLETION_FAILED
                               : REDIRECT_COMPLETION_SUCCEEDED);
     return 0;
+}
+
+static REDIRECT *redirect_byte_endpoint_create(
+        rxvm_byte_endpoint *endpoint,
+        const atomic_uchar *cancelled,
+        int output_from_child) {
+    REDIRECT *redirect;
+    REDIRECT_COMPLETION *completion;
+    int required_direction = output_from_child
+            ? RXVM_BYTE_ENDPOINT_WRITE : RXVM_BYTE_ENDPOINT_READ;
+    if (!endpoint ||
+        !(rxvm_byte_endpoint_direction(endpoint) & required_direction)) {
+        return NULL;
+    }
+    redirect = (REDIRECT *)calloc(1u, sizeof(*redirect));
+    if (!redirect) return NULL;
+    redirect_endpoint_init(
+            redirect, output_from_child
+                    ? REDIRECT_ENDPOINT_OUTPUT : REDIRECT_ENDPOINT_INPUT);
+    completion = redirect_completion_create(
+            output_from_child
+                    ? REDIRECT_TRANSFER_ENDPOINT_OUTPUT
+                    : REDIRECT_TRANSFER_ENDPOINT_INPUT);
+    if (!completion) {
+        free(redirect);
+        return NULL;
+    }
+    completion->endpoint = endpoint;
+    completion->cancelled = cancelled;
+    rxvm_byte_endpoint_retain(endpoint);
+    if (redirect_pipe_start(redirect, completion, output_from_child) != 0) {
+        redirect_completion_destroy(completion);
+        free(redirect);
+        return NULL;
+    }
+    return redirect;
+}
+
+REDIRECT *rxspawn_redirect_from_byte_endpoint(
+        rxvm_byte_endpoint *endpoint,
+        const atomic_uchar *cancelled) {
+    return redirect_byte_endpoint_create(endpoint, cancelled, 0);
+}
+
+REDIRECT *rxspawn_redirect_to_byte_endpoint(
+        rxvm_byte_endpoint *endpoint,
+        const atomic_uchar *cancelled) {
+    return redirect_byte_endpoint_create(endpoint, cancelled, 1);
+}
+
+int rxspawn_redirect_byte_endpoint_destroy(REDIRECT *redirect) {
+    int result;
+    if (!redirect) return 0;
+    if (redirect->endpoint_kind == REDIRECT_ENDPOINT_INPUT) {
+        result = crexxcmd_close_input_redirect(redirect);
+    } else {
+        result = crexxcmd_close_output_redirect(redirect);
+    }
+    if (result == 0 || !redirect->has_thread) free(redirect);
+    return result;
+}
+
+int rxspawn_redirect_write_close(REDIRECT *redirect,
+                                 const char *data,
+                                 size_t length) {
+    if (!redirect || redirect->endpoint_kind != REDIRECT_ENDPOINT_OUTPUT ||
+        (!data && length)) return -1;
+    WriteToStdin(redirect, (char *)(data ? data : ""), length);
+    if (redirect->errorCode) return -1;
+    return crexxcmd_close_output_redirect(redirect);
 }
 
 void WriteToStdin(REDIRECT* data, char *line, size_t nBytes)
@@ -2581,36 +3346,14 @@ int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes)
     if (!redirect) return 1;
     if (!data) data = "";
 
-    WriteToStdin(redirect, (char*)data, nBytes);
-    if (redirect->errorCode != 0) return -1;
-
-#ifdef _WIN32
-    if (redirect->hWrite != INVALID_HANDLE_VALUE) {
-        CloseHandle(redirect->hWrite);
-        redirect->hWrite = INVALID_HANDLE_VALUE;
-    }
-    if (join_redirect_thread(redirect) != 0) return -1;
-    if (redirect->hRead != INVALID_HANDLE_VALUE) {
-        CloseHandle(redirect->hRead);
-        redirect->hRead = INVALID_HANDLE_VALUE;
-    }
-#else
-    if (redirect->hWrite != -1) {
-        close(redirect->hWrite);
-        redirect->hWrite = -1;
-    }
-    if (join_redirect_thread(redirect) != 0) return -1;
-    if (redirect->hRead != -1) {
-        close(redirect->hRead);
-        redirect->hRead = -1;
-    }
-#endif
-
-    return redirect->errorCode == 0 ? 0 : -1;
+    return rxspawn_redirect_write_close(redirect, data, nBytes);
 }
 
 void CleanUp(SHELLDATA* data)
 {
+    /* Every abandonment path must release endpoint transfers before joining
+     * them, including failures that occur before a child is launched. */
+    rxspawn_stop_redirect_io(data, 1);
     if (data->buffer) {
         rxspawn_memory_free(data->buffer);
         data->buffer = 0;
@@ -2635,6 +3378,9 @@ void CleanUp(SHELLDATA* data)
 #ifdef _WIN32
 
     PROCESS_INFORMATION* pProcInfo = &(data->ChildProcessInfo);
+    if (data->ChildJob) {
+        (void)TerminateJobObject(data->ChildJob, 130u);
+    }
     if (pProcInfo->hProcess) {
         TerminateProcess(pProcInfo->hProcess, 0);
         CloseHandle(pProcInfo->hProcess);
@@ -2643,6 +3389,10 @@ void CleanUp(SHELLDATA* data)
     if (pProcInfo->hThread) {
         CloseHandle(pProcInfo->hThread);
         pProcInfo->hThread = NULL;
+    }
+    if (data->ChildJob) {
+        CloseHandle(data->ChildJob);
+        data->ChildJob = NULL;
     }
 
     // Close any pipes
@@ -2684,9 +3434,9 @@ void CleanUp(SHELLDATA* data)
 
         /* CleanUp is an abandonment path: stop and reap the direct child
          * before joining pipe owners, so no inherited end can keep them live. */
-        if (kill(child_pid, SIGKILL) == -1 && errno != ESRCH) {
-            data->waitThreadRC = 1;
-        }
+        if (kill(-child_pid, SIGKILL) == -1 &&
+            errno == ESRCH && kill(child_pid, SIGKILL) == -1 &&
+            errno != ESRCH) data->waitThreadRC = 1;
         while (waitpid(child_pid, &child_status, 0) == -1 && errno == EINTR) {
         }
         data->ChildProcessPID = 0;
@@ -2758,8 +3508,30 @@ void WaitForProcess(SHELLDATA* data)
         data->pError->hWrite = INVALID_HANDLE_VALUE;
     }
 
-    // Wait for child process to exit
-    dwWaitResult = WaitForSingleObject(data->ChildProcessInfo.hProcess, INFINITE);
+    // Wait in bounded slices so provider cancellation/deadline can terminate
+    // and join the direct child deterministically.
+    for (;;) {
+        dwWaitResult = WaitForSingleObject(
+                data->ChildProcessInfo.hProcess, 10u);
+        if (dwWaitResult != WAIT_TIMEOUT) break;
+        if (rxspawn_stop_requested(data)) {
+            BOOL terminated = data->ChildJob
+                    ? TerminateJobObject(
+                          data->ChildJob, data->timed_out ? 124u : 130u)
+                    : TerminateProcess(
+                          data->ChildProcessInfo.hProcess,
+                          data->timed_out ? 124u : 130u);
+            if (!terminated) {
+                data->waitThreadRC = 1;
+                Error("Failure spawn terminate", &data->waitThreadErrorText);
+            } else {
+                data->terminated = 1u;
+            }
+            dwWaitResult = WaitForSingleObject(
+                    data->ChildProcessInfo.hProcess, INFINITE);
+            break;
+        }
+    }
     if (dwWaitResult == WAIT_OBJECT_0) {
         // The child process has terminated.
         DWORD process_rc;
@@ -2768,7 +3540,8 @@ void WaitForProcess(SHELLDATA* data)
             data->waitThreadRC = 1;
             Error("Failure spawn U43", &(data->waitThreadErrorText));
         }
-        data->ChildProcessRC = (int)process_rc;
+        data->ChildProcessRC = data->terminated
+                ? (data->timed_out ? 124 : 130) : (int)process_rc;
     }
     else {
         // The child process is not signaled.
@@ -2782,6 +3555,16 @@ void WaitForProcess(SHELLDATA* data)
         CloseHandle(data->ChildProcessInfo.hThread);
     }
     data->ChildProcessInfo.hThread = NULL;
+    if (data->ChildJob) {
+        /* The direct child may have completed while descendants retained the
+         * stdio handles. Closing the job ends the entire owned tree first. */
+        CloseHandle(data->ChildJob);
+        data->ChildJob = NULL;
+    }
+
+    /* A normally exited child can leave its stdin producer blocked on an
+     * open endpoint. Stop only input; stdout/stderr must still drain to EOF. */
+    rxspawn_stop_redirect_io(data, 0);
 
     // Wait for the Input, Output and Error threads to die
     if (data->pInput && data->pInput->has_thread)
@@ -2843,8 +3626,37 @@ void WaitForProcess(SHELLDATA* data)
     int pid;
     pid = data->ChildProcessPID;
 
-    do {
-        w = waitpid(pid, &status, WUNTRACED | WCONTINUED);
+    for (;;) {
+        w = waitpid(pid, &status, WUNTRACED | WCONTINUED |
+                                 ((data->cancelled ||
+                                   data->deadline_microseconds)
+                                  ? WNOHANG : 0));
+        if (w == 0) {
+            if (rxspawn_stop_requested(data)) {
+                int kill_result = kill(-pid, SIGKILL);
+                if (kill_result == -1 && errno == ESRCH) {
+                    kill_result = kill(pid, SIGKILL);
+                }
+                if (kill_result == -1 && errno != ESRCH) {
+                    data->waitThreadRC = 1;
+                    Error("Failure spawn terminate",
+                          &data->waitThreadErrorText);
+                } else {
+                    data->terminated = 1u;
+                }
+                do {
+                    w = waitpid(pid, &status, 0);
+                } while (w == -1 && errno == EINTR);
+                break;
+            }
+            {
+                struct timespec pause_time;
+                pause_time.tv_sec = 0;
+                pause_time.tv_nsec = 10000000L;
+                nanosleep(&pause_time, NULL);
+            }
+            continue;
+        }
         if (w == -1)
         {
             if (errno == EINTR) continue;
@@ -2853,15 +3665,21 @@ void WaitForProcess(SHELLDATA* data)
             if (errno == ECHILD) data->ChildProcessPID = 0;
             break;
         }
-    } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+        if (WIFEXITED(status) || WIFSIGNALED(status)) break;
+    }
     if (w != -1) {
         data->ChildProcessPID = 0;
-        if (WIFEXITED(status)) {
+        if (data->terminated) {
+            data->ChildProcessRC = data->timed_out ? 124 : 130;
+        } else if (WIFEXITED(status)) {
             data->ChildProcessRC = WEXITSTATUS(status);
         } else if (WIFSIGNALED(status)) {
             data->ChildProcessRC = 128 + WTERMSIG(status);
         }
     }
+
+    /* See the Windows path above: normal exit closes stdin ownership only. */
+    rxspawn_stop_redirect_io(data, 0);
 
     /* Wait for the Input, Output and Error threads to die */
     if (data->pInput && data->pInput->has_thread)
@@ -3144,8 +3962,10 @@ int launchChild(SHELLDATA* data) {
     STARTUPINFOEXW si;
     SIZE_T attributeListSize;
     HANDLE inheritedHandles[3];
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION job_information;
     int inheritedHandleCount;
     int useHandleList;
+    int controlled_child;
     int i;
 
     // Set up the start up info struct.
@@ -3158,6 +3978,7 @@ int launchChild(SHELLDATA* data) {
     si.StartupInfo.hStdInput = (data->pInput && data->pInput->hRead != INVALID_HANDLE_VALUE) ? data->pInput->hRead : GetStdHandle(STD_INPUT_HANDLE);
 
     int flags = CREATE_UNICODE_ENVIRONMENT; // UTF16 Environment Variables
+    controlled_child = data->cancelled || data->deadline_microseconds;
     attributeListSize = 0;
     inheritedHandleCount = 0;
     useHandleList = data->pInput && data->pOutput && data->pError
@@ -3361,6 +4182,27 @@ int launchChild(SHELLDATA* data) {
                             wideWorkingDirectory, workingDirectoryLength);
     }
 
+    /* Controlled providers use a kill-on-close job and create suspended so a
+     * descendant cannot escape before the direct child is assigned. */
+    if (controlled_child) {
+        data->ChildJob = CreateJobObjectW(NULL, NULL);
+        ZeroMemory(&job_information, sizeof(job_information));
+        job_information.BasicLimitInformation.LimitFlags =
+                JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        if (!data->ChildJob || !SetInformationJobObject(
+                data->ChildJob, JobObjectExtendedLimitInformation,
+                &job_information, sizeof(job_information))) {
+            windows_release_startup_attributes(&si);
+            rxspawn_memory_free(wideApplicationPath);
+            rxspawn_memory_free(wideWorkingDirectory);
+            rxspawn_memory_free(wideFilePath);
+            rxspawn_memory_free(pszNewEnvironment);
+            CleanUp(data);
+            return SHELLSPAWN_FAILURE;
+        }
+        flags |= CREATE_SUSPENDED;
+    }
+
     /* Start the child process */
     if (!CreateProcessW(wideApplicationPath,wideFilePath,NULL,NULL,TRUE,
                        flags,pszNewEnvironment,wideWorkingDirectory,
@@ -3378,6 +4220,20 @@ int launchChild(SHELLDATA* data) {
         }
         else
         {
+            windows_release_startup_attributes(&si);
+            rxspawn_memory_free(wideApplicationPath);
+            rxspawn_memory_free(wideWorkingDirectory);
+            rxspawn_memory_free(wideFilePath);
+            rxspawn_memory_free(pszNewEnvironment);
+            CleanUp(data);
+            return SHELLSPAWN_FAILURE;
+        }
+    }
+    if (data->ChildJob) {
+        if (!AssignProcessToJobObject(
+                    data->ChildJob, data->ChildProcessInfo.hProcess) ||
+            ResumeThread(data->ChildProcessInfo.hThread) == (DWORD)-1) {
+            (void)TerminateJobObject(data->ChildJob, 130u);
             windows_release_startup_attributes(&si);
             rxspawn_memory_free(wideApplicationPath);
             rxspawn_memory_free(wideWorkingDirectory);
@@ -3406,11 +4262,20 @@ int launchChild(SHELLDATA* data) {
         return SHELLSPAWN_FAILURE;
     }
 
-    if (data->ChildProcessPID != 0) // Parent Process
+    if (data->ChildProcessPID != 0) { // Parent process owns the child group.
+        if (setpgid(data->ChildProcessPID, data->ChildProcessPID) != 0 &&
+            errno != EACCES && errno != ESRCH) {
+            CleanUp(data);
+            return SHELLSPAWN_FAILURE;
+        }
         return 0;
+    }
+
+    if (setpgid(0, 0) != 0) _exit(127);
 
     if (data->working_directory && chdir(data->working_directory) != 0) {
-        perror("Failure spawn working directory");
+        static const char message[] = "Failure spawn working directory\n";
+        (void)write(2, message, sizeof(message) - 1u);
         _exit(127);
     }
 
@@ -3482,7 +4347,10 @@ int launchChild(SHELLDATA* data) {
     // Execute the command
     if (data->environment) execve(data->file_path, data->argv, data->environment);
     else execv(data->file_path, data->argv);
-    perror("Failure spawn launchChild");
+    {
+        static const char message[] = "Failure spawn launchChild\n";
+        (void)write(2, message, sizeof(message) - 1u);
+    }
     _exit(127);
 #endif
 }

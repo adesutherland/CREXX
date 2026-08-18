@@ -1,0 +1,114 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(gate_f_channel_contract\|gate_f_levelb_contract\|rxvmchannel_provider_registry\|gate_f_channel_local_\(rxbvm\|rxtvm\)\|persistent_worker_executor-\(rxbvml\|rxtvml\)\(-doorbell-stress\|-sparse-owner\|-sparse-owner-stress\|-sparse-progress\|-native-return\)\?\|rxvmmemory_allocator\|rxvmworker_lifecycle\|rxvmactive_isolation\|inline_test_binary_class_attr_assign_\(shape\|run_noopt\|run_opt\)\|object_reference_regression_\(opt\|run_noopt\|run_opt\)\|inline_test_block_expr_live_sibling_\(opt\|run_noopt\|run_opt\)\|gate_f_signal_names_run_\(noopt\|opt\)\|ts_signal_\(noopt\|opt\)\|gate_f_levelb_bridge_inspection\|testConcurrency_\(noopt\|opt\)\)\$ --fixture-exclude-setup linked_opt_runtime_artifacts --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+      Start  212: object_reference_regression_opt
+ 1/36 Test  #212: object_reference_regression_opt .........................   Passed    1.48 sec
+      Start  338: inline_test_block_expr_live_sibling_opt
+ 2/36 Test  #338: inline_test_block_expr_live_sibling_opt .................   Passed    1.26 sec
+      Start  345: gate_f_channel_contract
+ 3/36 Test  #345: gate_f_channel_contract .................................   Passed    0.99 sec
+      Start  389: object_reference_regression_run_noopt
+ 4/36 Test  #389: object_reference_regression_run_noopt ...................   Passed    1.86 sec
+      Start  390: object_reference_regression_run_opt
+ 5/36 Test  #390: object_reference_regression_run_opt .....................   Passed    1.64 sec
+      Start  507: gate_f_levelb_contract
+ 6/36 Test  #507: gate_f_levelb_contract ..................................   Passed    1.31 sec
+      Start  724: inline_test_block_expr_live_sibling_run_noopt
+ 7/36 Test  #724: inline_test_block_expr_live_sibling_run_noopt ...........   Passed    1.51 sec
+      Start  725: inline_test_block_expr_live_sibling_run_opt
+ 8/36 Test  #725: inline_test_block_expr_live_sibling_run_opt .............   Passed    1.46 sec
+      Start  734: inline_test_binary_class_attr_assign_run_noopt
+ 9/36 Test  #734: inline_test_binary_class_attr_assign_run_noopt ..........   Passed    1.50 sec
+      Start  735: inline_test_binary_class_attr_assign_run_opt
+10/36 Test  #735: inline_test_binary_class_attr_assign_run_opt ............   Passed    1.46 sec
+      Start  736: inline_test_binary_class_attr_assign_shape
+11/36 Test  #736: inline_test_binary_class_attr_assign_shape ..............   Passed    1.19 sec
+      Start  737: gate_f_signal_names_run_noopt
+12/36 Test  #737: gate_f_signal_names_run_noopt ...........................   Passed    1.51 sec
+      Start  738: gate_f_signal_names_run_opt
+13/36 Test  #738: gate_f_signal_names_run_opt .............................   Passed    1.48 sec
+      Start 1056: rxvmmemory_allocator
+14/36 Test #1056: rxvmmemory_allocator ....................................   Passed    0.07 sec
+      Start 1057: rxvmworker_lifecycle
+15/36 Test #1057: rxvmworker_lifecycle ....................................   Passed    0.06 sec
+      Start 1058: rxvmchannel_provider_registry
+16/36 Test #1058: rxvmchannel_provider_registry ...........................   Passed    0.47 sec
+      Start 1059: rxvmactive_isolation
+17/36 Test #1059: rxvmactive_isolation ....................................   Passed    0.41 sec
+      Start 1141: gate_f_channel_local_rxbvm
+18/36 Test #1141: gate_f_channel_local_rxbvm ..............................   Passed    0.09 sec
+      Start 1142: gate_f_channel_local_rxtvm
+19/36 Test #1142: gate_f_channel_local_rxtvm ..............................   Passed    0.47 sec
+      Start 1211: persistent_worker_executor-rxbvml
+20/36 Test #1211: persistent_worker_executor-rxbvml .......................   Passed    0.56 sec
+      Start 1212: persistent_worker_executor-rxbvml-doorbell-stress
+21/36 Test #1212: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.06 sec
+      Start 1213: persistent_worker_executor-rxbvml-sparse-owner
+22/36 Test #1213: persistent_worker_executor-rxbvml-sparse-owner ..........   Passed    0.27 sec
+      Start 1214: persistent_worker_executor-rxbvml-sparse-owner-stress
+23/36 Test #1214: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.06 sec
+      Start 1215: persistent_worker_executor-rxbvml-sparse-progress
+24/36 Test #1215: persistent_worker_executor-rxbvml-sparse-progress .......   Passed    0.06 sec
+      Start 1216: persistent_worker_executor-rxbvml-native-return
+25/36 Test #1216: persistent_worker_executor-rxbvml-native-return .........   Passed    0.19 sec
+      Start 1225: persistent_worker_executor-rxtvml
+26/36 Test #1225: persistent_worker_executor-rxtvml .......................   Passed    0.69 sec
+      Start 1226: persistent_worker_executor-rxtvml-doorbell-stress
+27/36 Test #1226: persistent_worker_executor-rxtvml-doorbell-stress .......   Passed    0.06 sec
+      Start 1227: persistent_worker_executor-rxtvml-sparse-owner
+28/36 Test #1227: persistent_worker_executor-rxtvml-sparse-owner ..........   Passed    0.28 sec
+      Start 1228: persistent_worker_executor-rxtvml-sparse-owner-stress
+29/36 Test #1228: persistent_worker_executor-rxtvml-sparse-owner-stress ...   Passed    0.06 sec
+      Start 1229: persistent_worker_executor-rxtvml-sparse-progress
+30/36 Test #1229: persistent_worker_executor-rxtvml-sparse-progress .......   Passed    0.06 sec
+      Start 1230: persistent_worker_executor-rxtvml-native-return
+31/36 Test #1230: persistent_worker_executor-rxtvml-native-return .........   Passed    0.19 sec
+      Start 1487: ts_signal_noopt
+32/36 Test #1487: ts_signal_noopt .........................................   Passed    0.27 sec
+      Start 1488: ts_signal_opt
+33/36 Test #1488: ts_signal_opt ...........................................   Passed    0.27 sec
+      Start 1591: gate_f_levelb_bridge_inspection
+34/36 Test #1591: gate_f_levelb_bridge_inspection .........................   Passed    0.00 sec
+      Start 1629: testConcurrency_noopt
+35/36 Test #1629: testConcurrency_noopt ...................................   Passed    2.66 sec
+      Start 1630: testConcurrency_opt
+36/36 Test #1630: testConcurrency_opt .....................................   Passed    0.98 sec
+
+100% tests passed, 0 tests failed out of 36
+
+Label Time Summary:
+binary               =   1.19 sec*proc (1 test)
+channels             =   2.02 sec*proc (4 tests)
+classlib             =   0.00 sec*proc (1 test)
+compiler             =   3.49 sec*proc (3 tests)
+concurrency          =   1.31 sec*proc (1 test)
+e5                   =   2.55 sec*proc (12 tests)
+f1c                  =   1.03 sec*proc (3 tests)
+fallback             =   1.18 sec*proc (8 tests)
+gate-e               =   2.55 sec*proc (12 tests)
+gate-f               =   2.02 sec*proc (5 tests)
+gate_f               =   1.31 sec*proc (1 test)
+industrial           =   2.55 sec*proc (12 tests)
+inlining             =   1.19 sec*proc (1 test)
+inspection           =   0.00 sec*proc (1 test)
+interpreter          =   4.12 sec*proc (18 tests)
+levelb               =   1.31 sec*proc (1 test)
+lifecycle            =   1.19 sec*proc (8 tests)
+linked_opt           =   7.28 sec*proc (6 tests)
+macos                =   2.55 sec*proc (12 tests)
+memory               =   0.13 sec*proc (2 tests)
+native               =   0.38 sec*proc (2 tests)
+perf3                =   3.58 sec*proc (15 tests)
+performance          =   0.99 sec*proc (1 test)
+private              =   2.55 sec*proc (12 tests)
+provider-registry    =   0.47 sec*proc (1 test)
+race                 =   0.25 sec*proc (4 tests)
+regression           =   1.19 sec*proc (1 test)
+rxas                 =   0.99 sec*proc (1 test)
+rxbin                =   0.99 sec*proc (1 test)
+signals              =   0.41 sec*proc (1 test)
+sparse               =   1.18 sec*proc (8 tests)
+worker               =   0.47 sec*proc (2 tests)
+
+Total Test time (real) =  26.98 sec

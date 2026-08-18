@@ -87,6 +87,7 @@
 #include "../binutils/include/rxjtable.h"
 #include "rxastree.h"
 #include "rxvmintp.h"
+#include "rxvmchannel.h"
 /* #include <complex.h> */
 #include <signal.h>
 
@@ -4179,6 +4180,10 @@ const char *interrupt_to_string(unsigned char interrupt) {
             return "POSIX_USR2";;
         case RXSIGNAL_POSIX_CHLD:
             return "POSIX_CHLD";
+        case RXSIGNAL_CHANNEL_ERROR:
+            return "CHANNEL_ERROR";
+        case RXSIGNAL_TASK_FAILURE:
+            return "TASK_FAILURE";
         case RXSIGNAL_BREAKPOINT:
             return "BREAKPOINT";
         case RXSIGNAL_OTHER:
@@ -4215,6 +4220,8 @@ unsigned char string_to_interrupt(const char *interrupt) {
     if (strcmp(interrupt, "POSIX_USR1") == 0) return RXSIGNAL_POSIX_USR1;
     if (strcmp(interrupt, "POSIX_USR2") == 0) return RXSIGNAL_POSIX_USR2;
     if (strcmp(interrupt, "POSIX_CHLD") == 0) return RXSIGNAL_POSIX_CHLD;
+    if (strcmp(interrupt, "CHANNEL_ERROR") == 0) return RXSIGNAL_CHANNEL_ERROR;
+    if (strcmp(interrupt, "TASK_FAILURE") == 0) return RXSIGNAL_TASK_FAILURE;
     if (strcmp(interrupt, "BREAKPOINT") == 0) return RXSIGNAL_BREAKPOINT;
     if (strcmp(interrupt, "OTHER") == 0) return RXSIGNAL_OTHER;
     return RXSIGNAL_MAX; // Invalid Signal Code
@@ -4597,6 +4604,8 @@ RX_INLINE stack_frame *frame_f(
         this->interrupt_table[RXSIGNAL_POSIX_USR1-1].response = RXSIGNAL_RESPONSE_IGNORE;
         this->interrupt_table[RXSIGNAL_POSIX_USR2-1].response = RXSIGNAL_RESPONSE_IGNORE;
         this->interrupt_table[RXSIGNAL_POSIX_CHLD-1].response = RXSIGNAL_RESPONSE_IGNORE;
+        this->interrupt_table[RXSIGNAL_CHANNEL_ERROR-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_TASK_FAILURE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_BREAKPOINT-1].response = RXSIGNAL_RESPONSE_IGNORE;
         this->interrupt_table[RXSIGNAL_OTHER-1].response = RXSIGNAL_RESPONSE_HALT;
         this->is_interrupt = 0; // No signals pending
@@ -5585,6 +5594,7 @@ rxvm_invoke_outlined_handler(rxvm_handler_function function,
 #include "rxvmhandlers_numeric.inc"
 #include "rxvmhandlers_string.inc"
 #include "rxvmhandlers_system.inc"
+#include "rxvmhandlers_channel.inc"
 
 #undef RXVM_PRIVATE_HANDLER
 #undef RXVM_HANDLER
@@ -5610,6 +5620,7 @@ rxvm_outlined_handler_functions[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
 #include "rxvmhandlers_numeric.inc"
 #include "rxvmhandlers_string.inc"
 #include "rxvmhandlers_system.inc"
+#include "rxvmhandlers_channel.inc"
 #undef RXVM_PRIVATE_HANDLER
 #undef RXVM_HANDLER
 };
@@ -5626,6 +5637,7 @@ rxvm_handler_inline_placements[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
 #include "rxvmhandlers_numeric.inc"
 #include "rxvmhandlers_string.inc"
 #include "rxvmhandlers_system.inc"
+#include "rxvmhandlers_channel.inc"
 #undef RXVM_PRIVATE_HANDLER
 #undef RXVM_HANDLER
 };
@@ -6530,6 +6542,7 @@ START_OF_INSTRUCTIONS
 #include "rxvmhandlers_numeric.inc"
 #include "rxvmhandlers_string.inc"
 #include "rxvmhandlers_system.inc"
+#include "rxvmhandlers_channel.inc"
 
 #undef RXVM_PRIVATE_HANDLER
 #undef RXVM_HANDLER
@@ -6646,6 +6659,7 @@ START_OF_INSTRUCTIONS
 #include "rxvmhandlers_numeric.inc"
 #include "rxvmhandlers_string.inc"
 #include "rxvmhandlers_system.inc"
+#include "rxvmhandlers_channel.inc"
 
 #undef RXVM_PRIVATE_HANDLER
 #undef RXVM_HANDLER

@@ -220,6 +220,28 @@ static void output_meta_inline_line(FILE *stream, bin_space *pgm, meta_inline_co
     if (payload) free(payload);
 }
 
+static void output_meta_task_target_line(FILE *stream,
+                                         bin_space *pgm,
+                                         meta_task_target_constant *mentry,
+                                         const char *indent) {
+    char symbol_buffer[MAX_LINE_SIZE];
+    char binding_buffer[MAX_LINE_SIZE];
+    string_constant *binding;
+
+    get_const_string(pgm, symbol_buffer, sizeof(symbol_buffer), mentry->symbol);
+    binding = (string_constant *)(pgm->const_pool + mentry->binding);
+    encode_binary_to_hex(binding_buffer,
+                         sizeof(binding_buffer),
+                         binding->string,
+                         binding->string_len);
+    fprintf(stream,
+            "%s.meta %s=\".task%u\" %s\n",
+            indent,
+            symbol_buffer,
+            mentry->kind,
+            binding_buffer);
+}
+
 static void output_meta_source_step_line(FILE *stream, bin_space *pgm, meta_source_step_constant *mentry, const char *indent) {
     char file_buffer[MAX_LINE_SIZE];
     char source_buffer[MAX_LINE_SIZE];
@@ -1189,6 +1211,13 @@ static void output_meta_post_proc(FILE *stream, module_file *module, bin_space *
             }
             break;
 
+            case META_TASK_TARGET: {
+                meta_task_target_constant *mentry =
+                    ((meta_task_target_constant *) (module->constant + m));
+                output_meta_task_target_line(stream, pgm, mentry, "                ");
+            }
+            break;
+
             case META_CLASS: {
                 /* Emitted before the procedure header */
             }
@@ -1300,6 +1329,13 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
             case META_INLINE: {
                 meta_inline_constant *mentry = ((meta_inline_constant *) (module->constant + m));
                 output_meta_inline_line(stream, pgm, mentry, "                ");
+            }
+            break;
+
+            case META_TASK_TARGET: {
+                meta_task_target_constant *mentry =
+                    ((meta_task_target_constant *) (module->constant + m));
+                output_meta_task_target_line(stream, pgm, mentry, "                ");
             }
             break;
 
@@ -1673,6 +1709,32 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     else fprintf(stream, "\n");
                     if (symbol) free(symbol);
                     if (payload) free(payload);
+                }
+                    break;
+
+                case META_TASK_TARGET:
+                {
+                    meta_task_target_constant *mentry =
+                        (meta_task_target_constant *)entry;
+                    char symbol_buffer[MAX_LINE_SIZE];
+                    char binding_buffer[MAX_LINE_SIZE];
+                    string_constant *binding =
+                        (string_constant *)(pgm->const_pool + mentry->binding);
+                    get_const_string(pgm,
+                                     symbol_buffer,
+                                     sizeof(symbol_buffer),
+                                     mentry->symbol);
+                    encode_binary_to_hex(binding_buffer,
+                                         sizeof(binding_buffer),
+                                         binding->string,
+                                         binding->string_len);
+                    fprintf(stream,
+                            "* 0x%.6lx META-TASK-TARGET @0x%.6lx %s kind=%u %s\n",
+                            i,
+                            mentry->base.address,
+                            symbol_buffer,
+                            mentry->kind,
+                            binding_buffer);
                 }
                     break;
 

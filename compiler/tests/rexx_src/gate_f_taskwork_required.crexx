@@ -1,0 +1,12 @@
+options levelg
+import concurrency
+
+namespace gate_f_taskwork_required
+
+ordinary: class
+  *: factory
+    return
+
+main: procedure
+  target = task .ordinary()
+  return

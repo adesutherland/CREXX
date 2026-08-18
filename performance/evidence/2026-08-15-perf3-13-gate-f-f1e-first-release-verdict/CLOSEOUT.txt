@@ -1,0 +1,56 @@
+PERF3-13 Gate F F1e local closeout
+Date: 2026-08-15
+
+Implemented:
+- core isolated-process provider type 2 with capability mask 0x010f;
+- bounded warm worker processes, bounded admission and the existing canonical
+  RXCV pool/scope/task/completion contract;
+- private versioned READY/INVOKE/STARTED/RESULT/CANCEL/SHUTDOWN framing;
+- bytecode-only generation snapshots that preserve distinct semantic graphs
+  as concatenated RXBIN 007 containers and retain numeric callable identities;
+- one fresh executor and VM context per request, including no module-global
+  spill when a process is reused;
+- exactly-once completion for result/cancel/deadline/disconnect races;
+- cooperative cancellation followed by process-only hard termination after a
+  250 ms grace, typed pre/post-STARTED loss and dead-worker replacement;
+- deterministic provider pipe, thread, process and temporary-file teardown;
+- private POSIX protocol-write SIGPIPE containment without a process-global
+  signal-policy change; and
+- both rxbvm and rxtvm conformance plus Level B process-pool open/close proof.
+
+QA:
+- focused ordinary Release: 106/106;
+- full Debug: 2,115/2,115;
+- focused Apple ASan: 106/106 with detect_leaks=0 because Apple LSan is unavailable;
+- high-risk Debug stress: 13 selected tests repeated 100 times, 1,300/1,300;
+- concurrent process/SIGPIPE stress: three tests repeated 500 times, 1,500/1,500;
+- post-audit process/fail-fast stress: three tests repeated 100 times, 300/300;
+- ordinary Release build complete; and
+- initial and unchanged-confirmation 12-pair Release panels: no guard hit and
+  no confirmed regression.
+
+Defects found and closed during qualification:
+1. No-opt Level B process-pool open failed because the first snapshot writer
+   assumed one semantic graph. Rebuilding one combined graph opened the pool
+   but could renumber callable identities. The final writer retains the normal
+   concatenated-archive shape and groups modules by original graph. A new
+   three-VM generation-control test executes callables from both reloaded
+   graphs.
+2. A test used arbitrary callable ID 999 to force a child load; in a large
+   linked class image that ID can be real. The invalid fixture was removed and
+   the program-generation control now proves child reload without relying on
+   an arbitrary ID.
+3. Full parallel Debug QA observed one protocol SIGPIPE after hundreds of
+   clean focused runs. The worker now blocks SIGPIPE only around its private
+   control-pipe writes and exits with it still blocked on EPIPE. The 1,500-run
+   concurrent stress and complete Debug rerun are clean.
+4. Final code review found that fail-fast marked a running sibling cancelled
+   but did not send the cooperative CANCEL frame before its hard-kill grace.
+   Terminal observation now invokes the common cancel-and-signal path outside
+   the provider mutex. A two-worker fail-fast fixture proves a failing task
+   cooperatively cancels its running sibling; 300 repeated process executions,
+   full Debug, focused ASan and focused Release are clean after the repair.
+
+Performance verdict: conservative no-confirmed-regression result; no
+improvement claim. F1e is locally complete on develop. F1f Level G lowering is
+the next Gate F slice. No push or release claim is made.

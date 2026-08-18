@@ -38,6 +38,30 @@
 #include "rxcp_sym.h"
 #include "rxcp_ctx.h"
 #include "rxcp_val.h"
+#include "rxsha256.h"
+
+char* rxcp_task_placeholder_hex(const char* callable_identity) {
+    static const char digits[] = "0123456789abcdef";
+    unsigned char digest[32];
+    unsigned char byte;
+    char *result;
+    size_t i;
+
+    if (!callable_identity) return 0;
+    result = (char *)malloc(2u + 80u * 2u + 1u);
+    if (!result) return 0;
+    rx_sha256(callable_identity, strlen(callable_identity), digest);
+    result[0] = '0';
+    result[1] = 'x';
+    for (i = 0u; i < 80u; i++) {
+        byte = (unsigned char)(digest[i & 31u] ^
+                               (unsigned char)(i * 0x5bu + 0x31u));
+        result[2u + i * 2u] = digits[byte >> 4u];
+        result[3u + i * 2u] = digits[byte & 0x0fu];
+    }
+    result[162] = 0;
+    return result;
+}
 
 static int rxcp_ascii_streq_ci_len(const char *left, size_t left_len, const char *right) {
     size_t i;
@@ -1393,6 +1417,10 @@ const char* node_type_to_string(NodeType type) {
         case OPT_DISPATCH: return "OPT_DISPATCH";
         case OPT_DISPATCH_CASE: return "OPT_DISPATCH_CASE";
         case OPT_DISPATCH_DEFAULT: return "OPT_DISPATCH_DEFAULT";
+        case TASK_DECL: return "TASK_DECL";
+        case TASK_TARGET: return "TASK_TARGET";
+        case PARALLEL_DO: return "PARALLEL_DO";
+        case PARALLEL_BLOCK_EXPR: return "PARALLEL_BLOCK_EXPR";
         case SIGNAL_NAME: return "SIGNAL_NAME";
         case AST_SEMANTIC_CONTEXT: return "AST_SEMANTIC_CONTEXT";
         case TYPE_REFERENCE: return "TYPE_REFERENCE";

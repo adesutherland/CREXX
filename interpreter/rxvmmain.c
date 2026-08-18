@@ -34,6 +34,7 @@
 #include "platform.h"
 #include "rxvmintp.h"
 #include "rxvmplugin_framework.h"
+#include "rxvmprocessworker.h"
 #include "rxvm.h"
 
 /* Library Buffer */
@@ -102,6 +103,12 @@ int main(int argc, char *argv[]) {
     size_t num_modules;
 
     platform_install_signal_handlers();
+
+    /* Private, rebuild-together process-provider worker mode. It is kept out
+     * of public help and executes only the versioned framed task protocol. */
+    if (argc == 3 && strcmp(argv[1], "--rxvm-process-worker") == 0) {
+        return rxvm_process_worker_main(argv[2]);
+    }
 
 #ifdef _WIN32
     /* Enable UTF-8 Processes */
@@ -320,6 +327,23 @@ int main(int argc, char *argv[]) {
 #endif
 
     /* Load plugins statically linked from linked buffer */
+    {
+        const rxvm_program_generation *generation = 0;
+        rxvm_program_result generation_result =
+                rxvm_program_generation_seal(&context, &generation);
+
+        /* Existing native-bearing images remain valid controller programs,
+         * but cannot seed attached bytecode workers.  Preserve their normal
+         * startup and let a later chanopen report provider unavailability. */
+        if (generation_result != RXVM_PROGRAM_OK &&
+            generation_result != RXVM_PROGRAM_NATIVE_EXCLUDED) {
+            fprintf(stderr, "ERROR sealing executable program generation\n");
+            rxfremod(&context);
+            clear_rxvmplugin_factories();
+            return -1;
+        }
+    }
+
     if (rxldmodp(&context) == -1) {
         fprintf(stderr, "ERROR reading linked plugins\n");
         exit(-1);

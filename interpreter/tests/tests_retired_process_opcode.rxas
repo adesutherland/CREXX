@@ -1,0 +1,13 @@
+/*
+ * The mutator replaces this valid three-operand IADD with retired opcode 466,
+ * preserving the exact operand count of the former SPAWN encoding. Keeping
+ * the base image valid lets the regression prove a realistically shaped stale
+ * RXBIN fails explicitly in each concrete VM without making a reserved RXAS
+ * mnemonic source-visible.
+ */
+
+.globals=0
+
+main() .locals=1
+    iadd r0,r0,r0
+    ret

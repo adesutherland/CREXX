@@ -1,0 +1,5 @@
+mode,samples,elapsed_us_min,elapsed_us_median,elapsed_us_max,scans_median,idle_scans_median,idle_scan_percent
+rxbvm-noopt,12,315084,330890,332320,265,260,98.113
+rxbvm-opt,12,309776,328916,331051,263,258,98.099
+rxtvm-noopt,12,329605,330988,333248,265,260,98.113
+rxtvm-opt,12,319315,329712,331045,264,259,98.106

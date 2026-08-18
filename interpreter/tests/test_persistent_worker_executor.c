@@ -24,6 +24,8 @@ int e5_native_return_entered(void);
 
 #include "rxvm.h"
 #include "rxvmexecutor.h"
+#include "rxvmintp.h"
+#include "rxvmworker.h"
 
 static int failures;
 
@@ -106,6 +108,74 @@ static void destroy_terminal(rxvm_executor_request **request) {
     *request = 0;
 }
 
+static int seal_task_binding(const char *rxbin,
+                             const char *symbol,
+                             unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE]) {
+    rxvm_context *context = rxvm_create();
+    size_t index;
+    int sealed = 0;
+
+    if (!context) return 0;
+    if (!rxvm_load_file(context, (char *)rxbin) || rxvm_link(context) != 0) {
+        rxvm_destroy(context);
+        return 0;
+    }
+    for (index = 0u; index < context->num_modules; index++) {
+        module *loaded = context->modules[index];
+        const RxGraph *graph = loaded && loaded->file
+                ? loaded->file->semantic_graph : 0;
+        if (graph && rx_graph_task_binding(graph, symbol, 1u, binding)) {
+            sealed = 1;
+            break;
+        }
+    }
+    rxvm_destroy(context);
+    return sealed;
+}
+
+static void run_task_binding_cache(const char *rxbin) {
+    unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE];
+    rxvm_executor *executor = 0;
+    rxvm_executor_result create_result = RXVM_EXECUTOR_INVALID;
+    rxvm_executor_register_image argument;
+    size_t submission;
+
+    CHECK(seal_task_binding(rxbin, "e5worker.identity", binding),
+          "seal the repeated-submission task binding");
+    if (failures) return;
+    executor = rxvm_executor_create(rxbin, 1u, 4u, &create_result);
+    CHECK(executor && create_result == RXVM_EXECUTOR_OK,
+          "create one worker for task-plan cache conformance");
+    if (!executor) return;
+
+    memset(&argument, 0, sizeof(argument));
+    argument.type = RXVM_EXECUTOR_REGISTER_STRING;
+    argument.bytes = "41";
+    argument.length = 2u;
+    for (submission = 0u; submission < 3u; submission++) {
+        rxvm_executor_request *request = 0;
+        rxvm_executor_completion completion;
+        rxvm_executor_result result =
+                rxvm_executor_submit_task_binding_registers_result(
+                        executor, 0u, binding, 0u, 0, 1u, &argument,
+                        RXVM_EXECUTOR_REGISTER_INTEGER, &request);
+        CHECK(result == RXVM_EXECUTOR_OK && request,
+              "accept a sealed task through the cache path");
+        if (!request) continue;
+        CHECK(rxvm_executor_request_wait_completion(request, &completion) ==
+                      RXVM_EXECUTOR_REQUEST_COMPLETED &&
+                      completion.result.type == RXVM_EXECUTOR_REGISTER_INTEGER &&
+                      completion.result.integer == 41,
+              "return the exact typed result through the cache path");
+        CHECK(rxvm_executor_request_destroy(request) == RXVM_EXECUTOR_OK,
+              "destroy a cached-task terminal request");
+        CHECK(rxvm_executor_task_plan_cache_entry_count(executor, 0u) == 1u,
+              "reuse one validated task plan for repeated identical submissions");
+    }
+    CHECK(rxvm_executor_destroy(executor) == 0u,
+          "cached task-plan worker tears down without leaks");
+}
+
 static void run_affinity_and_isolation(const char *rxbin) {
     rxvm_executor *executor;
     rxvm_executor_result create_result;
@@ -119,6 +189,7 @@ static void run_affinity_and_isolation(const char *rxbin) {
     rxvm_executor_request *get0 = 0;
     rxvm_executor_request *get1 = 0;
     rxvm_executor_request *missing = 0;
+    rxvm_executor_request *failed = 0;
     rxvm_executor_request *recovery = 0;
     rxvm_executor_statistics statistics;
     rxvm_executor_request_state state;
@@ -204,6 +275,13 @@ static void run_affinity_and_isolation(const char *rxbin) {
               "terminal completion is stable across a repeated wait");
     }
     destroy_terminal(&missing);
+    failed = submit_zero(executor, 0u, "e5worker.fail");
+    if (failed) {
+        state = rxvm_executor_request_wait(failed, &result);
+        CHECK(state == RXVM_EXECUTOR_REQUEST_EXECUTION_FAILED,
+              "an unhandled worker signal is a typed execution failure");
+    }
+    destroy_terminal(&failed);
     recovery = submit_one(executor, 0u, "e5worker.identity", "37");
     wait_completed(recovery, 37,
                    "worker remains usable after a failed request");
@@ -219,8 +297,8 @@ static void run_affinity_and_isolation(const char *rxbin) {
           "no request remains running after the isolation panel");
     CHECK(statistics.cancelled_requests == 2u,
           "loop and recursive cancellation each publish one completion");
-    CHECK(statistics.failed_requests == 1u,
-          "missing procedure contributes exactly one failed completion");
+    CHECK(statistics.failed_requests == 2u,
+          "missing target and worker signal contribute failed completions");
 
     leaks = rxvm_executor_destroy(executor);
     CHECK(leaks == 0u,
@@ -449,6 +527,104 @@ static int parse_positive_size(const char *text, size_t *value_out) {
     return 1;
 }
 
+static int run_worker_topology(int argc, char **argv) {
+    rxvm_executor *executor;
+    rxvm_executor_request **requests;
+    rxvm_executor_result create_result;
+    rxvm_executor_statistics statistics;
+    uint64_t deadline;
+    size_t worker_count;
+    size_t worker;
+    size_t leaks;
+    int ok = 1;
+
+    if (argc != 4 || !parse_positive_size(argv[3], &worker_count)) {
+        fprintf(stderr, "usage: %s --worker-topology E5_RXBIN WORKERS\n",
+                argv[0]);
+        return 2;
+    }
+    executor = rxvm_executor_create(argv[2], worker_count, 1u, &create_result);
+    if (!executor || create_result != RXVM_EXECUTOR_OK) return 1;
+    requests = (rxvm_executor_request **)calloc(worker_count,
+                                                 sizeof(*requests));
+    if (!requests) {
+        (void)rxvm_executor_destroy(executor);
+        return 1;
+    }
+
+    for (worker = 0u; worker < worker_count; worker++) {
+        requests[worker] = submit_zero(
+                executor, worker, "e5worker.loop_forever");
+        if (!requests[worker]) ok = 0;
+    }
+    for (worker = 0u; ok && worker < worker_count; worker++) {
+        if (rxvm_executor_request_wait_started(requests[worker]) !=
+                RXVM_EXECUTOR_REQUEST_RUNNING) {
+            ok = 0;
+        }
+    }
+
+    memset(&statistics, 0, sizeof(statistics));
+    deadline = monotonic_nanoseconds() + 5000000000ULL;
+    while (ok && monotonic_nanoseconds() < deadline) {
+        rxvm_executor_statistics_get(executor, &statistics);
+        if (statistics.running_requests == worker_count &&
+            statistics.maximum_parallel_requests == worker_count) {
+            break;
+        }
+#if defined(_WIN32)
+        Sleep(1);
+#else
+        {
+            struct timespec delay = {0, 1000000L};
+            (void)nanosleep(&delay, 0);
+        }
+#endif
+    }
+    if (statistics.worker_count != worker_count ||
+        statistics.queue_capacity_per_worker != 1u ||
+        statistics.running_requests != worker_count ||
+        statistics.maximum_parallel_requests != worker_count) {
+        ok = 0;
+    }
+
+    for (worker = 0u; worker < worker_count; worker++) {
+        if (requests[worker] &&
+            rxvm_executor_cancel(requests[worker]) != RXVM_EXECUTOR_OK) {
+            ok = 0;
+        }
+    }
+    for (worker = 0u; worker < worker_count; worker++) {
+        int result = 0;
+        if (!requests[worker]) continue;
+        if (rxvm_executor_request_wait(requests[worker], &result) !=
+                RXVM_EXECUTOR_REQUEST_CANCELLED) {
+            ok = 0;
+        }
+        if (rxvm_executor_request_destroy(requests[worker]) !=
+                RXVM_EXECUTOR_OK) {
+            ok = 0;
+        }
+    }
+    free(requests);
+
+    rxvm_executor_statistics_get(executor, &statistics);
+    if (statistics.running_requests != 0u ||
+        statistics.cancelled_requests != worker_count) {
+        ok = 0;
+    }
+    leaks = rxvm_executor_destroy(executor);
+    if (leaks != 0u) ok = 0;
+    if (failures) ok = 0;
+
+    printf("E5_WORKER_TOPOLOGY result=%s workers=%zu max_parallel=%zu "
+           "running_after=%zu cancelled=%zu leaks=%zu\n",
+           ok ? "PASS" : "FAIL", worker_count,
+           statistics.maximum_parallel_requests,
+           statistics.running_requests, statistics.cancelled_requests, leaks);
+    return ok ? 0 : 1;
+}
+
 static int run_benchmark_direct(const char *rxbin,
                                 const char *procedure,
                                 size_t jobs,
@@ -553,7 +729,7 @@ static int run_benchmark(int argc, char **argv) {
         fprintf(stderr,
                 "usage: %s --benchmark "
                 "direct|executor1|executor2|executor4|executor8 "
-                "E5_RXBIN JOBS ITERATIONS [spin|churn]\n", argv[0]);
+                "E5_RXBIN JOBS ITERATIONS [spin|churn|identity]\n", argv[0]);
         return 2;
     }
     mode = argv[2];
@@ -561,6 +737,8 @@ static int run_benchmark(int argc, char **argv) {
     if (argc == 7) workload = argv[6];
     if (strcmp(workload, "churn") == 0) {
         procedure = "e5worker.churn";
+    } else if (strcmp(workload, "identity") == 0) {
+        procedure = "e5worker.identity";
     } else if (strcmp(workload, "spin") != 0) {
         fprintf(stderr, "ERROR: unknown E6 benchmark workload: %s\n",
                 workload);
@@ -978,6 +1156,9 @@ static int run_doorbell_stress(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
+    if (argc > 1 && strcmp(argv[1], "--worker-topology") == 0) {
+        return run_worker_topology(argc, argv);
+    }
     if (argc > 1 && strcmp(argv[1], "--benchmark") == 0) {
         return run_benchmark(argc, argv);
     }
@@ -1004,6 +1185,7 @@ int main(int argc, char **argv) {
     run_affinity_and_isolation(argv[1]);
     run_backpressure_copy_and_drain(argv[1]);
     run_industrial_envelope_and_lifecycle(argv[1]);
+    run_task_binding_cache(argv[1]);
     if (failures) {
         fprintf(stderr, "E5_PERSISTENT_WORKERS result=FAIL failures=%d\n",
                 failures);

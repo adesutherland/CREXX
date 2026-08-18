@@ -1,0 +1,38 @@
+PERF3-13 Gate F F1g-C first Release verdict
+Date: 2026-08-15
+Branch: develop
+Accepted control source: 66f193f3f (committed F1g-B parent)
+Candidate: frozen F1g-C working tree before its local slice commit
+Host: Darwin 25.5.0 arm64, 10 logical CPUs, AC power, no thermal or performance warning
+Build: ordinary profiling-off Release
+
+Isolated native change:
+- rxvmsock.c now tests the socket entry's public terminal status before
+  validating text or publishing binary length
+- timeout=2, EOF=1 and would-block=3 are public statuses, not byte counts
+- the two conditions are in owner-local socket receive functions, not the
+  opcode dispatch loop or any ordinary benchmark path
+
+Exact reconstructed F1g-B controls:
+- rxbvm sha256 1ae6d67dad2de22a1edc8d7f811cb21c81acd3f3e55ae71c9301e7413bcd9a23, 1,379,232 bytes
+- rxtvm sha256 e9ef2498712a671dcfe85ae1912387734db83ad95c096aa451f573c7d9c4ad95, 1,379,360 bytes
+- only rxvmsock.c was rebuilt from 66f193f3f and linked against the otherwise
+  identical current Release objects
+
+Frozen candidates:
+- rxbvm sha256 22ea81c29d4423a496e7c6ad51bcd5bc4fef1170dc9db59266728f136cc3f418, 1,379,272 bytes
+- rxtvm sha256 3e30b39d560f302c650ad7588bcd2a99c77944c47a2dbcb91da3e69e5b774fdd, 1,379,400 bytes
+- size delta: +40 bytes in each VM
+- the final post-QA rebuilt VMs retain these exact candidate hashes
+
+Balanced 12-pair ordinary single-thread results, candidate versus control:
+- rxtvm Sieve elapsed: +0.580223%, 95% CI [+0.126767%, +1.033680%], clear small adverse, no guard hit
+- rxbvm Sieve elapsed: -0.525145%, 95% CI [-0.911248%, -0.139042%], clear favorable, no guard hit
+- rxtvm RexxCPS rate: -0.273042%, 95% CI [-0.934430%, +0.388346%], noisy/inconclusive, no guard hit
+- rxbvm RexxCPS rate: +0.009991%, 95% CI [-0.902684%, +0.922665%], noisy/inconclusive, no guard hit
+
+Verdict: accept F1g-C. The slow-path socket correction is guard-clean and the
+HTTP library adds safe transferable headers, bounded policy, verified TLS,
+explicit redirect/retry rules and ambiguity diagnostics without an HTTP opcode
+or provider type. Explicit streaming, compressed decoding and crexx-rag
+integration remain F1g-D.

@@ -57,6 +57,15 @@ size_t rxvm_program_generation_instruction_bytes(
 size_t rxvm_program_generation_constant_bytes(
         const rxvm_program_generation *generation);
 
+/* Write one immutable generation as a self-contained RXBIN 007 archive for an
+ * isolated worker. Distinct input semantic graphs remain distinct concatenated
+ * containers so their numeric target IDs are preserved. Returns nonzero only
+ * after the complete archive is flushed and closed. This private F1 seam is
+ * not an installed ABI. */
+int rxvm_program_generation_write_file(
+        const rxvm_program_generation *generation,
+        const char *path);
+
 /* Context teardown hook; generation storage remains runtime-owned. */
 void rxvm_program_generation_release_context(struct rxvm_context *context);
 int rxvm_program_generation_owns_module(

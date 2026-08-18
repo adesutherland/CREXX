@@ -1,0 +1,35 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 508: gate_f_levelg_rxbvm_noopt
+1/8 Test #508: gate_f_levelg_rxbvm_noopt ............   Passed    5.03 sec
+    Start 509: gate_f_levelg_rxbvm_opt
+2/8 Test #509: gate_f_levelg_rxbvm_opt ..............   Passed    5.35 sec
+    Start 510: gate_f_levelg_rxtvm_noopt
+3/8 Test #510: gate_f_levelg_rxtvm_noopt ............   Passed    5.05 sec
+    Start 511: gate_f_levelg_rxtvm_opt
+4/8 Test #511: gate_f_levelg_rxtvm_opt ..............   Passed    5.38 sec
+    Start 516: gate_f_taskwork_import_rxbvm_noopt
+5/8 Test #516: gate_f_taskwork_import_rxbvm_noopt ...   Passed    3.99 sec
+    Start 517: gate_f_taskwork_import_rxbvm_opt
+6/8 Test #517: gate_f_taskwork_import_rxbvm_opt .....   Passed    4.03 sec
+    Start 518: gate_f_taskwork_import_rxtvm_noopt
+7/8 Test #518: gate_f_taskwork_import_rxtvm_noopt ...   Passed    4.01 sec
+    Start 519: gate_f_taskwork_import_rxtvm_opt
+8/8 Test #519: gate_f_taskwork_import_rxtvm_opt .....   Passed    4.04 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Label Time Summary:
+compiler       =  36.89 sec*proc (8 tests)
+concurrency    =  36.89 sec*proc (8 tests)
+f1f            =  36.89 sec*proc (8 tests)
+gate_f         =  36.89 sec*proc (8 tests)
+import         =  16.07 sec*proc (4 tests)
+levelg         =  36.89 sec*proc (8 tests)
+linked         =  36.89 sec*proc (8 tests)
+noopt          =  18.08 sec*proc (4 tests)
+opt            =  18.81 sec*proc (4 tests)
+rxbvm          =  18.41 sec*proc (4 tests)
+rxtvm          =  18.48 sec*proc (4 tests)
+taskwork       =  16.07 sec*proc (4 tests)
+
+Total Test time (real) =  36.92 sec

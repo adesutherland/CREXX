@@ -1,0 +1,12 @@
+options levelg
+namespace gate_f_pending_mutation
+
+work: task = .int
+  return 7
+
+main: procedure = .int
+  do parallel
+    value = work()
+    value = 8
+  end
+  return 0

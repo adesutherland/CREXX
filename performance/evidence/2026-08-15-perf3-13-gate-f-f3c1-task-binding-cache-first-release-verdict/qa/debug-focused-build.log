@@ -1,0 +1,72 @@
+[0/2] Re-checking globbed directories...
+[1/72] Building C object binutils/CMakeFiles/rxbin.dir/rxbin.c.o
+[2/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprocessworker.c.o
+[3/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprogram.c.o
+[4/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_process.c.o
+[5/72] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o
+[6/72] Building C object binutils/CMakeFiles/rxbin.dir/rxbin007.c.o
+[7/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel.c.o
+[8/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmactive.c.o
+[9/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmexecutor.c.o
+[10/72] Building C object binutils/CMakeFiles/rxbin.dir/rxgraph.c.o
+[11/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_child.c.o
+[12/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+[13/72] Linking C static library bin/librxvmplugin.a
+[14/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[15/72] Linking C static library bin/librxbin.a
+[16/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[17/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+[18/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[19/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+[20/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprogram.c.o
+[21/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxastoke.c.o
+[22/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxaseror.c.o
+[23/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[24/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_batch.c.o
+[25/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmexecutor.c.o
+[26/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_opt.c.o
+[27/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxasscan.c.o
+[28/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_pass.c.o
+[29/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_rewrite.c.o
+[30/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_graph.c.o
+[31/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_analysis.c.o
+[32/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_signal.c.o
+[33/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow.c.o
+[34/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_use.c.o
+[35/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxasgrmr.c.o
+[36/72] Building C object assembler/CMakeFiles/rxas.dir/rxasmain.c.o
+[37/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_ssa.c.o
+[38/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxaslib.c.o
+[39/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_dsl.c.o
+[40/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmactive.c.o
+[41/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel.c.o
+[42/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel_process.c.o
+[43/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxasassm.c.o
+[44/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprocessworker.c.o
+[45/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel_child.c.o
+[46/72] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_proof.c.o
+[47/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/exitfunc.c.o
+[48/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/interrupt.c.o
+[49/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxpafuncs.c.o
+[50/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmload.c.o
+[51/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxcrexxcmd.c.o
+[52/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvml/rxvm_run.c.o
+[53/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxspawn.c.o
+[54/72] Linking C static library bin/librxaslib.a
+[55/72] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[56/72] Building C object interpreter/CMakeFiles/rxvml.dir/rxvmlib.c.o
+[57/72] Building C object interpreter/CMakeFiles/rxtvm.dir/rxvmmain.c.o
+[58/72] Building C object binutils/CMakeFiles/test_rxgraph.dir/tests/test_rxgraph.c.o
+[59/72] Linking C executable bin/rxas
+[60/72] Linking C executable bin/test_rxgraph
+[61/72] Building C object interpreter/CMakeFiles/rxvml.dir/rxvml.c.o
+[62/72] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[63/72] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[64/72] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmintp.c.o
+[65/72] Linking C static library bin/librxvml.a
+[66/72] Linking C executable bin/rxbvm
+[67/72] Linking C executable bin/rxtvm
+[68/72] Assembling Gate F F1b channel benchmark ...
+[69/72] Assembling Gate F F1e process channel fixture ...
+[70/72] Building C object interpreter/CMakeFiles/test_rxvmchannel_process.dir/tests/test_rxvmchannel_process.c.o
+[71/72] Linking C executable interpreter/test_rxvmchannel_process

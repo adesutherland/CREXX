@@ -32,8 +32,15 @@ static ASTNode *inline_find_mapped_node(InlineCloneState *state, ASTNode *old_no
 
     if (!state || !old_node) return NULL;
 
-    for (i = 0; i < state->node_count; i++) {
-        if (state->node_entries[i].old_node == old_node) return state->node_entries[i].new_node;
+    /*
+     * A transformed argument can be cloned more than once while an enclosing
+     * call is expanded.  Associations inside the clone belong to the newest
+     * owner clone, not an earlier capture of the same source node.
+     */
+    for (i = state->node_count; i > 0; i--) {
+        if (state->node_entries[i - 1].old_node == old_node) {
+            return state->node_entries[i - 1].new_node;
+        }
     }
 
     return NULL;
@@ -80,6 +87,17 @@ static int inline_symbol_uses_imported_template(Symbol *symbol) {
     return def_node && symbol->ast_template != def_node;
 }
 
+static int inline_symbol_is_task_callable(Symbol *symbol) {
+    size_t i;
+
+    if (!symbol) return 0;
+    for (i = 0; i < sym_nond(symbol); i++) {
+        SymbolNode *link = sym_trnd(symbol, i);
+        if (link && link->node && link->node->is_task_callable) return 1;
+    }
+    return 0;
+}
+
 int inline_node_is_inlineable_call(ASTNode *node, Symbol **proc_sym_out) {
     Symbol *proc_sym;
 
@@ -92,7 +110,9 @@ int inline_node_is_inlineable_call(ASTNode *node, Symbol **proc_sym_out) {
     }
 
     proc_sym = node->symbolNode ? node->symbolNode->symbol : NULL;
-    if (!proc_sym || !proc_sym->is_inlinable || !inline_symbol_has_callable_template(proc_sym)) return 0;
+    if (!proc_sym || !proc_sym->is_inlinable ||
+        inline_symbol_is_task_callable(proc_sym) ||
+        !inline_symbol_has_callable_template(proc_sym)) return 0;
 
     if (proc_sym_out) *proc_sym_out = proc_sym;
     return 1;

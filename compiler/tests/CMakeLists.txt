@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.24)
 project(CompilerTests C)
 
 find_package(Threads REQUIRED)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -22,6 +23,7 @@ if(UNIX)
     target_include_directories(test_import_discovery_snapshot PRIVATE ${CMAKE_SOURCE_DIR}/compiler)
     add_test(NAME import_discovery_snapshot COMMAND test_import_discovery_snapshot)
     set_tests_properties(import_discovery_snapshot PROPERTIES LABELS "compiler;imports;concurrency")
+    crexx_label_concurrency_tests(SP01 import_discovery_snapshot)
 endif()
 
 # Ensure the driver is built when tests are built
@@ -114,7 +116,11 @@ endif()
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
         set_tests_properties(${NAME} PROPERTIES
                 LABELS "compiler;syntax_highlighting;stage0"
-                RESOURCE_LOCK syntax_highlighting_parser)
+                # The fake editor takes an asynchronous parser snapshot. Keep
+                # the existing parser lock and also isolate that snapshot from
+                # compiler/runtime tests which launch CPU-heavy child processes.
+                RESOURCE_LOCK syntax_highlighting_parser
+                RUN_SERIAL TRUE)
     endfunction()
 endif()
 
@@ -1193,6 +1199,19 @@ add_test(NAME nr15_native_stem_contract
 set_tests_properties(nr15_native_stem_contract PROPERTIES
         LABELS "compiler;performance;rxbin;stem;nr15")
 
+add_test(NAME gate_f_channel_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXLINK=$<TARGET_FILE:rxlink>
+                 -DRXDAS=$<TARGET_FILE:rxdas>
+                 -DMUTATE_FEATURE=$<TARGET_FILE:mutate_rxbin_feature>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/gate_f_channel_contract.rxas
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/gate_f_channel_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/gate_f_channel_contract.cmake)
+set_tests_properties(gate_f_channel_contract PROPERTIES
+        LABELS "compiler;performance;rxas;rxbin;gate-f;channels")
+crexx_label_concurrency_tests(SP02 gate_f_channel_contract)
+
 add_test(NAME nr09_numeric_context_contract
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
@@ -1933,6 +1952,9 @@ add_crexx_run_test(repro_implicit_address_abuttal rexx_src/repro_implicit_addres
 add_crexx_run_test(implicit_address_indexed_stem rexx_src/implicit_address_indexed_stem.crexx)
 add_crexx_run_test(test_explicit_address rexx_src/test_explicit_address.crexx)
 add_crexx_run_test(test_address_redirect rexx_src/test_address_redirect.crexx)
+crexx_label_concurrency_tests(SP04
+        test_address_redirect_run_noopt
+        test_address_redirect_run_opt)
 add_crexx_run_test(address_crexx_flush_visible rexx_src/address_crexx_flush_visible.crexx)
 add_crexx_run_test(lineout_flush_visible rexx_src/lineout_flush_visible.crexx)
 add_crexx_run_test(optional_arg_presence_copy rexx_src/optional_arg_presence_copy.crexx)
@@ -1964,6 +1986,575 @@ add_crexx_isolated_run_test(type_ops_showcase rexx_src/type_ops_showcase.crexx)
 add_crexx_isolated_run_test(interface_match_same_module rexx_src/interface_match_same_module.crexx)
 add_crexx_isolated_run_fail_test(interface_match_reject_single rexx_src/interface_match_reject_single.crexx)
 add_crexx_isolated_run_fail_test(type_ops_fail rexx_src/type_ops_fail.crexx)
+
+set(GATE_F_LEVELB_CONTRACT_SCRIPT
+    "${CMAKE_CURRENT_BINARY_DIR}/gate_f_levelb_contract.cmake")
+file(GENERATE OUTPUT "${GATE_F_LEVELB_CONTRACT_SCRIPT}" CONTENT
+"execute_process(
+    COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -n
+            -o \"gate_f_levelb_contract\"
+            \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/gate_f_levelb_contract.crexx\"
+    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
+    OUTPUT_VARIABLE rxc_out
+    ERROR_VARIABLE rxc_err
+    RESULT_VARIABLE rxc_result)
+if(NOT rxc_result EQUAL 0)
+  message(FATAL_ERROR \"Gate F Level B contract rxc failure: \\n\${rxc_out}\\n\${rxc_err}\")
+endif()
+execute_process(
+    COMMAND \"$<TARGET_FILE:rxas>\" -o \"gate_f_levelb_contract.rxbin\"
+            \"gate_f_levelb_contract\"
+    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
+    OUTPUT_VARIABLE rxas_out
+    ERROR_VARIABLE rxas_err
+    RESULT_VARIABLE rxas_result)
+if(NOT rxas_result EQUAL 0)
+  message(FATAL_ERROR \"Gate F Level B contract rxas failure: \\n\${rxas_out}\\n\${rxas_err}\")
+endif()
+execute_process(
+    COMMAND \"$<TARGET_FILE:rxdas>\" \"gate_f_levelb_contract.rxbin\"
+    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
+    OUTPUT_VARIABLE rxdas_out
+    ERROR_VARIABLE rxdas_err
+    RESULT_VARIABLE rxdas_result)
+if(NOT rxdas_result EQUAL 0)
+  message(FATAL_ERROR \"Gate F Level B contract rxdas failure: \\n\${rxdas_out}\\n\${rxdas_err}\")
+endif()
+foreach(required IN ITEMS
+        \"gate_f_levelb_contract.taskpool\"
+        \"gate_f_levelb_contract.taskscope\"
+        \"gate_f_levelb_contract.task\"
+        \"gate_f_levelb_contract.tasktarget\"
+        \"gate_f_levelb_contract.taskwork\"
+        \"gate_f_levelb_contract.taskcontext\"
+        \"gate_f_levelb_contract.completion\"
+        \"gate_f_levelb_contract.channel\"
+        \"gate_f_levelb_contract.channelrequest\"
+        \"gate_f_levelb_contract.channelvalue\"
+        \"gate_f_levelb_contract.channelcodec\"
+        \"gate_f_levelb_contract.byteendpoint\"
+        \"gate_f_levelb_contract.serviceref\"
+        \"gate_f_levelb_contract.transferbuffer\")
+  if(NOT rxdas_out MATCHES \"\${required}.*\\\\.interface\")
+    message(FATAL_ERROR \"Gate F Level B contract is missing interface metadata for \${required}\")
+  endif()
+endforeach()
+")
+add_test(NAME gate_f_levelb_contract
+         COMMAND ${CMAKE_COMMAND} -P "${GATE_F_LEVELB_CONTRACT_SCRIPT}")
+set_tests_properties(gate_f_levelb_contract PROPERTIES
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        LABELS "compiler;levelb;concurrency;gate_f")
+crexx_label_concurrency_tests(SP05 gate_f_levelb_contract)
+
+# Gate F F1f is a linked end-to-end contract: task target placeholders must
+# travel through rxc and rxas, be sealed by rxlink, and then execute identically
+# on both concrete VM implementations.  Keep optimized and no-opt images paired
+# because expression planning and inlining meet at this boundary.
+function(add_gate_f_levelg_conformance RUNNER MODE)
+    set(TEST_NAME "gate_f_levelg_${RUNNER}_${MODE}")
+    set(BASE "${TEST_NAME}")
+    set(WORK_DIR "${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}_ws")
+    set(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}.cmake")
+    if(MODE STREQUAL "noopt")
+        set(RXC_FLAGS "-n")
+        set(RXAS_FLAGS "-n")
+    else()
+        set(RXC_FLAGS "")
+        set(RXAS_FLAGS "")
+    endif()
+
+    file(GENERATE OUTPUT "${SCRIPT}" CONTENT
+"file(MAKE_DIRECTORY \"${WORK_DIR}\")
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${RXC_FLAGS}
+          -o \"${BASE}\"
+          \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/gate_f_levelg_conformance.crexx\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Gate F Level G rxc failure:\\n\${out}\\n\${err}\")
+endif()
+file(READ \"${WORK_DIR}/${BASE}.rxas\" rxas)
+string(REGEX MATCHALL
+       \"load r[0-9]+,\\\"gate_f_levelg_conformance\\.(first|second|third)\\\"\"
+       dependency_targets \"\${rxas}\")
+list(LENGTH dependency_targets dependency_count)
+if(dependency_count LESS 3)
+  message(FATAL_ERROR \"Missing Gate F dependency target loads in generated RXAS\")
+endif()
+list(GET dependency_targets 0 dependency_first)
+list(GET dependency_targets 1 dependency_second)
+list(GET dependency_targets 2 dependency_third)
+if(NOT dependency_first MATCHES \"\\.first\\\"$\" OR
+   NOT dependency_second MATCHES \"\\.second\\\"$\" OR
+   NOT dependency_third MATCHES \"\\.third\\\"$\")
+  message(FATAL_ERROR
+          \"Dependency submission order is not first, second, third: \${dependency_targets}\")
+endif()
+string(REGEX MATCH
+       \"sigpop \\\"FAILURE\\\"[\\r\\n]+[ ]+br l[0-9]+bexprend\"
+       parallel_leave_unwind \"\${rxas}\")
+if(parallel_leave_unwind STREQUAL \"\")
+  message(FATAL_ERROR \"Parallel LEAVE WITH did not unwind its signal handler\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS}
+          -o \"${BASE}.rxbin\" \"${BASE}\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Gate F Level G rxas failure:\\n\${out}\\n\${err}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxlink>\" -o \"${BASE}_linked.rxbin\"
+          \"${BASE}.rxbin\"
+          \"${CMAKE_BINARY_DIR}/bin/library.rxbin\"
+          \"${CMAKE_BINARY_DIR}/bin/classlib.rxbin\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Gate F Level G rxlink failure:\\n\${out}\\n\${err}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:${RUNNER}>\" \"${BASE}_linked.rxbin\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+set(full_out \"\${out}\${err}\")
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Gate F Level G ${RUNNER} failure:\\n\${full_out}\")
+endif()
+foreach(required IN ITEMS
+        \"ordinary\" \"GOOD\" \"writer-a\" \"writer-b\"
+        \"PASS: Gate F Level G conformance\")
+  string(FIND \"\${full_out}\" \"\${required}\" required_pos)
+  if(required_pos EQUAL -1)
+    message(FATAL_ERROR \"Missing runtime evidence '\${required}':\\n\${full_out}\")
+  endif()
+endforeach()
+foreach(forbidden IN ITEMS \"BAD\" \"FAIL: Gate F\")
+  string(FIND \"\${full_out}\" \"\${forbidden}\" forbidden_pos)
+  if(NOT forbidden_pos EQUAL -1)
+    message(FATAL_ERROR \"Forbidden runtime output '\${forbidden}':\\n\${full_out}\")
+  endif()
+endforeach()
+")
+
+    add_test(NAME ${TEST_NAME}
+             COMMAND ${CMAKE_COMMAND} -P "${SCRIPT}")
+    set_tests_properties(${TEST_NAME} PROPERTIES
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            LABELS "compiler;levelg;concurrency;gate_f;f1f;linked;${MODE};${RUNNER}"
+            RESOURCE_LOCK gate_f_concurrency_runtime
+            TIMEOUT 180)
+    crexx_label_concurrency_tests(SP06 ${TEST_NAME})
+    crexx_label_concurrency_tests(SP08 ${TEST_NAME})
+endfunction()
+
+add_gate_f_levelg_conformance(rxbvm noopt)
+add_gate_f_levelg_conformance(rxbvm opt)
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_gate_f_levelg_conformance(rxtvm noopt)
+    add_gate_f_levelg_conformance(rxtvm opt)
+endif()
+
+function(add_gate_f_task_method_import RUNNER MODE)
+    set(TEST_NAME "gate_f_task_method_import_${RUNNER}_${MODE}")
+    set(WORK_DIR "${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}_ws")
+    set(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}.cmake")
+    if(MODE STREQUAL "noopt")
+        set(RXC_FLAGS "-n")
+        set(RXAS_FLAGS "-n")
+    else()
+        set(RXC_FLAGS "")
+        set(RXAS_FLAGS "")
+    endif()
+    file(GENERATE OUTPUT "${SCRIPT}" CONTENT
+"file(MAKE_DIRECTORY \"${WORK_DIR}\")
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${RXC_FLAGS}
+          -o task_method_lib
+          \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/gate_f_task_method_lib.crexx\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Imported task-method library rxc failure:\\n\${out}\\n\${err}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS}
+          -o task_method_lib.rxbin task_method_lib
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Imported task-method library rxas failure:\\n\${out}\\n\${err}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${WORK_DIR}\"
+          -i \"${CMAKE_BINARY_DIR}/bin\" ${RXC_FLAGS}
+          -o imported_task_levelb
+          \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/gate_f_imported_task_levelb.crexx\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+set(full_out \"\${out}\${err}\")
+if(res EQUAL 0 OR NOT full_out MATCHES \"#TASK_ONLY_LEVELG\")
+  message(FATAL_ERROR \"Imported task method escaped the Level G gate:\\n\${full_out}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${WORK_DIR}\"
+          -i \"${CMAKE_BINARY_DIR}/bin\" ${RXC_FLAGS}
+          -o task_method_main
+          \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/gate_f_task_method_import.crexx\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Imported task-method client rxc failure:\\n\${out}\\n\${err}\")
+endif()
+file(READ \"${WORK_DIR}/task_method_main.rxas\" task_method_main_rxas)
+string(FIND \"\${task_method_main_rxas}\" \"submit_arguments\" submit_arguments_pos)
+if(submit_arguments_pos EQUAL -1)
+  message(FATAL_ERROR \"Imported task methods were not lowered through taskscope.submit_arguments\")
+endif()
+string(FIND \"\${task_method_main_rxas}\" \"result_value\" result_value_pos)
+if(result_value_pos EQUAL -1)
+  message(FATAL_ERROR \"Imported object task result was not materialized as a ChannelValue\")
+endif()
+string(FIND \"\${task_method_main_rxas}\" \"gate_f_task_method_lib.answerbox.§factory.from_channel\" from_channel_pos)
+if(from_channel_pos EQUAL -1)
+  message(FATAL_ERROR \"Imported object task result omitted answerbox.from_channel reconstruction\")
+endif()
+string(FIND \"\${task_method_main_rxas}\" \"gate_f_task_method_lib.inputbox.to_channel\" input_to_channel_pos)
+if(input_to_channel_pos EQUAL -1)
+  message(FATAL_ERROR \"Imported object task argument omitted inputbox.to_channel transfer\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS}
+          -o task_method_main.rxbin task_method_main
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Imported task-method client rxas failure:\\n\${out}\\n\${err}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxlink>\" -o task_method_linked.rxbin
+          task_method_main.rxbin task_method_lib.rxbin
+          \"${CMAKE_BINARY_DIR}/bin/library.rxbin\"
+          \"${CMAKE_BINARY_DIR}/bin/classlib.rxbin\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Imported task-method rxlink failure:\\n\${out}\\n\${err}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:${RUNNER}>\" task_method_linked.rxbin
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Imported task-method ${RUNNER} failure:\\n\${out}\\n\${err}\")
+endif()
+")
+    add_test(NAME ${TEST_NAME} COMMAND ${CMAKE_COMMAND} -P "${SCRIPT}")
+    set_tests_properties(${TEST_NAME} PROPERTIES
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            LABELS "compiler;levelg;concurrency;gate_f;f1f;linked;import;method;${MODE};${RUNNER}"
+            RESOURCE_LOCK gate_f_concurrency_runtime
+            TIMEOUT 180)
+    crexx_label_concurrency_tests(SP03 ${TEST_NAME})
+    crexx_label_concurrency_tests(SP06 ${TEST_NAME})
+endfunction()
+
+add_gate_f_task_method_import(rxbvm noopt)
+add_gate_f_task_method_import(rxbvm opt)
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_gate_f_task_method_import(rxtvm noopt)
+    add_gate_f_task_method_import(rxtvm opt)
+endif()
+
+function(add_gate_f_taskwork_import RUNNER MODE)
+    set(TEST_NAME "gate_f_taskwork_import_${RUNNER}_${MODE}")
+    set(WORK_DIR "${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}_ws")
+    set(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}.cmake")
+    if(MODE STREQUAL "noopt")
+        set(RXC_FLAGS "-n")
+        set(RXAS_FLAGS "-n")
+    else()
+        set(RXC_FLAGS "")
+        set(RXAS_FLAGS "")
+    endif()
+    file(GENERATE OUTPUT "${SCRIPT}" CONTENT
+"file(MAKE_DIRECTORY \"${WORK_DIR}\")
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${RXC_FLAGS}
+          -o taskwork_lib
+          \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/gate_f_taskwork_lib.crexx\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Imported taskwork library rxc failure:\\n\${out}\\n\${err}\")
+endif()
+file(READ \"${WORK_DIR}/taskwork_lib.rxas\" taskwork_rxas)
+string(FIND \"\${taskwork_rxas}\" \".task3\" taskwork_meta)
+if(taskwork_meta EQUAL -1)
+  message(FATAL_ERROR \"Imported taskwork library omitted sealed .task3 metadata\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS}
+          -o taskwork_lib.rxbin taskwork_lib
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Imported taskwork library rxas failure:\\n\${out}\\n\${err}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${WORK_DIR}\"
+          -i \"${CMAKE_BINARY_DIR}/bin\" ${RXC_FLAGS}
+          -o taskwork_main
+          \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/gate_f_taskwork_import.crexx\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Imported taskwork client rxc failure:\\n\${out}\\n\${err}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS}
+          -o taskwork_main.rxbin taskwork_main
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Imported taskwork client rxas failure:\\n\${out}\\n\${err}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxlink>\" -o taskwork_linked.rxbin
+          taskwork_main.rxbin taskwork_lib.rxbin
+          \"${CMAKE_BINARY_DIR}/bin/library.rxbin\"
+          \"${CMAKE_BINARY_DIR}/bin/classlib.rxbin\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Imported taskwork rxlink failure:\\n\${out}\\n\${err}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:${RUNNER}>\" taskwork_linked.rxbin
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Imported taskwork ${RUNNER} failure:\\n\${out}\\n\${err}\")
+endif()
+")
+    add_test(NAME ${TEST_NAME} COMMAND ${CMAKE_COMMAND} -P "${SCRIPT}")
+    set_tests_properties(${TEST_NAME} PROPERTIES
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            LABELS "compiler;levelg;concurrency;gate_f;f1f;linked;import;taskwork;${MODE};${RUNNER}"
+            RESOURCE_LOCK gate_f_concurrency_runtime
+            TIMEOUT 180)
+    crexx_label_concurrency_tests(SP06 ${TEST_NAME})
+endfunction()
+
+add_gate_f_taskwork_import(rxbvm noopt)
+add_gate_f_taskwork_import(rxbvm opt)
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_gate_f_taskwork_import(rxtvm noopt)
+    add_gate_f_taskwork_import(rxtvm opt)
+endif()
+
+function(add_gate_f_levelg_failure NAME SOURCE DIAGNOSTIC)
+    set(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(WORK_DIR "${CMAKE_CURRENT_BINARY_DIR}/${NAME}_ws")
+    file(GENERATE OUTPUT "${SCRIPT}" CONTENT
+"file(MAKE_DIRECTORY \"${WORK_DIR}\")
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\"
+          -o \"${NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/${SOURCE}\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+set(full_out \"\${out}\${err}\")
+if(res EQUAL 0)
+  message(FATAL_ERROR \"Expected ${DIAGNOSTIC}, but compilation succeeded\")
+endif()
+string(FIND \"\${full_out}\" \"#${DIAGNOSTIC}\" diagnostic_pos)
+if(diagnostic_pos EQUAL -1)
+  message(FATAL_ERROR \"Expected #${DIAGNOSTIC}:\\n\${full_out}\")
+endif()
+")
+    add_test(NAME ${NAME} COMMAND ${CMAKE_COMMAND} -P "${SCRIPT}")
+    set_tests_properties(${NAME} PROPERTIES
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            LABELS "compiler;levelg;concurrency;gate_f;f1f;negative")
+    crexx_label_concurrency_tests(SP06 ${NAME})
+endfunction()
+
+add_gate_f_levelg_failure(gate_f_bad_scope
+        gate_f_bad_scope.crexx PARALLEL_SCOPE_TYPE)
+add_gate_f_levelg_failure(gate_f_pending_mutation
+        gate_f_pending_mutation.crexx PENDING_TASK_RESULT_MUTATION)
+add_gate_f_levelg_failure(gate_f_pending_return
+        gate_f_pending_return.crexx PENDING_TASK_RESULT_MUTATION)
+add_gate_f_levelg_failure(gate_f_pending_reference
+        gate_f_pending_reference.crexx PENDING_TASK_RESULT_MUTATION)
+add_gate_f_levelg_failure(gate_f_nested_task_wait
+        gate_f_nested_task_wait.crexx TASK_NESTED_WAIT)
+add_gate_f_levelg_failure(gate_f_task_exposed_arg
+        gate_f_task_exposed_arg.crexx TASK_EXPOSED_ARGUMENT)
+add_gate_f_levelg_failure(gate_f_task_reference_arg
+        gate_f_task_reference_arg.crexx TASK_REFERENCE_TYPE)
+add_gate_f_levelg_failure(gate_f_task_receiver
+        gate_f_task_receiver.crexx TASK_NONTRANSFERABLE_RECEIVER)
+add_gate_f_levelg_failure(gate_f_dynamic_task_target
+        gate_f_dynamic_task_target.crexx TASK_DYNAMIC_TARGET)
+add_gate_f_levelg_failure(gate_f_scope_reused
+        gate_f_scope_reused.crexx PARALLEL_SCOPE_REUSED)
+add_gate_f_levelg_failure(gate_f_task_levelb
+        gate_f_task_levelb.crexx TASK_ONLY_LEVELG)
+add_gate_f_levelg_failure(gate_f_parallel_levelb
+        gate_f_parallel_levelb.crexx PARALLEL_ONLY_LEVELG)
+add_gate_f_levelg_failure(gate_f_parallel_expr_levelb
+        gate_f_parallel_expr_levelb.crexx PARALLEL_ONLY_LEVELG)
+add_gate_f_levelg_failure(gate_f_task_target_levelb
+        gate_f_task_target_levelb.crexx TASK_TARGET_ONLY_LEVELG)
+add_gate_f_levelg_failure(gate_f_task_factory_target_levelb
+        gate_f_task_factory_target_levelb.crexx TASK_TARGET_ONLY_LEVELG)
+add_gate_f_levelg_failure(gate_f_taskwork_required
+        gate_f_taskwork_required.crexx TASKWORK_ADAPTER_REQUIRED)
+add_gate_f_levelg_failure(gate_f_taskwork_factory_arg
+        gate_f_taskwork_factory_arg.crexx TASK_NONTRANSFERABLE_TYPE)
+add_gate_f_levelg_failure(gate_f_task_object_result_required
+        gate_f_task_object_result_required.crexx TASK_NONTRANSFERABLE_TYPE)
+add_gate_f_levelg_failure(gate_f_task_interface_result
+        gate_f_task_interface_result.crexx TASK_NONTRANSFERABLE_TYPE)
+
+set(GATE_F_CONTEXTUAL_LEVELB_SCRIPT
+        "${CMAKE_CURRENT_BINARY_DIR}/gate_f_contextual_levelb.cmake")
+set(GATE_F_CONTEXTUAL_LEVELB_WORK_DIR
+        "${CMAKE_CURRENT_BINARY_DIR}/gate_f_contextual_levelb_ws")
+file(GENERATE OUTPUT "${GATE_F_CONTEXTUAL_LEVELB_SCRIPT}" CONTENT
+"file(MAKE_DIRECTORY \"${GATE_F_CONTEXTUAL_LEVELB_WORK_DIR}\")
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\"
+          -o contextual
+          \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/gate_f_contextual_levelb.crexx\"
+  WORKING_DIRECTORY \"${GATE_F_CONTEXTUAL_LEVELB_WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Level B contextual-word rxc failure:\\n\${out}\\n\${err}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxas>\" -o contextual.rxbin contextual
+  WORKING_DIRECTORY \"${GATE_F_CONTEXTUAL_LEVELB_WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Level B contextual-word rxas failure:\\n\${out}\\n\${err}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxlink>\" -o contextual_linked.rxbin
+          contextual.rxbin \"${CMAKE_BINARY_DIR}/bin/library.rxbin\"
+  WORKING_DIRECTORY \"${GATE_F_CONTEXTUAL_LEVELB_WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Level B contextual-word rxlink failure:\\n\${out}\\n\${err}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxbvm>\" contextual_linked.rxbin
+  WORKING_DIRECTORY \"${GATE_F_CONTEXTUAL_LEVELB_WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Level B contextual-word runtime failure:\\n\${out}\\n\${err}\")
+endif()
+")
+add_test(NAME gate_f_contextual_levelb
+         COMMAND ${CMAKE_COMMAND} -P "${GATE_F_CONTEXTUAL_LEVELB_SCRIPT}")
+set_tests_properties(gate_f_contextual_levelb PROPERTIES
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        LABELS "compiler;levelb;concurrency;gate_f;f1f;contextual")
+crexx_label_concurrency_tests(SP06 gate_f_contextual_levelb)
+
+# Gate F's compiler-generated task controller uses block-scoped signal
+# handlers.  Prove the shared control-transfer emitter independently so a
+# future task-lowering change cannot accidentally mask broken RETURN/LEAVE
+# cleanup.
+function(add_signal_control_unwind_test RUNNER MODE)
+    set(TEST_NAME "signal_control_unwind_${RUNNER}_${MODE}")
+    set(BASE "${TEST_NAME}")
+    set(WORK_DIR "${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}_ws")
+    set(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}.cmake")
+    if(MODE STREQUAL "noopt")
+        set(RXC_FLAGS "-n")
+        set(RXAS_FLAGS "-n")
+    else()
+        set(RXC_FLAGS "")
+        set(RXAS_FLAGS "")
+    endif()
+
+    file(GENERATE OUTPUT "${SCRIPT}" CONTENT
+"file(MAKE_DIRECTORY \"${WORK_DIR}\")
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${RXC_FLAGS}
+          -o \"${BASE}\"
+          \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/signal_control_unwind.crexx\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Signal control unwind rxc failure:\\n\${out}\\n\${err}\")
+endif()
+file(READ \"${WORK_DIR}/${BASE}.rxas\" rxas)
+foreach(shape IN ITEMS
+        \"sigpop \\\"OTHER\\\"[\\r\\n]+[ ]+br l[0-9]+doend\"
+        \"sigpop \\\"OTHER\\\"[\\r\\n]+[ ]+br l[0-9]+bexprend\")
+  string(REGEX MATCH \"\${shape}\" unwind_match \"\${rxas}\")
+  if(unwind_match STREQUAL \"\")
+    message(FATAL_ERROR \"Missing signal control unwind shape: \${shape}\")
+  endif()
+endforeach()
+if(\"${MODE}\" STREQUAL \"noopt\")
+  string(REGEX MATCH
+         \"sigpop \\\"OTHER\\\"[\\r\\n]+[ ]+ret 7\"
+         return_unwind \"\${rxas}\")
+  if(return_unwind STREQUAL \"\")
+    message(FATAL_ERROR \"RETURN did not unwind its signal handler\")
+  endif()
+else()
+  string(REGEX MATCHALL
+         \"sigpop \\\"OTHER\\\"[\\r\\n]+[ ]+br l[0-9]+bexprend\"
+         inlined_unwinds \"\${rxas}\")
+  list(LENGTH inlined_unwinds inlined_unwind_count)
+  if(inlined_unwind_count LESS 2)
+    message(FATAL_ERROR
+            \"Optimized inlined RETURN/LEAVE WITH shapes lost signal unwinds\")
+  endif()
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS}
+          -o \"${BASE}.rxbin\" \"${BASE}\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Signal control unwind rxas failure:\\n\${out}\\n\${err}\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:${RUNNER}>\" \"${BASE}.rxbin\"
+  WORKING_DIRECTORY \"${WORK_DIR}\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+set(full_out \"\${out}\${err}\")
+if(NOT res EQUAL 0 OR
+   NOT full_out MATCHES \"PASS: signal control unwind\" OR
+   full_out MATCHES \"BAD:|FAIL:\")
+  message(FATAL_ERROR \"Signal control unwind ${RUNNER} failure:\\n\${full_out}\")
+endif()
+")
+
+    add_test(NAME ${TEST_NAME} COMMAND ${CMAKE_COMMAND} -P "${SCRIPT}")
+    set_tests_properties(${TEST_NAME} PROPERTIES
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            LABELS "compiler;signals;control_flow;gate_f;${MODE};${RUNNER}"
+            TIMEOUT 60)
+    crexx_label_concurrency_tests(SP06 ${TEST_NAME})
+    crexx_label_concurrency_tests(SP08 ${TEST_NAME})
+endfunction()
+
+add_signal_control_unwind_test(rxbvm noopt)
+add_signal_control_unwind_test(rxbvm opt)
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_signal_control_unwind_test(rxtvm noopt)
+    add_signal_control_unwind_test(rxtvm opt)
+endif()
 
 add_crexx_isolated_run_test(interface_named_factory_same_module rexx_src/interface_named_factory_same_module.crexx)
 add_crexx_isolated_run_test(interface_named_factory_tiebreak rexx_src/interface_named_factory_tiebreak.crexx)
@@ -2341,6 +2932,25 @@ add_test(NAME inline_rhs_block_expr_concat_binary_opt
 set_tests_properties(inline_rhs_block_expr_concat_binary_opt PROPERTIES
         LABELS "linked_opt"
         FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+set(INLINE_NESTED_BINARY_OWNER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_nested_binary_block_owner_shape.cmake")
+set(INLINE_NESTED_BINARY_OWNER_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_nested_binary_block_owner_shape_ws\")\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -o \"inline_nested_binary_block_owner\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_nested_binary_block_owner.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on nested binary owner shape: \${out}\${err}\")\nendif()\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "file(READ \"\${work}/inline_nested_binary_block_owner.rxas\" generated_rxas)\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "if(generated_rxas MATCHES [=[call[0-9]* [^\\n]*(wrap_node|wrap_document)\\(\\)]=])\n  message(FATAL_ERROR \"Supported nested binary calls were not inlined:\\n\${generated_rxas}\")\nendif()\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "if(generated_rxas MATCHES [=[r-1]=])\n  message(FATAL_ERROR \"Nested inline emitted an unset register:\\n\${generated_rxas}\")\nendif()\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_nested_binary_block_owner.rxbin\" \"inline_nested_binary_block_owner\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND INLINE_NESTED_BINARY_OWNER_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas rejected nested binary owner shape: \${out}\${err}\")\nendif()\n")
+file(GENERATE OUTPUT "${INLINE_NESTED_BINARY_OWNER_SCRIPT}" CONTENT "${INLINE_NESTED_BINARY_OWNER_CONTENT}")
+
+add_test(NAME inline_nested_binary_block_owner_shape_opt
+         COMMAND ${CMAKE_COMMAND} -P "${INLINE_NESTED_BINARY_OWNER_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(inline_nested_binary_block_owner_shape_opt PROPERTIES
+        LABELS "compiler;assembler;inlining;binary")
 
 set(INLINE_CROSS_FILE_SOURCE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_cross_file_source_opt.cmake")
 set(INLINE_CROSS_FILE_SOURCE_CONTENT "set(full_out \"\")\n")
@@ -2795,6 +3405,7 @@ add_crexx_run_test(inline_test_call rexx_src/inline_test_call.crexx)
 add_crexx_run_test(inline_test_expr rexx_src/inline_test_expr.crexx)
 add_crexx_run_test(inline_test_expr_negative rexx_src/inline_test_expr_negative.crexx)
 add_crexx_run_test(inline_test_nested_call_expr rexx_src/inline_test_nested_call_expr.crexx)
+add_crexx_run_test(inline_nested_binary_block_owner rexx_src/inline_nested_binary_block_owner.crexx)
 add_crexx_run_test(inline_test_concat_expr rexx_src/inline_test_concat_expr.crexx)
 add_crexx_run_test(inline_test_say_expr rexx_src/inline_test_say_expr.crexx)
 add_crexx_run_test(inline_test_say_expr_negative rexx_src/inline_test_say_expr_negative.crexx)
@@ -2851,6 +3462,17 @@ add_crexx_run_test(inline_test_imported_bif_block_expr_lifetime rexx_src/inline_
 add_crexx_run_test(attr_array_call_result_lifetime rexx_src/attr_array_call_result_lifetime.crexx)
 add_crexx_run_test(inline_test_complex_lhs_assign rexx_src/inline_test_complex_lhs_assign.crexx)
 add_crexx_run_test(inline_test_binary_arg_return rexx_src/inline_test_binary_arg_return.crexx)
+add_crexx_run_test(inline_test_binary_class_attr_assign rexx_src/inline_test_binary_class_attr_assign.crexx)
+add_test(NAME inline_test_binary_class_attr_assign_shape
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_test_binary_class_attr_assign.crexx
+                 -DINCLUDE_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_test_binary_class_attr_assign_shape_ws
+                 -P ${CMAKE_SOURCE_DIR}/cmake/CheckInlineBinaryClassAttribute.cmake)
+set_tests_properties(inline_test_binary_class_attr_assign_shape PROPERTIES
+        LABELS "compiler;inlining;binary;regression")
+add_crexx_run_test(gate_f_signal_names rexx_src/gate_f_signal_names.crexx)
 add_crexx_run_test(inline_test_class_methods rexx_src/inline_test_class_methods.crexx)
 
 # New Phase 2 Scoping Tests
@@ -4270,7 +4892,23 @@ add_custom_command(
         COMMENT "Compiling address_llm_host.crexx ..."
 )
 
-add_custom_target(address_llm_fixture_bin ALL DEPENDS address_llm_provider.rxbin address_llm_host.rxbin)
+# The Level G providers now own bounded task/endpoint resources. Link this
+# integration fixture through the normal library/classlib/rxfnsg toolchain so
+# interface providers and teardown match deployed images.
+add_custom_command(
+        OUTPUT address_llm_linked.rxbin
+        COMMAND $<TARGET_FILE:rxlink> -o address_llm_linked
+                address_llm_provider.rxbin
+                address_llm_host.rxbin
+                ${CMAKE_BINARY_DIR}/bin/library.rxbin
+                ${CMAKE_BINARY_DIR}/bin/classlib.rxbin
+                ${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin
+        DEPENDS rxlink address_llm_provider.rxbin address_llm_host.rxbin library classlib rxfnsg
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Linking Level G LLM ADDRESS fixture with its concurrency classes ..."
+)
+
+add_custom_target(address_llm_fixture_bin ALL DEPENDS address_llm_linked.rxbin)
 
 add_custom_command(
         OUTPUT native_kv_address_demo.rxbin
@@ -4584,14 +5222,12 @@ add_test(NAME address_cms_demo COMMAND
 set_tests_properties(address_cms_demo PROPERTIES LABELS "compiler;stage3")
 add_test(NAME address_llm_provider COMMAND
         ${CREXX_RXVM_EXECUTABLE}
-        ${CMAKE_BINARY_DIR}/bin/library.rxbin
-        ${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/address_llm_provider.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/address_llm_host.rxbin)
+        ${CMAKE_CURRENT_BINARY_DIR}/address_llm_linked.rxbin)
 set_tests_properties(address_llm_provider PROPERTIES LABELS "compiler;stage3")
 set_tests_properties(address_llm_provider PROPERTIES
         PASS_REGULAR_EXPRESSION "PASS: address llm host"
         FAIL_REGULAR_EXPRESSION "address llm host failures")
+crexx_label_concurrency_tests(SP07 address_llm_provider)
 add_test(NAME address_native_kv_demo COMMAND native_kv_address_demo)
 set_tests_properties(address_native_kv_demo PROPERTIES LABELS "compiler;stage3")
 if(CREXX_BUILD_SQLITE_ADDRESS_DEMO)
@@ -4602,6 +5238,7 @@ add_test(NAME address_callback_host COMMAND test_address_callback_host)
 set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
 add_test(NAME e2_active_context_isolation COMMAND test_e2_active_context)
 set_tests_properties(e2_active_context_isolation PROPERTIES LABELS "compiler;stage3")
+crexx_label_concurrency_tests(SP01 e2_active_context_isolation)
 add_test(NAME dynamic_load COMMAND test_dynamic_load)
 set_tests_properties(dynamic_load PROPERTIES LABELS "compiler;stage3")
 foreach(_dynamic_interface_runner IN ITEMS rxvm)

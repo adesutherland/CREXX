@@ -32,6 +32,7 @@ code before editing user-facing docs.
 | `docs/books/crexx_programming_guide` | Practical guide | Users and integrators | Build, run, tools, host integration, plugins | Practical and task-oriented |
 | `docs/books/crexx_vm_spec` | VM and bytecode reference | Implementers | VM model, instruction set, platform notes | Precise and technical |
 | `docs/reference/rxas` | Human RXAS reference source | RXAS authors, VM/toolchain implementers | Instruction prose skeletons and inventory intended to feed generated docs later | Reader-focused and structured |
+| `concurrency` | Concurrency control plane | Maintainers and contributors | Live task/channel/provider worklist, accepted decisions and dated development history | Status-oriented and explicit |
 | `rexxscript/doc` | RexxScript product docs | Users, integrators, RexxScript developers | User guide, developer guide, runtime/product source of truth | Product-owned and current |
 | `docs/ai-context` | Current implementation context | Agents and maintainers | Architecture facts, debugging, Level B authoring, library/runtime notes | Operational and explicit |
 | `compiler/docs` | Compiler implementation notebook | Compiler maintainers | Parser, validation, emitter, exits, inlining, retired working notes | Deep technical notes with status labels |
@@ -55,6 +56,8 @@ code before editing user-facing docs.
   `docs/ROADMAP.md`. A roadmap entry is not a release promise; create an issue
   only when the work is concrete enough to track.
 - Implementation facts needed by agents belong in `docs/ai-context`.
+- Live concurrency capability, portability and publication status belongs in
+  `concurrency/WORKLIST.md`; performance timing remains under `performance/`.
 - Deep compiler mechanisms belong in `compiler/docs`; promote summaries into
   public docs only when they help users or integrators.
 - Working notes may stay in `compiler/docs` or `docs/ai-context`, but they must

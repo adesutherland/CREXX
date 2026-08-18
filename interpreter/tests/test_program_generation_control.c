@@ -13,6 +13,7 @@
 
 #include "rxvm.h"
 #include "rxvmintp.h"
+#include "rxvmprogram.h"
 
 typedef struct e4a_structure_counts {
     size_t module_count;
@@ -410,10 +411,12 @@ cleanup:
 }
 
 static void run_shared_generation(const char *control_rxbin,
-                                  const char *late_rxbin) {
+                                  const char *late_rxbin,
+                                  const char *snapshot_rxbin) {
     rxvm_runtime *runtime = 0;
     rxvm_context *source = 0;
     rxvm_context *peer = 0;
+    rxvm_context *snapshot = 0;
     const rxvm_program_generation *initial_generation = 0;
     const rxvm_program_generation *derived_generation = 0;
     e4a_structure_counts source_counts;
@@ -547,6 +550,26 @@ static void run_shared_generation(const char *control_rxbin,
           "peer generation advance does not disturb source state");
     compare_shared_contexts(source, peer);
 
+    CHECK(rxvm_program_generation_write_file(
+              derived_generation, snapshot_rxbin) != 0,
+          "serialize multi-graph generation as an RXBIN archive");
+    snapshot = rxvm_create();
+    CHECK(snapshot != 0, "create isolated snapshot validation context");
+    if (snapshot) {
+        CHECK(rxvm_load_file(snapshot, (char *)snapshot_rxbin) != 0,
+              "load serialized multi-graph generation archive");
+        CHECK(snapshot->num_modules ==
+                  rxvm_program_generation_module_count(derived_generation),
+              "snapshot preserves every generation module");
+        CHECK(rxvm_link(snapshot) == 0 && rxvm_prepare(snapshot) == 0,
+              "link and prepare serialized multi-graph generation archive");
+        CHECK(call_one(snapshot, "e4control.set", "23") == 23 &&
+                  rxvm_call(snapshot, "e4control.get", 0, 0) == 23,
+              "snapshot preserves the initial graph callable identities");
+        CHECK(call_one(snapshot, "e4late.identity", "29") == 30,
+              "snapshot preserves the late graph callable identities");
+    }
+
     /* One context may disappear while the other keeps generation storage. */
     rxvm_destroy(source);
     source = 0;
@@ -556,6 +579,8 @@ static void run_shared_generation(const char *control_rxbin,
           "peer remains executable after source generation pin releases");
 
 cleanup:
+    if (snapshot) rxvm_destroy(snapshot);
+    if (snapshot_rxbin) remove(snapshot_rxbin);
     if (source) rxvm_destroy(source);
     if (peer) rxvm_destroy(peer);
     if (runtime) {
@@ -572,13 +597,15 @@ cleanup:
 }
 
 int main(int argc, char **argv) {
-    if (argc != 3) {
-        fprintf(stderr, "usage: %s CONTROL_RXBIN LATE_RXBIN\n", argv[0]);
+    if (argc != 4) {
+        fprintf(stderr,
+                "usage: %s CONTROL_RXBIN LATE_RXBIN SNAPSHOT_RXBIN\n",
+                argv[0]);
         return 2;
     }
 
     run_independent_control(argv[1], argv[2]);
-    if (!failures) run_shared_generation(argv[1], argv[2]);
+    if (!failures) run_shared_generation(argv[1], argv[2], argv[3]);
     if (failures) {
         fprintf(stderr, "E4_PROGRAM_CONTROL result=FAIL failures=%d\n",
                 failures);

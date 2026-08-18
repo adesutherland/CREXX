@@ -1,0 +1,17 @@
+dpkg-deb: building package 'crexx' in '/home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/post-fix-artifacts/CREXX-linux-x86_64.deb'.
+ new Debian package, version 2.0.
+ size 10253278 bytes: control archive=464 bytes.
+     512 bytes,    13 lines      control
+ Package: crexx
+ Version: 1.0.0-beta.3+local.gc38a5d184dee.dirty-1
+ Section: devel
+ Priority: optional
+ Architecture: amd64
+ Maintainer: CREXX Project <noreply@github.com>
+ Installed-Size: 50976
+ Homepage: https://github.com/adesutherland/CREXX
+ Description: cREXX toolchain and runtime
+  CREXX is a custom REXX-to-bytecode toolchain. This package installs the
+  compiler, assembler, linker, virtual machines, debugger, runtime files,
+  examples, VERSION, and BUILDINFO under /opt/crexx, with command symlinks
+  in /usr/bin.

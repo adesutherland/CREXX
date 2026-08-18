@@ -1,0 +1,74 @@
+PERF3-13 Gate F F1a/F1b accepted Mac closeout
+
+Selected implementation
+  - RXBIN feature bit 1<<3 and public opcodes 650..654 implement chanopen,
+    chanstart, chanwait, chancancel and chanclose.
+  - RXAS/RXDAS, metadata, feature, malformed-image and duplicate-output
+    validation are aligned.
+  - Both concrete VMs use the same cold channel handlers and execution-local
+    generation-checked channel/ticket capabilities.
+  - The runtime-owned F1b registry seed contains core provider type 1. It uses
+    the controller's sealed generation and Gate E's attached executor; live VM
+    values, procedure-name strings and public RXPA task calls do not cross.
+  - The minimum provider accepts canonical RXCV configuration/envelopes over
+    Gate E's integer/string fixture and advertises bounded admission,
+    cancellation and completion-order observation.
+  - chanwait materializes completion RXCV in controller-worker-owned storage
+    before marking the ticket observed, so an allocation failure cannot lose a
+    terminal result.
+  - Context teardown cancels, joins and releases open channels, tickets,
+    requests and attached workers.
+
+Boundary retained for later F1 slices
+  - Full ChannelValue values/transfers, deadlines/scopes and the Level B/Level G
+    surface are F1c.
+  - The private extension registration hook and fake-provider GF-B09 vector
+    must be completed before F1 closes; no public provider-plugin ABI is
+    published in F1.
+  - Redirect/child-process migration is F1d and concurrent HTTP is F1e.
+
+QA
+  Debug focused Gate E/F regression set: 31/31 passed.
+  Debug repeated concurrency matrix: 10 tests repeated 100 times each; all
+  1,000 executions passed across both channel and executor engines.
+  Release repeated concurrency matrix: the same 1,000 optimized executions
+  passed.
+  Profiling-off Release focused set: 5/5 passed.
+  Both concrete Release channel benchmark correctness runs: passed.
+  Final Debug rebuild after completion-materialization hardening: 1,058 build
+  actions passed.
+  Final profiling-off Release rebuild: 1,058 build actions passed.
+  Final full Debug CTest at parallel 30: 2,086/2,086 passed in 403.57 seconds,
+  including every parser-thread highlighting test without a recovery rerun.
+  Runtime output/input aliasing is executed directly on both concrete VMs.
+
+Broad-run repair
+  The first broad run exposed eager generation sealing as fatal for otherwise
+  valid native/plugin-bearing images. Startup now permits
+  RXVM_PROGRAM_NATIVE_EXCLUDED. Such programs execute normally; chanopen later
+  reports provider unavailability if that image cannot seed attached workers.
+  Other generation-seal failures remain fatal. The original 72 affected
+  runtime/plugin tests and three highlighting tests were replayed; the runtime
+  group passed after rebuilding every executable that embeds rxvmmain.c.
+
+Post-audit performance revalidation
+  The receiver-owned completion hardening changed rxvmintp.c.o, so the earlier
+  accepted timing is not reused as final proof. A byte-verified repeat against
+  the same accepted E6 controls uses one warmup and twelve balanced recorded
+  rounds. Its result is recorded in POST-AUDIT-VERDICT.txt and
+  timing-post-audit/.
+
+Sanitizer
+  The focused ASan build passed and 16/16 serialized channel, allocator,
+  worker-lifecycle and executor tests passed on both engines. This macOS ASan
+  runtime aborts when detect_leaks=1 because LeakSanitizer is unsupported on
+  the platform, so the runner was repeated with leak detection disabled.
+  Runtime allocator census, zero-live-allocation assertions and deterministic
+  teardown checks remained enabled and passed. Leak-enabled LSan remains a
+  Linux qualification item rather than a claimed Mac result.
+
+Disposition
+  Adrian accepted the confirmed additional computed-goto code-layout cost for
+  deferred F3/release-hardening tuning. F1a and the minimum F1b local-provider
+  vertical slice are complete. F1c is next, subject to its own implementation,
+  first Release verdict and closeout.

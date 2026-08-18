@@ -28,6 +28,12 @@ the bytecode toolchain, core standard libraries, host integration, and packaging
 on the supported desktop platforms. `rxdb` exists as an experimental debugger
 prototype and is not yet part of the stable release surface.
 
+`develop` also contains an initial Level G structured-concurrency surface:
+task declarations and `DO PARALLEL`, explicit pool/scope classes, local and
+isolated-process providers, bounded byte endpoints, structured child-process
+redirection, and a concurrent HTTP client. This work has local macOS
+qualification but is not a released, stable or fully cross-platform contract.
+
 ## Build
 
 ```bash
@@ -96,6 +102,16 @@ is searched for same-extension imports.
   use and how much authority each area has.
 - [Level B tutorial](docs/books/crexx_programming_guide/levelb_tutorial.md)
   teaches practical Level B for Rexx programmers with tested examples.
+- [Concurrent programming](docs/books/crexx_programming_guide/concurrency.md)
+  teaches the initial Level G task and scope model with complete checked
+  examples.
+- [Tasks and parallel execution](docs/books/crexx_language_reference/concurrency.md)
+  defines the Level G syntax and evaluation rules.
+- [Concurrency classes](docs/books/crexx_library_reference/concurrency.md) and
+  [concurrent HTTP](docs/books/crexx_library_reference/concurrent_http.md)
+  document the explicit library surface.
+- [Concurrency architecture](docs/ai-context/CREXX_CONCURRENCY.md) records the
+  ownership, transfer, provider and implementation boundaries for maintainers.
 - [RexxScript user guide](rexxscript/doc/user-guide.md) covers the standalone
   `rexxscript` runner, the `REXXSCRIPT` command, and the direct evaluator API.
 - [Language reference](docs/books/crexx_language_reference/about.md) covers the

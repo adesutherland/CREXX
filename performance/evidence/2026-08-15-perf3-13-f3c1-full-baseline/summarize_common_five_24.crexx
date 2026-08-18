@@ -1,0 +1,208 @@
+/* PERF3-13 F3C1 combined 24-pair common-five reducer. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] <> 3 then do
+  say "Usage: summarize_common_five_24 OUTPUT_SUMMARY INITIAL_SAMPLES APPEND_SAMPLES"
+  return 2
+end
+
+output_path = argv[1]
+input_paths = .string[]
+input_paths[1] = argv[2]
+input_paths[2] = argv[3]
+workloads = .string[]
+workloads[1] = "Sieve"
+workloads[2] = "Permute"
+workloads[3] = "Bounce"
+workloads[4] = "Richards"
+workloads[5] = "Base64"
+vms = .string[]
+vms[1] = "rxtvm"
+vms[2] = "rxbvm"
+control_values = .float[]
+candidate_values = .float[]
+control_counts = .int[]
+candidate_counts = .int[]
+
+do input_index = 1 to input_paths[0]
+  input_path = input_paths[input_index]
+  line_number = 0
+  do while lines(input_path)
+    line = linein(input_path)
+    line_number = line_number + 1
+    if line_number = 1 then iterate
+    fields = split_delimited(line, ",")
+    if fields[0] <> 20 then return fail("unexpected sample row width")
+    if fields[11] <> "recorded" then iterate
+    if fields[18] <> "pass" then return fail("non-passing recorded sample")
+    workload_index = find_text(workloads, fields[3])
+    if workload_index = 0 then iterate
+    vm_index = find_text(vms, fields[6])
+    if vm_index = 0 then return fail("unexpected VM for common-five row")
+    group_index = vm_index * 100 + workload_index
+    if fields[7] = "f1f-control" then do
+      control_counts[group_index] = control_counts[group_index] + 1
+      value_index = group_index * 100 + control_counts[group_index]
+      control_values[value_index] = fields[15]
+    end
+    else if fields[7] = "f3c1-cache" then do
+      candidate_counts[group_index] = candidate_counts[group_index] + 1
+      value_index = group_index * 100 + candidate_counts[group_index]
+      candidate_values[value_index] = fields[15]
+    end
+    else return fail("unexpected variant")
+  end
+  call linein input_path
+end
+
+call remove_output output_path
+header = "aggregate,vm,metric,pairs,control_median,candidate_median," || ,
+    "min_percent,q1_percent,median_percent,q3_percent,max_percent," || ,
+    "mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent," || ,
+    "interval_result,favorable,total,guard_hit"
+if lineout(output_path, header) <> 0 then return fail("could not create summary")
+
+do vm_index = 1 to vms[0]
+  ratios = .float[]
+  deltas = .float[]
+  favorable = 0
+  sum = 0.0
+  do round = 1 to 24
+    ratio_product = 1.0
+    do workload_index = 1 to workloads[0]
+      group_index = vm_index * 100 + workload_index
+      if control_counts[group_index] <> 24 | candidate_counts[group_index] <> 24 then
+        return fail("incomplete common-five cell")
+      value_index = group_index * 100 + round
+      control = control_values[value_index]
+      candidate = candidate_values[value_index]
+      if control <= 0.0 | candidate <= 0.0 then
+        return fail("incomplete common-five pair")
+      ratio_product = ratio_product * control / candidate
+    end
+    ratio = fifth_root(ratio_product)
+    delta = (ratio - 1.0) * 100.0
+    ratios[round] = ratio
+    deltas[round] = delta
+    sum = sum + delta
+    if delta > 0.0 then favorable = favorable + 1
+  end
+  call sort_floats ratios
+  call sort_floats deltas
+  mean = sum / 24.0
+  sum_squares = 0.0
+  do round = 1 to 24
+    difference = deltas[round] - mean
+    sum_squares = sum_squares + difference * difference
+  end
+  sample_deviation = square_root(sum_squares / 23.0)
+  margin = 2.068658 * sample_deviation / square_root(24.0)
+  interval_low = mean - margin
+  interval_high = mean + margin
+  interval_result = "noisy_inconclusive"
+  if interval_low > 0.0 then interval_result = "clear_favorable"
+  else if interval_high < 0.0 then interval_result = "clear_adverse"
+  guard_hit = "no"
+  if mean < -1.0 then guard_hit = "yes"
+  row = "common-five," || vms[vm_index] || ,
+      ",higher_is_better_geomean_ratio,24,1.000000," || ,
+      float_text(sample_quantile(ratios, 1, 2)) || "," || ,
+      float_text(deltas[1]) || "," || ,
+      float_text(sample_quantile(deltas, 1, 4)) || "," || ,
+      float_text(sample_quantile(deltas, 1, 2)) || "," || ,
+      float_text(sample_quantile(deltas, 3, 4)) || "," || ,
+      float_text(deltas[24]) || "," || float_text(mean) || "," || ,
+      float_text(interval_low) || "," || float_text(interval_high) || "," || ,
+      interval_result || "," || favorable || ",24," || guard_hit
+  if lineout(output_path, row) <> 0 then return fail("could not append row")
+end
+call lineout output_path
+say "PASS: PERF3-13 F3C1 combined 24-pair common-five summary retained at" output_path
+return 0
+
+find_text: procedure = .int
+  arg values = .string[], wanted = .string
+  do index = 1 to values[0]
+    if values[index] = wanted then return index
+  end
+  return 0
+
+remove_output: procedure = .void
+  arg path = .string
+  remove_out = .string[]
+  remove_err = .string[]
+  address crexx "rm :path" output remove_out error remove_err
+  return
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+sort_floats: procedure = .void
+  arg expose values = .float[]
+  do i = 2 to values[0]
+    item = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > item
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = item
+  end
+  return
+
+sample_quantile: procedure = .float
+  arg values = .float[], numerator = .int, denominator = .int
+  scaled = (values[0] - 1) * numerator
+  lower_zero_index = scaled <idiv> denominator
+  remainder = scaled <mod> denominator
+  lower_value = values[lower_zero_index + 1]
+  if remainder = 0 then return lower_value
+  return lower_value + (values[lower_zero_index + 2] - lower_value) * ,
+      ((remainder as .float) / (denominator as .float))
+
+fifth_root: procedure = .float
+  arg value = .float
+  if value <= 0.0 then return 0.0
+  guess = 1.0
+  do iteration = 1 to 80
+    fourth_power = guess * guess * guess * guess
+    next_guess = (4.0 * guess + value / fourth_power) / 5.0
+    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess
+    guess = next_guess
+  end
+  return guess
+
+square_root: procedure = .float
+  arg value = .float
+  if value <= 0.0 then return 0.0
+  guess = value
+  if guess < 1.0 then guess = 1.0
+  do iteration = 1 to 80
+    next_guess = (guess + value / guess) / 2.0
+    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess
+    guess = next_guess
+  end
+  return guess
+
+float_text: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

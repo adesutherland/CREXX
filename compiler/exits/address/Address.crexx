@@ -349,8 +349,8 @@ buildRedirect: procedure = .string
         return "_string2redir(" || expr || ")"
     end
 
-    if isArray then return "_redir2array(" || expr || ")"
-    return "_redir2string(" || expr || ")"
+    if isArray then return "_redir2array(reference " || expr || ")"
+    return "_redir2string(reference " || expr || ")"
 
 isExposeArrayToken: procedure = .int
     arg tok = .token

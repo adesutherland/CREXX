@@ -1,0 +1,9 @@
+options levelb
+namespace gate_f_task_target_levelb
+
+work: procedure = .int
+  return 1
+
+main: procedure = .int
+  target = task work
+  return 0

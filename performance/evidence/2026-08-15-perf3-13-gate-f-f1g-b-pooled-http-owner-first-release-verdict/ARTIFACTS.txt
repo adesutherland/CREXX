@@ -1,0 +1,38 @@
+PERF3-13 Gate F F1g-B retained artifacts
+
+Host/toolchain:
+- Darwin 25.5.0 arm64, 10 logical CPUs
+- CMake 4.3.2, Apple clang toolchain
+- ordinary profiling-off Release, profile-20 handler panel, NETWORK TLS
+- AC attached; no recorded thermal or performance warning
+
+Frozen candidate:
+- source predecessor 8b784eccbb38 plus the recorded F1g-B working-tree scope
+- rxbvm sha256 9580f0f9bec56269d3fd98dba7cdb7288ce6720480c13ecc124d298c766ee267,
+  1,379,224 bytes
+- rxtvm sha256 dafa237ef92e8ac6fd66c429318593910bd32ef67ff69a10d3b84bcdf883086c,
+  1,379,352 bytes
+- no VM/compiler C or C++ source, RXAS opcode or RXBIN format changed
+
+Correctness:
+- qa/debug-focused-build.log
+- qa/debug-focused-ctest.log: 6/6 focused tests plus fixture
+- qa/release-build.log
+- qa/release-focused.log: 6/6 focused tests plus fixture
+- qa/release-gate-f.log: 41/41 Gate F tests plus fixture
+- qa/release-stress-repeat100.log: all four cells repeated 100 times;
+  400 clients and 1,600 pooled requests
+- qa/llm-debug.log and qa/llm-release.log: 4/4 legacy Level G LLM cells in
+  each build after explicit qualification of the synchronous rxhttp type
+- qa/debug-ctest.log: 2,155/2,155 full Debug CTest
+- qa/asan-build.log: complete Apple ASan build, leak detection disabled
+- qa/asan-ctest.log: 146/146 focused Apple ASan CTest
+- qa/post-chunk-debug-build.log and qa/post-chunk-debug-ctest.log: final
+  chunk-terminator correction rebuilt and passed all four Debug HTTP cells
+- qa/post-chunk-release-build.log and qa/post-chunk-release-ctest.log: final
+  correction rebuilt and passed all four Release HTTP cells
+- qa/post-chunk-release-stress-repeat100.log: final corrected path repeated
+  all four cells 100 times; 400 clients and 1,600 pooled requests
+- qa/post-chunk-asan-build.log and qa/post-chunk-asan-ctest.log: final
+  correction rebuilt under Apple ASan and passed all four HTTP cells,
+  leak detection disabled

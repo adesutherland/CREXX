@@ -24,7 +24,7 @@
 
 /* REXX LEVEL B ADDRESS FUNCTIONS */
 options levelb
-namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_environment _address_function _address_call _address_call_response addressenv addresscall _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressdriverregistry addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment crexxaddressenvironment systemaddressenvironment shelladdressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
+namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_environment _address_function _address_call _address_call_response addressenv addresscall _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressdriverregistry addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressredirect addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment crexxaddressenvironment systemaddressenvironment shelladdressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
 import rxfnsb
 
 /**
@@ -309,19 +309,151 @@ standardaddresssandbox: class implements .addresssandbox
 
     return ""
 
+/**
+ * Controller-owned adapter between classic ADDRESS redirection and bounded
+ * byte endpoints. Input is snapshotted by the factory. Output is accumulated
+ * as bytes and applied to the referenced Rexx receiver only by `finish()` on
+ * the controlling execution.
+ */
+addressredirect: class
+  _kind = .int
+  _input = .binary
+  _captured = .binary
+  _string_target = reference .string
+  _array_target = reference .string[]
+
+  none: factory
+    empty = .binary
+    _kind = 0
+    _input = empty
+    _captured = empty
+    return
+
+  input_string: factory
+    arg source = .string
+    empty = .binary
+    _kind = 1
+    _input = source as .binary
+    newline = '0a'x as .binary
+    assembler bappend _input,newline
+    _captured = empty
+    return
+
+  input_array: factory
+    arg source = .string[]
+    input = .binary
+    empty = .binary
+    _kind = 1
+    newline = '0a'x as .binary
+    do i = 1 to source[0]
+      bytes = source[i] as .binary
+      assembler bappend input,bytes
+      assembler bappend input,newline
+    end
+    _input = input
+    _captured = empty
+    return
+
+  output_string: factory
+    arg target = reference .string
+    empty = .binary
+    _kind = 2
+    _input = empty
+    _captured = empty
+    _string_target = target
+    return
+
+  output_array: factory
+    arg target = reference .string[]
+    empty = .binary
+    _kind = 3
+    _input = empty
+    _captured = empty
+    _array_target = target
+    return
+
+  has_input: method = .boolean
+    return _kind = 1
+
+  captures_output: method = .boolean
+    return _kind = 2 | _kind = 3
+
+  input_snapshot: method = .binary
+    return _input
+
+  append_bytes: method = .void
+    arg bytes = .binary
+    if captures_output() then assembler bappend _captured,bytes
+    return
+
+  native_emit: method = .int
+    arg text = .string
+    if captures_output() = 0 then return 0
+    bytes = text as .binary
+    assembler bappend _captured,bytes
+    return 1
+
+  finish: method = .void
+    if _kind = 2 then do
+      if <refvalid>(_string_target) = 0 then do
+        assembler signal "REFERENCE_INVALID","ADDRESS output string is no longer live"
+        return
+      end
+      target = dereference _string_target
+      target = target || (_captured as .string)
+      return
+    end
+    if _kind <> 3 then return
+    if <refvalid>(_array_target) = 0 then do
+      assembler signal "REFERENCE_INVALID","ADDRESS output array is no longer live"
+      return
+    end
+
+    target_array = dereference _array_target
+    byte_count = 0
+    assembler blen byte_count,_captured
+    start = 0
+    do offset = 0 to byte_count - 1
+      current = 0
+      assembler getbyte current,_captured,offset
+      if current <> 10 then iterate
+      after = offset
+      if after > start then do
+        previous = 0
+        previous_offset = after - 1
+        assembler getbyte previous,_captured,previous_offset
+        if previous = 13 then after = after - 1
+      end
+      line = .binary
+      line_length = after - start
+      assembler bslice line,_captured,start,line_length
+      target_array[target_array[0] + 1] = line as .string
+      start = offset + 1
+    end
+    if start < byte_count then do
+      line = .binary
+      line_length = byte_count - start
+      assembler bslice line,_captured,start,line_length
+      target_array[target_array[0] + 1] = line as .string
+    end
+    return
+
 addressrequest: class
   _environment_name = .string
   _command = .string
-  _stdin_endpoint = .binary
-  _stdout_endpoint = .binary
-  _stderr_endpoint = .binary
+  _stdin_endpoint = .addressredirect
+  _stdout_endpoint = .addressredirect
+  _stderr_endpoint = .addressredirect
   _binding_count = .int
   _bindings = .addressbinding[]
   _sandbox = .addresssandbox
   _flags = .string
 
   *: factory
-    arg environment_name = "", command = "", stdin_endpoint = .binary, stdout_endpoint = .binary, stderr_endpoint = .binary, flags = ""
+    arg environment_name = "", command = "", stdin_endpoint = .addressredirect, stdout_endpoint = .addressredirect, stderr_endpoint = .addressredirect, flags = ""
+    if initialized(stdin_endpoint) = 0 then stdin_endpoint = .addressredirect.none()
+    if initialized(stdout_endpoint) = 0 then stdout_endpoint = .addressredirect.none()
+    if initialized(stderr_endpoint) = 0 then stderr_endpoint = .addressredirect.none()
     _environment_name = environment_name
     _command = command
     _stdin_endpoint = stdin_endpoint
@@ -346,25 +478,25 @@ addressrequest: class
     arg command = .string
     _command = command
 
-  get_stdin_endpoint: method = .binary
+  get_stdin_endpoint: method = .addressredirect
     return _stdin_endpoint
 
   set_stdin_endpoint: method = .void
-    arg stdin_endpoint = .binary
+    arg stdin_endpoint = .addressredirect
     _stdin_endpoint = stdin_endpoint
 
-  get_stdout_endpoint: method = .binary
+  get_stdout_endpoint: method = .addressredirect
     return _stdout_endpoint
 
   set_stdout_endpoint: method = .void
-    arg stdout_endpoint = .binary
+    arg stdout_endpoint = .addressredirect
     _stdout_endpoint = stdout_endpoint
 
-  get_stderr_endpoint: method = .binary
+  get_stderr_endpoint: method = .addressredirect
     return _stderr_endpoint
 
   set_stderr_endpoint: method = .void
-    arg stderr_endpoint = .binary
+    arg stderr_endpoint = .addressredirect
     _stderr_endpoint = stderr_endpoint
 
   get_flags: method = .string
@@ -852,7 +984,7 @@ nativeaddressenvironment: class implements .addressenvironment .addressinstance 
 
 /* This is the function that the compiler calls for the ADDRESS instruction */
 _address: procedure = .int
-  arg env = "", command = "", in = .binary, out = .binary, err = .binary, expose ... = .string
+  arg env = "", command = "", in = .addressredirect, out = .addressredirect, err = .addressredirect, expose ... = .string
 
   request = .addressrequest
   response = .addressresponse
@@ -866,6 +998,9 @@ _address: procedure = .int
   update_value = .string
   j = .int
 
+  if initialized(in) = 0 then in = .addressredirect.none()
+  if initialized(out) = 0 then out = .addressredirect.none()
+  if initialized(err) = 0 then err = .addressredirect.none()
   call ensure_address_runtime
 
   env_name = normalize_environment_name(env)
@@ -925,7 +1060,7 @@ _address: procedure = .int
 
 /* ADDRESS dispatch with an explicit caller-supplied sandbox object. */
 _address_with_sandbox: procedure = .int
-  arg env = "", command = "", in = .binary, out = .binary, err = .binary, expose sandbox = .addresssandbox, expose ... = .string
+  arg env = "", command = "", in = .addressredirect, out = .addressredirect, err = .addressredirect, expose sandbox = .addresssandbox, expose ... = .string
 
   request = .addressrequest
   response = .addressresponse
@@ -939,6 +1074,9 @@ _address_with_sandbox: procedure = .int
   update_value = .string
   j = .int
 
+  if initialized(in) = 0 then in = .addressredirect.none()
+  if initialized(out) = 0 then out = .addressredirect.none()
+  if initialized(err) = 0 then err = .addressredirect.none()
   call ensure_address_runtime
 
   env_name = normalize_environment_name(env)
@@ -1004,11 +1142,14 @@ _address_apply_exposed_value: procedure = .void
   return
 
 _address_new_request: procedure = .addressrequest
-  arg env = "", command = "", in = .binary, out = .binary, err = .binary
+  arg env = "", command = "", in = .addressredirect, out = .addressredirect, err = .addressredirect
 
   env_name = .string
   set_rc = .int
 
+  if initialized(in) = 0 then in = .addressredirect.none()
+  if initialized(out) = 0 then out = .addressredirect.none()
+  if initialized(err) = 0 then err = .addressredirect.none()
   call ensure_address_runtime
 
   env_name = normalize_environment_name(env)
@@ -1481,6 +1622,10 @@ dispatch_address_request: procedure = .addressresponse expose _address_runtime_r
   env_obj = _address_environment_objects[idx] as .addressenvironment
   call rxfnsb.._trace_command_before(env_name, request.get_command())
   response = env_obj.execute(request)
+  output_endpoint = request.get_stdout_endpoint()
+  error_endpoint = request.get_stderr_endpoint()
+  call output_endpoint.finish()
+  call error_endpoint.finish()
   call rxfnsb.._trace_command_after(env_name, request.get_command(), response.get_rc(), response.get_condition_name())
   _address_environment_objects[idx] = env_obj
   return response
@@ -1491,9 +1636,9 @@ execute_system_command: procedure = .addressresponse expose _address_runtime_rea
   request = .addressrequest
   env_obj = .addressenvironment
   idx = .int
-  stdin_endpoint = .binary
-  stdout_endpoint = .binary
-  stderr_endpoint = .binary
+  stdin_endpoint = .addressredirect
+  stdout_endpoint = .addressredirect
+  stderr_endpoint = .addressredirect
   sandbox = .addresssandbox
 
   stdin_endpoint = source_request.get_stdin_endpoint()
@@ -1535,35 +1680,347 @@ _address_first_chars: procedure = .string
   arg text = .string, count = .int
   return first_chars(text, count)
 
+/* Private RXCV/channel helpers for the foundational ADDRESS library. They
+ * deliberately use only the five core RXAS channel instructions. */
+_address_channel_error: procedure = .void
+  arg operation = .string, status = .int
+  message = operation || " status=" || status
+  assembler signal "CHANNEL_ERROR",message
+  return
+
+_address_cv_node: procedure = .binary
+  arg tag = .int, payload = .binary
+  result = '000000000000000000000000'x as .binary
+  payload_length = 0
+  <at..u8>(0) result = tag
+  assembler blen payload_length,payload
+  <at..int>(4) result = payload_length
+  assembler bappend result,payload
+  return result
+
+_address_cv_merge_flags: procedure = .int
+  arg left_flags = .int, right_flags = .int
+  if right_flags = 0 then return left_flags
+  if left_flags = 0 then return right_flags
+  if left_flags = right_flags then return left_flags
+  return 3
+
+_address_cv_flags_at: procedure = .int
+  arg bytes = .binary, offset = .int
+  tag = <at..u8>(offset) bytes
+  if tag = 10 then return 1
+  if tag = 11 then return 2
+  if tag = 8 then do
+    count = <at..int>(offset + 12) bytes
+    child = offset + 20
+    flags = 0
+    do i = 1 to count
+      flags = _address_cv_merge_flags(flags, _address_cv_flags_at(bytes, child))
+      child = child + 12 + <at..int>(child + 4) bytes
+    end
+    return flags
+  end
+  if tag = 9 then do
+    schema_length = <at..int>(offset + 12) bytes
+    fields = <at..int>(offset + 24 + schema_length) bytes
+    child = offset + 32 + schema_length
+    flags = 0
+    do i = 1 to fields
+      name_length = <at..int>(child) bytes
+      child = child + 8 + name_length
+      flags = _address_cv_merge_flags(flags, _address_cv_flags_at(bytes, child))
+      child = child + 12 + <at..int>(child + 4) bytes
+    end
+    return flags
+  end
+  return 0
+
+_address_cv_document: procedure = .binary
+  arg node = .binary
+  result = '52584356010000000000000000000000'x as .binary
+  node_length = 0
+  <at..u16>(6) result = _address_cv_flags_at(node, 0)
+  assembler blen node_length,node
+  <at..int>(8) result = 16 + node_length
+  assembler bappend result,node
+  return result
+
+_address_cv_root_node: procedure = .binary
+  arg document = .binary
+  result = .binary
+  byte_count = <at..int>(20) document + 12
+  start = 16
+  assembler bslice result,document,start,byte_count
+  return result
+
+_address_cv_null: procedure = .binary
+  return _address_cv_document(_address_cv_node(0, ''x as .binary))
+
+_address_cv_boolean: procedure = .binary
+  arg item = .boolean
+  if item then return _address_cv_document(_address_cv_node(2, ''x as .binary))
+  return _address_cv_document(_address_cv_node(1, ''x as .binary))
+
+_address_cv_integer: procedure = .binary
+  arg item = .int
+  payload = '0000000000000000'x as .binary
+  <at..int>(0) payload = item
+  return _address_cv_document(_address_cv_node(3, payload))
+
+_address_cv_string: procedure = .binary
+  arg item = .string
+  return _address_cv_document(_address_cv_node(6, item as .binary))
+
+_address_cv_binary: procedure = .binary
+  arg item = .binary
+  return _address_cv_document(_address_cv_node(7, item))
+
+_address_cv_name_compare: procedure = .int
+  arg left = .string, right = .string
+  left_bytes = left as .binary
+  right_bytes = right as .binary
+  left_length = 0
+  right_length = 0
+  assembler blen left_length,left_bytes
+  assembler blen right_length,right_bytes
+  common = left_length
+  if right_length < common then common = right_length
+  do offset = 0 to common - 1
+    left_byte = 0
+    right_byte = 0
+    assembler getbyte left_byte,left_bytes,offset
+    assembler getbyte right_byte,right_bytes,offset
+    if left_byte < right_byte then return -1
+    if left_byte > right_byte then return 1
+  end
+  if left_length < right_length then return -1
+  if left_length > right_length then return 1
+  return 0
+
+_address_cv_record: procedure = .binary
+  arg schema = .string, names = .string[], values = .binary[]
+  sorted_names = .string[]
+  sorted_values = .binary[]
+  do i = 1 to names[0]
+    sorted_names[i] = names[i]
+    sorted_values[i] = values[i]
+  end
+  do i = 2 to sorted_names[0]
+    name = sorted_names[i]
+    encoded = sorted_values[i]
+    j = i - 1
+    do while j >= 1
+      if _address_cv_name_compare(sorted_names[j], name) <= 0 then leave
+      sorted_names[j + 1] = sorted_names[j]
+      sorted_values[j + 1] = sorted_values[j]
+      j = j - 1
+    end
+    sorted_names[j + 1] = name
+    sorted_values[j + 1] = encoded
+  end
+  payload = '0000000000000000'x as .binary
+  schema_bytes = schema as .binary
+  schema_length = 0
+  assembler blen schema_length,schema_bytes
+  <at..int>(0) payload = schema_length
+  assembler bappend payload,schema_bytes
+  trailer = '000000000000000000000000'x as .binary
+  <at..u32>(0) trailer = 1
+  <at..int>(4) trailer = sorted_names[0]
+  assembler bappend payload,trailer
+  do i = 1 to sorted_names[0]
+    name_bytes = sorted_names[i] as .binary
+    name_length = 0
+    assembler blen name_length,name_bytes
+    prefix = '0000000000000000'x as .binary
+    <at..int>(0) prefix = name_length
+    assembler bappend payload,prefix
+    assembler bappend payload,name_bytes
+    node = _address_cv_root_node(sorted_values[i])
+    assembler bappend payload,node
+  end
+  return _address_cv_document(_address_cv_node(9, payload))
+
+_address_cv_string_array: procedure = .binary
+  arg items = .string[]
+  payload = '0000000000000000'x as .binary
+  <at..int>(0) payload = items[0]
+  do i = 1 to items[0]
+    node = _address_cv_root_node(_address_cv_string(items[i]))
+    assembler bappend payload,node
+  end
+  return _address_cv_document(_address_cv_node(8, payload))
+
+_address_cv_field: procedure = .binary
+  arg document = .binary, wanted = .string
+  schema_length = <at..int>(28) document
+  fields = <at..int>(40 + schema_length) document
+  offset = 48 + schema_length
+  do i = 1 to fields
+    name_length = <at..int>(offset) document
+    current = <at..string>(offset + 8, name_length) document
+    offset = offset + 8 + name_length
+    node_length = 12 + <at..int>(offset + 4) document
+    if current = wanted then do
+      node = .binary
+      assembler bslice node,document,offset,node_length
+      return _address_cv_document(node)
+    end
+    offset = offset + node_length
+  end
+  call _address_channel_error "RXCV missing field " || wanted, 1
+  return _address_cv_null()
+
+_address_cv_type: procedure = .int
+  arg document = .binary
+  return <at..u8>(16) document
+
+_address_cv_as_integer: procedure = .int
+  arg document = .binary
+  if _address_cv_type(document) <> 3 then do
+    call _address_channel_error "RXCV integer type", 2
+    return 0
+  end
+  return <at..int>(28) document
+
+_address_cv_as_boolean: procedure = .boolean
+  arg document = .binary
+  tag = _address_cv_type(document)
+  if tag <> 1 & tag <> 2 then do
+    call _address_channel_error "RXCV boolean type", 2
+    return 0
+  end
+  return tag = 2
+
+_address_cv_as_binary: procedure = .binary
+  arg document = .binary
+  if _address_cv_type(document) <> 7 then do
+    call _address_channel_error "RXCV binary type", 2
+    empty = .binary
+    return empty
+  end
+  result = .binary
+  start = 28
+  byte_count = <at..int>(20) document
+  assembler bslice result,document,start,byte_count
+  return result
+
+_address_chan_open: procedure = .int
+  arg provider = .int, capabilities = .int, configuration = .binary
+  status = 0
+  handle = 0
+  assembler chanopen status,handle,provider,capabilities,configuration
+  if status <> 0 then call _address_channel_error "chanopen", status
+  return handle
+
+_address_chan_start: procedure = .int
+  arg handle = .int, envelope = .binary, wait_microseconds = .int
+  status = 0
+  ticket = 0
+  assembler chanstart status,ticket,handle,envelope,wait_microseconds
+  if status <> 0 then call _address_channel_error "chanstart", status
+  return ticket
+
+_address_chan_wait: procedure = .binary
+  arg handle = .int, wait_microseconds = .int
+  status = 0
+  completion = .binary
+  assembler chanwait status,completion,handle,wait_microseconds
+  if status = 10 | status = 11 then do
+    empty = .binary
+    return empty
+  end
+  if status <> 0 then call _address_channel_error "chanwait", status
+  return completion
+
+_address_chan_close: procedure = .void
+  arg handle = .int, mode = .int
+  status = 0
+  assembler chanclose status,handle,mode
+  if status <> 0 then call _address_channel_error "chanclose", status
+  return
+
+_address_byte_open: procedure = .int
+  arg direction = .int, capacity = .int
+  names = .string[]
+  values = .binary[]
+  names[1] = "capacity"
+  values[1] = _address_cv_integer(capacity)
+  names[2] = "direction"
+  values[2] = _address_cv_integer(direction)
+  configuration = _address_cv_record("crexx.channel.byte-memory", names, values)
+  return _address_chan_open(4, 127, configuration)
+
+_address_byte_reference: procedure = .binary
+  arg handle = .int, rights = .int
+  names = .string[]
+  values = .binary[]
+  names[1] = "requestedRights"
+  values[1] = _address_cv_integer(rights)
+  names[2] = "requestedScope"
+  values[2] = _address_cv_integer(1)
+  envelope = _address_cv_record("crexx.channel.byte-export-reference", names, values)
+  ticket = _address_chan_start(handle, envelope, -1)
+  completion = _address_chan_wait(handle, -1)
+  state = _address_cv_as_integer(_address_cv_field(completion, "state"))
+  if state <> 1 then call _address_channel_error "byte endpoint export", state
+  return _address_cv_field(completion, "result")
+
+_address_byte_half_close: procedure = .void
+  arg handle = .int, direction = .int
+  names = .string[]
+  values = .binary[]
+  names[1] = "direction"
+  values[1] = _address_cv_integer(direction)
+  envelope = _address_cv_record("crexx.channel.byte-half-close", names, values)
+  ticket = _address_chan_start(handle, envelope, -1)
+  completion = _address_chan_wait(handle, -1)
+  state = _address_cv_as_integer(_address_cv_field(completion, "state"))
+  if state <> 1 then call _address_channel_error "byte endpoint half-close", state
+  return
+
+_address_byte_start_write: procedure = .int
+  arg handle = .int, bytes = .binary
+  names = .string[]
+  values = .binary[]
+  names[1] = "bytes"
+  values[1] = _address_cv_binary(bytes)
+  envelope = _address_cv_record("crexx.channel.byte-write", names, values)
+  return _address_chan_start(handle, envelope, -1)
+
+_address_byte_start_drain: procedure = .int
+  arg handle = .int
+  names = .string[]
+  values = .binary[]
+  names[1] = "maximumBytes"
+  values[1] = _address_cv_integer(16777216)
+  envelope = _address_cv_record("crexx.channel.byte-drain", names, values)
+  return _address_chan_start(handle, envelope, -1)
+
 spawn_request: procedure = .addressresponse
   arg request = .addressrequest, spawn_mode = 0
 
   response = .addressresponse(0)
-  redirect = .binary[6]
-  assembler setattrs redirect,6
-  envs = .string[]
+  env_names = .string[]
+  env_values = .binary[]
   crexx_bindings = .string[]
-  spawn_mode_value = .int
-  slot = .int
+  environment = .binary
   binding_slot = .int
   command = .string
-  stdin_endpoint = .binary
-  stdout_endpoint = .binary
-  stderr_endpoint = .binary
+  stdin_adapter = .addressredirect
+  stdout_adapter = .addressredirect
+  stderr_adapter = .addressredirect
+  stdin_handle = 0
+  stdout_handle = 0
+  stderr_handle = 0
+  child_handle = 0
+  stdout_done = 1
+  stderr_done = 1
 
-  assembler linkattr1 stdin_endpoint,request,8
-  assembler linkattr1 stdout_endpoint,request,9
-  assembler linkattr1 stderr_endpoint,request,7
-  assembler linktoattr1 1,redirect,stdin_endpoint
-  assembler linktoattr1 2,redirect,stdout_endpoint
-  assembler linktoattr1 3,redirect,stderr_endpoint
+  stdin_adapter = request.get_stdin_endpoint()
+  stdout_adapter = request.get_stdout_endpoint()
+  stderr_adapter = request.get_stderr_endpoint()
 
-  assembler linkattr1 envs,redirect,4
-  assembler linkattr1 spawn_mode_value,redirect,5
-  assembler linkattr1 crexx_bindings,redirect,6
-  spawn_mode_value = spawn_mode
-
-  slot = 0
   binding_slot = 0
   do i = 1 to request.get_binding_count()
     binding = .addressbinding
@@ -1579,10 +2036,9 @@ spawn_request: procedure = .addressresponse
     if alias = "" then alias = binding.get_internal_name()
 
     if kind = "VAR" then do
-      slot = slot + 1
-      envs.slot = alias
-      slot = slot + 1
-      envs.slot = binding.get_value()
+      env_slot = env_names[0] + 1
+      env_names[env_slot] = alias
+      env_values[env_slot] = _address_cv_string(binding.get_value())
 
       binding_slot = binding_slot + 1
       crexx_bindings.binding_slot = "VAR"
@@ -1612,14 +2068,133 @@ spawn_request: procedure = .addressresponse
     end
   end
 
-  assembler unlink envs
-  assembler unlink spawn_mode_value
-  assembler unlink crexx_bindings
-
   command = request.get_command()
-  rc = 0
-  assembler spawn rc,command,redirect
 
+  null_value = _address_cv_null()
+  stdin_reference = null_value
+  stdout_reference = null_value
+  stderr_reference = null_value
+
+  if stdin_adapter.has_input() then do
+    input_bytes = stdin_adapter.input_snapshot()
+    input_length = 0
+    assembler blen input_length,input_bytes
+    if input_length > 16777216 then do
+      call _address_channel_error "ADDRESS input exceeds RXCV limit", 8
+      return response
+    end
+    input_capacity = input_length
+    if input_capacity < 1 then input_capacity = 1
+    stdin_handle = _address_byte_open(3, input_capacity)
+    stdin_reference = _address_byte_reference(stdin_handle, 1)
+    write_ticket = _address_byte_start_write(stdin_handle, input_bytes)
+    write_completion = _address_chan_wait(stdin_handle, -1)
+    write_state = _address_cv_as_integer(_address_cv_field(write_completion, "state"))
+    if write_state <> 1 then call _address_channel_error "ADDRESS stdin snapshot", write_state
+    call _address_byte_half_close(stdin_handle, 2)
+  end
+
+  if stdout_adapter.captures_output() then do
+    stdout_handle = _address_byte_open(3, 65536)
+    stdout_reference = _address_byte_reference(stdout_handle, 2)
+    stdout_ticket = _address_byte_start_drain(stdout_handle)
+    stdout_done = 0
+  end
+
+  if stderr_adapter.captures_output() then do
+    stderr_handle = _address_byte_open(3, 65536)
+    stderr_reference = _address_byte_reference(stderr_handle, 2)
+    stderr_ticket = _address_byte_start_drain(stderr_handle)
+    stderr_done = 0
+  end
+
+  child_config_names = .string[]
+  child_config_values = .binary[]
+  child_config_names[1] = "capacity"
+  child_config_values[1] = _address_cv_integer(1)
+  child_configuration = _address_cv_record("crexx.channel.child-process-provider", child_config_names, child_config_values)
+  child_handle = _address_chan_open(5, 255, child_configuration)
+
+  if env_names[0] > 0 then environment = _address_cv_record("crexx.channel.environment", env_names, env_values)
+  else environment = null_value
+  empty_arguments = .string[]
+  child_names = .string[]
+  child_values = .binary[]
+  child_names[1] = "arguments"
+  child_values[1] = _address_cv_string_array(empty_arguments)
+  child_names[2] = "bindings"
+  child_values[2] = _address_cv_string_array(crexx_bindings)
+  child_names[3] = "environment"
+  child_values[3] = environment
+  child_names[4] = "executable"
+  child_values[4] = _address_cv_string(command)
+  child_names[5] = "mode"
+  child_values[5] = _address_cv_integer(spawn_mode)
+  child_names[6] = "stderr"
+  child_values[6] = stderr_reference
+  child_names[7] = "stdin"
+  child_values[7] = stdin_reference
+  child_names[8] = "stdout"
+  child_values[8] = stdout_reference
+  child_names[9] = "workingDirectory"
+  child_values[9] = null_value
+  child_envelope = _address_cv_record("crexx.channel.child-process-start", child_names, child_values)
+  child_ticket = _address_chan_start(child_handle, child_envelope, -1)
+
+  child_done = 0
+  rc = -3
+  do while child_done = 0 | stdout_done = 0 | stderr_done = 0
+    if child_done = 0 then do
+      child_completion = _address_chan_wait(child_handle, 1000)
+      child_completion_length = 0
+      assembler blen child_completion_length,child_completion
+      if child_completion_length > 0 then do
+        child_done = 1
+        child_state = _address_cv_as_integer(_address_cv_field(child_completion, "state"))
+        if child_state = 1 then rc = _address_cv_as_integer(_address_cv_field(child_completion, "result"))
+      end
+    end
+
+    if stdout_done = 0 then do
+      stream_completion = _address_chan_wait(stdout_handle, 0)
+      stream_length = 0
+      assembler blen stream_length,stream_completion
+      if stream_length > 0 then do
+        stream_state = _address_cv_as_integer(_address_cv_field(stream_completion, "state"))
+        if stream_state <> 1 then call _address_channel_error "ADDRESS stdout drain", stream_state
+        stream_bytes = _address_cv_as_binary(_address_cv_field(stream_completion, "result"))
+        call stdout_adapter.append_bytes(stream_bytes)
+        stream_details = _address_cv_field(stream_completion, "details")
+        stdout_done = _address_cv_as_boolean(_address_cv_field(stream_details, "eof"))
+        if stdout_done = 0 then stdout_ticket = _address_byte_start_drain(stdout_handle)
+      end
+    end
+
+    if stderr_done = 0 then do
+      stream_completion = _address_chan_wait(stderr_handle, 0)
+      stream_length = 0
+      assembler blen stream_length,stream_completion
+      if stream_length > 0 then do
+        stream_state = _address_cv_as_integer(_address_cv_field(stream_completion, "state"))
+        if stream_state <> 1 then call _address_channel_error "ADDRESS stderr drain", stream_state
+        call stderr_adapter.append_bytes(_address_cv_as_binary(_address_cv_field(stream_completion, "result")))
+        stream_details = _address_cv_field(stream_completion, "details")
+        stderr_done = _address_cv_as_boolean(_address_cv_field(stream_details, "eof"))
+        if stderr_done = 0 then stderr_ticket = _address_byte_start_drain(stderr_handle)
+      end
+    end
+  end
+
+  call _address_chan_close child_handle,1
+  if stdin_handle <> 0 then call _address_chan_close stdin_handle,1
+  if stdout_handle <> 0 then call _address_chan_close stdout_handle,1
+  if stderr_handle <> 0 then call _address_chan_close stderr_handle,1
+
+  /* Class values are copied at the request/provider boundary. Apply the
+     bytes accumulated by this controller-owned copy to its explicit target
+     references before returning to the outer dispatcher. */
+  call stdout_adapter.finish()
+  call stderr_adapter.finish()
   call response.set_rc(rc)
   return response
 
@@ -1677,35 +2252,26 @@ first_chars: procedure = .string
   if count <= 0 then return ""
   return substr(text, 1, count)
 
-/* Return a no-redirect native endpoint payload */
-_noredir: procedure = .binary
-    handle = .binary
-    return handle
+/* Return an adapter that inherits the normal stream. */
+_noredir: procedure = .addressredirect
+    return .addressredirect.none()
 
-/* Return a native endpoint payload that redirects output to an array */
-_redir2array: procedure = .binary
-    arg expose arr = .string[]
-    handle = .binary
-    assembler redir2arr handle, arr
-    return handle
+/* Return a controller-side output-array adapter. */
+_redir2array: procedure = .addressredirect
+    arg target = reference .string[]
+    return .addressredirect.output_array(target)
 
-/* Return a native endpoint payload that redirects output to a string */
-_redir2string: procedure = .binary
-    arg expose str = .string
-    handle = .binary
-    assembler redir2str handle, str
-    return handle
+/* Return a controller-side output-string adapter. */
+_redir2string: procedure = .addressredirect
+    arg target = reference .string
+    return .addressredirect.output_string(target)
 
-/* Return a native endpoint payload that redirects input from an array */
-_array2redir: procedure = .binary
-    arg expose arr = .string[]
-    handle = .binary
-    assembler arr2redir handle, arr
-    return handle
+/* Snapshot array input before asynchronous I/O begins. */
+_array2redir: procedure = .addressredirect
+    arg source = .string[]
+    return .addressredirect.input_array(source)
 
-/* Return a native endpoint payload that redirects input from a string */
-_string2redir: procedure = .binary
-    arg expose str = .string
-    handle = .binary
-    assembler str2redir handle, str
-    return handle
+/* Snapshot string input before asynchronous I/O begins. */
+_string2redir: procedure = .addressredirect
+    arg source = .string
+    return .addressredirect.input_string(source)

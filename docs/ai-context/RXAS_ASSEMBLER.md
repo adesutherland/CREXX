@@ -1294,3 +1294,61 @@ Network.framework, Security.framework, CoreFoundation.framework, and the system
 trust store for `sockconnecttls`. The OpenSSL backend supports both direct TLS
 connect and true STARTTLS. The SChannel backend uses Windows SChannel/SSPI and
 the Windows trust store, and supports both direct TLS connect and true STARTTLS.
+
+## 7. Core Channel Instructions
+
+Core concurrency and future transport providers use one transport-neutral RXAS
+family. Level B classes must use these instructions;
+there is no parallel RXPA task-start/task-wait ABI and providers do not add
+provider-specific opcodes.
+
+The current public instructions are:
+
+| Opcode | RXAS form | Outputs | Inputs |
+| ---: | --- | --- | --- |
+| `650` | `chanopen rStatus,rChannel,rProviderType,rRequiredCapabilities,rConfiguration` | status, channel | provider type `.int`, capability mask `.int`, canonical RXCV `.binary` |
+| `651` | `chanstart rStatus,rTicket,rChannel,rEnvelope,rWaitMicroseconds` | status, ticket | channel `.int`, RXCV envelope `.binary`, relative wait `.int` |
+| `652` | `chanwait rStatus,rCompletion,rChannel,rWaitMicroseconds` | status, completion | channel `.int`, relative wait `.int` |
+| `653` | `chancancel rStatus,rChannel,rTicket,rReason` | status | channel/ticket `.int`, RXCV reason `.binary` |
+| `654` | `chanclose rStatus,rChannel,rMode` | status | channel `.int`, mode `.int` |
+
+The two-output forms require distinct output registers. Outputs may alias input
+registers because the VM snapshots inputs before writing failure defaults or
+results. A failed operation returns a status and leaves the companion output at
+`0` or empty binary; the instructions have `RXSC_NONE` signal contracts.
+
+All five instructions are initially `FLG_OPT_BARRIER` with classified opaque
+effects. Optimizers must not move, duplicate, fold or remove them. TRACE,
+debugger and profiler identity remains the canonical opcode. The handlers are
+outlined/cold under the current `profile-20` policy.
+
+Any image containing one of these opcodes requires
+`RXBIN007_FEATURE_CHANNELS` (`1 << 3`). RXAS emits it, RXLINK retains the
+validated union, and RXBIN readers reject either a channel opcode without the
+bit or an unsupported feature bit. RXAS/RXDAS round trips preserve the five
+mnemonics and operand order.
+
+`rProviderType` is one mutually exclusive implementation code;
+`rRequiredCapabilities` is a bit mask. Type `0` is invalid; type `1` is the
+core local-thread provider, type `2` is the isolated-process provider, type
+`3` remains the reserved open-host provider, type `4` is the reusable byte
+endpoint and type `5` is the structured child-process provider. Extension
+codes begin at `65536`. Type `1` advertises bounded admission (`0x0001`), cancellation
+(`0x0002`), deadlines (`0x0004`) and completion-order observation (`0x0008`).
+Unknown required bits fail instead of being ignored. A private validated
+registration seam and fake-provider conformance fixture exist; no public
+provider-plugin ABI is implied.
+
+Configuration, envelopes, reasons and completions are canonical versioned RXCV
+documents. The current implementation includes the complete value tree, typed
+task register images, provider-owned deadlines/scopes, Level B classes and
+Level G lowering over sealed task procedure, transferable receiver and
+`.taskwork` factory targets.
+Assembler `.task1`, `.task2` and `.task3` metadata carry an 80-byte binding;
+RXAS resolves its image, callable, signature and adapter identity and RXBIN
+validation rejects malformed or stale bindings. Raw
+channel/ticket integers are execution-local capabilities, not transferable
+values. Concurrent HTTP/TLS is a Level G library consumer, not an opcode or
+provider type. Exact status codes, RXCV layouts and lifecycle rules are in
+[`CREXX_CONCURRENCY.md`](CREXX_CONCURRENCY.md) and the per-instruction
+[RXAS reference](../reference/rxas/instructions/09-io-sockets-processes-and-time.md).

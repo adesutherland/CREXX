@@ -40,6 +40,7 @@
 #include "crexx_version.h"
 #include <assert.h>
 #include <signal.h>
+#include <stdatomic.h>
 #include <stdint.h>
 
 typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
@@ -84,6 +85,10 @@ typedef struct rxvm_graph_binding {
     size_t factory_count;
     rxvm_graph_provider_binding *provider_bindings;
     size_t provider_count;
+    /* Lazily computed by the owning executor worker on its first sealed-task
+     * miss. The graph is immutable for the lifetime of this binding. */
+    unsigned char task_graph_digest[32];
+    unsigned char task_graph_digest_valid;
 } rxvm_graph_binding;
 
 #define RXVM_METHOD_CACHE_WAYS 2u
@@ -599,6 +604,7 @@ typedef struct rxvm_context {
     rxpa_session_instance *rxpa_sessions;
     rxpa_session_call_binding *rxpa_session_bindings;
     rxpa_compatibility_context rxpa_compatibility;
+    struct rxvm_channel_context *channel_context;
 #ifdef CREXX_VM_PROFILING
     /* Keep optional build-local fields last so existing field offsets stay stable. */
     char profile_mode;
@@ -672,9 +678,23 @@ RX_INLINE void rxvm_call_native_procedure(proc_runtime *procedure, int args,
 
 /* Private structure for output to string thread */
 typedef struct redirect REDIRECT;
+struct rxvm_byte_endpoint;
 
 /* Resolve an internal native-payload redirect endpoint value. */
 REDIRECT *rxspawn_redirect_from_value(value *redirect_reg);
+
+/* Private reusable child-I/O adapters. Their background owners retain only a
+ * C byte endpoint plus copied bytes; they never retain a live Rexx value. */
+REDIRECT *rxspawn_redirect_from_byte_endpoint(
+        struct rxvm_byte_endpoint *endpoint,
+        const atomic_uchar *cancelled);
+REDIRECT *rxspawn_redirect_to_byte_endpoint(
+        struct rxvm_byte_endpoint *endpoint,
+        const atomic_uchar *cancelled);
+int rxspawn_redirect_byte_endpoint_destroy(REDIRECT *redirect);
+int rxspawn_redirect_write_close(REDIRECT *redirect,
+                                 const char *data,
+                                 size_t length);
 
 /* Get Environment Value
  * Sets value (null terminated) (and a handle) from env variable name length name_length (not null terminated)
@@ -707,6 +727,53 @@ int shellspawn(const char *command,
                int mode,
                int *rc,
                char **errorText);
+
+int shellspawn_snapshot(const char *command,
+                        REDIRECT *pIn,
+                        REDIRECT *pOut,
+                        REDIRECT *pErr,
+                        const char *working_directory,
+                        const char *const *environment,
+                        int mode,
+                        int64_t wait_microseconds,
+                        const atomic_uchar *cancelled,
+                        atomic_uchar *input_stopped,
+                        atomic_uchar *output_stopped,
+                        int *termination_reason,
+                        int *rc,
+                        char **errorText);
+
+int shellspawn_snapshot_bindings(const char *command,
+                                 REDIRECT *pIn,
+                                 REDIRECT *pOut,
+                                 REDIRECT *pErr,
+                                 const char *working_directory,
+                                 const char *const *environment,
+                                 const char *const *crexx_bindings,
+                                 size_t crexx_binding_count,
+                                 int mode,
+                                 int64_t wait_microseconds,
+                                 const atomic_uchar *cancelled,
+                                 atomic_uchar *input_stopped,
+                                 atomic_uchar *output_stopped,
+                                 int *termination_reason,
+                                 int *rc,
+                                 char **errorText);
+
+int shellspawn_argv_snapshot(const char *const *argv,
+                             int argc,
+                             REDIRECT *pIn,
+                             REDIRECT *pOut,
+                             REDIRECT *pErr,
+                             const char *working_directory,
+                             const char *const *environment,
+                             int64_t wait_microseconds,
+                             const atomic_uchar *cancelled,
+                             atomic_uchar *input_stopped,
+                             atomic_uchar *output_stopped,
+                             int *termination_reason,
+                             int *rc,
+                             char **errorText);
 
 // SPAWN Error codes
 #define SHELLSPAWN_OK         0

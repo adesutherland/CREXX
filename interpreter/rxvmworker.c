@@ -51,6 +51,8 @@ struct rxvm_runtime {
     size_t worker_count;
     void *program_state;
     rxvm_runtime_program_state_destroyer program_state_destroyer;
+    void *channel_state;
+    rxvm_runtime_channel_state_destroyer channel_state_destroyer;
     rxvm_runtime_mutex mutex;
 };
 
@@ -77,6 +79,8 @@ size_t rxvm_runtime_destroy(rxvm_runtime *runtime) {
     size_t leaks;
     void *program_state;
     rxvm_runtime_program_state_destroyer program_state_destroyer;
+    void *channel_state;
+    rxvm_runtime_channel_state_destroyer channel_state_destroyer;
     if (!runtime) return 0;
     rxvm_runtime_mutex_lock(&runtime->mutex);
     if (runtime->worker_count != 0u) {
@@ -85,9 +89,14 @@ size_t rxvm_runtime_destroy(rxvm_runtime *runtime) {
     }
     program_state = runtime->program_state;
     program_state_destroyer = runtime->program_state_destroyer;
+    channel_state = runtime->channel_state;
+    channel_state_destroyer = runtime->channel_state_destroyer;
     runtime->program_state = 0;
     runtime->program_state_destroyer = 0;
+    runtime->channel_state = 0;
+    runtime->channel_state_destroyer = 0;
     rxvm_runtime_mutex_unlock(&runtime->mutex);
+    if (channel_state_destroyer) channel_state_destroyer(channel_state);
     if (program_state_destroyer) program_state_destroyer(program_state);
     leaks = rxvm_memory_context_destroy(runtime->memory_context);
     runtime->memory_context = 0;
@@ -128,6 +137,31 @@ int rxvm_runtime_install_program_state(
     if (!runtime->program_state) {
         runtime->program_state = state;
         runtime->program_state_destroyer = destroyer;
+        installed = 1;
+    }
+    rxvm_runtime_mutex_unlock(&runtime->mutex);
+    return installed;
+}
+
+void *rxvm_runtime_channel_state(rxvm_runtime *runtime) {
+    void *state;
+    if (!runtime) return 0;
+    rxvm_runtime_mutex_lock(&runtime->mutex);
+    state = runtime->channel_state;
+    rxvm_runtime_mutex_unlock(&runtime->mutex);
+    return state;
+}
+
+int rxvm_runtime_install_channel_state(
+        rxvm_runtime *runtime,
+        void *state,
+        rxvm_runtime_channel_state_destroyer destroyer) {
+    int installed = 0;
+    if (!runtime || !state || !destroyer) return 0;
+    rxvm_runtime_mutex_lock(&runtime->mutex);
+    if (!runtime->channel_state) {
+        runtime->channel_state = state;
+        runtime->channel_state_destroyer = destroyer;
         installed = 1;
     }
     rxvm_runtime_mutex_unlock(&runtime->mutex);

@@ -1,6 +1,6 @@
 options levelb
 
-namespace e5worker expose add get identity spin churn loop_forever recurse_forever native_then_complete
+namespace e5worker expose add get identity fail spin churn loop_forever recurse_forever native_then_complete
 import e5native
 
 add: procedure = .int expose state
@@ -14,6 +14,10 @@ get: procedure = .int expose state
 identity: procedure = .int
   arg number = .string
   return number + 0
+
+fail: procedure = .int
+  assembler signal "INVALID_ARGUMENTS", "persistent executor failure fixture"
+  return 0
 
 spin: procedure = .int
   arg iterations = .string

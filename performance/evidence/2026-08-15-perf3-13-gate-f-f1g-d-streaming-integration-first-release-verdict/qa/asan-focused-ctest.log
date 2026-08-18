@@ -1,0 +1,110 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(gate_f_\(levelg\|taskwork_import\|task_method_import\)_\(rxbvm\|rxtvm\)_\(noopt\|opt\)\|testConcurrency_\(noopt\|opt\)\|ts_http_\(pooled\|streaming\|crexx_rag\|codec\|policy\|tls_live\)_\(rxbvm\|rxtvm\)_\(noopt\|opt\)\)\$ --parallel 8
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/39 Test    #1: linked_opt_runtime_artifacts_build ......   Passed   37.19 sec
+      Start  515: gate_f_task_method_import_rxtvm_opt
+      Start 1698: ts_http_streaming_rxbvm_opt
+      Start 1702: ts_http_crexx_rag_rxbvm_opt
+      Start 1697: ts_http_streaming_rxbvm_noopt
+      Start 1700: ts_http_streaming_rxtvm_opt
+      Start 1704: ts_http_crexx_rag_rxtvm_opt
+      Start 1699: ts_http_streaming_rxtvm_noopt
+      Start 1703: ts_http_crexx_rag_rxtvm_noopt
+ 2/39 Test #1699: ts_http_streaming_rxtvm_noopt ...........   Passed    2.93 sec
+      Start 1701: ts_http_crexx_rag_rxbvm_noopt
+ 3/39 Test #1703: ts_http_crexx_rag_rxtvm_noopt ...........   Passed    2.93 sec
+      Start 1711: ts_http_policy_rxtvm_noopt
+ 4/39 Test #1700: ts_http_streaming_rxtvm_opt .............   Passed    2.94 sec
+ 5/39 Test #1704: ts_http_crexx_rag_rxtvm_opt .............   Passed    2.94 sec
+      Start 1709: ts_http_policy_rxbvm_noopt
+      Start 1712: ts_http_policy_rxtvm_opt
+ 6/39 Test #1698: ts_http_streaming_rxbvm_opt .............   Passed    3.34 sec
+      Start 1710: ts_http_policy_rxbvm_opt
+ 7/39 Test #1697: ts_http_streaming_rxbvm_noopt ...........   Passed    3.35 sec
+      Start 1713: ts_http_codec_rxbvm_noopt
+ 8/39 Test #1702: ts_http_crexx_rag_rxbvm_opt .............   Passed    3.38 sec
+      Start 1715: ts_http_codec_rxtvm_noopt
+ 9/39 Test #1713: ts_http_codec_rxbvm_noopt ...............   Passed    1.87 sec
+      Start 1680: testConcurrency_noopt
+10/39 Test #1715: ts_http_codec_rxtvm_noopt ...............   Passed    1.86 sec
+      Start 1696: ts_http_pooled_rxtvm_opt
+11/39 Test #1701: ts_http_crexx_rag_rxbvm_noopt ...........   Passed    2.97 sec
+      Start 1693: ts_http_pooled_rxbvm_noopt
+12/39 Test #1711: ts_http_policy_rxtvm_noopt ..............   Passed    4.83 sec
+      Start 1695: ts_http_pooled_rxtvm_noopt
+13/39 Test #1712: ts_http_policy_rxtvm_opt ................   Passed    4.84 sec
+      Start 1694: ts_http_pooled_rxbvm_opt
+14/39 Test #1709: ts_http_policy_rxbvm_noopt ..............   Passed    4.89 sec
+      Start 1708: ts_http_tls_live_rxtvm_opt
+15/39 Test #1696: ts_http_pooled_rxtvm_opt ................   Passed    2.77 sec
+      Start 1707: ts_http_tls_live_rxtvm_noopt
+16/39 Test #1710: ts_http_policy_rxbvm_opt ................   Passed    4.79 sec
+      Start 1706: ts_http_tls_live_rxbvm_opt
+17/39 Test #1693: ts_http_pooled_rxbvm_noopt ..............   Passed    2.76 sec
+      Start 1705: ts_http_tls_live_rxbvm_noopt
+18/39 Test #1708: ts_http_tls_live_rxtvm_opt ..............   Passed    2.25 sec
+      Start 1716: ts_http_codec_rxtvm_opt
+19/39 Test #1707: ts_http_tls_live_rxtvm_noopt ............   Passed    2.24 sec
+      Start 1714: ts_http_codec_rxbvm_opt
+20/39 Test #1706: ts_http_tls_live_rxbvm_opt ..............   Passed    2.25 sec
+      Start 1681: testConcurrency_opt
+21/39 Test #1695: ts_http_pooled_rxtvm_noopt ..............   Passed    2.83 sec
+22/39 Test #1716: ts_http_codec_rxtvm_opt .................   Passed    0.53 sec
+23/39 Test #1694: ts_http_pooled_rxbvm_opt ................   Passed    2.84 sec
+24/39 Test #1714: ts_http_codec_rxbvm_opt .................   Passed    0.51 sec
+25/39 Test #1705: ts_http_tls_live_rxbvm_noopt ............   Passed    2.23 sec
+26/39 Test #1680: testConcurrency_noopt ...................   Passed    7.04 sec
+27/39 Test #1681: testConcurrency_opt .....................   Passed    1.94 sec
+28/39 Test  #515: gate_f_task_method_import_rxtvm_opt .....   Passed   17.56 sec
+      Start  513: gate_f_task_method_import_rxbvm_opt
+29/39 Test  #513: gate_f_task_method_import_rxbvm_opt .....   Passed   12.61 sec
+      Start  512: gate_f_task_method_import_rxbvm_noopt
+30/39 Test  #512: gate_f_task_method_import_rxbvm_noopt ...   Passed   12.15 sec
+      Start  514: gate_f_task_method_import_rxtvm_noopt
+31/39 Test  #514: gate_f_task_method_import_rxtvm_noopt ...   Passed   12.17 sec
+      Start  511: gate_f_levelg_rxtvm_opt
+32/39 Test  #511: gate_f_levelg_rxtvm_opt .................   Passed    9.03 sec
+      Start  509: gate_f_levelg_rxbvm_opt
+33/39 Test  #509: gate_f_levelg_rxbvm_opt .................   Passed    9.04 sec
+      Start  510: gate_f_levelg_rxtvm_noopt
+34/39 Test  #510: gate_f_levelg_rxtvm_noopt ...............   Passed    8.27 sec
+      Start  508: gate_f_levelg_rxbvm_noopt
+35/39 Test  #508: gate_f_levelg_rxbvm_noopt ...............   Passed    8.32 sec
+      Start  517: gate_f_taskwork_import_rxbvm_opt
+36/39 Test  #517: gate_f_taskwork_import_rxbvm_opt ........   Passed    7.51 sec
+      Start  519: gate_f_taskwork_import_rxtvm_opt
+37/39 Test  #519: gate_f_taskwork_import_rxtvm_opt ........   Passed    7.54 sec
+      Start  516: gate_f_taskwork_import_rxbvm_noopt
+38/39 Test  #516: gate_f_taskwork_import_rxbvm_noopt ......   Passed    7.44 sec
+      Start  518: gate_f_taskwork_import_rxtvm_noopt
+39/39 Test  #518: gate_f_taskwork_import_rxtvm_noopt ......   Passed    7.47 sec
+
+100% tests passed, 0 tests failed out of 39
+
+Label Time Summary:
+compiler       = 119.11 sec*proc (12 tests)
+compression    =  16.99 sec*proc (8 tests)
+concurrency    = 119.11 sec*proc (12 tests)
+crexx_rag      =  12.22 sec*proc (4 tests)
+f1f            = 119.11 sec*proc (12 tests)
+f1g            =  69.07 sec*proc (24 tests)
+gate_f         = 188.18 sec*proc (36 tests)
+http           =  69.07 sec*proc (24 tests)
+import         =  84.44 sec*proc (8 tests)
+levelg         = 188.18 sec*proc (36 tests)
+library        =  69.07 sec*proc (24 tests)
+linked         = 151.07 sec*proc (22 tests)
+linked_opt     =  35.33 sec*proc (13 tests)
+method         =  54.48 sec*proc (4 tests)
+noopt          =  55.82 sec*proc (6 tests)
+opt            =  63.28 sec*proc (6 tests)
+policy         =  19.36 sec*proc (4 tests)
+rxbvm          =  92.26 sec*proc (18 tests)
+rxtvm          =  95.92 sec*proc (18 tests)
+streaming      =  12.55 sec*proc (4 tests)
+taskwork       =  29.96 sec*proc (4 tests)
+tls            =   8.98 sec*proc (4 tests)
+
+Total Test time (real) = 156.34 sec

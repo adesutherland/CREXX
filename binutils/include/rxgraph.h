@@ -34,6 +34,7 @@ extern "C" {
 
 #define RX_GRAPH_NONE UINT32_MAX
 #define RX_GRAPH_SERIAL_VERSION 1u
+#define RX_GRAPH_TASK_BINDING_SIZE 80u
 
 typedef uint32_t RxGraphId;
 typedef uint32_t RxMemberId;
@@ -303,6 +304,25 @@ RxCallableId rx_graph_find_callable(const RxGraph *graph, const char *symbol);
 int rx_graph_callable(const RxGraph *graph,
                       RxCallableId callable,
                       RxGraphCallableView *view);
+int rx_graph_digest(const RxGraph *graph, unsigned char digest[32]);
+int rx_graph_task_binding(const RxGraph *graph,
+                          const char *symbol,
+                          unsigned int kind,
+                          unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE]);
+int rx_graph_task_binding_validate(
+        const RxGraph *graph,
+        const unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE],
+        RxCallableId *callable_out,
+        unsigned int *kind_out);
+/* Validate against a digest already computed from GRAPH. This is the
+ * worker-local cache seam; callers must not accept an externally supplied
+ * digest as authoritative. */
+int rx_graph_task_binding_validate_digest(
+        const RxGraph *graph,
+        const unsigned char graph_digest[32],
+        const unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE],
+        RxCallableId *callable_out,
+        unsigned int *kind_out);
 RxFactoryId rx_graph_find_factory(const RxGraph *graph,
                                   RxGraphId interface_type,
                                   RxMemberId member);

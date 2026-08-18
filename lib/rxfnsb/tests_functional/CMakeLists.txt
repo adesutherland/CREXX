@@ -6,6 +6,7 @@ enable_testing()
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 
 set(REXXBINS
         tlinesz.rxbin
@@ -137,7 +138,6 @@ set(REXXBINS
         ts_rxjson_noisy_contract.rxbin
         ts_rxsocket.rxbin
         ts_socket_tls_live.rxbin
-        ts_rxhttp.rxbin
         ts_afterword.rxbin
 )
 
@@ -357,6 +357,14 @@ foreach(_ef0_runner IN LISTS _ef0_concrete_runners)
     endforeach()
 endforeach()
 
+crexx_label_concurrency_tests(SP04
+        ts_address_array_lifecycle_noopt
+        ts_address_array_lifecycle_opt
+        ts_address_array_lifecycle_rxbvm_noopt
+        ts_address_array_lifecycle_rxbvm_opt
+        ${_ef0_spawn_transfer_tests})
+crexx_label_concurrency_tests(SP08 ${_ef0_spawn_transfer_tests})
+
 # Run each caught-signal sequence in one VM so the harnesses verify that call
 # unwind preserves exposed arrays and object receivers across repeated errors.
 add_custom_target(ts_arraysort_errors)
@@ -411,8 +419,6 @@ set_tests_properties(ts_rxsocket_noopt ts_rxsocket_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxsocket loopback")
 set_tests_properties(ts_socket_tls_live_noopt ts_socket_tls_live_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxsocket TLS live smoke")
-set_tests_properties(ts_rxhttp_noopt ts_rxhttp_opt
-        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxhttp helpers")
 set_tests_properties(ts_trace_noopt ts_trace_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: trace helpers")
 set_tests_properties(ts_version_noopt ts_version_opt

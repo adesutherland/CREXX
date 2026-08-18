@@ -1,0 +1,36 @@
+PERF3-13 Gate F F1g-C closeout
+Date: 2026-08-15
+
+Implemented:
+- .httpheaders exact-transfer builder with canonical receiver-side validation,
+  CR/LF injection defence and library-owned authority/framing fields
+- .httppolicy bounded timeout, header, request and replay configuration with
+  failure-atomic updates
+- post(path, body, headers), replacing the provisional content-type argument
+- verified HTTPS, same-origin 307/308, idempotency-key replay restrictions,
+  attempts/redirects/ambiguity response history and explicit cross-origin/
+  method-rewrite refusal
+- bounded request target/header/body and response header/body/encoded storage,
+  early EOF, bodyless 204/304 and compressed-response refusal
+- socket receive correction for positive timeout/EOF/would-block statuses
+
+QA:
+- all optimized/unoptimized rxbvm/rxtvm HTTP and socket cells pass in Debug,
+  ordinary Release and focused Apple AddressSanitizer
+- live certificate/hostname verification passes in all four Release and all
+  four sanitizer cells
+- the seven-scenario loopback policy fixture survives 100 repeats in each cell
+- complete Debug passes 2,163/2,163 and focused Release Gate F passes 50/50
+- the mandatory ordinary single-thread Release verdict is guard-clean
+
+Toolchain learning:
+- a proposed block-scoped signal assertion was correctly rejected because that
+  syntax is Level-B-only under the Level G language option; the test was removed
+  rather than weakening the language gate
+- library qualification rebuilt and exercised rxc, rxas, rxlink and both VM
+  engines as required
+
+Deferred to F1g-D:
+- explicit request and response byte-endpoint streaming APIs
+- bounded compressed response decoding
+- concurrent crexx-rag generation/embedding integration fixture

@@ -1,0 +1,12 @@
+Test project C:/crexx-qa/windows-gcc-2b793c81e-build
+  Test    #1: linked_opt_runtime_artifacts_build
+  Test  #506: gate_f_levelb_contract
+  Test #1658: gate_f_levelb_bridge_inspection
+  Test #1696: testConcurrency_noopt
+  Test #1697: testConcurrency_opt
+  Test #1720: testTaskContextEndpoint_rxbvm_noopt
+  Test #1721: testTaskContextEndpoint_rxbvm_opt
+  Test #1722: testTaskContextEndpoint_rxtvm_noopt
+  Test #1723: testTaskContextEndpoint_rxtvm_opt
+
+Total Tests: 9

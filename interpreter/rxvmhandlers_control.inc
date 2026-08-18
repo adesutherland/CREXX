@@ -846,6 +846,10 @@ RXVM_HANDLER(METALOADDATA_REG_REG_REG, VM_ADVANCE(3);
                             x = (rxinteger) ((meta_inline_constant *) (pool + i))->payload;
                             set_const_string(op1R->attributes[j]->attributes[1], (string_constant *) (pool + x));
                             break;
+                        case META_TASK_TARGET:
+                            /* Compiler/linker relocation metadata is consumed
+                             * before execution and has no source reflection. */
+                            break;
                         case STRING_CONST:
                         case FLOAT_CONST:
                         case PROC_CONST:

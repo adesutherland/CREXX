@@ -447,6 +447,8 @@ walker_result pdot_walker_handler(walker_direction direction,
             case UPPER:
             case PARSE:
             case BLOCK_EXPR:
+            case PARALLEL_DO:
+            case PARALLEL_BLOCK_EXPR:
                 attributes = "color=green4";
                 only_type = 1;
                 break;
@@ -458,6 +460,8 @@ walker_result pdot_walker_handler(walker_direction direction,
             case FUNCTION:
             case FUNC_SYMBOL:
             case PROCEDURE:
+            case TASK_DECL:
+            case TASK_TARGET:
                 attributes = "color=pink";
                 break;
 

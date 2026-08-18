@@ -1599,6 +1599,7 @@ static int is_meta_constant_type(enum const_pool_type type) {
         case META_IMPLEMENTS:
         case META_MEMBER:
         case META_INLINE:
+        case META_TASK_TARGET:
             return 1;
         default:
             return 0;
@@ -1785,6 +1786,21 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
             meta->payload = payload;
             return *ok;
         }
+        case META_TASK_TARGET: {
+            meta_task_target_constant *source = (meta_task_target_constant *)entry;
+            size_t symbol = link_constant_offset(context, output_module, input_module,
+                                                 source->symbol, ok);
+            size_t binding = link_constant_offset(context, output_module, input_module,
+                                                  source->binding, ok);
+            meta_task_target_constant *meta =
+                (meta_task_target_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->binding = binding;
+            meta->kind = source->kind;
+            return *ok;
+        }
         default:
             *ok = 0;
             return 0;
@@ -1938,7 +1954,8 @@ static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_
         case META_INTERFACE:
         case META_IMPLEMENTS:
         case META_MEMBER:
-        case META_INLINE: {
+        case META_INLINE:
+        case META_TASK_TARGET: {
             meta_entry *meta = (meta_entry *)entry;
             int prev = link_constant_offset_int(context, output_module, input_module, meta->prev, ok);
             int next = link_constant_offset_int(context, output_module, input_module, meta->next, ok);

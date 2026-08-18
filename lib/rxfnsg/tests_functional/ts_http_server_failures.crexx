@@ -1,0 +1,86 @@
+/* Negative handler-path proof for the bounded Level G HTTP server. */
+options levelg
+
+import rxfnsb
+import concurrency
+import rxfnsg
+
+failure_client: class implements .taskwork
+  _client = .channelvalue
+
+  *: factory
+    arg client = .channelvalue
+    _client = client
+    return
+
+  run: method = .channelvalue
+    arg ignored = .channelvalue, context = .taskcontext
+    client = .httpclient.from_channel(_client)
+    response = client.get("/failure", .httpheaders.empty())
+    call client.close()
+    return response.to_channel()
+
+oversize_service: class implements .httpservice .taskwork
+  *: factory
+    return
+
+  handle: method = .httpresponse
+    arg request = .httprequest, context = .taskcontext
+    return .httpresponse.text(200, copies("x", 64))
+
+  run: method = .channelvalue
+    arg encoded = .channelvalue, context = .taskcontext
+    service = self as .httpservice
+    return service.dispatch(encoded, context)
+
+failing_service: class implements .httpservice .taskwork
+  *: factory
+    return
+
+  handle: method = .httpresponse
+    arg request = .httprequest, context = .taskcontext
+    call raise "HTTP_TEST_FAILURE", "expected handler failure", ""
+    return .httpresponse.text(500, "unreachable")
+
+  run: method = .channelvalue
+    arg encoded = .channelvalue, context = .taskcontext
+    service = self as .httpservice
+    return service.dispatch(encoded, context)
+
+run_case: procedure = .int
+  arg target = .tasktarget, body_limit = .int, handler_timeout = .int, expected_status = .int
+  server = .httpserver.local("127.0.0.1", 0, 1, 2, 2, 4096, 16, body_limit, handler_timeout, 1000)
+  policy = .httppolicy.safe()
+  call policy.set_timeouts(1000, 1000, 1000, 2000, 2000, 5000)
+  client = .httpclient.pooled("http://127.0.0.1:" || server.port(), 1, 2, 1024, policy)
+  pool = .taskpool.local(1, 2)
+  scope = .taskscope.collectall(pool, 10000)
+  child = scope.submit(task .failure_client(client.to_channel()), .channelvalue.null_value())
+  served = server.serve(target, 1)
+  completion = child.wait(-1)
+  errors = 0
+  if served <> 1 | completion.succeeded() = 0 then errors = errors + 1
+  else do
+    response = .httpresponse.from_channel(completion.value())
+    if response.status() <> expected_status then do
+      say "FAIL: expected HTTP status" expected_status "but received" response.status()
+      errors = errors + 1
+    end
+  end
+  call scope.finish()
+  call pool.close()
+  call client.close()
+  call server.close()
+  return errors
+
+main: procedure = .int
+  errors = run_case(task .oversize_service(), 8, 2000, 500)
+  errors = errors + run_case(task .failing_service(), 1024, 100, 500)
+  if errors > 0 then do
+    say "FAIL: Level G HTTP handler failure cases" errors
+    return 1
+  end
+  say "PASS: Level G HTTP server bounds unusable and failed handlers"
+  return 0
+
+exit main()

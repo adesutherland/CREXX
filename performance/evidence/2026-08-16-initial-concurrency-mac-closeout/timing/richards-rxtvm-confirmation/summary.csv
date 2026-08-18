@@ -1,0 +1,3 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+richards-rxtvm-control,Richards,crexx,rxtvm,feature-freeze,A,no,startup-included,20,elapsed_ns,12,2096370000.000000,2178735250.000000,2194969000.000000,2258991500.000000,2335328000.000000,35196500.000000,1.603508,10.886623,yes
+richards-rxtvm-candidate,Richards,crexx,rxtvm,qa-candidate,A,no,startup-included,20,elapsed_ns,12,2099077000.000000,2134281500.000000,2170034500.000000,2190578250.000000,2416206000.000000,35952500.000000,1.656771,14.614007,yes

@@ -1,0 +1,20 @@
+options levelb
+import rxfnsb
+
+namespace gate_f_signal_names
+
+main: procedure = .int
+  caught = 0
+  do
+    assembler signal "CHANNEL_ERROR","channel fixture"
+  on signal channel_error as channel_problem
+    if channel_problem.name() = "CHANNEL_ERROR" & channel_problem.code() = 26 then caught = caught + 1
+  end
+  do
+    assembler signal "TASK_FAILURE","task fixture"
+  on signal task_failure as task_problem
+    if task_problem.name() = "TASK_FAILURE" & task_problem.code() = 27 then caught = caught + 1
+  end
+  if caught <> 2 then return 1
+  say "PASS: Gate F signal names"
+  return 0

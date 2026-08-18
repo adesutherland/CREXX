@@ -1,0 +1,27 @@
+options levelb
+
+main: procedure = .int
+  document = wrap_document(wrap_node('aabb'x as .binary))
+  length = 0
+  assembler blen length,document
+
+  if length <> 4 then return 1
+  if <at..u8>(0) document <> 68 then return 2
+  if <at..u8>(1) document <> 78 then return 3
+  if <at..u8>(2) document <> 170 then return 4
+  if <at..u8>(3) document <> 187 then return 5
+
+  say "Nested binary inline owner test finished."
+  return 0
+
+wrap_node: procedure = .binary
+  arg payload = .binary
+  result = '4e'x as .binary
+  assembler bappend result,payload
+  return result
+
+wrap_document: procedure = .binary
+  arg node = .binary
+  result = '44'x as .binary
+  assembler bappend result,node
+  return result

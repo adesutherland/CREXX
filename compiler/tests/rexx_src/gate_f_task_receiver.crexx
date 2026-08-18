@@ -1,0 +1,14 @@
+options levelg
+namespace gate_f_task_receiver
+
+main: procedure = .int
+  worker = .workbox()
+  return worker.increment(1)
+
+workbox: class
+  *: factory
+    return
+
+  increment: task = .int
+    arg value = .int
+    return value + 1

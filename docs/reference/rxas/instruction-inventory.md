@@ -2,8 +2,8 @@
 
 This inventory is for coverage validation. Every mnemonic from `rxas -i` should appear exactly once with its current primary skeleton section.
 
-- Unique mnemonics: 379
-- Opcode/form rows: 585
+- Unique mnemonics: 378
+- Opcode/form rows: 584
 
 ## Section Counts
 
@@ -16,8 +16,8 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md) | 46 |
 | [Strings And Characters](instructions/06-strings-and-characters.md) | 31 |
 | [Binary Memory](instructions/07-binary-memory.md) | 41 |
-| [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md) | 41 |
-| [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md) | 44 |
+| [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md) | 36 |
+| [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md) | 48 |
 | [Signals, Breakpoints, And Runtime](instructions/10-signals-breakpoints-and-runtime.md) | 19 |
 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md) | 23 |
 | [Large And Fused Instructions](instructions/12-large-instructions.md) | 29 |
@@ -31,7 +31,6 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `and` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#and) |
 | `append` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#append) |
 | `appendchar` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#appendchar) |
-| `arr2redir` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#arr2redir) |
 | `assertinitialized` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#assertinitialized) |
 | `asserttype` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#asserttype) |
 | `bappend` | 1 | [Binary Memory](instructions/07-binary-memory.md#bappend) |
@@ -98,6 +97,11 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `call2` | 1 | [Program Control And Calls](instructions/01-program-control.md#call2) |
 | `call3` | 1 | [Program Control And Calls](instructions/01-program-control.md#call3) |
 | `call4` | 1 | [Program Control And Calls](instructions/01-program-control.md#call4) |
+| `chancancel` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#chancancel) |
+| `chanclose` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#chanclose) |
+| `chanopen` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#chanopen) |
+| `chanstart` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#chanstart) |
+| `chanwait` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#chanwait) |
 | `cnop` | 2 | [Program Control And Calls](instructions/01-program-control.md#cnop) |
 | `concat` | 3 | [Strings And Characters](instructions/06-strings-and-characters.md#concat) |
 | `concchar` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#concchar) |
@@ -272,7 +276,6 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `not` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#not) |
 | `null` | 1 | [Data Movement And Conversion](instructions/02-data-movement-and-conversion.md#null) |
 | `nulln` | 3 | [Large And Fused Instructions](instructions/12-large-instructions.md#nulln) |
-| `nullredir` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#nullredir) |
 | `numeng` | 1 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#numeng) |
 | `numsci` | 1 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#numsci) |
 | `or` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#or) |
@@ -283,8 +286,6 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `parsewords3d` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#parsewords3d) |
 | `poschar` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#poschar) |
 | `readline` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#readline) |
-| `redir2arr` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#redir2arr) |
-| `redir2str` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#redir2str) |
 | `refvalid` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#refvalid) |
 | `req` | 3 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#req) |
 | `ret` | 5 | [Program Control And Calls](instructions/01-program-control.md#ret) |
@@ -363,7 +364,6 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `sockstarttls` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#sockstarttls) |
 | `sockstatus` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#sockstatus) |
 | `socktimeout` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#socktimeout) |
-| `spawn` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#spawn) |
 | `srcfprocsel` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#srcfprocsel) |
 | `srcmethodsel` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#srcmethodsel) |
 | `stob` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#stob) |
@@ -380,7 +380,6 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `stemset2` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#stemset2) |
 | `stemsize` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#stemsize) |
 | `stemvalueat` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#stemvalueat) |
-| `str2redir` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#str2redir) |
 | `strchar` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#strchar) |
 | `strlen` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#strlen) |
 | `strlower` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#strlower) |

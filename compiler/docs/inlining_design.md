@@ -37,6 +37,14 @@ but keep explicit rewrite strategies for each parent-expression or statement
 bucket. Future work should improve the clarity and test coverage of those
 buckets rather than attempting one fully generic splice operation.
 
+The fail-closed rule applies to mathematical or semantic uncertainty, not to
+an implementation defect in an already supported bucket. If an accepted
+inlined shape misbinds a scope, loses an assignment, changes evaluation order,
+or emits an invalid register, repair the cloned/bound shape and add opt/no-opt
+equivalence coverage. Do not make that shape silently stay as a call merely to
+avoid the defect. A call site should remain uninlined only when the compiler
+cannot yet prove that its rewrite preserves the ordinary call semantics.
+
 ### Supported scenarios
 
 The currently supported scenarios are:
@@ -351,6 +359,12 @@ Implemented behaviour:
   `§this` binding and final writeback.
 - Method and factory call actuals that read caller attributes are captured in the caller scope before the callee's `§this` or `§factory` scope is introduced. For methods, the receiver is captured first when this path is needed; factory bodies then get that `§factory` object initialized with the owning class's attribute count and concrete object type before the cloned factory body executes.
 - Cloned `BLOCK_EXPR` and compiler-generated block associations are preserved so nested inline scopes continue to resolve `§this`, `§factory`, and `LEAVE_WITH` targets correctly.
+- Whole-RHS calls assigned to aggregate or binary class attributes retain
+  their inlined body. Their result is routed through the ordinary assignment
+  emitter rather than the local-register copy shortcut, so the generated RXAS
+  includes the receiver-slot `linkattr`/copy/unlink sequence. The
+  `inline_test_binary_class_attr_assign` regression locks both the optimized
+  shape and optimized/unoptimized execution.
 
 Remaining guardrail:
 

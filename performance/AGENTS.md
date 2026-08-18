@@ -168,6 +168,15 @@ is reviewed:
    further time completing an implementation whose design has not survived its
    first Release performance gate.
 
+An explicit unattended or overnight continuation direction from Adrian may
+replace the interactive pause for the named sequence of slices. In that case,
+rerun an adverse or noisy targeted verdict once without changing the candidate
+or measurement shape. If the result is confirmed, retain both runs, record the
+slowdown and the changed binary/code shape most likely responsible, apply any
+standing disposition Adrian supplied, and continue with the required QA and
+next slice. This exception does not weaken the default interactive stop and
+does not authorize redesign, publication or a changed benchmark.
+
 ### Approved closeout path
 
 After Adrian accepts the Release verdict, keep closeout to the shortest path

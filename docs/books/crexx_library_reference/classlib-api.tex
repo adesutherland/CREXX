@@ -95,80 +95,6 @@
 
     \Factory
       {public}
-      {stem}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {hash}
-      {(\Param{key}{.string})}
-
-    \Method
-      {public}
-      {.string}
-      {get}
-      {(\Param{key}{.string})}
-
-    \Method
-      {public}
-      {.void}
-      {set}
-      {\Params{
-        \ParamLine{\Param{key}{""}}
-        \LastParamLine{\Param{value}{.string}}
-      }}
-
-    \Method
-      {public}
-      {.int}
-      {size}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {key}
-      {(\Param{ix}{.int})}
-
-    \Method
-      {public}
-      {.string}
-      {value}
-      {(\Param{kv}{.int})}
-
-    \Method
-      {public}
-      {.string}
-      {valueAt}
-      {(\Param{ix}{.int})}
-
-    \Method
-      {public}
-      {.string[]}
-      {tails}
-      {()}
-
-    \Method
-      {public}
-      {.string[]}
-      {values}
-      {()}
-
-    \Method
-      {public}
-      {.stemIterator}
-      {iterator}
-      {()}
-
-    \Method
-      {public}
-      {.stemIterator}
-      {snapshotIterator}
-      {()}
-
-    \Factory
-      {public}
       {stemIterator}
       {\Params{
         \ParamLine{\Param{source}{reference .stem}}
@@ -210,485 +136,6 @@
       {.int}
       {isLive}
       {()}
-
-  \end{Members}
-\end{CrexxClass}
-
-\begin{CrexxClass}{\textit{.httpclient}}{rxhttp}
-
-  \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{\textit{.httpclient}}
-  \end{Hierarchy}
-
-  \begin{Members}
-
-    \Factory
-      {public}
-      {httpclient}
-      {\Params{
-        \ParamLine{\Param{host}{"127.0.0.1"}}
-        \ParamLine{\Param{port}{80}}
-        \ParamLine{\Param{timeout}{30000}}
-        \LastParamLine{\Param{tls}{0}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {send}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \LastParamLine{\Param{contentType}{""}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {sendWithHeaders}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \ParamLine{\Param{contentType}{""}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {post}
-      {\Params{
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{.string}}
-        \LastParamLine{\Param{contentType}{"application/octet-stream"}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {postWithHeaders}
-      {\Params{
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{.string}}
-        \ParamLine{\Param{contentType}{"application/octet-stream"}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {buildRequest}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \LastParamLine{\Param{contentType}{""}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {buildRequestWithHeaders}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \ParamLine{\Param{contentType}{""}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {extractBody}
-      {(\Param{response}{.string})}
-
-    \Method
-      {public}
-      {.string}
-      {header}
-      {(\Param{name}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {status}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {httpStatus}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {error}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {lastHttp}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {lastBody}
-      {()}
-
-  \end{Members}
-\end{CrexxClass}
-
-\begin{CrexxClass}{.http}{rxhttp}
-
-  \begin{Hierarchy}
-    \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .http}
-  \end{Hierarchy}
-
-  \begin{Members}
-
-    \Factory
-      {public}
-      {httpclient}
-      {\Params{
-        \ParamLine{\Param{host}{"127.0.0.1"}}
-        \ParamLine{\Param{port}{80}}
-        \ParamLine{\Param{timeout}{30000}}
-        \LastParamLine{\Param{tls}{0}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {send}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \LastParamLine{\Param{contentType}{""}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {sendWithHeaders}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \ParamLine{\Param{contentType}{""}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {post}
-      {\Params{
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{.string}}
-        \LastParamLine{\Param{contentType}{"application/octet-stream"}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {postWithHeaders}
-      {\Params{
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{.string}}
-        \ParamLine{\Param{contentType}{"application/octet-stream"}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {buildRequest}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \LastParamLine{\Param{contentType}{""}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {buildRequestWithHeaders}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \ParamLine{\Param{contentType}{""}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {extractBody}
-      {(\Param{response}{.string})}
-
-    \Method
-      {public}
-      {.string}
-      {header}
-      {(\Param{name}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {status}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {httpStatus}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {error}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {lastHttp}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {lastBody}
-      {()}
-
-    \Factory
-      {public}
-      {http}
-      {\Params{
-        \ParamLine{\Param{host}{"127.0.0.1"}}
-        \ParamLine{\Param{port}{80}}
-        \ParamLine{\Param{timeout}{30000}}
-        \LastParamLine{\Param{tls}{0}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {send}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \LastParamLine{\Param{contentType}{""}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {sendWithHeaders}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \ParamLine{\Param{contentType}{""}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {post}
-      {\Params{
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{.string}}
-        \LastParamLine{\Param{contentType}{"application/octet-stream"}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {postWithHeaders}
-      {\Params{
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{.string}}
-        \ParamLine{\Param{contentType}{"application/octet-stream"}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {buildRequest}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \LastParamLine{\Param{contentType}{""}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {buildRequestWithHeaders}
-      {\Params{
-        \ParamLine{\Param{verb}{.string}}
-        \ParamLine{\Param{path}{.string}}
-        \ParamLine{\Param{body}{""}}
-        \ParamLine{\Param{contentType}{""}}
-        \LastParamLine{\Param{headers}{.string[]}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {extractBody}
-      {(\Param{response}{.string})}
-
-    \Method
-      {public}
-      {.string}
-      {header}
-      {(\Param{name}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {status}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {httpStatus}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {error}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {lastHttp}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {lastBody}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {\_send}
-      {(\Param{request}{.string})}
-
-    \Method
-      {public}
-      {.string}
-      {\_read\_response}
-      {(\Param{sock}{.int})}
-
-    \Method
-      {public}
-      {.int}
-      {\_has\_complete\_body}
-      {(\Param{response}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {\_body\_start}
-      {(\Param{response}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {\_content\_length}
-      {(\Param{header}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {\_is\_chunked}
-      {(\Param{header}{.string})}
-
-    \Method
-      {public}
-      {.string}
-      {\_header\_value}
-      {\Params{
-        \ParamLine{\Param{header}{.string}}
-        \LastParamLine{\Param{name}{.string}}
-      }}
-
-    \Method
-      {public}
-      {.string}
-      {\_decode\_chunked\_body}
-      {(\Param{body}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {\_chunked\_complete}
-      {(\Param{body}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {\_byte\_length}
-      {(\Param{text}{.string})}
-
-    \Method
-      {public}
-      {.string}
-      {\_take\_bytes}
-      {\Params{
-        \ParamLine{\Param{text}{.string}}
-        \LastParamLine{\Param{count}{.int}}
-      }}
-
-    \Method
-      {public}
-      {.int}
-      {\_hex\_to\_int}
-      {(\Param{text}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {\_hex\_digit\_value}
-      {(\Param{c}{.string})}
-
-    \Method
-      {public}
-      {.int}
-      {\_parse\_status}
-      {(\Param{response}{.string})}
-
-    \Method
-      {public}
-      {}
-      {\_set\_error}
-      {\Params{
-        \ParamLine{\Param{code}{.int}}
-        \LastParamLine{\Param{message}{.string}}
-      }}
 
   \end{Members}
 \end{CrexxClass}
@@ -900,11 +347,1638 @@
   \end{Members}
 \end{CrexxClass}
 
+\begin{CrexxClass}{.httpheaders}{rxfnsg}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .httpheaders}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {empty}
+      {()}
+
+    \Factory
+      {public}
+      {json}
+      {()}
+
+    \Factory
+      {public}
+      {media\_type}
+      {(\Param{value}{.string})}
+
+    \Factory
+      {public}
+      {from\_channel}
+      {(\Param{encoded}{.channelvalue})}
+
+    \Method
+      {public}
+      {.httpheaders}
+      {add}
+      {\Params{
+        \ParamLine{\Param{name}{.string}}
+        \LastParamLine{\Param{value}{.string}}
+      }}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {to\_channel}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {content\_type}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {wire}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {count}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {bytes}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {header}
+      {(\Param{name}{.string})}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.httppolicy}{rxfnsg}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .httppolicy}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {safe}
+      {()}
+
+    \Factory
+      {public}
+      {from\_channel}
+      {(\Param{encoded}{.channelvalue})}
+
+    \Method
+      {public}
+      {.void}
+      {set\_timeouts}
+      {\Params{
+        \ParamLine{\Param{dns}{.int}}
+        \ParamLine{\Param{connect}{.int}}
+        \ParamLine{\Param{tls}{.int}}
+        \ParamLine{\Param{request}{.int}}
+        \ParamLine{\Param{response}{.int}}
+        \LastParamLine{\Param{total}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.void}
+      {set\_limits}
+      {\Params{
+        \ParamLine{\Param{header\_count}{.int}}
+        \ParamLine{\Param{header\_bytes}{.int}}
+        \LastParamLine{\Param{request\_bytes}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.void}
+      {set\_replay}
+      {\Params{
+        \ParamLine{\Param{redirects}{.int}}
+        \LastParamLine{\Param{retries}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {to\_channel}
+      {()}
+
+    \Method
+      {public}
+      {.void}
+      {validate}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {dns\_timeout}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {connect\_timeout}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {tls\_timeout}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {request\_timeout}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {response\_timeout}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {total\_timeout}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {header\_count}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {header\_bytes}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {request\_bytes}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {redirects}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {retries}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.httpbody}{rxfnsg}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .httpbody}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {fixed}
+      {\Params{
+        \ParamLine{\Param{content\_length}{.int}}
+        \ParamLine{\Param{capacity}{.int}}
+        \LastParamLine{\Param{response\_capacity}{65536}}
+      }}
+
+    \Factory
+      {public}
+      {chunked}
+      {\Params{
+        \ParamLine{\Param{capacity}{.int}}
+        \LastParamLine{\Param{response\_capacity}{65536}}
+      }}
+
+    \Factory
+      {public}
+      {from\_channel}
+      {(\Param{encoded}{.channelvalue})}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {to\_channel}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {write}
+      {\Params{
+        \ParamLine{\Param{bytes}{.binary}}
+        \LastParamLine{\Param{wait\_milliseconds}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.void}
+      {finish}
+      {()}
+
+    \Method
+      {public}
+      {.void}
+      {cancel}
+      {(\Param{reason}{.string})}
+
+    \Method
+      {public}
+      {.void}
+      {close}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {length}
+      {()}
+
+    \Method
+      {public}
+      {.binary}
+      {endpoint\_reference}
+      {()}
+
+    \Method
+      {public}
+      {.binary}
+      {response\_reference}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {response\_capacity}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.httpresponse}{rxfnsg}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .httpresponse}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {new}
+      {\Params{
+        \ParamLine{\Param{transport\_status}{.int}}
+        \ParamLine{\Param{http\_status}{.int}}
+        \ParamLine{\Param{headers}{.string}}
+        \ParamLine{\Param{body}{.string}}
+        \ParamLine{\Param{error}{.string}}
+        \ParamLine{\Param{attempts}{0}}
+        \ParamLine{\Param{redirects}{0}}
+        \LastParamLine{\Param{ambiguous}{0}}
+      }}
+
+    \Factory
+      {public}
+      {text}
+      {\Params{
+        \ParamLine{\Param{status}{.int}}
+        \ParamLine{\Param{body}{.string}}
+        \LastParamLine{\Param{?headers}{.httpheaders}}
+      }}
+
+    \Factory
+      {public}
+      {binary}
+      {\Params{
+        \ParamLine{\Param{status}{.int}}
+        \ParamLine{\Param{body}{.binary}}
+        \LastParamLine{\Param{?headers}{.httpheaders}}
+      }}
+
+    \Factory
+      {public}
+      {from\_wire}
+      {(\Param{wire}{.binary})}
+
+    \Factory
+      {public}
+      {from\_stream\_wire}
+      {\Params{
+        \ParamLine{\Param{wire}{.binary}}
+        \LastParamLine{\Param{stream\_encoded}{.binary}}
+      }}
+
+    \Method
+      {public}
+      {.void}
+      {attach\_stream}
+      {(\Param{stream\_encoded}{.binary})}
+
+    \Factory
+      {public}
+      {from\_channel}
+      {(\Param{encoded}{.channelvalue})}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {to\_channel}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {status}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {transport\_status}
+      {()}
+
+    \Method
+      {public}
+      {.boolean}
+      {succeeded}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {body}
+      {()}
+
+    \Method
+      {public}
+      {.binary}
+      {body\_bytes}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {raw}
+      {()}
+
+    \Method
+      {public}
+      {.boolean}
+      {streaming}
+      {()}
+
+    \Method
+      {public}
+      {.binary}
+      {body\_reference}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {header}
+      {(\Param{name}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {header\_wire}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {error}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {attempts}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {redirects}
+      {()}
+
+    \Method
+      {public}
+      {.boolean}
+      {ambiguous\_outcome}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.httpclient}{rxfnsg}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .httpclient \hfill\textit{.\_httpclient\_contract}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {pooled}
+      {\Params{
+        \ParamLine{\Param{origin}{.string}}
+        \ParamLine{\Param{connections}{.int}}
+        \ParamLine{\Param{admission}{.int}}
+        \ParamLine{\Param{maximum\_response}{.int}}
+        \LastParamLine{\Param{?policy}{.httppolicy}}
+      }}
+
+    \Factory
+      {public}
+      {from\_channel}
+      {(\Param{encoded}{.channelvalue})}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {to\_channel}
+      {()}
+
+    \Method
+      {public}
+      {.httpresponse}
+      {request}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{.binary}}
+        \LastParamLine{\Param{headers}{.httpheaders}}
+      }}
+
+    \Method
+      {public}
+      {.httpresponse}
+      {get}
+      {\Params{
+        \ParamLine{\Param{path}{.string}}
+        \LastParamLine{\Param{headers}{.httpheaders}}
+      }}
+
+    \Method
+      {public}
+      {.httpresponse}
+      {post}
+      {\Params{
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{.string}}
+        \LastParamLine{\Param{headers}{.httpheaders}}
+      }}
+
+    \Method
+      {public}
+      {.httpresponse}
+      {post\_stream}
+      {\Params{
+        \ParamLine{\Param{path}{.string}}
+        \ParamLine{\Param{body}{.httpbody}}
+        \ParamLine{\Param{headers}{.httpheaders}}
+        \LastParamLine{\Param{response\_capacity}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.void}
+      {close}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.httprequest}{rxfnsg}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .httprequest}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {inbound}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{target}{.string}}
+        \ParamLine{\Param{headers}{.string}}
+        \ParamLine{\Param{body}{.binary}}
+        \LastParamLine{\Param{remote}{.string}}
+      }}
+
+    \Factory
+      {public}
+      {routed}
+      {\Params{
+        \ParamLine{\Param{verb}{.string}}
+        \ParamLine{\Param{target}{.string}}
+        \ParamLine{\Param{headers}{.string}}
+        \ParamLine{\Param{body}{.binary}}
+        \ParamLine{\Param{remote}{.string}}
+        \LastParamLine{\Param{reply\_reference}{.binary}}
+      }}
+
+    \Factory
+      {public}
+      {from\_channel}
+      {(\Param{encoded}{.channelvalue})}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {to\_channel}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {verb}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {target}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {body}
+      {()}
+
+    \Method
+      {public}
+      {.binary}
+      {body\_bytes}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {header}
+      {(\Param{name}{.string})}
+
+    \Method
+      {public}
+      {.string}
+      {headers}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {remote}
+      {()}
+
+    \Method
+      {public}
+      {.boolean}
+      {routed\_reply}
+      {()}
+
+    \Method
+      {public}
+      {.binary}
+      {reply\_reference}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.httpservice}}{rxfnsg}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.httpservice}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.httpresponse}
+      {handle}
+      {\Params{
+        \ParamLine{\Param{request}{.httprequest}}
+        \LastParamLine{\Param{context}{.taskcontext}}
+      }}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {dispatch}
+      {\Params{
+        \ParamLine{\Param{encoded}{.channelvalue}}
+        \LastParamLine{\Param{context}{.taskcontext}}
+      }}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.httpserver}{rxfnsg}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .httpserver}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {local}
+      {\Params{
+        \ParamLine{\Param{host}{.string}}
+        \ParamLine{\Param{port}{.int}}
+        \ParamLine{\Param{workers}{4}}
+        \ParamLine{\Param{admission}{64}}
+        \ParamLine{\Param{connections}{64}}
+        \ParamLine{\Param{maximum\_header\_bytes}{65536}}
+        \ParamLine{\Param{maximum\_headers}{100}}
+        \ParamLine{\Param{maximum\_body\_bytes}{8388608}}
+        \ParamLine{\Param{handler\_timeout}{30000}}
+        \LastParamLine{\Param{request\_timeout}{30000}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {serve}
+      {\Params{
+        \ParamLine{\Param{target}{.tasktarget}}
+        \LastParamLine{\Param{maximum\_requests}{-1}}
+      }}
+
+    \Method
+      {public}
+      {.void}
+      {close}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {host}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {port}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {served}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {scans}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {idle\_scans}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.taskpool}}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.taskpool}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {local}
+      {\Params{
+        \ParamLine{\Param{workers}{.int}}
+        \LastParamLine{\Param{admission\_capacity}{.int}}
+      }}
+
+    \Factory
+      {public}
+      {process}
+      {\Params{
+        \ParamLine{\Param{workers}{.int}}
+        \LastParamLine{\Param{admission\_capacity}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {provider\_type}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {capacity}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {admission\_capacity}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {queued}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {running}
+      {()}
+
+    \Method
+      {public}
+      {.void}
+      {close}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.taskscope}}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.taskscope}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {default}
+      {()}
+
+    \Factory
+      {public}
+      {failfast}
+      {\Params{
+        \ParamLine{\Param{pool}{.taskpool}}
+        \LastParamLine{\Param{timeout\_milliseconds}{.int}}
+      }}
+
+    \Factory
+      {public}
+      {collectall}
+      {\Params{
+        \ParamLine{\Param{pool}{.taskpool}}
+        \LastParamLine{\Param{timeout\_milliseconds}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.task}
+      {submit}
+      {\Params{
+        \ParamLine{\Param{target}{.tasktarget}}
+        \LastParamLine{\Param{request}{.channelvalue}}
+      }}
+
+    \Method
+      {public}
+      {.task}
+      {submit\_arguments}
+      {\Params{
+        \ParamLine{\Param{target}{.tasktarget}}
+        \LastParamLine{\Param{arguments}{.taskarguments}}
+      }}
+
+    \Method
+      {public}
+      {.task}
+      {ask}
+      {\Params{
+        \ParamLine{\Param{service}{.serviceref}}
+        \LastParamLine{\Param{request}{.channelvalue}}
+      }}
+
+    \Method
+      {public}
+      {.completion}
+      {next}
+      {(\Param{wait\_milliseconds}{.int})}
+
+    \Method
+      {public}
+      {.completion[]}
+      {join}
+      {()}
+
+    \Method
+      {public}
+      {.void}
+      {cancel}
+      {(\Param{reason}{.channelvalue})}
+
+    \Method
+      {public}
+      {.void}
+      {close}
+      {()}
+
+    \Method
+      {public}
+      {.void}
+      {finish}
+      {()}
+
+    \Method
+      {public}
+      {.void}
+      {abort}
+      {(\Param{reason}{.channelvalue})}
+
+    \Method
+      {public}
+      {.int}
+      {result\_integer}
+      {(\Param{child}{.task})}
+
+    \Method
+      {public}
+      {.string}
+      {result\_string}
+      {(\Param{child}{.task})}
+
+    \Method
+      {public}
+      {.binary}
+      {result\_binary}
+      {(\Param{child}{.task})}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {result\_value}
+      {(\Param{child}{.task})}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.task}}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.task}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.int}
+      {identity}
+      {()}
+
+    \Method
+      {public}
+      {.boolean}
+      {terminal}
+      {()}
+
+    \Method
+      {public}
+      {.void}
+      {cancel}
+      {(\Param{reason}{.channelvalue})}
+
+    \Method
+      {public}
+      {.completion}
+      {wait}
+      {(\Param{wait\_milliseconds}{.int})}
+
+    \Method
+      {public}
+      {.completion}
+      {completion}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.tasktarget}}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.tasktarget}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {binding}
+      {\Params{
+        \ParamLine{\Param{diagnostic\_name}{.string}}
+        \ParamLine{\Param{signature}{.string}}
+        \ParamLine{\Param{binding}{.binary}}
+        \LastParamLine{\Param{?factory\_arguments}{.channelvalue[]}}
+      }}
+
+    \Method
+      {public}
+      {.string}
+      {name}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {signature}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.taskwork}}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.taskwork}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {run}
+      {\Params{
+        \ParamLine{\Param{request}{.channelvalue}}
+        \LastParamLine{\Param{context}{.taskcontext}}
+      }}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.taskcontext}}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.taskcontext}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.int}
+      {timeout\_remaining}
+      {()}
+
+    \Method
+      {public}
+      {.boolean}
+      {cancellation\_requested}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {trace\_identity}
+      {()}
+
+    \Method
+      {public}
+      {.byteendpoint}
+      {endpoint}
+      {(\Param{provider\_reference}{.channelvalue})}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.completion}}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.completion}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.boolean}
+      {available}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {request\_identity}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {sequence}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {state}
+      {()}
+
+    \Method
+      {public}
+      {.boolean}
+      {succeeded}
+      {()}
+
+    \Method
+      {public}
+      {.boolean}
+      {has\_value}
+      {()}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {value}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {error\_code}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {message}
+      {()}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {details}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.channel}}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.channel}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {open}
+      {\Params{
+        \ParamLine{\Param{provider\_type}{.int}}
+        \ParamLine{\Param{required\_capabilities}{.int}}
+        \LastParamLine{\Param{configuration}{.channelvalue}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {provider\_type}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {capabilities}
+      {()}
+
+    \Method
+      {public}
+      {.channelrequest}
+      {start}
+      {\Params{
+        \ParamLine{\Param{envelope}{.channelvalue}}
+        \LastParamLine{\Param{wait\_milliseconds}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.completion}
+      {wait}
+      {(\Param{wait\_milliseconds}{.int})}
+
+    \Method
+      {public}
+      {.void}
+      {cancel}
+      {\Params{
+        \ParamLine{\Param{request}{.channelrequest}}
+        \LastParamLine{\Param{reason}{.channelvalue}}
+      }}
+
+    \Method
+      {public}
+      {.void}
+      {close}
+      {(\Param{mode}{.int})}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.channelrequest}}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.channelrequest}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.int}
+      {identity}
+      {()}
+
+    \Method
+      {public}
+      {.boolean}
+      {terminal}
+      {()}
+
+    \Method
+      {public}
+      {.void}
+      {cancel}
+      {(\Param{reason}{.channelvalue})}
+
+    \Method
+      {public}
+      {.completion}
+      {wait}
+      {(\Param{wait\_milliseconds}{.int})}
+
+    \Method
+      {public}
+      {.completion}
+      {completion}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.channelvalue}}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.channelvalue}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {null\_value}
+      {()}
+
+    \Factory
+      {public}
+      {boolean\_value}
+      {(\Param{item}{.boolean})}
+
+    \Factory
+      {public}
+      {integer\_value}
+      {(\Param{item}{.int})}
+
+    \Factory
+      {public}
+      {float\_value}
+      {(\Param{item}{.float})}
+
+    \Factory
+      {public}
+      {decimal\_value}
+      {(\Param{item}{.decimal})}
+
+    \Factory
+      {public}
+      {string\_value}
+      {(\Param{item}{.string})}
+
+    \Factory
+      {public}
+      {binary\_value}
+      {(\Param{item}{.binary})}
+
+    \Factory
+      {public}
+      {array\_value}
+      {(\Param{items}{.channelvalue[]})}
+
+    \Factory
+      {public}
+      {record\_value}
+      {\Params{
+        \ParamLine{\Param{schema}{.string}}
+        \ParamLine{\Param{version}{.int}}
+        \ParamLine{\Param{names}{.string[]}}
+        \LastParamLine{\Param{values}{.channelvalue[]}}
+      }}
+
+    \Method
+      {public}
+      {.int}
+      {type\_code}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {schema}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {version}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {count}
+      {()}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {item}
+      {(\Param{index}{.int})}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {field}
+      {(\Param{name}{.string})}
+
+    \Method
+      {public}
+      {.boolean}
+      {as\_boolean}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {as\_integer}
+      {()}
+
+    \Method
+      {public}
+      {.float}
+      {as\_float}
+      {()}
+
+    \Method
+      {public}
+      {.decimal}
+      {as\_decimal}
+      {()}
+
+    \Method
+      {public}
+      {.string}
+      {as\_string}
+      {()}
+
+    \Method
+      {public}
+      {.binary}
+      {as\_binary}
+      {()}
+
+    \Method
+      {public}
+      {.binary}
+      {encode}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.channelcodec}}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.channelcodec}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.string}
+      {schema}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {version}
+      {()}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {encode}
+      {(\Param{item}{.object})}
+
+    \Method
+      {public}
+      {.object}
+      {decode}
+      {(\Param{item}{.channelvalue})}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.byteendpoint}}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.byteendpoint}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {memory}
+      {\Params{
+        \ParamLine{\Param{direction}{.int}}
+        \LastParamLine{\Param{capacity}{.int}}
+      }}
+
+    \Factory
+      {public}
+      {null\_endpoint}
+      {(\Param{direction}{.int})}
+
+    \Factory
+      {public}
+      {from\_reference}
+      {(\Param{provider\_reference}{.channelvalue})}
+
+    \Factory
+      {public}
+      {from\_encoded\_reference}
+      {(\Param{encoded}{.binary})}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {provider\_reference}
+      {()}
+
+    \Method
+      {public}
+      {.channelrequest}
+      {start\_read}
+      {\Params{
+        \ParamLine{\Param{maximum\_bytes}{.int}}
+        \LastParamLine{\Param{wait\_milliseconds}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.channelrequest}
+      {start\_write}
+      {\Params{
+        \ParamLine{\Param{bytes}{.binary}}
+        \LastParamLine{\Param{wait\_milliseconds}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.void}
+      {half\_close}
+      {(\Param{direction}{.int})}
+
+    \Method
+      {public}
+      {.void}
+      {cancel}
+      {(\Param{reason}{.channelvalue})}
+
+    \Method
+      {public}
+      {.void}
+      {close}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.serviceref}}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.serviceref}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Method
+      {public}
+      {.string}
+      {service\_type}
+      {()}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {provider\_reference}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{\textit{.transferbuffer}}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{\textit{.transferbuffer}}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {allocate}
+      {(\Param{capacity}{.int})}
+
+    \Factory
+      {public}
+      {copy\_from}
+      {(\Param{bytes}{.binary})}
+
+    \Method
+      {public}
+      {.int}
+      {size}
+      {()}
+
+    \Method
+      {public}
+      {.int}
+      {capacity}
+      {()}
+
+    \Method
+      {public}
+      {.boolean}
+      {mutable}
+      {()}
+
+    \Method
+      {public}
+      {.void}
+      {write}
+      {\Params{
+        \ParamLine{\Param{offset}{.int}}
+        \LastParamLine{\Param{bytes}{.binary}}
+      }}
+
+    \Method
+      {public}
+      {.binary}
+      {read}
+      {\Params{
+        \ParamLine{\Param{offset}{.int}}
+        \LastParamLine{\Param{length}{.int}}
+      }}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {move\_value}
+      {()}
+
+    \Method
+      {public}
+      {.channelvalue}
+      {seal}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
+\begin{CrexxClass}{.taskarguments}{concurrency}
+
+  \begin{Hierarchy}
+    \HierarchyLine[\APIOpen]{0}{.object}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .taskarguments}
+  \end{Hierarchy}
+
+  \begin{Members}
+
+    \Factory
+      {public}
+      {empty}
+      {()}
+
+    \Method
+      {public}
+      {.taskarguments}
+      {add\_value}
+      {(\Param{value}{.channelvalue})}
+
+    \Method
+      {public}
+      {.taskarguments}
+      {add\_channel\_value}
+      {(\Param{value}{.channelvalue})}
+
+    \Method
+      {public}
+      {.taskarguments}
+      {add\_boolean}
+      {(\Param{value}{.boolean})}
+
+    \Method
+      {public}
+      {.taskarguments}
+      {add\_integer}
+      {(\Param{value}{.int})}
+
+    \Method
+      {public}
+      {.taskarguments}
+      {add\_string}
+      {(\Param{value}{.string})}
+
+    \Method
+      {public}
+      {.taskarguments}
+      {add\_binary}
+      {(\Param{value}{.binary})}
+
+    \Method
+      {public}
+      {.channelvalue[]}
+      {values}
+      {()}
+
+  \end{Members}
+\end{CrexxClass}
+
 \begin{CrexxClass}{.ArrayList}{data}
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .ArrayList}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .ArrayList \hfill\textit{.ObjectIterable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1005,7 +2079,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .ArrayListIterator}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .ArrayListIterator \hfill\textit{.ObjectIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1056,7 +2130,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .Bag}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .Bag \hfill\textit{.Printable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1308,7 +2382,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .TreeMap}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .TreeMap \hfill\textit{.Map}, \textit{.Printable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -1640,24 +2714,10 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .fastFind}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .fastFind \hfill\textit{.matchResult}}
   \end{Hierarchy}
 
   \begin{Members}
-
-    \Factory
-      {public}
-      {matchResult}
-      {\Params{
-        \ParamLine{\Param{line}{.string}}
-        \LastParamLine{\Param{delim}{.string}}
-      }}
-
-    \Method
-      {public}
-      {.int}
-      {position}
-      {()}
 
     \Factory
       {public}
@@ -1704,62 +2764,10 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .qFind}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .qFind \hfill\textit{.matchResult}}
   \end{Hierarchy}
 
   \begin{Members}
-
-    \Factory
-      {public}
-      {matchResult}
-      {\Params{
-        \ParamLine{\Param{line}{.string}}
-        \LastParamLine{\Param{delim}{.string}}
-      }}
-
-    \Method
-      {public}
-      {.int}
-      {position}
-      {()}
-
-    \Factory
-      {public}
-      {fastFind}
-      {\Params{
-        \ParamLine{\Param{line}{.string}}
-        \LastParamLine{\Param{delim}{.string}}
-      }}
-
-    \Method
-      {public}
-      {.int}
-      {found}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {position}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {before}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {match}
-      {()}
-
-    \Method
-      {public}
-      {.string}
-      {after}
-      {()}
 
     \Factory
       {public}
@@ -1806,7 +2814,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .rexx}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .rexx \hfill\textit{.ObjectPrintable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2216,7 +3224,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .RexxComparator}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .RexxComparator \hfill\textit{.Comparator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2281,7 +3289,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringArrayList}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringArrayList \hfill\textit{.StringIterable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2397,7 +3405,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringArrayListIterator}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringArrayListIterator \hfill\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2448,7 +3456,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashMap}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashMap \hfill\textit{.StringIterable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2457,12 +3465,6 @@
       {public}
       {StringHashMap}
       {(\Param{expected}{1024})}
-
-    \Method
-      {public}
-      {.int}
-      {\_find}
-      {(\Param{key}{.string})}
 
     \Method
       {public}
@@ -2546,7 +3548,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashMapIterator}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashMapIterator \hfill\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2609,12 +3611,6 @@
     \Method
       {public}
       {.int}
-      {\_find}
-      {(\Param{key}{.string})}
-
-    \Method
-      {public}
-      {.int}
       {add}
       {(\Param{key}{.string})}
 
@@ -2673,7 +3669,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashSetIterator}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringHashSetIterator \hfill\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2879,7 +3875,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectHashMap}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectHashMap \hfill\textit{.StringIterable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -2888,12 +3884,6 @@
       {public}
       {StringObjectHashMap}
       {(\Param{expected}{1024})}
-
-    \Method
-      {public}
-      {.int}
-      {\_find}
-      {(\Param{key}{.string})}
 
     \Method
       {public}
@@ -2955,12 +3945,6 @@
     \Method
       {public}
       {.int}
-      {\_indexToken}
-      {()}
-
-    \Method
-      {public}
-      {.int}
       {free}
       {()}
 
@@ -2971,7 +3955,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectHashMapIterator}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectHashMapIterator \hfill\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -3027,7 +4011,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectTreeMap}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectTreeMap \hfill\textit{.StringIterable}, \textit{.ObjectPrintable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -3131,7 +4115,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectTreeMapIterator}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringObjectTreeMapIterator \hfill\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -3187,7 +4171,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringOldTreeMap}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringOldTreeMap \hfill\textit{.StringIterable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -3195,18 +4179,6 @@
     \Factory
       {public}
       {StringOldTreeMap}
-      {()}
-
-    \Method
-      {public}
-      {.int}
-      {\_find}
-      {(\Param{key}{.string})}
-
-    \Method
-      {public}
-      {.string[]}
-      {\_sortedKeys}
       {()}
 
     \Method
@@ -3356,7 +4328,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeMap}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeMap \hfill\textit{.StringIterable}, \textit{.ObjectPrintable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -3466,7 +4438,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeMapIterator}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeMapIterator \hfill\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -3501,7 +4473,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeSet}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeSet \hfill\textit{.StringIterable}}
   \end{Hierarchy}
 
   \begin{Members}
@@ -3584,7 +4556,7 @@
 
   \begin{Hierarchy}
     \HierarchyLine[\APIOpen]{0}{.object}
-    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeSetIterator}
+    \HierarchyLine{1}{\APIHierarchyBranch\ .StringTreeSetIterator \hfill\textit{.StringIterator}}
   \end{Hierarchy}
 
   \begin{Members}

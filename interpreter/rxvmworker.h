@@ -18,6 +18,7 @@ extern "C" {
 
 typedef struct rxvm_runtime rxvm_runtime;
 typedef void (*rxvm_runtime_program_state_destroyer)(void *state);
+typedef void (*rxvm_runtime_channel_state_destroyer)(void *state);
 
 typedef enum rxvm_worker_state {
     RXVM_WORKER_UNINITIALIZED = 0,
@@ -54,6 +55,13 @@ int rxvm_runtime_install_program_state(
         rxvm_runtime *runtime,
         void *state,
         rxvm_runtime_program_state_destroyer destroyer);
+
+/* Cold private extension point for the Gate F provider registry. */
+void *rxvm_runtime_channel_state(rxvm_runtime *runtime);
+int rxvm_runtime_install_channel_state(
+        rxvm_runtime *runtime,
+        void *state,
+        rxvm_runtime_channel_state_destroyer destroyer);
 
 /* One worker is permanently affine to the thread that initializes it. */
 typedef struct rxvm_worker {

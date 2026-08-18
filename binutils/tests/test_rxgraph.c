@@ -2,6 +2,7 @@
 
 #include "rxgraph.h"
 #include "rxbin.h"
+#include "rxsha256.h"
 #include "rxsignature.h"
 
 #include <stdio.h>
@@ -23,10 +24,16 @@ int main(void) {
     RxGraphId asset;
     RxGraphId base_box;
     RxGraphId derived_box;
+    RxGraphId work;
     RxMemberId describe;
+    RxMemberId increment;
     RxMemberId factory_member;
     RxCallableId callable;
     RxCallableId factory_callable;
+    RxCallableId task_method_callable;
+    RxCallableId receiver_factory_callable;
+    RxCallableId taskwork_factory_callable;
+    RxCallableId taskwork_run_callable;
     RxFactoryId factory;
     RxGraphProcRef procedure;
     RxGraphCallableView callable_view;
@@ -55,6 +62,19 @@ int main(void) {
     builder = rx_graph_builder_create();
     ok &= require(builder != 0, "create graph builder");
     if (!builder) return 1;
+
+    {
+        static const unsigned char abc_digest[32] = {
+            0xba, 0x78, 0x16, 0xbf, 0x8f, 0x01, 0xcf, 0xea,
+            0x41, 0x41, 0x40, 0xde, 0x5d, 0xae, 0x22, 0x23,
+            0xb0, 0x03, 0x61, 0xa3, 0x96, 0x17, 0x7a, 0x9c,
+            0xb4, 0x10, 0xff, 0x61, 0xf2, 0x00, 0x15, 0xad
+        };
+        unsigned char digest[32];
+        rx_sha256("abc", 3u, digest);
+        ok &= require(memcmp(digest, abc_digest, sizeof(digest)) == 0,
+                      "compute the SHA-256 standard vector");
+    }
 
     ok &= require(rx_graph_builder_find_type(builder, ".boolean") != RX_GRAPH_NONE,
                   "seed boolean as a built-in graph type");
@@ -103,14 +123,23 @@ int main(void) {
                                          RX_GRAPH_TYPE_CLASS,
                                          0u);
     derived_box = rx_graph_builder_add_type(builder,
-                                            "graph_test.derived_box",
-                                            RX_GRAPH_TYPE_CLASS,
-                                            0u);
+                                             "graph_test.derived_box",
+                                             RX_GRAPH_TYPE_CLASS,
+                                             0u);
+    work = rx_graph_builder_add_type(builder,
+                                     "graph_test.work",
+                                     RX_GRAPH_TYPE_CLASS,
+                                     0u);
     describe = rx_graph_builder_add_member(builder,
                                            "describe",
                                            ".string",
                                            "",
                                            RX_GRAPH_MEMBER_METHOD);
+    increment = rx_graph_builder_add_member(builder,
+                                            "increment",
+                                            ".int",
+                                            "value=.int",
+                                            RX_GRAPH_MEMBER_METHOD);
     factory_member = rx_graph_builder_add_member(builder,
                                                  "*",
                                                  ".graph_test..shape",
@@ -131,10 +160,49 @@ int main(void) {
                                                      "",
                                                      procedure,
                                                      0u);
+    procedure.procedure_offset = 1350u;
+    receiver_factory_callable = rx_graph_builder_add_callable(
+            builder,
+            "graph_test.box.\xC2\xA7" "factory.from_channel",
+            ".graph_test..box",
+            "encoded=.channelvalue",
+            procedure,
+            0u);
+    procedure.procedure_offset = 1400u;
+    task_method_callable = rx_graph_builder_add_callable(
+            builder,
+            "graph_test.box.increment",
+            ".int",
+            "value=.int",
+            procedure,
+            0u);
+    procedure.procedure_offset = 1450u;
+    taskwork_factory_callable = rx_graph_builder_add_callable(
+            builder,
+            "graph_test.work.\xC2\xA7" "factory",
+            "graph_test.work",
+            "delta=.int",
+            procedure,
+            0u);
+    procedure.procedure_offset = 1500u;
+    taskwork_run_callable = rx_graph_builder_add_callable(
+            builder,
+            "graph_test.work.run",
+            ".channelvalue",
+            "request=.channelvalue,context=.taskcontext",
+            procedure,
+            0u);
     ok &= require(shape != RX_GRAPH_NONE && box != RX_GRAPH_NONE,
                   "add graph types");
-    ok &= require(describe != RX_GRAPH_NONE && callable != RX_GRAPH_NONE &&
-                  factory_member != RX_GRAPH_NONE && factory_callable != RX_GRAPH_NONE,
+    ok &= require(describe != RX_GRAPH_NONE && increment != RX_GRAPH_NONE &&
+                  callable != RX_GRAPH_NONE &&
+                  factory_member != RX_GRAPH_NONE &&
+                  factory_callable != RX_GRAPH_NONE &&
+                  receiver_factory_callable != RX_GRAPH_NONE &&
+                  task_method_callable != RX_GRAPH_NONE &&
+                  taskwork_factory_callable != RX_GRAPH_NONE &&
+                  taskwork_run_callable != RX_GRAPH_NONE &&
+                  work != RX_GRAPH_NONE,
                   "add graph member and callable");
     ok &= require(rx_graph_builder_add_edge(builder,
                                             box,
@@ -178,6 +246,9 @@ int main(void) {
                   "add factory declaration");
     ok &= require(rx_graph_builder_add_dispatch(builder, box, describe, callable),
                   "add dispatch row");
+    ok &= require(rx_graph_builder_add_dispatch(
+                          builder, box, increment, task_method_callable),
+                  "add task-method dispatch row");
     ok &= require(rx_graph_builder_add_provider(builder,
                                                 shape,
                                                 factory_member,
@@ -222,6 +293,104 @@ int main(void) {
                   callable_view.procedure.module_index == 3u &&
                   callable_view.procedure.procedure_offset == 1234u,
                   "read callable procedure reference");
+    {
+        unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE];
+        unsigned char changed[RX_GRAPH_TASK_BINDING_SIZE];
+        unsigned char graph_digest[32];
+        unsigned char wrong_digest[32];
+        RxCallableId bound_callable = RX_GRAPH_NONE;
+        unsigned int bound_kind = 0u;
+        ok &= require(rx_graph_task_binding(graph,
+                                            "graph_test.box.describe",
+                                            1u,
+                                            binding) &&
+                      rx_graph_digest(graph, graph_digest) &&
+                      rx_graph_task_binding_validate_digest(
+                              graph, graph_digest, binding,
+                              &bound_callable, &bound_kind) &&
+                      rx_graph_task_binding_validate(graph,
+                                                     binding,
+                                                     &bound_callable,
+                                                     &bound_kind) &&
+                      bound_callable == callable && bound_kind == 1u,
+                      "seal and validate a callable task binding");
+        memcpy(wrong_digest, graph_digest, sizeof(wrong_digest));
+        wrong_digest[0] ^= 1u;
+        ok &= require(!rx_graph_task_binding_validate_digest(
+                              graph, wrong_digest, binding, 0, 0),
+                      "reject a task binding against a wrong cached graph digest");
+        memcpy(changed, binding, sizeof(changed));
+        changed[12] ^= 1u;
+        ok &= require(!rx_graph_task_binding_validate(graph,
+                                                      changed,
+                                                      0,
+                                                      0),
+                      "reject a task binding for a different image graph");
+        memcpy(changed, binding, sizeof(changed));
+        changed[44] ^= 1u;
+        ok &= require(!rx_graph_task_binding_validate(graph,
+                                                      changed,
+                                                      0,
+                                                      0),
+                      "reject a task binding with a stale callable signature");
+        memcpy(changed, binding, sizeof(changed));
+        changed[76] = 1u;
+        ok &= require(!rx_graph_task_binding_validate(graph,
+                                                      changed,
+                                                      0,
+                                                      0),
+                      "reject noncanonical task binding reserved bytes");
+        ok &= require(!rx_graph_task_binding(graph,
+                                             "graph_test.missing",
+                                             1u,
+                                             changed),
+                      "reject a missing callable task target");
+        ok &= require(rx_graph_task_binding(graph,
+                                            "graph_test.box.increment",
+                                            2u,
+                                            binding) &&
+                      binding[76] ==
+                              (unsigned char)(receiver_factory_callable + 1u) &&
+                      binding[77] == 0u && binding[78] == 0u &&
+                      binding[79] == 0u &&
+                      rx_graph_task_binding_validate(graph,
+                                                     binding,
+                                                     &bound_callable,
+                                                     &bound_kind) &&
+                      bound_callable == task_method_callable &&
+                      bound_kind == 2u,
+                      "seal and validate a task method receiver factory");
+        memcpy(changed, binding, sizeof(changed));
+        changed[76] ^= 1u;
+        ok &= require(!rx_graph_task_binding_validate(graph,
+                                                      changed,
+                                                      0,
+                                                      0),
+                      "reject a task method with a changed receiver factory");
+        ok &= require(rx_graph_task_binding(
+                              graph,
+                              "graph_test.work.\xC2\xA7" "factory",
+                              3u,
+                              binding) &&
+                      binding[76] ==
+                              (unsigned char)(taskwork_run_callable + 1u) &&
+                      binding[77] == 0u && binding[78] == 0u &&
+                      binding[79] == 0u &&
+                      rx_graph_task_binding_validate(graph,
+                                                     binding,
+                                                     &bound_callable,
+                                                     &bound_kind) &&
+                      bound_callable == taskwork_factory_callable &&
+                      bound_kind == 3u,
+                      "seal and validate a taskwork run adapter");
+        memcpy(changed, binding, sizeof(changed));
+        changed[76] ^= 1u;
+        ok &= require(!rx_graph_task_binding_validate(graph,
+                                                      changed,
+                                                      0,
+                                                      0),
+                      "reject a taskwork binding with a changed run adapter");
+    }
     factory = rx_graph_find_factory(graph, shape, factory_member);
     ok &= require(factory != RX_GRAPH_NONE && rx_graph_factory_count(graph) == 1u,
                   "find factory bucket");

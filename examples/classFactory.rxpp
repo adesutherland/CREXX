@@ -121,5 +121,3 @@ return
   ##emit setters
   ##emit copy_fields
   return result
-
-

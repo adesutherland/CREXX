@@ -93,6 +93,7 @@ global_reg ::= GREG KW_EXPOSE(T) error NEWLINE. {rxaseaft(context, T, "Expecting
 global_meta ::= KW_META STRING EQUAL STRING STRING reg(E) NEWLINE. {rxaserat(context, E, "Cannot set register metadata here");}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A);}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(P) NEWLINE. {rxasqmil(context,V,OP,P);}
+global_meta ::= KW_META STRING(V) EQUAL STRING(OP) HEX(P) NEWLINE. {rxasqmil(context,V,OP,P);}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_CLASS NEWLINE. {rxasqmclss(context,V,OP,T);}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_ATTR INT(R) NEWLINE. {rxasqmattr(context,V,OP,T,R);}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_INTERFACE NEWLINE. {rxasqmintf(context,V,OP,T);}
@@ -147,6 +148,7 @@ instruction ::= KW_TRACEEVENT STRING(K) INT(M) STRING(VS) STRING(VT) STRING(RT) 
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) reg(R) NEWLINE. {rxasqmre(context,V,OP,T,R);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(P) NEWLINE. {rxasqmil(context,V,OP,P);}
+instruction ::= KW_META STRING(V) EQUAL STRING(OP) HEX(P) NEWLINE. {rxasqmil(context,V,OP,P);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) STRING(C) NEWLINE. {rxasqmct(context,V,OP,T,C);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_CLASS NEWLINE. {rxasqmclss(context,V,OP,T);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_ATTR INT(R) NEWLINE. {rxasqmattr(context,V,OP,T,R);}
@@ -169,6 +171,7 @@ decl_instructions ::= decl_instruction.
 decl_instructions ::= decl_instructions decl_instruction.
 decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A);}
 decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(P) NEWLINE. {rxasqmil(context,V,OP,P);}
+decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) HEX(P) NEWLINE. {rxasqmil(context,V,OP,P);}
 decl_instruction ::= NEWLINE.
 
 // Declaration instruction error messages

@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+server-rxbvm-noopt,HTTP-Server-rxbvm-noopt,crexx,rxbvm,levelg-server,A,no,startup-included,two-parallel-requests,elapsed_ns,12,519376000.000000,536489500.000000,539163000.000000,541156500.000000,542336000.000000,2345500.000000,0.435026,4.258452,no
+server-rxbvm-opt,HTTP-Server-rxbvm-opt,crexx,rxbvm,levelg-server,A,no,startup-included,two-parallel-requests,elapsed_ns,12,510948000.000000,530641250.000000,534269000.000000,538558500.000000,540747000.000000,4558000.000000,0.853128,5.577527,no
+server-rxtvm-noopt,HTTP-Server-rxtvm-noopt,crexx,rxtvm,levelg-server,A,no,startup-included,two-parallel-requests,elapsed_ns,12,533114000.000000,535393750.000000,538835500.000000,541988500.000000,547372000.000000,3455000.000000,0.641198,2.646077,no
+server-rxtvm-opt,HTTP-Server-rxtvm-opt,crexx,rxtvm,levelg-server,A,no,startup-included,two-parallel-requests,elapsed_ns,12,527380000.000000,530707500.000000,534118000.000000,536635250.000000,543726000.000000,3381500.000000,0.633100,3.060372,no

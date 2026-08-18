@@ -569,7 +569,7 @@ MeasurementSeries: class
          * If a value should remain part of the object's state, it must be assigned
          * to an object attribute.
          */
-        
+
         initial_message = .string
         initial_message = "MeasurementSeries created"
 

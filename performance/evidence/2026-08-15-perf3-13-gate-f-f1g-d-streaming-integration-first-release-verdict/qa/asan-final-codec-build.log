@@ -1,0 +1,84 @@
+Command: cmake --build cmake-build-debugasan --target ts_http_codec --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+-- CMake Version: 4.3.2
+-- CREXX Version: crexx-1.0.0-beta.3+local.gcd2453e357a3.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20260807T121554Z
+-- CREXX Build Commit: cd2453e357a3
+-- CMake Generator: Unix Makefiles
+-- Using local DSL-Syntax-Highlighter at /Users/adrian/CLionProjects/CREXX/../DSL-Syntax-Highlighter
+-- C compiler flags: -fsanitize=address -fno-omit-frame-pointer
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always 
+-- Linker flags for executables: -fsanitize=address
+-- Linker flags for shared libs: -fsanitize=address
+-- Debug C compiler flags: -g
+-- Debug C++ compiler flags: -g
+-- Debug linker flags for executables: 
+-- Debug linker flags for shared libs: 
+-- Fetching SQLite amalgamation 3530200 for native ADDRESS demo
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: NETWORK
+-- cREXX product VM: rxvm -> rxbvm (AppleClang)
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- Building with ODBC support enabled.
+-- Configuring done (0.4s)
+-- Generating done (1.7s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+[  0%] Built target rxbin
+[  0%] Built target dslsyntax_parser
+[  0%] Built target re2c_objects_autogen_ver_to_vernum
+[  0%] Built target lemon
+[  4%] Built target re2c_objects_autogen
+[  8%] Built target avl_tree
+[  8%] Built target platform
+[ 12%] Built target rxvmmemory
+[ 12%] Built target rxpa
+[ 12%] Built target rxvm_platform_objects
+[ 16%] Built target rxbvm_core_objects
+[ 16%] Built target decnumber
+[ 16%] Built target rxlink
+[ 16%] Built target rxvmref
+[ 16%] Built target rxvmplugin
+[ 16%] Built target mc_decimal_manual
+[ 16%] Built target rxbvml
+[ 33%] Built target re2c
+[ 37%] Built target rxaslib
+[ 37%] Built target rxas
+[ 37%] Built target library-rxas
+[ 54%] Built target rxclib
+[ 54%] Built target rxc
+[ 54%] Built target token_bin
+[ 87%] Built target library-rexx
+[ 87%] Built target exit_dummy_bin
+[ 87%] Built target library
+[ 87%] Built target exit_dump_bin
+[ 87%] Built target exit_rxqueue_bin
+[ 87%] Built target exit_query_bin
+[ 87%] Built target exit_sort_bin
+[ 87%] Built target exit_add_bin
+[ 87%] Built target exit_sortx_bin
+[ 87%] Built target exit_address_bin
+[ 87%] Built target exit_execio_bin
+[ 91%] Built target exit_parse_bin
+[ 91%] Built target exit_fsay_bin
+[ 91%] Built target exit_msay_bin
+[ 91%] Built target exit_signal_bin
+[ 91%] Built target exit_substr_bin
+[ 91%] Built target exit_rexxscript_bin
+[ 91%] Built target exit_trace_bin
+[ 91%] Built target compiler_exit_bin
+[100%] Built target classlib
+[100%] cREXX compile and assemble httpcodec ...
+[100%] cREXX Linked Level G Library Image ...
+[100%] Built target rxfnsg
+[100%] Generating ts_http_codec_rxbvm_noopt.rxbin
+[100%] Generating ts_http_codec_rxbvm_opt.rxbin
+[100%] Generating ts_http_codec_rxtvm_opt.rxbin
+[100%] Generating ts_http_codec_rxtvm_noopt.rxbin
+[100%] Built target ts_http_codec_rxtvm_noopt_artifact
+[100%] Built target ts_http_codec_rxbvm_noopt_artifact
+[100%] Built target ts_http_codec_rxbvm_opt_artifact
+[100%] Built target ts_http_codec_rxtvm_opt_artifact
+[100%] Built target ts_http_codec

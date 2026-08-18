@@ -6,7 +6,7 @@ import rxfnsb
 main: procedure
    /*
     * Usage:
-    *   crexx rexxApiDoc --args source.crexx [extra-interface]
+    *   crexx rexxApiDoc --args source.crexx [extra-interface|--exposed]
     *
     * The generated LaTeX is written to stdout, so a complete directory can
     * be processed repeatably from a shell script and redirected to one file.
@@ -18,12 +18,17 @@ main: procedure
 
    source = .string
    extraInterface = .string
+   exposedOnly = .boolean
 
    source = sourcea.1
-   if sourcea[0] >= 2 then extraInterface = sourcea.2
-   else extraInterface = ''
+   extraInterface = ''
+   exposedOnly = 0
+   if sourcea[0] >= 2 then do
+      if lower(sourcea.2) = '--exposed' then exposedOnly = 1
+      else extraInterface = sourcea.2
+   end
 
-   call emitAlmanacClass source, extraInterface
+   call emitAlmanacClass source, extraInterface, exposedOnly
    return
 
 
@@ -37,16 +42,20 @@ main: procedure
  *      - Name: class [extends Base] [implements I1 I2 ...]
  *      - *: factory
  *      - name: method = .returnType
+ *      - name: task = .returnType
  *      - the first following arg statement
  *
  *  Notes:
  *      - Method bodies are not parsed.
  *      - Class fields are deliberately omitted from the public API.
+ *      - Underscore-prefixed callables are implementation-private and omitted.
  *      - An optional documentation-only interface can be supplied as the
  *        second command-line argument (for example Map for StringTreeMap).
+ *      - Passing --exposed emits only declarations named by the namespace
+ *        expose list. This keeps implementation classes out of public API.
  *  ------------------------------------------------------------------ */
 emitAlmanacClass: procedure
-   arg file=.string, extraInterface=.string
+   arg file=.string, extraInterface=.string, exposedOnly=.boolean
 
    content = loadText(file)
    lines = splitLines(content)
@@ -55,7 +64,9 @@ emitAlmanacClass: procedure
     * variable and copy it into classNamespace when a declaration starts.
     */
    namespace_ = ''
+   namespaceExposes = ''
    classNamespace = ''
+   classExposes = ''
    className = ''
    classKind = 'class'
    baseClass = '.object'
@@ -74,8 +85,11 @@ emitAlmanacClass: procedure
       low  = lower(line)
 
       if left(low,10) = 'namespace ' then do
-         parse var line . namespace_ .
+         parse var line . namespace_ namespaceTail
          namespace_ = strip(namespace_)
+         namespaceExposes = ''
+         if lower(word(namespaceTail,1)) = 'expose' then
+            namespaceExposes = subword(namespaceTail,2)
          iterate
       end
 
@@ -85,24 +99,27 @@ emitAlmanacClass: procedure
           * Flush the previous declaration before starting the next one.
           */
          if className \= '' then do
-            if strip(extraInterface) \= '' & \extraUsed then do
-               call appendUnique interfaces, extraInterface
-               extraUsed = 1
+            if \exposedOnly | isExposed(className,classExposes) then do
+               if strip(extraInterface) \= '' & \extraUsed then do
+                  call appendUnique interfaces, extraInterface
+                  extraUsed = 1
+               end
+               call emitOneClass classNamespace, className, classKind, baseClass, ,
+                                 interfaces, memberKind, memberName, memberType, memberArgs
+               classCount = classCount + 1
             end
-            call emitOneClass classNamespace, className, classKind, baseClass, ,
-                              interfaces, memberKind, memberName, memberType, memberArgs
-            classCount = classCount + 1
          end
 
          classKind = 'class'
          className = strip(left(line,pclass-1))
          classNamespace = namespace_
+         classExposes = namespaceExposes
          baseClass = '.object'
-         interfaces = .string[]
-         memberKind = .string[]
-         memberName = .string[]
-         memberType = .string[]
-         memberArgs = .string[]
+         call arraydrop interfaces
+         call arraydrop memberKind
+         call arraydrop memberName
+         call arraydrop memberType
+         call arraydrop memberArgs
 
          tail = strip(substr(line,pclass+7))
          call parseClassTail tail, baseClass, interfaces
@@ -112,24 +129,27 @@ emitAlmanacClass: procedure
       pinterface = pos(': interface', low)
       if pinterface > 0 then do
          if className \= '' then do
-            if strip(extraInterface) \= '' & \extraUsed then do
-               call appendUnique interfaces, extraInterface
-               extraUsed = 1
+            if \exposedOnly | isExposed(className,classExposes) then do
+               if strip(extraInterface) \= '' & \extraUsed then do
+                  call appendUnique interfaces, extraInterface
+                  extraUsed = 1
+               end
+               call emitOneClass classNamespace, className, classKind, baseClass, ,
+                                 interfaces, memberKind, memberName, memberType, memberArgs
+               classCount = classCount + 1
             end
-            call emitOneClass classNamespace, className, classKind, baseClass, ,
-                              interfaces, memberKind, memberName, memberType, memberArgs
-            classCount = classCount + 1
          end
 
          classKind = 'interface'
          className = strip(left(line,pinterface-1))
          classNamespace = namespace_
+         classExposes = namespaceExposes
          baseClass = ''
-         interfaces = .string[]
-         memberKind = .string[]
-         memberName = .string[]
-         memberType = .string[]
-         memberArgs = .string[]
+         call arraydrop interfaces
+         call arraydrop memberKind
+         call arraydrop memberName
+         call arraydrop memberType
+         call arraydrop memberArgs
 
          tail = strip(substr(line,pinterface+11))
          call parseInterfaceTail tail, interfaces
@@ -143,6 +163,7 @@ emitAlmanacClass: procedure
       if pfactory > 0 then do
          name = strip(left(line,pfactory-1))
          if name = '*' then name = className
+         if left(name,1) = '_' then iterate
 
          memberKind[memberKind[0]+1] = 'factory'
          n = memberKind[0]
@@ -155,6 +176,7 @@ emitAlmanacClass: procedure
       pmethod = pos(': method', low)
       if pmethod > 0 then do
          name = strip(left(line,pmethod-1))
+         if left(name,1) = '_' then iterate
          tail = strip(substr(line,pmethod+8))
          rtype = ''
          peq = pos('=',tail)
@@ -167,22 +189,47 @@ emitAlmanacClass: procedure
          memberArgs[n] = findArguments(lines,i+1)
          iterate
       end
+
+      ptask = pos(': task', low)
+      if ptask > 0 then do
+         name = strip(left(line,ptask-1))
+         if left(name,1) = '_' then iterate
+         tail = strip(substr(line,ptask+6))
+         rtype = ''
+         peq = pos('=',tail)
+         if peq > 0 then rtype = strip(substr(tail,peq+1))
+
+         memberKind[memberKind[0]+1] = 'task'
+         n = memberKind[0]
+         memberName[n] = name
+         memberType[n] = rtype
+         memberArgs[n] = findArguments(lines,i+1)
+         iterate
+      end
    end
 
    /* Flush the final declaration in the file. */
    if className \= '' then do
-      if strip(extraInterface) \= '' & \extraUsed then do
-         call appendUnique interfaces, extraInterface
-         extraUsed = 1
+      if \exposedOnly | isExposed(className,classExposes) then do
+         if strip(extraInterface) \= '' & \extraUsed then do
+            call appendUnique interfaces, extraInterface
+            extraUsed = 1
+         end
+         call emitOneClass classNamespace, className, classKind, baseClass, ,
+                           interfaces, memberKind, memberName, memberType, memberArgs
+         classCount = classCount + 1
       end
-      call emitOneClass classNamespace, className, classKind, baseClass, ,
-                        interfaces, memberKind, memberName, memberType, memberArgs
-      classCount = classCount + 1
    end
 
    if classCount = 0 then
       say '% rexxApiDoc: no class or interface declaration found in 'latexEscape(file)
 return
+
+
+/* Test whether a declaration is part of the namespace's public expose list. */
+isExposed: procedure=.boolean
+   arg name=.string, exposes=.string
+return wordpos(lower(strip(name)),lower(exposes)) > 0
 
 
 /* Emit one fully collected class or interface. */

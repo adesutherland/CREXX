@@ -124,17 +124,12 @@ builds by default. Developers who still need it can configure with
 `CREXX_BUILD_LEGACY_SOCKET_PLUGIN=ON`; otherwise source builds avoid that
 plugin's OpenSSL discovery and distribution burden.
 
-`lib/rxfnsb/rexx/rxhttp.crexx` provides a reusable Level B HTTP client on top of
-`rxsocket`. It builds request text with UTF-8 byte-counted `Content-Length`,
-reads raw socket responses, decodes `Content-Length` and HTTP/1.1 chunked
-bodies, preserves non-2xx response bodies for diagnostics, and exposes the last
-raw response/body through the `httpclient` interface. It sends
-`Accept-Encoding: identity` and `Connection: close`; compressed content remains
-out of scope. A non-zero fourth factory argument enables TLS through
-`socketconnecttls`. Callers can pass complete additional header lines through
-`sendWithHeaders`, `postWithHeaders`, or `buildRequestWithHeaders`, which is
-how hosted provider authentication is layered without duplicating HTTP framing.
-See `lib/rxfnsb/rexx/rxhttp.md`.
+`lib/rxfnsg/rexx/httpcore.crexx` is the private Level B `_rxhttpcore` backend
+for binary HTTP framing, parsing and codecs. It is shared by the Level G client,
+server and LLM providers and is not a public convenience client. The public
+pre-release HTTP surface is intentionally Level G so that policy, bounded task
+lifecycle and typed request/response values are not duplicated at two language
+levels.
 
 `lib/rxfnsb/rexx/trace.crexx` provides the Level B trace/debugger internals used
 by `rxdb` and by the `TRACE` certified compiler exit:
@@ -200,11 +195,10 @@ read scalar bindings auto-exposed from ADDRESS host-variable anchors such as
 `:name` and `${name}`. Anchor interpretation remains provider-specific; the VM
 only carries binding values and write-back updates.
 
-`lib/rxfnsg/rexx/llm.crexx` contains the first Level G LLM integration surface.
-Level G is layered on the Level B foundation: the module is `options levelg`,
-builds into `rxfnsg.rxbin`, and imports the Level B `rxfnsb`, `rxjson`, and
-`rxhttp` modules rather than duplicating their work. It exposes a
-class-shaped interface in the `rxfnsg` namespace:
+`lib/rxfnsg/rexx/llm.crexx` contains the Level G LLM integration surface. The
+module is `options levelg`, builds into `rxfnsg.rxbin`, uses `rxjson`, and sends
+through the public Level G `.httpclient` plus the shared private `_rxhttpcore`.
+It exposes a class-shaped interface in the `rxfnsg` namespace:
 
 - `llm`: provider-selecting interface for the local Ollama default
 - `ollama`: concrete local Ollama implementation over plain HTTP
@@ -213,17 +207,40 @@ class-shaped interface in the `rxfnsg` namespace:
 - `gemini`: concrete Gemini `generateContent` implementation over HTTPS
 
 The first provider posts JSON to a local Ollama `/api/generate` endpoint with
-`stream:false`, using `rxhttp` for HTTP transport and `rxjson` for
-request/response JSON. It keeps the last raw HTTP response plus decoded JSON
-body available for diagnostics. Hosted providers are also Rexx implementations:
-they use environment-variable API keys by default, build provider-specific JSON
-request bodies and authentication headers, and send through `rxhttp` with TLS
-enabled. `demos/llm/llm_address_environment.crexx` layers a Rexx ADDRESS
+`stream:false`. It keeps reconstructed HTTP diagnostics plus the decoded JSON
+body available. Hosted providers are also Rexx implementations: they use
+environment-variable API keys by default, build provider-specific JSON request
+bodies and authentication headers, and send through the same pooled client with
+TLS enabled. Each provider closes its owned HTTP pool through `close()`.
+`demos/llm/llm_address_environment.crexx` layers a Rexx ADDRESS
 provider over these clients so scripts can use model-shaped environments such
 as `ADDRESS LLM_GPT_4_1`, `ADDRESS CLAUDE_SONNET_4_5`, and
 `ADDRESS GEMMA4_LATEST`; the provider caches by environment instance and routes
 through a small driver registry of exact aliases and prefixes. See
 `lib/rxfnsg/rexx/llm.md` and `demos/llm/`.
+
+`lib/rxfnsg/rexx/http.crexx` and `httpserver.crexx` are the initial Level
+G HTTP surface. The transferable
+`.httpclient.pooled(origin, connections, admission, maximum_response, ?policy)`
+supports buffered `request`, `get` and `post` task methods plus endpoint-backed
+`post_stream`. It exposes `.httpheaders`, `.httppolicy`, `.httpbody` and
+independent typed `.httpresponse` values. Each long-lived `.taskwork` connection
+owner holds at most one reusable socket. Fixed-size admission descriptors and
+type-4 byte endpoints carry canonical references and bytes, never socket
+integers or live VM values. The client provides safe headers, bounded budgets,
+verified TLS, same-origin 307/308 and idempotency-key replay policy, ambiguity
+history, fixed/chunked request streams, identity-encoded response streams and
+bounded gzip/zlib/raw-DEFLATE decoding for buffered responses.
+
+The clear-text buffered `.httpserver` owns every accepted socket on its
+controller and sends only complete `.httprequest` records to sealed
+`.httpservice .taskwork` targets. Handlers return `.httpresponse.text(...)` or
+`.httpresponse.binary(...)`; the controller revalidates the result against its
+limits. This does not use or implement `.taskscope.ask()` or `.serviceref`.
+Server TLS, HTTP/2, WebSockets, background lifecycle and streaming handlers are
+outside the current contract. See the
+[concurrent HTTP client/server guide](../books/crexx_library_reference/concurrent_http.md)
+and the both-VM `lib/rxfnsg/tests_functional/ts_http_*` fixtures.
 
 `lib/rxfnsl/rexx/tinyexpr.crexx` contains the first Level L
 language-engineering proving slice. It is deliberately not a lexer generator or
@@ -350,6 +367,26 @@ and other shapes keep normal call/copyback behavior unless their storage proof
 is equally strong. Multi-tail source expressions retain canonical construction
 where conversion, evaluation order, or TRACE observation has not proved the
 two-segment form equivalent.
+
+`lib/classlib/Concurrency.crexx` is the explicit Level B concurrency surface.
+It ships in `classlib.rxbin` and implements the
+pool, scope, task, target/work/context, completion, channel/request,
+`ChannelValue`/codec, byte-endpoint, service-reference and transfer-buffer
+interfaces. Local and isolated-process pool paths reach RXVM only through
+authored `chanopen`, `chanstart`, `chanwait`, `chancancel` and `chanclose`
+instructions; there is no RXPA task-start path or procedure-name-string
+dispatch. Level G task procedures/methods, task expressions and `DO PARALLEL`
+lower through these classes, including receiver-side `.taskwork` factories.
+The syntax is gated by `OPTIONS LEVELG`; Level B programs may use the explicit
+classes directly. Service `ask` and pool statistics deliberately signal
+unsupported status `19`. `.taskcontext.endpoint()` reconstructs a worker-local
+byte endpoint from a transferable type-4 provider reference and has a direct
+public-contract test through the full toolchain and both VM variants.
+Functional tests are in `lib/classlib/tests_functional/testConcurrency.crexx`;
+`testTaskContextEndpoint.crexx` and imported task method/`.taskwork` tests
+exercise `rxc`, `rxas`, `rxlink` and both VMs. The enduring architecture and
+status boundary is
+[`CREXX_CONCURRENCY.md`](CREXX_CONCURRENCY.md).
 
 Level B classlib collection names carry their value contract because the
 language does not yet have generics. Current public classlib containers and

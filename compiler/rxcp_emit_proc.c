@@ -31,6 +31,7 @@
 #include "rxcpbgmr.h"
 #include "rxcp_emit.h"
 #include "rxcp_val.h"
+#include "rxcp_util.h"
 
 static int node_is_inside_imported_file(ASTNode *node) {
     while (node) {
@@ -39,6 +40,55 @@ static int node_is_inside_imported_file(ASTNode *node) {
         node = node->parent;
     }
     return 0;
+}
+
+static int node_is_taskwork_factory(ASTNode *node) {
+    ASTNode *class_node;
+    char *class_name;
+    int result;
+
+    if (!node || node->node_type != FACTORY ||
+        !(class_node = node->parent) ||
+        class_node->node_type != CLASS_DEF ||
+        !class_node->symbolNode || !class_node->symbolNode->symbol) {
+        return 0;
+    }
+    class_name = sym_frnm(class_node->symbolNode->symbol);
+    if (!class_name) return 0;
+    result = symbol_name_assignable_to(
+            node->context, class_name, "concurrency.taskwork");
+    free(class_name);
+    return result;
+}
+
+static int node_is_taskwork_run_method(ASTNode *node) {
+    ASTNode *class_node;
+    char *class_name;
+    char *method_name;
+    int result;
+
+    if (!node || node->node_type != METHOD ||
+        !(class_node = node->parent) ||
+        class_node->node_type != CLASS_DEF ||
+        !class_node->symbolNode || !class_node->symbolNode->symbol ||
+        !node->symbolNode || !node->symbolNode->symbol) {
+        return 0;
+    }
+    method_name = sym_frnm(node->symbolNode->symbol);
+    if (!method_name || strlen(method_name) < sizeof(".run") - 1u ||
+        strcmp(method_name + strlen(method_name) - (sizeof(".run") - 1u),
+               ".run") != 0) {
+        free(method_name);
+        return 0;
+    }
+    free(method_name);
+
+    class_name = sym_frnm(class_node->symbolNode->symbol);
+    if (!class_name) return 0;
+    result = symbol_name_assignable_to(
+            node->context, class_name, "concurrency.taskwork");
+    free(class_name);
+    return result;
 }
 
 static int node_is_runtime_callable_reference(ASTNode *node) {
@@ -270,7 +320,9 @@ void emit_proc(ASTNode *node, void *pl) {
                 /* A declaration - external */
                 /* Imported declarations are consumer snapshots; emit only callables the generated RXAS still references. */
                 if (node_is_inside_imported_file(node) &&
-                    !imported_declaration_has_runtime_reference(node)) {
+                    !imported_declaration_has_runtime_reference(node) &&
+                    !node_is_taskwork_factory(node) &&
+                    !node_is_taskwork_run_method(node)) {
                     if (!node->output) node->output = output_f();
                     break;
                 }
@@ -297,6 +349,21 @@ void emit_proc(ASTNode *node, void *pl) {
                               proc_label,
                               args
                 );
+                if (node->is_task_callable || node_is_taskwork_factory(node)) {
+                    char *placeholder = rxcp_task_placeholder_hex(proc_fqn);
+                    const char *task_option = node_is_taskwork_factory(node)
+                            ? ".task3"
+                            : (node->node_type == METHOD ? ".task2" : ".task1");
+                    char *with_task = placeholder
+                        ? mprintf("%s   .meta \"%s\"=\"%s\" %s\n",
+                                  buf, proc_fqn, task_option, placeholder)
+                        : 0;
+                    free(placeholder);
+                    if (with_task) {
+                        free(buf);
+                        buf = with_task;
+                    }
+                }
                 if (node->output) output_prepend_text(buf, node->output);
                 else node->output = output_fs(buf);
                 free(type);
@@ -361,6 +428,21 @@ void emit_proc(ASTNode *node, void *pl) {
                     char *with_payload = mprintf("%s%s\"\n", buf, inline_payload);
                     free(buf);
                     buf = with_payload;
+                }
+                if (node->is_task_callable || node_is_taskwork_factory(node)) {
+                    char *placeholder = rxcp_task_placeholder_hex(proc_fqn);
+                    const char *task_option = node_is_taskwork_factory(node)
+                            ? ".task3"
+                            : (node->node_type == METHOD ? ".task2" : ".task1");
+                    char *with_task = placeholder
+                        ? mprintf("%s   .meta \"%s\"=\"%s\" %s\n",
+                                  buf, proc_fqn, task_option, placeholder)
+                        : 0;
+                    free(placeholder);
+                    if (with_task) {
+                        free(buf);
+                        buf = with_task;
+                    }
                 }
                 if (node->output) output_prepend_text(buf, node->output);
                 else node->output = output_fs(buf);

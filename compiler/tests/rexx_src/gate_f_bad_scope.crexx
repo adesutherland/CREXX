@@ -1,0 +1,8 @@
+options levelg
+namespace gate_f_bad_scope
+
+main: procedure = .int
+  do parallel using 7
+    say "never"
+  end
+  return 0

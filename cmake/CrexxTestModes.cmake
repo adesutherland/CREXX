@@ -9,7 +9,7 @@ function(_crexx_register_linked_opt_artifact TARGET_NAME)
 endfunction()
 
 function(_crexx_register_runtime_test)
-    set(options PASS_TEST_NAME_ARGUMENT)
+    set(options PASS_TEST_NAME_ARGUMENT LINKED)
     set(oneValueArgs NAME RUNNER PROGRAM WORKING_DIRECTORY
             EXPECTED_EXIT_CODE EXPECTED_FAILURE_DESCRIPTION)
     set(multiValueArgs RUNTIME_ARGS TEST_LABELS REQUIRED_OUTPUT_REGEX FORBIDDEN_OUTPUT_REGEX)
@@ -27,7 +27,7 @@ function(_crexx_register_runtime_test)
     if(CREXX_PASS_TEST_NAME_ARGUMENT)
         list(APPEND _crexx_runtime_args -a ${CREXX_NAME})
     endif()
-    if(CREXX_NAME MATCHES "_opt$")
+    if(CREXX_LINKED OR CREXX_NAME MATCHES "_opt$")
         set(_crexx_script "${CMAKE_CURRENT_BINARY_DIR}/${CREXX_NAME}_linked_runtime.cmake")
         crexx_write_linked_runtime_script(
                 OUTPUT "${_crexx_script}"
@@ -47,7 +47,11 @@ function(_crexx_register_runtime_test)
                 COMMAND ${CMAKE_COMMAND} -P "${_crexx_script}"
                 WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
         )
-        list(APPEND _crexx_labels linked_opt)
+        if(CREXX_NAME MATCHES "_opt$")
+            list(APPEND _crexx_labels linked_opt)
+        else()
+            list(APPEND _crexx_labels linked)
+        endif()
     elseif(NOT "${CREXX_EXPECTED_EXIT_CODE}" STREQUAL "")
         set(_crexx_script "${CMAKE_CURRENT_BINARY_DIR}/${CREXX_NAME}_checked_runtime.cmake")
         crexx_write_runtime_script(
@@ -85,7 +89,7 @@ function(_crexx_register_runtime_test)
 endfunction()
 
 function(crexx_add_rexx_opt_matrix)
-    set(options PASS_TEST_NAME_ARGUMENT)
+    set(options PASS_TEST_NAME_ARGUMENT LINKED_ALL_MODES)
     set(oneValueArgs NAME SOURCE WORKING_DIRECTORY TARGET_GROUP RUNNER COMPILER_TARGET ASSEMBLER_TARGET
             EXPECTED_EXIT_CODE EXPECTED_FAILURE_DESCRIPTION)
     set(multiValueArgs DEPENDS IMPORT_PATHS RXC_FLAGS RXAS_FLAGS RUNTIME_ARGS TEST_LABELS
@@ -155,13 +159,16 @@ function(crexx_add_rexx_opt_matrix)
         if(CREXX_TARGET_GROUP)
             add_dependencies(${CREXX_TARGET_GROUP} ${_crexx_artifact_target})
         endif()
-        if(_crexx_mode STREQUAL "opt")
+        if(_crexx_mode STREQUAL "opt" OR CREXX_LINKED_ALL_MODES)
             _crexx_register_linked_opt_artifact(${_crexx_artifact_target})
         endif()
 
         set(_crexx_runtime_test_args)
         if(CREXX_PASS_TEST_NAME_ARGUMENT)
             list(APPEND _crexx_runtime_test_args PASS_TEST_NAME_ARGUMENT)
+        endif()
+        if(CREXX_LINKED_ALL_MODES)
+            list(APPEND _crexx_runtime_test_args LINKED)
         endif()
         _crexx_register_runtime_test(
                 NAME ${CREXX_NAME}_${_crexx_mode}

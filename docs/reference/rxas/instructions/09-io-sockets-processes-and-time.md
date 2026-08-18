@@ -1,10 +1,193 @@
 # I/O, Sockets, Processes, And Time
 
-These instructions expose C-stream I/O, console I/O, environment and time
-queries, VM-managed TCP/TLS sockets, and process redirection. File handles are
-opaque `FILE *` values stored in integer payloads; socket handles are VM-managed
-integers. Unless stated otherwise, low-level C-stream failures are returned or
-left in stream status rather than translated into VM signals.
+These instructions expose provider channels, C-stream I/O, console I/O,
+environment and time queries, VM-managed TCP/TLS sockets, and structured child
+process execution. File handles are opaque `FILE *` values stored in integer
+payloads; socket and channel handles are VM-managed integers. Unless stated
+otherwise, low-level C-stream failures are returned or left in stream status
+rather than translated into VM signals.
+
+## `chancancel`
+
+Request cancellation of one operation owned by a channel.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x028d` | `chancancel rStatus,rChannel,rTicket,rReason` | Return cancellation status. |
+
+### Operands And Semantics
+
+The channel and ticket are execution-local integer capabilities. `rReason` is
+a canonical RXCV binary reason document. Only `rStatus` is written. Providers
+may report a race with an already-terminal operation; cancellation never
+transfers or forcibly shares a live VM value.
+
+### Signals
+
+Operational failures, stale capabilities and wrong ownership are returned in
+`rStatus`; the instruction itself has no VM signal continuation.
+
+### Example
+
+<!-- rxas-example name="channel-chancancel" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=4
+    chancancel r0,r1,r2,r3
+    ret
+```
+
+### Related
+
+`chanopen`, `chanstart`, `chanwait`, `chanclose`.
+
+## `chanclose`
+
+Close a channel using drain or cancel semantics.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x028e` | `chanclose rStatus,rChannel,rMode` | Close and release the channel lifecycle. |
+
+### Operands And Semantics
+
+Mode `1` drains admitted operations; mode `2` cancels them. Close is the
+structured teardown boundary: provider workers, tickets and attached resources
+are joined or released before successful completion. Only `rStatus` is
+written.
+
+### Signals
+
+Invalid modes, stale handles and provider failures are status results, not VM
+signals.
+
+### Example
+
+<!-- rxas-example name="channel-chanclose" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    chanclose r0,r1,r2
+    ret
+```
+
+### Related
+
+`chanopen`, `chanstart`, `chanwait`, `chancancel`.
+
+## `chanopen`
+
+Open one provider channel with explicit capability requirements.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x028a` | `chanopen rStatus,rChannel,rProviderType,rRequiredCapabilities,rConfiguration` | Return status and a channel capability. |
+
+### Operands And Semantics
+
+Provider type is one mutually exclusive implementation code; required
+capabilities are a bit mask. Configuration is a canonical versioned RXCV
+binary document. The two output registers must be distinct, though outputs may
+alias inputs because the VM snapshots all inputs first. Failure leaves the
+channel output at `0` and no partially opened provider resource.
+
+### Signals
+
+Malformed configuration, unavailable providers, unsupported capabilities and
+allocation failures are returned in `rStatus`; the instruction raises no VM
+signal.
+
+### Example
+
+<!-- rxas-example name="channel-chanopen" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=5
+    chanopen r0,r1,r2,r3,r4
+    ret
+```
+
+### Related
+
+`chanstart`, `chanwait`, `chancancel`, `chanclose`.
+
+## `chanstart`
+
+Submit one canonical operation envelope to an open channel.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x028b` | `chanstart rStatus,rTicket,rChannel,rEnvelope,rWaitMicroseconds` | Return admission status and ticket. |
+
+### Operands And Semantics
+
+The envelope is a canonical RXCV binary value. A wait of `-1` waits forever,
+`0` is nonblocking, and a positive value is a relative microsecond budget.
+Admission and backpressure are provider-bounded. The two output registers must
+be distinct; failure leaves the ticket at `0`.
+
+### Signals
+
+Invalid envelopes, timeouts, backpressure and lifecycle errors are status
+results, not VM signals.
+
+### Example
+
+<!-- rxas-example name="channel-chanstart" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=5
+    chanstart r0,r1,r2,r3,r4
+    ret
+```
+
+### Related
+
+`chanopen`, `chanwait`, `chancancel`, `chanclose`.
+
+## `chanwait`
+
+Observe the next completion from a channel.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x028c` | `chanwait rStatus,rCompletion,rChannel,rWaitMicroseconds` | Return status and canonical completion. |
+
+### Operands And Semantics
+
+The wait budget uses the same `-1`, `0`, or positive-relative-microseconds
+contract as `chanstart`. Successful observation writes a receiver-owned RXCV
+binary completion and consumes that observation. The two outputs must be
+distinct; failure leaves the completion as an empty binary value.
+
+### Signals
+
+Would-block, timeout, stale capability and provider failure are returned in
+`rStatus`; the instruction raises no VM signal.
+
+### Example
+
+<!-- rxas-example name="channel-chanwait" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=4
+    chanwait r0,r1,r2,r3
+    ret
+```
+
+### Related
+
+`chanopen`, `chanstart`, `chancancel`, `chanclose`.
 
 ## `fclearerr`
 
@@ -535,10 +718,6 @@ main() .locals=1
     getenv r0,"PATH"
     ret
 ```
-
-### Related
-
-`spawn`.
 
 ## `mtime`
 
@@ -1412,46 +1591,6 @@ main() .locals=3
 ### Related
 
 `sockblocking`, `sockpending`.
-
-## `spawn`
-
-Run a command through the platform spawn layer with optional redirections.
-
-### Forms
-
-| Opcode | Form | Effect |
-| --- | --- | --- |
-| `0x01d2` | `spawn rExitCode,rCommand,rOptions` | Execute and store command status. |
-
-### Operands And Semantics
-
-The command is copied and NUL-terminated. `rOptions` attributes are, in order:
-stdin redirect, stdout redirect, stderr redirect, environment variables, spawn
-mode, and cREXX ADDRESS binding metadata; missing attributes use defaults.
-Redirect values are native redirect payloads made by the redirect instructions.
-On success only `rExitCode.int` changes; command/options are unchanged. Spawn
-consumes/cleans redirect resources as defined by the redirect protocol.
-
-### Signals
-
-Raises `FAILURE` when the command is not found or the platform spawn layer
-fails, with diagnostic text when available. Command-buffer allocation failure
-is not translated.
-
-### Example
-
-<!-- rxas-example name="io-spawn" test="assemble" -->
-```rxas
-.globals=0
-main() .locals=3
-    load r1,"true"
-    spawn r0,r1,r2
-    ret
-```
-
-### Related
-
-`redir2str`, `str2redir`, `nullredir`, `getenv`.
 
 ## `time`
 

@@ -1,0 +1,52 @@
+options levelg comments_dash
+namespace concurrency_basic
+
+first: task = .int
+  return 20
+
+second: task = .int
+  return 22
+
+twice: task = .int
+  arg value = .int
+  return value * 2
+
+plusone: task = .int
+  arg value = .int
+  return value + 1
+
+announce: task
+  arg text = .string
+  say text
+  return
+
+ordinary: procedure = .int
+  return 1
+
+main: procedure = .int
+  -- Independent task calls in one expression may overlap.
+  if first() + second() <> 42 then return 1
+
+  do parallel
+    left = twice(20)
+    right = plusone(1)
+
+    -- This is an ordinary procedure, so it stays on the controller.
+    controller_value = ordinary()
+
+    -- Reading left materializes that pending task result here.
+    if left <> 40 then return 2
+    if controller_value <> 1 then return 3
+  end
+
+  -- END has already accounted for right even though it was not read above.
+  if right <> 2 then return 4
+
+  -- CALL task routines share the parallel scope and join at END.
+  do parallel
+    call announce "worker one"
+    call announce "worker two"
+  end
+
+  say "PASS: basic concurrency example"
+  return 0

@@ -53,7 +53,7 @@ jobs:
       - name: CTest Release
         shell: msys2 {0}
         run: |
-          ctest --test-dir "${{ runner.temp }}/release" --output-on-failure --no-tests=error --parallel 1
+          ctest --test-dir "${{ runner.temp }}/release" --output-on-failure --no-tests=error --label-exclude "^performance-measurement$" --parallel 1
 
       - name: Collect executables
         shell: msys2 {0}

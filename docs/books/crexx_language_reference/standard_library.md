@@ -78,11 +78,15 @@ work:
   objects
 - `rxsocket`: VM-backed TCP sockets with optional TLS depending on build
   configuration
-- `rxhttp`: HTTP client support layered on `rxsocket`
 
-These modules are intentionally modest. They provide enough transport and JSON
-support for current demos and integrations without claiming to be complete web
-frameworks.
+The private Level B `_rxhttpcore` module provides binary HTTP framing, parsing
+and codecs for higher layers; it is not a user client. User-facing HTTP belongs
+to `rxfnsg`: its initial Level G client provides pooled task requests,
+policy, buffered content decoding and bounded response streaming, while its
+bounded server dispatches complete request values to task classes. The Level G
+LLM providers use the same client and private backend. See
+[Concurrent HTTP client and server](../crexx_library_reference/concurrent_http.md)
+for the complete surface and examples.
 
 ## ADDRESS and Trace Support
 
@@ -102,9 +106,13 @@ smoke-tested debugging aid, not as a supported full debugger contract.
 ## Class Library
 
 `classlib` is loaded by the `crexx` driver by default and is part of the beta
-surface, but its public contract should stay small until class-library tests
-and examples are expanded. Prefer documenting concrete, tested classes rather
-than broad promises.
+surface. Its initial concurrency classes include `.taskpool`,
+`.taskscope`, `.task`, `.completion`, `.tasktarget`, `.taskwork`, `.channel`,
+`.channelvalue`, `.byteendpoint` and `.transferbuffer`. They provide explicit
+control beneath Level G syntax while preserving one provider-neutral contract.
+See [Concurrency classes](../crexx_library_reference/concurrency.md) for
+lifecycle rules and examples. Unsupported telemetry and service declarations
+fail explicitly; they do not return invented values.
 
 ## RexxScript
 
@@ -118,11 +126,15 @@ The product documentation lives with the runtime source:
 - [RexxScript user guide](../../../rexxscript/doc/user-guide.md)
 - [RexxScript developer guide](../../../rexxscript/doc/developer-guide.md)
 
-## Level G and LLM Work
+## Level G Libraries
 
-`rxfnsg` contains early Level G class-shaped library work, including the LLM
-client modules used by demos. This is useful and real, but Level G itself is
-not the baseline user language for the Release 1 beta line.
+`rxfnsg` contains the LLM client modules used by demos and the initial
+concurrent HTTP client/server implementation. Level G task/parallel syntax and
+the classlib concurrency surface are implemented and tested on the current development
+baseline, but they are not the stable Level B contract. Start with the
+[concurrent programming guide](../crexx_programming_guide/concurrency.md),
+which includes complete checked examples and explains when ordinary work stays
+on the controlling execution.
 
 ## Level L Generated-Output Work
 

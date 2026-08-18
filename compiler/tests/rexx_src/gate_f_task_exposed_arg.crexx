@@ -1,0 +1,9 @@
+options levelg
+namespace gate_f_task_exposed_arg
+
+invalid: task = .int
+  arg expose value = .int
+  return value
+
+main: procedure = .int
+  return 0

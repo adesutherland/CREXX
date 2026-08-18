@@ -3,10 +3,14 @@ cmake_minimum_required(VERSION 3.24)
 project(Interpreter C)
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 find_package(Threads REQUIRED)
 
-set(CMAKE_C_STANDARD 99) # enables inline keyword
+set(CMAKE_C_STANDARD 11) # required by the concurrency atomics
+set(CMAKE_C_STANDARD_REQUIRED ON)
 if(MSVC)
+    # Visual Studio exposes its C11 atomic implementation behind this switch.
+    add_compile_options($<$<COMPILE_LANGUAGE:C>:/experimental:c11atomics>)
     set(CMAKE_C_FLAGS_RELEASE "/O2 /Ob2 /DNDEBUG")
 else()
     set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is about as good as it get in practice
@@ -71,10 +75,25 @@ set(RXVM_CORE_OBJECT_SOURCES
         rxvmhandlers_numeric.inc
         rxvmhandlers_string.inc
         rxvmhandlers_system.inc
+        rxvmhandlers_channel.inc
         rxvmworker.h
         rxvmworker.c
         rxvmprogram.h
         rxvmprogram.c
+        rxvmexecutor.h
+        rxvmexecutor.c
+        rxvmchannel.h
+        rxvmchannel_internal.h
+        rxvmchannel.c
+        rxvmchannel_process.h
+        rxvmchannel_process.c
+        rxvmprocessprotocol.h
+        rxvmprocessprotocol.c
+        rxvmprocessworker.h
+        rxvmprocessworker.c
+        rxvmbyteendpoint.c
+        rxvmchannel_byte.c
+        rxvmchannel_child.c
         rxvmactive.c
         rxvmstem.h
         rxvmload.c
@@ -209,8 +228,15 @@ set(CREXX_SOCKET_TARGET_LIBS)
 set(CREXX_SOCKET_MANUAL_LINK_LIBS)
 set(CREXX_NATIVE_RUNTIME_LINK_FLAGS)
 if(WIN32)
-    set(CREXX_SOCKET_TARGET_LIBS ws2_32)
-    set(CREXX_SOCKET_MANUAL_LINK_LIBS -lws2_32)
+    # advapi32 supplies the OS CSPRNG used for runtime-scoped channel
+    # capability identities; every VM embedding must retain that dependency.
+    set(CREXX_SOCKET_TARGET_LIBS ws2_32 advapi32)
+    set(CREXX_SOCKET_MANUAL_LINK_LIBS -lws2_32 -ladvapi32)
+    if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
+        list(APPEND CREXX_NATIVE_RUNTIME_LINK_FLAGS advapi32.lib)
+    else()
+        list(APPEND CREXX_NATIVE_RUNTIME_LINK_FLAGS -ladvapi32)
+    endif()
 endif()
 
 if(WIN32)
@@ -572,6 +598,36 @@ add_executable(test_rxvmworker tests/test_rxvmworker.c rxvmworker.c)
 target_include_directories(test_rxvmworker PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(test_rxvmworker PRIVATE rxvmmemory Threads::Threads)
 
+add_executable(test_rxvmchannel_registry
+        tests/test_rxvmchannel_registry.c)
+target_include_directories(test_rxvmchannel_registry PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ../inc ../assembler ../binutils/include ../platform ../avl_tree
+        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+target_link_libraries(test_rxvmchannel_registry PRIVATE rxvml Threads::Threads)
+
+add_executable(test_rxvmchannel_process
+        tests/test_rxvmchannel_process.c)
+target_include_directories(test_rxvmchannel_process PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ../inc ../assembler ../binutils/include ../platform ../avl_tree
+        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+target_link_libraries(test_rxvmchannel_process PRIVATE rxvml Threads::Threads)
+
+add_executable(test_rxvmbyteendpoint tests/test_rxvmbyteendpoint.c)
+target_include_directories(test_rxvmbyteendpoint PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ../inc ../assembler ../binutils/include ../platform ../avl_tree
+        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+target_link_libraries(test_rxvmbyteendpoint PRIVATE rxvml Threads::Threads)
+
+add_executable(test_rxvmchannel_byte tests/test_rxvmchannel_byte.c)
+target_include_directories(test_rxvmchannel_byte PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ../inc ../assembler ../binutils/include ../platform ../avl_tree
+        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+target_link_libraries(test_rxvmchannel_byte PRIVATE rxvml Threads::Threads)
+
 add_executable(test_rxvmactive tests/test_rxvmactive.c)
 target_include_directories(test_rxvmactive PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -619,6 +675,13 @@ target_include_directories(mutate_jtable_rxbin PRIVATE
         ../binutils/include
         ../platform)
 
+add_executable(mutate_retired_process_opcode
+        tests/mutate_retired_process_opcode.c)
+target_link_libraries(mutate_retired_process_opcode PRIVATE rxbin)
+target_include_directories(mutate_retired_process_opcode PRIVATE
+        ../binutils/include
+        ../platform)
+
 add_executable(test_rxpa_utf_validation
         tests/test_rxpa_utf_validation.c
         rxpafuncs.c
@@ -655,6 +718,15 @@ add_test(NAME rxvmstem_storage COMMAND test_rxvmstem)
 add_test(NAME rxvmstem_allocator_family COMMAND test_rxvmstem_allocator_family)
 add_test(NAME rxvmmemory_allocator COMMAND test_rxvmmemory)
 add_test(NAME rxvmworker_lifecycle COMMAND test_rxvmworker)
+add_test(NAME rxvmchannel_provider_registry COMMAND test_rxvmchannel_registry)
+set_tests_properties(rxvmchannel_provider_registry PROPERTIES
+        LABELS "interpreter;perf3;gate-f;f1c;channels;provider-registry")
+add_test(NAME rxvmbyteendpoint_substrate COMMAND test_rxvmbyteendpoint)
+set_tests_properties(rxvmbyteendpoint_substrate PROPERTIES
+        LABELS "interpreter;perf3;gate-f;f1d;channels;byte-endpoint;lifecycle")
+add_test(NAME rxvmchannel_byte_provider COMMAND test_rxvmchannel_byte)
+set_tests_properties(rxvmchannel_byte_provider PROPERTIES
+        LABELS "interpreter;perf3;gate-f;f1d;channels;byte-endpoint;provider-reference")
 add_test(NAME rxvmactive_isolation COMMAND test_rxvmactive)
 add_test(NAME rxvmplugin_context_ownership
         COMMAND test_rxvmplugin_context
@@ -708,6 +780,32 @@ set_tests_properties(rxvmstem_storage PROPERTIES
         LABELS "interpreter;stem;nr15")
 set_tests_properties(rxvmstem_allocator_family PROPERTIES
         LABELS "interpreter;stem;memory")
+
+crexx_label_concurrency_tests(SP01
+        rxvmmemory_allocator
+        rxvmworker_lifecycle
+        rxvmactive_isolation
+        rxvmplugin_context_ownership
+        rxpa_static_catalogue_replay
+        rxpa_static_session_lifecycle
+        rxpa_session_factory_failure_rollback
+        rxpa_session_manifest_fail_closed
+        rxpa_rxmath_static_mixed_policy
+        rxpa_legacy_call_serialization
+        rxpa_process_reentrant_overlap
+        rxpa_legacy_recursive_reentry
+        rxpa_branch_free_load_binding
+        rxpa_bound_legacy_serialization
+        rxpa_legacy_transition_quiescence)
+crexx_label_concurrency_tests(SP02 rxvmchannel_provider_registry)
+crexx_label_concurrency_tests(SP03
+        rxvmchannel_provider_registry
+        rxvmbyteendpoint_substrate
+        rxvmchannel_byte_provider)
+crexx_label_concurrency_tests(SP04
+        rxvmchannel_provider_registry
+        rxvmbyteendpoint_substrate
+        rxvmchannel_byte_provider)
 
 add_test(
         NAME crexxsaa_cache_tool_location
@@ -1175,6 +1273,8 @@ foreach(_crexx_concrete_vm IN LISTS CREXX_CONCRETE_VM_TARGETS)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(rxasdispatchcontract-${_crexx_concrete_vm} PROPERTIES
             LABELS "interpreter;rxas;dispatch")
+    crexx_label_concurrency_tests(SP02
+            rxasdispatchcontract-${_crexx_concrete_vm})
 endforeach()
 
 if(BUILD_TESTING AND CREXX_VM_PROFILING)
@@ -1429,6 +1529,152 @@ set_tests_properties(rxasbinaryslicetests PROPERTIES
         RESOURCE_LOCK rxas_binary_slice_scratch)
 crexx_add_rxas_vm_binary(tests_binary_memory "typed binary memory operations")
 crexx_add_vm_test(NAME rxasbinarymemorytests RXVM_ARGS tests_binary_memory PASS_REGULAR_EXPRESSION "PASS: Binary Memory Typed Ops")
+
+# Gate F F1c executes the same local-channel image on both concrete VMs.
+add_custom_command(
+        OUTPUT test_gate_f_channel_local.rxbin
+        COMMAND $<TARGET_FILE:rxas> -o test_gate_f_channel_local
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_gate_f_channel_local
+        DEPENDS tests/test_gate_f_channel_local.rxas rxas rxbvm
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Assembling Gate F F1c local channel fixture ...")
+add_custom_target(test_gate_f_channel_local_bin ALL
+        DEPENDS test_gate_f_channel_local.rxbin)
+add_test(NAME gate_f_channel_local_rxbvm
+        COMMAND $<TARGET_FILE:rxbvm> test_gate_f_channel_local
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(gate_f_channel_local_rxbvm PROPERTIES
+        LABELS "interpreter;perf3;gate-f;f1c;channels;lifecycle"
+        PASS_REGULAR_EXPRESSION "PASS: Gate F F1c local channel"
+        TIMEOUT 30)
+crexx_label_concurrency_tests(SP02 gate_f_channel_local_rxbvm)
+crexx_label_concurrency_tests(SP04 gate_f_channel_local_rxbvm)
+crexx_label_concurrency_tests(SP08 gate_f_channel_local_rxbvm)
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_dependencies(test_gate_f_channel_local_bin rxtvm)
+    add_test(NAME gate_f_channel_local_rxtvm
+            COMMAND $<TARGET_FILE:rxtvm> test_gate_f_channel_local
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(gate_f_channel_local_rxtvm PROPERTIES
+            LABELS "interpreter;perf3;gate-f;f1c;channels;lifecycle"
+            PASS_REGULAR_EXPRESSION "PASS: Gate F F1c local channel"
+            TIMEOUT 30)
+    crexx_label_concurrency_tests(SP02 gate_f_channel_local_rxtvm)
+    crexx_label_concurrency_tests(SP04 gate_f_channel_local_rxtvm)
+    crexx_label_concurrency_tests(SP08 gate_f_channel_local_rxtvm)
+endif()
+
+# Gate F F1e executes one transport/conformance image on both concrete VMs.
+add_custom_command(
+        OUTPUT test_gate_f_channel_process.rxbin
+        COMMAND $<TARGET_FILE:rxas> -o test_gate_f_channel_process
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_gate_f_channel_process
+        DEPENDS tests/test_gate_f_channel_process.rxas rxas rxbvm
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Assembling Gate F F1e process channel fixture ...")
+add_custom_target(test_gate_f_channel_process_bin ALL
+        DEPENDS test_gate_f_channel_process.rxbin)
+add_dependencies(test_rxvmchannel_process
+        test_gate_f_channel_process_bin rxbvm)
+add_test(NAME rxvmchannel_process_crash_replacement
+        COMMAND test_rxvmchannel_process
+                ${CMAKE_CURRENT_BINARY_DIR}/test_gate_f_channel_process.rxbin)
+set_tests_properties(rxvmchannel_process_crash_replacement PROPERTIES
+        LABELS "interpreter;perf3;gate-f;f1e;channels;process;crash;lifecycle"
+        PASS_REGULAR_EXPRESSION
+        "PASS: Gate F F1e process crash and replacement"
+        TIMEOUT 45)
+crexx_label_concurrency_tests(SP04 rxvmchannel_process_crash_replacement)
+crexx_label_concurrency_tests(SP08 rxvmchannel_process_crash_replacement)
+add_test(NAME gate_f_channel_process_rxbvm
+        COMMAND $<TARGET_FILE:rxbvm> test_gate_f_channel_process
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(gate_f_channel_process_rxbvm PROPERTIES
+        LABELS "interpreter;perf3;gate-f;f1e;channels;process;lifecycle"
+        PASS_REGULAR_EXPRESSION "PASS: Gate F F1e process channel"
+        TIMEOUT 45)
+crexx_label_concurrency_tests(SP04 gate_f_channel_process_rxbvm)
+crexx_label_concurrency_tests(SP08 gate_f_channel_process_rxbvm)
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_dependencies(test_gate_f_channel_process_bin rxtvm)
+    add_test(NAME gate_f_channel_process_rxtvm
+            COMMAND $<TARGET_FILE:rxtvm> test_gate_f_channel_process
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(gate_f_channel_process_rxtvm PROPERTIES
+            LABELS "interpreter;perf3;gate-f;f1e;channels;process;lifecycle"
+            PASS_REGULAR_EXPRESSION "PASS: Gate F F1e process channel"
+            TIMEOUT 45)
+    crexx_label_concurrency_tests(SP04 gate_f_channel_process_rxtvm)
+    crexx_label_concurrency_tests(SP08 gate_f_channel_process_rxtvm)
+endif()
+
+# Gate F replaces the pre-release spawn/redirect opcodes with the five channel
+# operations.  Source assembly rejects the retired mnemonics, while a stale
+# binary retaining numeric slot 466 must halt explicitly in both VM dispatches.
+add_custom_command(
+        OUTPUT tests_retired_process_opcode_base.rxbin
+        COMMAND $<TARGET_FILE:rxas> -o tests_retired_process_opcode_base
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_retired_process_opcode
+        DEPENDS tests/tests_retired_process_opcode.rxas rxas
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Assembling retired process-opcode base fixture ...")
+set(_retired_process_opcode_bins)
+foreach(_retired_process_opcode RANGE 466 471)
+    set(_retired_process_opcode_bin
+            "tests_retired_process_opcode_${_retired_process_opcode}.rxbin")
+    add_custom_command(
+            OUTPUT "${_retired_process_opcode_bin}"
+            COMMAND $<TARGET_FILE:mutate_retired_process_opcode>
+                    ${CMAKE_CURRENT_BINARY_DIR}/tests_retired_process_opcode_base.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/${_retired_process_opcode_bin}
+                    ${_retired_process_opcode}
+            DEPENDS tests_retired_process_opcode_base.rxbin
+                    mutate_retired_process_opcode
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Injecting retired process opcode ${_retired_process_opcode} into stale RXBIN fixture ...")
+    list(APPEND _retired_process_opcode_bins
+            "${_retired_process_opcode_bin}")
+endforeach()
+add_custom_target(test_retired_process_opcode_bin ALL
+        DEPENDS ${_retired_process_opcode_bins})
+add_dependencies(test_retired_process_opcode_bin rxbvm)
+foreach(_retired_process_opcode RANGE 466 471)
+    crexx_add_vm_expected_failure_test(
+            NAME retired_process_opcode_${_retired_process_opcode}_rxbvm
+            RUNNER $<TARGET_FILE:rxbvm>
+            RXVM_ARGS tests_retired_process_opcode_${_retired_process_opcode}
+            EXPECTED_EXIT_CODE 10
+            EXPECTED_FAILURE_DESCRIPTION "retired process opcode fails explicitly"
+            REQUIRED_OUTPUT_REGEX "UNKNOWN_INSTRUCTION"
+            TEST_LABELS "interpreter;rxas;gate-f;f1d;compatibility")
+    crexx_label_concurrency_tests(SP02
+            retired_process_opcode_${_retired_process_opcode}_rxbvm)
+    if(CREXX_THREADED_VM_SUPPORTED)
+        crexx_add_vm_expected_failure_test(
+                NAME retired_process_opcode_${_retired_process_opcode}_rxtvm
+                RUNNER $<TARGET_FILE:rxtvm>
+                RXVM_ARGS tests_retired_process_opcode_${_retired_process_opcode}
+                EXPECTED_EXIT_CODE 10
+                EXPECTED_FAILURE_DESCRIPTION "retired process opcode fails explicitly"
+                REQUIRED_OUTPUT_REGEX "UNKNOWN_INSTRUCTION"
+                TEST_LABELS "interpreter;rxas;gate-f;f1d;compatibility")
+        crexx_label_concurrency_tests(SP02
+                retired_process_opcode_${_retired_process_opcode}_rxtvm)
+    endif()
+endforeach()
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_dependencies(test_retired_process_opcode_bin rxtvm)
+endif()
+
+add_custom_command(
+        OUTPUT test_gate_f_channel_benchmark.rxbin
+        COMMAND $<TARGET_FILE:rxas> -o test_gate_f_channel_benchmark
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_gate_f_channel_benchmark
+        DEPENDS tests/test_gate_f_channel_benchmark.rxas rxas rxbvm
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Assembling Gate F F1b channel benchmark ...")
+add_custom_target(test_gate_f_channel_benchmark_bin ALL
+        DEPENDS test_gate_f_channel_benchmark.rxbin)
 crexx_add_rxas_vm_binary(tests_jump_table "linear jump table dispatch")
 crexx_add_vm_test(NAME rxasjumptabletests RXVM_ARGS tests_jump_table PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Ops")
 crexx_add_rxas_vm_binary(tests_jump_table_linear_sources "linear jump table source matrix")
@@ -1638,9 +1884,11 @@ function(crexx_configure_program_generation_control TARGET_NAME)
             COMMAND ${TARGET_NAME}
                     ${CMAKE_CURRENT_BINARY_DIR}/test_program_generation_control.rxbin
                     ${CMAKE_CURRENT_BINARY_DIR}/test_program_generation_late.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}-archive.rxbin
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(${TARGET_NAME} PROPERTIES
             LABELS "interpreter;perf3;gate-e;e4a;e4b")
+    crexx_label_concurrency_tests(SP01 ${TARGET_NAME})
 endfunction()
 
 add_executable(program_generation_control-rxvml
@@ -1773,6 +2021,7 @@ if(BUILD_TESTING AND
         set_tests_properties(${TARGET_NAME} PROPERTIES
                 LABELS "interpreter;perf3;gate-e;e5;private;industrial;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 120)
+        crexx_label_concurrency_tests(SP01 ${TARGET_NAME})
         add_test(
                 NAME ${TARGET_NAME}-doorbell-stress
                 COMMAND ${CMAKE_COMMAND} -E env
@@ -1784,6 +2033,10 @@ if(BUILD_TESTING AND
         set_tests_properties(${TARGET_NAME}-doorbell-stress PROPERTIES
                 LABELS "interpreter;perf3;gate-e;e5;private;industrial;race;lifecycle;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 120)
+        crexx_label_concurrency_stress_tests(SP01
+                ${TARGET_NAME}-doorbell-stress)
+        crexx_label_concurrency_tests(SP08
+                ${TARGET_NAME}-doorbell-stress)
         add_test(
                 NAME ${TARGET_NAME}-sparse-owner
                 COMMAND ${CMAKE_COMMAND} -E env
@@ -1795,6 +2048,7 @@ if(BUILD_TESTING AND
         set_tests_properties(${TARGET_NAME}-sparse-owner PROPERTIES
                 LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 120)
+        crexx_label_concurrency_tests(SP01 ${TARGET_NAME}-sparse-owner)
         add_test(
                 NAME ${TARGET_NAME}-sparse-owner-stress
                 COMMAND ${CMAKE_COMMAND} -E env
@@ -1807,6 +2061,10 @@ if(BUILD_TESTING AND
         set_tests_properties(${TARGET_NAME}-sparse-owner-stress PROPERTIES
                 LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;race;lifecycle;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 120)
+        crexx_label_concurrency_stress_tests(SP01
+                ${TARGET_NAME}-sparse-owner-stress)
+        crexx_label_concurrency_tests(SP08
+                ${TARGET_NAME}-sparse-owner-stress)
         add_test(
                 NAME ${TARGET_NAME}-sparse-progress
                 COMMAND ${CMAKE_COMMAND} -E env
@@ -1818,6 +2076,8 @@ if(BUILD_TESTING AND
         set_tests_properties(${TARGET_NAME}-sparse-progress PROPERTIES
                 LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 30)
+        crexx_label_concurrency_tests(SP01 ${TARGET_NAME}-sparse-progress)
+        crexx_label_concurrency_tests(SP08 ${TARGET_NAME}-sparse-progress)
         add_test(
                 NAME ${TARGET_NAME}-native-return
                 COMMAND ${CMAKE_COMMAND} -E env
@@ -1829,6 +2089,26 @@ if(BUILD_TESTING AND
         set_tests_properties(${TARGET_NAME}-native-return PROPERTIES
                 LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;native;lifecycle;${_crexx_e5_doorbell_platform_label}"
                 TIMEOUT 30)
+        crexx_label_concurrency_tests(SP01 ${TARGET_NAME}-native-return)
+        crexx_label_concurrency_tests(SP08 ${TARGET_NAME}-native-return)
+        add_test(
+                NAME ${TARGET_NAME}-e6-worker-topology-w8
+                COMMAND ${CMAKE_COMMAND} -E env
+                        CREXX_VM_E5_DOORBELL=${_crexx_e5_doorbell_backend}
+                        $<TARGET_FILE:${TARGET_NAME}>
+                        --worker-topology
+                        ${CMAKE_CURRENT_BINARY_DIR}/test_persistent_worker_executor.rxbin
+                        8)
+        set_tests_properties(
+                ${TARGET_NAME}-e6-worker-topology-w8
+                PROPERTIES
+                LABELS "interpreter;gate-e;e6;private;worker;topology;${_crexx_e5_doorbell_platform_label}"
+                PROCESSORS 8
+                TIMEOUT 30)
+        crexx_label_concurrency_tests(
+                SP01 ${TARGET_NAME}-e6-worker-topology-w8)
+        crexx_label_concurrency_tests(
+                SP08 ${TARGET_NAME}-e6-worker-topology-w8)
         foreach(_crexx_e6_workers IN ITEMS 1 2 4 8)
             foreach(_crexx_e6_workload IN ITEMS spin churn)
                 if("${_crexx_e6_workload}" STREQUAL "spin")
@@ -1848,7 +2128,7 @@ if(BUILD_TESTING AND
                 set_tests_properties(
                         ${TARGET_NAME}-e6-scale-${_crexx_e6_workload}-w${_crexx_e6_workers}
                         PROPERTIES
-                        LABELS "interpreter;perf3;gate-e;e6;private;scale;${_crexx_e6_workload};${_crexx_e5_doorbell_platform_label}"
+                        LABELS "interpreter;perf3;performance-measurement;gate-e;e6;private;scale;${_crexx_e6_workload};${_crexx_e5_doorbell_platform_label}"
                         PROCESSORS ${_crexx_e6_workers}
                         TIMEOUT 120)
             endforeach()
@@ -1866,6 +2146,8 @@ if(BUILD_TESTING AND
                     ${TARGET_NAME}-doorbell-fallback PROPERTIES
                     LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;windows"
                     TIMEOUT 30)
+            crexx_label_concurrency_tests(SP01
+                    ${TARGET_NAME}-doorbell-fallback)
             add_test(
                     NAME ${TARGET_NAME}-fallback
                     COMMAND ${CMAKE_COMMAND} -E env
@@ -1877,6 +2159,7 @@ if(BUILD_TESTING AND
             set_tests_properties(${TARGET_NAME}-fallback PROPERTIES
                     LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;windows"
                     TIMEOUT 120)
+            crexx_label_concurrency_tests(SP01 ${TARGET_NAME}-fallback)
             add_test(
                     NAME ${TARGET_NAME}-fallback-stress
                     COMMAND ${CMAKE_COMMAND} -E env
@@ -1889,6 +2172,10 @@ if(BUILD_TESTING AND
             set_tests_properties(${TARGET_NAME}-fallback-stress PROPERTIES
                     LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;race;lifecycle;windows"
                     TIMEOUT 120)
+            crexx_label_concurrency_stress_tests(SP01
+                    ${TARGET_NAME}-fallback-stress)
+            crexx_label_concurrency_tests(SP08
+                    ${TARGET_NAME}-fallback-stress)
             add_test(
                     NAME ${TARGET_NAME}-sparse-progress-fallback
                     COMMAND ${CMAKE_COMMAND} -E env
@@ -1901,18 +2188,20 @@ if(BUILD_TESTING AND
                     ${TARGET_NAME}-sparse-progress-fallback PROPERTIES
                     LABELS "interpreter;perf3;gate-e;e5;private;industrial;fallback;sparse;windows"
                     TIMEOUT 30)
+            crexx_label_concurrency_tests(SP01
+                    ${TARGET_NAME}-sparse-progress-fallback)
+            crexx_label_concurrency_tests(SP08
+                    ${TARGET_NAME}-sparse-progress-fallback)
         endif()
     endfunction()
 
     add_executable(persistent_worker_executor-rxvml
-            tests/test_persistent_worker_executor.c
-            rxvmexecutor.c)
+            tests/test_persistent_worker_executor.c)
     target_link_libraries(persistent_worker_executor-rxvml rxvml)
     crexx_configure_persistent_worker_executor(persistent_worker_executor-rxvml)
 
     add_executable(persistent_worker_executor-rxbvml
-            tests/test_persistent_worker_executor.c
-            rxvmexecutor.c)
+            tests/test_persistent_worker_executor.c)
     target_link_libraries(persistent_worker_executor-rxbvml rxbvml)
     target_compile_definitions(persistent_worker_executor-rxbvml PRIVATE NTHREADED=1)
     crexx_configure_persistent_worker_executor(persistent_worker_executor-rxbvml)
@@ -1920,7 +2209,6 @@ if(BUILD_TESTING AND
     if(CREXX_THREADED_VM_SUPPORTED)
         add_executable(persistent_worker_executor-rxtvml
                 tests/test_persistent_worker_executor.c
-                rxvmexecutor.c
                 rxvml.c
                 $<TARGET_OBJECTS:rxtvm_core_objects>)
         target_link_libraries(persistent_worker_executor-rxtvml

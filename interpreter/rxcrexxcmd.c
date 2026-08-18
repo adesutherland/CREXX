@@ -2575,7 +2575,9 @@ static int snapshot_append_environment_pair(char ***items,
 
 int rxcrexxcmd_active_process_snapshot(char **working_directory,
                                        char ***environment) {
-    rxcrexxcmd_state *state = active_state(0);
+    rxcrexxcmd_state *state = active_state(1);
+    rxcrexxcmd_state local_state;
+    int owns_local_state = 0;
     char **items = NULL;
     size_t count = 0;
     rxcrexxcmd_env_entry *base;
@@ -2583,11 +2585,16 @@ int rxcrexxcmd_active_process_snapshot(char **working_directory,
 
     if (working_directory) *working_directory = NULL;
     if (environment) *environment = NULL;
-    if (!state) return 0;
+    if (!state) {
+        if (rxvm_active_context_current() ||
+            state_initialize(&local_state) != 0) return -1;
+        state = &local_state;
+        owns_local_state = 1;
+    }
 
     if (working_directory) {
         *working_directory = snapshot_strdup(state->current_directory);
-        if (!*working_directory) return -1;
+        if (!*working_directory) goto fail;
     }
 
     for (base = state->base_environment; base; base = base->next) {
@@ -2606,12 +2613,14 @@ int rxcrexxcmd_active_process_snapshot(char **working_directory,
 
     if (environment) *environment = items;
     else rxcrexxcmd_process_snapshot_free(NULL, items);
+    if (owns_local_state) state_clear(&local_state);
     return 0;
 
 fail:
     rxcrexxcmd_process_snapshot_free(
         working_directory ? *working_directory : NULL, items);
     if (working_directory) *working_directory = NULL;
+    if (owns_local_state) state_clear(&local_state);
     return -1;
 }
 

@@ -1,0 +1,1940 @@
+[0/2] Re-checking globbed directories...
+[1/1676] Copying bootstrap src/options/parse_opts.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[2/1676] Copying bootstrap src/parse/lexer.cc and src/parse/lexer.h, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[3/1676] Copying bootstrap src/parse/conf_lexer.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[4/1676] Copying bootstrap parser, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[5/1676] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[6/1676] Copying bootstrap parser, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[7/1676] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[8/1676] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[9/1676] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[10/1676] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[11/1676] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[12/1676] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[13/1676] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[14/1676] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[15/1676] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[16/1676] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[17/1676] Copying bootstrap syntax file, reconfigure with RE2C_REBUILD_PARSERS to regenerate
+[18/1676] Generating doc/re2c.1
+[19/1676] Copying bootstrap src/msg/ver_to_vernum.cc, reconfigure with RE2C_REBUILD_LEXERS to regenerate
+[20/1676] Building CXX object re2c\CMakeFiles\re2c_objects_autogen.dir\src\parse\lexer.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[21/1676] Building CXX object re2c\CMakeFiles\re2c_objects_autogen.dir\src\parse\parser.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[22/1676] Building CXX object re2c\CMakeFiles\re2c_objects_autogen.dir\src\parse\conf_lexer.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[23/1676] Building CXX object re2c\CMakeFiles\re2c_objects_autogen.dir\src\options\parse_opts.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[24/1676] Building CXX object re2c\CMakeFiles\re2c_objects_autogen.dir\src\parse\conf_parser.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[25/1676] Building CXX object re2c\CMakeFiles\re2c_objects_autogen_ver_to_vernum.dir\src\msg\ver_to_vernum.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[26/1676] Generating src/msg/help_re2c.cc
+[27/1676] Building C object lemon\CMakeFiles\lemon.dir\lemon.c.obj
+[28/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\codegen\helpers.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[29/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\codegen\output.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[30/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\codegen\pass1_analyze.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[31/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\codegen\pass3_fixup.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[32/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\codegen\pass2_generate.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[33/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\codegen\pass4_render.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[34/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\options\symtab.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[35/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\nfa\re_to_nfa.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[36/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\options\opt.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[37/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\debug\dump_adfa.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[38/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\debug\dump_cfg.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[39/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\debug\dump_dfa.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[40/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\debug\dump_dfa_tree.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[41/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\debug\dump_interf.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[42/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\adfa\adfa.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[43/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\debug\dump_nfa.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[44/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\cfg\compact.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[45/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\cfg\cfg.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[46/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\cfg\dce.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[47/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\cfg\freeze.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[48/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\cfg\liveanal.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[49/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\cfg\interfere.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[50/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\cfg\normalize.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[51/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\cfg\optimize.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[52/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\cfg\varalloc.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[53/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\cfg\rename.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[54/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\dfa\dead_rules.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[55/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\dfa\closure.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[56/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\dfa\fallback_tags.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[57/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\dfa\determinization.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[58/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\dfa\fillpoints.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[59/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\dfa\find_state.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[60/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\dfa\minimization.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[61/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\dfa\tagver_table.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[62/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\dfa\tcmd.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[63/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\encoding\ebcdic.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[64/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\encoding\enc.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[65/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\encoding\range_suffix.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[66/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\encoding\utf8.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[67/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\encoding\utf16.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[68/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\msg\msg.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[69/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\msg\warn.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[70/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\regexp\ast_to_re.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[71/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\regexp\default_tags.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[72/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\regexp\fixed_tags.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[73/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\regexp\nullable.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[74/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\regexp\regexp.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[75/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\encoding\unicode_casemap.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[76/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\regexp\split_charset.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[77/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\skeleton\control_flow.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[78/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\skeleton\generate_code.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[79/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\skeleton\generate_data.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[80/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\skeleton\maxpath.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[81/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\skeleton\skeleton.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[82/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\parse\ast.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[83/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\util\file_utils.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[84/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\parse\input.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[85/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\util\string_utils.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[86/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\util\range.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[87/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\msg\help_re2c.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[88/1676] Building C object platform\CMakeFiles\platform.dir\platform.c.obj
+[89/1676] Building C object platform\CMakeFiles\platform.dir\rxinteger.c.obj
+[90/1676] Building C object avl_tree\CMakeFiles\avl_tree.dir\avl_tree.c.obj
+[91/1676] Building C object binutils\CMakeFiles\rxbin.dir\rxbin.c.obj
+[92/1676] Building C object binutils\CMakeFiles\rxbin.dir\rxbin007.c.obj
+[93/1676] Building C object binutils\CMakeFiles\rxbin.dir\rxsignature.c.obj
+[94/1676] Building C object binutils\CMakeFiles\rxbin.dir\rxsha256.c.obj
+[95/1676] Building CXX object re2c\CMakeFiles\re2c.dir\src\main.cc.obj
+cl : Command line warning D9025 : overriding '/W3' with '/w'
+[96/1676] Building C object binutils\CMakeFiles\rxbin.dir\rxgraph.c.obj
+[97/1676] Building C object interpreter\CMakeFiles\rxvmmemory.dir\rxvmmemory.c.obj
+[98/1676] Linking CXX executable re2c\re2c.exe
+[99/1676] Linking C static library bin\platform.lib
+[100/1676] Linking C executable lemon\lemon.exe
+[101/1676] Linking C static library bin\avl_tree.lib
+[102/1676] Linking C static library bin\rxbin.lib
+[103/1676] Building C object interpreter\CMakeFiles\rxvmref.dir\rxvmref.c.obj
+[104/1676] Linking C static library bin\rxvmmemory.lib
+[105/1676] Create REXX ASSEMBLER Parser...
+[106/1676] Building C object interpreter\CMakeFiles\rxvmref.dir\rxpacompat.c.obj
+[107/1676] Linking C static library bin\rxvmref.lib
+[108/1676] Building C object interpreter\rxvmplugin\CMakeFiles\rxvmplugin.dir\rxvmplugin_framework.c.obj
+[109/1676] Building C object interpreter\rxvmplugin\rxvmplugins\mc_decimal\CMakeFiles\decnumber.dir\decnumber\decContext.c.obj
+[110/1676] Building C object interpreter\rxvmplugin\rxvmplugins\mc_decimal\CMakeFiles\decnumber.dir\decnumber\decNumber.c.obj
+[111/1676] Linking C static library bin\rxvmplugin.lib
+[112/1676] Linking C static library bin\decnumber.lib
+[113/1676] Building C object interpreter\rxvmplugin\rxvmplugins\mc_decimal\CMakeFiles\mc_decimal_manual.dir\mc_decimal.c.obj
+[114/1676] Building C object rxpa\CMakeFiles\rxpa.dir\rxpa.c.obj
+[115/1676] Create REXX ASSEMBLER Lexer...
+[116/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxastoke.c.obj
+[117/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxaseror.c.obj
+[118/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxvmintp.c.obj
+[119/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxas_opt.c.obj
+[120/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxas_flow.c.obj
+[121/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxas_flow_batch.c.obj
+[122/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxas_flow_pass.c.obj
+[123/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxas_flow_graph.c.obj
+[124/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxas_flow_analysis.c.obj
+[125/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxas_flow_rewrite.c.obj
+[126/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxas_flow_signal.c.obj
+[127/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxas_flow_ssa.c.obj
+[128/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxas_flow_use.c.obj
+[129/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxas_flow_proof.c.obj
+[130/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxasgrmr.c.obj
+[131/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxasassm.c.obj
+[132/1676] Building C object assembler\CMakeFiles\rxaslib.dir\__\binutils\rxopmeta.c.obj
+[133/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxaslib.c.obj
+[134/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxas_dsl.c.obj
+[135/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxvmworker.c.obj
+[136/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxvmprogram.c.obj
+[137/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxvmexecutor.c.obj
+[138/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxvmchannel.c.obj
+[139/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxvmchannel_process.c.obj
+[140/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxvmprocessprotocol.c.obj
+[141/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxvmprocessworker.c.obj
+[142/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxvmbyteendpoint.c.obj
+[143/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxvmchannel_byte.c.obj
+[144/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxvmchannel_child.c.obj
+[145/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxvmactive.c.obj
+[146/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxvmload.c.obj
+[147/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\interrupt.c.obj
+[148/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxspawn.c.obj
+[149/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxcrexxcmd.c.obj
+[150/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\exitfunc.c.obj
+[151/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxpafuncs.c.obj
+[152/1676] Building C object interpreter\CMakeFiles\rxbvm_core_objects.dir\rxvml\rxvm_run.c.obj
+[153/1676] Building C object interpreter\CMakeFiles\rxvm_platform_objects.dir\rxvmsock.c.obj
+[154/1676] Building C object interpreter\CMakeFiles\rxbvml.dir\rxvmlib.c.obj
+[155/1676] Building C object interpreter\CMakeFiles\rxbvml.dir\rxvml.c.obj
+[156/1676] Linking C static library bin\rxvm_mc_decimal_manual.lib
+[157/1676] Linking C static library bin\rxpa.lib
+[158/1676] Linking C static library bin\rxbvml.lib
+[159/1676] Building C object assembler\CMakeFiles\rxas.dir\rxasmain.c.obj
+[160/1676] Building C object linker\CMakeFiles\rxlink.dir\rxlinkmain.c.obj
+[161/1676] Linking C executable bin\rxlink.exe
+[162/1676] Building C object lib\rxfnsb\tests_functional\CMakeFiles\address_argv_fixture.dir\address_argv_fixture.c.obj
+[163/1676] Linking C executable bin\address_argv_fixture.exe
+[164/1676] Building C object lib\rxfnsb\tests_functional\CMakeFiles\address_spawn_transfer_fixture.dir\address_spawn_transfer_fixture.c.obj
+[165/1676] Linking C executable bin\address_spawn_transfer_fixture.exe
+[166/1676] Building C object cpacker\CMakeFiles\rxcpack.dir\rxcpack.c.obj
+C:\Users\adria\CLionProjects\CREXX\cpacker\rxcpack.c(190): warning C4477: 'fprintf' : format string '%lu' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\cpacker\rxcpack.c(190): note: consider using '%zu' in the format string
+[167/1676] Linking C executable bin\rxcpack.exe
+[168/1676] Building C object interpreter\CMakeFiles\rxpashim.dir\rxpashim.c.obj
+[169/1676] Building C object interpreter\CMakeFiles\rxbvm.dir\rxvmmain.c.obj
+[170/1676] Linking C static library bin\rxpashim.lib
+[171/1676] Building C object lib\plugins\keyaccess\CMakeFiles\_keyaccess.dir\keyaccess.c.obj
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(588): warning C4477: 'fprintf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type 'time_t'
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(588): note: consider using '%lld' in the format string
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(588): note: consider using '%Id' in the format string
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(588): note: consider using '%I64d' in the format string
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(894): warning C4477: 'snprintf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type 'time_t'
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(894): note: consider using '%lld' in the format string
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(894): note: consider using '%Id' in the format string
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(894): note: consider using '%I64d' in the format string
+[172/1676] Building C object lib\plugins\id\CMakeFiles\_id.dir\id.c.obj
+[173/1676] Building C object lib\plugins\system\CMakeFiles\_system.dir\system.c.obj
+[174/1676] Linking C executable bin\rxbvm.exe
+[175/1676] Building C object interpreter\CMakeFiles\rxvml.dir\rxvmlib.c.obj
+[176/1676] Building C object interpreter\CMakeFiles\rxvml.dir\rxvml.c.obj
+[177/1676] Building C object interpreter\rxvmplugin\rxvmplugins\mc_decimal\CMakeFiles\mc_decimal_dynamic.dir\mc_decimal.c.obj
+[178/1676] Building C object preprocessor\CMakeFiles\precomp_static.dir\precomp.c.obj
+[179/1676] Building C object preprocessor\CMakeFiles\precomp.dir\precomp.c.obj
+[180/1676] Linking C shared module bin\rx_keyaccess.rxplugin
+[181/1676] Linking C shared module bin\rx_id.rxplugin
+[182/1676] Linking C shared module bin\rx_system.rxplugin
+[183/1676] Building C object lib\plugins\system\CMakeFiles\_system_static.dir\system.c.obj
+[184/1676] Linking C static library bin\rxvml.lib
+[185/1676] Creating rxvm copy of rxbvm
+[186/1676] Linking C shared module bin\rxvm_mc_decimal.rxvmplugin
+[187/1676] Linking C static library bin\rxprecomp_static.lib
+[188/1676] Linking C shared module bin\rxprecomp.rxplugin
+[189/1676] Stage rxpp macro support files ...
+[190/1676] Linking C static library bin\rx_system_static.lib
+[191/1676] Building C object linker\CMakeFiles\rxlink_concat_files.dir\tests\concat_files.c.obj
+[192/1676] Building C object interpreter\CMakeFiles\_e5native.dir\tests\e5_native_return_plugin.c.obj
+[193/1676] Linking C executable linker\rxlink_concat_files.exe
+[194/1676] Building C object disassembler\CMakeFiles\rxdas.dir\rxdamain.c.obj
+[195/1676] Building C object disassembler\CMakeFiles\rxdas.dir\rxdadism.c.obj
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1493): warning C4477: 'fprintf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1493): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1504): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1504): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1508): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1508): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1512): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1512): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1519): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1519): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1525): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1525): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1532): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1532): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1532): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1532): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1543): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1543): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1554): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1554): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1561): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1561): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1573): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1573): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1573): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1573): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1597): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1597): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1597): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1597): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1620): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1620): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1620): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1620): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1637): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1637): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1637): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1637): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1650): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1650): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1650): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1650): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1664): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1664): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1664): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1664): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1677): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1677): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1677): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1677): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1688): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1688): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1688): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1688): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1707): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1707): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1707): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1707): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1732): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1732): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1732): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1732): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1744): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1744): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1744): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1744): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1758): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1758): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1758): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1758): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1773): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1773): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1773): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1773): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1780): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1780): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1792): warning C4477: 'fprintf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1792): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1852): warning C4477: 'snprintf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1852): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1906): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1906): note: consider using '%zx' in the format string
+[196/1676] Building C object interpreter\CMakeFiles\mutate_jtable_rxbin.dir\tests\mutate_jtable_rxbin.c.obj
+[197/1676] Building C object interpreter\CMakeFiles\mutate_retired_process_opcode.dir\tests\mutate_retired_process_opcode.c.obj
+[198/1676] Linking C shared module bin\rx_e5native.rxplugin
+[199/1676] Building C object lib\plugins\treemap\CMakeFiles\_treemap.dir\treemap.c.obj
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\treemap\treemap.c(1085): warning C4477: 'printf' : format string '%lu' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\treemap\treemap.c(1085): note: consider using '%zu' in the format string
+[200/1676] Building C object lib\plugins\recv390\CMakeFiles\_recv390.dir\recv390.c.obj
+[201/1676] Building C object lib\plugins\map\CMakeFiles\_map.dir\map.c.obj
+[202/1676] Building C object tests\rxpa\CMakeFiles\_rxpalink_decl.dir\rxpa_staticlink.c.obj
+[203/1676] Building C object tests\rxpa\CMakeFiles\_testfuncs_static.dir\rxpa_functests.c.obj
+[204/1676] Building C object compiler\tests\CMakeFiles\crexx_demo_sqlite3.dir\__\__\_deps\crexx_sqlite_amalgamation-src\sqlite3.c.obj
+[205/1676] Linking C executable bin\rxdas.exe
+[206/1676] Building C object disassembler\CMakeFiles\mutate_graph_rxbin.dir\tests\mutate_graph_rxbin.c.obj
+[207/1676] Building C object interpreter\CMakeFiles\rxvm_platform_notls_objects.dir\rxvmsock.c.obj
+[208/1676] Building C object interpreter\CMakeFiles\crexxsaa.dir\crexxsaa.c.obj
+[209/1676] Linking C executable interpreter\mutate_jtable_rxbin.exe
+[210/1676] Linking C executable interpreter\mutate_retired_process_opcode.exe
+[211/1676] Building C object interpreter\CMakeFiles\_e5native_static.dir\tests\e5_native_return_plugin.c.obj
+[212/1676] Building C object interpreter\rxvmplugin\rxvmplugins\mc_decimal\CMakeFiles\mc_decimal.dir\mc_decimal.c.obj
+[213/1676] Building C object interpreter\rxvmplugin\rxvmplugins\db_decimal\CMakeFiles\db_decimal_dynamic.dir\db_decimal.c.obj
+[214/1676] Building C object interpreter\rxvmplugin\rxvmplugins\db_decimal\CMakeFiles\db_decimal_manual.dir\db_decimal.c.obj
+[215/1676] Building C object lib\plugins\CMakeFiles\_rxpa_session_failure.dir\__\__\interpreter\tests\rxpa_session_failure_plugin.c.obj
+[216/1676] Building C object lib\plugins\arrays\CMakeFiles\_arrays.dir\arrays.c.obj
+[217/1676] Building C object lib\plugins\rxmath\CMakeFiles\_rxmath.dir\rxmath.c.obj
+[218/1676] Building C object lib\plugins\rxmath\CMakeFiles\_rxmath_static.dir\rxmath.c.obj
+[219/1676] Building C object lib\plugins\stack\CMakeFiles\_stack.dir\stack.c.obj
+[220/1676] Building C object lib\plugins\stack\CMakeFiles\_stack_static.dir\stack.c.obj
+[221/1676] Building C object lib\plugins\cipher\CMakeFiles\_cipher.dir\cipher.c.obj
+[222/1676] Building C object lib\plugins\cipher\CMakeFiles\_cipher_static.dir\cipher.c.obj
+[223/1676] Building C object lib\plugins\strings\CMakeFiles\_strings.dir\strings.c.obj
+[224/1676] Building C object lib\plugins\getpi\CMakeFiles\_getpi.dir\getpi.c.obj
+[225/1676] Building C object lib\plugins\llist\CMakeFiles\_llist.dir\llist.c.obj
+[226/1676] Linking C shared module bin\rx_treemap.rxplugin
+[227/1676] Building C object lib\plugins\id\CMakeFiles\_id_static.dir\id.c.obj
+[228/1676] Linking C shared module bin\rx_recv390.rxplugin
+[229/1676] Linking C shared module bin\rx_map.rxplugin
+[230/1676] Building C object lib\plugins\rxtcp\CMakeFiles\_rxtcp.dir\rxtcp.c.obj
+[231/1676] Building C object lib\plugins\rxml\CMakeFiles\_rxml.dir\rxml.c.obj
+[232/1676] Building C object lib\plugins\fileio\CMakeFiles\_fileio.dir\fileio.c.obj
+[233/1676] Building C object lib\plugins\matrix\CMakeFiles\_matrix.dir\matrix.c.obj
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\matrix\matrix.c(424): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type 'rxinteger'
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\matrix\matrix.c(424): note: consider using '%lld' in the format string
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\matrix\matrix.c(424): note: consider using '%Id' in the format string
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\matrix\matrix.c(424): note: consider using '%I64d' in the format string
+[234/1676] Building C object lib\plugins\odbc\CMakeFiles\_odbc_mock.dir\odbc.c.obj
+[235/1676] Building C object lib\plugins\odbc\CMakeFiles\_odbc_mock.dir\tests\mock_odbc.c.obj
+[236/1676] Building C object tests\native_signals\CMakeFiles\signal_tester.dir\sigtest-windows.c.obj
+[237/1676] Linking C static library tests\rx_rxpalink_decl.lib
+[238/1676] Building C object tests\rxpa\CMakeFiles\_rxpa_classdecl_static_decl.dir\rxpa_classdecl.c.obj
+[239/1676] Building C object tests\rxpa\CMakeFiles\_rxpalink_static.dir\rxpa_staticlink.c.obj
+[240/1676] Linking C static library tests\rx_testfuncs_static.lib
+[241/1676] Building C object tests\rxpa\CMakeFiles\funcvm.dir\__\__\interpreter\rxvmmain.c.obj
+[242/1676] Building C object binutils\CMakeFiles\test_rxgraph.dir\tests\test_rxgraph.c.obj
+[243/1676] Building C object contract\CMakeFiles\crexx-contract.dir\contractmain.c.obj
+[244/1676] Building C object contract\CMakeFiles\crexx-contract.dir\contract_model.c.obj
+[245/1676] Building C object contract\CMakeFiles\crexx-contract.dir\contract_json.c.obj
+[246/1676] Building C object contract\CMakeFiles\crexx-contract.dir\contract_compat.c.obj
+[247/1676] Building C object compiler\tests\CMakeFiles\mutate_rxbin_feature.dir\mutate_rxbin_feature.c.obj
+[248/1676] Linking C static library compiler\tests\crexx_demo_sqlite3.lib
+[249/1676] Building C object compiler\tests\CMakeFiles\test_rxvml_utf_boundaries.dir\src\test_rxvml_utf_boundaries.c.obj
+[250/1676] Linking C executable disassembler\mutate_graph_rxbin.exe
+[251/1676] Building C object assembler\CMakeFiles\rxaslib.dir\rxasscan.c.obj
+[252/1676] Linking C static library bin\rxaslib.lib
+[253/1676] Create Options Parser...
+[254/1676] Create REXX B Parser...
+[255/1676] Create Options Lexer...
+[256/1676] Create REXX B Lexer...
+[257/1676] Create REXX C Lexer...
+[258/1676] Create REXX C Parser...
+[259/1676] Linking C executable bin\rxas.exe
+[260/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcpmain.c.obj
+[261/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_ast_core.c.obj
+[262/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_ast_print.c.obj
+[263/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_ast_walk.c.obj
+[264/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_util.c.obj
+[265/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_diag.c.obj
+[266/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_diag_fallback.c.obj
+[267/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_dsl.c.obj
+[268/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_highlight_controller.c.obj
+[269/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_source_tree.c.obj
+[270/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_source_ext.c.obj
+[271/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_srcmap.c.obj
+[272/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcposcn.c.obj
+[273/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcpopgr.c.obj
+[274/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcpopar.c.obj
+[275/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxvmintp.c.obj
+[276/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcpbgmr.c.obj
+[277/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcpbpar.c.obj
+[278/1676] Building C object compiler\CMakeFiles\rxclib.dir\rexbscan.c.obj
+[279/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcpcgmr.c.obj
+[280/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcpcpar.c.obj
+[281/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcpcdiag.c.obj
+[282/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcpcsym.c.obj
+[283/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcpcval.c.obj
+[284/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_val_sym.c.obj
+[285/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_val_type.c.obj
+[286/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_val_trans.c.obj
+[287/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_ast_rewrite.c.obj
+[288/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_val_check.c.obj
+[289/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_val_plugin.c.obj
+[290/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_val_orch.c.obj
+[291/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcpsymb.c.obj
+[292/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_fixup.c.obj
+[293/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_ast_val.c.obj
+[294/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_remap.c.obj
+[295/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_remap_build.c.obj
+[296/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_task_lower.c.obj
+[297/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_levelc_lower.c.obj
+[298/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_inline.c.obj
+[299/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_inline_rules.c.obj
+[300/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcpemit.c.obj
+[301/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_emit_core.c.obj
+[302/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_emit_super.c.obj
+[303/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_emit_reg.c.obj
+[304/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_emit_expr.c.obj
+[305/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_emit_flow.c.obj
+[306/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_emit_proc.c.obj
+[307/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_emit_meta.c.obj
+[308/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_opt.c.obj
+[309/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_partial_call.c.obj
+[310/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_flow.c.obj
+[311/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_dispatch.c.obj
+[312/1676] Building C object compiler\CMakeFiles\rxclib.dir\__\platform\platform.c.obj
+[313/1676] Building C object compiler\CMakeFiles\rxclib.dir\__\platform\rxinteger.c.obj
+[314/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcpfunc.c.obj
+C:\Users\adria\CLionProjects\CREXX\compiler\rxcpfunc.c(1740): warning C4068: unknown pragma 'clang'
+C:\Users\adria\CLionProjects\CREXX\compiler\rxcpfunc.c(1741): warning C4068: unknown pragma 'ide'
+C:\Users\adria\CLionProjects\CREXX\compiler\rxcpfunc.c(1805): warning C4068: unknown pragma 'clang'
+[315/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_exit.c.obj
+[316/1676] Building C object compiler\CMakeFiles\rxclib.dir\rxcp_instr.c.obj
+[317/1676] Building C object compiler\CMakeFiles\rxc.dir\rxc_main.c.obj
+[318/1676] cREXX assemble _elapsed ...
+[319/1676] cREXX RXAS Library Archive ...
+[320/1676] cREXX RXLINK fixture tests_link_root ...
+[321/1676] cREXX RXLINK fixture tests_link_provider_a ...
+[322/1676] cREXX RXLINK fixture tests_link_interface_root ...
+[323/1676] cREXX RXLINK fixture tests_link_interface_impl ...
+[324/1676] cREXX RXLINK success fixture ...
+[325/1676] cREXX RXLINK interface fixture ...
+[326/1676] cREXX RXLINK inline-metadata fixture ...
+[327/1676] cREXX RXLINK stripped fixture ...
+[328/1676] cREXX RXLINK record-stream concat fixture ...
+[329/1676] cREXX RXAS Float Constant Pool Tests ...
+[330/1676] cREXX RXBIN 007 portable-format tests ...
+[331/1676] Assembling Gate F F1e process channel fixture ...
+[332/1676] Assembling PERF3-13 E5 sparse progress fixture ...
+[333/1676] Building C object compiler\tests\CMakeFiles\test_rxcp_super_combiner.dir\test_rxcp_super_combiner.c.obj
+[334/1676] Building C object compiler\tests\CMakeFiles\test_source_provenance.dir\src\test_source_provenance.c.obj
+[335/1676] cREXX RXLINK fixture tests_link_provider_b ...
+[336/1676] cREXX RXLINK fixture tests_link_srcfproc_root ...
+[337/1676] cREXX RXLINK fixture tests_link_srcfproc_contract ...
+[338/1676] cREXX RXLINK fixture tests_link_srcmethod_root ...
+[339/1676] cREXX RXLINK fixture tests_link_srcmethod_provider ...
+[340/1676] Building C object linker\CMakeFiles\test_linked_format.dir\tests\test_linked_format.c.obj
+[341/1676] Building C object disassembler\CMakeFiles\test_disassembler_dump.dir\tests\test_disassembler_dump.c.obj
+[342/1676] Building C object disassembler\CMakeFiles\test_disassembler_dump.dir\rxdadism.c.obj
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1493): warning C4477: 'fprintf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1493): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1504): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1504): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1508): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1508): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1512): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1512): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1519): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1519): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1525): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1525): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1532): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1532): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1532): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1532): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1543): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1543): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1554): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1554): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1561): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1561): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1573): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1573): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1573): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1573): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1597): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1597): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1597): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1597): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1620): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1620): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1620): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1620): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1637): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1637): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1637): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1637): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1650): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1650): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1650): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1650): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1664): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1664): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1664): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1664): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1677): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1677): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1677): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1677): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1688): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1688): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1688): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1688): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1707): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1707): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1707): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1707): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1732): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1732): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1732): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1732): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1744): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1744): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1744): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1744): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1758): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1758): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1758): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1758): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1773): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1773): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1773): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1773): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1780): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1780): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1792): warning C4477: 'fprintf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1792): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1852): warning C4477: 'snprintf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1852): note: consider using '%zx' in the format string
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1906): warning C4477: 'fprintf' : format string '%.6lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\disassembler\rxdadism.c(1906): note: consider using '%zx' in the format string
+[343/1676] cREXX RXDAS roundtrip fixture tests_compact_format ...
+[344/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxvmworker.c.obj
+[345/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxvmprogram.c.obj
+[346/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxvmexecutor.c.obj
+[347/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxvmchannel.c.obj
+[348/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxvmchannel_process.c.obj
+[349/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxvmprocessprotocol.c.obj
+[350/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxvmprocessworker.c.obj
+[351/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxvmbyteendpoint.c.obj
+[352/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxvmchannel_byte.c.obj
+[353/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxvmchannel_child.c.obj
+[354/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxvmactive.c.obj
+[355/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxvmload.c.obj
+[356/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\interrupt.c.obj
+[357/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxspawn.c.obj
+[358/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxcrexxcmd.c.obj
+[359/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\exitfunc.c.obj
+[360/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxpafuncs.c.obj
+[361/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented_core_objects.dir\rxvml\rxvm_run.c.obj
+[362/1676] Building C object interpreter\CMakeFiles\rxseq.dir\rxseqmain.c.obj
+[363/1676] Building C object interpreter\CMakeFiles\rxseq.dir\rxseqfile.c.obj
+[364/1676] Building C object interpreter\CMakeFiles\test_rxseqfile.dir\tests\test_rxseqfile.c.obj
+[365/1676] Building C object interpreter\CMakeFiles\test_rxseqfile.dir\rxseqfile.c.obj
+[366/1676] Building C object interpreter\CMakeFiles\rxbvm_instrumented.dir\rxvmmain.c.obj
+[367/1676] Building C object interpreter\CMakeFiles\test_rxcrexxcmd_flush.dir\tests\test_rxcrexxcmd_flush.c.obj
+[368/1676] Linking C shared library bin\crexxsaa.dll
+[369/1676] Building C object interpreter\CMakeFiles\crexxsaa_tool.dir\crexxsaa_tool.c.obj
+[370/1676] Building C object interpreter\CMakeFiles\ts_regvalue_tester.dir\tests\ts_regvalue_tester.c.obj
+[371/1676] Building C object interpreter\CMakeFiles\test_rxvmstem.dir\tests\test_rxvmstem.c.obj
+[372/1676] Building C object interpreter\CMakeFiles\test_rxvmstem_allocator_family.dir\tests\test_rxvmstem_allocator_family.c.obj
+[373/1676] Building C object interpreter\CMakeFiles\test_rxvmmemory.dir\tests\test_rxvmmemory.c.obj
+[374/1676] Building C object interpreter\CMakeFiles\test_rxvmworker.dir\tests\test_rxvmworker.c.obj
+[375/1676] Building C object interpreter\CMakeFiles\test_rxvmworker.dir\rxvmworker.c.obj
+[376/1676] Building C object interpreter\CMakeFiles\test_rxvmchannel_registry.dir\tests\test_rxvmchannel_registry.c.obj
+[377/1676] Building C object interpreter\CMakeFiles\test_rxvmbyteendpoint.dir\tests\test_rxvmbyteendpoint.c.obj
+[378/1676] Building C object interpreter\CMakeFiles\test_rxvmchannel_byte.dir\tests\test_rxvmchannel_byte.c.obj
+[379/1676] Building C object interpreter\CMakeFiles\test_rxvmactive.dir\tests\test_rxvmactive.c.obj
+[380/1676] Building C object interpreter\CMakeFiles\test_rxvmplugin_context.dir\tests\test_rxvmplugin_context.c.obj
+[381/1676] Building C object interpreter\CMakeFiles\test_rxpa_concurrency.dir\tests\test_rxpa_concurrency.c.obj
+[382/1676] Building C object interpreter\CMakeFiles\test_rxpa_odbc.dir\tests\test_rxpa_odbc.c.obj
+[383/1676] Building C object interpreter\CMakeFiles\test_rxpa_odbc_old_host.dir\tests\test_rxpa_odbc_old_host.c.obj
+[384/1676] Building C object interpreter\CMakeFiles\test_jtable_policy.dir\tests\test_jtable_policy.c.obj
+[385/1676] Building C object interpreter\CMakeFiles\test_signal_mask.dir\tests\test_signal_mask.c.obj
+[386/1676] Building C object interpreter\CMakeFiles\test_rxpa_utf_validation.dir\tests\test_rxpa_utf_validation.c.obj
+[387/1676] Building C object interpreter\CMakeFiles\test_rxpa_utf_validation.dir\rxpafuncs.c.obj
+[388/1676] Building C object interpreter\CMakeFiles\test_rxpa_utf_validation.dir\rxvmactive.c.obj
+[389/1676] Building C object interpreter\CMakeFiles\test_rxpa_utf_validation.dir\rxvmworker.c.obj
+[390/1676] Linking C static library interpreter\rx_e5native_static.lib
+[391/1676] Building C object interpreter\CMakeFiles\test_db_decimal_archive_link.dir\tests\test_db_decimal_archive_link.c.obj
+[392/1676] Building C object interpreter\CMakeFiles\test_float_pool_format.dir\tests\test_float_pool_format.c.obj
+[393/1676] Building C object interpreter\CMakeFiles\test_compact_format.dir\tests\test_compact_format.c.obj
+[394/1676] Building C object interpreter\CMakeFiles\test_rxvmchannel_process.dir\tests\test_rxvmchannel_process.c.obj
+[395/1676] Assembling retired process-opcode base fixture ...
+[396/1676] cREXX RXAS jump-table corruption base (linear) ...
+[397/1676] cREXX RXAS jump-table corruption base (openhash) ...
+[398/1676] cREXX RXAS jump-table corruption base (acph) ...
+[399/1676] Building C object interpreter\rxvmplugin\rxvmplugins\mc_decimal\CMakeFiles\decnumber_test.dir\decnumber_test.c.obj
+[400/1676] Linking C static library bin\rxvm_mc_decimal.lib
+[401/1676] Building C object interpreter\rxvmplugin\rxvmplugins\mc_decimal\CMakeFiles\mc_decimal_test_harness.dir\mc_decimal_sanity_harness_test.c.obj
+[402/1676] Building C object interpreter\rxvmplugin\rxvmplugins\mc_decimal\CMakeFiles\mc_decimal_dyn_test_harness.dir\mc_decimal_sanity_harness_test.c.obj
+[403/1676] Building C object interpreter\rxvmplugin\rxvmplugins\mc_decimal\CMakeFiles\mc_decimal_manual_test_harness.dir\mc_decimal_sanity_harness_test.c.obj
+[404/1676] Building C object interpreter\rxvmplugin\rxvmplugins\mc_decimal\CMakeFiles\mc_decimal_full_tests.dir\mc_decimal_full_tests.c.obj
+[405/1676] Linking C shared module bin\rxvm_db_decimal.rxvmplugin
+[406/1676] Linking C static library bin\rxvm_db_decimal_manual.lib
+[407/1676] Building C object interpreter\rxvmplugin\rxvmplugins\db_decimal\CMakeFiles\db_decimal_tests.dir\db_decimal_tests.c.obj
+[408/1676] Linking C shared module bin\rx_rxpa_session_failure.rxplugin
+[409/1676] Linking C shared module bin\rx_arrays.rxplugin
+[410/1676] Linking C shared module bin\rx_rxmath.rxplugin
+[411/1676] Linking C static library bin\rx_rxmath_static.lib
+[412/1676] Linking C shared module bin\rx_stack.rxplugin
+[413/1676] Linking C static library bin\rx_stack_static.lib
+[414/1676] Linking C shared module bin\rx_cipher.rxplugin
+[415/1676] Linking C static library bin\rx_cipher_static.lib
+[416/1676] Linking C shared module bin\rx_strings.rxplugin
+[417/1676] Linking C shared module bin\rx_getpi.rxplugin
+[418/1676] Building C object lib\plugins\keyaccess\CMakeFiles\_keyaccess_static.dir\keyaccess.c.obj
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(588): warning C4477: 'fprintf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type 'time_t'
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(588): note: consider using '%lld' in the format string
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(588): note: consider using '%Id' in the format string
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(588): note: consider using '%I64d' in the format string
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(894): warning C4477: 'snprintf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type 'time_t'
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(894): note: consider using '%lld' in the format string
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(894): note: consider using '%Id' in the format string
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\keyaccess\keyaccess.c(894): note: consider using '%I64d' in the format string
+[419/1676] Linking C shared module bin\rx_llist.rxplugin
+[420/1676] Building C object lib\plugins\llist\CMakeFiles\_llist_static.dir\llist.c.obj
+[421/1676] Building C object lib\plugins\treemap\CMakeFiles\_treemap_static.dir\treemap.c.obj
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\treemap\treemap.c(1085): warning C4477: 'printf' : format string '%lu' requires an argument of type 'unsigned long', but variadic argument 1 has type 'size_t'
+C:\Users\adria\CLionProjects\CREXX\lib\plugins\treemap\treemap.c(1085): note: consider using '%zu' in the format string
+[422/1676] Linking C static library bin\rx_id_static.lib
+[423/1676] Building C object lib\plugins\recv390\CMakeFiles\_recv390_static.dir\recv390.c.obj
+[424/1676] Linking C shared module bin\rx_rxtcp.rxplugin
+[425/1676] Building C object lib\plugins\rxtcp\CMakeFiles\_rxtcp_static.dir\rxtcp.c.obj
+[426/1676] Linking C shared module bin\rx_rxml.rxplugin
+[427/1676] Linking C shared module bin\rx_fileio.rxplugin
+[428/1676] Linking C shared module bin\rx_matrix.rxplugin
+[429/1676] Linking C shared module lib\plugins\odbc\mock\rx_odbc.rxplugin
+[430/1676] Building C object tests\CMakeFiles\test_rxinteger_contract.dir\test_rxinteger_contract.c.obj
+[431/1676] Building C object tests\CMakeFiles\test_rxop_metadata.dir\test_rxop_metadata.c.obj
+[432/1676] Building C object tests\CMakeFiles\test_rxop_metadata.dir\__\binutils\include\opdata.c.obj
+[433/1676] Building C object tests\CMakeFiles\test_rxop_metadata.dir\__\binutils\rxopmeta.c.obj
+[434/1676] Building C object tests\CMakeFiles\test_rxas_flow_graph.dir\test_rxas_flow_graph.c.obj
+[435/1676] Linking C executable tools\signal_tester.exe
+[436/1676] Building C object tests\performance\CMakeFiles\decimal_gate1_adapter.dir\decimal\decimal_gate1_adapter.c.obj
+[437/1676] Building C object tests\rxpa\CMakeFiles\_rxpa_invalid_manifest.dir\rxpa_invalid_manifest.c.obj
+[438/1676] Building C object tests\rxpa\CMakeFiles\_rxpa_bench_reentrant.dir\rxpa_call_kernel.c.obj
+[439/1676] Building C object tests\rxpa\CMakeFiles\_rxpa_bench_legacy.dir\rxpa_call_kernel.c.obj
+[440/1676] Building C object tests\rxpa\CMakeFiles\_rxpa_bench_session.dir\rxpa_call_kernel.c.obj
+[441/1676] Linking C static library tests\rx_rxpa_classdecl_static_decl.lib
+[442/1676] Linking C static library tests\rx_rxpalink_static.lib
+[443/1676] Building C object tests\rxpa\CMakeFiles\testvm.dir\__\__\interpreter\rxvmmain.c.obj
+[444/1676] Linking C executable tests\funcvm.exe
+[445/1676] Linking C executable bin\test_rxgraph.exe
+[446/1676] Linking C executable bin\crexx-contract.exe
+[447/1676] Linking C executable compiler\tests\mutate_rxbin_feature.exe
+[448/1676] Linking C executable compiler\tests\test_rxvml_utf_boundaries.exe
+[449/1676] Linking C executable linker\test_linked_format.exe
+[450/1676] cREXX RXLINK fixture tests_link_signature_bad_impl ...
+[451/1676] cREXX RXLINK control-file fixture ...
+[452/1676] cREXX RXLINK srcfprocsel fixture ...
+[453/1676] cREXX RXLINK srcmethodsel fixture ...
+[454/1676] Linking C executable disassembler\test_disassembler_dump.exe
+[455/1676] cREXX RXDAS roundtrip fixture tests_basic ...
+[456/1676] cREXX RXDAS roundtrip fixture tests_int_contract ...
+[457/1676] cREXX RXDAS roundtrip fixture tests_float_pool ...
+[458/1676] cREXX RXDAS roundtrip fixture tests_wide_operands ...
+[459/1676] cREXX RXDAS invalid semantic-graph fixture ...
+[460/1676] cREXX RXDAS roundtrip fixture tests_interfaces ...
+[461/1676] cREXX RXDAS roundtrip fixture tests_disassembler_roundtrip ...
+[462/1676] cREXX RXDAS roundtrip fixture tests_disassembler_imported ...
+[463/1676] cREXX RXDAS roundtrip fixture tests_binary ...
+[464/1676] cREXX RXDAS roundtrip fixture tests_jump_table ...
+[465/1676] cREXX RXDAS roundtrip fixture tests_jump_table_hash_edges ...
+[466/1676] cREXX RXDAS roundtrip fixture tests_jump_table_rexx_strings ...
+[467/1676] Linking C executable bin\rxseq.exe
+[468/1676] Linking C executable bin\test_rxseqfile.exe
+[469/1676] Linking C executable bin\rxbvm_instrumented.exe
+[470/1676] Linking C executable bin\test_rxcrexxcmd_flush.exe
+[471/1676] Linking C executable bin\crexxsaa.exe
+[472/1676] Linking C executable interpreter\ts_regvalue_tester.exe
+[473/1676] Linking C executable interpreter\test_rxvmstem.exe
+[474/1676] Linking C executable interpreter\test_rxvmstem_allocator_family.exe
+[475/1676] Linking C executable interpreter\test_rxvmmemory.exe
+[476/1676] Linking C executable interpreter\test_rxvmworker.exe
+[477/1676] Linking C executable interpreter\test_rxvmchannel_registry.exe
+[478/1676] Linking C executable interpreter\test_rxvmchannel_process.exe
+[479/1676] Linking C executable interpreter\test_rxvmbyteendpoint.exe
+[480/1676] Linking C executable interpreter\test_rxvmchannel_byte.exe
+[481/1676] Linking C executable interpreter\test_rxvmactive.exe
+[482/1676] Linking C executable interpreter\test_rxvmplugin_context.exe
+[483/1676] Linking C executable interpreter\test_rxpa_concurrency.exe
+[484/1676] Linking C executable interpreter\test_rxpa_odbc.exe
+[485/1676] Linking C executable interpreter\test_rxpa_odbc_old_host.exe
+[486/1676] Linking C executable interpreter\test_jtable_policy.exe
+[487/1676] Linking C executable interpreter\test_signal_mask.exe
+[488/1676] Linking C executable interpreter\test_rxpa_utf_validation.exe
+[489/1676] Linking C executable interpreter\test_float_pool_format.exe
+[490/1676] Linking C executable interpreter\test_compact_format.exe
+[491/1676] Linking C executable interpreter\test_db_decimal_archive_link.exe
+[492/1676] cREXX RXAS Instruction Tests (raise uncaptured signal) ...
+[493/1676] cREXX RXAS Instruction Tests (fallback panic source reporting) ...
+[494/1676] cREXX RXAS Instruction Tests (breakpoint address reporting) ...
+[495/1676] cREXX RXAS Instruction Tests (register flag partitioning) ...
+[496/1676] cREXX RXAS Instruction Tests (UTF flag cache) ...
+[497/1676] cREXX RXAS Instruction Tests (attribute bulk insert/delete) ...
+[498/1676] cREXX RXAS Instruction Tests (reference value instructions) ...
+[499/1676] cREXX RXAS Instruction Tests (PERF2-02 direct reference guards) ...
+[500/1676] cREXX RXAS Instruction Tests (PERF2-05 partial reference materialization) ...
+[501/1676] cREXX RXAS Instruction Tests (PERF2-05 exact reference relink) ...
+[502/1676] cREXX RXAS Instruction Tests (object initialization lifecycle instructions) ...
+[503/1676] cREXX RXAS Instruction Tests (signal call argument attributes) ...
+[504/1676] cREXX RXAS Instruction Tests (signal handler response modes) ...
+[505/1676] cREXX RXAS Instruction Tests (signal call-window mapping unwind) ...
+[506/1676] cREXX RXAS Instruction Tests (signal mask boundary handling) ...
+[507/1676] cREXX RXAS Instruction Tests (signal silent halt response) ...
+[508/1676] cREXX RXAS Instruction Tests (signal frame handler table scope) ...
+[509/1676] cREXX RXAS Instruction Tests (nested pending signal delivery) ...
+[510/1676] cREXX RXAS Instruction Tests (action-aware signal handlers) ...
+[511/1676] cREXX RXAS Instruction Tests (retired signal retry marker) ...
+[512/1676] cREXX RXAS Instruction Tests (signal handler push/pop scope) ...
+[513/1676] cREXX RXAS Instruction Tests (signal branch with bound value) ...
+[514/1676] cREXX RXAS Instruction Tests (NR-09 large instructions) ...
+[515/1676] cREXX RXAS Basic Instruction Tests ...
+[516/1676] cREXX RXAS Integer Math Instruction Tests ...
+[517/1676] cREXX RXAS Instruction Tests (signed 64-bit integer contract) ...
+[518/1676] cREXX RXAS Float Math Instruction Tests ...
+[519/1676] cREXX RXAS String Instruction Tests ...
+[520/1676] cREXX RXAS Logic and Flow Instruction Tests ...
+[521/1676] cREXX RXAS System and I/O Instruction Tests ...
+[522/1676] cREXX RXAS Instruction Tests (binary buffer and I/O) ...
+[523/1676] cREXX RXAS Instruction Tests (typed binary memory operations) ...
+[524/1676] Assembling Gate F F1c local channel fixture ...
+[525/1676] Injecting retired process opcode 466 into stale RXBIN fixture ...
+[526/1676] Injecting retired process opcode 467 into stale RXBIN fixture ...
+[527/1676] Injecting retired process opcode 468 into stale RXBIN fixture ...
+[528/1676] Injecting retired process opcode 469 into stale RXBIN fixture ...
+[529/1676] Injecting retired process opcode 470 into stale RXBIN fixture ...
+[530/1676] Injecting retired process opcode 471 into stale RXBIN fixture ...
+[531/1676] Assembling Gate F F1b channel benchmark ...
+[532/1676] cREXX RXAS Instruction Tests (linear jump table dispatch) ...
+[533/1676] cREXX RXAS Instruction Tests (linear jump table source matrix) ...
+[534/1676] cREXX RXAS Instruction Tests (openhash jump table source matrix) ...
+[535/1676] cREXX RXAS Instruction Tests (acph jump table source matrix) ...
+[536/1676] cREXX RXAS Instruction Tests (auto jump table source matrix) ...
+[537/1676] cREXX RXAS Instruction Tests (open-hash and ACPH jump table edge cases) ...
+[538/1676] cREXX RXAS Instruction Tests (auto jump table policy paths) ...
+[539/1676] cREXX RXAS Instruction Tests (Rexx padded and numeric string jump tables) ...
+[540/1676] cREXX RXAS Instruction Tests (jump table syntax and value boundaries) ...
+[541/1676] Mutating jump table rxasjtablecorruptalgorithm (algorithm) ...
+[542/1676] Mutating jump table rxasjtablecorruptheader (header) ...
+[543/1676] Mutating jump table rxasjtablecorruptlinearkey (linear-key-offset) ...
+[544/1676] Mutating jump table rxasjtablecorruptlineartarget (linear-target) ...
+[545/1676] Mutating jump table rxasjtablecorruptopenslot (open-slot-offset) ...
+[546/1676] Mutating jump table rxasjtablecorruptacphslot (acph-slot-kind) ...
+[547/1676] Mutating jump table rxasjtablecorruptacphtarget (acph-target) ...
+[548/1676] cREXX RXAS Socket Instruction Tests ...
+[549/1676] cREXX RXAS Decimal Instruction Tests ...
+[550/1676] cREXX RXAS Conversion Instruction Tests ...
+[551/1676] cREXX RXAS Object Instruction Tests ...
+[552/1676] cREXX RXAS Reflection Instruction Tests ...
+[553/1676] cREXX RXAS Interface Dispatch Instruction Tests ...
+[554/1676] cREXX RXAS Instruction Tests (descriptor selector contracts) ...
+[555/1676] cREXX RXAS Stress Instruction Tests ...
+[556/1676] cREXX RXAS Instruction Tests (remaining deterministic instruction gaps) ...
+[557/1676] cREXX RXAS Instruction Tests (arbitrary operand pipeline) ...
+[558/1676] Linking C executable interpreter\rxvmplugin\rxvmplugins\mc_decimal\decnumber_test.exe
+[559/1676] Linking C executable interpreter\rxvmplugin\rxvmplugins\mc_decimal\mc_decimal_test_harness.exe
+[560/1676] Linking C executable interpreter\rxvmplugin\rxvmplugins\mc_decimal\mc_decimal_dyn_test_harness.exe
+[561/1676] Linking C executable interpreter\rxvmplugin\rxvmplugins\mc_decimal\mc_decimal_manual_test_harness.exe
+[562/1676] Linking C executable interpreter\rxvmplugin\rxvmplugins\mc_decimal\mc_decimal_full_tests.exe
+[563/1676] Linking C executable interpreter\rxvmplugin\rxvmplugins\db_decimal\db_decimal_tests.exe
+[564/1676] Linking C static library bin\rx_keyaccess_static.lib
+[565/1676] Linking C static library bin\rx_llist_static.lib
+[566/1676] Linking C static library bin\rx_treemap_static.lib
+[567/1676] Linking C static library bin\rx_recv390_static.lib
+[568/1676] Linking C static library bin\rx_rxtcp_static.lib
+[569/1676] Linking C executable tests\test_rxinteger_contract.exe
+[570/1676] Linking C executable tests\test_rxop_metadata.exe
+[571/1676] Linking C executable tests\test_rxas_flow_graph.exe
+[572/1676] Generating whole_procedure_runtime_rxvm_noopt.rxbin
+[573/1676] Generating whole_procedure_runtime_rxvm_opt.rxbin
+[574/1676] Generating nr18_flow_runtime_rxvm_noopt.rxbin
+[575/1676] Generating nr18_flow_runtime_rxvm_opt.rxbin
+[576/1676] Generating storage_identity_runtime_rxvm_noopt.rxbin
+[577/1676] Generating storage_identity_runtime_rxvm_opt.rxbin
+[578/1676] Generating redundant_itos_runtime_rxvm_noopt.rxbin
+[579/1676] Generating redundant_itos_runtime_rxvm_opt.rxbin
+[580/1676] Generating signal_contract_runtime_rxvm_noopt.rxbin
+[581/1676] Generating signal_contract_runtime_rxvm_opt.rxbin
+[582/1676] Generating copied_xtoy_component_placement_runtime_rxvm_noopt.rxbin
+[583/1676] Generating copied_xtoy_component_placement_runtime_rxvm_opt.rxbin
+[584/1676] Generating branch_thread_runtime_rxvm_noopt.rxbin
+[585/1676] Generating branch_thread_runtime_rxvm_opt.rxbin
+[586/1676] cREXX RXAS intr_test - Native Signal Test Harness ...
+[587/1676] Linking C executable tests\performance\decimal_gate1_adapter.exe
+[588/1676] Generating reference_iterator_system_rxvm_noopt.rxbin
+[589/1676] Generating reference_iterator_system_rxvm_opt.rxbin
+[590/1676] Generating reference_iterator_perf_rxvm_noopt.rxbin
+[591/1676] Generating reference_iterator_perf_rxvm_opt.rxbin
+[592/1676] Generating reference_generated_contract_rxvm_noopt.rxbin
+[593/1676] Generating reference_generated_contract_rxvm_opt.rxbin
+[594/1676] Linking C shared module tests\rxpa\rx_rxpa_invalid_manifest.rxplugin
+[595/1676] Linking C shared module tests\rxpa\rx_rxpa_bench_reentrant.rxplugin
+[596/1676] Linking C shared module tests\rxpa\rx_rxpa_bench_legacy.rxplugin
+[597/1676] Linking C shared module tests\rxpa\rx_rxpa_bench_session.rxplugin
+[598/1676] Linking C executable tests\testvm.exe
+[599/1676] Building C object compiler\CMakeFiles\rxclib.dir\rexcscan.c.obj
+[600/1676] Linking C static library bin\rxclib.lib
+[601/1676] Linking C executable compiler\tests\test_rxcp_super_combiner.exe
+[602/1676] Linking C executable bin\rxc.exe
+[603/1676] Linking C executable compiler\tests\test_source_provenance.exe
+[604/1676] Building token.rxbin
+[605/1676] Building Dummy.rxbin
+[606/1676] Building C object compiler\tests\CMakeFiles\crexx_test_driver.dir\src\test_driver.c.obj
+[607/1676] Linking C executable compiler\tests\crexx_test_driver.exe
+[608/1676] cREXX compile and assemble _address ...
+[609/1676] cREXX compile and assemble _rxsystem ...
+[610/1676] cREXX compile and assemble _jdn ...
+[611/1676] cREXX compile and assemble _datei ...
+[612/1676] cREXX compile and assemble _dateo ...
+[613/1676] cREXX compile and assemble _ftrunc ...
+[614/1676] cREXX compile and assemble _itrunc ...
+[615/1676] cREXX compile and assemble _typedformat ...
+[616/1676] cREXX compile and assemble abbrev ...
+[617/1676] cREXX compile and assemble abs ...
+[618/1676] cREXX compile and assemble intabs ...
+[619/1676] cREXX compile and assemble floatabs ...
+[620/1676] cREXX compile and assemble b2x ...
+[621/1676] cREXX compile and assemble b2d ...
+[622/1676] cREXX compile and assemble binary ...
+[623/1676] cREXX compile and assemble c2x ...
+[624/1676] cREXX compile and assemble c2d ...
+[625/1676] cREXX compile and assemble center ...
+[626/1676] cREXX compile and assemble centre ...
+[627/1676] cREXX compile and assemble changestr ...
+[628/1676] cREXX compile and assemble compare ...
+[629/1676] cREXX compile and assemble copies ...
+[630/1676] cREXX compile and assemble countstr ...
+[631/1676] cREXX compile and assemble d2b ...
+[632/1676] cREXX compile and assemble d2c ...
+[633/1676] cREXX compile and assemble d2x ...
+[634/1676] cREXX compile and assemble date ...
+[635/1676] cREXX compile and assemble delstr ...
+[636/1676] cREXX compile and assemble delword ...
+[637/1676] cREXX compile and assemble fileio ...
+[638/1676] cREXX compile and assemble filter ...
+[639/1676] cREXX compile and assemble format ...
+[640/1676] cREXX compile and assemble intformat ...
+[641/1676] cREXX compile and assemble floatformat ...
+[642/1676] cREXX compile and assemble fnv ...
+[643/1676] cREXX compile and assemble getenv ...
+[644/1676] cREXX compile and assemble insert ...
+[645/1676] cREXX compile and assemble length ...
+[646/1676] cREXX compile and assemble linesize ...
+[647/1676] cREXX compile and assemble loadmodule ...
+[648/1676] cREXX compile and assemble lower ...
+[649/1676] cREXX compile and assemble max ...
+[650/1676] cREXX compile and assemble intmax ...
+[651/1676] cREXX compile and assemble floatmax ...
+[652/1676] cREXX compile and assemble min ...
+[653/1676] cREXX compile and assemble intmin ...
+[654/1676] cREXX compile and assemble floatmin ...
+[655/1676] cREXX compile and assemble numeric ...
+[656/1676] cREXX compile and assemble overlay ...
+[657/1676] cREXX compile and assemble pos ...
+[658/1676] cREXX compile and assemble qscan ...
+[659/1676] cREXX compile and assemble qpos ...
+[660/1676] cREXX compile and assemble qsplit ...
+[661/1676] cREXX compile and assemble qsplitsafe ...
+[662/1676] cREXX compile and assemble qextractall ...
+[663/1676] cREXX compile and assemble qextractpair ...
+[664/1676] cREXX compile and assemble qstripcomment ...
+[665/1676] cREXX compile and assemble qremoveall ...
+[666/1676] cREXX compile and assemble fsayfmt ...
+[667/1676] cREXX compile and assemble lastpos ...
+[668/1676] cREXX compile and assemble left ...
+[669/1676] cREXX compile and assemble right ...
+[670/1676] cREXX compile and assemble raise ...
+[671/1676] cREXX compile and assemble reverse ...
+[672/1676] cREXX compile and assemble signal ...
+[673/1676] cREXX compile and assemble trace ...
+[674/1676] cREXX compile and assemble sign ...
+[675/1676] cREXX compile and assemble intsign ...
+[676/1676] cREXX compile and assemble floatsign ...
+[677/1676] cREXX compile and assemble space ...
+[678/1676] cREXX compile and assemble strip ...
+[679/1676] cREXX compile and assemble substr ...
+[680/1676] cREXX compile and assemble substro ...
+[681/1676] cREXX compile and assemble symbol ...
+[682/1676] cREXX compile and assemble time ...
+[683/1676] cREXX compile and assemble translate ...
+[684/1676] cREXX compile and assemble trunc ...
+[685/1676] cREXX compile and assemble floattrunc ...
+[686/1676] cREXX compile and assemble upper ...
+[687/1676] cREXX compile and assemble value ...
+[688/1676] cREXX compile and assemble verify ...
+[689/1676] cREXX compile and assemble version ...
+[690/1676] cREXX compile and assemble sourceinfo ...
+[691/1676] cREXX compile and assemble word ...
+[692/1676] cREXX compile and assemble words ...
+[693/1676] cREXX compile and assemble wordindex ...
+[694/1676] cREXX compile and assemble subword ...
+[695/1676] cREXX compile and assemble wordlength ...
+[696/1676] cREXX compile and assemble wordpos ...
+[697/1676] cREXX compile and assemble qword ...
+[698/1676] cREXX compile and assemble qwordlength ...
+[699/1676] cREXX compile and assemble qwords ...
+[700/1676] cREXX compile and assemble qwordindex ...
+[701/1676] cREXX compile and assemble qwordpos ...
+[702/1676] cREXX compile and assemble qsubword ...
+[703/1676] cREXX compile and assemble regex ...
+[704/1676] cREXX compile and assemble x2b ...
+[705/1676] cREXX compile and assemble x2c ...
+[706/1676] cREXX compile and assemble x2d ...
+[707/1676] cREXX compile and assemble random ...
+[708/1676] cREXX compile and assemble reradix ...
+[709/1676] cREXX compile and assemble sequence ...
+[710/1676] cREXX compile and assemble find ...
+[711/1676] cREXX compile and assemble index ...
+[712/1676] cREXX compile and assemble xrange ...
+[713/1676] cREXX compile and assemble parsecompile ...
+[714/1676] cREXX compile and assemble parsestring ...
+[715/1676] cREXX compile and assemble parse ...
+[716/1676] cREXX compile and assemble datatype ...
+[717/1676] cREXX compile and assemble arrayfind ...
+[718/1676] cREXX compile and assemble splice ...
+[719/1676] cREXX compile and assemble arrayinsert ...
+[720/1676] cREXX compile and assemble arraydelete ...
+[721/1676] cREXX compile and assemble arrayappend ...
+[722/1676] cREXX compile and assemble arrayprepend ...
+[723/1676] cREXX compile and assemble objectarrayinsert ...
+[724/1676] cREXX compile and assemble objectarraydelete ...
+[725/1676] cREXX compile and assemble objectarrayappend ...
+[726/1676] cREXX compile and assemble objectarrayprepend ...
+[727/1676] cREXX compile and assemble objectarraydrop ...
+[728/1676] cREXX compile and assemble objectarraymove ...
+[729/1676] cREXX compile and assemble arraypop ...
+[730/1676] cREXX compile and assemble arrayshift ...
+[731/1676] cREXX compile and assemble arrayget ...
+[732/1676] cREXX compile and assemble arrayset ...
+[733/1676] cREXX compile and assemble arraycontains ...
+[734/1676] cREXX compile and assemble arrayindexof ...
+[735/1676] cREXX compile and assemble arrayreverse ...
+[736/1676] cREXX compile and assemble arrayjoin ...
+[737/1676] cREXX compile and assemble arraysort ...
+[738/1676] cREXX compile and assemble arraycopy ...
+[739/1676] cREXX compile and assemble arraydrop ...
+[740/1676] cREXX compile and assemble arrayhi ...
+[741/1676] cREXX compile and assemble arraymove ...
+[742/1676] cREXX compile and assemble fmtmask ...
+[743/1676] cREXX compile and assemble compilemask ...
+[744/1676] cREXX compile and assemble runmask ...
+[745/1676] cREXX compile and assemble stem ...
+[746/1676] cREXX compile and assemble rxjson ...
+[747/1676] cREXX compile and assemble rxsocket ...
+[748/1676] cREXX compile and assemble wordrep ...
+[749/1676] cREXX compile and assemble rxqueue ...
+[750/1676] cREXX compile and assemble afterword ...
+[751/1676] cREXX REXX Library Archive ...
+[752/1676] cREXX Linked Library Image ...
+[753/1676] Building Query.rxbin
+[754/1676] Building Dump.rxbin
+[755/1676] Building Sort.rxbin
+[756/1676] Building Sortx.rxbin
+[757/1676] Building Execio.rxbin
+[758/1676] Building Add.rxbin
+[759/1676] Building Fsay.rxbin
+[760/1676] Building Msay.rxbin
+[761/1676] Building Address.rxbin
+[762/1676] Building Signal.rxbin
+[763/1676] Building Trace.rxbin
+[764/1676] Building RexxScript.rxbin
+[765/1676] Building Substr.rxbin
+[766/1676] Building Queue compiler exit
+[767/1676] C Packing cREXX RXFNSB Library ...
+[768/1676] Building C object interpreter\CMakeFiles\rxvme.dir\rxvmmain.c.obj
+[769/1676] Building C object interpreter\CMakeFiles\rxvme.dir\library.c.obj
+[770/1676] Building Parse.rxbin
+[771/1676] Building rxcexits.rxbin (bundled via concatenation)
+[772/1676] Linking C executable bin\rxvme.exe
+[773/1676] Generating tlinesz_noopt.rxbin
+[774/1676] Generating tlinesz_opt.rxbin
+[775/1676] Clearing stale class library member images ...
+[776/1676] Generating ts_abbrev_noopt.rxbin
+[777/1676] Generating ts_abbrev_opt.rxbin
+[778/1676] Generating ts_abs_noopt.rxbin
+[779/1676] Generating ts_abs_opt.rxbin
+[780/1676] Generating ts_typed_numeric_noopt.rxbin
+[781/1676] cREXX compile and assemble ObjectIterator ...
+[782/1676] Generating ts_typed_numeric_opt.rxbin
+[783/1676] Generating ts_address_protocol_noopt.rxbin
+[784/1676] cREXX compile and assemble StringIterator ...
+[785/1676] Generating ts_address_protocol_opt.rxbin
+[786/1676] Generating ts_address_noopt.rxbin
+[787/1676] Generating ts_address_opt.rxbin
+[788/1676] cREXX compile and assemble ObjectIterable ...
+[789/1676] Generating ts_address_crexx_noopt.rxbin
+[790/1676] cREXX compile and assemble ObjectPrintable ...
+[791/1676] cREXX compile and assemble StringIterable ...
+[792/1676] cREXX compile and assemble StringTreeSetIterator ...
+[793/1676] cREXX compile and assemble ArrayList ...
+[794/1676] Generating ts_address_crexx_opt.rxbin
+[795/1676] Generating ts_address_capture_noopt.rxbin
+[796/1676] cREXX compile and assemble BagIterator ...
+[797/1676] Generating ts_address_capture_opt.rxbin
+[798/1676] Generating ts_address_argv_noopt.rxbin
+[799/1676] Generating ts_address_argv_opt.rxbin
+[800/1676] Generating ts_address_array_lifecycle_noopt.rxbin
+[801/1676] cREXX compile and assemble Comparator ...
+[802/1676] Generating ts_address_array_lifecycle_opt.rxbin
+[803/1676] Generating ts_address_spawn_transfer_noopt.rxbin
+[804/1676] cREXX compile and assemble Iterator ...
+[805/1676] Generating ts_address_spawn_transfer_opt.rxbin
+[806/1676] cREXX compile and assemble Map ...
+[807/1676] Generating ts_binary_noopt.rxbin
+[808/1676] cREXX compile and assemble ObjectArrayList ...
+[809/1676] cREXX compile and assemble ObjectComparator ...
+[810/1676] cREXX compile and assemble ObjectObjectTreeMapIterator ...
+[811/1676] Generating ts_binary_opt.rxbin
+[812/1676] Generating ts_c2x_noopt.rxbin
+[813/1676] Generating ts_c2x_opt.rxbin
+[814/1676] Generating ts_center_noopt.rxbin
+[815/1676] cREXX compile and assemble Printable ...
+[816/1676] Generating ts_center_opt.rxbin
+[817/1676] Generating ts_changestr_noopt.rxbin
+[818/1676] Generating ts_changestr_opt.rxbin
+[819/1676] Generating ts_compare_noopt.rxbin
+[820/1676] cREXX compile and assemble StringArrayList ...
+[821/1676] Generating ts_compare_opt.rxbin
+[822/1676] Generating ts_countstr_noopt.rxbin
+[823/1676] Generating ts_countstr_opt.rxbin
+[824/1676] Generating ts_d2c_noopt.rxbin
+[825/1676] cREXX compile and assemble StringHashMapIterator ...
+[826/1676] Generating ts_d2c_opt.rxbin
+[827/1676] Generating ts_d2x_noopt.rxbin
+[828/1676] Generating ts_d2x_opt.rxbin
+[829/1676] Generating ts_date_noopt.rxbin
+[830/1676] cREXX compile and assemble StringHashSetIterator ...
+[831/1676] Generating ts_date_opt.rxbin
+[832/1676] Generating ts_date2_noopt.rxbin
+[833/1676] cREXX compile and assemble StringObjectHashMapIterator ...
+[834/1676] Generating ts_date2_opt.rxbin
+[835/1676] Generating ts_date_core_noopt.rxbin
+[836/1676] Generating ts_date_core_opt.rxbin
+[837/1676] Generating ts_delstr_noopt.rxbin
+[838/1676] Generating ts_delstr_opt.rxbin
+[839/1676] cREXX compile and assemble StringObjectTreeMapIterator ...
+[840/1676] Generating ts_delword_noopt.rxbin
+[841/1676] Generating ts_delword_opt.rxbin
+[842/1676] Generating ts_fileio_chars_noopt.rxbin
+[843/1676] Generating ts_fileio_chars_opt.rxbin
+[844/1676] Generating ts_format_noopt.rxbin
+[845/1676] cREXX compile and assemble StringTreeMapIterator ...
+[846/1676] Generating ts_format_opt.rxbin
+[847/1676] Generating ts_fnv_noopt.rxbin
+[848/1676] Generating ts_fnv_opt.rxbin
+[849/1676] Generating ts_fsayfmt_noopt.rxbin
+[850/1676] Generating ts_fsayfmt_opt.rxbin
+[851/1676] Generating ts_insert_noopt.rxbin
+[852/1676] Generating ts_insert_opt.rxbin
+[853/1676] cREXX compile and assemble StringTreeSet ...
+[854/1676] Generating ts_left_noopt.rxbin
+[855/1676] Generating ts_left_opt.rxbin
+[856/1676] Generating ts_length_noopt.rxbin
+[857/1676] Generating ts_length_opt.rxbin
+[858/1676] Generating ts_lower_noopt.rxbin
+[859/1676] Generating ts_lower_opt.rxbin
+[860/1676] Generating ts_min_max_noopt.rxbin
+[861/1676] cREXX compile and assemble TreeMapIterator ...
+[862/1676] Generating ts_min_max_opt.rxbin
+[863/1676] Generating ts_overlay_noopt.rxbin
+[864/1676] Generating ts_overlay_opt.rxbin
+[865/1676] Generating ts_pos_noopt.rxbin
+[866/1676] Generating ts_pos_opt.rxbin
+[867/1676] cREXX compile and assemble ArrayListIterator ...
+[868/1676] Generating ts_qpos_noopt.rxbin
+[869/1676] Generating ts_qpos_opt.rxbin
+[870/1676] Generating ts_qlibrary_noopt.rxbin
+[871/1676] Generating ts_qlibrary_opt.rxbin
+[872/1676] Generating ts_random_noopt.rxbin
+[873/1676] Generating ts_random_opt.rxbin
+[874/1676] cREXX compile and assemble Bag ...
+[875/1676] Generating ts_reverse_noopt.rxbin
+[876/1676] Generating ts_reverse_opt.rxbin
+[877/1676] Generating ts_regex_noopt.rxbin
+[878/1676] Generating ts_regex_opt.rxbin
+[879/1676] Generating ts_right_noopt.rxbin
+[880/1676] Generating ts_right_opt.rxbin
+[881/1676] Generating ts_sign_noopt.rxbin
+[882/1676] Generating ts_sign_opt.rxbin
+[883/1676] Generating ts_space_noopt.rxbin
+[884/1676] Generating ts_space_opt.rxbin
+[885/1676] Generating ts_strip_noopt.rxbin
+[886/1676] Generating ts_strip_opt.rxbin
+[887/1676] Generating ts_symbol_noopt.rxbin
+[888/1676] Generating ts_symbol_opt.rxbin
+[889/1676] cREXX compile and assemble Concurrency ...
+[890/1676] Generating ts_test_noopt.rxbin
+[891/1676] Generating ts_test_opt.rxbin
+[892/1676] Generating ts_time_noopt.rxbin
+[893/1676] Generating ts_time_opt.rxbin
+[894/1676] cREXX compile and assemble Iterable ...
+[895/1676] Generating ts_trace_noopt.rxbin
+[896/1676] cREXX compile and assemble ObjectArrayListIterator ...
+[897/1676] cREXX compile and assemble ObjectLinkedList ...
+[898/1676] cREXX compile and assemble ObjectObjectTreeMap ...
+[899/1676] cREXX compile and assemble ObjectStack ...
+[900/1676] cREXX compile and assemble Qfind ...
+[901/1676] Generating ts_trace_opt.rxbin
+[902/1676] Generating ts_translate_noopt.rxbin
+[903/1676] cREXX compile and assemble Rexx ...
+[904/1676] cREXX compile and assemble RexxComparator ...
+[905/1676] Generating ts_translate_opt.rxbin
+[906/1676] Generating ts_trunc_noopt.rxbin
+[907/1676] Generating ts_trunc_opt.rxbin
+[908/1676] Generating ts_upper_noopt.rxbin
+[909/1676] Generating ts_upper_opt.rxbin
+[910/1676] Generating ts_upper_lower_noopt.rxbin
+[911/1676] Generating ts_upper_lower_opt.rxbin
+[912/1676] Generating ts_version_noopt.rxbin
+[913/1676] Generating ts_version_opt.rxbin
+[914/1676] Generating ts_sourceinfo_noopt.rxbin
+[915/1676] Generating ts_sourceinfo_opt.rxbin
+[916/1676] Generating ts_value_noopt.rxbin
+[917/1676] Generating ts_value_opt.rxbin
+[918/1676] Generating ts_verify_noopt.rxbin
+[919/1676] cREXX compile and assemble Scanlex ...
+[920/1676] Generating ts_verify_opt.rxbin
+[921/1676] Generating ts_wordlength_noopt.rxbin
+[922/1676] Generating ts_wordlength_opt.rxbin
+[923/1676] Generating ts_wordpos_noopt.rxbin
+[924/1676] Generating ts_wordpos_opt.rxbin
+[925/1676] cREXX compile and assemble StringArrayListIterator ...
+[926/1676] Generating ts_wrdix_noopt.rxbin
+[927/1676] Generating ts_wrdix_opt.rxbin
+[928/1676] Generating ts_x2b_noopt.rxbin
+[929/1676] Generating ts_x2b_opt.rxbin
+[930/1676] Generating ts_x2c_noopt.rxbin
+[931/1676] Generating ts_x2c_opt.rxbin
+[932/1676] Generating ts_x2d_noopt.rxbin
+[933/1676] cREXX compile and assemble StringHashMap ...
+[934/1676] Generating ts_x2d_opt.rxbin
+[935/1676] Generating tscopies_noopt.rxbin
+[936/1676] Generating tscopies_opt.rxbin
+[937/1676] Generating tslastpos_noopt.rxbin
+[938/1676] Generating tslastpos_opt.rxbin
+[939/1676] cREXX compile and assemble StringHashSet ...
+[940/1676] cREXX compile and assemble StringLinkedList ...
+[941/1676] cREXX compile and assemble StringObjectHashMap ...
+[942/1676] cREXX compile and assemble StringObjectTreeMap ...
+[943/1676] cREXX compile and assemble StringOldTreeMap ...
+[944/1676] cREXX compile and assemble StringStack ...
+[945/1676] cREXX compile and assemble StringTreeMap ...
+[946/1676] Generating tsubstr_noopt.rxbin
+[947/1676] Generating tsubstr_opt.rxbin
+[948/1676] Generating tsword_noopt.rxbin
+[949/1676] Generating tsword_opt.rxbin
+[950/1676] Generating ts_words_noopt.rxbin
+[951/1676] cREXX compile and assemble TreeMap ...
+[952/1676] Generating ts_words_opt.rxbin
+[953/1676] cREXX Linked Class Library Image ...
+[954/1676] Generating ts_reradix_noopt.rxbin
+[955/1676] Clearing stale rxfnsc runtime member images ...
+[956/1676] Generating ts_reradix_opt.rxbin
+[957/1676] Generating ts_sequence_noopt.rxbin
+[958/1676] Generating ts_sequence_opt.rxbin
+[959/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBitFunctions ...
+[960/1676] cREXX compile and assemble rxfnsc runtime RexxValue ...
+[961/1676] cREXX compile and assemble rxfnsc runtime RexxClassicCharacterScan ...
+[962/1676] cREXX compile and assemble rxfnsc runtime RexxClassicConfig ...
+[963/1676] cREXX compile and assemble rxfnsc runtime RexxClassicState ...
+[964/1676] cREXX compile and assemble rxfnsc runtime RexxStem ...
+[965/1676] cREXX compile and assemble rxfnsc runtime RexxClassicEncoding ...
+[966/1676] cREXX compile and assemble rxfnsc runtime RexxClassicDatatype ...
+[967/1676] Generating ts_find_noopt.rxbin
+[968/1676] Generating ts_find_opt.rxbin
+[969/1676] Generating ts_index_noopt.rxbin
+[970/1676] Generating ts_index_opt.rxbin
+[971/1676] cREXX compile and assemble rxfnsc runtime RexxVariablePool ...
+[972/1676] cREXX compile and assemble rxfnsc runtime RexxClassicCharacterOps ...
+[973/1676] Generating ts_parse_noopt.rxbin
+[974/1676] Generating ts_parse_opt.rxbin
+[975/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifs ...
+[976/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifBitand ...
+[977/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifD2x ...
+[978/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifX2d ...
+[979/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifAbbrev ...
+[980/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifAbs ...
+[981/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifAddress ...
+[982/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifB2x ...
+[983/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifBitor ...
+[984/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifBitxor ...
+[985/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifC2d ...
+[986/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifC2x ...
+[987/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifCenter ...
+[988/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifChangestr ...
+[989/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifCopies ...
+[990/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifCompare ...
+[991/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifCountstr ...
+[992/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifD2c ...
+[993/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifDatatype ...
+[994/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifDate ...
+[995/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifDelstr ...
+[996/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifDelword ...
+[997/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifFormat ...
+[998/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifInsert ...
+[999/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifLastpos ...
+[1000/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifLeft ...
+[1001/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifLength ...
+[1002/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifMax ...
+[1003/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifMin ...
+[1004/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifNumeric ...
+[1005/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifOverlay ...
+[1006/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifPos ...
+[1007/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifRandom ...
+[1008/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifReverse ...
+[1009/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifRight ...
+[1010/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifSign ...
+[1011/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifSpace ...
+[1012/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifStrip ...
+[1013/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifSubstr ...
+[1014/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifSubword ...
+[1015/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifSymbol ...
+[1016/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifTime ...
+[1017/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifTrace ...
+[1018/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifTranslate ...
+[1019/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifTrunc ...
+[1020/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifValue ...
+[1021/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifVerify ...
+[1022/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifWord ...
+[1023/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifWordindex ...
+[1024/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifWordlength ...
+[1025/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifWordpos ...
+[1026/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifWords ...
+[1027/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifX2b ...
+[1028/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifX2c ...
+[1029/1676] Generating ts_datatype_noopt.rxbin
+[1030/1676] Generating ts_datatype_opt.rxbin
+[1031/1676] Generating ts_numeric_noopt.rxbin
+[1032/1676] Generating ts_numeric_opt.rxbin
+[1033/1676] Generating ts_splice_noopt.rxbin
+[1034/1676] Generating ts_splice_opt.rxbin
+[1035/1676] Generating ts_arraydelete_noopt.rxbin
+[1036/1676] cREXX compile and assemble rxfnsc runtime RexxClassicBifXrange ...
+[1037/1676] cREXX Linked rxfnsc Runtime Library Image ...
+[1038/1676] Generating testRexxValue_noopt.rxbin
+[1039/1676] Generating ts_arraydelete_opt.rxbin
+[1040/1676] Generating testRexxValue_opt.rxbin
+[1041/1676] Generating ts_arraydelete_focused_noopt.rxbin
+[1042/1676] Generating testRexxRuntimePools_noopt.rxbin
+[1043/1676] Generating testRexxRuntimePools_opt.rxbin
+[1044/1676] Generating ts_arraydelete_focused_opt.rxbin
+[1045/1676] Generating testRexxClassicBifs_noopt.rxbin
+[1046/1676] Generating ts_arrayappend_noopt.rxbin
+[1047/1676] Generating testRexxClassicBifs_opt.rxbin
+[1048/1676] Generating ts_arrayappend_opt.rxbin
+[1049/1676] Generating testRexxClassicBifAbbrev_noopt.rxbin
+[1050/1676] Generating testRexxClassicBifAbbrev_opt.rxbin
+[1051/1676] Generating ts_arraycontains_noopt.rxbin
+[1052/1676] Generating testRexxClassicBifAbs_noopt.rxbin
+[1053/1676] Generating testRexxClassicBifAbs_opt.rxbin
+[1054/1676] Generating ts_arraycontains_opt.rxbin
+[1055/1676] Generating testRexxClassicBifAddress_noopt.rxbin
+[1056/1676] Generating testRexxClassicBifAddress_opt.rxbin
+[1057/1676] Generating ts_arraycopy_noopt.rxbin
+[1058/1676] Generating testRexxClassicBifB2x_noopt.rxbin
+[1059/1676] Generating ts_arraycopy_opt.rxbin
+[1060/1676] Generating ts_arraydrop_noopt.rxbin
+[1061/1676] Generating testRexxClassicBifB2x_opt.rxbin
+[1062/1676] Generating ts_arraydrop_opt.rxbin
+[1063/1676] Generating testRexxClassicBifBitwise_noopt.rxbin
+[1064/1676] Generating ts_arrayfind_noopt.rxbin
+[1065/1676] Generating testRexxClassicBifBitwise_opt.rxbin
+[1066/1676] Generating ts_arrayfind_opt.rxbin
+[1067/1676] Generating testRexxClassicBifC2d_noopt.rxbin
+[1068/1676] Generating testRexxClassicBifC2d_opt.rxbin
+[1069/1676] Generating ts_arrayget_noopt.rxbin
+[1070/1676] Generating ts_arrayget_opt.rxbin
+[1071/1676] Generating testRexxClassicBifC2x_noopt.rxbin
+[1072/1676] Generating testRexxClassicBifC2x_opt.rxbin
+[1073/1676] Generating ts_arrayhi_noopt.rxbin
+[1074/1676] Generating ts_arrayhi_opt.rxbin
+[1075/1676] Generating testRexxClassicBifCenter_noopt.rxbin
+[1076/1676] Generating ts_arrayindexof_noopt.rxbin
+[1077/1676] Generating testRexxClassicBifCenter_opt.rxbin
+[1078/1676] Generating testRexxClassicBifCentre_noopt.rxbin
+[1079/1676] Generating ts_arrayindexof_opt.rxbin
+[1080/1676] Generating ts_arrayinsert_noopt.rxbin
+[1081/1676] Generating testRexxClassicBifCentre_opt.rxbin
+[1082/1676] Generating testRexxClassicBifChangestr_noopt.rxbin
+[1083/1676] Generating ts_arrayinsert_opt.rxbin
+[1084/1676] Generating ts_arrayjoin_noopt.rxbin
+[1085/1676] Generating testRexxClassicBifChangestr_opt.rxbin
+[1086/1676] Generating ts_arrayjoin_opt.rxbin
+[1087/1676] Generating testRexxClassicBifCompare_noopt.rxbin
+[1088/1676] Generating ts_arraymove_noopt.rxbin
+[1089/1676] Generating testRexxClassicBifCompare_opt.rxbin
+[1090/1676] Generating testRexxClassicBifCopies_noopt.rxbin
+[1091/1676] Generating ts_arraymove_opt.rxbin
+[1092/1676] Generating testRexxClassicBifCopies_opt.rxbin
+[1093/1676] Generating ts_arraypop_noopt.rxbin
+[1094/1676] Generating ts_arraypop_opt.rxbin
+[1095/1676] Generating testRexxClassicBifCountstr_noopt.rxbin
+[1096/1676] Generating testRexxClassicBifCountstr_opt.rxbin
+[1097/1676] Generating ts_arrayprepend_noopt.rxbin
+[1098/1676] Generating ts_arrayprepend_opt.rxbin
+[1099/1676] Generating testRexxClassicBifD2x_noopt.rxbin
+[1100/1676] Generating ts_arrayreverse_noopt.rxbin
+[1101/1676] Generating testRexxClassicBifD2x_opt.rxbin
+[1102/1676] Generating ts_arrayreverse_opt.rxbin
+[1103/1676] Generating testRexxClassicBifD2c_noopt.rxbin
+[1104/1676] Generating ts_arrayset_noopt.rxbin
+[1105/1676] Generating testRexxClassicBifD2c_opt.rxbin
+[1106/1676] Generating ts_arrayset_opt.rxbin
+[1107/1676] Generating testRexxClassicBifDate_noopt.rxbin
+[1108/1676] Generating ts_arrayshift_noopt.rxbin
+[1109/1676] Generating testRexxClassicBifDate_opt.rxbin
+[1110/1676] Generating ts_arrayshift_opt.rxbin
+[1111/1676] Generating testRexxClassicBifDatatype_noopt.rxbin
+[1112/1676] Generating ts_arraysort_noopt.rxbin
+[1113/1676] Generating ts_arraysort_opt.rxbin
+[1114/1676] Generating testRexxClassicBifDatatype_opt.rxbin
+[1115/1676] Generating ts_b2d_noopt.rxbin
+[1116/1676] Generating testRexxClassicBifDelstr_noopt.rxbin
+[1117/1676] Generating ts_b2d_opt.rxbin
+[1118/1676] Generating testRexxClassicBifDelstr_opt.rxbin
+[1119/1676] Generating ts_b2x_noopt.rxbin
+[1120/1676] Generating testRexxClassicBifDelword_noopt.rxbin
+[1121/1676] Generating ts_b2x_opt.rxbin
+[1122/1676] Generating testRexxClassicBifDelword_opt.rxbin
+[1123/1676] Generating ts_c2d_noopt.rxbin
+[1124/1676] Generating testRexxClassicBifFormat_noopt.rxbin
+[1125/1676] Generating ts_c2d_opt.rxbin
+[1126/1676] Generating testRexxClassicBifFormat_opt.rxbin
+[1127/1676] Generating ts_centre_noopt.rxbin
+[1128/1676] Generating testRexxClassicBifInsert_noopt.rxbin
+[1129/1676] Generating testRexxClassicBifInsert_opt.rxbin
+[1130/1676] Generating ts_centre_opt.rxbin
+[1131/1676] Generating testRexxClassicBifLastpos_noopt.rxbin
+[1132/1676] Generating testRexxClassicBifLastpos_opt.rxbin
+[1133/1676] Generating ts_d2b_noopt.rxbin
+[1134/1676] Generating ts_d2b_opt.rxbin
+[1135/1676] Generating testRexxClassicBifLeft_noopt.rxbin
+[1136/1676] Generating ts_ftrunc_noopt.rxbin
+[1137/1676] Generating testRexxClassicBifLeft_opt.rxbin
+[1138/1676] Generating testRexxClassicBifLength_noopt.rxbin
+[1139/1676] Generating ts_ftrunc_opt.rxbin
+[1140/1676] Generating ts_getenv_noopt.rxbin
+[1141/1676] Generating testRexxClassicBifLength_opt.rxbin
+[1142/1676] Generating ts_getenv_opt.rxbin
+[1143/1676] Generating testRexxClassicBifMax_noopt.rxbin
+[1144/1676] Building the LOADMODULE focused provider
+[1145/1676] Generating testRexxClassicBifMax_opt.rxbin
+[1146/1676] Generating ts_itrunc_noopt.rxbin
+[1147/1676] Generating ts_itrunc_opt.rxbin
+[1148/1676] Generating testRexxClassicBifMin_noopt.rxbin
+[1149/1676] Generating testRexxClassicBifMin_opt.rxbin
+[1150/1676] Generating ts_loadmodule_noopt.rxbin
+[1151/1676] Generating ts_loadmodule_opt.rxbin
+[1152/1676] Generating testRexxClassicBifNumeric_noopt.rxbin
+[1153/1676] Generating testRexxClassicBifNumeric_opt.rxbin
+[1154/1676] Generating ts_max_noopt.rxbin
+[1155/1676] Generating ts_max_opt.rxbin
+[1156/1676] Generating testRexxClassicBifOverlay_noopt.rxbin
+[1157/1676] Generating ts_min_noopt.rxbin
+[1158/1676] Generating testRexxClassicBifOverlay_opt.rxbin
+[1159/1676] Generating ts_min_opt.rxbin
+[1160/1676] Generating testRexxClassicBifPos_noopt.rxbin
+[1161/1676] Generating ts_objectarrayappend_noopt.rxbin
+[1162/1676] Generating testRexxClassicBifPos_opt.rxbin
+[1163/1676] Generating ts_objectarrayappend_opt.rxbin
+[1164/1676] Generating testRexxClassicBifRandom_noopt.rxbin
+[1165/1676] Generating ts_objectarraydelete_noopt.rxbin
+[1166/1676] Generating testRexxClassicBifRandom_opt.rxbin
+[1167/1676] Generating testRexxClassicBifReverse_noopt.rxbin
+[1168/1676] Generating ts_objectarraydelete_opt.rxbin
+[1169/1676] Generating testRexxClassicBifReverse_opt.rxbin
+[1170/1676] Generating ts_objectarraydrop_noopt.rxbin
+[1171/1676] Generating ts_objectarraydrop_opt.rxbin
+[1172/1676] Generating testRexxClassicBifRight_noopt.rxbin
+[1173/1676] Generating ts_objectarrayinsert_noopt.rxbin
+[1174/1676] Generating testRexxClassicBifRight_opt.rxbin
+[1175/1676] Generating ts_objectarrayinsert_opt.rxbin
+[1176/1676] Generating testRexxClassicBifSign_noopt.rxbin
+[1177/1676] Generating ts_objectarraymove_noopt.rxbin
+[1178/1676] Generating testRexxClassicBifSign_opt.rxbin
+[1179/1676] Generating testRexxClassicBifSpace_noopt.rxbin
+[1180/1676] Generating ts_objectarraymove_opt.rxbin
+[1181/1676] Generating testRexxClassicBifSpace_opt.rxbin
+[1182/1676] Generating ts_objectarrayprepend_noopt.rxbin
+[1183/1676] Generating ts_objectarrayprepend_opt.rxbin
+[1184/1676] Generating testrexx0_noopt.rxbin
+[1185/1676] Generating testRexxClassicBifStrip_noopt.rxbin
+[1186/1676] Generating testRexxClassicBifStrip_opt.rxbin
+[1187/1676] Generating ts_qwordlength_noopt.rxbin
+[1188/1676] Generating testrexx0_opt.rxbin
+[1189/1676] Generating ts_qwordlength_opt.rxbin
+[1190/1676] Generating testrexx_noopt.rxbin
+[1191/1676] Generating testRexxClassicBifSubstr_noopt.rxbin
+[1192/1676] Generating testRexxClassicBifSubstr_opt.rxbin
+[1193/1676] Generating ts_raise_noopt.rxbin
+[1194/1676] Generating ts_raise_opt.rxbin
+[1195/1676] Generating testRexxClassicBifSubword_noopt.rxbin
+[1196/1676] Generating testRexxClassicBifSubword_opt.rxbin
+[1197/1676] Generating ts_rxsystem_noopt.rxbin
+[1198/1676] Generating ts_rxsystem_opt.rxbin
+[1199/1676] Generating testRexxClassicBifSymbol_noopt.rxbin
+[1200/1676] Generating testRexxClassicBifSymbol_opt.rxbin
+[1201/1676] Generating ts_rxsystem_exit_noopt.rxbin
+[1202/1676] Generating ts_rxsystem_exit_opt.rxbin
+[1203/1676] Generating testRexxClassicBifTime_noopt.rxbin
+[1204/1676] Generating testRexxClassicBifTime_opt.rxbin
+[1205/1676] Generating testrexx_opt.rxbin
+[1206/1676] Generating ts_rxqueue_noopt.rxbin
+[1207/1676] Generating testStringArrayList_noopt.rxbin
+[1208/1676] Generating testStringArrayList_opt.rxbin
+[1209/1676] Generating testStringHashMap_noopt.rxbin
+[1210/1676] Generating testStringHashMap_opt.rxbin
+[1211/1676] Generating testStringHashSet_noopt.rxbin
+[1212/1676] Generating ts_rxqueue_opt.rxbin
+[1213/1676] Generating testStringHashSet_opt.rxbin
+[1214/1676] Generating testRexxClassicBifTrace_noopt.rxbin
+[1215/1676] Generating testStringLinkedList_noopt.rxbin
+[1216/1676] Generating testStringLinkedList_opt.rxbin
+[1217/1676] Generating testRexxClassicBifTrace_opt.rxbin
+[1218/1676] Generating ts_signal_noopt.rxbin
+[1219/1676] Generating testStringTreeMap_noopt.rxbin
+[1220/1676] Generating ts_signal_opt.rxbin
+[1221/1676] Generating testRexxClassicBifTranslate_noopt.rxbin
+[1222/1676] Generating testRexxClassicBifTranslate_opt.rxbin
+[1223/1676] Generating ts_substro_noopt.rxbin
+[1224/1676] Generating ts_substro_opt.rxbin
+[1225/1676] Generating testStringTreeMap_opt.rxbin
+[1226/1676] Generating testRexxClassicBifTrunc_noopt.rxbin
+[1227/1676] Generating testStringTreeSet_noopt.rxbin
+[1228/1676] Generating testRexxClassicBifTrunc_opt.rxbin
+[1229/1676] Generating ts_subword_noopt.rxbin
+[1230/1676] Generating testStringTreeSet_opt.rxbin
+[1231/1676] Generating ts_subword_opt.rxbin
+[1232/1676] Generating testStringStack_noopt.rxbin
+[1233/1676] Generating testStringStack_opt.rxbin
+[1234/1676] Generating testRexxClassicBifValue_noopt.rxbin
+[1235/1676] Generating ts_xrange_noopt.rxbin
+[1236/1676] Generating testRexxClassicBifValue_opt.rxbin
+[1237/1676] Generating ts_xrange_opt.rxbin
+[1238/1676] Generating testObjectCollections_noopt.rxbin
+[1239/1676] Generating testRexxClassicBifVerify_noopt.rxbin
+[1240/1676] Generating testObjectCollections_opt.rxbin
+[1241/1676] Clearing stale RexxScript runtime member images ...
+[1242/1676] Generating testRexxClassicBifVerify_opt.rxbin
+[1243/1676] Generating ts_objectarray_noopt.rxbin
+[1244/1676] Generating ts_objectarray_opt.rxbin
+[1245/1676] Generating testStringObjectMaps_noopt.rxbin
+[1246/1676] cREXX compile and assemble httpcodec ...
+[1247/1676] Generating testRexxClassicBifWord_noopt.rxbin
+[1248/1676] Generating testRexxClassicBifWord_opt.rxbin
+[1249/1676] Generating testStringObjectMaps_opt.rxbin
+[1250/1676] Generating ts_stem_noopt.rxbin
+[1251/1676] Generating ts_stem_opt.rxbin
+[1252/1676] Generating testObjectObjectTreeMap_noopt.rxbin
+[1253/1676] Generating testObjectObjectTreeMap_opt.rxbin
+[1254/1676] cREXX compile and assemble httpcore ...
+[1255/1676] Generating testRexxClassicBifWordindex_noopt.rxbin
+[1256/1676] Generating testRexxClassicBifWordindex_opt.rxbin
+[1257/1676] Generating ts_rxjson_noopt.rxbin
+[1258/1676] Generating ts_rxjson_opt.rxbin
+[1259/1676] Generating testTreeMap_noopt.rxbin
+[1260/1676] Generating testTreeMap_opt.rxbin
+[1261/1676] cREXX compile and assemble http ...
+[1262/1676] Generating testRexxClassicBifWordlength_noopt.rxbin
+[1263/1676] Generating testRexxClassicBifWordlength_opt.rxbin
+[1264/1676] Generating ts_rxjson_document_noopt.rxbin
+[1265/1676] Generating ts_rxjson_document_opt.rxbin
+[1266/1676] Clearing stale native-backed class library member images ...
+[1267/1676] Generating testRexxComparator_noopt.rxbin
+[1268/1676] Generating testRexxComparator_opt.rxbin
+[1269/1676] Staging current HTTP metadata for the Level G LLM module ...
+[1270/1676] Generating testRexxClassicBifWordpos_noopt.rxbin
+[1271/1676] Generating testRexxClassicBifWordpos_opt.rxbin
+[1272/1676] Building optimized arraydump function example
+[1273/1676] Building optimized arrayformat function example
+[1274/1676] Generating ts_rxjson_numeric_projection_noopt.rxbin
+[1275/1676] Generating ts_rxjson_numeric_projection_opt.rxbin
+[1276/1676] cREXX compile and assemble native-backed classlib adapter Id ...
+[1277/1676] cREXX compile and assemble native-backed classlib adapter KeyDB ...
+[1278/1676] cREXX compile and assemble native-backed classlib adapter Os ...
+[1279/1676] Generating testQfind_noopt.rxbin
+[1280/1676] Generating testQfind_opt.rxbin
+[1281/1676] cREXX compile and assemble httpserver ...
+[1282/1676] cREXX compile and assemble llm ...
+[1283/1676] Generating testRexxClassicBifWords_noopt.rxbin
+[1284/1676] Generating testRexxClassicBifWords_opt.rxbin
+[1285/1676] Bundling array-formatting function example
+[1286/1676] Compiling dynamic_load_provider.crexx ...
+[1287/1676] cREXX compile and assemble rxdb_gui ...
+[1288/1676] Generating ts_rxjson_noisy_contract_noopt.rxbin
+[1289/1676] Generating ts_rxjson_noisy_contract_opt.rxbin
+[1290/1676] cREXX Linked native-backed Class Library Adapter Image ...
+[1291/1676] Generating testTokenise_noopt.rxbin
+[1292/1676] Generating testTokenise_opt.rxbin
+[1293/1676] cREXX Linked Level G Library Image ...
+[1294/1676] Generating testRexxClassicBifX2b_noopt.rxbin
+[1295/1676] Generating testRexxClassicBifX2b_opt.rxbin
+[1296/1676] Building optimized array-formatting example program
+[1297/1676] Generating ascommon_noopt.rxbin
+[1298/1676] Generating ascommon_opt.rxbin
+[1299/1676] Compiling stub_plugin.crexx ...
+[1300/1676] Compiling cms_address_demo.crexx ...
+[1301/1676] Compiling address_cms_host.crexx ...
+[1302/1676] cREXX compile and assemble RexxScript runtime RexxScriptEvaluator ...
+[1303/1676] cREXX compile and assemble RexxScript runtime RexxScriptRuntime ...
+[1304/1676] Compiling cms_address_environment.crexx ...
+[1305/1676] Compiling kv_address_demo.crexx ...
+[1306/1676] Compiling sqlite_address_demo.crexx ...
+[1307/1676] cREXX compile and assemble RexxScript runtime RexxScriptEvaluateCompat ...
+[1308/1676] cREXX Linked RexxScript Runtime Library Image ...
+[1309/1676] Compiling address_callback_host.crexx ...
+[1310/1676] cREXX compile, assemble, link and package crexx ...
+[1311/1676] Building C object crexx_driver\CMakeFiles\crexx.dir\crexx.c.obj
+[1312/1676] Compiling e2_active_context.crexx ...
+[1313/1676] Compiling dynamic_load_host.crexx ...
+[1314/1676] rxpp compile, assemble, link and package rxpp ...
+[1315/1676] Compiling crexxsaa_variables_host.crexx ...
+[1316/1676] Building C object preprocessor\CMakeFiles\rxpp.dir\rxpp.c.obj
+[1317/1676] Compiling test_reentrancy.crexx ...
+[1318/1676] cREXX compile, assemble, link and package rxdb ...
+[1319/1676] Compiling PERF3-13 E5 native-doorbell control ...
+[1320/1676] Compiling PERF3-13 E4 program-generation controls ...
+[1321/1676] Linking C executable bin\rxpp.exe
+[1322/1676] Generating ts_rxsocket_noopt.rxbin
+[1323/1676] Generating ts_rxsocket_opt.rxbin
+[1324/1676] Generating we_noopt.rxbin
+[1325/1676] Generating we_opt.rxbin
+[1326/1676] Generating testJSON_noopt.rxbin
+[1327/1676] cREXX compile and assemble tinyexpr ...
+[1328/1676] Generating testJSON_opt.rxbin
+[1329/1676] Generating testid_noopt.rxbin
+[1330/1676] Generating testid_opt.rxbin
+[1331/1676] Generating ts_http_service_contract_noopt.rxbin
+[1332/1676] Generating ts_http_service_contract_opt.rxbin
+[1333/1676] Generating testRexxClassicBifX2c_noopt.rxbin
+[1334/1676] Generating testRexxClassicBifX2c_opt.rxbin
+[1335/1676] Building optimized pprint compiler-exit example
+[1336/1676] Generating asutf_noopt.rxbin
+[1337/1676] Generating asutf_opt.rxbin
+[1338/1676] Building C object tests\rxpa\CMakeFiles\_rxpa_dynlink.dir\rxpa_dynlink.c.obj
+[1339/1676] Building C object tests\rxpa\CMakeFiles\rxc_staticlink.dir\__\__\compiler\rxc_main.c.obj
+[1340/1676] Building C object tests\rxpa\CMakeFiles\_testfuncs_dynamic.dir\rxpa_functests.c.obj
+[1341/1676] Building C object tests\rxpa\multplugins\CMakeFiles\_plugin1.dir\plugin1.c.obj
+[1342/1676] Building C object tests\rxpa\multplugins\CMakeFiles\_plugin2.dir\plugin2.c.obj
+[1343/1676] Linking C executable bin\crexx.exe
+[1344/1676] Building C object compiler\tests\CMakeFiles\test_crexxsaa_status.dir\src\test_crexxsaa_status.c.obj
+[1345/1676] Building C object compiler\tests\CMakeFiles\test_bridge.dir\src\test_bridge.c.obj
+[1346/1676] Building C object compiler\tests\CMakeFiles\test_address_bridge.dir\src\test_address_bridge.c.obj
+[1347/1676] cREXX compile, assemble, link and package standalone RexxScript runner ...
+[1348/1676] Compiling address_llm_host.crexx ...
+[1349/1676] Building C object compiler\tests\CMakeFiles\native_kv_address_demo.dir\__\__\demos\native\kv\kv_address_demo.c.obj
+[1350/1676] Building C object compiler\tests\CMakeFiles\native_sqlite_address_demo.dir\__\__\demos\native\sqlite\sqlite_address_demo.c.obj
+[1351/1676] Building C object compiler\tests\CMakeFiles\test_address_callback_host.dir\src\test_address_callback_host.c.obj
+[1352/1676] Building C object compiler\tests\CMakeFiles\test_e2_active_context.dir\src\test_e2_active_context.c.obj
+[1353/1676] Building C object compiler\tests\CMakeFiles\test_dynamic_load.dir\src\test_dynamic_load.c.obj
+[1354/1676] Compiling llm_address_environment.crexx ...
+[1355/1676] Compiling dynamic interface contract ...
+[1356/1676] Building C object compiler\tests\CMakeFiles\test_crexxsaa_variables.dir\src\test_crexxsaa_variables.c.obj
+[1357/1676] Compiling test_trace_source_jump_helper.crexx (noopt)
+[1358/1676] Building exittestsupport.rxbin
+[1359/1676] Building C object debugger\CMakeFiles\rxdb.dir\rxdb.c.obj
+[1360/1676] Compiling test_trace_source_jump_helper.crexx (opt)
+[1361/1676] Building C object interpreter\CMakeFiles\rxbvme.dir\rxvmmain.c.obj
+[1362/1676] Building C object interpreter\CMakeFiles\test_reentrancy.dir\tests\test_reentrancy.c.obj
+[1363/1676] Building C object interpreter\CMakeFiles\program_generation_control-rxvml.dir\tests\test_program_generation_control.c.obj
+[1364/1676] Building C object interpreter\CMakeFiles\program_generation_control-rxbvml.dir\tests\test_program_generation_control.c.obj
+[1365/1676] Building C object interpreter\CMakeFiles\rxbvme.dir\library.c.obj
+[1366/1676] Building C object interpreter\CMakeFiles\persistent_worker_executor-rxvml.dir\tests\test_persistent_worker_executor.c.obj
+[1367/1676] Building C object interpreter\CMakeFiles\persistent_worker_executor-rxbvml.dir\tests\test_persistent_worker_executor.c.obj
+[1368/1676] Generating ts_socket_tls_live_noopt.rxbin
+[1369/1676] Generating ts_socket_tls_live_opt.rxbin
+[1370/1676] Generating test1_noopt.rxbin
+[1371/1676] cREXX Linked Level L Library Image ...
+[1372/1676] Generating test1_opt.rxbin
+[1373/1676] Generating treemap_test.crexx
+[1374/1676] Generating id_test.crexx
+[1375/1676] Generating recv390_test.crexx
+[1376/1676] Generating map_test.crexx
+[1377/1676] Generating testBag_opt.rxbin
+[1378/1676] Generating testBag_noopt.rxbin
+[1379/1676] Generating testKeyDB_noopt.rxbin
+[1380/1676] Generating testKeyDB_opt.rxbin
+[1381/1676] Generating ts_llm_ollama_noopt.rxbin
+[1382/1676] Generating testRexxClassicBifX2d_noopt.rxbin
+[1383/1676] Generating ts_llm_ollama_opt.rxbin
+[1384/1676] Generating testRexxClassicBifX2d_opt.rxbin
+[1385/1676] Building C object rexxscript\CMakeFiles\rexxscript_cli.dir\RexxScriptRunner.c.obj
+[1386/1676] Generating testRexxScriptRuntime_noopt.rxbin
+[1387/1676] Bundling standalone pprint compiler-exit example
+[1388/1676] Generating basic_noopt.rxbin
+[1389/1676] Generating testRexxScriptRuntime_opt.rxbin
+[1390/1676] Linking C shared module tests\rxpa\rx_rxpa_dynlink.rxplugin
+[1391/1676] Building C object tests\rxpa\CMakeFiles\_rxpa_classdecl.dir\rxpa_classdecl.c.obj
+[1392/1676] Building C object tests\rxpa\CMakeFiles\_rxpa_bad_signatures.dir\rxpa_bad_signatures.c.obj
+[1393/1676] Generating basic_opt.rxbin
+[1394/1676] Building C object tests\rxpa\CMakeFiles\rxc_classdecl_static.dir\__\__\compiler\rxc_main.c.obj
+[1395/1676] Linking C executable tests\rxc_staticlink.exe
+[1396/1676] Linking C shared module tests\rxpa\rx_testfuncs_dynamic.rxplugin
+[1397/1676] Linking C shared module tests\rxpa\multplugins\rx_plugin1.rxplugin
+[1398/1676] Linking C shared module tests\rxpa\multplugins\rx_plugin2.rxplugin
+[1399/1676] Linking C executable compiler\tests\test_bridge.exe
+[1400/1676] Linking C executable compiler\tests\test_address_bridge.exe
+[1401/1676] Linking C executable compiler\tests\native_kv_address_demo.exe
+[1402/1676] Linking C executable compiler\tests\native_sqlite_address_demo.exe
+[1403/1676] Linking C executable compiler\tests\test_address_callback_host.exe
+[1404/1676] Linking C executable compiler\tests\test_e2_active_context.exe
+[1405/1676] Linking C executable compiler\tests\test_dynamic_load.exe
+[1406/1676] Linking C executable compiler\tests\test_crexxsaa_variables.exe
+[1407/1676] Linking C executable compiler\tests\test_crexxsaa_status.exe
+[1408/1676] Linking Level G LLM ADDRESS fixture with its concurrency classes ...
+[1409/1676] Compiling dynamic interface host ...
+[1410/1676] Compiling test_dump.crexx with exit (noopt)
+[1411/1676] Compiling dynamic interface provider ...
+[1412/1676] Compiling test_dump.crexx with exit (opt)
+[1413/1676] Compiling test_query.crexx with exit (noopt)
+[1414/1676] Compiling test_query.crexx with exit (opt)
+[1415/1676] Compiling test_sort.crexx with exit (noopt)
+[1416/1676] Compiling test_sort.crexx with exit (opt)
+[1417/1676] Compiling test_sortx.crexx with exit (noopt)
+[1418/1676] Compiling test_sortx.crexx with exit (opt)
+[1419/1676] Compiling test_address.crexx with exit (noopt)
+[1420/1676] Compiling test_address.crexx with exit (opt)
+[1421/1676] Compiling test_address_direct.crexx with exit (noopt)
+[1422/1676] Compiling test_execio.crexx with exit (noopt)
+[1423/1676] Compiling test_execio.crexx with exit (opt)
+[1424/1676] Compiling test_address_direct.crexx with exit (opt)
+[1425/1676] Compiling test_add.crexx with exit (noopt)
+[1426/1676] Compiling test_add.crexx with exit (opt)
+[1427/1676] Compiling test_fsay.crexx with exit (noopt)
+[1428/1676] Compiling test_fsay.crexx with exit (opt)
+[1429/1676] Compiling test_msay.crexx with exit (noopt)
+[1430/1676] Compiling test_msay.crexx with exit (opt)
+[1431/1676] Compiling test_parse.crexx with exit (noopt)
+[1432/1676] Compiling test_parse_direct.crexx with exit (noopt)
+[1433/1676] Compiling test_parse_direct.crexx with exit (opt)
+[1434/1676] Compiling test_parse_compiled_patterns.crexx with exit (noopt)
+[1435/1676] Compiling test_parse_compiled_patterns.crexx with exit (opt)
+[1436/1676] Compiling test_signal.crexx with exit (noopt)
+[1437/1676] Compiling test_signal.crexx with exit (opt)
+[1438/1676] Compiling test_signal_direct.crexx with exit (noopt)
+[1439/1676] Compiling test_signal_direct.crexx with exit (opt)
+[1440/1676] Compiling test_signal_block.crexx with exit (noopt)
+[1441/1676] Compiling test_signal_block.crexx with exit (opt)
+[1442/1676] Compiling reference_source_invalid_signal.crexx with exit (noopt)
+[1443/1676] Compiling reference_source_invalid_signal.crexx with exit (opt)
+[1444/1676] Compiling test_trace_exit.crexx with exit (noopt)
+[1445/1676] Compiling test_trace_exit.crexx with exit (opt)
+[1446/1676] Compiling test_trace_negated_string.crexx with exit (noopt)
+[1447/1676] Compiling test_trace_negated_string.crexx with exit (opt)
+[1448/1676] Compiling test_trace_results.crexx with exit (noopt)
+[1449/1676] Compiling test_trace_results.crexx with exit (opt)
+[1450/1676] Compiling test_trace_llm.crexx with exit (noopt)
+[1451/1676] Compiling test_trace_llm.crexx with exit (opt)
+[1452/1676] Compiling test_trace_direct.crexx with exit (noopt)
+[1453/1676] Compiling test_trace_direct.crexx with exit (opt)
+[1454/1676] Compiling test_trace_stderr.crexx with exit (noopt)
+[1455/1676] Compiling test_trace_stderr.crexx with exit (opt)
+[1456/1676] Compiling test_trace_file.crexx with exit (noopt)
+[1457/1676] Compiling test_trace_file.crexx with exit (opt)
+[1458/1676] Compiling test_parse.crexx with exit (opt)
+[1459/1676] Compiling test_trace_normal_quiet.crexx with exit (noopt)
+[1460/1676] Compiling test_trace_normal_command.crexx with exit (noopt)
+[1461/1676] Compiling test_trace_normal_quiet.crexx with exit (opt)
+[1462/1676] Compiling test_trace_env.crexx with exit (noopt)
+[1463/1676] Compiling test_trace_normal_command.crexx with exit (opt)
+[1464/1676] Compiling test_trace_event_batch.crexx with exit (noopt)
+[1465/1676] Compiling test_trace_env.crexx with exit (opt)
+[1466/1676] Compiling test_trace_env.crexx with exit (noopt)
+[1467/1676] Compiling test_trace_event_batch.crexx with exit (opt)
+[1468/1676] Compiling test_trace_env_ignored.crexx with exit (noopt)
+[1469/1676] Compiling test_trace_env.crexx with exit (opt)
+[1470/1676] Compiling test_trace_source_jump.crexx with exit (noopt)
+[1471/1676] Compiling test_trace_env_ignored.crexx with exit (opt)
+[1472/1676] Compiling test_trace_namespace_commands.crexx with exit (noopt)
+[1473/1676] Compiling test_trace_source_jump.crexx with exit (opt)
+[1474/1676] Compiling test_trace_namespace_commands.crexx with exit (opt)
+[1475/1676] Compiling test_rexxscript.crexx with exit (noopt)
+[1476/1676] Compiling test_rexxscript.crexx with exit (opt)
+[1477/1676] Compiling test_rexxscript_direct.crexx with exit (noopt)
+[1478/1676] Compiling test_rexxscript_direct.crexx with exit (opt)
+[1479/1676] Compiling test_substr.crexx with exit (noopt)
+[1480/1676] Compiling test_substr.crexx with exit (opt)
+[1481/1676] Compiling test_dummy.crexx with exit (noopt)
+[1482/1676] Compiling test_dummy.crexx with exit (opt)
+[1483/1676] Compiling test_rxqueue.crexx with exit (noopt)
+[1484/1676] Linking C executable bin\rxdb.exe
+[1485/1676] Linking C executable bin\rxbvme.exe
+[1486/1676] Linking C executable interpreter\test_reentrancy.exe
+[1487/1676] Compiling test_rxqueue.crexx with exit (opt)
+[1488/1676] Linking C executable interpreter\program_generation_control-rxvml.exe
+[1489/1676] Linking C executable interpreter\program_generation_control-rxbvml.exe
+[1490/1676] Linking C executable interpreter\persistent_worker_executor-rxvml.exe
+[1491/1676] Linking C executable interpreter\persistent_worker_executor-rxbvml.exe
+[1492/1676] Generating ts_afterword_noopt.rxbin
+[1493/1676] Generating ts_afterword_opt.rxbin
+[1494/1676] Generating ts_arraysort_errors_noopt.rxbin
+[1495/1676] Generating ts_arraysort_errors_opt.rxbin
+[1496/1676] Generating ts_stem_errors_noopt.rxbin
+[1497/1676] Generating ts_stem_errors_opt.rxbin
+[1498/1676] Generating crexxbrexx_noopt.rxbin
+[1499/1676] Generating crexxbrexx_opt.rxbin
+[1500/1676] Generating ts_tinyexpr_noopt.rxbin
+[1501/1676] Generating ts_tinyexpr_opt.rxbin
+[1502/1676] Generating arrays_test_noopt.rxbin
+[1503/1676] Generating arrays_test_opt.rxbin
+[1504/1676] Generating math_test_noopt.rxbin
+[1505/1676] Generating math_test_opt.rxbin
+[1506/1676] Generating stack_test_noopt.rxbin
+[1507/1676] Generating cipher_test_noopt.rxbin
+[1508/1676] Generating stack_test_opt.rxbin
+[1509/1676] Generating cipher_test_opt.rxbin
+[1510/1676] Generating strings_test_noopt.rxbin
+[1511/1676] Generating getpi_test_noopt.rxbin
+[1512/1676] Generating strings_test_opt.rxbin
+[1513/1676] Generating getpi_test_opt.rxbin
+[1514/1676] Generating keyaccess_test_noopt.rxbin
+[1515/1676] Generating llist_test_noopt.rxbin
+[1516/1676] Generating keyaccess_test_opt.rxbin
+[1517/1676] Generating llist_test_opt.rxbin
+[1518/1676] Generating treemap_test_noopt.rxbin
+[1519/1676] Generating treemap_test_opt.rxbin
+[1520/1676] Generating id_test_noopt.rxbin
+[1521/1676] Generating id_test_opt.rxbin
+[1522/1676] Generating recv390_test_noopt.rxbin
+[1523/1676] Generating recv390_test_opt.rxbin
+[1524/1676] Generating map_test_noopt.rxbin
+[1525/1676] Generating map_test_opt.rxbin
+[1526/1676] Generating tcp_test_noopt.rxbin
+[1527/1676] Generating tcp_test_opt.rxbin
+[1528/1676] Generating system_test_noopt.rxbin
+[1529/1676] Generating system_test_opt.rxbin
+[1530/1676] Generating rxml_test.rxbin
+[1531/1676] Generating fileio_test.rxbin
+Warning in fileio_test.crexx @ 3:8 - #UNUSED_IMPORT: Import is recognised but not used., "arrays"
+
+1 warning(s) in source file
+
+[1532/1676] Generating odbc_mock_prepared.rxbin
+[1533/1676] cREXX compile and assemble veclib ...
+[1534/1676] Generating testConcurrency_noopt.rxbin
+[1535/1676] Generating matrix_test.rxbin
+[1536/1676] Generating testOS_noopt.rxbin
+[1537/1676] Generating testConcurrency_opt.rxbin
+[1538/1676] Generating testOS_opt.rxbin
+[1539/1676] Generating docs_concurrency_basic_rxbvm_noopt.rxbin
+[1540/1676] Generating docs_concurrency_basic_rxbvm_opt.rxbin
+[1541/1676] Generating docs_concurrency_providers_rxbvm_noopt.rxbin
+[1542/1676] Generating docs_concurrency_providers_rxbvm_opt.rxbin
+[1543/1676] Generating docs_concurrency_transferable_objects_rxbvm_noopt.rxbin
+[1544/1676] Generating docs_concurrency_transferable_objects_rxbvm_opt.rxbin
+[1545/1676] Generating docs_concurrency_taskwork_rxbvm_noopt.rxbin
+[1546/1676] Generating testTaskContextEndpoint_rxbvm_noopt.rxbin
+[1547/1676] Generating docs_concurrency_taskwork_rxbvm_opt.rxbin
+[1548/1676] Generating ts_llm_providers_noopt.rxbin
+[1549/1676] Generating testTaskContextEndpoint_rxbvm_opt.rxbin
+[1550/1676] Generating ts_http_server_rxbvm_noopt.rxbin
+[1551/1676] Generating ts_llm_providers_opt.rxbin
+[1552/1676] Generating ts_http_server_rxbvm_opt.rxbin
+[1553/1676] Generating ts_http_server_failures_rxbvm_noopt.rxbin
+[1554/1676] Generating ts_http_server_failures_rxbvm_opt.rxbin
+[1555/1676] Generating ts_http_pooled_rxbvm_noopt.rxbin
+[1556/1676] Generating ts_http_streaming_rxbvm_noopt.rxbin
+[1557/1676] Generating ts_http_pooled_rxbvm_opt.rxbin
+[1558/1676] Generating ts_http_crexx_rag_rxbvm_noopt.rxbin
+[1559/1676] Generating ts_http_streaming_rxbvm_opt.rxbin
+[1560/1676] Generating ts_http_tls_live_rxbvm_noopt.rxbin
+[1561/1676] Generating ts_http_crexx_rag_rxbvm_opt.rxbin
+[1562/1676] Generating ts_http_tls_live_rxbvm_opt.rxbin
+[1563/1676] Generating ts_http_policy_rxbvm_noopt.rxbin
+[1564/1676] Generating ts_http_codec_rxbvm_noopt.rxbin
+[1565/1676] Generating ts_http_policy_rxbvm_opt.rxbin
+[1566/1676] Generating testRexxClassicBifXrange_noopt.rxbin
+[1567/1676] Generating ts_http_codec_rxbvm_opt.rxbin
+[1568/1676] Linking C executable bin\rexxscript.exe
+[1569/1676] Generating testRexxClassicBifXrange_opt.rxbin
+[1570/1676] Generating testRexxScriptCompat_noopt.rxbin
+[1571/1676] Generating testRexxScriptCompat_opt.rxbin
+[1572/1676] Building program with standalone pprint exit example
+[1573/1676] Generating levelbfunc_noopt.rxbin
+[1574/1676] Generating levelbfunc_opt.rxbin
+[1575/1676] Generating concatenation_noopt.rxbin
+[1576/1676] Generating concatenation_opt.rxbin
+[1577/1676] Generating benchmark_awfy_sieve_noopt.rxbin
+[1578/1676] Generating benchmark_awfy_sieve_opt.rxbin
+[1579/1676] Generating benchmark_awfy_permute_noopt.rxbin
+[1580/1676] Generating benchmark_awfy_permute_opt.rxbin
+[1581/1676] Generating benchmark_awfy_mandelbrot_noopt.rxbin
+[1582/1676] Generating benchmark_awfy_mandelbrot_opt.rxbin
+[1583/1676] Generating benchmark_awfy_towers_noopt.rxbin
+[1584/1676] Generating benchmark_awfy_towers_opt.rxbin
+[1585/1676] Generating benchmark_awfy_bounce_noopt.rxbin
+[1586/1676] Generating benchmark_awfy_bounce_opt.rxbin
+[1587/1676] Generating benchmark_awfy_storage_noopt.rxbin
+[1588/1676] Generating benchmark_awfy_storage_opt.rxbin
+[1589/1676] Generating benchmark_awfy_list_noopt.rxbin
+[1590/1676] Generating benchmark_awfy_richards_noopt.rxbin
+[1591/1676] Generating benchmark_awfy_list_opt.rxbin
+[1592/1676] Generating benchmark_json_parser_noopt.rxbin
+[1593/1676] Generating benchmark_awfy_richards_opt.rxbin
+[1594/1676] Generating benchmark_json_parser_opt.rxbin
+[1595/1676] Generating benchmark_base64_roundtrip_noopt.rxbin
+[1596/1676] Generating benchmark_base64_roundtrip_opt.rxbin
+[1597/1676] Generating benchmark_parse_frozen_noopt.rxbin
+[1598/1676] Generating benchmark_parse_frozen_generic_noopt.rxbin
+[1599/1676] Generating benchmark_parse_frozen_opt.rxbin
+[1600/1676] Generating benchmark_rexxcps_levelb_noopt.rxbin
+[1601/1676] Generating benchmark_parse_frozen_generic_opt.rxbin
+[1602/1676] Generating benchmark_rexxcps_levelb_opaque_noopt.rxbin
+[1603/1676] Generating benchmark_rexxcps_levelb_opt.rxbin
+[1604/1676] Generating benchmark_runner_noopt.rxbin
+[1605/1676] Generating benchmark_runner_opt.rxbin
+[1606/1676] Generating benchmark_rexxcps_levelb_opaque_opt.rxbin
+[1607/1676] Generating nr03_evidence_tool_selftest_noopt.rxbin
+[1608/1676] Generating nr10_cross_runtime_matrix_selftest_noopt.rxbin
+[1609/1676] Generating nr10_cross_runtime_matrix_selftest_opt.rxbin
+[1610/1676] Generating nr10_lifecycle_tool_selftest_noopt.rxbin
+[1611/1676] Generating nr10_lifecycle_tool_selftest_opt.rxbin
+[1612/1676] Generating nr10_artifact_inventory_selftest_noopt.rxbin
+[1613/1676] Generating nr03_evidence_tool_selftest_opt.rxbin
+[1614/1676] Generating nr10_artifact_inventory_selftest_opt.rxbin
+[1615/1676] Generating inlining_simple_noopt.rxbin
+[1616/1676] Generating inlining_simple_opt.rxbin
+[1617/1676] Generating reference_iterator_compare_rxvm_noopt.rxbin
+[1618/1676] Generating reference_iterator_compare_rxvm_opt.rxbin
+[1619/1676] Generating stringarraylist_iterator_compare_rxvm_noopt.rxbin
+[1620/1676] Generating stringarraylist_iterator_compare_rxvm_opt.rxbin
+[1621/1676] Generating stringtreemap_insert_compare_noopt.rxbin
+[1622/1676] Generating stringtreemap_insert_compare_opt.rxbin
+[1623/1676] Generating binary_fastpath_compare_noopt.rxbin
+[1624/1676] Generating binary_fastpath_compare_opt.rxbin
+[1625/1676] Generating binary_byvalue_compare_rxvm_noopt.rxbin
+[1626/1676] Generating binary_byvalue_compare_rxvm_opt.rxbin
+[1627/1676] Generating rxjson_parser_compare_noopt.rxbin
+[1628/1676] Generating rxjson_numeric_materialization_compare_noopt.rxbin
+[1629/1676] Generating rxjson_parser_compare_opt.rxbin
+[1630/1676] Generating tinyexpr_dispatch_compare_noopt.rxbin
+[1631/1676] Generating tinyexpr_dispatch_compare_opt.rxbin
+[1632/1676] Generating jump_dispatch_compare_noopt.rxbin
+[1633/1676] Generating rxjson_numeric_materialization_compare_opt.rxbin
+[1634/1676] Generating runtime_interface_lookup_compare_noopt.rxbin
+[1635/1676] Generating jump_dispatch_compare_opt.rxbin
+[1636/1676] Generating runtime_interface_lookup_compare_opt.rxbin
+[1637/1676] Generating inlining_complex_noopt.rxbin
+[1638/1676] Linking C shared module tests\rxpa\rx_rxpa_classdecl.rxplugin
+[1639/1676] Linking C shared module tests\rxpa\rx_rxpa_bad_signatures.rxplugin
+[1640/1676] Generating inlining_complex_opt.rxbin
+[1641/1676] Linking C executable tests\rxc_classdecl_static.exe
+[1642/1676] Generating rxpa_dynlink_run_noopt.rxbin
+[1643/1676] Generating rxpa_dynlink_run_opt.rxbin
+[1644/1676] Generating rxpa_staticlink_run_opt.rxbin
+[1645/1676] Generating rxpa_staticlink_run_noopt.rxbin
+[1646/1676] Generating rxpa_signal_funcs_dynamic_noopt.rxbin
+[1647/1676] Generating rxpa_signal_funcs_dynamic_opt.rxbin
+[1648/1676] Generating rxpa_signal_funcs_static_noopt.rxbin
+[1649/1676] Generating rxpa_signal_funcs_static_opt.rxbin
+[1650/1676] Generating rxpa_string_funcs_dynamic_noopt.rxbin
+[1651/1676] Generating rxpa_string_funcs_dynamic_opt.rxbin
+[1652/1676] Generating rxpa_string_funcs_static_noopt.rxbin
+[1653/1676] Generating rxpa_string_funcs_static_opt.rxbin
+[1654/1676] Generating rxpa_int_funcs_dynamic_noopt.rxbin
+[1655/1676] Generating rxpa_int_funcs_dynamic_opt.rxbin
+[1656/1676] Generating rxpa_int_funcs_static_noopt.rxbin
+[1657/1676] Generating rxpa_int_funcs_static_opt.rxbin
+[1658/1676] Generating rxpa_float_funcs_dynamic_noopt.rxbin
+[1659/1676] Generating rxpa_float_funcs_dynamic_opt.rxbin
+[1660/1676] Generating rxpa_float_funcs_static_noopt.rxbin
+[1661/1676] Generating rxpa_float_funcs_static_opt.rxbin
+[1662/1676] Generating rxpa_array_push_funcs_dynamic_noopt.rxbin
+[1663/1676] Generating rxpa_array_push_funcs_dynamic_opt.rxbin
+[1664/1676] Generating rxpa_array_push_funcs_static_noopt.rxbin
+[1665/1676] Generating rxpa_array_push_funcs_static_opt.rxbin
+[1666/1676] Generating rxpa_native_payload_funcs_dynamic_noopt.rxbin
+[1667/1676] Generating rxpa_native_payload_funcs_dynamic_opt.rxbin
+[1668/1676] Generating rxpa_native_payload_funcs_static_noopt.rxbin
+[1669/1676] Generating rxpa_native_payload_funcs_static_opt.rxbin
+[1670/1676] Generating rxpa_native_unwind_funcs_dynamic_noopt.rxbin
+[1671/1676] Generating rxpa_native_unwind_funcs_dynamic_opt.rxbin
+[1672/1676] Generating rxpa_native_unwind_funcs_static_noopt.rxbin
+[1673/1676] Generating rxpa_native_unwind_funcs_static_opt.rxbin
+[1674/1676] Generating rxpa_mult_test_noopt.rxbin
+[1675/1676] Generating rxpa_mult_test_opt.rxbin

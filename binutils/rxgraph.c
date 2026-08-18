@@ -5,6 +5,7 @@
  */
 
 #include "rxgraph.h"
+#include "rxsha256.h"
 
 #include "rxbin.h"
 #include "rxsignature.h"
@@ -1654,6 +1655,288 @@ int rx_graph_callable(const RxGraph *graph,
     return view->symbol != 0 && view->descriptor != 0;
 }
 
+static uint32_t rx_graph_task_u32(const unsigned char *source) {
+    return (uint32_t)source[0] |
+           ((uint32_t)source[1] << 8) |
+           ((uint32_t)source[2] << 16) |
+           ((uint32_t)source[3] << 24);
+}
+
+static void rx_graph_task_put_u32(unsigned char *target, uint32_t value) {
+    target[0] = (unsigned char)value;
+    target[1] = (unsigned char)(value >> 8);
+    target[2] = (unsigned char)(value >> 16);
+    target[3] = (unsigned char)(value >> 24);
+}
+
+int rx_graph_digest(const RxGraph *graph, unsigned char digest[32]) {
+    static const unsigned char domain[8] = {'R','X','G','R','D','1',0,0};
+    unsigned char *facts = 0;
+    unsigned char *indexes = 0;
+    unsigned char *document = 0;
+    size_t facts_size = 0u;
+    size_t indexes_size = 0u;
+    size_t document_size;
+    int result = 0;
+
+    if (!graph || !digest ||
+        !rx_graph_serialize_sections(
+                graph, &facts, &facts_size, &indexes, &indexes_size) ||
+        facts_size > SIZE_MAX - sizeof(domain) ||
+        indexes_size > SIZE_MAX - sizeof(domain) - facts_size) {
+        free(facts);
+        free(indexes);
+        return 0;
+    }
+    document_size = sizeof(domain) + facts_size + indexes_size;
+    document = (unsigned char *)malloc(document_size ? document_size : 1u);
+    if (document) {
+        memcpy(document, domain, sizeof(domain));
+        if (facts_size) memcpy(document + sizeof(domain), facts, facts_size);
+        if (indexes_size) {
+            memcpy(document + sizeof(domain) + facts_size,
+                   indexes, indexes_size);
+        }
+        rx_sha256(document, document_size, digest);
+        result = 1;
+    }
+    free(document);
+    free(facts);
+    free(indexes);
+    return result;
+}
+
+static int rx_graph_task_method_receiver_factory(
+        const RxGraph *graph,
+        const RxGraphCallableView *method,
+        RxCallableId *factory_out) {
+    const char *owner_name;
+    const char *argument_type;
+    char *normalized_argument_type;
+    char *factory_symbol;
+    size_t symbol_length;
+    RxCallableId factory;
+    RxGraphCallableView view;
+    rx_callable_signature signature;
+    RxGraphId return_type;
+    int valid;
+
+    if (factory_out) *factory_out = RX_GRAPH_NONE;
+    if (!graph || !method || method->owner_type == RX_GRAPH_NONE ||
+        method->owner_type >= rx_graph_type_count(graph)) return 0;
+    owner_name = rx_graph_type_name(graph, method->owner_type);
+    if (!owner_name ||
+        strlen(owner_name) > SIZE_MAX - sizeof(".§factory.from_channel")) {
+        return 0;
+    }
+    symbol_length = strlen(owner_name) +
+                    sizeof(".§factory.from_channel");
+    factory_symbol = (char *)malloc(symbol_length);
+    if (!factory_symbol) return 0;
+    snprintf(factory_symbol, symbol_length, "%s.§factory.from_channel",
+             owner_name);
+    factory = rx_graph_find_callable(graph, factory_symbol);
+    free(factory_symbol);
+    if (factory == RX_GRAPH_NONE ||
+        !rx_graph_callable(graph, factory, &view) ||
+        !rx_sig_parse_descriptor(view.descriptor, &signature)) {
+        return 0;
+    }
+
+    return_type = rx_graph_find_type(graph, signature.return_type);
+    argument_type = signature.arg_count == 1u ? signature.args[0].type : 0;
+    normalized_argument_type = argument_type
+            ? rx_graph_normalize_type_name(argument_type) : 0;
+    valid = signature.arg_count == 1u &&
+            !signature.args[0].is_ref &&
+            !signature.args[0].is_vararg &&
+            return_type == method->owner_type &&
+            normalized_argument_type &&
+            (strcmp(normalized_argument_type, ".channelvalue") == 0 ||
+             strcmp(normalized_argument_type,
+                    "concurrency.channelvalue") == 0);
+    free(normalized_argument_type);
+    rx_sig_free(&signature);
+    if (!valid) return 0;
+    if (factory_out) *factory_out = factory;
+    return 1;
+}
+
+static int rx_graph_task_type_spelling_is(const char *type_name,
+                                          const char *short_name,
+                                          const char *canonical_name) {
+    char *normalized;
+    int matches;
+
+    if (!type_name || !short_name || !canonical_name) return 0;
+    normalized = rx_graph_normalize_type_name(type_name);
+    if (!normalized) return 0;
+    matches = strcmp(normalized, short_name) == 0 ||
+              strcmp(normalized, canonical_name) == 0;
+    free(normalized);
+    return matches;
+}
+
+static int rx_graph_taskwork_run_adapter(
+        const RxGraph *graph,
+        const RxGraphCallableView *factory,
+        RxCallableId *adapter_out) {
+    rx_callable_signature factory_signature;
+    rx_callable_signature run_signature;
+    char *class_name;
+    char *run_symbol;
+    size_t symbol_length;
+    RxCallableId adapter;
+    RxGraphCallableView view;
+    int valid;
+
+    if (adapter_out) *adapter_out = RX_GRAPH_NONE;
+    if (!graph || !factory ||
+        !rx_sig_parse_descriptor(factory->descriptor, &factory_signature)) {
+        return 0;
+    }
+    class_name = rx_graph_normalize_type_name(factory_signature.return_type);
+    rx_sig_free(&factory_signature);
+    if (!class_name || strlen(class_name) > SIZE_MAX - sizeof(".run")) {
+        free(class_name);
+        return 0;
+    }
+    symbol_length = strlen(class_name) + sizeof(".run");
+    run_symbol = (char *)malloc(symbol_length);
+    if (!run_symbol) {
+        free(class_name);
+        return 0;
+    }
+    snprintf(run_symbol, symbol_length, "%s.run", class_name);
+    adapter = rx_graph_find_callable(graph, run_symbol);
+    free(run_symbol);
+    if (adapter == RX_GRAPH_NONE ||
+        !rx_graph_callable(graph, adapter, &view) ||
+        !rx_sig_parse_descriptor(view.descriptor, &run_signature)) {
+        free(class_name);
+        return 0;
+    }
+    if (view.owner_type != RX_GRAPH_NONE) {
+        const char *owner_name = rx_graph_type_name(graph, view.owner_type);
+        if (!owner_name || strcmp(owner_name, class_name) != 0) {
+            rx_sig_free(&run_signature);
+            free(class_name);
+            return 0;
+        }
+    }
+    free(class_name);
+    valid = run_signature.arg_count == 2u &&
+            !run_signature.args[0].is_ref &&
+            !run_signature.args[0].is_vararg &&
+            !run_signature.args[1].is_ref &&
+            !run_signature.args[1].is_vararg &&
+            rx_graph_task_type_spelling_is(
+                    run_signature.return_type, ".channelvalue",
+                    "concurrency.channelvalue") &&
+            rx_graph_task_type_spelling_is(
+                    run_signature.args[0].type, ".channelvalue",
+                    "concurrency.channelvalue") &&
+            rx_graph_task_type_spelling_is(
+                    run_signature.args[1].type, ".taskcontext",
+                    "concurrency.taskcontext");
+    rx_sig_free(&run_signature);
+    if (!valid) return 0;
+    if (adapter_out) *adapter_out = adapter;
+    return 1;
+}
+
+int rx_graph_task_binding(const RxGraph *graph,
+                          const char *symbol,
+                          unsigned int kind,
+                          unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE]) {
+    RxCallableId callable;
+    RxCallableId auxiliary = RX_GRAPH_NONE;
+    RxGraphCallableView view;
+
+    if (!graph || !symbol || !binding || kind < 1u || kind > 3u) return 0;
+    callable = rx_graph_find_callable(graph, symbol);
+    if (callable == RX_GRAPH_NONE || !rx_graph_callable(graph, callable, &view)) {
+        return 0;
+    }
+    memset(binding, 0, RX_GRAPH_TASK_BINDING_SIZE);
+    memcpy(binding, "RXTB", 4u);
+    binding[4] = 1u;
+    binding[5] = (unsigned char)kind;
+    rx_graph_task_put_u32(binding + 8u, callable);
+    if (kind == 2u && view.owner_type != RX_GRAPH_NONE &&
+        !rx_graph_task_method_receiver_factory(graph, &view, &auxiliary)) {
+        return 0;
+    } else if (kind == 3u &&
+               !rx_graph_taskwork_run_adapter(graph, &view, &auxiliary)) {
+        return 0;
+    }
+    if (!rx_graph_digest(graph, binding + 12u)) return 0;
+    rx_sha256(view.descriptor, strlen(view.descriptor), binding + 44u);
+    if (auxiliary != RX_GRAPH_NONE) {
+        if (auxiliary == UINT32_MAX) return 0;
+        rx_graph_task_put_u32(binding + 76u, auxiliary + 1u);
+    }
+    return 1;
+}
+
+int rx_graph_task_binding_validate_digest(
+        const RxGraph *graph,
+        const unsigned char graph_digest[32],
+        const unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE],
+        RxCallableId *callable_out,
+        unsigned int *kind_out) {
+    RxCallableId callable;
+    RxCallableId auxiliary;
+    RxCallableId expected_auxiliary = RX_GRAPH_NONE;
+    RxGraphCallableView view;
+    unsigned char signature[32];
+    unsigned int kind;
+
+    if (!graph || !graph_digest || !binding ||
+        memcmp(binding, "RXTB", 4u) != 0 || binding[4] != 1u ||
+        binding[6] != 0u || binding[7] != 0u) return 0;
+    kind = binding[5];
+    callable = rx_graph_task_u32(binding + 8u);
+    auxiliary = rx_graph_task_u32(binding + 76u);
+    if (kind < 1u || kind > 3u ||
+        !rx_graph_callable(graph, callable, &view) ||
+        memcmp(graph_digest, binding + 12u, 32u) != 0) return 0;
+    rx_sha256(view.descriptor, strlen(view.descriptor), signature);
+    if (memcmp(signature, binding + 44u, sizeof(signature)) != 0) return 0;
+    if (kind == 2u) {
+        if (view.owner_type != RX_GRAPH_NONE) {
+            if (!rx_graph_task_method_receiver_factory(
+                        graph, &view, &expected_auxiliary) ||
+                expected_auxiliary == UINT32_MAX ||
+                auxiliary != expected_auxiliary + 1u) return 0;
+        } else if (auxiliary != 0u) {
+            return 0;
+        }
+    } else if (kind == 3u) {
+        if (!rx_graph_taskwork_run_adapter(
+                    graph, &view, &expected_auxiliary) ||
+            expected_auxiliary == UINT32_MAX ||
+            auxiliary != expected_auxiliary + 1u) return 0;
+    } else if (auxiliary != 0u) {
+        return 0;
+    }
+    if (callable_out) *callable_out = callable;
+    if (kind_out) *kind_out = kind;
+    return 1;
+}
+
+int rx_graph_task_binding_validate(
+        const RxGraph *graph,
+        const unsigned char binding[RX_GRAPH_TASK_BINDING_SIZE],
+        RxCallableId *callable_out,
+        unsigned int *kind_out) {
+    unsigned char graph_digest[32];
+
+    return graph && rx_graph_digest(graph, graph_digest) &&
+           rx_graph_task_binding_validate_digest(
+                   graph, graph_digest, binding, callable_out, kind_out);
+}
+
 RxFactoryId rx_graph_find_factory(const RxGraph *graph,
                                   RxGraphId interface_type,
                                   RxMemberId member) {
@@ -3110,6 +3393,7 @@ static size_t rx_graph_crexx_meta_size(enum const_pool_type type) {
         case META_INLINE: return sizeof(meta_inline_constant);
         case META_SOURCE_STEP: return sizeof(meta_source_step_constant);
         case META_TRACE_EVENT: return sizeof(meta_trace_event_constant);
+        case META_TASK_TARGET: return sizeof(meta_task_target_constant);
         default: return 0u;
     }
 }

@@ -1,0 +1,9 @@
+cell,vm,metric,pairs,accepted_median,candidate_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total,guard_hit
+spin-w1,rxbvml,jobs_per_second,12,1661.552904,1582.656515,-5.726127,-4.028929,-2.546406,4.195974,7.152872,-0.445577,-3.468691,2.577538,noisy_inconclusive,5,12,no
+spin-w4,rxbvml,jobs_per_second,12,5904.948566,6080.708483,-8.421915,-1.102161,2.680104,5.998800,22.329176,3.434130,-1.585465,8.453726,noisy_inconclusive,8,12,no
+channel-latency,rxbvml,jobs_per_second,12,132549.149962,133375.675507,-11.767716,-3.066511,3.754154,7.961192,49.457084,5.576465,-4.291317,15.444247,noisy_inconclusive,8,12,no
+channel-throughput,rxbvml,jobs_per_second,12,2990.903324,3066.832381,-3.710075,0.133599,1.644031,3.820769,21.240419,3.017843,-1.153351,7.189038,noisy_inconclusive,9,12,no
+spin-w1,rxtvml,jobs_per_second,12,1254.817525,1271.885641,-9.270296,-4.590251,-0.795380,3.215908,12.946905,0.130930,-4.031279,4.293139,noisy_inconclusive,6,12,no
+spin-w4,rxtvml,jobs_per_second,12,4838.820789,4825.257688,-5.716232,-0.411877,0.415748,0.834652,3.683646,-0.052051,-1.579119,1.475017,noisy_inconclusive,8,12,no
+channel-latency,rxtvml,jobs_per_second,12,131232.000046,138522.926683,-64.952247,-0.592501,1.800080,7.152166,262.935558,19.108760,-31.318806,69.536325,noisy_inconclusive,9,12,no
+channel-throughput,rxtvml,jobs_per_second,12,2604.494535,2611.636143,-9.082181,-2.202010,-0.897469,1.082856,11.550680,-0.229273,-3.540798,3.082252,noisy_inconclusive,5,12,no

@@ -1,0 +1,44 @@
+PERF3-13 Gate F F1a/F1b bounded hot-loop investigation
+
+Question
+  Did the new slow channel handlers enter the profile-20 hot loop, or did the
+  public opcode addition perturb the monolithic computed-goto interpreter
+  layout even though the handlers are cold?
+
+Static result
+  - CHANOPEN, CHANSTART, CHANWAIT, CHANCANCEL and CHANCLOSE are all classified
+    NEVER by interpreter/rxvmhandlerpolicy.h.
+  - The normal computed-goto opcode map reaches those outlined handlers through
+    the existing common cold gateway.
+  - Adding the opcode-map entries and sparse-owner stubs still changes the
+    compiled rxvm_run_owned_core code shape in rxvmintp.c.o.
+
+Three-way link control
+  accepted: exact accepted E6 executable
+  hybrid:   exact accepted E6 rxvmintp.c.o plus current F1 non-interpreter
+            objects and harness
+  candidate: complete current F1 executable
+
+Twelve balanced recorded pairs gave:
+
+  spin-w1 accepted -> hybrid:
+    +0.930449%, interval -1.921161% to +3.782059%
+  spin-w1 hybrid -> candidate:
+    -5.881191%, interval -8.097104% to -3.665279%
+  spin-w4 accepted -> hybrid:
+    -0.320584%, interval -1.426326% to +0.785158%
+  spin-w4 hybrid -> candidate:
+    -0.799807%, interval -2.330323% to +0.730709%
+
+Conclusion
+  The selected rxvmintp.c.o/code shape explains the clear single-worker
+  rxtvml regression. The provider, executor, loader and benchmark objects do
+  not explain it. A disposable no-channel-sparse smoke restored approximately
+  the accepted rate and supports the same diagnosis, but was not elevated to
+  formal evidence.
+
+Disposition
+  Adrian accepted the code-layout cost for the evolving instruction surface.
+  F3/release hardening should reconsider one stable common cold gateway for
+  slow provider-bound operations and then tune final hot-loop layout after the
+  opcode surface has stopped moving.
