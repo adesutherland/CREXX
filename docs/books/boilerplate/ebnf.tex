@@ -1,0 +1,19 @@
+\lstdefinelanguage{EBNF}{
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+  literate=
+    {::=}{{\texttt{::=}}}3
+}
+
+\lstdefinestyle{ebnf}{
+  language=EBNF,
+  basicstyle=\fontspec{IBM Plex Mono}[Scale=0.85],
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  breaklines=true,
+  tabsize=2,
+  frame=none
+}
