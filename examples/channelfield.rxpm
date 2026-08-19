@@ -1,0 +1,28 @@
+##MACRO CHANNELFIELD mname,name,type,initial
+    .section class_fields &name = &type
+    if _mcalls=1 then do
+        .section factory *: factory
+    end
+    .section factory &name = &initial
+    .section getters get_&mname: method = &type
+    .section getters return &name
+    .section getters ##blankline
+    .section setters set_&mname: method = .void
+    .section setters arg value = &type
+    .section setters &name = value
+    .section setters return
+    .section setters ##blankline
+    .section channel_pack_names names[&_mcalls] = "&mname"
+    if type = ".int" then do
+        .section channel_pack_values values[&_mcalls] = .channelvalue.integer_value(&name)
+        .section channel_unpack &name = encoded.field("&mname").as_integer()
+    end
+    if type = ".string" then do
+        .section channel_pack_values values[&_mcalls] = .channelvalue.string_value(&name)
+        .section channel_unpack &name = encoded.field("&mname").as_string()
+    end
+    if type = ".boolean" then do
+        .section channel_pack_values values[&_mcalls] = .channelvalue.boolean_value(&name)
+        .section channel_unpack &name = encoded.field("&mname").as_boolean()
+    end
+##MEND
