@@ -82,13 +82,27 @@ letters, digits, `.`, `_`, or `-`. The assembler stores only symbol, provider
 ID and required/optional flags in this record; it does not duplicate the
 callable signature. RXBIN 007 writers set the native-provider feature bit.
 
+Module initialization uses a dedicated `META_INITIALIZER` record:
+
+```rxas
+.meta "example.boot"=".initializer" ".void" boot() ""
+```
+
+The five-field shape deliberately resembles callable metadata so generated
+RXAS and `rxdas` round trips retain the namespace-qualified diagnostic symbol
+and the local procedure reference. The assembler requires `.void`, an empty
+argument signature, and a local bytecode procedure. It stores the symbol and
+procedure as typed constant-pool references rather than treating the label as
+an exported callable. Multiple records are valid and their metadata-chain order
+is execution order. RXBIN 007 writers set the initializer feature bit.
+
 The serialized `expose_head` chain includes both `EXPOSE_REG_CONST` and
 `EXPOSE_PROC_CONST` records. Runtime linking and other module-local walkers now
 rely on that chain instead of scanning the whole constant pool.
 
-The interface/callable-contract work extends that same metadata path rather
-than introducing a second binary header mechanism. In addition to `META_CLASS`
-and `META_ATTR`, the assembler now serializes:
+The interface/callable-contract and initializer work extend that same metadata
+path rather than introducing a second binary header mechanism. In addition to
+`META_CLASS` and `META_ATTR`, the assembler now serializes:
 
 - `META_INTERFACE` for one interface header
 - `META_IMPLEMENTS` for one concrete-class-to-interface link

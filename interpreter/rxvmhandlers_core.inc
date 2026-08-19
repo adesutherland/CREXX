@@ -77,6 +77,13 @@ RXVM_HANDLER(CALL_FUNC,
             INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
             RXVM_EXTERNAL_SAFEPOINT();
         } else {
+            if (context->initialized_module_count != context->num_modules &&
+                rxvm_ensure_callee_initialized(context, current_module,
+                                                called_function) != 0) {
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE,
+                               "Module initialization failed")
+                DISPATCH;
+            }
             temp_frame = frame_f(called_function, 0, current_frame, next_pc, 0);
             if (!temp_frame) {
                 RXVM_INSTRUMENTATION_CALL(

@@ -215,6 +215,7 @@ int rexbscan(Context* s) {
     'FACTORY' { RET(TK_FACTORY); }
     'IF' { RET(TK_IF); }
     'IMPORT' { RET(TK_IMPORT); }
+    'INITIALISER' { RET(TK_INITIALISER); }
     'IS' { RET(TK_IS); }
   //  'INPUT' { RET(TK_INPUT); }
   //  'INTERPRET' { RET(TK_INTERPRET); }

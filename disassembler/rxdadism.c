@@ -401,6 +401,43 @@ static void output_meta_provider_for_symbol(FILE *stream,
     }
 }
 
+static size_t get_func_string(bin_space *pgm, char *buffer,
+                              size_t buffer_len, size_t index);
+
+static void output_meta_initializer_for_symbol(FILE *stream,
+                                               module_file *module,
+                                               bin_space *pgm,
+                                               const char *symbol,
+                                               const char *indent) {
+    int m;
+
+    if (!symbol) return;
+    m = module->header.meta_head;
+    while (m != -1) {
+        chameleon_constant *entry =
+            (chameleon_constant *)(module->constant + m);
+        if (entry->type == META_INITIALIZER) {
+            meta_initializer_constant *initializer =
+                (meta_initializer_constant *)(module->constant + m);
+            char *initializer_symbol =
+                get_const_raw_string_alloc(pgm, initializer->symbol);
+            if (initializer_symbol && strcmp(initializer_symbol, symbol) == 0) {
+                char symbol_buffer[MAX_LINE_SIZE];
+                char function_buffer[MAX_LINE_SIZE];
+                get_const_string(pgm, symbol_buffer, sizeof(symbol_buffer),
+                                 initializer->symbol);
+                get_func_string(pgm, function_buffer, sizeof(function_buffer),
+                                initializer->function);
+                fprintf(stream,
+                        "%s.meta %s=\".initializer\" \".void\" %s \"\"\n",
+                        indent ? indent : "", symbol_buffer, function_buffer);
+            }
+            free(initializer_symbol);
+        }
+        m = ((meta_entry *)(module->constant + m))->next;
+    }
+}
+
 /* Get the function name string
  * Returns the number of characters that would have been written assuming the
  * buffer was big enough - like snprintf() */
@@ -1078,6 +1115,8 @@ static void output_imported_proc_meta(FILE *stream, module_file *module, bin_spa
                     fprintf(stream, " %s\n",line_buffer);
                     output_meta_inline_for_symbol(stream, module, pgm, raw_symbol, "");
                     output_meta_provider_for_symbol(stream, module, pgm, raw_symbol, "");
+                    output_meta_initializer_for_symbol(stream, module, pgm,
+                                                       raw_symbol, "");
                     if (raw_symbol) free(raw_symbol);
                 }
                 m = mentry->base.next;
@@ -1793,6 +1832,22 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     fprintf(stream, " %s", line_buffer);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE,
                                      mentry->provider);
+                    fprintf(stream, " %s\n", line_buffer);
+                }
+                    break;
+
+                case META_INITIALIZER:
+                {
+                    meta_initializer_constant *mentry =
+                        (meta_initializer_constant *)entry;
+                    fprintf(stream,
+                            "* 0x%.6lx META-INITIALIZER @0x%.6lx",
+                            i, mentry->base.address);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE,
+                                     mentry->symbol);
+                    fprintf(stream, " %s", line_buffer);
+                    get_func_string(pgm, line_buffer, MAX_LINE_SIZE,
+                                    mentry->function);
                     fprintf(stream, " %s\n", line_buffer);
                 }
                     break;

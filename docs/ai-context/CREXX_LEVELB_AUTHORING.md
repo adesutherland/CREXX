@@ -219,6 +219,42 @@ References:
 - `docs/books/crexx_programming_guide/global_variables.md`
 - `debugger/rxdb.crexx`
 
+### Module initializers are private lifecycle procedures
+
+Use a module initializer when module-global state must be constructed before
+`main`, an embedded public call, or a task-worker request can observe that
+module instance:
+
+```rexx
+options levelb
+namespace example expose value
+
+boot: initialiser expose value
+  value = 42
+
+read: procedure = .int expose value
+  return value
+```
+
+A module may declare zero or more initializers. They run once for each mutable
+module instance, in declaration order. Each initializer has an ordinary
+namespace-qualified name for metadata and diagnostics, but it is a private
+lifecycle entry point: source cannot call it, import it as a callable, or list
+it in the namespace `expose` clause. The `expose` after `initialiser` has the
+same module-variable binding purpose as procedure-level `expose`; it does not
+export the initializer.
+
+Initializers accept no `arg` declarations and have an implicit `.void` return.
+A bare `return` is valid; returning a value is a compile error. If an
+initializer calls an ordinary procedure in another unready module, the VM
+initializes that module first. There is no source `requires` list, and a cycle
+through cross-module initializer calls fails at runtime.
+
+Use this for module-owned singleton-like objects, tables, caches, and resource
+managers. The lifetime is one mutable module overlay, not one process-global
+instance. In particular, persistent task workers each initialize their own
+overlay once before accepting work.
+
 ### Named constants are compile-time values
 
 Use `constant NAME = expression` inside an explicit procedure, method, or

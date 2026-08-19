@@ -1,0 +1,15 @@
+options levelb
+
+namespace initroot expose value
+
+import initdep
+
+boot: initialiser expose state
+  state = touch()
+
+value: procedure = .int expose state
+  return state
+
+main: procedure expose state
+  say state
+  return

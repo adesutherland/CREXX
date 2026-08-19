@@ -1,6 +1,11 @@
 options levelb
 namespace dynamic_load_provider expose dynamic_value
 
-dynamic_value: procedure = .string
+prefix = .string
+
+boot: initialiser expose prefix
+  prefix = "dynamic:"
+
+dynamic_value: procedure = .string expose prefix
   arg text = .string
-  return "dynamic:" || text
+  return prefix || text

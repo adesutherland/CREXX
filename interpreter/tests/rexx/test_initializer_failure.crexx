@@ -1,0 +1,9 @@
+options levelb
+
+namespace initfail expose ping
+
+boot: initialiser
+  assembler signal "INVALID_ARGUMENTS", "initializer failure fixture"
+
+ping: procedure = .int
+  return 1

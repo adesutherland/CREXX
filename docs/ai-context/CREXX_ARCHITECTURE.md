@@ -44,7 +44,7 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
    - Contains the **Exit Bridge Framework** (`rxcp_exit.c`), which intercepts unrecognized `IMPLICIT_CMD` nodes, invokes user-provided `rxplugin` macros to generate replacement source code, parses the interpolated strings (preserving literal quotes), and surgically grafts the resulting AST back into the main tree without violating return-type constraints. Compiler-exit dispatch is keyed by the first source token in the instruction, not by the first marshalled AST node; this matters for command-position member calls such as `x.add(...)`, whose AST node token is the member name but whose command head is `x`. A non-implicit exit that returns `REJECT` falls through to the certified implicit ADDRESS exit; `ERROR` remains a compiler error.
    - **Implicit Main Argument Bridge**: when the compiler synthesizes the file-level `main()` wrapper, that procedure is marked `is_implicit_main`. Later typing and emission use that marker to interpret `arg[]` / `arg[n]` access against the hidden command-line `.string[]` that the VM already passes to `main`. Ordinary procedures still use normal vararg semantics, and explicit zero-argument `main()` does not gain accidental source-level visibility of the hidden VM argv payload.
    - **Exit Fragment Scope Lifecycle**: replacement fragments from exits are parsed and structurally normalized before grafting, but any new lexical block scopes created by structured replacements are finalized later during symbol structuring/build. Nested `DO` / `IF` / `INSTRUCTIONS` emitted by exits are therefore a supported shape, and debug validation is staged after that scope rebuild so the validator sees the stabilized tree rather than the transient pre-scope fragment form.
-   - **Expose Mechanics**: Implements automatic scope resolution that allows `namespace ... expose` global variables to implicitly bind into local `PROCEDURE` scopes. Procedure-level `name: procedure [= .type] expose var ...` remains the local form for selected private module state shared by specific procedures.
+   - **Expose and Initializer Mechanics**: Implements automatic scope resolution that allows `namespace ... expose` global variables to implicitly bind into local `PROCEDURE` scopes. Procedure-level `name: procedure [= .type] expose var ...` remains the local form for selected private module state shared by specific procedures. `name: initialiser [expose var ...]` creates a private zero-argument `.void` lifecycle procedure. Multiple initializers are retained in declaration order; the compiler rejects calls to them, namespace exposure, arguments, and returned values, then emits dedicated `.initializer` metadata.
    - **Automatic Register Allocation**: Within `rxcp_val_sym.c` (Step 3 - Pass 3), the compiler walks the AST (`build_symbols_walker`) to identify explicit `NODE_REGISTER` allocations via the `with register.N[.view]` clause on class attributes. `register.0` is the source-level convention for a typed view of the containing value itself; `register.1` and above are one-based child attribute slots. `register.0` and duplicate typed views of the same physical `register.N` slot are complex attributes: emitted reads copy the linked physical payload view into a local register before expression manipulation, and writes copy the selected payload view back through the physical slot. The compiler does not copy status flags as hidden cache maintenance for these typed views; runtime classes such as `RexxValue` own their library/user flag protocol explicitly. Register flag views are direct masked status-word views, with VM/compiler/readable partitions validated as read-only source views and writable source partitions lowered through `settpmask`. The compiler automatically maps any remaining unmapped attributes of a class to unused VM registers (`r1`, `r2`, etc.) by synthesizing implicit `NODE_REGISTER` AST nodes. For normal classes, prefer this implicit allocation and keep callers on factories/methods; explicit `with register...` mappings should be reserved for genuine physical interop where a fixed layout is required.
 
 4. **Emitter (IR -> Assembly)**
@@ -106,16 +106,23 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
 5. **Assembler (`rxas`)**
    - Parses the generated `rxas` Assembly instructions.
    - Translates human-readable IR assembly into packed binary format (`rxbin` bytecode).
+   - Validates `.initializer` metadata against its local `.void`, zero-argument
+     bytecode procedure and sets the RXBIN 007 initializer feature bit.
    - Generates the final executable bytecode file.
 
 6. **Linker (`rxlink`, optional)**
    - Combines one or more `.rxbin` modules into a single linked image with one shared constant-pool record and one shared-backed module record per selected module.
    - Resolves imports and interface-provider relationships up front, while preserving the module boundaries needed by the VM loader.
+   - Remaps and preserves ordered initializer metadata without turning the
+     private lifecycle procedures into exports.
    - Can strip source-level debug metadata (`META_SOURCE_STEP` and `META_TRACE_EVENT`) for smaller deployable artifacts without removing runtime contract metadata.
 
 7. **Interpreter (`rxvm`)**
    - `rxvm` reads and executes the `rxbin` bytecode.
    - Modules are loaded via `rxldmod`.
+   - Provider resolution and linking precede execution-image preparation;
+     `rxvm_initialize()` then advances each mutable module overlay through its
+     once-only initializer state before `main` or a public call can enter it.
    - The execution loop happens inside the `rxvm_run` function (e.g., in `rxvmmain.c` / `rxvmintp.c`).
 
 ## Text, UTF-8, and Binary Data
@@ -576,5 +583,9 @@ do(G)         ::= tk_doloop(T) dorep(R) TK_EOC instruction_list(I) TK_END.
 5. **Association**: The AST node also uses the `association` pointer to link commands like `LEAVE` or `ITERATE` directly back to the target enclosing `DO` loop node.
 
 ## Execution and the VM
-Once compilation via `rxc` and `rxas` is complete, `rxvm` handles the execution. 
-Modules are ingested into memory mapping via functions like `rxldmod`. The VM spins up its contexts, loading dynamically or statically linked extensions, and invokes `rxvm_run` to march through and execute the virtual CPU instructions matching the loaded byte sequence.
+Once compilation via `rxc` and `rxas` is complete, `rxvm` handles the execution.
+Modules are ingested into memory mapping via functions like `rxldmod`. The VM
+spins up its contexts, resolves dynamically or statically linked providers,
+links and prepares the modules, runs each declared initializer once for that
+context's mutable module overlay, and only then invokes the requested program
+entry through `rxvm_run`/`rxvm_call`.

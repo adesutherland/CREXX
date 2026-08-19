@@ -1790,7 +1790,8 @@ static void executor_worker_run(rxvm_executor_worker *worker) {
                 RXVM_PROGRAM_OK ||
         rxldmodp(worker->context) < 0 ||
         rxvm_link(worker->context) != 0 ||
-        rxvm_prepare(worker->context) != 0) {
+        rxvm_prepare(worker->context) != 0 ||
+        rxvm_initialize(worker->context) != 0) {
         worker->startup_result = RXVM_EXECUTOR_WORKER_START_FAILED;
     } else {
         worker->startup_result = RXVM_EXECUTOR_OK;

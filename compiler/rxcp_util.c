@@ -824,6 +824,7 @@ const char* token_to_string(int token_id) {
         case TK_SIGNAL: return "TK_SIGNAL";
         case TK_ON: return "TK_ON";
         case TK_PROCEDURE: return "TK_PROCEDURE";
+        case TK_INITIALISER: return "TK_INITIALISER";
         case TK_EXPOSE: return "TK_EXPOSE";
         case TK_CALL: return "TK_CALL";
         case TK_OPTIONS: return "TK_OPTIONS";

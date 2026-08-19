@@ -1,0 +1,16 @@
+options levelb
+
+namespace initdep expose touch value
+
+first: initialiser expose state
+  state = state * 10 + 3
+
+second: initialiser expose state
+  state = state * 10 + 4
+
+touch: procedure = .int expose state
+  state = state * 10 + 5
+  return state
+
+value: procedure = .int expose state
+  return state

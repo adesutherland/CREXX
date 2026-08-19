@@ -401,6 +401,9 @@ static int rxinimod_common(rxvm_context *context,
     context->link_dirty = 0;
     context->interface_method_registry_dirty = 0;
     context->interface_factory_registry_dirty = 0;
+    context->initializer_depth = 0u;
+    context->current_initializer_module = 0;
+    context->initialized_module_count = 0u;
     context->active.rxvml_context = 0;
     context->active.rxpa_context = 0;
     context->active.rxpa_pool_head = 0;
@@ -1045,6 +1048,7 @@ size_t rxvm_materialize_module_overlay(
     context->modules[n]->file = file_module_section;
     context->modules[n]->native = file_module_section->native;
     context->modules[n]->state = RXVM_MOD_LOADED;
+    context->modules[n]->initializer_state = RXVM_INIT_UNINITIALIZED;
     context->modules[n]->procedures = 0;
     context->modules[n]->procedure_count = 0;
     context->modules[n]->proc_runtime_lookup = 0;

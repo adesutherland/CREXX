@@ -746,6 +746,17 @@ and application-local package builds may pass
 `OUTPUT_DIRECTORY`; omitting it deliberately selects the standard
 build/install provider directory.
 
+A deliberate alternate implementation, such as a mock provider, may retain a
+distinct CMake target while publishing the same stable manifest identity:
+
+```cmake
+add_dynamic_plugin_target(_example_mock PROVIDER_ID rx_example mock.c)
+```
+
+Its delivered artifact must still use the canonical `rx_example.rxplugin`
+stem. `PROVIDER_ID` is not an aliasing mechanism: the runtime requires the
+requested artifact stem and embedded manifest identity to agree.
+
 ## 5. Declaring Native Classes and Interfaces
 
 RXPA can also publish class/interface contract metadata to the compiler and VM.

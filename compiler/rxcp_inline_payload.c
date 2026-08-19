@@ -116,6 +116,10 @@ static int inline_prune_candidate(ASTNode *node) {
 
     if (!node || node->node_type != PROCEDURE) return 0;
     if (node->is_task_callable) return 0;
+    /* Initializers are runtime entry points even though source code cannot
+     * call or expose them, so the ordinary local-call liveness test does not
+     * describe their reachability. */
+    if (node->is_initializer) return 0;
     if (!inline_proc_has_body(node)) return 0;
     if (inline_proc_has_procedure_expose(node)) return 0;
 

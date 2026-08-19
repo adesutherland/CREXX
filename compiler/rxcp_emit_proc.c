@@ -378,6 +378,15 @@ void emit_proc(ASTNode *node, void *pl) {
                         buf = with_task;
                     }
                 }
+                if (node->is_initializer) {
+                    char *with_initializer = mprintf(
+                            "%s   .meta \"%s\"=\".initializer\" \".void\" %s() \"\"\n",
+                            buf, proc_fqn, proc_label);
+                    if (with_initializer) {
+                        free(buf);
+                        buf = with_initializer;
+                    }
+                }
                 if (node->output) output_prepend_text(buf, node->output);
                 else node->output = output_fs(buf);
                 free(type);
@@ -456,6 +465,15 @@ void emit_proc(ASTNode *node, void *pl) {
                     if (with_task) {
                         free(buf);
                         buf = with_task;
+                    }
+                }
+                if (node->is_initializer) {
+                    char *with_initializer = mprintf(
+                            "%s   .meta \"%s\"=\".initializer\" \".void\" %s() \"\"\n",
+                            buf, proc_fqn, proc_label);
+                    if (with_initializer) {
+                        free(buf);
+                        buf = with_initializer;
                     }
                 }
                 if (node->output) output_prepend_text(buf, node->output);

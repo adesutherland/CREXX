@@ -20,14 +20,43 @@ The execution of a program within `rxvm` is handled in discrete phases (as defin
    process-private opcode forms. Canonical `segment.binary` remains immutable
    and is still the serialization, reflection, source/profile and debug
    identity.
-5. **Execution**: `rxvm_run()` / `rxvm_call()` invoke a target procedure (typically `main`) and launch the main interpreter loop.
+5. **Module initialization**: `rxvm_initialize()` runs every declared
+   `META_INITIALIZER` once for its mutable module instance. Initializers run
+   after provider resolution/linking and preparation, but before the instance
+   can be entered by `main`, an embedded public call, or a persistent worker
+   request.
+6. **Execution**: `rxvm_run()` / `rxvm_call()` invoke a target procedure
+   (typically `main`) and launch the main interpreter loop.
+
+Each module overlay carries an initializer state of `UNINITIALIZED`,
+`INITIALIZING`, `READY`, or `FAILED`. Multiple initializer records in one
+module execute in metadata/source declaration order. A failure poisons that
+module instance and is not retried automatically. Initializer procedures have
+ordinary namespace-qualified diagnostic identities but are not exposed as
+public call targets.
+
+Unrelated modules begin in stable loaded-module order. During initialization,
+a bytecode call into another unready module first initializes the callee's
+module. Calling back into an `INITIALIZING` module detects a cycle and fails the
+involved initialization rather than observing partial state. Once the complete
+module set is ready, ordinary calls pay only the fast published-module-count
+comparison and do not invoke the slow initialization helper.
+
+`initialized_module_count` is the published ready prefix. A successful
+initialization pass advances it to `num_modules`. If initialization of a
+late-loaded suffix fails, previously published modules remain callable while
+the failed/unpublished modules remain inaccessible. A fresh context whose
+initial module set fails has an empty published prefix and cannot enter
+`main` or a public bytecode procedure.
 
 Runtime code can explicitly late-load another `.rxbin` or `.rxplugin` through
 the debugger-style `METALOADMODULE` instruction. The public rxfnsb wrapper is
 `loadmodule(path) -> .int`; it returns the last loaded module number, or a
 non-positive value on failure. A successful `METALOADMODULE` immediately calls
-`rxvm_link()` so existing unresolved imports can bind to procedures/classes in
-the newly loaded file. Undeclared late loading remains explicit; there is no
+`rxvm_link()` and prepares the execution image so existing unresolved imports
+can bind to procedures/classes in the newly loaded file. The new module remains
+pending until the next execution boundary initializes the unpublished suffix.
+Undeclared late loading remains explicit; there is no
 generic native-library directory sweep. A declared native callable is
 different: `META_PROVIDER` causes provider-stem resolution before procedure
 linking.

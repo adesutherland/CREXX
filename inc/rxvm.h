@@ -35,13 +35,18 @@ int rxvm_link(struct rxvm_context* ctx);
 /* Returns 0 on success, non-zero on error. */
 int rxvm_prepare(struct rxvm_context* ctx);
 
-/* --- Phase 4: Execution --- */
+/* --- Phase 4: Module initialization --- */
+/* Runs each declared initializer once for this mutable module instance. */
+/* Returns 0 on success, non-zero on failure. */
+int rxvm_initialize(struct rxvm_context* ctx);
+
+/* --- Phase 5: Execution --- */
 /* Executes a specific procedure by name (usually "main") within the context. */
 /* Returns the return code from the procedure. */
 int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv);
 
 /* --- Backward Compatibility --- */
-/* Wrapper that performs Link -> Prepare -> Call("main"). */
+/* Wrapper that performs Link -> Prepare -> Initialize -> Call("main"). */
 int rxvm_run(struct rxvm_context* ctx, int argc, char** argv);
 
 #endif /* CREXX_RXVM_H */

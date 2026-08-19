@@ -1315,6 +1315,12 @@ when_clause(W) ::= TK_WHEN(K) expression(E) ncl0 TK_EOS.
 task_def(P)         ::= TK_LABEL(L) TK_TASK opt_method_return_type(T).
                       { P = ast_f(context, TASK_DECL, L); P->is_task_callable = 1;
                         if (T) add_ast(P,T); else add_ast(P,ast_ft(context, VOID)); }
+procedure(P)      ::= TK_LABEL(L) TK_INITIALISER.
+                      { P = ast_f(context, PROCEDURE, L); P->is_initializer = 1;
+                        add_ast(P,ast_ft(context, VOID)); }
+procedure(P)      ::= TK_LABEL(L) TK_INITIALISER expose(E).
+                      { P = ast_f(context, PROCEDURE, L); P->is_initializer = 1;
+                        add_ast(P,ast_ft(context, VOID)); add_ast(P,E); }
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL type_def(C).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,C); }
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V).

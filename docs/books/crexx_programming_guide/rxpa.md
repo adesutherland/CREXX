@@ -294,6 +294,13 @@ set(CREXX_RXPA_PLUGIN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugin")
 add_dynamic_plugin_target(des rxdes.c desbase.c desbase.h)
 ```
 
+Test or replacement implementations that intentionally publish an existing
+stable provider identity under a different CMake target may pass
+`PROVIDER_ID`, for example
+`add_dynamic_plugin_target(des_mock PROVIDER_ID rxdes mock.c)`. The output
+artifact must still use the matching canonical provider stem; this option does
+not create a runtime alias.
+
 Configure with the selected scratch or system prefix explicitly:
 
 ```bash

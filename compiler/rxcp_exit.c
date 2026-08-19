@@ -779,6 +779,7 @@ static const char* token_type_to_string(int type, const char *text, size_t text_
         case TK_EXIT:
         case TK_CALL:
         case TK_PROCEDURE:
+        case TK_INITIALISER:
         case TK_NAMESPACE:
         case TK_IMPORT:
         case TK_EXPOSE:

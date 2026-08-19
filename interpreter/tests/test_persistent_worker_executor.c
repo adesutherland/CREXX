@@ -243,24 +243,26 @@ static void run_affinity_and_isolation(const char *rxbin) {
 
     add0 = submit_one(executor, 0u, "e5worker.add", "5");
     add1 = submit_one(executor, 1u, "e5worker.add", "11");
-    wait_completed(add0, 5, "worker zero initializes its private module global");
-    wait_completed(add1, 11, "worker one initializes its private module global");
+    wait_completed(add0, 105,
+                   "worker zero observes its initialized module instance");
+    wait_completed(add1, 111,
+                   "worker one observes its initialized module instance");
     destroy_terminal(&add0);
     destroy_terminal(&add1);
 
     again0 = submit_one(executor, 0u, "e5worker.add", "2");
     again1 = submit_one(executor, 1u, "e5worker.add", "3");
-    wait_completed(again0, 7,
-                   "worker zero retains warm state on the same affinity");
-    wait_completed(again1, 14,
-                   "worker one retains distinct warm state on its affinity");
+    wait_completed(again0, 107,
+                   "worker zero retains warm state without reinitializing");
+    wait_completed(again1, 114,
+                   "worker one retains distinct state without reinitializing");
     destroy_terminal(&again0);
     destroy_terminal(&again1);
 
     get0 = submit_zero(executor, 0u, "e5worker.get");
     get1 = submit_zero(executor, 1u, "e5worker.get");
-    wait_completed(get0, 7, "worker zero global remains isolated");
-    wait_completed(get1, 14, "worker one global remains isolated");
+    wait_completed(get0, 107, "worker zero initialized global remains isolated");
+    wait_completed(get1, 114, "worker one initialized global remains isolated");
     destroy_terminal(&get0);
     destroy_terminal(&get1);
 

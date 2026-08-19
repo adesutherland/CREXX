@@ -150,8 +150,193 @@ int rxvm_prepare(struct rxvm_context* ctx) {
     return 0;
 }
 
-int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) {
+static const char *rxvm_initializer_symbol(module *mod, size_t offset) {
+    string_constant *symbol;
+
+    if (!mod || offset >= mod->segment.const_size ||
+        mod->segment.const_size - offset < sizeof(string_constant)) return 0;
+    symbol = (string_constant *)(mod->segment.const_pool + offset);
+    if (symbol->base.type != STRING_CONST ||
+        symbol->base.size_in_pool < offsetof(string_constant, string) + 1u ||
+        symbol->base.size_in_pool > mod->segment.const_size - offset ||
+        symbol->string_len >= symbol->base.size_in_pool -
+                              offsetof(string_constant, string) ||
+        symbol->string[symbol->string_len] != 0) return 0;
+    return symbol->string;
+}
+
+static int rxvm_execute_initializer(struct rxvm_context *ctx,
+                                    module *mod,
+                                    proc_runtime *procedure,
+                                    const char *symbol) {
+    proc_runtime *saved_proc;
+    int saved_argc;
+    value **saved_args;
+    value *saved_ret;
+    value *ret;
     int rc;
+
+    saved_proc = ctx->ext_proc;
+    saved_argc = ctx->ext_argc;
+    saved_args = ctx->ext_args;
+    saved_ret = ctx->ext_ret;
+    ret = value_f_in(ctx->worker.memory_worker);
+    if (!ret) {
+        fprintf(stderr,
+                "ERROR: unable to allocate return storage for initializer %s in module %s\n",
+                symbol ? symbol : "<unknown>", mod->name);
+        return -1;
+    }
+
+    ctx->ext_proc = procedure;
+    ctx->ext_argc = 0;
+    ctx->ext_args = 0;
+    ctx->ext_ret = ret;
+    rc = run(ctx, 0, 0);
+    ctx->ext_proc = saved_proc;
+    ctx->ext_argc = saved_argc;
+    ctx->ext_args = saved_args;
+    ctx->ext_ret = saved_ret;
+    value_free(ret);
+
+    if (rc != 0) {
+        fprintf(stderr,
+                "ERROR: initializer %s failed in module %s (rc=%d)\n",
+                symbol ? symbol : "<unknown>", mod->name, rc);
+        return -1;
+    }
+    return 0;
+}
+
+static int rxvm_initialize_module(struct rxvm_context *ctx, module *mod) {
+    int offset;
+    size_t visited;
+    module *previous_initializer;
+
+    if (!ctx || !mod) return -1;
+    if (mod->initializer_state == RXVM_INIT_READY) return 0;
+    if (mod->initializer_state == RXVM_INIT_FAILED) {
+        fprintf(stderr, "ERROR: module %s initialization previously failed\n",
+                mod->name);
+        return -1;
+    }
+    if (mod->initializer_state == RXVM_INIT_INITIALIZING) {
+        fprintf(stderr, "ERROR: module initializer cycle reaches %s\n",
+                mod->name);
+        return -1;
+    }
+    if (mod->state < RXVM_MOD_THREADED) {
+        fprintf(stderr, "ERROR: module %s is not prepared for initialization\n",
+                mod->name);
+        return -1;
+    }
+
+    mod->initializer_state = RXVM_INIT_INITIALIZING;
+    previous_initializer = ctx->current_initializer_module;
+    ctx->current_initializer_module = mod;
+    ctx->initializer_depth++;
+    offset = mod->meta_head;
+    visited = 0u;
+    while (offset != -1 && visited++ <= mod->segment.const_size / 8u + 1u) {
+        meta_entry *entry;
+
+        if (offset < 0 || (size_t)offset >= mod->segment.const_size ||
+            mod->segment.const_size - (size_t)offset < sizeof(meta_entry)) {
+            fprintf(stderr, "ERROR: invalid metadata chain in module %s\n",
+                    mod->name);
+            goto fail;
+        }
+        entry = (meta_entry *)(mod->segment.const_pool + (size_t)offset);
+        if (entry->base.type == META_INITIALIZER) {
+            meta_initializer_constant *initializer;
+            proc_runtime *procedure;
+            const char *symbol;
+
+            if (entry->base.size_in_pool < sizeof(meta_initializer_constant)) {
+                fprintf(stderr,
+                        "ERROR: invalid initializer metadata in module %s\n",
+                        mod->name);
+                goto fail;
+            }
+            initializer = (meta_initializer_constant *)entry;
+            symbol = rxvm_initializer_symbol(mod, initializer->symbol);
+            procedure = rxvm_get_module_runtime_procedure(
+                    mod, initializer->function);
+            if (!symbol || !procedure || procedure->binarySpace != &mod->segment ||
+                procedure->start == SIZE_MAX) {
+                fprintf(stderr,
+                        "ERROR: initializer metadata does not name a local bytecode procedure in module %s\n",
+                        mod->name);
+                goto fail;
+            }
+            if (rxvm_execute_initializer(ctx, mod, procedure, symbol) != 0) {
+                goto fail;
+            }
+        }
+        offset = entry->next;
+    }
+    if (offset != -1) {
+        fprintf(stderr, "ERROR: cyclic metadata chain in module %s\n", mod->name);
+        goto fail;
+    }
+
+    ctx->initializer_depth--;
+    ctx->current_initializer_module = previous_initializer;
+    mod->initializer_state = RXVM_INIT_READY;
+    return 0;
+
+fail:
+    ctx->initializer_depth--;
+    ctx->current_initializer_module = previous_initializer;
+    mod->initializer_state = RXVM_INIT_FAILED;
+    return -1;
+}
+
+int rxvm_initialize(struct rxvm_context* ctx) {
+    rxvm_memory_worker *previous;
+    size_t index;
+    int rc;
+
+    if (!ctx) return -1;
+    if (ctx->initializer_depth != 0u) return 0;
+    if (rxvm_link(ctx) != 0 || rxvm_prepare(ctx) != 0) return -1;
+    previous = rxvm_memory_enter(ctx->worker.memory_worker);
+    rc = 0;
+    for (index = 0u; index < ctx->num_modules; index++) {
+        if (rxvm_initialize_module(ctx, ctx->modules[index]) != 0) {
+            rc = -1;
+            break;
+        }
+    }
+    if (rc == 0) ctx->initialized_module_count = ctx->num_modules;
+    rxvm_memory_leave(previous);
+    return rc;
+}
+
+int rxvm_ensure_callee_initialized(struct rxvm_context *ctx,
+                                   module *caller,
+                                   proc_runtime *callee) {
+    module *target;
+
+    if (!ctx || !callee || !callee->binarySpace) return 0;
+    target = callee->binarySpace->module;
+    if (!target) return 0;
+    if (ctx->initializer_depth == 0u) {
+        return target->initializer_state == RXVM_INIT_READY &&
+                       target->module_number <= ctx->initialized_module_count
+                ? 0 : -1;
+    }
+    if (target == caller || target->initializer_state == RXVM_INIT_READY) {
+        return 0;
+    }
+    return rxvm_initialize_module(ctx, target);
+}
+
+int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) {
+    int initialization_rc;
+    int rc;
+    if (!ctx) return -1;
+    initialization_rc = rxvm_initialize(ctx);
     rxvm_memory_worker *previous =
             rxvm_memory_enter(ctx->worker.memory_worker);
     value* ret_val = value_f_in(ctx->worker.memory_worker);
@@ -165,6 +350,13 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
         proc_runtime* p = NULL;
         if (src_node(ctx->exposed_proc_tree, proc_name, (size_t*)&p)) {
             int i;
+            if (initialization_rc != 0 &&
+                rxvm_ensure_callee_initialized(ctx, 0, p) != 0) {
+                value_free(ret_val);
+                ctx->ext_ret = NULL;
+                rxvm_memory_leave(previous);
+                return -1;
+            }
             ctx->ext_proc = p;
             ctx->ext_argc = argc;
             ctx->ext_args = argc > 0
@@ -205,6 +397,11 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
             rxvm_memory_leave(previous);
             return -1;
         }
+    } else if (initialization_rc != 0) {
+        value_free(ret_val);
+        ctx->ext_ret = NULL;
+        rxvm_memory_leave(previous);
+        return -1;
     }
 
     rc = run(ctx, argc, argv);
@@ -237,5 +434,6 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
 int rxvm_run(struct rxvm_context* ctx, int argc, char** argv) {
     if (rxvm_link(ctx) != 0) return -1;
     if (rxvm_prepare(ctx) != 0) return -1;
+    if (rxvm_initialize(ctx) != 0) return -1;
     return rxvm_call(ctx, "main", argc, argv);
 }

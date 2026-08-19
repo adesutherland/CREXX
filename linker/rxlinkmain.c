@@ -1081,6 +1081,31 @@ static int load_module_metadata(link_module_info *info) {
                 }
                 break;
             }
+            case META_INITIALIZER: {
+                meta_initializer_constant *initializer =
+                    (meta_initializer_constant *)entry;
+                const char *symbol = module_string_constant(
+                        module, initializer->symbol);
+                const meta_func_constant *function =
+                    module_function_metadata(module, symbol);
+                const char *type = function
+                    ? module_string_constant(module, function->type) : 0;
+                const char *args = function
+                    ? module_string_constant(module, function->args) : 0;
+                if (!symbol || !function ||
+                    function->func != initializer->function ||
+                    !type || strcmp(type, ".void") != 0 ||
+                    !args || *args != 0 ||
+                    initializer->function >= module->header.constant_size ||
+                    ((chameleon_constant *)((unsigned char *)module->constant +
+                                             initializer->function))->type != PROC_CONST) {
+                    fprintf(stderr,
+                            "ERROR: module %s has invalid initializer metadata for %s\n",
+                            module->name, symbol ? symbol : "<unknown>");
+                    return 0;
+                }
+                break;
+            }
             default:
                 break;
         }
@@ -1798,6 +1823,7 @@ static int is_meta_constant_type(enum const_pool_type type) {
         case META_INLINE:
         case META_TASK_TARGET:
         case META_PROVIDER:
+        case META_INITIALIZER:
             return 1;
         default:
             return 0;
@@ -2015,6 +2041,21 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
             meta->flags = source->flags;
             return *ok;
         }
+        case META_INITIALIZER: {
+            meta_initializer_constant *source =
+                (meta_initializer_constant *)entry;
+            size_t symbol = link_constant_offset(
+                    context, output_module, input_module, source->symbol, ok);
+            size_t function = link_constant_offset(
+                    context, output_module, input_module, source->function, ok);
+            meta_initializer_constant *meta =
+                (meta_initializer_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->function = function;
+            return *ok;
+        }
         default:
             *ok = 0;
             return 0;
@@ -2170,7 +2211,8 @@ static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_
         case META_MEMBER:
         case META_INLINE:
         case META_TASK_TARGET:
-        case META_PROVIDER: {
+        case META_PROVIDER:
+        case META_INITIALIZER: {
             meta_entry *meta = (meta_entry *)entry;
             int prev = link_constant_offset_int(context, output_module, input_module, meta->prev, ok);
             int next = link_constant_offset_int(context, output_module, input_module, meta->next, ok);

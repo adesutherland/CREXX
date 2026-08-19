@@ -1,15 +1,14 @@
 # Runtime Capability Composition Roadmap
 
-Status: approved roadmap in progress. RCC-1 and RCC-2 are implemented in the
-working tree with broad Debug and focused installed/native qualification;
-RCC-3 and later gates remain unimplemented unless separately noted.
+Status: approved roadmap in progress. RCC-1 through RCC-3 are implemented;
+RCC-4 and later gates remain unimplemented unless separately noted.
 
 Date: 2026-08-19.
 
 Decision state on 2026-08-19: the RXBIN format-boundary rule, opcode disposition
-list, once-per-mutable-module-instance initializer contract, and the related
-RCC-1/RCC-2 implementation are accepted. Initializer source spelling and
-optional finalizers remain separate decisions.
+list, once-per-mutable-module-instance initializer contract, the
+`name: initialiser` source spelling, and the related RCC-1 through RCC-3
+implementations are accepted. Optional finalizers remain a separate decision.
 
 ## Why this is not only a deployment roadmap
 
@@ -284,16 +283,18 @@ load RXBIN containers
   -> call main or the host-requested public procedure
 ```
 
-### Initializer contract accepted for RCC-0
+### Initializer contract implemented by RCC-3
 
 - The compiler/linker emits an explicit initializer metadata record pointing to
-  a callable ID. Do not scan for a magic `_init` name and do not require a
-  wrapper `main`.
-- A module declares zero or one initializer. Libraries that need several setup
-  steps use an ordinary private dispatcher, avoiding a second intra-module
-  ordering mechanism.
-- Source spelling is a separate language-design decision. The RXAS/RXBIN model
-  can be designed first without prematurely selecting syntax.
+  the local procedure identity. The VM does not scan for a magic `_init` name
+  and no wrapper `main` is required.
+- A module declares zero or more initializers. They run in source declaration
+  order, which is retained as metadata order when `rxlink` combines modules.
+- The source form is `name: initialiser [expose variable-list]`. The name has
+  the module's ordinary namespace-qualified identity for metadata and
+  diagnostics, but the initializer is a private lifecycle entry point: source
+  code cannot call it or export it through namespace `expose`. Its own
+  `expose` clause only makes module variables visible to its body.
 - An initializer takes no application arguments and returns `.void`. An
   unhandled signal or VM failure fails initialization; there is no parallel
   integer status convention.
@@ -304,28 +305,28 @@ load RXBIN containers
   sealed program generation.
 - Execution is serialized. Application `main`, tasks, and public host calls do
   not observe the module until its initializer has completed successfully.
-- Ordering is deterministic. Explicit initializer-dependency edges are
-  topologically ordered; unrelated modules use stable linked-module order.
-  Initializer dependency cycles fail before execution rather than relying on
-  incidental link order.
+- Ordering is deterministic. Unrelated modules use stable loaded/linked-module
+  order. If an initializer calls an ordinary procedure in an unready module,
+  the VM initializes that target module before entering the procedure. No
+  separate `requires` list is needed. Re-entry through such calls detects and
+  fails an initializer cycle.
 - The per-instance state machine is `UNINITIALIZED -> INITIALIZING -> READY` or
   `FAILED`. The VM makes at most one initializer attempt for that instance. A
   failed instance is poisoned and uncallable; it is destroyed or excluded from
   a failed late-load transaction rather than retried over partially changed
   globals or external side effects.
-- An initializer may call ordinary helpers in its own `INITIALIZING` module and
-  call dependencies that are already `READY`. Re-entering the same initializer,
-  calling an unready module without the required ordering edge, recursive module
-  loading, or task submission during initialization fails deterministically in
-  the first implementation. These restrictions avoid hidden ordering,
-  startup-pool deadlocks and partially published generations.
+- An initializer may call ordinary helpers in its own `INITIALIZING` module.
+  A call into another unready module initializes that module as described
+  above. An attempt to re-enter an initializer cycle fails deterministically.
 - A late-loaded module follows the same transaction: resolve its providers,
   link, prepare, initialize, then publish success. A failed initializer leaves
   the new module and any new provider session unavailable rather than half
   initialized. Existing `READY` module instances are not rerun.
-- Public `rxvm_run()` performs the lifecycle automatically. The embedding API
-  must also expose/ensure the same ready-state before its first public
-  `rxvm_call()`; initialization must not be a CLI-only guarantee.
+- Public `rxvm_run()` and `rxvm_call()` perform the lifecycle automatically;
+  embedders may call the explicit idempotent `rxvm_initialize()` phase. Local
+  task workers initialize their private module overlays before becoming
+  eligible for requests, so shared immutable program generations never share
+  mutable initialization state.
 - External side effects cannot in general be rolled back. Initializers should
   therefore keep such effects idempotent and bounded even though the VM, not
   library convention, enforces the at-most-one attempt within an instance.
@@ -392,6 +393,12 @@ Signals after earlier modules became `READY`, failure cleanup, initialization
 cycles, embedded re-entry, both VM dispatch modes and each task-provider
 lifetime need focused negative tests before publication.
 
+The accepted profiling-off Release call-path verdict is retained in
+[`2026-08-19 RCC-3 module initializers`](../../../performance/evidence/2026-08-19-rcc3-module-initializers-first-release-verdict/README.md).
+Across 12 balanced call/argument pairs, `rxbvm` is -0.353% paired mean and
+`rxtvm` is +0.179%; both confidence intervals include zero and remain inside
+the 3% guard.
+
 ## RXAS instruction-to-call review
 
 The current table has 655 numeric entries, including 68 reserved slots. There
@@ -433,15 +440,16 @@ metadata cases, and smaller cold handler/tooling surfaces.
 | RCC-0: decision lock | Complete the remaining role/provider-name decisions. The conditional 007/008 boundary, opcode disposition list and once-per-mutable-module-instance initializer semantics are accepted. | An approved design records what is core, what is merely default, which compatibility boundary applies, and the exact initialization unit. |
 | RCC-1: provider identity and dependency path — **implemented** | Add stable provider identity to compiler import provenance, RXAS metadata, RXBIN serialization, `rxlink` union/conflict logic, diagnostics, and inspection tools. | A linked image reports its exact native requirements without loading or running them. Old/new format behavior is deterministic. |
 | RCC-2: runtime and native-package resolution — **implemented** | Implement static-first trusted autoload, binary manifest-ID verification, installed/app-local lookup, failure diagnostics, and automatic static archive selection for native packaging. | The same test image runs under ordinary `rxvm`/`rxbvm` and native packaging without `-p` or a user-maintained provider list; missing/wrong providers fail before execution. |
-| RCC-3: explicit module initialization | Implement initializer metadata, per-module-instance state, VM ready-state, deterministic ordering, at-most-one attempt, late-load transaction, embedded/task-provider behavior, signal/failure tests, and documentation. | Every declared initializer reaches `READY` once per mutable module instance after dependencies/link/preparation and before that instance is observable on both VM modes. |
+| RCC-3: explicit module initialization — **implemented** | Implement initializer metadata, per-module-instance state, VM ready-state, deterministic ordering, at-most-one attempt, late-load transaction, embedded/task-provider behavior, signal/failure tests, and documentation. | Every declared initializer reaches `READY` once per mutable module instance after dependencies/link/preparation and before that instance is observable on both VM modes. |
 | RCC-4: production `rx_hash` | Build the small process-reentrant provider, publish the approved binary SHA-256 API directly through RXPA, ship dynamic and static forms, and connect it to dependency autoload. | Standard vectors, embedded zeroes, boundary lengths, both VMs, native package, install/package, concurrency, and `crexx-rag` integration pass. Retain the accepted performance evidence and remeasure only if the production path materially differs. |
 | RCC-5: split historical bundles | Extract and qualify the scalar math, stats, filesystem, platform, ID, hash/checksum, developer, and legacy surfaces. Update the component catalogue and packaging from actual transitive dependencies. | No broad `system` or `rxmath` status hides unrelated APIs; the `crexx` driver links only its narrow required providers. |
 | RCC-6: file-instruction replacement | Add `rx_io`, dual-lower/migrate the 14 `F*` forms, prove handle ownership and behavior, measure code/startup/call effects, and select the compatibility retirement point. | The call path is equivalent and acceptable; old opcodes are retained or tombstoned according to the approved format policy. |
 | RCC-7: measured instruction review | Evaluate existing RXAS `rxhash`, host utilities, then sockets/reflection only in the recorded order and as separate decisions. | Each family has a keep/convert disposition backed by use, performance, ownership, size, and compatibility evidence. |
 | RCC-8: release qualification | Cross-platform build/install/package, both VMs, native/embedded/late-load, security-path, failure, concurrency, and documentation closeout. | The product can explain and mechanically report every required provider and initializer; default installations work without manual runtime lists. |
 
-RCC-3 through RCC-8 are not automatically authorized by approval of RCC-1 and
-RCC-2. Each later production architecture or language/format decision remains
+RCC-4 through RCC-8 are not automatically authorized by approval of RCC-1
+through RCC-3. Each later production architecture or language/format decision
+remains
 subject to the repository's normal approval and, where performance-sensitive,
 first-Release-verdict gates.
 
@@ -458,8 +466,9 @@ The immediate decisions needed before implementation are:
    trusted dynamic fallback; leave exact metadata encoding to RCC-0.
 
 The RXBIN boundary rule, instruction-family disposition list and explicit
-callable-ID, **once-per-mutable-module-instance** initializer lifecycle no longer
-need approval at this gate. Source syntax and optional finalizers remain
-deferred. The 14 file operations remain the first conversion candidate, and
+callable-ID, **once-per-mutable-module-instance** initializer lifecycle and
+`name: initialiser` source syntax no longer need approval at this gate.
+Optional finalizers remain deferred. The 14 file operations remain the first
+conversion candidate, and
 existing RXAS `rxhash` remains pending its separate performance verdict;
 neither acceptance authorizes production work.

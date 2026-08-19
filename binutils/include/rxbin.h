@@ -70,11 +70,13 @@ enum rxbin007_feature_flags {
     RXBIN007_FEATURE_NATIVE_STEM = 1u << 2,
     RXBIN007_FEATURE_CHANNELS = 1u << 3,
     RXBIN007_FEATURE_NATIVE_PROVIDERS = 1u << 4,
+    RXBIN007_FEATURE_INITIALIZERS = 1u << 5,
     RXBIN007_SUPPORTED_FEATURES = RXBIN007_FEATURE_FIXED_CALLS |
                                    RXBIN007_FEATURE_FROZEN_PARSE |
                                    RXBIN007_FEATURE_NATIVE_STEM |
                                    RXBIN007_FEATURE_CHANNELS |
-                                   RXBIN007_FEATURE_NATIVE_PROVIDERS
+                                   RXBIN007_FEATURE_NATIVE_PROVIDERS |
+                                   RXBIN007_FEATURE_INITIALIZERS
 };
 
 typedef struct bin_space bin_space;
@@ -119,7 +121,7 @@ enum const_pool_type {
     STRING_CONST, BINARY_CONST, DECIMAL_CONST, FLOAT_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
     META_FUNC, META_REG, META_CONST, META_CLEAR,
     META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER, META_INLINE, META_SOURCE_STEP,
-    META_TRACE_EVENT, META_TASK_TARGET, META_PROVIDER
+    META_TRACE_EVENT, META_TASK_TARGET, META_PROVIDER, META_INITIALIZER
 };
 
 enum rxbin_provider_flags {
@@ -345,6 +347,15 @@ typedef struct meta_provider_constant {
     size_t provider;
     uint32_t flags;
 } meta_provider_constant;
+
+/* One source-declared module initializer. Records remain in declaration order
+ * in the module metadata chain. The callable is always a local no-argument
+ * bytecode procedure returning .void. */
+typedef struct meta_initializer_constant {
+    meta_entry base;
+    size_t symbol;
+    size_t function;
+} meta_initializer_constant;
 
 enum rxbin_section_flags {
     RXBIN_SECTION_INST_PACKED = 1u << 0,

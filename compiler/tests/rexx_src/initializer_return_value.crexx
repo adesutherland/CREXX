@@ -1,0 +1,5 @@
+options levelb
+namespace initializer_return_value
+
+boot: initialiser
+  return 1

@@ -350,6 +350,27 @@ static void update_interface_member_body_flag(ASTNode *node) {
 
 static void validate_task_callable_signature(ASTNode *node);
 
+static void validate_initializer_signature(ASTNode *node) {
+    ASTNode *args;
+
+    if (!node || !node->is_initializer) return;
+    args = ast_chld(node, ARGS, 0);
+    if (!args) {
+        for (args = node->sibling; args; args = args->sibling) {
+            if (args->node_type == ARGS) break;
+            if (args->node_type == PROCEDURE || args->node_type == TASK_DECL ||
+                args->node_type == CLASS_DEF || args->node_type == INTERFACE_DEF ||
+                args->node_type == METHOD || args->node_type == FACTORY) {
+                args = 0;
+                break;
+            }
+        }
+    }
+    if (args && args->child) {
+        mknd_err_unique(args, "INITIALISER_TAKES_NO_ARGUMENTS");
+    }
+}
+
 static void validate_levelg_concurrency_surface(Context *context,
                                                 ASTNode *node) {
     if (!context || !node || context->level == LEVELG) return;
@@ -749,6 +770,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                     add_ast(node,new_child);
                 }
                 validate_task_callable_signature(node);
+                validate_initializer_signature(node);
 
                 /* Make the new INSTRUCTIONS child */
                 new_child = ast_ft(context,INSTRUCTIONS);
@@ -1185,6 +1207,7 @@ static void structure_callable_body(Context *context,
     }
 
     args_node = ensure_args_child(context, node, add_empty_args);
+    validate_initializer_signature(node);
 
     instructions = ensure_instructions_child(context, node);
     last = 0;

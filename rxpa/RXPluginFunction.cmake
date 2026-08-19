@@ -27,8 +27,15 @@ endfunction()
 
 # Create a dynamic link module
 function(add_dynamic_plugin_target plugin_name)
-    # Assuming the rest of the source files are passed as additional arguments
-    set(sources ${ARGN})
+    # A test or alternate implementation may deliberately publish the stable
+    # identity of another provider while retaining a distinct CMake target.
+    cmake_parse_arguments(RXPA_PLUGIN "" "PROVIDER_ID" "" ${ARGN})
+    set(sources ${RXPA_PLUGIN_UNPARSED_ARGUMENTS})
+    if(RXPA_PLUGIN_PROVIDER_ID)
+        set(_crexx_plugin_id "${RXPA_PLUGIN_PROVIDER_ID}")
+    else()
+        set(_crexx_plugin_id "rx${plugin_name}")
+    endif()
 
     if(NOT sources)
         message(FATAL_ERROR "No source files provided for dynamic rxpa plugin ${plugin_name}")
@@ -38,8 +45,13 @@ function(add_dynamic_plugin_target plugin_name)
     add_library(${plugin_name} MODULE ${sources})
     _crexx_configure_rxpa_plugin_target(${plugin_name})
     target_compile_definitions(${plugin_name} PRIVATE BUILD_DLL)
-    target_compile_definitions(${plugin_name} PRIVATE "PLUGIN_ID=rx${plugin_name}")
-    set_target_properties(${plugin_name} PROPERTIES PREFIX "rx")
+    target_compile_definitions(${plugin_name} PRIVATE "PLUGIN_ID=${_crexx_plugin_id}")
+    if(RXPA_PLUGIN_PROVIDER_ID)
+        set_target_properties(${plugin_name} PROPERTIES
+                PREFIX "" OUTPUT_NAME "${_crexx_plugin_id}")
+    else()
+        set_target_properties(${plugin_name} PROPERTIES PREFIX "rx")
+    endif()
     set_target_properties(${plugin_name} PROPERTIES SUFFIX ".rxplugin")
     _crexx_set_dynamic_plugin_output(${plugin_name})
 

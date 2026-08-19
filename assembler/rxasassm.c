@@ -2727,8 +2727,31 @@ void rxasmete(Assembler_Context *context, Assembler_Token *kind, Assembler_Token
 
 /* Function Metadata */
 void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args) {
-    size_t entry = add_meta_entry(context,sizeof(meta_func_constant),META_FUNC);
+    size_t entry;
     size_t sentry;
+
+    if (strcmp((const char *)option->token_value.string, ".initializer") == 0) {
+        meta_initializer_constant *initializer;
+        size_t function;
+
+        if (strcmp((const char *)type->token_value.string, ".void") != 0 ||
+            ((const char *)args->token_value.string)[0] != 0) {
+            rxaserat(context, option,
+                     "Initializer metadata requires a no-argument .void callable");
+            return;
+        }
+        entry = add_meta_entry(
+                context, sizeof(meta_initializer_constant), META_INITIALIZER);
+        sentry = add_string_to_pool(
+                context, symbol, (char *)symbol->token_value.string);
+        function = add_func_to_pool(context, func);
+        initializer = (meta_initializer_constant *)(context->binary.const_pool + entry);
+        initializer->symbol = sentry;
+        initializer->function = function;
+        return;
+    }
+
+    entry = add_meta_entry(context,sizeof(meta_func_constant),META_FUNC);
 
     /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
     sentry = add_string_to_pool(context, symbol, (char*)symbol->token_value.string);
