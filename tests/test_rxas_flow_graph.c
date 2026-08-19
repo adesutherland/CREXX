@@ -998,6 +998,54 @@ static void test_policy_loop_identity(Assembler_Context *context) {
     fixture_destroy(&fixture);
 }
 
+static void test_policy_diamond_scaling(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[2];
+    const RxasFlowSignalAnalysis *analysis;
+    RxasFlowPolicyFact fact;
+    size_t diamond;
+    size_t return_instruction;
+    char alternate[32];
+    char join[32];
+    memset(&fixture, 0, sizeof(fixture));
+    for (diamond = 0; diamond < 36; diamond++) {
+        snprintf(alternate, sizeof(alternate), "policy_alt_%lu",
+                 (unsigned long)diamond);
+        snprintf(join, sizeof(join), "policy_join_%lu",
+                 (unsigned long)diamond);
+        operands[0] = fixture_label_ref(&fixture, alternate);
+        operands[1] = fixture_register(&fixture, 0);
+        fixture_op(&fixture, "brt", operands, 2);
+        operands[0] = fixture_register(&fixture, 1);
+        operands[1] = fixture_integer(&fixture, 0);
+        fixture_op(&fixture, "load", operands, 2);
+        operands[0] = fixture_label_ref(&fixture, join);
+        fixture_op(&fixture, "br", operands, 1);
+        fixture_label(&fixture, alternate);
+        operands[0] = fixture_register(&fixture, 1);
+        operands[1] = fixture_integer(&fixture, 1);
+        fixture_op(&fixture, "load", operands, 2);
+        fixture_label(&fixture, join);
+    }
+    fixture_op(&fixture, "ret", 0, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 14);
+    check(procedure != 0, "policy-diamond graph construction failed");
+    if (procedure) {
+        analysis = rxas_flow_require_signal_analysis(procedure, 14, 0);
+        return_instruction = rxas_flow_procedure_record(
+                procedure, 14, fixture.item_count - 1)->instruction_id;
+        check(analysis && rxas_flow_policy_at_instruction(
+                    analysis, 14, return_instruction, 0,
+                    "OBJECT_NOT_INITIALIZED", &fact) &&
+              fact.state == RXAS_FLOW_POLICY_INHERITED_UNKNOWN,
+              "shared policy diamonds did not retain inherited policy");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
 static RxasFlowRegister fixture_local_register(size_t number) {
     RxasFlowRegister reg;
     reg.register_class = RXAS_FLOW_REGISTER_LOCAL;
@@ -3608,6 +3656,7 @@ int main(void) {
     test_call_boundary_and_unknown(&context);
     test_policy_stack_uncertainty(&context);
     test_policy_loop_identity(&context);
+    test_policy_diamond_scaling(&context);
     test_sparse_storage_and_components(&context);
     test_attribute_path_storage(&context);
     test_argument_storage_and_call_effects(&context);

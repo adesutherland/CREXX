@@ -44,6 +44,7 @@ l8dostart:
    .traceevent "A" 6 "R" "I" "r" 4 7 7 0 "tmp" ""
    .srcstep 8 8 17 "inline_test_nested_scope_if_do.crexx" 16 5 15 "    return tmp"
    .traceevent "V" 6 "R" "I" "r" 4 13 13 0 "tmp" ""
+   .meta "inline_test_nested_scope_if_do.main.tmp"
    br l52bexprend
    .meta "inline_test_nested_scope_if_do.main.tmp"
 l57iffalse:

@@ -73,18 +73,21 @@ l86bexprend:
 
 describeBox() .locals=3
    .meta "inline_test_object_return_expr.describebox"="b" ".string" describeBox() "value=.box"
-   .srcstep 34 34 17 "inline_test_object_return_expr.crexx" 15 1 33 "describeBox: procedure = .string"
+   .srcstep 35 35 17 "inline_test_object_return_expr.crexx" 15 1 33 "describeBox: procedure = .string"
    numsci 18,1,1
    .srcstep 29 29 17 "inline_test_object_return_expr.crexx" 16 7 19 "  arg value = .Box"
    .meta "inline_test_object_return_expr.describebox.value"="b" ".box" a1
-   .srcstep 33 33 17 "inline_test_object_return_expr.crexx" 17 3 23 "  return value.getName()"
-   .srcstep 32 32 17 "inline_test_object_return_expr.crexx" 17 10 15 "  return value.getName()"
+   .srcstep 34 34 17 "inline_test_object_return_expr.crexx" 17 3 23 "  return value.getName()"
+   .srcstep 33 33 17 "inline_test_object_return_expr.crexx" 17 10 15 "  return value.getName()"
    .srcstep 30 30 33 "inline_test_object_return_expr.crexx" 17 10 15 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "a" 1 30 30 0 "value" ""
    .traceevent "A" 6 "R" "O" "a" 1 30 30 0 "§this" ""
-   .srcstep 31 31 17 "inline_test_object_return_expr.crexx" 28 5 16 "    return name"
+   .srcstep 31 31 6 "inline_test_object_return_expr.crexx" 27 3 28 "  getName: method = .string"
+   .traceevent "V" 6 "R" "O" "a" 1 34 34 0 "§this" ""
+   assertinitialized a1
+   .srcstep 32 32 17 "inline_test_object_return_expr.crexx" 28 5 16 "    return name"
    linkattr1 r1,a1,1
-   .traceevent "V" 6 "R" "S" "r" 1 33 33 0 "name" ""
+   .traceevent "V" 6 "R" "S" "r" 1 34 34 0 "name" ""
    scopy r2,r1
    unlinkbr r1,l115bexprend
 l115bexprend:
@@ -93,32 +96,32 @@ l115bexprend:
 
 §inline_test_object_return_expr.box.§factory() .locals=3
    .meta "inline_test_object_return_expr.box.§factory"="b" ".inline_test_object_return_expr..box" §inline_test_object_return_expr.box.§factory() "initial=.string"
-   .srcstep 38 38 17 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
+   .srcstep 39 39 17 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_return_expr.box"
    numsci 18,1,1
-   .srcstep 35 35 17 "inline_test_object_return_expr.crexx" 23 9 26 "    arg initial = .string"
+   .srcstep 36 36 17 "inline_test_object_return_expr.crexx" 23 9 26 "    arg initial = .string"
    .meta "inline_test_object_return_expr.box.§factory.initial"="b" ".string" a1
    .meta "inline_test_object_return_expr.box.§factory.§factory"="b" ".box" r1
-   .srcstep 36 36 17 "inline_test_object_return_expr.crexx" 24 5 19 "    name = initial"
-   .traceevent "V" 6 "R" "S" "a" 1 36 36 0 "initial" ""
+   .srcstep 37 37 17 "inline_test_object_return_expr.crexx" 24 5 19 "    name = initial"
+   .traceevent "V" 6 "R" "S" "a" 1 37 37 0 "initial" ""
    linkattr1 r2,r1,1
    scopy r2,a1
    unlink r2
-   .srcstep 37 37 17 "inline_test_object_return_expr.crexx" 25 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 1 37 37 0 "§factory" ""
+   .srcstep 38 38 17 "inline_test_object_return_expr.crexx" 25 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 38 38 0 "§factory" ""
    ret r1
    .meta "inline_test_object_return_expr.box.§factory.initial"
    .meta "inline_test_object_return_expr.box.§factory.§factory"
 
 §inline_test_object_return_expr.box.getname() .locals=2
    .meta "inline_test_object_return_expr.box.getname"="b" ".string" §inline_test_object_return_expr.box.getname() ""
-   .srcstep 40 40 17 "inline_test_object_return_expr.crexx" 27 3 28 "  getName: method = .string"
+   .srcstep 41 41 17 "inline_test_object_return_expr.crexx" 27 3 28 "  getName: method = .string"
    assertinitialized a1
    numsci 18,1,1
-   .srcstep 39 39 17 "inline_test_object_return_expr.crexx" 28 5 16 "    return name"
+   .srcstep 40 40 17 "inline_test_object_return_expr.crexx" 28 5 16 "    return name"
    .meta "inline_test_object_return_expr.box.getname.§this"="b" ".box" a1
    linkattr1 r1,a1,1
-   .traceevent "V" 6 "R" "S" "r" 1 39 39 0 "name" ""
+   .traceevent "V" 6 "R" "S" "r" 1 40 40 0 "name" ""
    ret r1
    .meta "inline_test_object_return_expr.box.getname.§this"

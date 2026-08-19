@@ -1,0 +1,49 @@
+options levelb comments_dash
+
+main: procedure = .int
+  probe = .CrossedLoopCleanup()
+  iterated = probe.iterateOuter()
+  left = probe.leaveOuter()
+
+  say "iterate="iterated "leave="left "outer="probe.outerLimit() "inner="probe.innerLimit()
+  if iterated <> 3 | left <> 1 then return 1
+  if probe.outerLimit() <> 3 | probe.innerLimit() <> 2 then return 1
+  say "PASS: structured exits clean crossed loops"
+  return 0
+
+CrossedLoopCleanup: class
+  outer_limit_ = .int
+  inner_limit_ = .int
+
+  *: factory
+    outer_limit_ = 3
+    inner_limit_ = 2
+    return
+
+  iterateOuter: method = .int
+    total = 0
+    do outer = 1 to outer_limit_
+      do inner = 1 to inner_limit_
+        total = total + 1
+        iterate outer
+      end
+      total = total + 100
+    end
+    return total
+
+  leaveOuter: method = .int
+    total = 0
+    do outer = 1 to outer_limit_
+      do inner = 1 to inner_limit_
+        total = total + 1
+        leave outer
+      end
+      total = total + 100
+    end
+    return total
+
+  outerLimit: method = .int
+    return outer_limit_
+
+  innerLimit: method = .int
+    return inner_limit_

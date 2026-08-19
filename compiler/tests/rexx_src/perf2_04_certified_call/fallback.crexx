@@ -1,5 +1,6 @@
 options levelb
 import rxfnsb
+namespace perf2_04_certified_fallback expose dynamic_fallback
 
 source = "René日🙂"
 start = 2

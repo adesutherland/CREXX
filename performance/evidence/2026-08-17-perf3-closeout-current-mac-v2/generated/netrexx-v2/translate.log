@@ -1,0 +1,13 @@
+[33mNetRexx portable processor[0m [34m5.10-GA[0m build 18-20260320-1410
+Copyright (c) RexxLA, 2011,2026.   All rights reserved.
+Parts Copyright (c) IBM Corporation, 1995,2008.
+Program base64_roundtrip_v2.nrx
+  === class base64_roundtrip_v2 ===
+    function main(String[])
+  26 +++     loop iteration=1 to repetitions
+     +++          ^^^^^^^^^
+     +++ [34mWarning[0m: Variable is set but not used
+    function encode(byte[])
+    function decode(String)
+    function base64Digit(Rexx)
+Compilation of '[33mbase64_roundtrip_v2.nrx[0m' successful [[34mone warning[0m]

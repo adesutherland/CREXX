@@ -1,0 +1,2 @@
+marker=2
+PASS: signal unwinds nested handlers

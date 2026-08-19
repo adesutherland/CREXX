@@ -1,0 +1,10 @@
+# Stage 5 pre-release current-product Apple timing scorecard.
+# Frozen cREXX commit: 81f15918676d; fresh Release build; CREXX_VM_PROFILING=OFF.
+# AWFY controls: smarr/are-we-fast-yet 74306fec151070fd07157cefeacf19e7e0bcdc89.
+# All aggregate flags are deliberately no. v3 aggregate membership differs after the
+# former NetRexx Base64 row was classified as Java/JVM control; named aggregate views
+# are computed explicitly in the report rather than silently pooled by this runner.
+# RSS noise append: zero warmups, ten additional observations for flagged NetRexx cells.
+crexx-cross-runtime-matrix|1
+s5-permute-netrexx|Permute|netrexx|netrexx|decimal-rexx-port|A|no|no|5000|PASS: AWFY Permute NetRexx decimal port||/usr/bin/java;-cp;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/netrexx-classes:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar;awfy_permute;5000
+s5-rexxcps-netrexx|RexxCPS|netrexx|netrexx|disclosed-2.2n|A|no|no|1000-clauses|PASS: RexxCPS 2.2n NetRexx disclosed adaptation|Performance:|/usr/bin/java;-cp;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/netrexx-classes:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar;rexxcps_2_2n

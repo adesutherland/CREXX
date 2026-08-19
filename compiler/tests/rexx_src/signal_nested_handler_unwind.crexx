@@ -1,0 +1,24 @@
+options levelb comments_dash
+
+main: procedure = .int
+  marker = 0
+  do
+    do
+      do
+        data = '01'x as .binary
+        ignored = <at..binary>(2, 1) data
+      on signal division_by_zero
+        marker = 100
+      end
+    on signal out_of_range
+      marker = 1
+    end
+    denominator = marker - 1
+    if marker <> 100 then ignored_number = 1 / denominator
+  on signal division_by_zero
+    marker = 2
+  end
+  say "marker="marker
+  if marker <> 2 then return 1
+  say "PASS: signal unwinds nested handlers"
+  return 0

@@ -112,7 +112,11 @@ walker_result exit_plan_walker(walker_direction direction, ASTNode* node, void *
 /* inline */
 walker_result identify_inlinable_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result inline_procedure_walker(walker_direction direction, ASTNode* node, void *payload);
+void rxcp_inline_prepare(Context *context);
+void rxcp_inline_prepare_quiet(Context *context);
 int rxcp_inline_pass(Context *context);
+int rxcp_inline_prepared_pass(Context *context);
+int rxcp_inline_scalar_accessor_pass(Context *context);
 void rxcp_inline_prune(Context *context, ASTNode *tree);
 char *rxcp_inline_export_payload(Context *context, ASTNode *callable);
 int rxcp_inline_payload_is_supported(const char *payload);

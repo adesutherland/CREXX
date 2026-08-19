@@ -497,6 +497,18 @@ string(APPEND RXC_BINARY_LITERAL_LOAD_CONTENT
        "if(NOT opt_rxas_out MATCHES [=[load r[0-9]+,\"AB\"]=])\n"
        "  message(FATAL_ERROR \"Optimized binary-to-string constant cast did not fold to a string load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
        "endif()\n"
+       "if(opt_rxas_out MATCHES [=[ret[ \\t]+0x]=])\n"
+       "  message(FATAL_ERROR \"Optimized binary constant return used an unsupported RXAS immediate operand.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
+       "endif()\n"
+       "if(opt_rxas_out MATCHES [=[ret[ \\t]+[-+0-9.]+d]=])\n"
+       "  message(FATAL_ERROR \"Optimized decimal constant return used an unsupported RXAS immediate operand.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
+       "endif()\n"
+       "if(NOT opt_rxas_out MATCHES [=[load r[0-9]+,0xaabb]=])\n"
+       "  message(FATAL_ERROR \"Optimized binary constant return was not materialized in a register.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
+       "endif()\n"
+       "if(NOT opt_rxas_out MATCHES [=[load r[0-9]+,12\\.5d]=])\n"
+       "  message(FATAL_ERROR \"Optimized decimal constant return was not materialized in a register.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
+       "endif()\n"
        "if(opt_rxas_out MATCHES [=[0x3078]=])\n"
        "  message(FATAL_ERROR \"Optimized binary constants were re-encoded as ASCII hex text.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{opt_rxas_out}\")\n"
        "endif()\n")
@@ -3309,6 +3321,22 @@ set_tests_properties(inline_reference_accessors_import_opt PROPERTIES
         LABELS "linked_opt;reference;receiver;imports"
         FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 
+add_test(NAME inline_scalar_accessors_import_opt
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DDEP_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_scalar_accessors_dep.crexx
+                 -DMAIN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_scalar_accessors_main.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_scalar_accessors_import_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_scalar_accessors_import_opt.cmake)
+set_tests_properties(inline_scalar_accessors_import_opt PROPERTIES
+        LABELS "linked_opt;scalar-access;receiver;signals;interfaces;imports"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
 set(INLINE_COMPUTED_RECEIVER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_test_computed_receiver_copyback_opt_rewrites.cmake")
 set(INLINE_COMPUTED_RECEIVER_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_test_computed_receiver_copyback_opt_ws\")\n")
 string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
@@ -3325,6 +3353,39 @@ add_test(NAME inline_test_computed_receiver_copyback_opt_rewrites
          COMMAND ${CMAKE_COMMAND} -P "${INLINE_COMPUTED_RECEIVER_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(inline_test_computed_receiver_copyback_opt_rewrites PROPERTIES LABELS "linked_opt")
+
+add_test(NAME inline_loop_bound_early_return_cleanup_opt_rewrites
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_test_loop_bound_early_return_cleanup.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_loop_bound_early_return_cleanup_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_loop_bound_early_return_cleanup.cmake)
+set_tests_properties(inline_loop_bound_early_return_cleanup_opt_rewrites PROPERTIES
+        LABELS "compiler;inlining;correctness;linked_opt"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(NAME structured_exit_crossed_loop_cleanup_opt_rewrites
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/structured_exit_crossed_loop_cleanup.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/structured_exit_crossed_loop_cleanup_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_structured_exit_crossed_loop_cleanup.cmake)
+set_tests_properties(structured_exit_crossed_loop_cleanup_opt_rewrites PROPERTIES
+        LABELS "compiler;flow;correctness;linked_opt"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(NAME signal_crossed_loop_cleanup_opt_rewrites
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/signal_crossed_loop_cleanup.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/signal_crossed_loop_cleanup_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_signal_crossed_loop_cleanup.cmake)
+set_tests_properties(signal_crossed_loop_cleanup_opt_rewrites PROPERTIES
+        LABELS "compiler;flow;signals;correctness;linked_opt"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 
 add_crexx_run_args_test(test_parse_arg_filename rexx_src/test_parse_arg_filename.crexx demo.rexx)
 add_crexx_run_args_test(implicit_main_arg_compat rexx_src/implicit_main_arg_compat.crexx alpha beta)
@@ -3425,7 +3486,37 @@ add_crexx_run_test(inline_test_member_receiver_expr rexx_src/inline_test_member_
 add_crexx_run_test(inline_test_named_factory_selector rexx_src/inline_test_named_factory_selector.crexx)
 add_crexx_run_test(inline_test_factory_arg_scope rexx_src/inline_test_factory_arg_scope.crexx)
 add_crexx_run_test(inline_test_computed_receiver_copyback rexx_src/inline_test_computed_receiver_copyback.crexx)
+add_crexx_run_test(inline_test_loop_bound_early_return_cleanup rexx_src/inline_test_loop_bound_early_return_cleanup.crexx)
+add_crexx_run_test(structured_exit_crossed_loop_cleanup rexx_src/structured_exit_crossed_loop_cleanup.crexx)
+add_crexx_run_test(signal_crossed_loop_cleanup rexx_src/signal_crossed_loop_cleanup.crexx)
+add_crexx_run_test(signal_nested_handler_unwind rexx_src/signal_nested_handler_unwind.crexx)
 add_crexx_run_test(inline_test_mutating_method_scalar_attr_return rexx_src/inline_test_mutating_method_scalar_attr_return.crexx)
+add_test(NAME inline_late_profitability_guard
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_late_profitability_guard.crexx
+                 -DINCLUDE_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_late_profitability_guard_ws
+                 -P ${CMAKE_SOURCE_DIR}/cmake/CheckInlineLateProfitability.cmake)
+set_tests_properties(inline_late_profitability_guard PROPERTIES
+        LABELS "compiler;inlining;performance;regression"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+add_crexx_run_test(flow_copy_fixed_point_inline_result rexx_src/flow_copy_fixed_point_inline_result.crexx)
+add_test(
+        NAME flow_copy_fixed_point_inline_result_contract
+        COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/flow_copy_fixed_point_inline_result.crexx
+                -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/flow_copy_fixed_point_inline_result_contract_ws
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/flow_copy_fixed_point_inline_result_contract.cmake
+)
+set_tests_properties(flow_copy_fixed_point_inline_result_contract
+                     PROPERTIES LABELS "compiler;flow;performance")
 add_crexx_run_test(inline_test_ref_opt rexx_src/inline_test_ref_opt.crexx)
 add_crexx_run_test(inline_test_ref_indexed rexx_src/inline_test_ref_indexed.crexx)
 add_crexx_run_test(inline_test_ref_stem rexx_src/inline_test_ref_stem.crexx)
@@ -3460,8 +3551,30 @@ add_crexx_run_test(inline_test_array_return_temp rexx_src/inline_test_array_retu
 add_crexx_run_test(inline_test_block_expr_live_sibling rexx_src/inline_test_block_expr_live_sibling.crexx)
 add_crexx_run_test(inline_test_imported_bif_block_expr_lifetime rexx_src/inline_test_imported_bif_block_expr_lifetime.crexx)
 add_crexx_run_test(attr_array_call_result_lifetime rexx_src/attr_array_call_result_lifetime.crexx)
+add_crexx_run_test(inline_indexed_attr_factory_lifetime
+        rexx_src/inline_indexed_attr_factory_lifetime.crexx)
+add_test(NAME inline_indexed_attr_factory_lifetime_shape
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_indexed_attr_factory_lifetime.crexx
+                 -DINCLUDE_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_indexed_attr_factory_lifetime_shape_ws
+                 -P ${CMAKE_SOURCE_DIR}/cmake/CheckInlineIndexedAttrFactoryLifetime.cmake)
+set_tests_properties(inline_indexed_attr_factory_lifetime_shape PROPERTIES
+        LABELS "compiler;inlining;register-lifetime;regression")
 add_crexx_run_test(inline_test_complex_lhs_assign rexx_src/inline_test_complex_lhs_assign.crexx)
 add_crexx_run_test(inline_test_binary_arg_return rexx_src/inline_test_binary_arg_return.crexx)
+add_crexx_run_args_test(inline_binary_formal_string_conversion
+        rexx_src/inline_binary_formal_string_conversion.crexx ABC)
+add_test(NAME inline_binary_formal_string_conversion_shape
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_binary_formal_string_conversion.crexx
+                 -DINCLUDE_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_binary_formal_string_conversion_shape_ws
+                 -P ${CMAKE_SOURCE_DIR}/cmake/CheckInlineBinaryFormalConversion.cmake)
+set_tests_properties(inline_binary_formal_string_conversion_shape PROPERTIES
+        LABELS "compiler;inlining;binary;conversion;regression")
 add_crexx_run_test(inline_test_binary_class_attr_assign rexx_src/inline_test_binary_class_attr_assign.crexx)
 add_test(NAME inline_test_binary_class_attr_assign_shape
          COMMAND ${CMAKE_COMMAND}

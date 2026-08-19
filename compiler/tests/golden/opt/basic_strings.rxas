@@ -19,54 +19,26 @@ main() .locals=5
    say "11"
    .srcstep 4 4 17 "basic_strings.crexx" 12 1 20 "say substr(c, 1, 5)"
    say "Hello"
-   .srcstep 13 13 17 "basic_strings.crexx" 13 1 20 "say pos(\"World\", c)"
-   .srcstep 12 12 17 "basic_strings.crexx" 13 5 8 "say pos(\"World\", c)"
-   .meta "basic_strings.main.found_position"="b" ".int" r0
-   .srcstep 5 5 25 "pos.crexx" 44 3 24 "  found_position = .int"
-   null r0
-   .srcstep 6 6 33 "basic_strings.crexx" 13 8 8 "say pos(\"World\", c)"
-   load r2,"World"
-   .traceevent "L" 4 "R" "S" "r" 2 6 6 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 2 6 6 0 "needle" ""
-   .srcstep 7 7 33 "basic_strings.crexx" 13 8 8 "say pos(\"World\", c)"
-   load r1,"Hello World"
-   .traceevent "L" 4 "R" "S" "r" 1 7 7 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 1 7 7 0 "haystack" ""
-   .traceevent "V" 6 "R" "S" "r" 2 13 13 0 "needle" ""
-   seq r3,r2,""
-   .traceevent "O" 4 "R" "B" "r" 3 13 13 0 "" ""
-   brt l356orend,r3
-   .traceevent "V" 6 "R" "S" "r" 1 13 13 0 "haystack" ""
-   seq r3,r1,""
-   .traceevent "O" 4 "R" "B" "r" 3 13 13 0 "" ""
-l356orend:
-   .traceevent "O" 4 "R" "B" "r" 3 13 13 0 "" ""
-   brf l355iffalse,r3
-   .srcstep 8 8 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
-   load r4,0
-   .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
-   br l334bexprend
-l355iffalse:
-   .srcstep 9 9 25 "pos.crexx" 50 3 25 "  found_position = start"
-   load r0,1
-   .traceevent "L" 4 "R" "I" "r" 0 9 9 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 0 9 9 0 "found_position" ""
-   .srcstep 10 10 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
-   .traceevent "V" 6 "R" "I" "r" 0 13 13 0 "found_position" ""
-   .traceevent "V" 6 "R" "S" "r" 2 13 13 0 "needle" ""
-   .traceevent "V" 6 "R" "S" "r" 1 13 13 0 "haystack" ""
-   strpos r0,r2,r1
-   .srcstep 11 11 25 "pos.crexx" 52 3 24 "  return found_position"
-   .traceevent "V" 6 "R" "I" "r" 0 13 13 0 "found_position" ""
-   icopy r4,r0
-   br l334bexprend
-l334bexprend:
-   .meta "basic_strings.main.found_position"
+   .srcstep 5 5 17 "basic_strings.crexx" 13 1 20 "say pos(\"World\", c)"
+   load r1,"World"
+   .traceevent "L" 4 "R" "S" "r" 1 5 5 0 "" ""
+   load r2,"Hello World"
+   .traceevent "L" 4 "R" "S" "r" 2 5 5 0 "" ""
+   load r0,3
+   settp r1,768
+   settp r2,256
+   settpcall r4,rxfnsb.pos(),r0,r3,0
    itos r4
+   .traceevent "F" 4 "R" "S" "r" 4 5 5 0 "pos" ""
    say r4
-   .srcstep 14 14 17 "basic_strings.crexx" 14 1 7 "return"
+   .srcstep 6 6 17 "basic_strings.crexx" 14 1 7 "return"
    ret
    .meta "basic_strings.main.a"
    .meta "basic_strings.main.b"
    .meta "basic_strings.main.c"
    .meta "basic_strings.main.d"
+
+/* Imported Declaration from file: pos@library.rxbin */
+
+rxfnsb.pos() .expose=rxfnsb.pos
+   .meta "rxfnsb.pos"="b" ".int" rxfnsb.pos() "needle=.string,haystack=.string,?start=.int"

@@ -45,6 +45,7 @@ l8dostart:
    imult r4,r3,2
    .traceevent "O" 4 "R" "I" "r" 4 13 13 0 "" ""
    icopy r3,r4
+   .meta "inline_test_nested_scope_exposed_call.main.tmp"
    br l60bexprend
    .meta "inline_test_nested_scope_exposed_call.main.tmp"
    .srcstep 11 11 17 "inline_test_nested_scope_exposed_call.crexx" 18 3 11 "  return 0"

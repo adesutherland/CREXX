@@ -1,0 +1,55 @@
+utc=2026-08-18T16:55:48Z
+{ 2.11 2.30 2.29 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+79485 /bin/zsh -c evidence_root=/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-08-18-decimal-01-libmpdec-screen
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g custom
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxtvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|ctest|cmake --build|ninja|make( |$)' || true
+} >"$evidence_root/post-state.txt" 2>&1
+printf '%s\n' 'driver stdout:'
+cat "$evidence_root/driver.stdout.txt"
+printf '%s\n' 'driver stderr:'
+cat "$evidence_root/driver.stderr.txt"
+printf '%s\n' 'summary:'
+sed -n '1,40p' "$evidence_root/l1/summary.csv"
+printf '%s\n' 'ratios:'
+sed -n '1,80p' "$evidence_root/l1/ratios.csv"
+printf '%s\n' 'post state:'
+cat "$evidence_root/post-state.txt"

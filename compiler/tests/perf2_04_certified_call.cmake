@@ -42,9 +42,22 @@ endfunction()
 function(check_fallback_rxas label path optimized)
     file(READ "${path}" rxas_text)
     if(optimized)
-        foreach(op strupper strlower strlen substring padstr fndnblnk fndblnk)
-            if(NOT rxas_text MATCHES "[ \t]${op}[ \t]")
-                message(FATAL_ERROR "${label} removed uncertified ${op} dynamic fallback:\n${rxas_text}")
+        set(dynamic_fallbacks
+            "upper~strupper"
+            "lower~strlower"
+            "length~strlen"
+            "substr~substring"
+            "left~padstr"
+            "right~padstr"
+            "word~(fndnblnk|fndblnk)")
+        foreach(fallback IN LISTS dynamic_fallbacks)
+            string(REPLACE "~" ";" fallback_fields "${fallback}")
+            list(GET fallback_fields 0 bif)
+            list(GET fallback_fields 1 opcode_pattern)
+            if(NOT rxas_text MATCHES "[ \t]${opcode_pattern}[ \t]" AND
+               NOT rxas_text MATCHES "call[^\n]*rxfnsb\\.${bif}\\(\\)")
+                message(FATAL_ERROR
+                    "${label} removed uncertified ${bif} dynamic inline/call fallback:\n${rxas_text}")
             endif()
         endforeach()
         foreach(bif upper lower length left right substr word)
@@ -147,7 +160,8 @@ run_checked("bounded-result fallback compile"
     -o "${WORK_DIR}/huge_width" "${HUGE_WIDTH_SOURCE}")
 file(READ "${WORK_DIR}/huge_width.rxas" huge_width_rxas)
 if(NOT huge_width_rxas MATCHES "left\\.crexx" OR
-   NOT huge_width_rxas MATCHES "[ \t]padstr[ \t]")
+   (NOT huge_width_rxas MATCHES "[ \t]padstr[ \t]" AND
+    NOT huge_width_rxas MATCHES "call[^\n]*rxfnsb\\.left\\(\\)"))
     message(FATAL_ERROR "bounded compiler-result policy did not retain LEFT fallback:\n${huge_width_rxas}")
 endif()
 

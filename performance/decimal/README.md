@@ -27,9 +27,28 @@ Adrian subsequently authorized repair before further work and accepted the
 focused verdict on 2026-08-05. It is retained at
 [`2026-08-05-decimal-01-numctx-repair-verdict`](../evidence/2026-08-05-decimal-01-numctx-repair-verdict/):
 Debug and ordinary profiling-off Release each pass 9/9 focused tests and 6/6
-observable VM/provider cells. It contains no timing. Gate 1 baseline
-preparation is now open, but its first performance cell still requires a newly
-confirmed exclusive-host reservation.
+observable VM/provider cells. It contains no timing.
+
+The 2026-08-18 current-provider capture is retained at
+[`2026-08-18-decimal-01-gate1-current-provider`](../evidence/2026-08-18-decimal-01-gate1-current-provider/).
+The isolated libmpdec 4.0.1 candidate and implementation double-check are at
+[`2026-08-18-decimal-01-libmpdec-screen`](../evidence/2026-08-18-decimal-01-libmpdec-screen/).
+Libmpdec passed the focused semantic and raw-copy lifecycle proof but failed
+the L1 progression gate: arithmetic and conversion were materially slower and
+only comparison improved by at least 15%. It therefore did not proceed to
+L2/L3 and did not change the production provider or ABI.
+
+The remaining D2 tuned-decNumber and D3 fixed-34 decQuad calibration is at
+[`2026-08-18-decimal-01-stage3-calibration`](../evidence/2026-08-18-decimal-01-stage3-calibration/).
+All 48 D2 builds passed their provider contracts, but no complete build showed
+credible timing headroom. D3 passed its admitted 9/18 semantic and lifecycle
+boundary but was materially slower in adapter and direct-core arithmetic.
+Stage 3 therefore closes as no change: retain the current 8/64/64
+`mc_decimal`; no production provider, plugin ABI or hybrid design is selected.
+The maintained Level B decision-table builder is
+[`summarize_stage3_calibration.crexx`](summarize_stage3_calibration.crexx).
+The enduring no-repeat lessons and explicit reopening triggers are recorded in
+[`performance/DECISIONS.md`](../DECISIONS.md).
 
 The qualified Gate 1 boundary and exact checksums are recorded in
 [`GATE1-CELL-MATRIX.md`](GATE1-CELL-MATRIX.md). Those independently authored
@@ -50,6 +69,6 @@ The permanent boundary is:
   `interpreter/rxvmplugin/rxvmplugins/` and is changed only after explicit
   approval.
 
-The Mac is a shared performance host. Correctness builds may proceed, but no
-timing session starts until Adrian has been asked to clear and reserve the
-machine and has confirmed that reservation.
+The Mac is a shared performance host. Correctness builds may proceed, but any
+new timing session requires a fresh clear-host confirmation; the retained
+2026-08-18 sessions record Adrian's confirmation and pre/post host state.

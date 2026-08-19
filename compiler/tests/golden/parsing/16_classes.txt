@@ -248,9 +248,6 @@ DEBUG_INLINE_FAILCLOSED §factory rule=inline.expression.block @ 16_classes.crex
 DEBUG_INLINE §factory @ 16_classes.crexx:10:4 - accept: nodes=12 returns=1 final_return=1 cutoff=300
 DEBUG_INLINE getvalue @ 16_classes.crexx:15:4 - accept: nodes=6 returns=1 final_return=1 cutoff=300
 DEBUG_INLINE setvalue @ 16_classes.crexx:18:4 - accept: nodes=11 returns=1 final_return=1 cutoff=300
-DEBUG_INLINE §factory @ 16_classes.crexx:10:4 - accept: nodes=12 returns=1 final_return=1 cutoff=300
-DEBUG_INLINE getvalue @ 16_classes.crexx:15:4 - accept: nodes=6 returns=1 final_return=1 cutoff=300
-DEBUG_INLINE setvalue @ 16_classes.crexx:18:4 - accept: nodes=11 returns=1 final_return=1 cutoff=300
 
 --- STAGE_FINAL ---
 REXX_UNIVERSE : "" (0:1) [Type: .void]
@@ -280,6 +277,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
               ASSIGN : "var" (3:4) [Type: .object]
                 VAR_TARGET : "\xc2\xa7this" (3:4) [Type: .object]
                 VAR_SYMBOL : "var" (3:4) [Type: .object]
+              ASSEMBLER : "assertinitialized" (15:4) [Type: .unknown]
+                VAR_SYMBOL : "\xc2\xa7this" (15:4) [Type: .object]
               LEAVE_WITH : "leave" (16:8) [Type: .int]
                 VAR_SYMBOL : "val" (16:15) [Type: .int]
         RETURN : "return" (5:0) [Type: .void]
@@ -326,10 +325,10 @@ Scope [0]: Unnamed
     Scope [2]: main
       var (Variable) -> .myclass
       Scope [3]: Unnamed
+        §this (Variable) -> .myclass
+      Scope [3]: Unnamed
         initial_value (Constant) -> .int
         §factory (Variable) -> .myclass
-      Scope [3]: Unnamed
-        §this (Variable) -> .myclass
     Scope [2]: myclass
       getvalue (Function) -> .int
       setvalue (Function) -> .void

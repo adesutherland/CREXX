@@ -1,0 +1,521 @@
+sample_id,stream,line_number,text
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-candidate-common18-arithmetic-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-common18-arithmetic-mpd-l1-mc-common18-arithmetic-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-candidate-classic9-arithmetic-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-classic9-arithmetic-mpd-l1-mc-classic9-arithmetic-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-candidate-common18-conversion-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-common18-conversion-mpd-l1-mc-common18-conversion-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-candidate-classic9-conversion-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=conversion iterations=20000000 checksum=245000000
+timing-DECIMAL-MPD-classic9-conversion-mpd-l1-mc-classic9-conversion-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-candidate-common18-compare-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-common18-compare-mpd-l1-mc-common18-compare-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-candidate-classic9-compare-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=compare iterations=100000000 checksum=700000000
+timing-DECIMAL-MPD-classic9-compare-mpd-l1-mc-classic9-compare-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-candidate-common18-copy-clear-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-common18-copy-clear-mpd-l1-mc-common18-copy-clear-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=3840000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-candidate-classic9-copy-clear-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=copy-clear iterations=60000000 checksum=2640000000
+timing-DECIMAL-MPD-classic9-copy-clear-mpd-l1-mc-classic9-copy-clear-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-candidate-common18-sync-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=sync iterations=1000000000 checksum=18000000000
+timing-DECIMAL-MPD-common18-sync-mpd-l1-mc-common18-sync-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-5,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-5,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-6,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-6,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-7,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-7,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-8,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-8,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-9,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-9,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-10,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-10,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-11,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-11,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-candidate-classic9-sync-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-12,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=sync iterations=1000000000 checksum=9000000000
+timing-DECIMAL-MPD-classic9-sync-mpd-l1-mc-classic9-sync-recorded-12,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload

@@ -1,0 +1,153 @@
+options levelb
+import rxfnsb
+
+main: procedure = .int
+  arg args = .string[]
+  blocks = .int[]
+  workloads = .string[]
+  vms = .string[]
+  variants = .string[]
+  rounds = .int[]
+  elapsed = .float[]
+
+  do file_index = 1 to args[0]
+    path = args[file_index]
+    if \lines(path) then do
+      say "ERROR: unreadable samples" path
+      return 1
+    end
+    header = linein(path)
+    do while lines(path)
+      fields = split_delimited(linein(path), ",")
+      if fields[0] < 18 | fields[11] <> "recorded" | fields[18] <> "pass" then iterate
+      next = blocks[0] + 1
+      blocks[next] = file_index
+      workloads[next] = fields[3]
+      vms[next] = fields[6]
+      variants[next] = fields[7]
+      rounds[next] = fields[12]
+      elapsed[next] = fields[15]
+    end
+    call linein path
+  end
+
+  wanted_workloads = .string[]
+  wanted_workloads[1] = "DeltaBlue"
+  wanted_workloads[2] = "CD"
+  wanted_workloads[3] = "Richards"
+  wanted_workloads[4] = "List"
+  wanted_workloads[5] = "Sieve"
+  wanted_workloads[6] = "RexxCPS"
+  wanted_vms = .string[]
+  wanted_vms[1] = "rxtvm"
+  wanted_vms[2] = "rxbvm"
+
+  say "workload,vm,n,min_percent,q1_percent,median_percent,q3_percent,max_percent,favorable,mean_percent,mean_ci95_low,mean_ci95_high"
+  do workload_index = 1 to wanted_workloads[0]
+    do vm_index = 1 to wanted_vms[0]
+      changes = .float[]
+      do base_index = 1 to blocks[0]
+        if workloads[base_index] <> wanted_workloads[workload_index] | ,
+            vms[base_index] <> wanted_vms[vm_index] | variants[base_index] <> "H0" then iterate
+        do candidate_index = 1 to blocks[0]
+          if blocks[candidate_index] = blocks[base_index] & ,
+              workloads[candidate_index] = workloads[base_index] & ,
+              vms[candidate_index] = vms[base_index] & ,
+              variants[candidate_index] = "H1-T20" & ,
+              rounds[candidate_index] = rounds[base_index] then do
+            changes[changes[0] + 1] = ,
+                ((elapsed[candidate_index] / elapsed[base_index]) - 1.0) * 100.0
+            leave
+          end
+        end
+      end
+      if changes[0] = 0 then do
+        say "ERROR: no pairs for" wanted_workloads[workload_index] wanted_vms[vm_index]
+        return 1
+      end
+      call report_pairs wanted_workloads[workload_index], wanted_vms[vm_index], changes
+    end
+  end
+  return 0
+
+report_pairs: procedure = .void
+  arg workload = .string, vm = .string, expose values = .float[]
+  sum = 0.0
+  favorable = 0
+  do i = 1 to values[0]
+    sum = sum + values[i]
+    if values[i] < 0.0 then favorable = favorable + 1
+  end
+  mean = sum / (values[0] as .float)
+  variance_sum = 0.0
+  do i = 1 to values[0]
+    difference = values[i] - mean
+    variance_sum = variance_sum + difference * difference
+  end
+  standard_error = float_sqrt(variance_sum / ((values[0] - 1) as .float)) / ,
+      float_sqrt(values[0] as .float)
+  critical = 2.079614
+  if values[0] = 12 then critical = 2.200985
+  else if values[0] = 24 then critical = 2.068658
+  else if values[0] = 36 then critical = 2.030108
+  margin = critical * standard_error
+  call sort_floats values
+  say workload || "," || vm || "," || values[0] || "," || ,
+      (values[1] as .string) || "," || (sample_quantile(values, 1, 4) as .string) || ,
+      "," || (sample_quantile(values, 1, 2) as .string) || "," || ,
+      (sample_quantile(values, 3, 4) as .string) || "," || ,
+      (values[values[0]] as .string) || "," || favorable || "," || ,
+      (mean as .string) || "," || ((mean - margin) as .string) || "," || ,
+      ((mean + margin) as .string)
+  return
+
+split_delimited: procedure = .string[]
+  arg value = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, value, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(value, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(value, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+sort_floats: procedure = .void
+  arg expose values = .float[]
+  do i = 2 to values[0]
+    value = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > value
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = value
+  end
+  return
+
+sample_quantile: procedure = .float
+  arg values = .float[], numerator = .int, denominator = .int
+  scaled = (values[0] - 1) * numerator
+  lower_zero_index = scaled <idiv> denominator
+  remainder = scaled <mod> denominator
+  lower_value = values[lower_zero_index + 1]
+  if remainder = 0 then return lower_value
+  upper_value = values[lower_zero_index + 2]
+  return lower_value + (upper_value - lower_value) * ,
+      ((remainder as .float) / (denominator as .float))
+
+float_sqrt: procedure = .float
+  arg value = .float
+  if value <= 0.0 then return 0.0
+  guess = value
+  if guess < 1.0 then guess = 1.0
+  do iteration = 1 to 80
+    next = (guess + value / guess) / 2.0
+    if floatabs(next - guess) < 0.000000000001 then return next
+    guess = next
+  end
+  return guess

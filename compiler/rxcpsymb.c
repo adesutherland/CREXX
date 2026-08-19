@@ -437,6 +437,30 @@ void ret_reg_all_deferred(Scope *scope) {
     deferred_array->size = 0;
 }
 
+/* Return deferred registers except for a protected set. */
+void ret_reg_all_deferred_except(Scope *scope, const int *registers, size_t count) {
+    size_t i;
+    size_t retained = 0;
+    dpa *deferred_array;
+    Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
+    deferred_array = (dpa*)(rs->deferred_registers_array);
+
+    for (i=0; i<deferred_array->size; i++) {
+        int reg = (int)(size_t)deferred_array->pointers[i];
+        size_t protected_index;
+
+        for (protected_index=0; protected_index<count; protected_index++) {
+            if (registers[protected_index] == reg) break;
+        }
+        if (protected_index < count) {
+            deferred_array->pointers[retained++] = deferred_array->pointers[i];
+        } else {
+            ret_reg_free(rs, reg);
+        }
+    }
+    deferred_array->size = retained;
+}
+
 /* Get number of free register from scope - returns the start of a sequence
  * n, n+1, n+2, ... n+number */
 int get_regs(Scope *scope, size_t number) {

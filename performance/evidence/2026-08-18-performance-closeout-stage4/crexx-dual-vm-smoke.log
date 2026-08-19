@@ -1,0 +1,225 @@
+BEGIN vm=rxtvm mode=noopt workload=awfy_sieve
+benchmark=awfy_sieve repetitions=1 result=669
+PASS: AWFY Sieve
+END PASS
+BEGIN vm=rxtvm mode=noopt workload=awfy_permute
+benchmark=awfy_permute repetitions=1 result=8660
+PASS: AWFY Permute
+END PASS
+BEGIN vm=rxtvm mode=noopt workload=awfy_bounce
+benchmark=awfy_bounce repetitions=1 result=1331
+PASS: AWFY Bounce
+END PASS
+BEGIN vm=rxtvm mode=noopt workload=awfy_richards
+benchmark=awfy_richards repetitions=1 queue_packets=23246 holds=9297
+PASS: AWFY Richards
+END PASS
+BEGIN vm=rxtvm mode=noopt workload=awfy_towers
+benchmark=awfy_towers repetitions=1 result=8191
+PASS: AWFY Towers
+END PASS
+BEGIN vm=rxtvm mode=noopt workload=awfy_storage
+benchmark=awfy_storage repetitions=1 result=5461
+PASS: AWFY Storage
+END PASS
+BEGIN vm=rxtvm mode=noopt workload=awfy_list
+benchmark=awfy_list repetitions=1 result=10
+PASS: AWFY List
+END PASS
+BEGIN vm=rxtvm mode=noopt workload=awfy_mandelbrot
+benchmark=awfy_mandelbrot size=1 result=128
+PASS: AWFY Mandelbrot
+END PASS
+BEGIN vm=rxtvm mode=noopt workload=awfy_json
+benchmark=awfy_json repetitions=1 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+PASS: Full AWFY Json
+END PASS
+BEGIN vm=rxtvm mode=noopt workload=awfy_deltablue
+benchmark=awfy_deltablue size=10 adaptation=stable-indexed-constraint-graph
+PASS: AWFY DeltaBlue
+END PASS
+BEGIN vm=rxtvm mode=noopt workload=awfy_cd
+benchmark=awfy_cd aircraft=2 frames=200 collisions=42 adaptation=indexed-red-black-tree-native-math
+PASS: AWFY CD
+END PASS
+BEGIN vm=rxtvm mode=noopt workload=awfy_havlak
+benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+PASS: AWFY Havlak
+END PASS
+BEGIN vm=rxtvm mode=noopt workload=awfy_queens
+benchmark=awfy_queens repetitions=1 result=1
+PASS: AWFY Queens
+END PASS
+BEGIN vm=rxtvm mode=noopt workload=awfy_nbody
+benchmark=awfy_nbody steps=1 energy=-0.169074954025067
+PASS: AWFY NBody
+END PASS
+BEGIN vm=rxtvm mode=opt workload=awfy_sieve
+benchmark=awfy_sieve repetitions=1 result=669
+PASS: AWFY Sieve
+END PASS
+BEGIN vm=rxtvm mode=opt workload=awfy_permute
+benchmark=awfy_permute repetitions=1 result=8660
+PASS: AWFY Permute
+END PASS
+BEGIN vm=rxtvm mode=opt workload=awfy_bounce
+benchmark=awfy_bounce repetitions=1 result=1331
+PASS: AWFY Bounce
+END PASS
+BEGIN vm=rxtvm mode=opt workload=awfy_richards
+benchmark=awfy_richards repetitions=1 queue_packets=23246 holds=9297
+PASS: AWFY Richards
+END PASS
+BEGIN vm=rxtvm mode=opt workload=awfy_towers
+benchmark=awfy_towers repetitions=1 result=8191
+PASS: AWFY Towers
+END PASS
+BEGIN vm=rxtvm mode=opt workload=awfy_storage
+benchmark=awfy_storage repetitions=1 result=5461
+PASS: AWFY Storage
+END PASS
+BEGIN vm=rxtvm mode=opt workload=awfy_list
+benchmark=awfy_list repetitions=1 result=10
+PASS: AWFY List
+END PASS
+BEGIN vm=rxtvm mode=opt workload=awfy_mandelbrot
+benchmark=awfy_mandelbrot size=1 result=128
+PASS: AWFY Mandelbrot
+END PASS
+BEGIN vm=rxtvm mode=opt workload=awfy_json
+benchmark=awfy_json repetitions=1 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+PASS: Full AWFY Json
+END PASS
+BEGIN vm=rxtvm mode=opt workload=awfy_deltablue
+benchmark=awfy_deltablue size=10 adaptation=stable-indexed-constraint-graph
+PASS: AWFY DeltaBlue
+END PASS
+BEGIN vm=rxtvm mode=opt workload=awfy_cd
+benchmark=awfy_cd aircraft=2 frames=200 collisions=42 adaptation=indexed-red-black-tree-native-math
+PASS: AWFY CD
+END PASS
+BEGIN vm=rxtvm mode=opt workload=awfy_havlak
+benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+PASS: AWFY Havlak
+END PASS
+BEGIN vm=rxtvm mode=opt workload=awfy_queens
+benchmark=awfy_queens repetitions=1 result=1
+PASS: AWFY Queens
+END PASS
+BEGIN vm=rxtvm mode=opt workload=awfy_nbody
+benchmark=awfy_nbody steps=1 energy=-0.169074954025067
+PASS: AWFY NBody
+END PASS
+BEGIN vm=rxbvm mode=noopt workload=awfy_sieve
+benchmark=awfy_sieve repetitions=1 result=669
+PASS: AWFY Sieve
+END PASS
+BEGIN vm=rxbvm mode=noopt workload=awfy_permute
+benchmark=awfy_permute repetitions=1 result=8660
+PASS: AWFY Permute
+END PASS
+BEGIN vm=rxbvm mode=noopt workload=awfy_bounce
+benchmark=awfy_bounce repetitions=1 result=1331
+PASS: AWFY Bounce
+END PASS
+BEGIN vm=rxbvm mode=noopt workload=awfy_richards
+benchmark=awfy_richards repetitions=1 queue_packets=23246 holds=9297
+PASS: AWFY Richards
+END PASS
+BEGIN vm=rxbvm mode=noopt workload=awfy_towers
+benchmark=awfy_towers repetitions=1 result=8191
+PASS: AWFY Towers
+END PASS
+BEGIN vm=rxbvm mode=noopt workload=awfy_storage
+benchmark=awfy_storage repetitions=1 result=5461
+PASS: AWFY Storage
+END PASS
+BEGIN vm=rxbvm mode=noopt workload=awfy_list
+benchmark=awfy_list repetitions=1 result=10
+PASS: AWFY List
+END PASS
+BEGIN vm=rxbvm mode=noopt workload=awfy_mandelbrot
+benchmark=awfy_mandelbrot size=1 result=128
+PASS: AWFY Mandelbrot
+END PASS
+BEGIN vm=rxbvm mode=noopt workload=awfy_json
+benchmark=awfy_json repetitions=1 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+PASS: Full AWFY Json
+END PASS
+BEGIN vm=rxbvm mode=noopt workload=awfy_deltablue
+benchmark=awfy_deltablue size=10 adaptation=stable-indexed-constraint-graph
+PASS: AWFY DeltaBlue
+END PASS
+BEGIN vm=rxbvm mode=noopt workload=awfy_cd
+benchmark=awfy_cd aircraft=2 frames=200 collisions=42 adaptation=indexed-red-black-tree-native-math
+PASS: AWFY CD
+END PASS
+BEGIN vm=rxbvm mode=noopt workload=awfy_havlak
+benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+PASS: AWFY Havlak
+END PASS
+BEGIN vm=rxbvm mode=noopt workload=awfy_queens
+benchmark=awfy_queens repetitions=1 result=1
+PASS: AWFY Queens
+END PASS
+BEGIN vm=rxbvm mode=noopt workload=awfy_nbody
+benchmark=awfy_nbody steps=1 energy=-0.169074954025067
+PASS: AWFY NBody
+END PASS
+BEGIN vm=rxbvm mode=opt workload=awfy_sieve
+benchmark=awfy_sieve repetitions=1 result=669
+PASS: AWFY Sieve
+END PASS
+BEGIN vm=rxbvm mode=opt workload=awfy_permute
+benchmark=awfy_permute repetitions=1 result=8660
+PASS: AWFY Permute
+END PASS
+BEGIN vm=rxbvm mode=opt workload=awfy_bounce
+benchmark=awfy_bounce repetitions=1 result=1331
+PASS: AWFY Bounce
+END PASS
+BEGIN vm=rxbvm mode=opt workload=awfy_richards
+benchmark=awfy_richards repetitions=1 queue_packets=23246 holds=9297
+PASS: AWFY Richards
+END PASS
+BEGIN vm=rxbvm mode=opt workload=awfy_towers
+benchmark=awfy_towers repetitions=1 result=8191
+PASS: AWFY Towers
+END PASS
+BEGIN vm=rxbvm mode=opt workload=awfy_storage
+benchmark=awfy_storage repetitions=1 result=5461
+PASS: AWFY Storage
+END PASS
+BEGIN vm=rxbvm mode=opt workload=awfy_list
+benchmark=awfy_list repetitions=1 result=10
+PASS: AWFY List
+END PASS
+BEGIN vm=rxbvm mode=opt workload=awfy_mandelbrot
+benchmark=awfy_mandelbrot size=1 result=128
+PASS: AWFY Mandelbrot
+END PASS
+BEGIN vm=rxbvm mode=opt workload=awfy_json
+benchmark=awfy_json repetitions=1 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+PASS: Full AWFY Json
+END PASS
+BEGIN vm=rxbvm mode=opt workload=awfy_deltablue
+benchmark=awfy_deltablue size=10 adaptation=stable-indexed-constraint-graph
+PASS: AWFY DeltaBlue
+END PASS
+BEGIN vm=rxbvm mode=opt workload=awfy_cd
+benchmark=awfy_cd aircraft=2 frames=200 collisions=42 adaptation=indexed-red-black-tree-native-math
+PASS: AWFY CD
+END PASS
+BEGIN vm=rxbvm mode=opt workload=awfy_havlak
+benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+PASS: AWFY Havlak
+END PASS
+BEGIN vm=rxbvm mode=opt workload=awfy_queens
+benchmark=awfy_queens repetitions=1 result=1
+PASS: AWFY Queens
+END PASS
+BEGIN vm=rxbvm mode=opt workload=awfy_nbody
+benchmark=awfy_nbody steps=1 energy=-0.169074954025067
+PASS: AWFY NBody
+END PASS
+PASS cells=56

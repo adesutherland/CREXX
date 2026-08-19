@@ -1,0 +1,25 @@
+captured=2026-08-18T14:18:38+0100
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+ProductName:		macOS
+ProductVersion:		26.5.2
+BuildVersion:		25F84
+Apple M5
+10
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+51c93c421bf444de28bc52eb9a0faedc99d1ae27
+## develop...origin/develop [ahead 6]
+ M compiler/rxcp_emit_reg.c
+ M compiler/rxcp_inline_rewrite.c
+ M compiler/tests/CMakeLists.txt
+ M compiler/tests/rexx_src/binary_literal_load.crexx
+ M performance/POST-PERF3-WORKLIST.md
+?? cmake/CheckInlineLateProfitability.cmake
+?? compiler/tests/rexx_src/inline_late_profitability_guard.crexx
+?? performance/evidence/2026-08-18-postperf-05-bounded-late-profitability-first-release-verdict/
+crexx-1.0.0-beta.3+local.g51c93c421bf4.dirty
+crexx-1.0.0-beta.3+local.g51c93c421bf4.dirty (Threaded Mode)
+crexx-1.0.0-beta.3+local.g51c93c421bf4.dirty (Bytecode Mode)

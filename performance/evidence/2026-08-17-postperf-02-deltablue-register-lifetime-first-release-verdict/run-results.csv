@@ -1,0 +1,15 @@
+workload,role,mode,vm,compile_rc,assemble_rc,link_rc,run_rc,result
+lifetime_regression,control,opt,rxvm,0,0,0,139,crash before output
+awfy_deltablue,control,opt,rxvm,0,0,0,139,crash before output
+lifetime_regression,candidate,opt,rxvm,0,0,0,0,PASS indexed attribute factory lifetime
+lifetime_regression,candidate,noopt,rxvm,0,0,0,0,PASS indexed attribute factory lifetime
+awfy_deltablue,candidate,opt,rxvm,0,0,0,0,PASS size 10 full chain and projection contract
+awfy_deltablue,candidate,noopt,rxvm,0,0,0,0,PASS size 10 full chain and projection contract
+lifetime_regression,candidate,opt,rxtvm,0,0,0,0,PASS indexed attribute factory lifetime
+lifetime_regression,candidate,noopt,rxtvm,0,0,0,0,PASS indexed attribute factory lifetime
+awfy_deltablue,candidate,opt,rxtvm,0,0,0,0,PASS size 10 full chain and projection contract
+awfy_deltablue,candidate,noopt,rxtvm,0,0,0,0,PASS size 10 full chain and projection contract
+lifetime_regression,candidate,opt,rxbvm,0,0,0,0,PASS indexed attribute factory lifetime
+lifetime_regression,candidate,noopt,rxbvm,0,0,0,0,PASS indexed attribute factory lifetime
+awfy_deltablue,candidate,opt,rxbvm,0,0,0,0,PASS size 10 full chain and projection contract
+awfy_deltablue,candidate,noopt,rxbvm,0,0,0,0,PASS size 10 full chain and projection contract

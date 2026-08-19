@@ -54,7 +54,8 @@ target_include_directories(test_rxas_flow_graph PRIVATE
 target_link_libraries(test_rxas_flow_graph PRIVATE rxaslib avl_tree platform)
 add_test(NAME rxas_flow_graph_contract COMMAND test_rxas_flow_graph)
 set_tests_properties(rxas_flow_graph_contract PROPERTIES
-        LABELS "rxas;optimizer;flow;metadata")
+        LABELS "rxas;optimizer;flow;metadata"
+        TIMEOUT 30)
 
 function(crexx_add_rxas_optimizer_check NAME SOURCE CASE)
     set(options)
@@ -130,6 +131,7 @@ crexx_add_rxas_optimizer_check(barrier_srcfproc barrier_srcfproc.rxas barrier_sr
 crexx_add_rxas_optimizer_check(barrier_asserttype barrier_asserttype.rxas barrier_asserttype)
 crexx_add_rxas_optimizer_check(barrier_assertinitialized barrier_assertinitialized.rxas barrier_assertinitialized)
 crexx_add_rxas_optimizer_check(barrier_ichkrng barrier_ichkrng.rxas barrier_ichkrng)
+crexx_add_rxas_optimizer_check(barrier_bcheckrange barrier_bcheckrange.rxas barrier_bcheckrange)
 crexx_add_rxas_optimizer_check(barrier_signal barrier_signal.rxas barrier_signal)
 crexx_add_rxas_optimizer_check(barrier_igtbr barrier_igtbr.rxas barrier_igtbr)
 crexx_add_rxas_optimizer_check(barrier_iltbr barrier_iltbr.rxas barrier_iltbr)
@@ -163,6 +165,8 @@ crexx_add_rxas_optimizer_check(redundant_absent_flow redundant_absent_flow.rxas 
 crexx_add_rxas_optimizer_check(redundant_absent_flow_noopt redundant_absent_flow.rxas redundant_absent_flow_noopt RXAS_FLAGS -n)
 crexx_add_rxas_optimizer_check(redundant_self_copy_flow redundant_self_copy_flow.rxas redundant_self_copy_flow RXAS_FLAGS -d)
 crexx_add_rxas_optimizer_check(redundant_self_copy_flow_noopt redundant_self_copy_flow.rxas redundant_self_copy_flow_noopt RXAS_FLAGS -n)
+crexx_add_rxas_optimizer_check(successful_guard_flow successful_guard_flow.rxas successful_guard_flow RXAS_FLAGS -d)
+crexx_add_rxas_optimizer_check(successful_guard_flow_noopt successful_guard_flow.rxas successful_guard_flow_noopt RXAS_FLAGS -n)
 
 add_custom_target(whole_procedure_runtime ALL)
 foreach(_nr27_runner IN ITEMS rxvm)

@@ -4,6 +4,16 @@ This is the operational home for the cREXX performance programme. It keeps the
 live roadmap, closed programme ledgers, portfolio contract and retained
 evidence together without turning test directories into a planning system.
 
+The bounded current-product closure sequence is governed by
+[`PERFORMANCE-CLOSEOUT-PLAN.md`](PERFORMANCE-CLOSEOUT-PLAN.md). Stages 1-4 are
+complete: the combined candidate and current decimal decision are frozen, the
+redundant Mac concurrency replay is waived, and the reviewed/calibrated
+[`portfolio-v3`](portfolio/manifest-v3.md) boundary is green. The Apple Stage 5
+pre-release scorecard is complete; exact-commit formal Linux QA-C remains its
+only exit item. Stage 6 documentation consolidation has started with the
+current [`RESULTS.md`](RESULTS.md) report; Stage 7 evidence clean-down remains
+plan-only.
+
 The original programme charter and 2026-07-15 evidence review remain in
 [`docs/planning/release-1/performance-programme-report-2026-07-15.md`](../docs/planning/release-1/performance-programme-report-2026-07-15.md).
 The complete handler-placement attempt history and the resulting Clang/GCC
@@ -29,10 +39,15 @@ those labels using the new product mapping.
 
 | Location | Purpose |
 | --- | --- |
+| `performance/PERFORMANCE-CLOSEOUT-PLAN.md` | Complete seven-stage current-product closeout plan; Stages 1-4 and the Apple Stage 5 scorecard complete, formal Linux QA-C pending, Stage 6 in progress and Stage 7 plan-only |
+| `performance/RESULTS.md` | Current less-technical performance scorecard, comparison questions and release-versus-next-release disposition |
+| `performance/PERFORMANCE-CLOSEOUT-STAGE4-WORKLIST.md` | Completed Stage 4 portfolio-v3 inventory, source review, runtime capability classification and qualification ledger |
+| `performance/portfolio/manifest-v3.md` | Frozen Stage 5 source, capability, aggregation and calibrated-work contract |
+| `performance/DECISIONS.md` | Enduring accepted/rejected performance decisions, lessons and explicit reopening triggers; currently seeded with DECIMAL-01 Stage 3 |
 | `performance/ROADMAP.md` | Approved live PERF3 priorities, transfers, dependencies and exit gates |
 | `performance/ROADMAP-PERF2-2026-07-31.md` | Closed PERF2 status, findings, decisions, future-point ledger and retained evidence links |
 | `performance/ROADMAP-INITIAL-SWEEP-2026-07-23.md` | Closed initial-sweep status and complete historical work/idea ledger |
-| `performance/decimal/` | Independent DECIMAL-01 decimal-provider correctness, candidate and performance-engineering control plane; no backend selected |
+| `performance/decimal/` | Independent DECIMAL-01 decimal-provider correctness and performance control plane; Stage 3 closes with current `mc_decimal` retained and no production change |
 | `performance/PERF3-01-WORKLIST.md` | Accepted current-HEAD Mac evidence/ranking package that selected PERF3-02 as the first bounded design panel |
 | `performance/PERF3-02-WORKLIST.md` | Historical C0-C4 panel and authoritative clean-host timing, superseded by the selected infrastructure-enabled C1abc composition |
 | `performance/PERF3-02-C1B-WORKLIST.md` | Completed receiver-link/exit proof underlying the selected C1b-R1 production rung; canonical dual-VM opt/no-opt results and exact copy removal pass |
@@ -44,6 +59,7 @@ those labels using the new product mapping.
 | `performance/PERF3-11-MIGRATION-WORKLIST.md` | Completed one-authority proof migration ledger and retained classification history for the migrated semantic/mechanical consumers |
 | `performance/PERF3-12B-WORKLIST.md` | Completed compound-tail route comparison, accepted production H1 proof, first Release verdict, broad closeout and fresh current-product Mac scorecard |
 | `performance/PERF3-13-WORKLIST.md` | Historical allocator, worker-foundation and concurrency implementation record; live concurrency work has moved to `concurrency/WORKLIST.md` |
+| `performance/POST-PERF3-WORKLIST.md` | Restart-safe control plane for Full AWFY Json, DeltaBlue/CD, Havlak, generic scalar-access proof and bounded compiler follow-ons |
 | `concurrency/` | Independent live control plane for tasks, channels, providers, endpoints and concurrent HTTP; historical Gate records are retained under `concurrency/history/` |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md` | Team-facing initial-sweep progress, accessible technical explanation and next-phase summary |
 | `performance/TEAM-PERFORMANCE-UPDATE-2026-07-27.md` | Team-facing PERF2-08/09 formal Mac scorecard, comparability vocabulary, exclusions and suggested successor direction |
@@ -87,9 +103,22 @@ those labels using the new product mapping.
 | `performance/evidence/2026-08-04-perf3-12b-b4-comparative-panel/` | Checksum-closed S0/S1/H1 route selection with a 36-pair both-VM H1 verdict and replayable rejected S1 fallback |
 | `performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/` | Accepted clean production H1 proof, exact structural result and mandatory first ordinary Release verdict |
 | `performance/evidence/2026-08-05-perf3-12b-mac-scorecard/` | Fresh clean merged-product Apple scorecard: 348/348 executions, no noise append, static/artifact identities and current aggregate ranking |
+| `performance/evidence/2026-08-17-postperf-01-awfy-json-compiler-repair-first-release-verdict/` | Accepted supported-shape string-to-binary inline-binding repair: clean control failure, candidate correctness, neutral compiler throughput and unchanged established images |
+| `performance/evidence/2026-08-17-postperf-01-full-awfy-json-qualification/` | Exact full-input AWFY Json cREXX reserve qualification, opt/no-opt product/concrete correctness, generated-code boundary and bounded process pilot |
+| `performance/evidence/2026-08-17-postperf-02-deltablue-register-lifetime-first-release-verdict/` | Accepted supported-shape indexed-target lifetime repair: clean control crashes, candidate three-VM correctness, neutral compiler throughput and unchanged established images |
+| `performance/evidence/2026-08-17-postperf-02-awfy-deltablue-qualification/` | Pinned AWFY DeltaBlue chain/projection reserve qualification, stable-indexed graph adaptation, opt/no-opt product/concrete correctness and retained optimizer-expansion result |
+| `performance/evidence/2026-08-17-postperf-02-awfy-cd-qualification/` | Pinned 200-frame AWFY CD reserve qualification, value/indexed-red-black adaptation, exact reference and product/concrete correctness, and retained optimizer-expansion result |
+| `performance/evidence/2026-08-17-postperf-03-awfy-havlak-qualification/` | Pinned AWFY Havlak reserve qualification, stable-indexed CFG/union-find adaptation, bounded product/concrete correctness, published-result audit and retained optimizer-expansion result |
+| `performance/evidence/2026-08-18-postperf-04-generic-scalar-access-first-release-verdict/` | Accepted generic exact scalar-access lane and four-family guard proof, formal 266-process verdict, assembler lifecycle disposition and 2,249-test closeout |
+| `performance/evidence/2026-08-18-postperf-05-bounded-late-profitability-first-release-verdict/` | Accepted H1-T20 RXC late-profitability gate, exact paired/static Release verdict, retained-call and fixed-point compiler repairs, 17-file identity proof and 2,251-test closeout |
 | `performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/` | Accepted Intel Linux GCC physical-doorbell PoC: focused stress/latency, handler and unchanged-dispatch proof, and an overall noisy/inconclusive E4 comparison on a stressed host |
 | `performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-clang-doorbell-poc/` | Accepted Intel Linux Clang repeat: focused stress/latency, generated-code proof, capped noisy/inconclusive E4 comparison and controlled GCC-versus-Clang build evidence |
 | `performance/evidence/2026-08-05-decimal-01-numctx-repair-verdict/` | Provisional focused decimal correctness repair: Debug/Release 9/9 plus 6/6 observable VM/provider cells; no timing or broad closeout |
+| `performance/evidence/2026-08-18-decimal-01-gate1-current-provider/` | Current-provider DECIMAL-01 L1 adapter and L2/L3 product capture, with invalid calibration and noisy cells explicitly retained and unexecuted guards kept open |
+| `performance/evidence/2026-08-18-decimal-01-libmpdec-screen/` | Correctness-clean libmpdec 4.0.1 candidate rejected at L1 after formal adapter timing plus lean-adapter and direct-core arithmetic attribution |
+| `performance/evidence/2026-08-18-decimal-01-stage3-calibration/` | Clear-host D2 48-build tuning and D3 fixed-34 decQuad adapter/core calibration; both rejected before formal L1, leaving current `mc_decimal` selected |
+| `performance/evidence/2026-08-18-performance-closeout-stage4/` | Green portfolio-v3 source review, capability classification, calibration and full qualification frozen in commit `81f159186` |
+| `performance/evidence/2026-08-18-performance-closeout-stage5/` | Fresh-build Apple pre-release scorecard: 89-cell timing/RSS, genuine-NetRexx and Java control separation, RexxCPS, lifecycle, artifacts, DECIMAL/concurrency dispositions and honest release findings |
 | `performance/evidence/2026-08-02-perf3-11-legacy-proof-baseline/` | Stable remaining legacy-proof inventory, exact focused acceptance floor, canonical keyhole identities, output-neutral diagnostic and 49/49 focused replay |
 | `performance/evidence/2026-08-02-perf3-11-m01-xtoy/` | Completed metadata-driven XTOY repetition migration: old ITOF floor plus 11 stronger focused deletions, total ITOD/BTOD contract, unchanged canonical images and 1,989-test closeout |
 | `performance/evidence/` | Dated provenance, commands, raw samples and summaries |
@@ -97,6 +126,7 @@ those labels using the new product mapping.
 | `performance/tools/run_lifecycle.crexx` | Level B compile/translate and cold load-to-first-result capture across the three portfolio runtimes |
 | `performance/tools/run_evidence_bundle.crexx` | Level B exact-image timing/profile/RXSEQ bundle orchestration and reporting |
 | `performance/tools/run_cross_runtime_matrix.crexx` | Level B compact formal timing/RSS matrix capture, summary and aggregate reporting |
+| `performance/decimal/summarize_stage3_calibration.crexx` | Level B D2 complete-build ranking and D3 adapter/direct-core Stage 3 decision tables |
 | `performance/tools/run_java_class.ps1` | Windows Java launcher that preserves the classpath as one argument inside semicolon-delimited matrix manifests |
 | `performance/tools/windows_peak_rss.ps1` | Native Windows child-process peak working-set sampler used by the formal matrix RSS fallback |
 | `performance/tools/inventory_performance_artifacts.crexx` | Level B hash/size inventory for versioned performance artifact manifests |
@@ -120,9 +150,10 @@ benchmark-native metric, and writes the exact argv and cREXX version to
 outside the steady-state aggregate and emits one CSV row per runtime, phase and
 sequence. The final phase is named `load_first_result` because the public CLIs
 do not expose a consistent loaded-but-not-executed boundary. Formal captures use
-`--crexx-vm both`, share the compile/assemble rows, retain separate `rxvm` and
+`--crexx-vm both`, share the compile/assemble rows, retain separate `rxtvm` and
 `rxbvm` load rows, and write the same median/IQR/MAD/noise summary fields as the
-matrix driver.
+matrix driver. The Stage 5 correction deliberately removed `rxvm` from this
+concrete-engine selector because product `rxvm` may alias either engine.
 `--append` preserves existing lifecycle rows, continues sequence numbering, and
 refreshes the summary after a policy-required noise append.
 

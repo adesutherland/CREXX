@@ -1,0 +1,21 @@
+sample_id,stream,line_number,text
+timing-DECIMAL-MPD-capacity-core-common18-mpd-capacity-core-decnumber-common18-warmup-1,stdout,1,DECIMAL-CORE provider=decnumber digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-capacity-core-common18-mpd-capacity-core-libmpdec-common18-warmup-1,stdout,1,DECIMAL-CORE provider=libmpdec digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-capacity-core-common18-mpd-capacity-core-decnumber-common18-recorded-1,stdout,1,DECIMAL-CORE provider=decnumber digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-capacity-core-common18-mpd-capacity-core-libmpdec-common18-recorded-1,stdout,1,DECIMAL-CORE provider=libmpdec digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-capacity-core-common18-mpd-capacity-core-libmpdec-common18-recorded-2,stdout,1,DECIMAL-CORE provider=libmpdec digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-capacity-core-common18-mpd-capacity-core-decnumber-common18-recorded-2,stdout,1,DECIMAL-CORE provider=decnumber digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-capacity-core-common18-mpd-capacity-core-decnumber-common18-recorded-3,stdout,1,DECIMAL-CORE provider=decnumber digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-capacity-core-common18-mpd-capacity-core-libmpdec-common18-recorded-3,stdout,1,DECIMAL-CORE provider=libmpdec digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-capacity-core-common18-mpd-capacity-core-libmpdec-common18-recorded-4,stdout,1,DECIMAL-CORE provider=libmpdec digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-capacity-core-common18-mpd-capacity-core-decnumber-common18-recorded-4,stdout,1,DECIMAL-CORE provider=decnumber digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-capacity-core-classic9-mpd-capacity-core-decnumber-classic9-warmup-1,stdout,1,DECIMAL-CORE provider=decnumber digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-capacity-core-classic9-mpd-capacity-core-libmpdec-classic9-warmup-1,stdout,1,DECIMAL-CORE provider=libmpdec digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-capacity-core-classic9-mpd-capacity-core-decnumber-classic9-recorded-1,stdout,1,DECIMAL-CORE provider=decnumber digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-capacity-core-classic9-mpd-capacity-core-libmpdec-classic9-recorded-1,stdout,1,DECIMAL-CORE provider=libmpdec digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-capacity-core-classic9-mpd-capacity-core-libmpdec-classic9-recorded-2,stdout,1,DECIMAL-CORE provider=libmpdec digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-capacity-core-classic9-mpd-capacity-core-decnumber-classic9-recorded-2,stdout,1,DECIMAL-CORE provider=decnumber digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-capacity-core-classic9-mpd-capacity-core-decnumber-classic9-recorded-3,stdout,1,DECIMAL-CORE provider=decnumber digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-capacity-core-classic9-mpd-capacity-core-libmpdec-classic9-recorded-3,stdout,1,DECIMAL-CORE provider=libmpdec digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-capacity-core-classic9-mpd-capacity-core-libmpdec-classic9-recorded-4,stdout,1,DECIMAL-CORE provider=libmpdec digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-capacity-core-classic9-mpd-capacity-core-decnumber-classic9-recorded-4,stdout,1,DECIMAL-CORE provider=decnumber digits=9 iterations=50000000 checksum=3950.61725

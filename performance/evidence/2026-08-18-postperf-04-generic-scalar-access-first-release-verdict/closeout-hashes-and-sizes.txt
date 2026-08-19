@@ -1,0 +1,14 @@
+Final ordinary profiling-off Release product after closeout QA:
+
+77793d8b2a49d51ade2bf2725cd4d6462e80aea8f7af98e14217c4d459196190  cmake-build-release/bin/rxc
+f7f44b6aec6384a6b15c5e02a2dd85bcff213cb1033f5412fa5978baae109b27  cmake-build-release/bin/rxas
+fbb34761ee2e45db203df4656063af73d65d1fbd202270d55e88998d79259963  cmake-build-release/bin/rxlink
+5da4517da4420d9de7a04bb2dc3a7edbcfd407a5248b4f9325ae0495f855a52a  cmake-build-release/bin/rxtvm
+6f9500a7ea7eb7858d47d5419cc639d141472955eec648b8ac9a012acc4f6f4e  cmake-build-release/bin/rxbvm
+666ebbf29b0d9561b010075db622c2001617b8b8220edf55923237f7774298ef  cmake-build-release/bin/library.rxbin
+e6079165152f468c5da4b8466a28cab848a09eac58e313c7343456d6faa05d96  cmake-build-release/tests/performance/postperf04_scalar_access_compare_opt.rxas  133982 bytes
+b8807ceac584954400e6e629c1f163d37b3a089f219374ed64bb9dfbf2831a15  /tmp/postperf04-final-current-absolute.rxbin  42518 bytes
+
+The final selected RXBIN was assembled from the absolute RXAS input identity
+recorded in COMMANDS.md and compares byte-for-byte with the retained accepted
+current.rxbin.

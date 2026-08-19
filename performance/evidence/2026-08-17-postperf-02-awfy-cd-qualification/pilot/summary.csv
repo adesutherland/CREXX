@@ -1,0 +1,5 @@
+benchmark,vm,mode,runs,min_ns,median_ns,mean_ns,max_ns,platform,crexx_version,vm_role,result_role
+cd,rxvm,opt,5,309329000,312990000,312562200,315802000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g31de35745a91.dirty 20260817,product,process-smoke
+cd,rxtvm,opt,5,307415000,312922000,312134800,315978000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g31de35745a91.dirty 20260817,concrete-engine-control,process-smoke
+cd,rxvm,noopt,5,56847000,60708000,59923400,60717000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g31de35745a91.dirty 20260817,product,process-smoke
+cd,rxtvm,noopt,5,54944000,57789000,58225000,60707000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g31de35745a91.dirty 20260817,concrete-engine-control,process-smoke

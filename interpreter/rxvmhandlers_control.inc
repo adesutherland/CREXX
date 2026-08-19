@@ -41,6 +41,10 @@ RXVM_HANDLER(BPON_FUNC, VM_ADVANCE(1);
                     RXVM_HANDLER_INTERRUPT_TABLE_OOM();
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].response = RXSIGNAL_RESPONSE_CALL;
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].function = signal_function;
+                current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].jump = 0;
+                current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].frame = 0;
+                current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].value_register = 0;
+                current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].stack_marker = 0;
                 rxvm_signal_pending_or(&pending_interrupts,
                                        rxsignal_mask(RXSIGNAL_BREAKPOINT));
             }
@@ -75,6 +79,7 @@ RXVM_HANDLER(SIGIGNORE_STRING, VM_ADVANCE(1);
                     current_frame->interrupt_table[sig-1].jump = 0;
                     current_frame->interrupt_table[sig-1].frame = 0;
                     current_frame->interrupt_table[sig-1].value_register = 0;
+                    current_frame->interrupt_table[sig-1].stack_marker = 0;
                     ignore_interrupt((int)sig); // Set the corresponding native interrupt to ignore
                 }
             }
@@ -99,6 +104,7 @@ RXVM_HANDLER(SIGHALT_STRING, VM_ADVANCE(1);
                     current_frame->interrupt_table[sig-1].jump = 0;
                     current_frame->interrupt_table[sig-1].frame = 0;
                     current_frame->interrupt_table[sig-1].value_register = 0;
+                    current_frame->interrupt_table[sig-1].stack_marker = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -123,6 +129,7 @@ RXVM_HANDLER(SIGSHALT_STRING, VM_ADVANCE(1);
                     current_frame->interrupt_table[sig-1].jump = 0;
                     current_frame->interrupt_table[sig-1].frame = 0;
                     current_frame->interrupt_table[sig-1].value_register = 0;
+                    current_frame->interrupt_table[sig-1].stack_marker = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -147,6 +154,7 @@ RXVM_HANDLER(SIGBR_ID_STRING, VM_ADVANCE(2);
                     current_frame->interrupt_table[sig-1].function = 0;
                     current_frame->interrupt_table[sig-1].frame = current_frame;
                     current_frame->interrupt_table[sig-1].value_register = 0;
+                    current_frame->interrupt_table[sig-1].stack_marker = current_frame->interrupt_stack;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -171,6 +179,7 @@ RXVM_HANDLER(SIGBRV_ID_REG_STRING, VM_ADVANCE(3);
                     current_frame->interrupt_table[sig-1].function = 0;
                     current_frame->interrupt_table[sig-1].frame = current_frame;
                     current_frame->interrupt_table[sig-1].value_register = REG_IDX(2);
+                    current_frame->interrupt_table[sig-1].stack_marker = current_frame->interrupt_stack;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -197,6 +206,7 @@ RXVM_HANDLER(SIGCALL_FUNC_STRING, VM_ADVANCE(2);
                     current_frame->interrupt_table[sig-1].jump = 0;
                     current_frame->interrupt_table[sig-1].frame = 0;
                     current_frame->interrupt_table[sig-1].value_register = 0;
+                    current_frame->interrupt_table[sig-1].stack_marker = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -223,6 +233,7 @@ RXVM_HANDLER(SIGCALLA_FUNC_STRING, VM_ADVANCE(2);
                     current_frame->interrupt_table[sig-1].jump = 0;
                     current_frame->interrupt_table[sig-1].frame = 0;
                     current_frame->interrupt_table[sig-1].value_register = 0;
+                    current_frame->interrupt_table[sig-1].stack_marker = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -248,6 +259,7 @@ RXVM_HANDLER(SIGCALLBR_ID_FUNC_STRING, VM_ADVANCE(3);
                     current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
                     current_frame->interrupt_table[sig-1].frame = current_frame;
                     current_frame->interrupt_table[sig-1].value_register = 0;
+                    current_frame->interrupt_table[sig-1].stack_marker = current_frame->interrupt_stack;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -272,6 +284,7 @@ RXVM_HANDLER(SIGRET_STRING, VM_ADVANCE(1);
                     current_frame->interrupt_table[sig-1].jump = 0;
                     current_frame->interrupt_table[sig-1].frame = 0;
                     current_frame->interrupt_table[sig-1].value_register = 0;
+                    current_frame->interrupt_table[sig-1].stack_marker = 0;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }

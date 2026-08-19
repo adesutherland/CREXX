@@ -364,6 +364,54 @@ static int get_call_window(ASTNode *call) {
 
 static int defer_reg_return(ASTNode* node);
 
+static ASTNode *block_expr_deferred_assignment_target(ASTNode *node) {
+    ASTNode *target;
+
+    if (!node || node->node_type != BLOCK_EXPR ||
+        !node->parent || node->parent->node_type != ASSIGN) return 0;
+    target = node->parent->child;
+    if (!target || target->sibling != node || !defer_reg_return(target)) return 0;
+    return target;
+}
+
+static ASTNode *node_statement_deferred_assignment_target(ASTNode *node) {
+    ASTNode *ancestor;
+
+    if (!node || !node->parent || node->parent->node_type != INSTRUCTIONS) return 0;
+    for (ancestor = node->parent->parent; ancestor; ancestor = ancestor->parent) {
+        ASTNode *target = block_expr_deferred_assignment_target(ancestor);
+        if (target) return target;
+    }
+    return 0;
+}
+
+static void return_statement_deferred_registers(ASTNode *node) {
+    ASTNode *target = node_statement_deferred_assignment_target(node);
+    int *protected_registers;
+    size_t protected_count = 0;
+    int i;
+
+    if (!target) {
+        ret_reg_all_deferred(node->scope);
+        return;
+    }
+
+    /* An indexed/property target is linked before its BLOCK_EXPR RHS is
+     * evaluated. Release the RHS statement's own deferred temporaries, but
+     * keep only the target destination and helper registers reserved until the
+     * enclosing assignment emits its unlink cleanup. */
+    protected_registers = malloc(sizeof(int) * (target->num_additional_registers + 1));
+    if (!protected_registers) return;
+    if (target->register_num >= 0) {
+        protected_registers[protected_count++] = target->register_num;
+    }
+    for (i = 0; i < target->num_additional_registers; i++) {
+        protected_registers[protected_count++] = target->additional_registers + i;
+    }
+    ret_reg_all_deferred_except(node->scope, protected_registers, protected_count);
+    free(protected_registers);
+}
+
 static int node_is_block_expr_leave(ASTNode *node) {
     ASTNode *parent;
 
@@ -488,6 +536,109 @@ static int inline_block_expr_owned_return_register(ASTNode *node,
     return 1;
 }
 
+static int block_expr_scope_is_generated_lifetime_boundary(Scope *scope) {
+    Scope *current;
+
+    for (current = scope; current; current = current->parent) {
+        if (current->type != SCOPE_PROCEDURE) continue;
+        if (!current->name) return 0;
+        return strncmp(current->name, "__inline", 8) == 0 ||
+               strncmp(current->name, "__rxtrace", 9) == 0;
+    }
+    return 0;
+}
+
+/* Match the runtime-affecting portion of scope cleanup emitted by
+ * rxcp_emit_flow.c.  Metadata-only cleanup cannot damage a BLOCK_EXPR result
+ * and should not force an otherwise unnecessary result-register reservation. */
+static int block_expr_scope_has_runtime_cleanup(Scope *scope) {
+    Symbol **symbols;
+    size_t i;
+    int has_cleanup = 0;
+
+    if (!scope || scope->type != SCOPE_LOCAL) return 0;
+    if (scp_dereference_symbol_count(scope) != 0) return 1;
+
+    symbols = scp_syms(scope);
+    if (!symbols) return 0;
+    for (i = 0; symbols[i]; i++) {
+        Symbol *symbol = symbols[i];
+
+        if (!symbol || symbol->symbol_type != VARIABLE_SYMBOL ||
+            symbol->inline_value_alias || symbol->exposed || symbol->is_arg ||
+            symbol->is_ref_arg || symbol->is_this || symbol->is_factory ||
+            symbol->register_type != 'r' || symbol->register_num < 0 ||
+            (symbol->name && strncmp(symbol->name, "__inline", 8) == 0)) {
+            continue;
+        }
+
+        if (block_expr_scope_is_generated_lifetime_boundary(symbol->scope) ||
+            symbol->has_reference_target || symbol->value_dims != 0) {
+            has_cleanup = 1;
+            break;
+        }
+
+        switch (symbol->type) {
+            case TP_BOOLEAN:
+            case TP_INTEGER:
+            case TP_FLOAT:
+            case TP_DECIMAL:
+            case TP_STRING:
+                break;
+            default:
+                has_cleanup = 1;
+                break;
+        }
+        if (has_cleanup) break;
+    }
+    free(symbols);
+    return has_cleanup;
+}
+
+static int block_expr_has_crossed_cleanup_exit(ASTNode *node,
+                                               ASTNode *block_expr) {
+    ASTNode *child;
+
+    if (!node || !block_expr) return 0;
+    if (node->node_type == LEAVE_WITH && node->association == block_expr) {
+        ASTNode *ancestor;
+
+        for (ancestor = node->parent;
+             ancestor && ancestor != block_expr;
+             ancestor = ancestor->parent) {
+            ASTNode *repeat = ancestor->node_type == DO ?
+                              ast_chdn(ancestor, 0) : 0;
+
+            if ((repeat && repeat->node_type == REPEAT) ||
+                (ancestor->scope &&
+                 ancestor->scope->defining_node == ancestor &&
+                 block_expr_scope_has_runtime_cleanup(ancestor->scope))) {
+                return 1;
+            }
+        }
+    }
+
+    for (child = node->child; child; child = child->sibling) {
+        if (block_expr_has_crossed_cleanup_exit(child, block_expr)) return 1;
+    }
+    return 0;
+}
+
+static void assign_block_expr_result_register(ASTNode *node) {
+    if (!node || node->node_type != BLOCK_EXPR ||
+        node->register_num != UNSET_REGISTER) return;
+
+    if (!inline_block_expr_assignment_target_register(node,
+                                                      &node->register_num,
+                                                      &node->register_type) &&
+        !inline_block_expr_owned_return_register(node,
+                                                 &node->register_num,
+                                                 &node->register_type)) {
+        node->register_num = get_reg(node->scope);
+        node->register_type = 'r';
+    }
+}
+
 static int scope_assigns_named_registers(Scope *scope) {
     ASTNode *owner;
 
@@ -543,6 +694,24 @@ static int symbol_uses_scoped_register(Symbol *symbol) {
     if (symbol_name_starts_with(symbol, "__inline")) return 0;
     if (symbol_name_starts_with(symbol, "__rxtrace")) return 0;
     return symbol_has_recyclable_local_storage_type(symbol);
+}
+
+/* RXAS has immediate SAY/RETURN forms only for integer, float and string
+ * operands.  Other constants (notably binary and decimal values) must retain
+ * their allocated register so the expression emitter materialises them with
+ * LOAD before the control instruction consumes the register. */
+static int constant_has_direct_control_operand(ASTNode *node) {
+    if (!node || !is_constant(node)) return 0;
+
+    switch (node->target_type) {
+        case TP_BOOLEAN:
+        case TP_INTEGER:
+        case TP_FLOAT:
+        case TP_STRING:
+            return 1;
+        default:
+            return 0;
+    }
 }
 
 static void assign_symbol_registers_worker(Symbol *symbol, void *payload) {
@@ -822,9 +991,20 @@ walker_result register_walker(walker_direction direction,
 
             case DO:
             case SIGNAL_BLOCK:
-            case BLOCK_EXPR:
             case INSTRUCTIONS:
                 assign_scoped_registers_for_node(node, payload);
+                break;
+
+            case BLOCK_EXPR:
+                assign_scoped_registers_for_node(node, payload);
+                /* A block result written by an early exit must remain distinct
+                 * from any linked repeat-expression register cleaned up on
+                 * that path. Reserve it before allocating the loop subtree;
+                 * ordinary block expressions retain the established late
+                 * allocation and register reuse. */
+                if (block_expr_has_crossed_cleanup_exit(node, node)) {
+                    assign_block_expr_result_register(node);
+                }
                 break;
 
             case ARGS:
@@ -954,9 +1134,11 @@ walker_result register_walker(walker_direction direction,
             case SAY:
             case RETURN:
                 /*
-                 * We do not need a register as we can handle a constant directly
+                 * RXAS can handle only its supported immediate operand types
+                 * directly.  Binary, decimal and other values need a register.
                  */
-                if (child1 && is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                if (constant_has_direct_control_operand(child1))
+                    child1->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
 
@@ -1621,15 +1803,7 @@ walker_result register_walker(walker_direction direction,
                 break;
 
             case BLOCK_EXPR:
-                if (!inline_block_expr_assignment_target_register(node,
-                                                                  &node->register_num,
-                                                                  &node->register_type) &&
-                    !inline_block_expr_owned_return_register(node,
-                                                             &node->register_num,
-                                                             &node->register_type)) {
-                    node->register_num = get_reg(node->scope);
-                    node->register_type = 'r';
-                }
+                assign_block_expr_result_register(node);
                 break;
 
             case IF:
@@ -1716,7 +1890,7 @@ walker_result register_walker(walker_direction direction,
         /* If this is a statement level node, return all deferred registers */
         if (node->parent && node->parent->node_type == INSTRUCTIONS &&
             !node_is_block_expr_leave(node)) {
-            ret_reg_all_deferred(node->scope);
+            return_statement_deferred_registers(node);
         }
 
         release_scoped_registers_for_node(node);

@@ -1,0 +1,19 @@
+utc=2026-08-18T17:01:54Z
+{ 2.52 2.40 2.35 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+80124 /bin/zsh -c evidence_root=/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-08-18-decimal-01-libmpdec-screen
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxtvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|ctest|cmake --build|ninja|make( |$)' || true
+} >"$evidence_root/double-check-post-state.txt" 2>&1
+cat "$evidence_root/double-check-driver.stdout.txt"
+cat "$evidence_root/double-check-driver.stderr.txt"
+sed -n '1,30p' "$evidence_root/double-check/summary.csv"
+rg -n "FAIL:|PANIC:" "$evidence_root/double-check/outputs.csv" || true

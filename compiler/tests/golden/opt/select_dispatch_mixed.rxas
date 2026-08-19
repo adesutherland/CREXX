@@ -4,457 +4,444 @@
 
 .globals=0
 
-main() .locals=34
+main() .locals=10
    .meta "select_dispatch_mixed.main"="b" ".int" main() ""
-   .srcstep 102 102 17 "select_dispatch_mixed.crexx" 3 1 23 "main: procedure = .int"
+   .srcstep 24 24 17 "select_dispatch_mixed.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
-   .meta "select_dispatch_mixed.main.counter"="b" ".int" r0
+   .meta "select_dispatch_mixed.main.counter"="b" ".int" r2
    .srcstep 1 1 17 "select_dispatch_mixed.crexx" 4 3 17 "  counter = .int"
-   null r0
-   .meta "select_dispatch_mixed.main.index"="b" ".int" r1
+   .meta "select_dispatch_mixed.main.index"="b" ".int" r3
    .srcstep 2 2 17 "select_dispatch_mixed.crexx" 5 3 15 "  index = .int"
-   null r1
-   .meta "select_dispatch_mixed.main.values"="b" ".int[8]" r2
+   .meta "select_dispatch_mixed.main.values"="b" ".int[8]" r4
    .srcstep 3 3 17 "select_dispatch_mixed.crexx" 6 3 18 "  values = .int[8]"
-   null r2
+   null r4
    .srcstep 4 4 17 "select_dispatch_mixed.crexx" 8 3 16 "  values[1] = 2"
-   setattrs r2,8
-   linkattr1 r3,r2,1
-   load r4,2
-   .traceevent "L" 4 "R" "I" "r" 4 4 4 0 "" ""
-   isetunlink r3,r4
-   .traceevent "A" 6 "R" "I" "r" 4 4 4 0 "values" ""
+   setattrs r4,8
+   linkattr1 r1,r4,1
+   load r0,2
+   .traceevent "L" 4 "R" "I" "r" 0 4 4 0 "" ""
+   isetunlink r1,r0
+   .traceevent "A" 6 "R" "I" "r" 0 4 4 0 "values" ""
    .srcstep 5 5 17 "select_dispatch_mixed.crexx" 9 3 16 "  values[2] = 9"
-   setattrs r2,8
-   linkattr1 r4,r2,2
-   load r3,9
-   .traceevent "L" 4 "R" "I" "r" 3 5 5 0 "" ""
-   isetunlink r4,r3
-   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "values" ""
+   setattrs r4,8
+   linkattr1 r1,r4,2
+   load r0,9
+   .traceevent "L" 4 "R" "I" "r" 0 5 5 0 "" ""
+   isetunlink r1,r0
+   .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "values" ""
    .srcstep 6 6 17 "select_dispatch_mixed.crexx" 10 3 17 "  values[3] = 11"
-   setattrs r2,8
-   linkattr1 r4,r2,3
-   load r3,11
-   .traceevent "L" 4 "R" "I" "r" 3 6 6 0 "" ""
-   isetunlink r4,r3
-   .traceevent "A" 6 "R" "I" "r" 3 6 6 0 "values" ""
+   setattrs r4,8
+   linkattr1 r1,r4,3
+   load r0,11
+   .traceevent "L" 4 "R" "I" "r" 0 6 6 0 "" ""
+   isetunlink r1,r0
+   .traceevent "A" 6 "R" "I" "r" 0 6 6 0 "values" ""
    .srcstep 7 7 17 "select_dispatch_mixed.crexx" 11 3 17 "  values[4] = 25"
-   setattrs r2,8
-   linkattr1 r4,r2,4
-   load r3,25
-   .traceevent "L" 4 "R" "I" "r" 3 7 7 0 "" ""
-   isetunlink r4,r3
-   .traceevent "A" 6 "R" "I" "r" 3 7 7 0 "values" ""
+   setattrs r4,8
+   linkattr1 r1,r4,4
+   load r0,25
+   .traceevent "L" 4 "R" "I" "r" 0 7 7 0 "" ""
+   isetunlink r1,r0
+   .traceevent "A" 6 "R" "I" "r" 0 7 7 0 "values" ""
    .srcstep 8 8 17 "select_dispatch_mixed.crexx" 12 3 17 "  values[5] = 21"
-   setattrs r2,8
-   linkattr1 r4,r2,5
-   load r3,21
-   .traceevent "L" 4 "R" "I" "r" 3 8 8 0 "" ""
-   isetunlink r4,r3
-   .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "values" ""
+   setattrs r4,8
+   linkattr1 r1,r4,5
+   load r0,21
+   .traceevent "L" 4 "R" "I" "r" 0 8 8 0 "" ""
+   isetunlink r1,r0
+   .traceevent "A" 6 "R" "I" "r" 0 8 8 0 "values" ""
    .srcstep 9 9 17 "select_dispatch_mixed.crexx" 13 3 17 "  values[6] = 30"
-   setattrs r2,8
-   linkattr1 r4,r2,6
-   load r3,30
-   .traceevent "L" 4 "R" "I" "r" 3 9 9 0 "" ""
-   isetunlink r4,r3
-   .traceevent "A" 6 "R" "I" "r" 3 9 9 0 "values" ""
+   setattrs r4,8
+   linkattr1 r1,r4,6
+   load r0,30
+   .traceevent "L" 4 "R" "I" "r" 0 9 9 0 "" ""
+   isetunlink r1,r0
+   .traceevent "A" 6 "R" "I" "r" 0 9 9 0 "values" ""
    .srcstep 10 10 17 "select_dispatch_mixed.crexx" 14 3 17 "  values[7] = 99"
-   setattrs r2,8
-   linkattr1 r4,r2,7
-   load r3,99
-   .traceevent "L" 4 "R" "I" "r" 3 10 10 0 "" ""
-   isetunlink r4,r3
-   .traceevent "A" 6 "R" "I" "r" 3 10 10 0 "values" ""
+   setattrs r4,8
+   linkattr1 r1,r4,7
+   load r0,99
+   .traceevent "L" 4 "R" "I" "r" 0 10 10 0 "" ""
+   isetunlink r1,r0
+   .traceevent "A" 6 "R" "I" "r" 0 10 10 0 "values" ""
    .srcstep 11 11 17 "select_dispatch_mixed.crexx" 15 3 17 "  values[8] = 15"
-   setattrs r2,8
-   linkattr1 r4,r2,8
-   load r3,15
-   .traceevent "L" 4 "R" "I" "r" 3 11 11 0 "" ""
-   isetunlink r4,r3
-   .traceevent "A" 6 "R" "I" "r" 3 11 11 0 "values" ""
-   .srcstep 87 87 17 "select_dispatch_mixed.crexx" 17 3 5 "  do index = 1 to 8"
+   setattrs r4,8
+   linkattr1 r1,r4,8
+   load r0,15
+   .traceevent "L" 4 "R" "I" "r" 0 11 11 0 "" ""
+   isetunlink r1,r0
+   .traceevent "A" 6 "R" "I" "r" 0 11 11 0 "values" ""
+   .srcstep 18 18 17 "select_dispatch_mixed.crexx" 17 3 5 "  do index = 1 to 8"
    .srcstep 12 12 17 "select_dispatch_mixed.crexx" 17 6 15 "  do index = 1 to 8"
-   load r1,1
-   .traceevent "L" 4 "R" "I" "r" 1 12 12 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 1 12 12 0 "index" ""
+   load r3,1
+   .traceevent "L" 4 "R" "I" "r" 3 12 12 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 12 12 0 "index" ""
    .srcstep 13 13 17 "select_dispatch_mixed.crexx" 17 16 20 "  do index = 1 to 8"
-   load r4,8
-   .traceevent "L" 4 "R" "I" "r" 4 0 0 0 "" ""
+   load r1,8
+   .traceevent "L" 4 "R" "I" "r" 1 0 0 0 "" ""
 l50dostart:
    .srcstep 13 13 17 "select_dispatch_mixed.crexx" 17 16 20 "  do index = 1 to 8"
-   igt r3,r1,r4
-   brt l50doend,r3
+   igt r0,r3,r1
+   brt l50doend,r0
    .srcstep 15 15 17 "select_dispatch_mixed.crexx" 18 5 16 "    counter = 0"
-   load r0,0
-   .traceevent "L" 4 "R" "I" "r" 0 15 15 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 0 15 15 0 "counter" ""
-   .srcstep 85 85 17 "select_dispatch_mixed.crexx" 19 5 47 "    say mixed_classify(values[index], counter)"
-   .srcstep 84 84 17 "select_dispatch_mixed.crexx" 19 9 23 "    say mixed_classify(values[index], counter)"
-   .srcstep 16 16 33 "select_dispatch_mixed.crexx" 28 7 12 "  arg value = .int, expose counter = .int"
-   .traceevent "V" 6 "R" "I" "r" 1 16 16 0 "index" ""
-   .traceevent "C" 4 "R" "I" "r" 1 16 16 0 "values" ""
-   setlinkattr1 r7,r2,8,r1
-   .traceevent "V" 6 "R" "I" "r" 7 16 16 0 "values" ""
-   igetunlink r6,r7
-   .traceevent "A" 6 "R" "I" "r" 6 16 16 0 "value" ""
-   .meta "select_dispatch_mixed.main.select_tmp"="b" ".int" r8
-   .srcstep 17 17 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   null r8
-   .srcstep 18 18 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   .traceevent "V" 6 "R" "I" "r" 6 18 18 0 "value" ""
-   icopy r8,r6
-   .traceevent "A" 6 "R" "I" "r" 8 18 18 0 "select_tmp" ""
-   .srcstep 82 82 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   .jtable jtable741 auto
-   jumpi r8,jtable741
-   br l741dispatchdefault
-l741dispatchcase0: .jcase jtable741 1
-   .srcstep 19 19 17 "select_dispatch_mixed.crexx" 31 17 27 "    when 1 then return 101"
-   load r7,101
-   .traceevent "L" 4 "R" "I" "r" 7 85 85 0 "" ""
-   icopy r32,r7
-   br l331bexprend
-   br l741dispatchend
-l741dispatchcase1: .jcase jtable741 2
-   .srcstep 20 20 17 "select_dispatch_mixed.crexx" 32 17 27 "    when 2 then return 102"
-   load r9,102
-   .traceevent "L" 4 "R" "I" "r" 9 85 85 0 "" ""
-   icopy r32,r9
-   br l331bexprend
-   br l741dispatchend
-l741dispatchcase2: .jcase jtable741 3
-   .srcstep 21 21 17 "select_dispatch_mixed.crexx" 33 17 27 "    when 3 then return 103"
-   load r10,103
-   .traceevent "L" 4 "R" "I" "r" 10 85 85 0 "" ""
-   icopy r32,r10
-   br l331bexprend
-   br l741dispatchend
-l741dispatchcase3: .jcase jtable741 4
-   .srcstep 22 22 17 "select_dispatch_mixed.crexx" 34 17 27 "    when 4 then return 104"
-   load r11,104
-   .traceevent "L" 4 "R" "I" "r" 11 85 85 0 "" ""
-   icopy r32,r11
-   br l331bexprend
-   br l741dispatchend
-l741dispatchcase4: .jcase jtable741 5
-   .srcstep 23 23 17 "select_dispatch_mixed.crexx" 35 17 27 "    when 5 then return 105"
-   load r12,105
-   .traceevent "L" 4 "R" "I" "r" 12 85 85 0 "" ""
-   icopy r32,r12
-   br l331bexprend
-   br l741dispatchend
-l741dispatchcase5: .jcase jtable741 6
-   .srcstep 24 24 17 "select_dispatch_mixed.crexx" 36 17 27 "    when 6 then return 106"
-   load r13,106
-   .traceevent "L" 4 "R" "I" "r" 13 85 85 0 "" ""
-   icopy r32,r13
-   br l331bexprend
-   br l741dispatchend
-l741dispatchcase6: .jcase jtable741 7
-   .srcstep 25 25 17 "select_dispatch_mixed.crexx" 37 17 27 "    when 7 then return 107"
-   load r14,107
-   .traceevent "L" 4 "R" "I" "r" 14 85 85 0 "" ""
-   icopy r32,r14
-   br l331bexprend
-   br l741dispatchend
-l741dispatchcase7: .jcase jtable741 8
-   .srcstep 26 26 17 "select_dispatch_mixed.crexx" 38 17 27 "    when 8 then return 108"
-   load r15,108
-   .traceevent "L" 4 "R" "I" "r" 15 85 85 0 "" ""
-   icopy r32,r15
-   br l331bexprend
-   br l741dispatchend
-l741dispatchdefault:
-   .srcstep 80 80 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   .srcstep 32 32 6 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
-   .srcstep 27 27 33 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
-   copy r16,r8
-   .traceevent "A" 6 "R" "I" "r" 16 27 27 0 "__inline_lhs_394_393" ""
-   .srcstep 31 31 33 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
-   .traceevent "V" 6 "R" "I" "r" 16 80 80 0 "__inline_lhs_394_393" ""
-   .srcstep 30 30 17 "select_dispatch_mixed.crexx" 39 10 21 "    when dynamic_key(counter, 9) then return 150"
-   .srcstep 28 28 17 "select_dispatch_mixed.crexx" 70 3 24 "  counter = counter + 1"
-   .traceevent "V" 6 "R" "I" "r" 0 28 28 0 "counter" ""
-   iadd r0,r0,1
-   .traceevent "O" 4 "R" "I" "r" 0 28 28 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 0 28 28 0 "counter" ""
-   .srcstep 29 29 17 "select_dispatch_mixed.crexx" 71 3 13 "  return key"
-   load r15,9
-   .traceevent "L" 4 "R" "I" "r" 15 80 80 0 "" ""
-   icopy r14,r15
-   br l648bexprend
-l648bexprend:
-   ieq r14,r16,r14
-   .traceevent "O" 4 "R" "B" "r" 14 80 80 0 "" ""
-   icopy r13,r14
-   br l614bexprend
-l614bexprend:
-   brf l392iffalse,r13
-   .srcstep 33 33 17 "select_dispatch_mixed.crexx" 39 39 49 "    when dynamic_key(counter, 9) then return 150"
-   load r12,150
-   .traceevent "L" 4 "R" "I" "r" 12 85 85 0 "" ""
-   icopy r32,r12
-   br l331bexprend
-   br l392ifend
-   .srcstep 81 81 17 "select_dispatch_mixed.crexx" 40 5 9 "    when 10 then return 210"
-l392iffalse:
-   .srcstep 78 78 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   ieq r11,r8,10
-   .traceevent "O" 4 "R" "B" "r" 11 78 78 0 "" ""
-   brf l400iffalse,r11
-   .srcstep 34 34 17 "select_dispatch_mixed.crexx" 40 18 28 "    when 10 then return 210"
-   load r10,210
-   .traceevent "L" 4 "R" "I" "r" 10 85 85 0 "" ""
-   icopy r32,r10
-   br l331bexprend
-   br l400ifend
-   .srcstep 79 79 17 "select_dispatch_mixed.crexx" 41 5 9 "    when 11 then return 211"
-l400iffalse:
-   .srcstep 76 76 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   ieq r9,r8,11
-   .traceevent "O" 4 "R" "B" "r" 9 76 76 0 "" ""
-   brf l406iffalse,r9
-   .srcstep 35 35 17 "select_dispatch_mixed.crexx" 41 18 28 "    when 11 then return 211"
-   load r7,211
-   .traceevent "L" 4 "R" "I" "r" 7 85 85 0 "" ""
-   icopy r32,r7
-   br l331bexprend
-   br l406ifend
-   .srcstep 77 77 17 "select_dispatch_mixed.crexx" 42 5 9 "    when 12 then return 212"
-l406iffalse:
-   .srcstep 74 74 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   ieq r18,r8,12
-   .traceevent "O" 4 "R" "B" "r" 18 74 74 0 "" ""
-   brf l412iffalse,r18
-   .srcstep 36 36 17 "select_dispatch_mixed.crexx" 42 18 28 "    when 12 then return 212"
-   load r19,212
-   .traceevent "L" 4 "R" "I" "r" 19 85 85 0 "" ""
-   icopy r32,r19
-   br l331bexprend
-   br l412ifend
-   .srcstep 75 75 17 "select_dispatch_mixed.crexx" 43 5 9 "    when \"15\" then return 215"
-l412iffalse:
-   .srcstep 72 72 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   req r20,r8,"15"
-   .traceevent "O" 4 "R" "B" "r" 20 72 72 0 "" ""
-   brf l418iffalse,r20
-   .srcstep 37 37 17 "select_dispatch_mixed.crexx" 43 20 30 "    when \"15\" then return 215"
-   load r21,215
-   .traceevent "L" 4 "R" "I" "r" 21 85 85 0 "" ""
-   icopy r32,r21
-   br l331bexprend
-   br l418ifend
-   .srcstep 73 73 17 "select_dispatch_mixed.crexx" 44 5 9 "    when dynamic_key(counter, 25) then return 250"
-l418iffalse:
-   .srcstep 70 70 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   .srcstep 43 43 6 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
-   .srcstep 38 38 33 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
-   copy r22,r8
-   .traceevent "A" 6 "R" "I" "r" 22 38 38 0 "__inline_lhs_426_425" ""
-   .srcstep 42 42 33 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
-   .traceevent "V" 6 "R" "I" "r" 22 70 70 0 "__inline_lhs_426_425" ""
-   .srcstep 41 41 17 "select_dispatch_mixed.crexx" 44 10 21 "    when dynamic_key(counter, 25) then return 250"
-   .srcstep 39 39 17 "select_dispatch_mixed.crexx" 70 3 24 "  counter = counter + 1"
-   .traceevent "V" 6 "R" "I" "r" 0 39 39 0 "counter" ""
-   iadd r0,r0,1
-   .traceevent "O" 4 "R" "I" "r" 0 39 39 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 0 39 39 0 "counter" ""
-   .srcstep 40 40 17 "select_dispatch_mixed.crexx" 71 3 13 "  return key"
-   load r21,25
-   .traceevent "L" 4 "R" "I" "r" 21 70 70 0 "" ""
-   icopy r19,r21
-   br l694bexprend
-l694bexprend:
-   ieq r19,r22,r19
-   .traceevent "O" 4 "R" "B" "r" 19 70 70 0 "" ""
-   icopy r14,r19
-   br l660bexprend
-l660bexprend:
-   brf l424iffalse,r14
-   .srcstep 44 44 17 "select_dispatch_mixed.crexx" 44 40 50 "    when dynamic_key(counter, 25) then return 250"
-   load r12,250
-   .traceevent "L" 4 "R" "I" "r" 12 85 85 0 "" ""
-   icopy r32,r12
-   br l331bexprend
-   br l424ifend
-   .srcstep 71 71 17 "select_dispatch_mixed.crexx" 45 5 9 "    when 20 then return 320"
-l424iffalse:
-   .srcstep 68 68 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   ieq r10,r8,20
-   .traceevent "O" 4 "R" "B" "r" 10 68 68 0 "" ""
-   brf l432iffalse,r10
-   .srcstep 45 45 17 "select_dispatch_mixed.crexx" 45 18 28 "    when 20 then return 320"
-   load r7,320
-   .traceevent "L" 4 "R" "I" "r" 7 85 85 0 "" ""
-   icopy r32,r7
-   br l331bexprend
-   br l432ifend
-   .srcstep 69 69 17 "select_dispatch_mixed.crexx" 46 5 9 "    when 21 then return 321"
-l432iffalse:
-   .srcstep 66 66 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   ieq r24,r8,21
-   .traceevent "O" 4 "R" "B" "r" 24 66 66 0 "" ""
-   brf l438iffalse,r24
-   .srcstep 46 46 17 "select_dispatch_mixed.crexx" 46 18 28 "    when 21 then return 321"
-   load r25,321
-   .traceevent "L" 4 "R" "I" "r" 25 85 85 0 "" ""
-   icopy r32,r25
-   br l331bexprend
-   br l438ifend
-   .srcstep 67 67 17 "select_dispatch_mixed.crexx" 47 5 9 "    when 22 then return 322"
-l438iffalse:
-   .srcstep 64 64 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   ieq r26,r8,22
-   .traceevent "O" 4 "R" "B" "r" 26 64 64 0 "" ""
-   brf l444iffalse,r26
-   .srcstep 47 47 17 "select_dispatch_mixed.crexx" 47 18 28 "    when 22 then return 322"
-   load r27,322
-   .traceevent "L" 4 "R" "I" "r" 27 85 85 0 "" ""
-   icopy r32,r27
-   br l331bexprend
-   br l444ifend
-   .srcstep 65 65 17 "select_dispatch_mixed.crexx" 48 5 9 "    when dynamic_key(counter, 40) then return 440"
-l444iffalse:
-   .srcstep 62 62 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   .srcstep 53 53 6 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
-   .srcstep 48 48 33 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
-   copy r28,r8
-   .traceevent "A" 6 "R" "I" "r" 28 48 48 0 "__inline_lhs_452_451" ""
-   .srcstep 52 52 33 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
-   .traceevent "V" 6 "R" "I" "r" 28 62 62 0 "__inline_lhs_452_451" ""
-   .srcstep 51 51 17 "select_dispatch_mixed.crexx" 48 10 21 "    when dynamic_key(counter, 40) then return 440"
-   .srcstep 49 49 17 "select_dispatch_mixed.crexx" 70 3 24 "  counter = counter + 1"
-   .traceevent "V" 6 "R" "I" "r" 0 49 49 0 "counter" ""
-   iadd r0,r0,1
-   .traceevent "O" 4 "R" "I" "r" 0 49 49 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 0 49 49 0 "counter" ""
-   .srcstep 50 50 17 "select_dispatch_mixed.crexx" 71 3 13 "  return key"
-   load r27,40
-   .traceevent "L" 4 "R" "I" "r" 27 62 62 0 "" ""
-   icopy r25,r27
-   br l729bexprend
-l729bexprend:
-   ieq r25,r28,r25
-   .traceevent "O" 4 "R" "B" "r" 25 62 62 0 "" ""
-   icopy r19,r25
-   br l706bexprend
-l706bexprend:
-   brf l450iffalse,r19
-   .srcstep 54 54 17 "select_dispatch_mixed.crexx" 48 40 50 "    when dynamic_key(counter, 40) then return 440"
-   load r12,440
-   .traceevent "L" 4 "R" "I" "r" 12 85 85 0 "" ""
-   icopy r32,r12
-   br l331bexprend
-   br l450ifend
-   .srcstep 63 63 17 "select_dispatch_mixed.crexx" 49 5 9 "    when 30 then return 430"
-l450iffalse:
-   .srcstep 60 60 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   ieq r7,r8,30
-   .traceevent "O" 4 "R" "B" "r" 7 60 60 0 "" ""
-   brf l458iffalse,r7
-   .srcstep 55 55 17 "select_dispatch_mixed.crexx" 49 18 28 "    when 30 then return 430"
-   load r30,430
-   .traceevent "L" 4 "R" "I" "r" 30 85 85 0 "" ""
-   icopy r32,r30
-   br l331bexprend
-   br l458ifend
-   .srcstep 61 61 17 "select_dispatch_mixed.crexx" 50 5 9 "    when 31 then return 431"
-l458iffalse:
-   .srcstep 58 58 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
-   ieq r31,r8,31
-   .traceevent "O" 4 "R" "B" "r" 31 58 58 0 "" ""
-   brf l464iffalse,r31
-   .srcstep 56 56 17 "select_dispatch_mixed.crexx" 50 18 28 "    when 31 then return 431"
-   load r32,431
-   .traceevent "L" 4 "R" "I" "r" 32 85 85 0 "" ""
-   br l331bexprend
-   br l464ifend
-   .srcstep 59 59 17 "select_dispatch_mixed.crexx" 51 5 14 "    otherwise return -1"
-l464iffalse:
-   .srcstep 57 57 17 "select_dispatch_mixed.crexx" 51 15 24 "    otherwise return -1"
-   load r33,-1
-   .traceevent "L" 4 "R" "I" "r" 33 85 85 0 "" ""
-   icopy r32,r33
-   br l331bexprend
-l464ifend:
-l458ifend:
-l450ifend:
-l444ifend:
-l438ifend:
-l432ifend:
-l424ifend:
-l418ifend:
-l412ifend:
-l406ifend:
-l400ifend:
-l392ifend:
-l741dispatchend:
-   .srcstep 83 83 17 "select_dispatch_mixed.crexx" 53 3 12 "  return -2"
-   load r33,-2
-   .traceevent "L" 4 "R" "I" "r" 33 85 85 0 "" ""
-   icopy r32,r33
-   br l331bexprend
-l331bexprend:
-   itos r32
-   say r32
-   .srcstep 86 86 17 "select_dispatch_mixed.crexx" 20 5 16 "    say counter"
-   itos r0
-   .traceevent "V" 6 "R" "S" "r" 0 86 86 0 "counter" ""
-   say r0
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 15 15 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 15 15 0 "counter" ""
+   .srcstep 16 16 17 "select_dispatch_mixed.crexx" 19 5 47 "    say mixed_classify(values[index], counter)"
+   .traceevent "V" 6 "R" "I" "r" 3 16 16 0 "index" ""
+   .traceevent "C" 4 "R" "I" "r" 3 16 16 0 "values" ""
+   setlinkattr1 r8,r4,8,r3
+   .traceevent "V" 6 "R" "I" "r" 8 16 16 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 2 16 16 0 "counter" ""
+   call2 r9,mixed_classify(),r8,r2
+   unlink r8
+   itos r9
+   .traceevent "F" 4 "R" "S" "r" 9 16 16 0 "mixed_classify" ""
+   say r9
+   .srcstep 17 17 17 "select_dispatch_mixed.crexx" 20 5 16 "    say counter"
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 17 17 0 "counter" ""
+   say r2
 l50doinc:
    .srcstep 14 14 17 "select_dispatch_mixed.crexx" 17 6 11 "  do index = 1 to 8"
-   inc r1
-   .srcstep 88 88 17 "select_dispatch_mixed.crexx" 21 3 6 "  end"
+   inc r3
+   .srcstep 19 19 17 "select_dispatch_mixed.crexx" 21 3 6 "  end"
    br l50dostart
 l50doend:
-   .srcstep 92 92 17 "select_dispatch_mixed.crexx" 22 3 26 "  say otherwise_if(2, 40)"
-   .srcstep 91 91 17 "select_dispatch_mixed.crexx" 22 7 19 "  say otherwise_if(2, 40)"
-   .srcstep 89 89 17 "select_dispatch_mixed.crexx" 60 17 27 "    when 2 then return 502"
-   load r33,502
-   .traceevent "L" 4 "R" "I" "r" 33 92 92 0 "" ""
-   icopy r32,r33
-   br l474bexprend
-   .srcstep 90 90 17 "select_dispatch_mixed.crexx" 66 3 14 "  return -501"
-   load r33,-501
-   .traceevent "L" 4 "R" "I" "r" 33 92 92 0 "" ""
-   icopy r32,r33
-   br l474bexprend
-l474bexprend:
-   itos r32
-   say r32
-   .srcstep 96 96 17 "select_dispatch_mixed.crexx" 23 3 27 "  say otherwise_if(99, 40)"
-   .srcstep 95 95 17 "select_dispatch_mixed.crexx" 23 7 19 "  say otherwise_if(99, 40)"
-   .srcstep 93 93 17 "select_dispatch_mixed.crexx" 63 26 36 "      if probe = 40 then return 540"
-   load r33,540
-   .traceevent "L" 4 "R" "I" "r" 33 96 96 0 "" ""
-   icopy r32,r33
-   br l517bexprend
-   .srcstep 94 94 17 "select_dispatch_mixed.crexx" 66 3 14 "  return -501"
-   load r33,-501
-   .traceevent "L" 4 "R" "I" "r" 33 96 96 0 "" ""
-   icopy r32,r33
-   br l517bexprend
-l517bexprend:
-   itos r32
-   say r32
-   .srcstep 100 100 17 "select_dispatch_mixed.crexx" 24 3 26 "  say otherwise_if(99, 0)"
-   .srcstep 99 99 17 "select_dispatch_mixed.crexx" 24 7 19 "  say otherwise_if(99, 0)"
-   .srcstep 97 97 17 "select_dispatch_mixed.crexx" 64 12 23 "      else return -500"
-   load r33,-500
-   .traceevent "L" 4 "R" "I" "r" 33 100 100 0 "" ""
-   icopy r32,r33
-   br l560bexprend
-   .srcstep 98 98 17 "select_dispatch_mixed.crexx" 66 3 14 "  return -501"
-   load r33,-501
-   .traceevent "L" 4 "R" "I" "r" 33 100 100 0 "" ""
-   icopy r32,r33
-   br l560bexprend
-l560bexprend:
-   itos r32
-   say r32
-   .srcstep 101 101 17 "select_dispatch_mixed.crexx" 25 3 11 "  return 0"
+   .srcstep 20 20 17 "select_dispatch_mixed.crexx" 22 3 26 "  say otherwise_if(2, 40)"
+   load r8,2
+   .traceevent "L" 4 "R" "I" "r" 8 20 20 0 "" ""
+   load r9,40
+   .traceevent "L" 4 "R" "I" "r" 9 20 20 0 "" ""
+   call2 r6,otherwise_if(),r8,r9
+   itos r6
+   .traceevent "F" 4 "R" "S" "r" 6 20 20 0 "otherwise_if" ""
+   say r6
+   .srcstep 21 21 17 "select_dispatch_mixed.crexx" 23 3 27 "  say otherwise_if(99, 40)"
+   load r8,99
+   .traceevent "L" 4 "R" "I" "r" 8 21 21 0 "" ""
+   load r9,40
+   .traceevent "L" 4 "R" "I" "r" 9 21 21 0 "" ""
+   call2 r6,otherwise_if(),r8,r9
+   itos r6
+   .traceevent "F" 4 "R" "S" "r" 6 21 21 0 "otherwise_if" ""
+   say r6
+   .srcstep 22 22 17 "select_dispatch_mixed.crexx" 24 3 26 "  say otherwise_if(99, 0)"
+   load r8,99
+   .traceevent "L" 4 "R" "I" "r" 8 22 22 0 "" ""
+   load r9,0
+   .traceevent "L" 4 "R" "I" "r" 9 22 22 0 "" ""
+   call2 r6,otherwise_if(),r8,r9
+   itos r6
+   .traceevent "F" 4 "R" "S" "r" 6 22 22 0 "otherwise_if" ""
+   say r6
+   .srcstep 23 23 17 "select_dispatch_mixed.crexx" 25 3 11 "  return 0"
    ret 0
    .meta "select_dispatch_mixed.main.counter"
    .meta "select_dispatch_mixed.main.index"
    .meta "select_dispatch_mixed.main.values"
+
+mixed_classify() .locals=25
+   .meta "select_dispatch_mixed.mixed_classify"="b" ".int" mixed_classify() "value=.int,expose counter=.int"
+   .srcstep 94 94 17 "select_dispatch_mixed.crexx" 27 1 33 "mixed_classify: procedure = .int"
+   numsci 18,1,1
+   .srcstep 25 25 17 "select_dispatch_mixed.crexx" 28 7 19 "  arg value = .int, expose counter = .int"
+   .meta "select_dispatch_mixed.mixed_classify.value"="b" ".int" a1
+   .srcstep 26 26 17 "select_dispatch_mixed.crexx" 28 21 42 "  arg value = .int, expose counter = .int"
+   .meta "select_dispatch_mixed.mixed_classify.counter"="b" ".int" a2
+   .meta "select_dispatch_mixed.mixed_classify.select_tmp"="b" ".int" r2
+   .srcstep 27 27 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   null r2
+   .srcstep 28 28 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   .traceevent "V" 6 "R" "I" "a" 1 28 28 0 "value" ""
+   icopy r2,a1
+   .traceevent "A" 6 "R" "I" "r" 2 28 28 0 "select_tmp" ""
+   .srcstep 92 92 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   .jtable jtable1868 auto
+   jumpi r2,jtable1868
+   br l1868dispatchdefault
+l1868dispatchcase0: .jcase jtable1868 1
+   .srcstep 29 29 17 "select_dispatch_mixed.crexx" 31 17 27 "    when 1 then return 101"
+   ret 101
+   br l1868dispatchend
+l1868dispatchcase1: .jcase jtable1868 2
+   .srcstep 30 30 17 "select_dispatch_mixed.crexx" 32 17 27 "    when 2 then return 102"
+   ret 102
+   br l1868dispatchend
+l1868dispatchcase2: .jcase jtable1868 3
+   .srcstep 31 31 17 "select_dispatch_mixed.crexx" 33 17 27 "    when 3 then return 103"
+   ret 103
+   br l1868dispatchend
+l1868dispatchcase3: .jcase jtable1868 4
+   .srcstep 32 32 17 "select_dispatch_mixed.crexx" 34 17 27 "    when 4 then return 104"
+   ret 104
+   br l1868dispatchend
+l1868dispatchcase4: .jcase jtable1868 5
+   .srcstep 33 33 17 "select_dispatch_mixed.crexx" 35 17 27 "    when 5 then return 105"
+   ret 105
+   br l1868dispatchend
+l1868dispatchcase5: .jcase jtable1868 6
+   .srcstep 34 34 17 "select_dispatch_mixed.crexx" 36 17 27 "    when 6 then return 106"
+   ret 106
+   br l1868dispatchend
+l1868dispatchcase6: .jcase jtable1868 7
+   .srcstep 35 35 17 "select_dispatch_mixed.crexx" 37 17 27 "    when 7 then return 107"
+   ret 107
+   br l1868dispatchend
+l1868dispatchcase7: .jcase jtable1868 8
+   .srcstep 36 36 17 "select_dispatch_mixed.crexx" 38 17 27 "    when 8 then return 108"
+   ret 108
+   br l1868dispatchend
+l1868dispatchdefault:
+   .srcstep 90 90 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   .srcstep 42 42 6 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
+   .srcstep 37 37 33 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
+   copy r3,r2
+   .traceevent "A" 6 "R" "I" "r" 3 37 37 0 "__inline_lhs_282_281" ""
+   .srcstep 41 41 33 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
+   .traceevent "V" 6 "R" "I" "r" 3 90 90 0 "__inline_lhs_282_281" ""
+   .srcstep 40 40 17 "select_dispatch_mixed.crexx" 39 10 21 "    when dynamic_key(counter, 9) then return 150"
+   .srcstep 38 38 17 "select_dispatch_mixed.crexx" 70 3 24 "  counter = counter + 1"
+   .traceevent "V" 6 "R" "I" "a" 2 38 38 0 "counter" ""
+   iadd a2,a2,1
+   .traceevent "O" 4 "R" "I" "a" 2 38 38 0 "" ""
+   .traceevent "A" 6 "R" "I" "a" 2 38 38 0 "counter" ""
+   .srcstep 39 39 17 "select_dispatch_mixed.crexx" 71 3 13 "  return key"
+   load r5,9
+   .traceevent "L" 4 "R" "I" "r" 5 90 90 0 "" ""
+   icopy r6,r5
+   br l892bexprend
+l892bexprend:
+   ieq r6,r3,r6
+   .traceevent "O" 4 "R" "B" "r" 6 90 90 0 "" ""
+   icopy r7,r6
+   br l603bexprend
+l603bexprend:
+   brf l280iffalse,r7
+   .srcstep 43 43 17 "select_dispatch_mixed.crexx" 39 39 49 "    when dynamic_key(counter, 9) then return 150"
+   ret 150
+   br l280ifend
+   .srcstep 91 91 17 "select_dispatch_mixed.crexx" 40 5 9 "    when 10 then return 210"
+l280iffalse:
+   .srcstep 88 88 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   ieq r8,r2,10
+   .traceevent "O" 4 "R" "B" "r" 8 88 88 0 "" ""
+   brf l283iffalse,r8
+   .srcstep 44 44 17 "select_dispatch_mixed.crexx" 40 18 28 "    when 10 then return 210"
+   ret 210
+   br l283ifend
+   .srcstep 89 89 17 "select_dispatch_mixed.crexx" 41 5 9 "    when 11 then return 211"
+l283iffalse:
+   .srcstep 86 86 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   ieq r9,r2,11
+   .traceevent "O" 4 "R" "B" "r" 9 86 86 0 "" ""
+   brf l286iffalse,r9
+   .srcstep 45 45 17 "select_dispatch_mixed.crexx" 41 18 28 "    when 11 then return 211"
+   ret 211
+   br l286ifend
+   .srcstep 87 87 17 "select_dispatch_mixed.crexx" 42 5 9 "    when 12 then return 212"
+l286iffalse:
+   .srcstep 84 84 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   ieq r10,r2,12
+   .traceevent "O" 4 "R" "B" "r" 10 84 84 0 "" ""
+   brf l289iffalse,r10
+   .srcstep 46 46 17 "select_dispatch_mixed.crexx" 42 18 28 "    when 12 then return 212"
+   ret 212
+   br l289ifend
+   .srcstep 85 85 17 "select_dispatch_mixed.crexx" 43 5 9 "    when \"15\" then return 215"
+l289iffalse:
+   .srcstep 82 82 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   req r11,r2,"15"
+   .traceevent "O" 4 "R" "B" "r" 11 82 82 0 "" ""
+   brf l292iffalse,r11
+   .srcstep 47 47 17 "select_dispatch_mixed.crexx" 43 20 30 "    when \"15\" then return 215"
+   ret 215
+   br l292ifend
+   .srcstep 83 83 17 "select_dispatch_mixed.crexx" 44 5 9 "    when dynamic_key(counter, 25) then return 250"
+l292iffalse:
+   .srcstep 80 80 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   .srcstep 53 53 6 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
+   .srcstep 48 48 33 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
+   copy r12,r2
+   .traceevent "A" 6 "R" "I" "r" 12 48 48 0 "__inline_lhs_297_296" ""
+   .srcstep 52 52 33 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
+   .traceevent "V" 6 "R" "I" "r" 12 80 80 0 "__inline_lhs_297_296" ""
+   .srcstep 51 51 17 "select_dispatch_mixed.crexx" 44 10 21 "    when dynamic_key(counter, 25) then return 250"
+   .srcstep 49 49 17 "select_dispatch_mixed.crexx" 70 3 24 "  counter = counter + 1"
+   .traceevent "V" 6 "R" "I" "a" 2 49 49 0 "counter" ""
+   iadd a2,a2,1
+   .traceevent "O" 4 "R" "I" "a" 2 49 49 0 "" ""
+   .traceevent "A" 6 "R" "I" "a" 2 49 49 0 "counter" ""
+   .srcstep 50 50 17 "select_dispatch_mixed.crexx" 71 3 13 "  return key"
+   load r6,25
+   .traceevent "L" 4 "R" "I" "r" 6 80 80 0 "" ""
+   icopy r14,r6
+   br l1208bexprend
+l1208bexprend:
+   ieq r14,r12,r14
+   .traceevent "O" 4 "R" "B" "r" 14 80 80 0 "" ""
+   icopy r15,r14
+   br l904bexprend
+l904bexprend:
+   brf l295iffalse,r15
+   .srcstep 54 54 17 "select_dispatch_mixed.crexx" 44 40 50 "    when dynamic_key(counter, 25) then return 250"
+   ret 250
+   br l295ifend
+   .srcstep 81 81 17 "select_dispatch_mixed.crexx" 45 5 9 "    when 20 then return 320"
+l295iffalse:
+   .srcstep 78 78 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   ieq r16,r2,20
+   .traceevent "O" 4 "R" "B" "r" 16 78 78 0 "" ""
+   brf l298iffalse,r16
+   .srcstep 55 55 17 "select_dispatch_mixed.crexx" 45 18 28 "    when 20 then return 320"
+   ret 320
+   br l298ifend
+   .srcstep 79 79 17 "select_dispatch_mixed.crexx" 46 5 9 "    when 21 then return 321"
+l298iffalse:
+   .srcstep 76 76 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   ieq r17,r2,21
+   .traceevent "O" 4 "R" "B" "r" 17 76 76 0 "" ""
+   brf l301iffalse,r17
+   .srcstep 56 56 17 "select_dispatch_mixed.crexx" 46 18 28 "    when 21 then return 321"
+   ret 321
+   br l301ifend
+   .srcstep 77 77 17 "select_dispatch_mixed.crexx" 47 5 9 "    when 22 then return 322"
+l301iffalse:
+   .srcstep 74 74 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   ieq r18,r2,22
+   .traceevent "O" 4 "R" "B" "r" 18 74 74 0 "" ""
+   brf l304iffalse,r18
+   .srcstep 57 57 17 "select_dispatch_mixed.crexx" 47 18 28 "    when 22 then return 322"
+   ret 322
+   br l304ifend
+   .srcstep 75 75 17 "select_dispatch_mixed.crexx" 48 5 9 "    when dynamic_key(counter, 40) then return 440"
+l304iffalse:
+   .srcstep 72 72 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   .srcstep 63 63 6 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
+   .srcstep 58 58 33 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
+   copy r19,r2
+   .traceevent "A" 6 "R" "I" "r" 19 58 58 0 "__inline_lhs_309_308" ""
+   .srcstep 62 62 33 "select_dispatch_mixed.crexx" 30 3 9 "  select value"
+   .traceevent "V" 6 "R" "I" "r" 19 72 72 0 "__inline_lhs_309_308" ""
+   .srcstep 61 61 17 "select_dispatch_mixed.crexx" 48 10 21 "    when dynamic_key(counter, 40) then return 440"
+   .srcstep 59 59 17 "select_dispatch_mixed.crexx" 70 3 24 "  counter = counter + 1"
+   .traceevent "V" 6 "R" "I" "a" 2 59 59 0 "counter" ""
+   iadd a2,a2,1
+   .traceevent "O" 4 "R" "I" "a" 2 59 59 0 "" ""
+   .traceevent "A" 6 "R" "I" "a" 2 59 59 0 "counter" ""
+   .srcstep 60 60 17 "select_dispatch_mixed.crexx" 71 3 13 "  return key"
+   load r14,40
+   .traceevent "L" 4 "R" "I" "r" 14 72 72 0 "" ""
+   icopy r21,r14
+   br l1539bexprend
+l1539bexprend:
+   ieq r21,r19,r21
+   .traceevent "O" 4 "R" "B" "r" 21 72 72 0 "" ""
+   icopy r22,r21
+   br l1220bexprend
+l1220bexprend:
+   brf l307iffalse,r22
+   .srcstep 64 64 17 "select_dispatch_mixed.crexx" 48 40 50 "    when dynamic_key(counter, 40) then return 440"
+   ret 440
+   br l307ifend
+   .srcstep 73 73 17 "select_dispatch_mixed.crexx" 49 5 9 "    when 30 then return 430"
+l307iffalse:
+   .srcstep 70 70 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   ieq r23,r2,30
+   .traceevent "O" 4 "R" "B" "r" 23 70 70 0 "" ""
+   brf l310iffalse,r23
+   .srcstep 65 65 17 "select_dispatch_mixed.crexx" 49 18 28 "    when 30 then return 430"
+   ret 430
+   br l310ifend
+   .srcstep 71 71 17 "select_dispatch_mixed.crexx" 50 5 9 "    when 31 then return 431"
+l310iffalse:
+   .srcstep 68 68 6 "select_dispatch_mixed.crexx" 30 3 15 "  select value"
+   ieq r24,r2,31
+   .traceevent "O" 4 "R" "B" "r" 24 68 68 0 "" ""
+   brf l313iffalse,r24
+   .srcstep 66 66 17 "select_dispatch_mixed.crexx" 50 18 28 "    when 31 then return 431"
+   ret 431
+   br l313ifend
+   .srcstep 69 69 17 "select_dispatch_mixed.crexx" 51 5 14 "    otherwise return -1"
+l313iffalse:
+   .srcstep 67 67 17 "select_dispatch_mixed.crexx" 51 15 24 "    otherwise return -1"
+   ret -1
+l313ifend:
+l310ifend:
+l307ifend:
+l304ifend:
+l301ifend:
+l298ifend:
+l295ifend:
+l292ifend:
+l289ifend:
+l286ifend:
+l283ifend:
+l280ifend:
+l1868dispatchend:
+   .srcstep 93 93 17 "select_dispatch_mixed.crexx" 53 3 12 "  return -2"
+   ret -2
+   .meta "select_dispatch_mixed.mixed_classify.counter"
+   .meta "select_dispatch_mixed.mixed_classify.value"
+
+otherwise_if() .locals=7
+   .meta "select_dispatch_mixed.otherwise_if"="b" ".int" otherwise_if() "value=.int,probe=.int"
+   .srcstep 114 114 17 "select_dispatch_mixed.crexx" 55 1 31 "otherwise_if: procedure = .int"
+   numsci 18,1,1
+   .srcstep 95 95 17 "select_dispatch_mixed.crexx" 56 7 19 "  arg value = .int, probe = .int"
+   .meta "select_dispatch_mixed.otherwise_if.value"="b" ".int" a1
+   .srcstep 96 96 17 "select_dispatch_mixed.crexx" 56 21 33 "  arg value = .int, probe = .int"
+   .meta "select_dispatch_mixed.otherwise_if.probe"="b" ".int" a2
+   .meta "select_dispatch_mixed.otherwise_if.select_tmp"="b" ".int" r2
+   .srcstep 97 97 6 "select_dispatch_mixed.crexx" 58 3 15 "  select value"
+   .srcstep 98 98 6 "select_dispatch_mixed.crexx" 58 3 15 "  select value"
+   .traceevent "V" 6 "R" "I" "a" 1 98 98 0 "value" ""
+   .traceevent "A" 6 "R" "I" "a" 1 98 98 0 "select_tmp" ""
+   .srcstep 111 111 6 "select_dispatch_mixed.crexx" 58 3 15 "  select value"
+   ieq r3,a1,1
+   .traceevent "O" 4 "R" "B" "r" 3 111 111 0 "" ""
+   brf l322iffalse,r3
+   .srcstep 99 99 17 "select_dispatch_mixed.crexx" 59 17 27 "    when 1 then return 501"
+   ret 501
+   br l322ifend
+   .srcstep 112 112 17 "select_dispatch_mixed.crexx" 60 5 9 "    when 2 then return 502"
+l322iffalse:
+   .srcstep 109 109 6 "select_dispatch_mixed.crexx" 58 3 15 "  select value"
+   ieq r4,a1,2
+   .traceevent "O" 4 "R" "B" "r" 4 109 109 0 "" ""
+   brf l325iffalse,r4
+   .srcstep 100 100 17 "select_dispatch_mixed.crexx" 60 17 27 "    when 2 then return 502"
+   ret 502
+   br l325ifend
+   .srcstep 110 110 17 "select_dispatch_mixed.crexx" 61 5 9 "    when 3 then return 503"
+l325iffalse:
+   .srcstep 107 107 6 "select_dispatch_mixed.crexx" 58 3 15 "  select value"
+   ieq r5,a1,3
+   .traceevent "O" 4 "R" "B" "r" 5 107 107 0 "" ""
+   brf l328iffalse,r5
+   .srcstep 101 101 17 "select_dispatch_mixed.crexx" 61 17 27 "    when 3 then return 503"
+   ret 503
+   br l328ifend
+   .srcstep 108 108 17 "select_dispatch_mixed.crexx" 62 5 14 "    otherwise"
+l328iffalse:
+   .srcstep 104 104 17 "select_dispatch_mixed.crexx" 63 7 20 "      if probe = 40 then return 540"
+   .traceevent "V" 6 "R" "I" "a" 2 104 104 0 "probe" ""
+   ieq r6,a2,40
+   .traceevent "O" 4 "R" "B" "r" 6 104 104 0 "" ""
+   brf l219iffalse,r6
+   .srcstep 105 105 17 "select_dispatch_mixed.crexx" 63 21 25 "      if probe = 40 then return 540"
+   .srcstep 102 102 17 "select_dispatch_mixed.crexx" 63 26 36 "      if probe = 40 then return 540"
+   ret 540
+   br l219ifend
+   .srcstep 106 106 17 "select_dispatch_mixed.crexx" 64 7 11 "      else return -500"
+l219iffalse:
+   .srcstep 103 103 17 "select_dispatch_mixed.crexx" 64 12 23 "      else return -500"
+   ret -500
+l219ifend:
+l328ifend:
+l325ifend:
+l322ifend:
+   .srcstep 113 113 17 "select_dispatch_mixed.crexx" 66 3 14 "  return -501"
+   ret -501
+   .meta "select_dispatch_mixed.otherwise_if.probe"
+   .meta "select_dispatch_mixed.otherwise_if.value"

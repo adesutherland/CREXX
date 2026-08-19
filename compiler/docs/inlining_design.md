@@ -365,6 +365,12 @@ Implemented behaviour:
   includes the receiver-slot `linkattr`/copy/unlink sequence. The
   `inline_test_binary_class_attr_assign` regression locks both the optimized
   shape and optimized/unoptimized execution.
+- A string actual bound to an inlined `.binary` value formal retains the
+  normal call's `stobin` conversion. The binding uses the ordinary typed
+  assignment emitter before the private binary formal is consumed; the raw
+  isolated-register copy remains limited to already-compatible values. The
+  `inline_binary_formal_string_conversion` regressions lock both the retained
+  inline shape and optimized/unoptimized execution.
 
 Remaining guardrail:
 
@@ -809,6 +815,8 @@ The implementation now covers:
 - `.ref` / `expose` varargs for `arg[]`, constant `arg[n]`, and constant `<argexists>(n)`, using existing RXAS argument/link primitives plus compiler-side capture helpers
 - assignment-site inlining when the LHS itself has child selectors, by falling back to the RHS `BLOCK_EXPR` path
 - binary-typed local plain procedures across the current statement and expression rewrite machinery
+- conversion-bearing string actuals for binary value formals, preserving the
+  normal call's `stobin` promotion without abandoning the inline rewrite
 - preserved default-init requirements for duplicated inline locals and inline-created aggregate temporaries
 - explicit cycle blocking so self recursion and mutual recursion do not expand indefinitely
 - receiver copyback for direct-receiver mutating method calls in statement, simple assignment, and supported single-consumer expression rewrites

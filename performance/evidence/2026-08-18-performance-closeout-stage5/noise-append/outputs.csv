@@ -1,0 +1,1401 @@
+sample_id,stream,line_number,text
+timing-Sieve-s5-sieve-rxbvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-s5-sieve-rxbvm-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-s5-sieve-java-recorded-1,stdout,1,Starting Sieve benchmark ...
+timing-Sieve-s5-sieve-java-recorded-1,stdout,2,Sieve: iterations=1 runtime: 46821us
+timing-Sieve-s5-sieve-java-recorded-1,stdout,3,Sieve: iterations=1 average: 46821us total: 46821us
+timing-Sieve-s5-sieve-java-recorded-1,stdout,4,
+timing-Sieve-s5-sieve-java-recorded-1,stdout,5,
+timing-Sieve-s5-sieve-java-recorded-1,stdout,6,Total Runtime: 46821us
+timing-Sieve-s5-sieve-java-recorded-2,stdout,1,Starting Sieve benchmark ...
+timing-Sieve-s5-sieve-java-recorded-2,stdout,2,Sieve: iterations=1 runtime: 45928us
+timing-Sieve-s5-sieve-java-recorded-2,stdout,3,Sieve: iterations=1 average: 45928us total: 45928us
+timing-Sieve-s5-sieve-java-recorded-2,stdout,4,
+timing-Sieve-s5-sieve-java-recorded-2,stdout,5,
+timing-Sieve-s5-sieve-java-recorded-2,stdout,6,Total Runtime: 45928us
+timing-Sieve-s5-sieve-rxbvm-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-s5-sieve-rxbvm-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-s5-sieve-rxbvm-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-s5-sieve-rxbvm-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-s5-sieve-java-recorded-3,stdout,1,Starting Sieve benchmark ...
+timing-Sieve-s5-sieve-java-recorded-3,stdout,2,Sieve: iterations=1 runtime: 46517us
+timing-Sieve-s5-sieve-java-recorded-3,stdout,3,Sieve: iterations=1 average: 46517us total: 46517us
+timing-Sieve-s5-sieve-java-recorded-3,stdout,4,
+timing-Sieve-s5-sieve-java-recorded-3,stdout,5,
+timing-Sieve-s5-sieve-java-recorded-3,stdout,6,Total Runtime: 46517us
+timing-Sieve-s5-sieve-java-recorded-4,stdout,1,Starting Sieve benchmark ...
+timing-Sieve-s5-sieve-java-recorded-4,stdout,2,Sieve: iterations=1 runtime: 46492us
+timing-Sieve-s5-sieve-java-recorded-4,stdout,3,Sieve: iterations=1 average: 46492us total: 46492us
+timing-Sieve-s5-sieve-java-recorded-4,stdout,4,
+timing-Sieve-s5-sieve-java-recorded-4,stdout,5,
+timing-Sieve-s5-sieve-java-recorded-4,stdout,6,Total Runtime: 46492us
+timing-Sieve-s5-sieve-rxbvm-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-s5-sieve-rxbvm-recorded-4,stdout,2,PASS: AWFY Sieve
+timing-Sieve-s5-sieve-rxbvm-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-s5-sieve-rxbvm-recorded-5,stdout,2,PASS: AWFY Sieve
+timing-Sieve-s5-sieve-java-recorded-5,stdout,1,Starting Sieve benchmark ...
+timing-Sieve-s5-sieve-java-recorded-5,stdout,2,Sieve: iterations=1 runtime: 48379us
+timing-Sieve-s5-sieve-java-recorded-5,stdout,3,Sieve: iterations=1 average: 48379us total: 48379us
+timing-Sieve-s5-sieve-java-recorded-5,stdout,4,
+timing-Sieve-s5-sieve-java-recorded-5,stdout,5,
+timing-Sieve-s5-sieve-java-recorded-5,stdout,6,Total Runtime: 48379us
+timing-Sieve-s5-sieve-java-recorded-6,stdout,1,Starting Sieve benchmark ...
+timing-Sieve-s5-sieve-java-recorded-6,stdout,2,Sieve: iterations=1 runtime: 45945us
+timing-Sieve-s5-sieve-java-recorded-6,stdout,3,Sieve: iterations=1 average: 45945us total: 45945us
+timing-Sieve-s5-sieve-java-recorded-6,stdout,4,
+timing-Sieve-s5-sieve-java-recorded-6,stdout,5,
+timing-Sieve-s5-sieve-java-recorded-6,stdout,6,Total Runtime: 45945us
+timing-Sieve-s5-sieve-rxbvm-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-s5-sieve-rxbvm-recorded-6,stdout,2,PASS: AWFY Sieve
+timing-Sieve-s5-sieve-rxbvm-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-s5-sieve-rxbvm-recorded-7,stdout,2,PASS: AWFY Sieve
+timing-Sieve-s5-sieve-java-recorded-7,stdout,1,Starting Sieve benchmark ...
+timing-Sieve-s5-sieve-java-recorded-7,stdout,2,Sieve: iterations=1 runtime: 45778us
+timing-Sieve-s5-sieve-java-recorded-7,stdout,3,Sieve: iterations=1 average: 45778us total: 45778us
+timing-Sieve-s5-sieve-java-recorded-7,stdout,4,
+timing-Sieve-s5-sieve-java-recorded-7,stdout,5,
+timing-Sieve-s5-sieve-java-recorded-7,stdout,6,Total Runtime: 45778us
+timing-Sieve-s5-sieve-java-recorded-8,stdout,1,Starting Sieve benchmark ...
+timing-Sieve-s5-sieve-java-recorded-8,stdout,2,Sieve: iterations=1 runtime: 46007us
+timing-Sieve-s5-sieve-java-recorded-8,stdout,3,Sieve: iterations=1 average: 46007us total: 46007us
+timing-Sieve-s5-sieve-java-recorded-8,stdout,4,
+timing-Sieve-s5-sieve-java-recorded-8,stdout,5,
+timing-Sieve-s5-sieve-java-recorded-8,stdout,6,Total Runtime: 46007us
+timing-Sieve-s5-sieve-rxbvm-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-s5-sieve-rxbvm-recorded-8,stdout,2,PASS: AWFY Sieve
+timing-Sieve-s5-sieve-rxbvm-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-s5-sieve-rxbvm-recorded-9,stdout,2,PASS: AWFY Sieve
+timing-Sieve-s5-sieve-java-recorded-9,stdout,1,Starting Sieve benchmark ...
+timing-Sieve-s5-sieve-java-recorded-9,stdout,2,Sieve: iterations=1 runtime: 47115us
+timing-Sieve-s5-sieve-java-recorded-9,stdout,3,Sieve: iterations=1 average: 47115us total: 47115us
+timing-Sieve-s5-sieve-java-recorded-9,stdout,4,
+timing-Sieve-s5-sieve-java-recorded-9,stdout,5,
+timing-Sieve-s5-sieve-java-recorded-9,stdout,6,Total Runtime: 47115us
+timing-Sieve-s5-sieve-java-recorded-10,stdout,1,Starting Sieve benchmark ...
+timing-Sieve-s5-sieve-java-recorded-10,stdout,2,Sieve: iterations=1 runtime: 46976us
+timing-Sieve-s5-sieve-java-recorded-10,stdout,3,Sieve: iterations=1 average: 46976us total: 46976us
+timing-Sieve-s5-sieve-java-recorded-10,stdout,4,
+timing-Sieve-s5-sieve-java-recorded-10,stdout,5,
+timing-Sieve-s5-sieve-java-recorded-10,stdout,6,Total Runtime: 46976us
+timing-Sieve-s5-sieve-rxbvm-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-s5-sieve-rxbvm-recorded-10,stdout,2,PASS: AWFY Sieve
+timing-Permute-s5-permute-netrexx-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-s5-permute-netrexx-recorded-1,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-s5-permute-java-recorded-1,stdout,1,Starting Permute benchmark ...
+timing-Permute-s5-permute-java-recorded-1,stdout,2,Permute: iterations=1 runtime: 59672us
+timing-Permute-s5-permute-java-recorded-1,stdout,3,Permute: iterations=1 average: 59672us total: 59672us
+timing-Permute-s5-permute-java-recorded-1,stdout,4,
+timing-Permute-s5-permute-java-recorded-1,stdout,5,
+timing-Permute-s5-permute-java-recorded-1,stdout,6,Total Runtime: 59672us
+timing-Permute-s5-permute-java-recorded-2,stdout,1,Starting Permute benchmark ...
+timing-Permute-s5-permute-java-recorded-2,stdout,2,Permute: iterations=1 runtime: 78841us
+timing-Permute-s5-permute-java-recorded-2,stdout,3,Permute: iterations=1 average: 78841us total: 78841us
+timing-Permute-s5-permute-java-recorded-2,stdout,4,
+timing-Permute-s5-permute-java-recorded-2,stdout,5,
+timing-Permute-s5-permute-java-recorded-2,stdout,6,Total Runtime: 78841us
+timing-Permute-s5-permute-netrexx-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-s5-permute-netrexx-recorded-2,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-s5-permute-netrexx-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-s5-permute-netrexx-recorded-3,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-s5-permute-java-recorded-3,stdout,1,Starting Permute benchmark ...
+timing-Permute-s5-permute-java-recorded-3,stdout,2,Permute: iterations=1 runtime: 68072us
+timing-Permute-s5-permute-java-recorded-3,stdout,3,Permute: iterations=1 average: 68072us total: 68072us
+timing-Permute-s5-permute-java-recorded-3,stdout,4,
+timing-Permute-s5-permute-java-recorded-3,stdout,5,
+timing-Permute-s5-permute-java-recorded-3,stdout,6,Total Runtime: 68072us
+timing-Permute-s5-permute-java-recorded-4,stdout,1,Starting Permute benchmark ...
+timing-Permute-s5-permute-java-recorded-4,stdout,2,Permute: iterations=1 runtime: 60534us
+timing-Permute-s5-permute-java-recorded-4,stdout,3,Permute: iterations=1 average: 60534us total: 60534us
+timing-Permute-s5-permute-java-recorded-4,stdout,4,
+timing-Permute-s5-permute-java-recorded-4,stdout,5,
+timing-Permute-s5-permute-java-recorded-4,stdout,6,Total Runtime: 60534us
+timing-Permute-s5-permute-netrexx-recorded-4,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-s5-permute-netrexx-recorded-4,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-s5-permute-netrexx-recorded-5,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-s5-permute-netrexx-recorded-5,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-s5-permute-java-recorded-5,stdout,1,Starting Permute benchmark ...
+timing-Permute-s5-permute-java-recorded-5,stdout,2,Permute: iterations=1 runtime: 59945us
+timing-Permute-s5-permute-java-recorded-5,stdout,3,Permute: iterations=1 average: 59945us total: 59945us
+timing-Permute-s5-permute-java-recorded-5,stdout,4,
+timing-Permute-s5-permute-java-recorded-5,stdout,5,
+timing-Permute-s5-permute-java-recorded-5,stdout,6,Total Runtime: 59945us
+timing-Permute-s5-permute-java-recorded-6,stdout,1,Starting Permute benchmark ...
+timing-Permute-s5-permute-java-recorded-6,stdout,2,Permute: iterations=1 runtime: 59777us
+timing-Permute-s5-permute-java-recorded-6,stdout,3,Permute: iterations=1 average: 59777us total: 59777us
+timing-Permute-s5-permute-java-recorded-6,stdout,4,
+timing-Permute-s5-permute-java-recorded-6,stdout,5,
+timing-Permute-s5-permute-java-recorded-6,stdout,6,Total Runtime: 59777us
+timing-Permute-s5-permute-netrexx-recorded-6,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-s5-permute-netrexx-recorded-6,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-s5-permute-netrexx-recorded-7,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-s5-permute-netrexx-recorded-7,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-s5-permute-java-recorded-7,stdout,1,Starting Permute benchmark ...
+timing-Permute-s5-permute-java-recorded-7,stdout,2,Permute: iterations=1 runtime: 59687us
+timing-Permute-s5-permute-java-recorded-7,stdout,3,Permute: iterations=1 average: 59687us total: 59687us
+timing-Permute-s5-permute-java-recorded-7,stdout,4,
+timing-Permute-s5-permute-java-recorded-7,stdout,5,
+timing-Permute-s5-permute-java-recorded-7,stdout,6,Total Runtime: 59687us
+timing-Permute-s5-permute-java-recorded-8,stdout,1,Starting Permute benchmark ...
+timing-Permute-s5-permute-java-recorded-8,stdout,2,Permute: iterations=1 runtime: 59787us
+timing-Permute-s5-permute-java-recorded-8,stdout,3,Permute: iterations=1 average: 59787us total: 59787us
+timing-Permute-s5-permute-java-recorded-8,stdout,4,
+timing-Permute-s5-permute-java-recorded-8,stdout,5,
+timing-Permute-s5-permute-java-recorded-8,stdout,6,Total Runtime: 59787us
+timing-Permute-s5-permute-netrexx-recorded-8,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-s5-permute-netrexx-recorded-8,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-s5-permute-netrexx-recorded-9,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-s5-permute-netrexx-recorded-9,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Permute-s5-permute-java-recorded-9,stdout,1,Starting Permute benchmark ...
+timing-Permute-s5-permute-java-recorded-9,stdout,2,Permute: iterations=1 runtime: 59973us
+timing-Permute-s5-permute-java-recorded-9,stdout,3,Permute: iterations=1 average: 59973us total: 59973us
+timing-Permute-s5-permute-java-recorded-9,stdout,4,
+timing-Permute-s5-permute-java-recorded-9,stdout,5,
+timing-Permute-s5-permute-java-recorded-9,stdout,6,Total Runtime: 59973us
+timing-Permute-s5-permute-java-recorded-10,stdout,1,Starting Permute benchmark ...
+timing-Permute-s5-permute-java-recorded-10,stdout,2,Permute: iterations=1 runtime: 59576us
+timing-Permute-s5-permute-java-recorded-10,stdout,3,Permute: iterations=1 average: 59576us total: 59576us
+timing-Permute-s5-permute-java-recorded-10,stdout,4,
+timing-Permute-s5-permute-java-recorded-10,stdout,5,
+timing-Permute-s5-permute-java-recorded-10,stdout,6,Total Runtime: 59576us
+timing-Permute-s5-permute-netrexx-recorded-10,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-s5-permute-netrexx-recorded-10,stdout,2,PASS: AWFY Permute NetRexx decimal port
+timing-Bounce-s5-bounce-java-recorded-1,stdout,1,Starting Bounce benchmark ...
+timing-Bounce-s5-bounce-java-recorded-1,stdout,2,Bounce: iterations=1 runtime: 27508us
+timing-Bounce-s5-bounce-java-recorded-1,stdout,3,Bounce: iterations=1 average: 27508us total: 27508us
+timing-Bounce-s5-bounce-java-recorded-1,stdout,4,
+timing-Bounce-s5-bounce-java-recorded-1,stdout,5,
+timing-Bounce-s5-bounce-java-recorded-1,stdout,6,Total Runtime: 27508us
+timing-Bounce-s5-bounce-java-recorded-2,stdout,1,Starting Bounce benchmark ...
+timing-Bounce-s5-bounce-java-recorded-2,stdout,2,Bounce: iterations=1 runtime: 27664us
+timing-Bounce-s5-bounce-java-recorded-2,stdout,3,Bounce: iterations=1 average: 27664us total: 27664us
+timing-Bounce-s5-bounce-java-recorded-2,stdout,4,
+timing-Bounce-s5-bounce-java-recorded-2,stdout,5,
+timing-Bounce-s5-bounce-java-recorded-2,stdout,6,Total Runtime: 27664us
+timing-Bounce-s5-bounce-java-recorded-3,stdout,1,Starting Bounce benchmark ...
+timing-Bounce-s5-bounce-java-recorded-3,stdout,2,Bounce: iterations=1 runtime: 27191us
+timing-Bounce-s5-bounce-java-recorded-3,stdout,3,Bounce: iterations=1 average: 27191us total: 27191us
+timing-Bounce-s5-bounce-java-recorded-3,stdout,4,
+timing-Bounce-s5-bounce-java-recorded-3,stdout,5,
+timing-Bounce-s5-bounce-java-recorded-3,stdout,6,Total Runtime: 27191us
+timing-Bounce-s5-bounce-java-recorded-4,stdout,1,Starting Bounce benchmark ...
+timing-Bounce-s5-bounce-java-recorded-4,stdout,2,Bounce: iterations=1 runtime: 27293us
+timing-Bounce-s5-bounce-java-recorded-4,stdout,3,Bounce: iterations=1 average: 27293us total: 27293us
+timing-Bounce-s5-bounce-java-recorded-4,stdout,4,
+timing-Bounce-s5-bounce-java-recorded-4,stdout,5,
+timing-Bounce-s5-bounce-java-recorded-4,stdout,6,Total Runtime: 27293us
+timing-Bounce-s5-bounce-java-recorded-5,stdout,1,Starting Bounce benchmark ...
+timing-Bounce-s5-bounce-java-recorded-5,stdout,2,Bounce: iterations=1 runtime: 27102us
+timing-Bounce-s5-bounce-java-recorded-5,stdout,3,Bounce: iterations=1 average: 27102us total: 27102us
+timing-Bounce-s5-bounce-java-recorded-5,stdout,4,
+timing-Bounce-s5-bounce-java-recorded-5,stdout,5,
+timing-Bounce-s5-bounce-java-recorded-5,stdout,6,Total Runtime: 27102us
+timing-Bounce-s5-bounce-java-recorded-6,stdout,1,Starting Bounce benchmark ...
+timing-Bounce-s5-bounce-java-recorded-6,stdout,2,Bounce: iterations=1 runtime: 27346us
+timing-Bounce-s5-bounce-java-recorded-6,stdout,3,Bounce: iterations=1 average: 27346us total: 27346us
+timing-Bounce-s5-bounce-java-recorded-6,stdout,4,
+timing-Bounce-s5-bounce-java-recorded-6,stdout,5,
+timing-Bounce-s5-bounce-java-recorded-6,stdout,6,Total Runtime: 27346us
+timing-Bounce-s5-bounce-java-recorded-7,stdout,1,Starting Bounce benchmark ...
+timing-Bounce-s5-bounce-java-recorded-7,stdout,2,Bounce: iterations=1 runtime: 27210us
+timing-Bounce-s5-bounce-java-recorded-7,stdout,3,Bounce: iterations=1 average: 27210us total: 27210us
+timing-Bounce-s5-bounce-java-recorded-7,stdout,4,
+timing-Bounce-s5-bounce-java-recorded-7,stdout,5,
+timing-Bounce-s5-bounce-java-recorded-7,stdout,6,Total Runtime: 27210us
+timing-Bounce-s5-bounce-java-recorded-8,stdout,1,Starting Bounce benchmark ...
+timing-Bounce-s5-bounce-java-recorded-8,stdout,2,Bounce: iterations=1 runtime: 27137us
+timing-Bounce-s5-bounce-java-recorded-8,stdout,3,Bounce: iterations=1 average: 27137us total: 27137us
+timing-Bounce-s5-bounce-java-recorded-8,stdout,4,
+timing-Bounce-s5-bounce-java-recorded-8,stdout,5,
+timing-Bounce-s5-bounce-java-recorded-8,stdout,6,Total Runtime: 27137us
+timing-Bounce-s5-bounce-java-recorded-9,stdout,1,Starting Bounce benchmark ...
+timing-Bounce-s5-bounce-java-recorded-9,stdout,2,Bounce: iterations=1 runtime: 27384us
+timing-Bounce-s5-bounce-java-recorded-9,stdout,3,Bounce: iterations=1 average: 27384us total: 27384us
+timing-Bounce-s5-bounce-java-recorded-9,stdout,4,
+timing-Bounce-s5-bounce-java-recorded-9,stdout,5,
+timing-Bounce-s5-bounce-java-recorded-9,stdout,6,Total Runtime: 27384us
+timing-Bounce-s5-bounce-java-recorded-10,stdout,1,Starting Bounce benchmark ...
+timing-Bounce-s5-bounce-java-recorded-10,stdout,2,Bounce: iterations=1 runtime: 27292us
+timing-Bounce-s5-bounce-java-recorded-10,stdout,3,Bounce: iterations=1 average: 27292us total: 27292us
+timing-Bounce-s5-bounce-java-recorded-10,stdout,4,
+timing-Bounce-s5-bounce-java-recorded-10,stdout,5,
+timing-Bounce-s5-bounce-java-recorded-10,stdout,6,Total Runtime: 27292us
+timing-Richards-s5-richards-rxbvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-s5-richards-rxbvm-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-s5-richards-java-recorded-1,stdout,1,Starting Richards benchmark ...
+timing-Richards-s5-richards-java-recorded-1,stdout,2,Richards: iterations=1 runtime: 14916us
+timing-Richards-s5-richards-java-recorded-1,stdout,3,Richards: iterations=1 average: 14916us total: 14916us
+timing-Richards-s5-richards-java-recorded-1,stdout,4,
+timing-Richards-s5-richards-java-recorded-1,stdout,5,
+timing-Richards-s5-richards-java-recorded-1,stdout,6,Total Runtime: 14916us
+timing-Richards-s5-richards-java-recorded-2,stdout,1,Starting Richards benchmark ...
+timing-Richards-s5-richards-java-recorded-2,stdout,2,Richards: iterations=1 runtime: 15226us
+timing-Richards-s5-richards-java-recorded-2,stdout,3,Richards: iterations=1 average: 15226us total: 15226us
+timing-Richards-s5-richards-java-recorded-2,stdout,4,
+timing-Richards-s5-richards-java-recorded-2,stdout,5,
+timing-Richards-s5-richards-java-recorded-2,stdout,6,Total Runtime: 15226us
+timing-Richards-s5-richards-rxbvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-s5-richards-rxbvm-recorded-2,stdout,2,PASS: AWFY Richards
+timing-Richards-s5-richards-rxbvm-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-s5-richards-rxbvm-recorded-3,stdout,2,PASS: AWFY Richards
+timing-Richards-s5-richards-java-recorded-3,stdout,1,Starting Richards benchmark ...
+timing-Richards-s5-richards-java-recorded-3,stdout,2,Richards: iterations=1 runtime: 15210us
+timing-Richards-s5-richards-java-recorded-3,stdout,3,Richards: iterations=1 average: 15210us total: 15210us
+timing-Richards-s5-richards-java-recorded-3,stdout,4,
+timing-Richards-s5-richards-java-recorded-3,stdout,5,
+timing-Richards-s5-richards-java-recorded-3,stdout,6,Total Runtime: 15210us
+timing-Richards-s5-richards-java-recorded-4,stdout,1,Starting Richards benchmark ...
+timing-Richards-s5-richards-java-recorded-4,stdout,2,Richards: iterations=1 runtime: 15016us
+timing-Richards-s5-richards-java-recorded-4,stdout,3,Richards: iterations=1 average: 15016us total: 15016us
+timing-Richards-s5-richards-java-recorded-4,stdout,4,
+timing-Richards-s5-richards-java-recorded-4,stdout,5,
+timing-Richards-s5-richards-java-recorded-4,stdout,6,Total Runtime: 15016us
+timing-Richards-s5-richards-rxbvm-recorded-4,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-s5-richards-rxbvm-recorded-4,stdout,2,PASS: AWFY Richards
+timing-Richards-s5-richards-rxbvm-recorded-5,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-s5-richards-rxbvm-recorded-5,stdout,2,PASS: AWFY Richards
+timing-Richards-s5-richards-java-recorded-5,stdout,1,Starting Richards benchmark ...
+timing-Richards-s5-richards-java-recorded-5,stdout,2,Richards: iterations=1 runtime: 15026us
+timing-Richards-s5-richards-java-recorded-5,stdout,3,Richards: iterations=1 average: 15026us total: 15026us
+timing-Richards-s5-richards-java-recorded-5,stdout,4,
+timing-Richards-s5-richards-java-recorded-5,stdout,5,
+timing-Richards-s5-richards-java-recorded-5,stdout,6,Total Runtime: 15026us
+timing-Richards-s5-richards-java-recorded-6,stdout,1,Starting Richards benchmark ...
+timing-Richards-s5-richards-java-recorded-6,stdout,2,Richards: iterations=1 runtime: 14906us
+timing-Richards-s5-richards-java-recorded-6,stdout,3,Richards: iterations=1 average: 14906us total: 14906us
+timing-Richards-s5-richards-java-recorded-6,stdout,4,
+timing-Richards-s5-richards-java-recorded-6,stdout,5,
+timing-Richards-s5-richards-java-recorded-6,stdout,6,Total Runtime: 14906us
+timing-Richards-s5-richards-rxbvm-recorded-6,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-s5-richards-rxbvm-recorded-6,stdout,2,PASS: AWFY Richards
+timing-Richards-s5-richards-rxbvm-recorded-7,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-s5-richards-rxbvm-recorded-7,stdout,2,PASS: AWFY Richards
+timing-Richards-s5-richards-java-recorded-7,stdout,1,Starting Richards benchmark ...
+timing-Richards-s5-richards-java-recorded-7,stdout,2,Richards: iterations=1 runtime: 15420us
+timing-Richards-s5-richards-java-recorded-7,stdout,3,Richards: iterations=1 average: 15420us total: 15420us
+timing-Richards-s5-richards-java-recorded-7,stdout,4,
+timing-Richards-s5-richards-java-recorded-7,stdout,5,
+timing-Richards-s5-richards-java-recorded-7,stdout,6,Total Runtime: 15420us
+timing-Richards-s5-richards-java-recorded-8,stdout,1,Starting Richards benchmark ...
+timing-Richards-s5-richards-java-recorded-8,stdout,2,Richards: iterations=1 runtime: 15081us
+timing-Richards-s5-richards-java-recorded-8,stdout,3,Richards: iterations=1 average: 15081us total: 15081us
+timing-Richards-s5-richards-java-recorded-8,stdout,4,
+timing-Richards-s5-richards-java-recorded-8,stdout,5,
+timing-Richards-s5-richards-java-recorded-8,stdout,6,Total Runtime: 15081us
+timing-Richards-s5-richards-rxbvm-recorded-8,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-s5-richards-rxbvm-recorded-8,stdout,2,PASS: AWFY Richards
+timing-Richards-s5-richards-rxbvm-recorded-9,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-s5-richards-rxbvm-recorded-9,stdout,2,PASS: AWFY Richards
+timing-Richards-s5-richards-java-recorded-9,stdout,1,Starting Richards benchmark ...
+timing-Richards-s5-richards-java-recorded-9,stdout,2,Richards: iterations=1 runtime: 15143us
+timing-Richards-s5-richards-java-recorded-9,stdout,3,Richards: iterations=1 average: 15143us total: 15143us
+timing-Richards-s5-richards-java-recorded-9,stdout,4,
+timing-Richards-s5-richards-java-recorded-9,stdout,5,
+timing-Richards-s5-richards-java-recorded-9,stdout,6,Total Runtime: 15143us
+timing-Richards-s5-richards-java-recorded-10,stdout,1,Starting Richards benchmark ...
+timing-Richards-s5-richards-java-recorded-10,stdout,2,Richards: iterations=1 runtime: 14990us
+timing-Richards-s5-richards-java-recorded-10,stdout,3,Richards: iterations=1 average: 14990us total: 14990us
+timing-Richards-s5-richards-java-recorded-10,stdout,4,
+timing-Richards-s5-richards-java-recorded-10,stdout,5,
+timing-Richards-s5-richards-java-recorded-10,stdout,6,Total Runtime: 14990us
+timing-Richards-s5-richards-rxbvm-recorded-10,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-s5-richards-rxbvm-recorded-10,stdout,2,PASS: AWFY Richards
+timing-Towers-s5-towers-java-recorded-1,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-java-recorded-1,stdout,2,Towers: iterations=1 runtime: 4168us
+timing-Towers-s5-towers-java-recorded-1,stdout,3,Towers: iterations=1 average: 4168us total: 4168us
+timing-Towers-s5-towers-java-recorded-1,stdout,4,
+timing-Towers-s5-towers-java-recorded-1,stdout,5,
+timing-Towers-s5-towers-java-recorded-1,stdout,6,Total Runtime: 4168us
+timing-Towers-s5-towers-python-recorded-1,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-python-recorded-1,stdout,2,Towers: iterations=1 runtime: 101227us
+timing-Towers-s5-towers-python-recorded-1,stdout,3,Towers: iterations=1 average: 101227us total: 101227us
+timing-Towers-s5-towers-python-recorded-1,stdout,4,
+timing-Towers-s5-towers-python-recorded-1,stdout,5,
+timing-Towers-s5-towers-python-recorded-1,stdout,6,Total Runtime: 101227us
+timing-Towers-s5-towers-python-recorded-2,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-python-recorded-2,stdout,2,Towers: iterations=1 runtime: 101178us
+timing-Towers-s5-towers-python-recorded-2,stdout,3,Towers: iterations=1 average: 101178us total: 101178us
+timing-Towers-s5-towers-python-recorded-2,stdout,4,
+timing-Towers-s5-towers-python-recorded-2,stdout,5,
+timing-Towers-s5-towers-python-recorded-2,stdout,6,Total Runtime: 101178us
+timing-Towers-s5-towers-java-recorded-2,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-java-recorded-2,stdout,2,Towers: iterations=1 runtime: 4189us
+timing-Towers-s5-towers-java-recorded-2,stdout,3,Towers: iterations=1 average: 4189us total: 4189us
+timing-Towers-s5-towers-java-recorded-2,stdout,4,
+timing-Towers-s5-towers-java-recorded-2,stdout,5,
+timing-Towers-s5-towers-java-recorded-2,stdout,6,Total Runtime: 4189us
+timing-Towers-s5-towers-java-recorded-3,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-java-recorded-3,stdout,2,Towers: iterations=1 runtime: 4231us
+timing-Towers-s5-towers-java-recorded-3,stdout,3,Towers: iterations=1 average: 4231us total: 4231us
+timing-Towers-s5-towers-java-recorded-3,stdout,4,
+timing-Towers-s5-towers-java-recorded-3,stdout,5,
+timing-Towers-s5-towers-java-recorded-3,stdout,6,Total Runtime: 4231us
+timing-Towers-s5-towers-python-recorded-3,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-python-recorded-3,stdout,2,Towers: iterations=1 runtime: 101107us
+timing-Towers-s5-towers-python-recorded-3,stdout,3,Towers: iterations=1 average: 101107us total: 101107us
+timing-Towers-s5-towers-python-recorded-3,stdout,4,
+timing-Towers-s5-towers-python-recorded-3,stdout,5,
+timing-Towers-s5-towers-python-recorded-3,stdout,6,Total Runtime: 101107us
+timing-Towers-s5-towers-python-recorded-4,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-python-recorded-4,stdout,2,Towers: iterations=1 runtime: 98785us
+timing-Towers-s5-towers-python-recorded-4,stdout,3,Towers: iterations=1 average: 98785us total: 98785us
+timing-Towers-s5-towers-python-recorded-4,stdout,4,
+timing-Towers-s5-towers-python-recorded-4,stdout,5,
+timing-Towers-s5-towers-python-recorded-4,stdout,6,Total Runtime: 98785us
+timing-Towers-s5-towers-java-recorded-4,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-java-recorded-4,stdout,2,Towers: iterations=1 runtime: 4268us
+timing-Towers-s5-towers-java-recorded-4,stdout,3,Towers: iterations=1 average: 4268us total: 4268us
+timing-Towers-s5-towers-java-recorded-4,stdout,4,
+timing-Towers-s5-towers-java-recorded-4,stdout,5,
+timing-Towers-s5-towers-java-recorded-4,stdout,6,Total Runtime: 4268us
+timing-Towers-s5-towers-java-recorded-5,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-java-recorded-5,stdout,2,Towers: iterations=1 runtime: 4475us
+timing-Towers-s5-towers-java-recorded-5,stdout,3,Towers: iterations=1 average: 4475us total: 4475us
+timing-Towers-s5-towers-java-recorded-5,stdout,4,
+timing-Towers-s5-towers-java-recorded-5,stdout,5,
+timing-Towers-s5-towers-java-recorded-5,stdout,6,Total Runtime: 4475us
+timing-Towers-s5-towers-python-recorded-5,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-python-recorded-5,stdout,2,Towers: iterations=1 runtime: 99149us
+timing-Towers-s5-towers-python-recorded-5,stdout,3,Towers: iterations=1 average: 99149us total: 99149us
+timing-Towers-s5-towers-python-recorded-5,stdout,4,
+timing-Towers-s5-towers-python-recorded-5,stdout,5,
+timing-Towers-s5-towers-python-recorded-5,stdout,6,Total Runtime: 99149us
+timing-Towers-s5-towers-python-recorded-6,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-python-recorded-6,stdout,2,Towers: iterations=1 runtime: 99248us
+timing-Towers-s5-towers-python-recorded-6,stdout,3,Towers: iterations=1 average: 99248us total: 99248us
+timing-Towers-s5-towers-python-recorded-6,stdout,4,
+timing-Towers-s5-towers-python-recorded-6,stdout,5,
+timing-Towers-s5-towers-python-recorded-6,stdout,6,Total Runtime: 99248us
+timing-Towers-s5-towers-java-recorded-6,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-java-recorded-6,stdout,2,Towers: iterations=1 runtime: 4255us
+timing-Towers-s5-towers-java-recorded-6,stdout,3,Towers: iterations=1 average: 4255us total: 4255us
+timing-Towers-s5-towers-java-recorded-6,stdout,4,
+timing-Towers-s5-towers-java-recorded-6,stdout,5,
+timing-Towers-s5-towers-java-recorded-6,stdout,6,Total Runtime: 4255us
+timing-Towers-s5-towers-java-recorded-7,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-java-recorded-7,stdout,2,Towers: iterations=1 runtime: 4540us
+timing-Towers-s5-towers-java-recorded-7,stdout,3,Towers: iterations=1 average: 4540us total: 4540us
+timing-Towers-s5-towers-java-recorded-7,stdout,4,
+timing-Towers-s5-towers-java-recorded-7,stdout,5,
+timing-Towers-s5-towers-java-recorded-7,stdout,6,Total Runtime: 4540us
+timing-Towers-s5-towers-python-recorded-7,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-python-recorded-7,stdout,2,Towers: iterations=1 runtime: 100400us
+timing-Towers-s5-towers-python-recorded-7,stdout,3,Towers: iterations=1 average: 100400us total: 100400us
+timing-Towers-s5-towers-python-recorded-7,stdout,4,
+timing-Towers-s5-towers-python-recorded-7,stdout,5,
+timing-Towers-s5-towers-python-recorded-7,stdout,6,Total Runtime: 100400us
+timing-Towers-s5-towers-python-recorded-8,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-python-recorded-8,stdout,2,Towers: iterations=1 runtime: 113654us
+timing-Towers-s5-towers-python-recorded-8,stdout,3,Towers: iterations=1 average: 113654us total: 113654us
+timing-Towers-s5-towers-python-recorded-8,stdout,4,
+timing-Towers-s5-towers-python-recorded-8,stdout,5,
+timing-Towers-s5-towers-python-recorded-8,stdout,6,Total Runtime: 113654us
+timing-Towers-s5-towers-java-recorded-8,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-java-recorded-8,stdout,2,Towers: iterations=1 runtime: 4265us
+timing-Towers-s5-towers-java-recorded-8,stdout,3,Towers: iterations=1 average: 4265us total: 4265us
+timing-Towers-s5-towers-java-recorded-8,stdout,4,
+timing-Towers-s5-towers-java-recorded-8,stdout,5,
+timing-Towers-s5-towers-java-recorded-8,stdout,6,Total Runtime: 4265us
+timing-Towers-s5-towers-java-recorded-9,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-java-recorded-9,stdout,2,Towers: iterations=1 runtime: 4275us
+timing-Towers-s5-towers-java-recorded-9,stdout,3,Towers: iterations=1 average: 4275us total: 4275us
+timing-Towers-s5-towers-java-recorded-9,stdout,4,
+timing-Towers-s5-towers-java-recorded-9,stdout,5,
+timing-Towers-s5-towers-java-recorded-9,stdout,6,Total Runtime: 4275us
+timing-Towers-s5-towers-python-recorded-9,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-python-recorded-9,stdout,2,Towers: iterations=1 runtime: 99075us
+timing-Towers-s5-towers-python-recorded-9,stdout,3,Towers: iterations=1 average: 99075us total: 99075us
+timing-Towers-s5-towers-python-recorded-9,stdout,4,
+timing-Towers-s5-towers-python-recorded-9,stdout,5,
+timing-Towers-s5-towers-python-recorded-9,stdout,6,Total Runtime: 99075us
+timing-Towers-s5-towers-python-recorded-10,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-python-recorded-10,stdout,2,Towers: iterations=1 runtime: 100958us
+timing-Towers-s5-towers-python-recorded-10,stdout,3,Towers: iterations=1 average: 100958us total: 100958us
+timing-Towers-s5-towers-python-recorded-10,stdout,4,
+timing-Towers-s5-towers-python-recorded-10,stdout,5,
+timing-Towers-s5-towers-python-recorded-10,stdout,6,Total Runtime: 100958us
+timing-Towers-s5-towers-java-recorded-10,stdout,1,Starting Towers benchmark ...
+timing-Towers-s5-towers-java-recorded-10,stdout,2,Towers: iterations=1 runtime: 4241us
+timing-Towers-s5-towers-java-recorded-10,stdout,3,Towers: iterations=1 average: 4241us total: 4241us
+timing-Towers-s5-towers-java-recorded-10,stdout,4,
+timing-Towers-s5-towers-java-recorded-10,stdout,5,
+timing-Towers-s5-towers-java-recorded-10,stdout,6,Total Runtime: 4241us
+timing-Storage-s5-storage-oorexx-recorded-1,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-s5-storage-oorexx-recorded-1,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-s5-storage-java-recorded-1,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-java-recorded-1,stdout,2,Storage: iterations=1 runtime: 4453us
+timing-Storage-s5-storage-java-recorded-1,stdout,3,Storage: iterations=1 average: 4453us total: 4453us
+timing-Storage-s5-storage-java-recorded-1,stdout,4,
+timing-Storage-s5-storage-java-recorded-1,stdout,5,
+timing-Storage-s5-storage-java-recorded-1,stdout,6,Total Runtime: 4453us
+timing-Storage-s5-storage-python-recorded-1,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-python-recorded-1,stdout,2,Storage: iterations=1 runtime: 15584us
+timing-Storage-s5-storage-python-recorded-1,stdout,3,Storage: iterations=1 average: 15584us total: 15584us
+timing-Storage-s5-storage-python-recorded-1,stdout,4,
+timing-Storage-s5-storage-python-recorded-1,stdout,5,
+timing-Storage-s5-storage-python-recorded-1,stdout,6,Total Runtime: 15584us
+timing-Storage-s5-storage-python-recorded-2,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-python-recorded-2,stdout,2,Storage: iterations=1 runtime: 15717us
+timing-Storage-s5-storage-python-recorded-2,stdout,3,Storage: iterations=1 average: 15717us total: 15717us
+timing-Storage-s5-storage-python-recorded-2,stdout,4,
+timing-Storage-s5-storage-python-recorded-2,stdout,5,
+timing-Storage-s5-storage-python-recorded-2,stdout,6,Total Runtime: 15717us
+timing-Storage-s5-storage-java-recorded-2,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-java-recorded-2,stdout,2,Storage: iterations=1 runtime: 4650us
+timing-Storage-s5-storage-java-recorded-2,stdout,3,Storage: iterations=1 average: 4650us total: 4650us
+timing-Storage-s5-storage-java-recorded-2,stdout,4,
+timing-Storage-s5-storage-java-recorded-2,stdout,5,
+timing-Storage-s5-storage-java-recorded-2,stdout,6,Total Runtime: 4650us
+timing-Storage-s5-storage-oorexx-recorded-2,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-s5-storage-oorexx-recorded-2,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-s5-storage-python-recorded-3,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-python-recorded-3,stdout,2,Storage: iterations=1 runtime: 15676us
+timing-Storage-s5-storage-python-recorded-3,stdout,3,Storage: iterations=1 average: 15676us total: 15676us
+timing-Storage-s5-storage-python-recorded-3,stdout,4,
+timing-Storage-s5-storage-python-recorded-3,stdout,5,
+timing-Storage-s5-storage-python-recorded-3,stdout,6,Total Runtime: 15676us
+timing-Storage-s5-storage-oorexx-recorded-3,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-s5-storage-oorexx-recorded-3,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-s5-storage-java-recorded-3,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-java-recorded-3,stdout,2,Storage: iterations=1 runtime: 4634us
+timing-Storage-s5-storage-java-recorded-3,stdout,3,Storage: iterations=1 average: 4634us total: 4634us
+timing-Storage-s5-storage-java-recorded-3,stdout,4,
+timing-Storage-s5-storage-java-recorded-3,stdout,5,
+timing-Storage-s5-storage-java-recorded-3,stdout,6,Total Runtime: 4634us
+timing-Storage-s5-storage-java-recorded-4,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-java-recorded-4,stdout,2,Storage: iterations=1 runtime: 4420us
+timing-Storage-s5-storage-java-recorded-4,stdout,3,Storage: iterations=1 average: 4420us total: 4420us
+timing-Storage-s5-storage-java-recorded-4,stdout,4,
+timing-Storage-s5-storage-java-recorded-4,stdout,5,
+timing-Storage-s5-storage-java-recorded-4,stdout,6,Total Runtime: 4420us
+timing-Storage-s5-storage-oorexx-recorded-4,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-s5-storage-oorexx-recorded-4,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-s5-storage-python-recorded-4,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-python-recorded-4,stdout,2,Storage: iterations=1 runtime: 15819us
+timing-Storage-s5-storage-python-recorded-4,stdout,3,Storage: iterations=1 average: 15819us total: 15819us
+timing-Storage-s5-storage-python-recorded-4,stdout,4,
+timing-Storage-s5-storage-python-recorded-4,stdout,5,
+timing-Storage-s5-storage-python-recorded-4,stdout,6,Total Runtime: 15819us
+timing-Storage-s5-storage-java-recorded-5,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-java-recorded-5,stdout,2,Storage: iterations=1 runtime: 4425us
+timing-Storage-s5-storage-java-recorded-5,stdout,3,Storage: iterations=1 average: 4425us total: 4425us
+timing-Storage-s5-storage-java-recorded-5,stdout,4,
+timing-Storage-s5-storage-java-recorded-5,stdout,5,
+timing-Storage-s5-storage-java-recorded-5,stdout,6,Total Runtime: 4425us
+timing-Storage-s5-storage-python-recorded-5,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-python-recorded-5,stdout,2,Storage: iterations=1 runtime: 15478us
+timing-Storage-s5-storage-python-recorded-5,stdout,3,Storage: iterations=1 average: 15478us total: 15478us
+timing-Storage-s5-storage-python-recorded-5,stdout,4,
+timing-Storage-s5-storage-python-recorded-5,stdout,5,
+timing-Storage-s5-storage-python-recorded-5,stdout,6,Total Runtime: 15478us
+timing-Storage-s5-storage-oorexx-recorded-5,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-s5-storage-oorexx-recorded-5,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-s5-storage-oorexx-recorded-6,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-s5-storage-oorexx-recorded-6,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-s5-storage-python-recorded-6,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-python-recorded-6,stdout,2,Storage: iterations=1 runtime: 15903us
+timing-Storage-s5-storage-python-recorded-6,stdout,3,Storage: iterations=1 average: 15903us total: 15903us
+timing-Storage-s5-storage-python-recorded-6,stdout,4,
+timing-Storage-s5-storage-python-recorded-6,stdout,5,
+timing-Storage-s5-storage-python-recorded-6,stdout,6,Total Runtime: 15903us
+timing-Storage-s5-storage-java-recorded-6,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-java-recorded-6,stdout,2,Storage: iterations=1 runtime: 4506us
+timing-Storage-s5-storage-java-recorded-6,stdout,3,Storage: iterations=1 average: 4506us total: 4506us
+timing-Storage-s5-storage-java-recorded-6,stdout,4,
+timing-Storage-s5-storage-java-recorded-6,stdout,5,
+timing-Storage-s5-storage-java-recorded-6,stdout,6,Total Runtime: 4506us
+timing-Storage-s5-storage-oorexx-recorded-7,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-s5-storage-oorexx-recorded-7,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-s5-storage-java-recorded-7,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-java-recorded-7,stdout,2,Storage: iterations=1 runtime: 4458us
+timing-Storage-s5-storage-java-recorded-7,stdout,3,Storage: iterations=1 average: 4458us total: 4458us
+timing-Storage-s5-storage-java-recorded-7,stdout,4,
+timing-Storage-s5-storage-java-recorded-7,stdout,5,
+timing-Storage-s5-storage-java-recorded-7,stdout,6,Total Runtime: 4458us
+timing-Storage-s5-storage-python-recorded-7,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-python-recorded-7,stdout,2,Storage: iterations=1 runtime: 15695us
+timing-Storage-s5-storage-python-recorded-7,stdout,3,Storage: iterations=1 average: 15695us total: 15695us
+timing-Storage-s5-storage-python-recorded-7,stdout,4,
+timing-Storage-s5-storage-python-recorded-7,stdout,5,
+timing-Storage-s5-storage-python-recorded-7,stdout,6,Total Runtime: 15695us
+timing-Storage-s5-storage-python-recorded-8,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-python-recorded-8,stdout,2,Storage: iterations=1 runtime: 15579us
+timing-Storage-s5-storage-python-recorded-8,stdout,3,Storage: iterations=1 average: 15579us total: 15579us
+timing-Storage-s5-storage-python-recorded-8,stdout,4,
+timing-Storage-s5-storage-python-recorded-8,stdout,5,
+timing-Storage-s5-storage-python-recorded-8,stdout,6,Total Runtime: 15579us
+timing-Storage-s5-storage-java-recorded-8,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-java-recorded-8,stdout,2,Storage: iterations=1 runtime: 4792us
+timing-Storage-s5-storage-java-recorded-8,stdout,3,Storage: iterations=1 average: 4792us total: 4792us
+timing-Storage-s5-storage-java-recorded-8,stdout,4,
+timing-Storage-s5-storage-java-recorded-8,stdout,5,
+timing-Storage-s5-storage-java-recorded-8,stdout,6,Total Runtime: 4792us
+timing-Storage-s5-storage-oorexx-recorded-8,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-s5-storage-oorexx-recorded-8,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-s5-storage-python-recorded-9,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-python-recorded-9,stdout,2,Storage: iterations=1 runtime: 15607us
+timing-Storage-s5-storage-python-recorded-9,stdout,3,Storage: iterations=1 average: 15607us total: 15607us
+timing-Storage-s5-storage-python-recorded-9,stdout,4,
+timing-Storage-s5-storage-python-recorded-9,stdout,5,
+timing-Storage-s5-storage-python-recorded-9,stdout,6,Total Runtime: 15607us
+timing-Storage-s5-storage-oorexx-recorded-9,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-s5-storage-oorexx-recorded-9,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-s5-storage-java-recorded-9,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-java-recorded-9,stdout,2,Storage: iterations=1 runtime: 4593us
+timing-Storage-s5-storage-java-recorded-9,stdout,3,Storage: iterations=1 average: 4593us total: 4593us
+timing-Storage-s5-storage-java-recorded-9,stdout,4,
+timing-Storage-s5-storage-java-recorded-9,stdout,5,
+timing-Storage-s5-storage-java-recorded-9,stdout,6,Total Runtime: 4593us
+timing-Storage-s5-storage-java-recorded-10,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-java-recorded-10,stdout,2,Storage: iterations=1 runtime: 4473us
+timing-Storage-s5-storage-java-recorded-10,stdout,3,Storage: iterations=1 average: 4473us total: 4473us
+timing-Storage-s5-storage-java-recorded-10,stdout,4,
+timing-Storage-s5-storage-java-recorded-10,stdout,5,
+timing-Storage-s5-storage-java-recorded-10,stdout,6,Total Runtime: 4473us
+timing-Storage-s5-storage-oorexx-recorded-10,stdout,1,benchmark=awfy_storage repetitions=20 result=5461
+timing-Storage-s5-storage-oorexx-recorded-10,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-s5-storage-python-recorded-10,stdout,1,Starting Storage benchmark ...
+timing-Storage-s5-storage-python-recorded-10,stdout,2,Storage: iterations=1 runtime: 15758us
+timing-Storage-s5-storage-python-recorded-10,stdout,3,Storage: iterations=1 average: 15758us total: 15758us
+timing-Storage-s5-storage-python-recorded-10,stdout,4,
+timing-Storage-s5-storage-python-recorded-10,stdout,5,
+timing-Storage-s5-storage-python-recorded-10,stdout,6,Total Runtime: 15758us
+timing-List-s5-list-java-recorded-1,stdout,1,Starting List benchmark ...
+timing-List-s5-list-java-recorded-1,stdout,2,List: iterations=1 runtime: 18213us
+timing-List-s5-list-java-recorded-1,stdout,3,List: iterations=1 average: 18213us total: 18213us
+timing-List-s5-list-java-recorded-1,stdout,4,
+timing-List-s5-list-java-recorded-1,stdout,5,
+timing-List-s5-list-java-recorded-1,stdout,6,Total Runtime: 18213us
+timing-List-s5-list-java-recorded-2,stdout,1,Starting List benchmark ...
+timing-List-s5-list-java-recorded-2,stdout,2,List: iterations=1 runtime: 18031us
+timing-List-s5-list-java-recorded-2,stdout,3,List: iterations=1 average: 18031us total: 18031us
+timing-List-s5-list-java-recorded-2,stdout,4,
+timing-List-s5-list-java-recorded-2,stdout,5,
+timing-List-s5-list-java-recorded-2,stdout,6,Total Runtime: 18031us
+timing-List-s5-list-java-recorded-3,stdout,1,Starting List benchmark ...
+timing-List-s5-list-java-recorded-3,stdout,2,List: iterations=1 runtime: 18337us
+timing-List-s5-list-java-recorded-3,stdout,3,List: iterations=1 average: 18337us total: 18337us
+timing-List-s5-list-java-recorded-3,stdout,4,
+timing-List-s5-list-java-recorded-3,stdout,5,
+timing-List-s5-list-java-recorded-3,stdout,6,Total Runtime: 18337us
+timing-List-s5-list-java-recorded-4,stdout,1,Starting List benchmark ...
+timing-List-s5-list-java-recorded-4,stdout,2,List: iterations=1 runtime: 19239us
+timing-List-s5-list-java-recorded-4,stdout,3,List: iterations=1 average: 19239us total: 19239us
+timing-List-s5-list-java-recorded-4,stdout,4,
+timing-List-s5-list-java-recorded-4,stdout,5,
+timing-List-s5-list-java-recorded-4,stdout,6,Total Runtime: 19239us
+timing-List-s5-list-java-recorded-5,stdout,1,Starting List benchmark ...
+timing-List-s5-list-java-recorded-5,stdout,2,List: iterations=1 runtime: 17963us
+timing-List-s5-list-java-recorded-5,stdout,3,List: iterations=1 average: 17963us total: 17963us
+timing-List-s5-list-java-recorded-5,stdout,4,
+timing-List-s5-list-java-recorded-5,stdout,5,
+timing-List-s5-list-java-recorded-5,stdout,6,Total Runtime: 17963us
+timing-List-s5-list-java-recorded-6,stdout,1,Starting List benchmark ...
+timing-List-s5-list-java-recorded-6,stdout,2,List: iterations=1 runtime: 18044us
+timing-List-s5-list-java-recorded-6,stdout,3,List: iterations=1 average: 18044us total: 18044us
+timing-List-s5-list-java-recorded-6,stdout,4,
+timing-List-s5-list-java-recorded-6,stdout,5,
+timing-List-s5-list-java-recorded-6,stdout,6,Total Runtime: 18044us
+timing-List-s5-list-java-recorded-7,stdout,1,Starting List benchmark ...
+timing-List-s5-list-java-recorded-7,stdout,2,List: iterations=1 runtime: 18511us
+timing-List-s5-list-java-recorded-7,stdout,3,List: iterations=1 average: 18511us total: 18511us
+timing-List-s5-list-java-recorded-7,stdout,4,
+timing-List-s5-list-java-recorded-7,stdout,5,
+timing-List-s5-list-java-recorded-7,stdout,6,Total Runtime: 18511us
+timing-List-s5-list-java-recorded-8,stdout,1,Starting List benchmark ...
+timing-List-s5-list-java-recorded-8,stdout,2,List: iterations=1 runtime: 18001us
+timing-List-s5-list-java-recorded-8,stdout,3,List: iterations=1 average: 18001us total: 18001us
+timing-List-s5-list-java-recorded-8,stdout,4,
+timing-List-s5-list-java-recorded-8,stdout,5,
+timing-List-s5-list-java-recorded-8,stdout,6,Total Runtime: 18001us
+timing-List-s5-list-java-recorded-9,stdout,1,Starting List benchmark ...
+timing-List-s5-list-java-recorded-9,stdout,2,List: iterations=1 runtime: 18081us
+timing-List-s5-list-java-recorded-9,stdout,3,List: iterations=1 average: 18081us total: 18081us
+timing-List-s5-list-java-recorded-9,stdout,4,
+timing-List-s5-list-java-recorded-9,stdout,5,
+timing-List-s5-list-java-recorded-9,stdout,6,Total Runtime: 18081us
+timing-List-s5-list-java-recorded-10,stdout,1,Starting List benchmark ...
+timing-List-s5-list-java-recorded-10,stdout,2,List: iterations=1 runtime: 18206us
+timing-List-s5-list-java-recorded-10,stdout,3,List: iterations=1 average: 18206us total: 18206us
+timing-List-s5-list-java-recorded-10,stdout,4,
+timing-List-s5-list-java-recorded-10,stdout,5,
+timing-List-s5-list-java-recorded-10,stdout,6,Total Runtime: 18206us
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-1,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-1,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-s5-mandelbrot-java-recorded-1,stdout,1,Starting Mandelbrot benchmark ...
+timing-Mandelbrot-s5-mandelbrot-java-recorded-1,stdout,2,Mandelbrot: iterations=1 runtime: 20353us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-1,stdout,3,Mandelbrot: iterations=1 average: 20353us total: 20353us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-1,stdout,4,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-1,stdout,5,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-1,stdout,6,Total Runtime: 20353us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-2,stdout,1,Starting Mandelbrot benchmark ...
+timing-Mandelbrot-s5-mandelbrot-java-recorded-2,stdout,2,Mandelbrot: iterations=1 runtime: 20308us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-2,stdout,3,Mandelbrot: iterations=1 average: 20308us total: 20308us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-2,stdout,4,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-2,stdout,5,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-2,stdout,6,Total Runtime: 20308us
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-2,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-2,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-3,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-3,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-s5-mandelbrot-java-recorded-3,stdout,1,Starting Mandelbrot benchmark ...
+timing-Mandelbrot-s5-mandelbrot-java-recorded-3,stdout,2,Mandelbrot: iterations=1 runtime: 20431us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-3,stdout,3,Mandelbrot: iterations=1 average: 20431us total: 20431us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-3,stdout,4,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-3,stdout,5,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-3,stdout,6,Total Runtime: 20431us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-4,stdout,1,Starting Mandelbrot benchmark ...
+timing-Mandelbrot-s5-mandelbrot-java-recorded-4,stdout,2,Mandelbrot: iterations=1 runtime: 20486us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-4,stdout,3,Mandelbrot: iterations=1 average: 20486us total: 20486us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-4,stdout,4,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-4,stdout,5,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-4,stdout,6,Total Runtime: 20486us
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-4,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-4,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-5,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-5,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-s5-mandelbrot-java-recorded-5,stdout,1,Starting Mandelbrot benchmark ...
+timing-Mandelbrot-s5-mandelbrot-java-recorded-5,stdout,2,Mandelbrot: iterations=1 runtime: 20499us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-5,stdout,3,Mandelbrot: iterations=1 average: 20499us total: 20499us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-5,stdout,4,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-5,stdout,5,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-5,stdout,6,Total Runtime: 20499us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-6,stdout,1,Starting Mandelbrot benchmark ...
+timing-Mandelbrot-s5-mandelbrot-java-recorded-6,stdout,2,Mandelbrot: iterations=1 runtime: 20532us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-6,stdout,3,Mandelbrot: iterations=1 average: 20532us total: 20532us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-6,stdout,4,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-6,stdout,5,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-6,stdout,6,Total Runtime: 20532us
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-6,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-6,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-7,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-7,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-s5-mandelbrot-java-recorded-7,stdout,1,Starting Mandelbrot benchmark ...
+timing-Mandelbrot-s5-mandelbrot-java-recorded-7,stdout,2,Mandelbrot: iterations=1 runtime: 20358us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-7,stdout,3,Mandelbrot: iterations=1 average: 20358us total: 20358us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-7,stdout,4,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-7,stdout,5,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-7,stdout,6,Total Runtime: 20358us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-8,stdout,1,Starting Mandelbrot benchmark ...
+timing-Mandelbrot-s5-mandelbrot-java-recorded-8,stdout,2,Mandelbrot: iterations=1 runtime: 20464us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-8,stdout,3,Mandelbrot: iterations=1 average: 20464us total: 20464us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-8,stdout,4,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-8,stdout,5,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-8,stdout,6,Total Runtime: 20464us
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-8,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-8,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-9,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-9,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-s5-mandelbrot-java-recorded-9,stdout,1,Starting Mandelbrot benchmark ...
+timing-Mandelbrot-s5-mandelbrot-java-recorded-9,stdout,2,Mandelbrot: iterations=1 runtime: 20570us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-9,stdout,3,Mandelbrot: iterations=1 average: 20570us total: 20570us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-9,stdout,4,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-9,stdout,5,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-9,stdout,6,Total Runtime: 20570us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-10,stdout,1,Starting Mandelbrot benchmark ...
+timing-Mandelbrot-s5-mandelbrot-java-recorded-10,stdout,2,Mandelbrot: iterations=1 runtime: 20545us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-10,stdout,3,Mandelbrot: iterations=1 average: 20545us total: 20545us
+timing-Mandelbrot-s5-mandelbrot-java-recorded-10,stdout,4,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-10,stdout,5,
+timing-Mandelbrot-s5-mandelbrot-java-recorded-10,stdout,6,Total Runtime: 20545us
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-10,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-s5-mandelbrot-rxbvm-recorded-10,stdout,2,PASS: AWFY Mandelbrot
+timing-Json-s5-json-rxtvm-recorded-1,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxtvm-recorded-1,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-rxbvm-recorded-1,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxbvm-recorded-1,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-oorexx-recorded-1,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 adaptation=standard-library-dom
+timing-Json-s5-json-oorexx-recorded-1,stdout,2,PASS: Full AWFY Json ooRexx standard-library port
+timing-Json-s5-json-java-recorded-1,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-java-recorded-1,stdout,2,Json: iterations=1 runtime: 3918us
+timing-Json-s5-json-java-recorded-1,stdout,3,Json: iterations=1 runtime: 1022us
+timing-Json-s5-json-java-recorded-1,stdout,4,Json: iterations=1 runtime: 1075us
+timing-Json-s5-json-java-recorded-1,stdout,5,Json: iterations=1 runtime: 650us
+timing-Json-s5-json-java-recorded-1,stdout,6,Json: iterations=1 runtime: 1017us
+timing-Json-s5-json-java-recorded-1,stdout,7,Json: iterations=1 runtime: 635us
+timing-Json-s5-json-java-recorded-1,stdout,8,Json: iterations=1 runtime: 1275us
+timing-Json-s5-json-java-recorded-1,stdout,9,Json: iterations=1 runtime: 787us
+timing-Json-s5-json-java-recorded-1,stdout,10,Json: iterations=1 runtime: 798us
+timing-Json-s5-json-java-recorded-1,stdout,11,Json: iterations=1 runtime: 801us
+timing-Json-s5-json-java-recorded-1,stdout,12,Json: iterations=10 average: 1197us total: 11978us
+timing-Json-s5-json-java-recorded-1,stdout,13,
+timing-Json-s5-json-java-recorded-1,stdout,14,
+timing-Json-s5-json-java-recorded-1,stdout,15,Total Runtime: 11978us
+timing-Json-s5-json-python-recorded-1,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-python-recorded-1,stdout,2,Json: iterations=1 runtime: 4085us
+timing-Json-s5-json-python-recorded-1,stdout,3,Json: iterations=1 runtime: 3949us
+timing-Json-s5-json-python-recorded-1,stdout,4,Json: iterations=1 runtime: 3877us
+timing-Json-s5-json-python-recorded-1,stdout,5,Json: iterations=1 runtime: 4279us
+timing-Json-s5-json-python-recorded-1,stdout,6,Json: iterations=1 runtime: 3888us
+timing-Json-s5-json-python-recorded-1,stdout,7,Json: iterations=1 runtime: 3945us
+timing-Json-s5-json-python-recorded-1,stdout,8,Json: iterations=1 runtime: 3900us
+timing-Json-s5-json-python-recorded-1,stdout,9,Json: iterations=1 runtime: 3898us
+timing-Json-s5-json-python-recorded-1,stdout,10,Json: iterations=1 runtime: 3865us
+timing-Json-s5-json-python-recorded-1,stdout,11,Json: iterations=1 runtime: 3929us
+timing-Json-s5-json-python-recorded-1,stdout,12,Json: iterations=10 average: 3962us total: 39615us
+timing-Json-s5-json-python-recorded-1,stdout,13,
+timing-Json-s5-json-python-recorded-1,stdout,14,
+timing-Json-s5-json-python-recorded-1,stdout,15,Total Runtime: 39615us
+timing-Json-s5-json-python-recorded-2,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-python-recorded-2,stdout,2,Json: iterations=1 runtime: 4078us
+timing-Json-s5-json-python-recorded-2,stdout,3,Json: iterations=1 runtime: 3884us
+timing-Json-s5-json-python-recorded-2,stdout,4,Json: iterations=1 runtime: 3855us
+timing-Json-s5-json-python-recorded-2,stdout,5,Json: iterations=1 runtime: 4289us
+timing-Json-s5-json-python-recorded-2,stdout,6,Json: iterations=1 runtime: 3951us
+timing-Json-s5-json-python-recorded-2,stdout,7,Json: iterations=1 runtime: 3851us
+timing-Json-s5-json-python-recorded-2,stdout,8,Json: iterations=1 runtime: 3864us
+timing-Json-s5-json-python-recorded-2,stdout,9,Json: iterations=1 runtime: 3858us
+timing-Json-s5-json-python-recorded-2,stdout,10,Json: iterations=1 runtime: 3895us
+timing-Json-s5-json-python-recorded-2,stdout,11,Json: iterations=1 runtime: 3935us
+timing-Json-s5-json-python-recorded-2,stdout,12,Json: iterations=10 average: 3946us total: 39460us
+timing-Json-s5-json-python-recorded-2,stdout,13,
+timing-Json-s5-json-python-recorded-2,stdout,14,
+timing-Json-s5-json-python-recorded-2,stdout,15,Total Runtime: 39460us
+timing-Json-s5-json-java-recorded-2,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-java-recorded-2,stdout,2,Json: iterations=1 runtime: 3945us
+timing-Json-s5-json-java-recorded-2,stdout,3,Json: iterations=1 runtime: 1585us
+timing-Json-s5-json-java-recorded-2,stdout,4,Json: iterations=1 runtime: 1042us
+timing-Json-s5-json-java-recorded-2,stdout,5,Json: iterations=1 runtime: 540us
+timing-Json-s5-json-java-recorded-2,stdout,6,Json: iterations=1 runtime: 958us
+timing-Json-s5-json-java-recorded-2,stdout,7,Json: iterations=1 runtime: 821us
+timing-Json-s5-json-java-recorded-2,stdout,8,Json: iterations=1 runtime: 829us
+timing-Json-s5-json-java-recorded-2,stdout,9,Json: iterations=1 runtime: 579us
+timing-Json-s5-json-java-recorded-2,stdout,10,Json: iterations=1 runtime: 582us
+timing-Json-s5-json-java-recorded-2,stdout,11,Json: iterations=1 runtime: 572us
+timing-Json-s5-json-java-recorded-2,stdout,12,Json: iterations=10 average: 1145us total: 11453us
+timing-Json-s5-json-java-recorded-2,stdout,13,
+timing-Json-s5-json-java-recorded-2,stdout,14,
+timing-Json-s5-json-java-recorded-2,stdout,15,Total Runtime: 11453us
+timing-Json-s5-json-oorexx-recorded-2,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 adaptation=standard-library-dom
+timing-Json-s5-json-oorexx-recorded-2,stdout,2,PASS: Full AWFY Json ooRexx standard-library port
+timing-Json-s5-json-rxbvm-recorded-2,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxbvm-recorded-2,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-rxtvm-recorded-2,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxtvm-recorded-2,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-oorexx-recorded-3,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 adaptation=standard-library-dom
+timing-Json-s5-json-oorexx-recorded-3,stdout,2,PASS: Full AWFY Json ooRexx standard-library port
+timing-Json-s5-json-java-recorded-3,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-java-recorded-3,stdout,2,Json: iterations=1 runtime: 3914us
+timing-Json-s5-json-java-recorded-3,stdout,3,Json: iterations=1 runtime: 898us
+timing-Json-s5-json-java-recorded-3,stdout,4,Json: iterations=1 runtime: 1101us
+timing-Json-s5-json-java-recorded-3,stdout,5,Json: iterations=1 runtime: 663us
+timing-Json-s5-json-java-recorded-3,stdout,6,Json: iterations=1 runtime: 976us
+timing-Json-s5-json-java-recorded-3,stdout,7,Json: iterations=1 runtime: 631us
+timing-Json-s5-json-java-recorded-3,stdout,8,Json: iterations=1 runtime: 1188us
+timing-Json-s5-json-java-recorded-3,stdout,9,Json: iterations=1 runtime: 803us
+timing-Json-s5-json-java-recorded-3,stdout,10,Json: iterations=1 runtime: 781us
+timing-Json-s5-json-java-recorded-3,stdout,11,Json: iterations=1 runtime: 788us
+timing-Json-s5-json-java-recorded-3,stdout,12,Json: iterations=10 average: 1174us total: 11743us
+timing-Json-s5-json-java-recorded-3,stdout,13,
+timing-Json-s5-json-java-recorded-3,stdout,14,
+timing-Json-s5-json-java-recorded-3,stdout,15,Total Runtime: 11743us
+timing-Json-s5-json-python-recorded-3,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-python-recorded-3,stdout,2,Json: iterations=1 runtime: 4206us
+timing-Json-s5-json-python-recorded-3,stdout,3,Json: iterations=1 runtime: 3904us
+timing-Json-s5-json-python-recorded-3,stdout,4,Json: iterations=1 runtime: 3902us
+timing-Json-s5-json-python-recorded-3,stdout,5,Json: iterations=1 runtime: 4316us
+timing-Json-s5-json-python-recorded-3,stdout,6,Json: iterations=1 runtime: 3877us
+timing-Json-s5-json-python-recorded-3,stdout,7,Json: iterations=1 runtime: 3823us
+timing-Json-s5-json-python-recorded-3,stdout,8,Json: iterations=1 runtime: 3896us
+timing-Json-s5-json-python-recorded-3,stdout,9,Json: iterations=1 runtime: 3833us
+timing-Json-s5-json-python-recorded-3,stdout,10,Json: iterations=1 runtime: 3886us
+timing-Json-s5-json-python-recorded-3,stdout,11,Json: iterations=1 runtime: 3893us
+timing-Json-s5-json-python-recorded-3,stdout,12,Json: iterations=10 average: 3954us total: 39536us
+timing-Json-s5-json-python-recorded-3,stdout,13,
+timing-Json-s5-json-python-recorded-3,stdout,14,
+timing-Json-s5-json-python-recorded-3,stdout,15,Total Runtime: 39536us
+timing-Json-s5-json-rxtvm-recorded-3,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxtvm-recorded-3,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-rxbvm-recorded-3,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxbvm-recorded-3,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-rxbvm-recorded-4,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxbvm-recorded-4,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-rxtvm-recorded-4,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxtvm-recorded-4,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-python-recorded-4,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-python-recorded-4,stdout,2,Json: iterations=1 runtime: 4077us
+timing-Json-s5-json-python-recorded-4,stdout,3,Json: iterations=1 runtime: 3911us
+timing-Json-s5-json-python-recorded-4,stdout,4,Json: iterations=1 runtime: 4038us
+timing-Json-s5-json-python-recorded-4,stdout,5,Json: iterations=1 runtime: 4253us
+timing-Json-s5-json-python-recorded-4,stdout,6,Json: iterations=1 runtime: 3901us
+timing-Json-s5-json-python-recorded-4,stdout,7,Json: iterations=1 runtime: 3872us
+timing-Json-s5-json-python-recorded-4,stdout,8,Json: iterations=1 runtime: 3997us
+timing-Json-s5-json-python-recorded-4,stdout,9,Json: iterations=1 runtime: 3842us
+timing-Json-s5-json-python-recorded-4,stdout,10,Json: iterations=1 runtime: 3879us
+timing-Json-s5-json-python-recorded-4,stdout,11,Json: iterations=1 runtime: 3884us
+timing-Json-s5-json-python-recorded-4,stdout,12,Json: iterations=10 average: 3965us total: 39654us
+timing-Json-s5-json-python-recorded-4,stdout,13,
+timing-Json-s5-json-python-recorded-4,stdout,14,
+timing-Json-s5-json-python-recorded-4,stdout,15,Total Runtime: 39654us
+timing-Json-s5-json-java-recorded-4,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-java-recorded-4,stdout,2,Json: iterations=1 runtime: 3687us
+timing-Json-s5-json-java-recorded-4,stdout,3,Json: iterations=1 runtime: 1585us
+timing-Json-s5-json-java-recorded-4,stdout,4,Json: iterations=1 runtime: 1369us
+timing-Json-s5-json-java-recorded-4,stdout,5,Json: iterations=1 runtime: 559us
+timing-Json-s5-json-java-recorded-4,stdout,6,Json: iterations=1 runtime: 982us
+timing-Json-s5-json-java-recorded-4,stdout,7,Json: iterations=1 runtime: 929us
+timing-Json-s5-json-java-recorded-4,stdout,8,Json: iterations=1 runtime: 837us
+timing-Json-s5-json-java-recorded-4,stdout,9,Json: iterations=1 runtime: 582us
+timing-Json-s5-json-java-recorded-4,stdout,10,Json: iterations=1 runtime: 563us
+timing-Json-s5-json-java-recorded-4,stdout,11,Json: iterations=1 runtime: 571us
+timing-Json-s5-json-java-recorded-4,stdout,12,Json: iterations=10 average: 1166us total: 11664us
+timing-Json-s5-json-java-recorded-4,stdout,13,
+timing-Json-s5-json-java-recorded-4,stdout,14,
+timing-Json-s5-json-java-recorded-4,stdout,15,Total Runtime: 11664us
+timing-Json-s5-json-oorexx-recorded-4,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 adaptation=standard-library-dom
+timing-Json-s5-json-oorexx-recorded-4,stdout,2,PASS: Full AWFY Json ooRexx standard-library port
+timing-Json-s5-json-python-recorded-5,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-python-recorded-5,stdout,2,Json: iterations=1 runtime: 3944us
+timing-Json-s5-json-python-recorded-5,stdout,3,Json: iterations=1 runtime: 3884us
+timing-Json-s5-json-python-recorded-5,stdout,4,Json: iterations=1 runtime: 4097us
+timing-Json-s5-json-python-recorded-5,stdout,5,Json: iterations=1 runtime: 4316us
+timing-Json-s5-json-python-recorded-5,stdout,6,Json: iterations=1 runtime: 3918us
+timing-Json-s5-json-python-recorded-5,stdout,7,Json: iterations=1 runtime: 3886us
+timing-Json-s5-json-python-recorded-5,stdout,8,Json: iterations=1 runtime: 4299us
+timing-Json-s5-json-python-recorded-5,stdout,9,Json: iterations=1 runtime: 3980us
+timing-Json-s5-json-python-recorded-5,stdout,10,Json: iterations=1 runtime: 3942us
+timing-Json-s5-json-python-recorded-5,stdout,11,Json: iterations=1 runtime: 3974us
+timing-Json-s5-json-python-recorded-5,stdout,12,Json: iterations=10 average: 4024us total: 40240us
+timing-Json-s5-json-python-recorded-5,stdout,13,
+timing-Json-s5-json-python-recorded-5,stdout,14,
+timing-Json-s5-json-python-recorded-5,stdout,15,Total Runtime: 40240us
+timing-Json-s5-json-rxtvm-recorded-5,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxtvm-recorded-5,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-rxbvm-recorded-5,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxbvm-recorded-5,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-oorexx-recorded-5,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 adaptation=standard-library-dom
+timing-Json-s5-json-oorexx-recorded-5,stdout,2,PASS: Full AWFY Json ooRexx standard-library port
+timing-Json-s5-json-java-recorded-5,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-java-recorded-5,stdout,2,Json: iterations=1 runtime: 3690us
+timing-Json-s5-json-java-recorded-5,stdout,3,Json: iterations=1 runtime: 989us
+timing-Json-s5-json-java-recorded-5,stdout,4,Json: iterations=1 runtime: 1030us
+timing-Json-s5-json-java-recorded-5,stdout,5,Json: iterations=1 runtime: 595us
+timing-Json-s5-json-java-recorded-5,stdout,6,Json: iterations=1 runtime: 1388us
+timing-Json-s5-json-java-recorded-5,stdout,7,Json: iterations=1 runtime: 667us
+timing-Json-s5-json-java-recorded-5,stdout,8,Json: iterations=1 runtime: 1151us
+timing-Json-s5-json-java-recorded-5,stdout,9,Json: iterations=1 runtime: 1005us
+timing-Json-s5-json-java-recorded-5,stdout,10,Json: iterations=1 runtime: 988us
+timing-Json-s5-json-java-recorded-5,stdout,11,Json: iterations=1 runtime: 860us
+timing-Json-s5-json-java-recorded-5,stdout,12,Json: iterations=10 average: 1236us total: 12363us
+timing-Json-s5-json-java-recorded-5,stdout,13,
+timing-Json-s5-json-java-recorded-5,stdout,14,
+timing-Json-s5-json-java-recorded-5,stdout,15,Total Runtime: 12363us
+timing-Json-s5-json-java-recorded-6,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-java-recorded-6,stdout,2,Json: iterations=1 runtime: 3659us
+timing-Json-s5-json-java-recorded-6,stdout,3,Json: iterations=1 runtime: 872us
+timing-Json-s5-json-java-recorded-6,stdout,4,Json: iterations=1 runtime: 1400us
+timing-Json-s5-json-java-recorded-6,stdout,5,Json: iterations=1 runtime: 592us
+timing-Json-s5-json-java-recorded-6,stdout,6,Json: iterations=1 runtime: 973us
+timing-Json-s5-json-java-recorded-6,stdout,7,Json: iterations=1 runtime: 861us
+timing-Json-s5-json-java-recorded-6,stdout,8,Json: iterations=1 runtime: 811us
+timing-Json-s5-json-java-recorded-6,stdout,9,Json: iterations=1 runtime: 627us
+timing-Json-s5-json-java-recorded-6,stdout,10,Json: iterations=1 runtime: 582us
+timing-Json-s5-json-java-recorded-6,stdout,11,Json: iterations=1 runtime: 587us
+timing-Json-s5-json-java-recorded-6,stdout,12,Json: iterations=10 average: 1096us total: 10964us
+timing-Json-s5-json-java-recorded-6,stdout,13,
+timing-Json-s5-json-java-recorded-6,stdout,14,
+timing-Json-s5-json-java-recorded-6,stdout,15,Total Runtime: 10964us
+timing-Json-s5-json-oorexx-recorded-6,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 adaptation=standard-library-dom
+timing-Json-s5-json-oorexx-recorded-6,stdout,2,PASS: Full AWFY Json ooRexx standard-library port
+timing-Json-s5-json-rxbvm-recorded-6,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxbvm-recorded-6,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-rxtvm-recorded-6,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxtvm-recorded-6,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-python-recorded-6,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-python-recorded-6,stdout,2,Json: iterations=1 runtime: 4059us
+timing-Json-s5-json-python-recorded-6,stdout,3,Json: iterations=1 runtime: 3891us
+timing-Json-s5-json-python-recorded-6,stdout,4,Json: iterations=1 runtime: 3864us
+timing-Json-s5-json-python-recorded-6,stdout,5,Json: iterations=1 runtime: 4150us
+timing-Json-s5-json-python-recorded-6,stdout,6,Json: iterations=1 runtime: 3780us
+timing-Json-s5-json-python-recorded-6,stdout,7,Json: iterations=1 runtime: 3774us
+timing-Json-s5-json-python-recorded-6,stdout,8,Json: iterations=1 runtime: 3837us
+timing-Json-s5-json-python-recorded-6,stdout,9,Json: iterations=1 runtime: 3809us
+timing-Json-s5-json-python-recorded-6,stdout,10,Json: iterations=1 runtime: 3821us
+timing-Json-s5-json-python-recorded-6,stdout,11,Json: iterations=1 runtime: 3838us
+timing-Json-s5-json-python-recorded-6,stdout,12,Json: iterations=10 average: 3882us total: 38823us
+timing-Json-s5-json-python-recorded-6,stdout,13,
+timing-Json-s5-json-python-recorded-6,stdout,14,
+timing-Json-s5-json-python-recorded-6,stdout,15,Total Runtime: 38823us
+timing-Json-s5-json-rxbvm-recorded-7,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxbvm-recorded-7,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-oorexx-recorded-7,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 adaptation=standard-library-dom
+timing-Json-s5-json-oorexx-recorded-7,stdout,2,PASS: Full AWFY Json ooRexx standard-library port
+timing-Json-s5-json-java-recorded-7,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-java-recorded-7,stdout,2,Json: iterations=1 runtime: 4134us
+timing-Json-s5-json-java-recorded-7,stdout,3,Json: iterations=1 runtime: 1842us
+timing-Json-s5-json-java-recorded-7,stdout,4,Json: iterations=1 runtime: 1209us
+timing-Json-s5-json-java-recorded-7,stdout,5,Json: iterations=1 runtime: 769us
+timing-Json-s5-json-java-recorded-7,stdout,6,Json: iterations=1 runtime: 1034us
+timing-Json-s5-json-java-recorded-7,stdout,7,Json: iterations=1 runtime: 996us
+timing-Json-s5-json-java-recorded-7,stdout,8,Json: iterations=1 runtime: 1192us
+timing-Json-s5-json-java-recorded-7,stdout,9,Json: iterations=1 runtime: 660us
+timing-Json-s5-json-java-recorded-7,stdout,10,Json: iterations=1 runtime: 654us
+timing-Json-s5-json-java-recorded-7,stdout,11,Json: iterations=1 runtime: 765us
+timing-Json-s5-json-java-recorded-7,stdout,12,Json: iterations=10 average: 1325us total: 13255us
+timing-Json-s5-json-java-recorded-7,stdout,13,
+timing-Json-s5-json-java-recorded-7,stdout,14,
+timing-Json-s5-json-java-recorded-7,stdout,15,Total Runtime: 13255us
+timing-Json-s5-json-python-recorded-7,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-python-recorded-7,stdout,2,Json: iterations=1 runtime: 4373us
+timing-Json-s5-json-python-recorded-7,stdout,3,Json: iterations=1 runtime: 4012us
+timing-Json-s5-json-python-recorded-7,stdout,4,Json: iterations=1 runtime: 3982us
+timing-Json-s5-json-python-recorded-7,stdout,5,Json: iterations=1 runtime: 4374us
+timing-Json-s5-json-python-recorded-7,stdout,6,Json: iterations=1 runtime: 4100us
+timing-Json-s5-json-python-recorded-7,stdout,7,Json: iterations=1 runtime: 4021us
+timing-Json-s5-json-python-recorded-7,stdout,8,Json: iterations=1 runtime: 3927us
+timing-Json-s5-json-python-recorded-7,stdout,9,Json: iterations=1 runtime: 3954us
+timing-Json-s5-json-python-recorded-7,stdout,10,Json: iterations=1 runtime: 3967us
+timing-Json-s5-json-python-recorded-7,stdout,11,Json: iterations=1 runtime: 3928us
+timing-Json-s5-json-python-recorded-7,stdout,12,Json: iterations=10 average: 4064us total: 40638us
+timing-Json-s5-json-python-recorded-7,stdout,13,
+timing-Json-s5-json-python-recorded-7,stdout,14,
+timing-Json-s5-json-python-recorded-7,stdout,15,Total Runtime: 40638us
+timing-Json-s5-json-rxtvm-recorded-7,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxtvm-recorded-7,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-rxtvm-recorded-8,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxtvm-recorded-8,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-python-recorded-8,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-python-recorded-8,stdout,2,Json: iterations=1 runtime: 3993us
+timing-Json-s5-json-python-recorded-8,stdout,3,Json: iterations=1 runtime: 3885us
+timing-Json-s5-json-python-recorded-8,stdout,4,Json: iterations=1 runtime: 3783us
+timing-Json-s5-json-python-recorded-8,stdout,5,Json: iterations=1 runtime: 4180us
+timing-Json-s5-json-python-recorded-8,stdout,6,Json: iterations=1 runtime: 3795us
+timing-Json-s5-json-python-recorded-8,stdout,7,Json: iterations=1 runtime: 3795us
+timing-Json-s5-json-python-recorded-8,stdout,8,Json: iterations=1 runtime: 3851us
+timing-Json-s5-json-python-recorded-8,stdout,9,Json: iterations=1 runtime: 3892us
+timing-Json-s5-json-python-recorded-8,stdout,10,Json: iterations=1 runtime: 3834us
+timing-Json-s5-json-python-recorded-8,stdout,11,Json: iterations=1 runtime: 3817us
+timing-Json-s5-json-python-recorded-8,stdout,12,Json: iterations=10 average: 3882us total: 38825us
+timing-Json-s5-json-python-recorded-8,stdout,13,
+timing-Json-s5-json-python-recorded-8,stdout,14,
+timing-Json-s5-json-python-recorded-8,stdout,15,Total Runtime: 38825us
+timing-Json-s5-json-java-recorded-8,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-java-recorded-8,stdout,2,Json: iterations=1 runtime: 3801us
+timing-Json-s5-json-java-recorded-8,stdout,3,Json: iterations=1 runtime: 1561us
+timing-Json-s5-json-java-recorded-8,stdout,4,Json: iterations=1 runtime: 1062us
+timing-Json-s5-json-java-recorded-8,stdout,5,Json: iterations=1 runtime: 572us
+timing-Json-s5-json-java-recorded-8,stdout,6,Json: iterations=1 runtime: 957us
+timing-Json-s5-json-java-recorded-8,stdout,7,Json: iterations=1 runtime: 822us
+timing-Json-s5-json-java-recorded-8,stdout,8,Json: iterations=1 runtime: 800us
+timing-Json-s5-json-java-recorded-8,stdout,9,Json: iterations=1 runtime: 596us
+timing-Json-s5-json-java-recorded-8,stdout,10,Json: iterations=1 runtime: 705us
+timing-Json-s5-json-java-recorded-8,stdout,11,Json: iterations=1 runtime: 596us
+timing-Json-s5-json-java-recorded-8,stdout,12,Json: iterations=10 average: 1147us total: 11472us
+timing-Json-s5-json-java-recorded-8,stdout,13,
+timing-Json-s5-json-java-recorded-8,stdout,14,
+timing-Json-s5-json-java-recorded-8,stdout,15,Total Runtime: 11472us
+timing-Json-s5-json-oorexx-recorded-8,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 adaptation=standard-library-dom
+timing-Json-s5-json-oorexx-recorded-8,stdout,2,PASS: Full AWFY Json ooRexx standard-library port
+timing-Json-s5-json-rxbvm-recorded-8,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxbvm-recorded-8,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-java-recorded-9,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-java-recorded-9,stdout,2,Json: iterations=1 runtime: 3793us
+timing-Json-s5-json-java-recorded-9,stdout,3,Json: iterations=1 runtime: 1013us
+timing-Json-s5-json-java-recorded-9,stdout,4,Json: iterations=1 runtime: 1116us
+timing-Json-s5-json-java-recorded-9,stdout,5,Json: iterations=1 runtime: 729us
+timing-Json-s5-json-java-recorded-9,stdout,6,Json: iterations=1 runtime: 965us
+timing-Json-s5-json-java-recorded-9,stdout,7,Json: iterations=1 runtime: 689us
+timing-Json-s5-json-java-recorded-9,stdout,8,Json: iterations=1 runtime: 1150us
+timing-Json-s5-json-java-recorded-9,stdout,9,Json: iterations=1 runtime: 755us
+timing-Json-s5-json-java-recorded-9,stdout,10,Json: iterations=1 runtime: 800us
+timing-Json-s5-json-java-recorded-9,stdout,11,Json: iterations=1 runtime: 831us
+timing-Json-s5-json-java-recorded-9,stdout,12,Json: iterations=10 average: 1184us total: 11841us
+timing-Json-s5-json-java-recorded-9,stdout,13,
+timing-Json-s5-json-java-recorded-9,stdout,14,
+timing-Json-s5-json-java-recorded-9,stdout,15,Total Runtime: 11841us
+timing-Json-s5-json-python-recorded-9,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-python-recorded-9,stdout,2,Json: iterations=1 runtime: 4064us
+timing-Json-s5-json-python-recorded-9,stdout,3,Json: iterations=1 runtime: 3946us
+timing-Json-s5-json-python-recorded-9,stdout,4,Json: iterations=1 runtime: 3874us
+timing-Json-s5-json-python-recorded-9,stdout,5,Json: iterations=1 runtime: 4353us
+timing-Json-s5-json-python-recorded-9,stdout,6,Json: iterations=1 runtime: 3906us
+timing-Json-s5-json-python-recorded-9,stdout,7,Json: iterations=1 runtime: 3908us
+timing-Json-s5-json-python-recorded-9,stdout,8,Json: iterations=1 runtime: 3919us
+timing-Json-s5-json-python-recorded-9,stdout,9,Json: iterations=1 runtime: 3920us
+timing-Json-s5-json-python-recorded-9,stdout,10,Json: iterations=1 runtime: 3851us
+timing-Json-s5-json-python-recorded-9,stdout,11,Json: iterations=1 runtime: 3833us
+timing-Json-s5-json-python-recorded-9,stdout,12,Json: iterations=10 average: 3957us total: 39574us
+timing-Json-s5-json-python-recorded-9,stdout,13,
+timing-Json-s5-json-python-recorded-9,stdout,14,
+timing-Json-s5-json-python-recorded-9,stdout,15,Total Runtime: 39574us
+timing-Json-s5-json-rxtvm-recorded-9,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxtvm-recorded-9,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-rxbvm-recorded-9,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxbvm-recorded-9,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-oorexx-recorded-9,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 adaptation=standard-library-dom
+timing-Json-s5-json-oorexx-recorded-9,stdout,2,PASS: Full AWFY Json ooRexx standard-library port
+timing-Json-s5-json-oorexx-recorded-10,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 adaptation=standard-library-dom
+timing-Json-s5-json-oorexx-recorded-10,stdout,2,PASS: Full AWFY Json ooRexx standard-library port
+timing-Json-s5-json-rxbvm-recorded-10,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxbvm-recorded-10,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-rxtvm-recorded-10,stdout,1,benchmark=awfy_json repetitions=10 fixture_bytes=25820 operations=156 indexed_nodes=3392 adaptation=standard-library-indexed-document
+timing-Json-s5-json-rxtvm-recorded-10,stdout,2,PASS: Full AWFY Json
+timing-Json-s5-json-python-recorded-10,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-python-recorded-10,stdout,2,Json: iterations=1 runtime: 4097us
+timing-Json-s5-json-python-recorded-10,stdout,3,Json: iterations=1 runtime: 3921us
+timing-Json-s5-json-python-recorded-10,stdout,4,Json: iterations=1 runtime: 3873us
+timing-Json-s5-json-python-recorded-10,stdout,5,Json: iterations=1 runtime: 4312us
+timing-Json-s5-json-python-recorded-10,stdout,6,Json: iterations=1 runtime: 3874us
+timing-Json-s5-json-python-recorded-10,stdout,7,Json: iterations=1 runtime: 3851us
+timing-Json-s5-json-python-recorded-10,stdout,8,Json: iterations=1 runtime: 3870us
+timing-Json-s5-json-python-recorded-10,stdout,9,Json: iterations=1 runtime: 3922us
+timing-Json-s5-json-python-recorded-10,stdout,10,Json: iterations=1 runtime: 3911us
+timing-Json-s5-json-python-recorded-10,stdout,11,Json: iterations=1 runtime: 3888us
+timing-Json-s5-json-python-recorded-10,stdout,12,Json: iterations=10 average: 3952us total: 39519us
+timing-Json-s5-json-python-recorded-10,stdout,13,
+timing-Json-s5-json-python-recorded-10,stdout,14,
+timing-Json-s5-json-python-recorded-10,stdout,15,Total Runtime: 39519us
+timing-Json-s5-json-java-recorded-10,stdout,1,Starting Json benchmark ...
+timing-Json-s5-json-java-recorded-10,stdout,2,Json: iterations=1 runtime: 3617us
+timing-Json-s5-json-java-recorded-10,stdout,3,Json: iterations=1 runtime: 913us
+timing-Json-s5-json-java-recorded-10,stdout,4,Json: iterations=1 runtime: 1124us
+timing-Json-s5-json-java-recorded-10,stdout,5,Json: iterations=1 runtime: 788us
+timing-Json-s5-json-java-recorded-10,stdout,6,Json: iterations=1 runtime: 1248us
+timing-Json-s5-json-java-recorded-10,stdout,7,Json: iterations=1 runtime: 882us
+timing-Json-s5-json-java-recorded-10,stdout,8,Json: iterations=1 runtime: 1064us
+timing-Json-s5-json-java-recorded-10,stdout,9,Json: iterations=1 runtime: 781us
+timing-Json-s5-json-java-recorded-10,stdout,10,Json: iterations=1 runtime: 796us
+timing-Json-s5-json-java-recorded-10,stdout,11,Json: iterations=1 runtime: 799us
+timing-Json-s5-json-java-recorded-10,stdout,12,Json: iterations=10 average: 1201us total: 12012us
+timing-Json-s5-json-java-recorded-10,stdout,13,
+timing-Json-s5-json-java-recorded-10,stdout,14,
+timing-Json-s5-json-java-recorded-10,stdout,15,Total Runtime: 12012us
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-1,stdout,1,benchmark=awfy_deltablue size=500 adaptation=stable-indexed-constraint-graph
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-1,stdout,2,PASS: AWFY DeltaBlue
+timing-DeltaBlue-s5-deltablue-java-recorded-1,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-java-recorded-1,stdout,2,DeltaBlue: iterations=1 runtime: 12782us
+timing-DeltaBlue-s5-deltablue-java-recorded-1,stdout,3,DeltaBlue: iterations=1 average: 12782us total: 12782us
+timing-DeltaBlue-s5-deltablue-java-recorded-1,stdout,4,
+timing-DeltaBlue-s5-deltablue-java-recorded-1,stdout,5,
+timing-DeltaBlue-s5-deltablue-java-recorded-1,stdout,6,Total Runtime: 12782us
+timing-DeltaBlue-s5-deltablue-python-recorded-1,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-python-recorded-1,stdout,2,DeltaBlue: iterations=1 runtime: 9869us
+timing-DeltaBlue-s5-deltablue-python-recorded-1,stdout,3,DeltaBlue: iterations=1 average: 9869us total: 9869us
+timing-DeltaBlue-s5-deltablue-python-recorded-1,stdout,4,
+timing-DeltaBlue-s5-deltablue-python-recorded-1,stdout,5,
+timing-DeltaBlue-s5-deltablue-python-recorded-1,stdout,6,Total Runtime: 9869us
+timing-DeltaBlue-s5-deltablue-python-recorded-2,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-python-recorded-2,stdout,2,DeltaBlue: iterations=1 runtime: 9990us
+timing-DeltaBlue-s5-deltablue-python-recorded-2,stdout,3,DeltaBlue: iterations=1 average: 9990us total: 9990us
+timing-DeltaBlue-s5-deltablue-python-recorded-2,stdout,4,
+timing-DeltaBlue-s5-deltablue-python-recorded-2,stdout,5,
+timing-DeltaBlue-s5-deltablue-python-recorded-2,stdout,6,Total Runtime: 9990us
+timing-DeltaBlue-s5-deltablue-java-recorded-2,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-java-recorded-2,stdout,2,DeltaBlue: iterations=1 runtime: 12292us
+timing-DeltaBlue-s5-deltablue-java-recorded-2,stdout,3,DeltaBlue: iterations=1 average: 12292us total: 12292us
+timing-DeltaBlue-s5-deltablue-java-recorded-2,stdout,4,
+timing-DeltaBlue-s5-deltablue-java-recorded-2,stdout,5,
+timing-DeltaBlue-s5-deltablue-java-recorded-2,stdout,6,Total Runtime: 12292us
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-2,stdout,1,benchmark=awfy_deltablue size=500 adaptation=stable-indexed-constraint-graph
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-2,stdout,2,PASS: AWFY DeltaBlue
+timing-DeltaBlue-s5-deltablue-python-recorded-3,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-python-recorded-3,stdout,2,DeltaBlue: iterations=1 runtime: 9781us
+timing-DeltaBlue-s5-deltablue-python-recorded-3,stdout,3,DeltaBlue: iterations=1 average: 9781us total: 9781us
+timing-DeltaBlue-s5-deltablue-python-recorded-3,stdout,4,
+timing-DeltaBlue-s5-deltablue-python-recorded-3,stdout,5,
+timing-DeltaBlue-s5-deltablue-python-recorded-3,stdout,6,Total Runtime: 9781us
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-3,stdout,1,benchmark=awfy_deltablue size=500 adaptation=stable-indexed-constraint-graph
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-3,stdout,2,PASS: AWFY DeltaBlue
+timing-DeltaBlue-s5-deltablue-java-recorded-3,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-java-recorded-3,stdout,2,DeltaBlue: iterations=1 runtime: 12278us
+timing-DeltaBlue-s5-deltablue-java-recorded-3,stdout,3,DeltaBlue: iterations=1 average: 12278us total: 12278us
+timing-DeltaBlue-s5-deltablue-java-recorded-3,stdout,4,
+timing-DeltaBlue-s5-deltablue-java-recorded-3,stdout,5,
+timing-DeltaBlue-s5-deltablue-java-recorded-3,stdout,6,Total Runtime: 12278us
+timing-DeltaBlue-s5-deltablue-java-recorded-4,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-java-recorded-4,stdout,2,DeltaBlue: iterations=1 runtime: 11152us
+timing-DeltaBlue-s5-deltablue-java-recorded-4,stdout,3,DeltaBlue: iterations=1 average: 11152us total: 11152us
+timing-DeltaBlue-s5-deltablue-java-recorded-4,stdout,4,
+timing-DeltaBlue-s5-deltablue-java-recorded-4,stdout,5,
+timing-DeltaBlue-s5-deltablue-java-recorded-4,stdout,6,Total Runtime: 11152us
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-4,stdout,1,benchmark=awfy_deltablue size=500 adaptation=stable-indexed-constraint-graph
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-4,stdout,2,PASS: AWFY DeltaBlue
+timing-DeltaBlue-s5-deltablue-python-recorded-4,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-python-recorded-4,stdout,2,DeltaBlue: iterations=1 runtime: 10221us
+timing-DeltaBlue-s5-deltablue-python-recorded-4,stdout,3,DeltaBlue: iterations=1 average: 10221us total: 10221us
+timing-DeltaBlue-s5-deltablue-python-recorded-4,stdout,4,
+timing-DeltaBlue-s5-deltablue-python-recorded-4,stdout,5,
+timing-DeltaBlue-s5-deltablue-python-recorded-4,stdout,6,Total Runtime: 10221us
+timing-DeltaBlue-s5-deltablue-java-recorded-5,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-java-recorded-5,stdout,2,DeltaBlue: iterations=1 runtime: 12184us
+timing-DeltaBlue-s5-deltablue-java-recorded-5,stdout,3,DeltaBlue: iterations=1 average: 12184us total: 12184us
+timing-DeltaBlue-s5-deltablue-java-recorded-5,stdout,4,
+timing-DeltaBlue-s5-deltablue-java-recorded-5,stdout,5,
+timing-DeltaBlue-s5-deltablue-java-recorded-5,stdout,6,Total Runtime: 12184us
+timing-DeltaBlue-s5-deltablue-python-recorded-5,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-python-recorded-5,stdout,2,DeltaBlue: iterations=1 runtime: 10042us
+timing-DeltaBlue-s5-deltablue-python-recorded-5,stdout,3,DeltaBlue: iterations=1 average: 10042us total: 10042us
+timing-DeltaBlue-s5-deltablue-python-recorded-5,stdout,4,
+timing-DeltaBlue-s5-deltablue-python-recorded-5,stdout,5,
+timing-DeltaBlue-s5-deltablue-python-recorded-5,stdout,6,Total Runtime: 10042us
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-5,stdout,1,benchmark=awfy_deltablue size=500 adaptation=stable-indexed-constraint-graph
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-5,stdout,2,PASS: AWFY DeltaBlue
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-6,stdout,1,benchmark=awfy_deltablue size=500 adaptation=stable-indexed-constraint-graph
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-6,stdout,2,PASS: AWFY DeltaBlue
+timing-DeltaBlue-s5-deltablue-python-recorded-6,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-python-recorded-6,stdout,2,DeltaBlue: iterations=1 runtime: 9770us
+timing-DeltaBlue-s5-deltablue-python-recorded-6,stdout,3,DeltaBlue: iterations=1 average: 9770us total: 9770us
+timing-DeltaBlue-s5-deltablue-python-recorded-6,stdout,4,
+timing-DeltaBlue-s5-deltablue-python-recorded-6,stdout,5,
+timing-DeltaBlue-s5-deltablue-python-recorded-6,stdout,6,Total Runtime: 9770us
+timing-DeltaBlue-s5-deltablue-java-recorded-6,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-java-recorded-6,stdout,2,DeltaBlue: iterations=1 runtime: 10914us
+timing-DeltaBlue-s5-deltablue-java-recorded-6,stdout,3,DeltaBlue: iterations=1 average: 10914us total: 10914us
+timing-DeltaBlue-s5-deltablue-java-recorded-6,stdout,4,
+timing-DeltaBlue-s5-deltablue-java-recorded-6,stdout,5,
+timing-DeltaBlue-s5-deltablue-java-recorded-6,stdout,6,Total Runtime: 10914us
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-7,stdout,1,benchmark=awfy_deltablue size=500 adaptation=stable-indexed-constraint-graph
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-7,stdout,2,PASS: AWFY DeltaBlue
+timing-DeltaBlue-s5-deltablue-java-recorded-7,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-java-recorded-7,stdout,2,DeltaBlue: iterations=1 runtime: 12450us
+timing-DeltaBlue-s5-deltablue-java-recorded-7,stdout,3,DeltaBlue: iterations=1 average: 12450us total: 12450us
+timing-DeltaBlue-s5-deltablue-java-recorded-7,stdout,4,
+timing-DeltaBlue-s5-deltablue-java-recorded-7,stdout,5,
+timing-DeltaBlue-s5-deltablue-java-recorded-7,stdout,6,Total Runtime: 12450us
+timing-DeltaBlue-s5-deltablue-python-recorded-7,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-python-recorded-7,stdout,2,DeltaBlue: iterations=1 runtime: 9960us
+timing-DeltaBlue-s5-deltablue-python-recorded-7,stdout,3,DeltaBlue: iterations=1 average: 9960us total: 9960us
+timing-DeltaBlue-s5-deltablue-python-recorded-7,stdout,4,
+timing-DeltaBlue-s5-deltablue-python-recorded-7,stdout,5,
+timing-DeltaBlue-s5-deltablue-python-recorded-7,stdout,6,Total Runtime: 9960us
+timing-DeltaBlue-s5-deltablue-python-recorded-8,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-python-recorded-8,stdout,2,DeltaBlue: iterations=1 runtime: 9884us
+timing-DeltaBlue-s5-deltablue-python-recorded-8,stdout,3,DeltaBlue: iterations=1 average: 9884us total: 9884us
+timing-DeltaBlue-s5-deltablue-python-recorded-8,stdout,4,
+timing-DeltaBlue-s5-deltablue-python-recorded-8,stdout,5,
+timing-DeltaBlue-s5-deltablue-python-recorded-8,stdout,6,Total Runtime: 9884us
+timing-DeltaBlue-s5-deltablue-java-recorded-8,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-java-recorded-8,stdout,2,DeltaBlue: iterations=1 runtime: 12363us
+timing-DeltaBlue-s5-deltablue-java-recorded-8,stdout,3,DeltaBlue: iterations=1 average: 12363us total: 12363us
+timing-DeltaBlue-s5-deltablue-java-recorded-8,stdout,4,
+timing-DeltaBlue-s5-deltablue-java-recorded-8,stdout,5,
+timing-DeltaBlue-s5-deltablue-java-recorded-8,stdout,6,Total Runtime: 12363us
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-8,stdout,1,benchmark=awfy_deltablue size=500 adaptation=stable-indexed-constraint-graph
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-8,stdout,2,PASS: AWFY DeltaBlue
+timing-DeltaBlue-s5-deltablue-python-recorded-9,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-python-recorded-9,stdout,2,DeltaBlue: iterations=1 runtime: 9914us
+timing-DeltaBlue-s5-deltablue-python-recorded-9,stdout,3,DeltaBlue: iterations=1 average: 9914us total: 9914us
+timing-DeltaBlue-s5-deltablue-python-recorded-9,stdout,4,
+timing-DeltaBlue-s5-deltablue-python-recorded-9,stdout,5,
+timing-DeltaBlue-s5-deltablue-python-recorded-9,stdout,6,Total Runtime: 9914us
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-9,stdout,1,benchmark=awfy_deltablue size=500 adaptation=stable-indexed-constraint-graph
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-9,stdout,2,PASS: AWFY DeltaBlue
+timing-DeltaBlue-s5-deltablue-java-recorded-9,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-java-recorded-9,stdout,2,DeltaBlue: iterations=1 runtime: 12679us
+timing-DeltaBlue-s5-deltablue-java-recorded-9,stdout,3,DeltaBlue: iterations=1 average: 12679us total: 12679us
+timing-DeltaBlue-s5-deltablue-java-recorded-9,stdout,4,
+timing-DeltaBlue-s5-deltablue-java-recorded-9,stdout,5,
+timing-DeltaBlue-s5-deltablue-java-recorded-9,stdout,6,Total Runtime: 12679us
+timing-DeltaBlue-s5-deltablue-java-recorded-10,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-java-recorded-10,stdout,2,DeltaBlue: iterations=1 runtime: 12478us
+timing-DeltaBlue-s5-deltablue-java-recorded-10,stdout,3,DeltaBlue: iterations=1 average: 12478us total: 12478us
+timing-DeltaBlue-s5-deltablue-java-recorded-10,stdout,4,
+timing-DeltaBlue-s5-deltablue-java-recorded-10,stdout,5,
+timing-DeltaBlue-s5-deltablue-java-recorded-10,stdout,6,Total Runtime: 12478us
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-10,stdout,1,benchmark=awfy_deltablue size=500 adaptation=stable-indexed-constraint-graph
+timing-DeltaBlue-s5-deltablue-rxtvm-recorded-10,stdout,2,PASS: AWFY DeltaBlue
+timing-DeltaBlue-s5-deltablue-python-recorded-10,stdout,1,Starting DeltaBlue benchmark ...
+timing-DeltaBlue-s5-deltablue-python-recorded-10,stdout,2,DeltaBlue: iterations=1 runtime: 9953us
+timing-DeltaBlue-s5-deltablue-python-recorded-10,stdout,3,DeltaBlue: iterations=1 average: 9953us total: 9953us
+timing-DeltaBlue-s5-deltablue-python-recorded-10,stdout,4,
+timing-DeltaBlue-s5-deltablue-python-recorded-10,stdout,5,
+timing-DeltaBlue-s5-deltablue-python-recorded-10,stdout,6,Total Runtime: 9953us
+timing-CD-s5-cd-java-recorded-1,stdout,1,Starting CD benchmark ...
+timing-CD-s5-cd-java-recorded-1,stdout,2,CD: iterations=1 runtime: 29661us
+timing-CD-s5-cd-java-recorded-1,stdout,3,CD: iterations=1 average: 29661us total: 29661us
+timing-CD-s5-cd-java-recorded-1,stdout,4,
+timing-CD-s5-cd-java-recorded-1,stdout,5,
+timing-CD-s5-cd-java-recorded-1,stdout,6,Total Runtime: 29661us
+timing-CD-s5-cd-java-recorded-2,stdout,1,Starting CD benchmark ...
+timing-CD-s5-cd-java-recorded-2,stdout,2,CD: iterations=1 runtime: 27071us
+timing-CD-s5-cd-java-recorded-2,stdout,3,CD: iterations=1 average: 27071us total: 27071us
+timing-CD-s5-cd-java-recorded-2,stdout,4,
+timing-CD-s5-cd-java-recorded-2,stdout,5,
+timing-CD-s5-cd-java-recorded-2,stdout,6,Total Runtime: 27071us
+timing-CD-s5-cd-java-recorded-3,stdout,1,Starting CD benchmark ...
+timing-CD-s5-cd-java-recorded-3,stdout,2,CD: iterations=1 runtime: 28335us
+timing-CD-s5-cd-java-recorded-3,stdout,3,CD: iterations=1 average: 28335us total: 28335us
+timing-CD-s5-cd-java-recorded-3,stdout,4,
+timing-CD-s5-cd-java-recorded-3,stdout,5,
+timing-CD-s5-cd-java-recorded-3,stdout,6,Total Runtime: 28335us
+timing-CD-s5-cd-java-recorded-4,stdout,1,Starting CD benchmark ...
+timing-CD-s5-cd-java-recorded-4,stdout,2,CD: iterations=1 runtime: 27128us
+timing-CD-s5-cd-java-recorded-4,stdout,3,CD: iterations=1 average: 27128us total: 27128us
+timing-CD-s5-cd-java-recorded-4,stdout,4,
+timing-CD-s5-cd-java-recorded-4,stdout,5,
+timing-CD-s5-cd-java-recorded-4,stdout,6,Total Runtime: 27128us
+timing-CD-s5-cd-java-recorded-5,stdout,1,Starting CD benchmark ...
+timing-CD-s5-cd-java-recorded-5,stdout,2,CD: iterations=1 runtime: 28202us
+timing-CD-s5-cd-java-recorded-5,stdout,3,CD: iterations=1 average: 28202us total: 28202us
+timing-CD-s5-cd-java-recorded-5,stdout,4,
+timing-CD-s5-cd-java-recorded-5,stdout,5,
+timing-CD-s5-cd-java-recorded-5,stdout,6,Total Runtime: 28202us
+timing-CD-s5-cd-java-recorded-6,stdout,1,Starting CD benchmark ...
+timing-CD-s5-cd-java-recorded-6,stdout,2,CD: iterations=1 runtime: 26143us
+timing-CD-s5-cd-java-recorded-6,stdout,3,CD: iterations=1 average: 26143us total: 26143us
+timing-CD-s5-cd-java-recorded-6,stdout,4,
+timing-CD-s5-cd-java-recorded-6,stdout,5,
+timing-CD-s5-cd-java-recorded-6,stdout,6,Total Runtime: 26143us
+timing-CD-s5-cd-java-recorded-7,stdout,1,Starting CD benchmark ...
+timing-CD-s5-cd-java-recorded-7,stdout,2,CD: iterations=1 runtime: 27159us
+timing-CD-s5-cd-java-recorded-7,stdout,3,CD: iterations=1 average: 27159us total: 27159us
+timing-CD-s5-cd-java-recorded-7,stdout,4,
+timing-CD-s5-cd-java-recorded-7,stdout,5,
+timing-CD-s5-cd-java-recorded-7,stdout,6,Total Runtime: 27159us
+timing-CD-s5-cd-java-recorded-8,stdout,1,Starting CD benchmark ...
+timing-CD-s5-cd-java-recorded-8,stdout,2,CD: iterations=1 runtime: 26749us
+timing-CD-s5-cd-java-recorded-8,stdout,3,CD: iterations=1 average: 26749us total: 26749us
+timing-CD-s5-cd-java-recorded-8,stdout,4,
+timing-CD-s5-cd-java-recorded-8,stdout,5,
+timing-CD-s5-cd-java-recorded-8,stdout,6,Total Runtime: 26749us
+timing-CD-s5-cd-java-recorded-9,stdout,1,Starting CD benchmark ...
+timing-CD-s5-cd-java-recorded-9,stdout,2,CD: iterations=1 runtime: 25280us
+timing-CD-s5-cd-java-recorded-9,stdout,3,CD: iterations=1 average: 25280us total: 25280us
+timing-CD-s5-cd-java-recorded-9,stdout,4,
+timing-CD-s5-cd-java-recorded-9,stdout,5,
+timing-CD-s5-cd-java-recorded-9,stdout,6,Total Runtime: 25280us
+timing-CD-s5-cd-java-recorded-10,stdout,1,Starting CD benchmark ...
+timing-CD-s5-cd-java-recorded-10,stdout,2,CD: iterations=1 runtime: 25660us
+timing-CD-s5-cd-java-recorded-10,stdout,3,CD: iterations=1 average: 25660us total: 25660us
+timing-CD-s5-cd-java-recorded-10,stdout,4,
+timing-CD-s5-cd-java-recorded-10,stdout,5,
+timing-CD-s5-cd-java-recorded-10,stdout,6,Total Runtime: 25660us
+timing-Havlak-s5-havlak-rxbvm-recorded-1,stdout,1,benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+timing-Havlak-s5-havlak-rxbvm-recorded-1,stdout,2,PASS: AWFY Havlak
+timing-Havlak-s5-havlak-rxbvm-recorded-2,stdout,1,benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+timing-Havlak-s5-havlak-rxbvm-recorded-2,stdout,2,PASS: AWFY Havlak
+timing-Havlak-s5-havlak-rxbvm-recorded-3,stdout,1,benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+timing-Havlak-s5-havlak-rxbvm-recorded-3,stdout,2,PASS: AWFY Havlak
+timing-Havlak-s5-havlak-rxbvm-recorded-4,stdout,1,benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+timing-Havlak-s5-havlak-rxbvm-recorded-4,stdout,2,PASS: AWFY Havlak
+timing-Havlak-s5-havlak-rxbvm-recorded-5,stdout,1,benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+timing-Havlak-s5-havlak-rxbvm-recorded-5,stdout,2,PASS: AWFY Havlak
+timing-Havlak-s5-havlak-rxbvm-recorded-6,stdout,1,benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+timing-Havlak-s5-havlak-rxbvm-recorded-6,stdout,2,PASS: AWFY Havlak
+timing-Havlak-s5-havlak-rxbvm-recorded-7,stdout,1,benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+timing-Havlak-s5-havlak-rxbvm-recorded-7,stdout,2,PASS: AWFY Havlak
+timing-Havlak-s5-havlak-rxbvm-recorded-8,stdout,1,benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+timing-Havlak-s5-havlak-rxbvm-recorded-8,stdout,2,PASS: AWFY Havlak
+timing-Havlak-s5-havlak-rxbvm-recorded-9,stdout,1,benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+timing-Havlak-s5-havlak-rxbvm-recorded-9,stdout,2,PASS: AWFY Havlak
+timing-Havlak-s5-havlak-rxbvm-recorded-10,stdout,1,benchmark=awfy_havlak dummy_loops=1 finder_repeats=0 loops=1605 nodes=5213 adaptation=stable-indexed-cfg-union-find
+timing-Havlak-s5-havlak-rxbvm-recorded-10,stdout,2,PASS: AWFY Havlak
+timing-Queens-s5-queens-java-recorded-1,stdout,1,Starting Queens benchmark ...
+timing-Queens-s5-queens-java-recorded-1,stdout,2,Queens: iterations=1 runtime: 35972us
+timing-Queens-s5-queens-java-recorded-1,stdout,3,Queens: iterations=1 average: 35972us total: 35972us
+timing-Queens-s5-queens-java-recorded-1,stdout,4,
+timing-Queens-s5-queens-java-recorded-1,stdout,5,
+timing-Queens-s5-queens-java-recorded-1,stdout,6,Total Runtime: 35972us
+timing-Queens-s5-queens-java-recorded-2,stdout,1,Starting Queens benchmark ...
+timing-Queens-s5-queens-java-recorded-2,stdout,2,Queens: iterations=1 runtime: 39945us
+timing-Queens-s5-queens-java-recorded-2,stdout,3,Queens: iterations=1 average: 39945us total: 39945us
+timing-Queens-s5-queens-java-recorded-2,stdout,4,
+timing-Queens-s5-queens-java-recorded-2,stdout,5,
+timing-Queens-s5-queens-java-recorded-2,stdout,6,Total Runtime: 39945us
+timing-Queens-s5-queens-java-recorded-3,stdout,1,Starting Queens benchmark ...
+timing-Queens-s5-queens-java-recorded-3,stdout,2,Queens: iterations=1 runtime: 35748us
+timing-Queens-s5-queens-java-recorded-3,stdout,3,Queens: iterations=1 average: 35748us total: 35748us
+timing-Queens-s5-queens-java-recorded-3,stdout,4,
+timing-Queens-s5-queens-java-recorded-3,stdout,5,
+timing-Queens-s5-queens-java-recorded-3,stdout,6,Total Runtime: 35748us
+timing-Queens-s5-queens-java-recorded-4,stdout,1,Starting Queens benchmark ...
+timing-Queens-s5-queens-java-recorded-4,stdout,2,Queens: iterations=1 runtime: 36388us
+timing-Queens-s5-queens-java-recorded-4,stdout,3,Queens: iterations=1 average: 36388us total: 36388us
+timing-Queens-s5-queens-java-recorded-4,stdout,4,
+timing-Queens-s5-queens-java-recorded-4,stdout,5,
+timing-Queens-s5-queens-java-recorded-4,stdout,6,Total Runtime: 36388us
+timing-Queens-s5-queens-java-recorded-5,stdout,1,Starting Queens benchmark ...
+timing-Queens-s5-queens-java-recorded-5,stdout,2,Queens: iterations=1 runtime: 37162us
+timing-Queens-s5-queens-java-recorded-5,stdout,3,Queens: iterations=1 average: 37162us total: 37162us
+timing-Queens-s5-queens-java-recorded-5,stdout,4,
+timing-Queens-s5-queens-java-recorded-5,stdout,5,
+timing-Queens-s5-queens-java-recorded-5,stdout,6,Total Runtime: 37162us
+timing-Queens-s5-queens-java-recorded-6,stdout,1,Starting Queens benchmark ...
+timing-Queens-s5-queens-java-recorded-6,stdout,2,Queens: iterations=1 runtime: 36940us
+timing-Queens-s5-queens-java-recorded-6,stdout,3,Queens: iterations=1 average: 36940us total: 36940us
+timing-Queens-s5-queens-java-recorded-6,stdout,4,
+timing-Queens-s5-queens-java-recorded-6,stdout,5,
+timing-Queens-s5-queens-java-recorded-6,stdout,6,Total Runtime: 36940us
+timing-Queens-s5-queens-java-recorded-7,stdout,1,Starting Queens benchmark ...
+timing-Queens-s5-queens-java-recorded-7,stdout,2,Queens: iterations=1 runtime: 37419us
+timing-Queens-s5-queens-java-recorded-7,stdout,3,Queens: iterations=1 average: 37419us total: 37419us
+timing-Queens-s5-queens-java-recorded-7,stdout,4,
+timing-Queens-s5-queens-java-recorded-7,stdout,5,
+timing-Queens-s5-queens-java-recorded-7,stdout,6,Total Runtime: 37419us
+timing-Queens-s5-queens-java-recorded-8,stdout,1,Starting Queens benchmark ...
+timing-Queens-s5-queens-java-recorded-8,stdout,2,Queens: iterations=1 runtime: 36180us
+timing-Queens-s5-queens-java-recorded-8,stdout,3,Queens: iterations=1 average: 36180us total: 36180us
+timing-Queens-s5-queens-java-recorded-8,stdout,4,
+timing-Queens-s5-queens-java-recorded-8,stdout,5,
+timing-Queens-s5-queens-java-recorded-8,stdout,6,Total Runtime: 36180us
+timing-Queens-s5-queens-java-recorded-9,stdout,1,Starting Queens benchmark ...
+timing-Queens-s5-queens-java-recorded-9,stdout,2,Queens: iterations=1 runtime: 35908us
+timing-Queens-s5-queens-java-recorded-9,stdout,3,Queens: iterations=1 average: 35908us total: 35908us
+timing-Queens-s5-queens-java-recorded-9,stdout,4,
+timing-Queens-s5-queens-java-recorded-9,stdout,5,
+timing-Queens-s5-queens-java-recorded-9,stdout,6,Total Runtime: 35908us
+timing-Queens-s5-queens-java-recorded-10,stdout,1,Starting Queens benchmark ...
+timing-Queens-s5-queens-java-recorded-10,stdout,2,Queens: iterations=1 runtime: 37180us
+timing-Queens-s5-queens-java-recorded-10,stdout,3,Queens: iterations=1 average: 37180us total: 37180us
+timing-Queens-s5-queens-java-recorded-10,stdout,4,
+timing-Queens-s5-queens-java-recorded-10,stdout,5,
+timing-Queens-s5-queens-java-recorded-10,stdout,6,Total Runtime: 37180us
+timing-NBody-s5-nbody-java-recorded-1,stdout,1,Starting NBody benchmark ...
+timing-NBody-s5-nbody-java-recorded-1,stdout,2,NBody: iterations=1 runtime: 11451us
+timing-NBody-s5-nbody-java-recorded-1,stdout,3,NBody: iterations=1 average: 11451us total: 11451us
+timing-NBody-s5-nbody-java-recorded-1,stdout,4,
+timing-NBody-s5-nbody-java-recorded-1,stdout,5,
+timing-NBody-s5-nbody-java-recorded-1,stdout,6,Total Runtime: 11451us
+timing-NBody-s5-nbody-java-recorded-2,stdout,1,Starting NBody benchmark ...
+timing-NBody-s5-nbody-java-recorded-2,stdout,2,NBody: iterations=1 runtime: 11373us
+timing-NBody-s5-nbody-java-recorded-2,stdout,3,NBody: iterations=1 average: 11373us total: 11373us
+timing-NBody-s5-nbody-java-recorded-2,stdout,4,
+timing-NBody-s5-nbody-java-recorded-2,stdout,5,
+timing-NBody-s5-nbody-java-recorded-2,stdout,6,Total Runtime: 11373us
+timing-NBody-s5-nbody-java-recorded-3,stdout,1,Starting NBody benchmark ...
+timing-NBody-s5-nbody-java-recorded-3,stdout,2,NBody: iterations=1 runtime: 11618us
+timing-NBody-s5-nbody-java-recorded-3,stdout,3,NBody: iterations=1 average: 11618us total: 11618us
+timing-NBody-s5-nbody-java-recorded-3,stdout,4,
+timing-NBody-s5-nbody-java-recorded-3,stdout,5,
+timing-NBody-s5-nbody-java-recorded-3,stdout,6,Total Runtime: 11618us
+timing-NBody-s5-nbody-java-recorded-4,stdout,1,Starting NBody benchmark ...
+timing-NBody-s5-nbody-java-recorded-4,stdout,2,NBody: iterations=1 runtime: 11457us
+timing-NBody-s5-nbody-java-recorded-4,stdout,3,NBody: iterations=1 average: 11457us total: 11457us
+timing-NBody-s5-nbody-java-recorded-4,stdout,4,
+timing-NBody-s5-nbody-java-recorded-4,stdout,5,
+timing-NBody-s5-nbody-java-recorded-4,stdout,6,Total Runtime: 11457us
+timing-NBody-s5-nbody-java-recorded-5,stdout,1,Starting NBody benchmark ...
+timing-NBody-s5-nbody-java-recorded-5,stdout,2,NBody: iterations=1 runtime: 11442us
+timing-NBody-s5-nbody-java-recorded-5,stdout,3,NBody: iterations=1 average: 11442us total: 11442us
+timing-NBody-s5-nbody-java-recorded-5,stdout,4,
+timing-NBody-s5-nbody-java-recorded-5,stdout,5,
+timing-NBody-s5-nbody-java-recorded-5,stdout,6,Total Runtime: 11442us
+timing-NBody-s5-nbody-java-recorded-6,stdout,1,Starting NBody benchmark ...
+timing-NBody-s5-nbody-java-recorded-6,stdout,2,NBody: iterations=1 runtime: 11468us
+timing-NBody-s5-nbody-java-recorded-6,stdout,3,NBody: iterations=1 average: 11468us total: 11468us
+timing-NBody-s5-nbody-java-recorded-6,stdout,4,
+timing-NBody-s5-nbody-java-recorded-6,stdout,5,
+timing-NBody-s5-nbody-java-recorded-6,stdout,6,Total Runtime: 11468us
+timing-NBody-s5-nbody-java-recorded-7,stdout,1,Starting NBody benchmark ...
+timing-NBody-s5-nbody-java-recorded-7,stdout,2,NBody: iterations=1 runtime: 11401us
+timing-NBody-s5-nbody-java-recorded-7,stdout,3,NBody: iterations=1 average: 11401us total: 11401us
+timing-NBody-s5-nbody-java-recorded-7,stdout,4,
+timing-NBody-s5-nbody-java-recorded-7,stdout,5,
+timing-NBody-s5-nbody-java-recorded-7,stdout,6,Total Runtime: 11401us
+timing-NBody-s5-nbody-java-recorded-8,stdout,1,Starting NBody benchmark ...
+timing-NBody-s5-nbody-java-recorded-8,stdout,2,NBody: iterations=1 runtime: 12726us
+timing-NBody-s5-nbody-java-recorded-8,stdout,3,NBody: iterations=1 average: 12726us total: 12726us
+timing-NBody-s5-nbody-java-recorded-8,stdout,4,
+timing-NBody-s5-nbody-java-recorded-8,stdout,5,
+timing-NBody-s5-nbody-java-recorded-8,stdout,6,Total Runtime: 12726us
+timing-NBody-s5-nbody-java-recorded-9,stdout,1,Starting NBody benchmark ...
+timing-NBody-s5-nbody-java-recorded-9,stdout,2,NBody: iterations=1 runtime: 11517us
+timing-NBody-s5-nbody-java-recorded-9,stdout,3,NBody: iterations=1 average: 11517us total: 11517us
+timing-NBody-s5-nbody-java-recorded-9,stdout,4,
+timing-NBody-s5-nbody-java-recorded-9,stdout,5,
+timing-NBody-s5-nbody-java-recorded-9,stdout,6,Total Runtime: 11517us
+timing-NBody-s5-nbody-java-recorded-10,stdout,1,Starting NBody benchmark ...
+timing-NBody-s5-nbody-java-recorded-10,stdout,2,NBody: iterations=1 runtime: 11481us
+timing-NBody-s5-nbody-java-recorded-10,stdout,3,NBody: iterations=1 average: 11481us total: 11481us
+timing-NBody-s5-nbody-java-recorded-10,stdout,4,
+timing-NBody-s5-nbody-java-recorded-10,stdout,5,
+timing-NBody-s5-nbody-java-recorded-10,stdout,6,Total Runtime: 11481us

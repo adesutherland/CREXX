@@ -1,0 +1,5 @@
+benchmark,vm,mode,runs,min_ns,median_ns,mean_ns,max_ns,platform,crexx_version,vm_role,result_role
+deltablue,rxvm,opt,5,2425292000,2428071000,2430656800,2438375000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g00188b13ca51.dirty 20260817,product,process-smoke
+deltablue,rxtvm,opt,5,2428420000,2440023000,2437359400,2442642000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g00188b13ca51.dirty 20260817,concrete-engine-control,process-smoke
+deltablue,rxvm,noopt,5,131411000,132511000,135666800,146577000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g00188b13ca51.dirty 20260817,product,process-smoke
+deltablue,rxtvm,noopt,5,135818000,145152000,141961200,147007000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g00188b13ca51.dirty 20260817,concrete-engine-control,process-smoke

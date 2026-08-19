@@ -4,141 +4,161 @@
 
 .globals=0
 
-main() .locals=14
+main() .locals=6
    .meta "18_array_class_main.main"="b" ".int" main() ""
    numsci 18,1,1
-   .meta "18_array_class_main.main.ary"="b" ".item[1]" r0
+   .meta "18_array_class_main.main.ary"="b" ".item[1]" r1
    .srcstep 1 1 17 "18_array_class_main.crexx" 8 1 14 "ary = .Item[1]"
-   null r0
+   null r1
    .srcstep 2 2 17 "18_array_class_main.crexx" 4 1 12 "say \"Start\""
    say "Start"
    .srcstep 3 3 17 "18_array_class_main.crexx" 5 1 11 "say \"Main\""
    say "Main"
    .srcstep 7 7 17 "18_array_class_main.crexx" 6 1 21 "it1 = .Item(\"Hello\")"
    .srcstep 4 4 6 "array_class_lib.crexx" 5 1 29 "*: factory\n  arg v = .string"
-   setattrs r2,2
+   setattrs r3,2
    .srcstep 5 5 6 "array_class_lib.crexx" 5 1 29 "*: factory\n  arg v = .string"
-   setobjtype r2,"array_class_lib.item"
+   setobjtype r3,"array_class_lib.item"
    .srcstep 6 6 25 "array_class_lib.crexx" 8 9 16 "        val = v"
    load r4,"Hello"
    .traceevent "L" 4 "R" "S" "r" 4 6 6 0 "" ""
-   linkattr1 r3,r2,1
-   scopy r3,r4
-   unlink r3
-   .traceevent "V" 6 "R" "O" "r" 2 0 0 0 "§factory" ""
-   copy r1,r2
-   .traceevent "A" 6 "R" "O" "r" 1 0 0 0 "it1" ""
+   linkattr1 r0,r3,1
+   scopy r0,r4
+   unlink r0
+   .traceevent "V" 6 "R" "O" "r" 3 0 0 0 "§factory" ""
+   copy r2,r3
+   .traceevent "A" 6 "R" "O" "r" 2 0 0 0 "it1" ""
    .srcstep 8 8 17 "18_array_class_main.crexx" 7 1 18 "say \"Created it1\""
-   .meta "18_array_class_main.main.it1"="b" ".item" r1
+   .meta "18_array_class_main.main.it1"="b" ".item" r2
    say "Created it1"
    .srcstep 9 9 17 "18_array_class_main.crexx" 9 1 18 "say \"Created ary\""
    say "Created ary"
    .srcstep 10 10 17 "18_array_class_main.crexx" 10 1 13 "ary[1] = it1"
-   setattrs r0,1
-   linkattr1 r3,r0,1
-   .traceevent "V" 6 "R" "O" "r" 1 10 10 0 "it1" ""
-   copy r3,r1
-   .traceevent "A" 6 "R" "O" "r" 3 10 10 0 "ary" ""
-   unlink r3
+   setattrs r1,1
+   linkattr1 r0,r1,1
+   .traceevent "V" 6 "R" "O" "r" 2 10 10 0 "it1" ""
+   copy r0,r2
+   .traceevent "A" 6 "R" "O" "r" 0 10 10 0 "ary" ""
+   unlink r0
    .srcstep 11 11 17 "18_array_class_main.crexx" 11 1 22 "say \"Assigned ary[1]\""
    say "Assigned ary[1]"
    .srcstep 12 12 17 "18_array_class_main.crexx" 12 1 22 "say \"Calling process\""
    say "Calling process"
-   .srcstep 34 34 17 "18_array_class_main.crexx" 13 1 17 "say process(ary)"
-   .srcstep 33 33 17 "18_array_class_main.crexx" 13 5 12 "say process(ary)"
-   .srcstep 13 13 6 "18_array_class_main.crexx" 18 9 14 "    arg items = .Item[]"
-   .traceevent "V" 6 "R" "O" "r" 0 34 34 0 "ary" ""
-   copy r5,r0
-   .srcstep 14 14 17 "18_array_class_main.crexx" 19 5 44 "    say \"Inside process, Items.0 =\" items.0"
-   .traceevent "C" 4 "R" "V" "r" 7 14 14 0 "items" ""
-   getattrs r8,r5,0
-   itos r8
-   .traceevent "V" 6 "R" "S" "r" 8 14 14 0 "items" ""
-   sconcat r8,"Inside process, Items.0 =",r8
-   .traceevent "O" 4 "R" "S" "r" 8 14 14 0 "" ""
-   say r8
-   .srcstep 16 16 17 "18_array_class_main.crexx" 20 5 19 "    if items.0 < 1 then return \"\""
-   .traceevent "C" 4 "R" "V" "r" 8 16 16 0 "items" ""
-   getattrs r7,r5,0
-   .traceevent "V" 6 "R" "I" "r" 7 16 16 0 "items" ""
-   ilt r7,r7,1
-   .traceevent "O" 4 "R" "B" "r" 7 16 16 0 "" ""
-   brf l178iffalse,r7
-   .srcstep 17 17 17 "18_array_class_main.crexx" 20 20 24 "    if items.0 < 1 then return \"\""
-   .srcstep 15 15 17 "18_array_class_main.crexx" 20 25 34 "    if items.0 < 1 then return \"\""
-   load r9,""
-   .traceevent "L" 4 "R" "S" "r" 9 34 34 0 "" ""
-   scopy r13,r9
-   br l165bexprend
-l178iffalse:
-   .srcstep 18 18 17 "18_array_class_main.crexx" 22 5 17 "    it = items.1"
-   minlinkattr1 r9,r5,1
-   .traceevent "V" 6 "R" "O" "r" 9 18 18 0 "items" ""
-   copy r3,r9
-   .traceevent "A" 6 "R" "O" "r" 3 18 18 0 "it" ""
-   unlink r9
-   .srcstep 21 21 17 "18_array_class_main.crexx" 23 5 21 "    val = it.get_val()"
-   .srcstep 19 19 33 "18_array_class_main.crexx" 23 11 13 "    val = it.get_val()"
-   .traceevent "V" 6 "R" "O" "r" 3 19 19 0 "it" ""
-   .traceevent "A" 6 "R" "O" "r" 3 19 19 0 "§this" ""
-   .srcstep 20 20 33 "18_array_class_main.crexx" 23 13 13 "    val = it.get_val()"
-   linkattr1 r9,r3,1
-   .traceevent "V" 6 "R" "S" "r" 9 20 20 0 "val" ""
-   copy r6,r9
-   .traceevent "A" 6 "R" "S" "r" 6 20 20 0 "val" ""
-   unlink r9
-   .srcstep 30 30 17 "18_array_class_main.crexx" 25 5 7 "    do i = 1 to items.0"
-   .srcstep 22 22 17 "18_array_class_main.crexx" 25 8 13 "    do i = 1 to items.0"
-   load r9,1
-   .traceevent "L" 4 "R" "I" "r" 9 22 22 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 9 22 22 0 "i" ""
-   .srcstep 23 23 17 "18_array_class_main.crexx" 25 14 24 "    do i = 1 to items.0"
-   .traceevent "C" 4 "R" "V" "r" 10 34 34 0 "items" ""
-   getattrs r11,r5,0
-   .traceevent "V" 6 "R" "I" "r" 11 34 34 0 "items" ""
-l196dostart:
-   .srcstep 23 23 17 "18_array_class_main.crexx" 25 14 24 "    do i = 1 to items.0"
-   igt r12,r9,r11
-   brt l196doend,r12
-   .srcstep 25 25 17 "18_array_class_main.crexx" 26 9 23 "        it_i = items[i]"
-   .traceevent "V" 6 "R" "I" "r" 9 25 25 0 "i" ""
-   .traceevent "C" 4 "R" "I" "r" 9 25 25 0 "items" ""
-   minlinkattr1 r13,r5,r9,0
-   .traceevent "V" 6 "R" "O" "r" 13 25 25 0 "items" ""
-   copy r8,r13
-   .traceevent "A" 6 "R" "O" "r" 8 25 25 0 "it_i" ""
-   unlink r13
-   .srcstep 28 28 17 "18_array_class_main.crexx" 27 9 29 "        val_i = it_i.get_val()"
-   .srcstep 26 26 33 "18_array_class_main.crexx" 27 17 21 "        val_i = it_i.get_val()"
-   .traceevent "V" 6 "R" "O" "r" 8 26 26 0 "it_i" ""
-   .traceevent "A" 6 "R" "O" "r" 8 26 26 0 "§this" ""
-   .srcstep 27 27 33 "18_array_class_main.crexx" 27 21 21 "        val_i = it_i.get_val()"
-   linkattr1 r13,r8,1
-   .traceevent "V" 6 "R" "S" "r" 13 27 27 0 "val" ""
-   copy r7,r13
-   .traceevent "A" 6 "R" "S" "r" 7 27 27 0 "val_i" ""
-   unlink r13
-   .srcstep 29 29 17 "18_array_class_main.crexx" 28 9 18 "        say val_i"
-   .traceevent "V" 6 "R" "S" "r" 7 29 29 0 "val_i" ""
-   say r7
-l196doinc:
-   .srcstep 24 24 17 "18_array_class_main.crexx" 25 8 9 "    do i = 1 to items.0"
-   inc r9
-   .srcstep 31 31 17 "18_array_class_main.crexx" 29 5 8 "    end"
-   br l196dostart
-l196doend:
-   endlife r8
-   .srcstep 32 32 17 "18_array_class_main.crexx" 30 5 15 "    return val"
-   .traceevent "V" 6 "R" "S" "r" 6 34 34 0 "val" ""
-   scopy r13,r6
-   br l165bexprend
-l165bexprend:
-   endlife r3
-   endlife r5
-   say r13
-   .srcstep 35 35 17 "18_array_class_main.crexx" 14 1 11 "say \"Done\""
+   .srcstep 13 13 17 "18_array_class_main.crexx" 13 1 17 "say process(ary)"
+   .traceevent "V" 6 "R" "O" "r" 1 13 13 0 "ary" ""
+   settp r1,256
+   call1 r5,process(),r1
+   .traceevent "F" 4 "R" "S" "r" 5 13 13 0 "process" ""
+   say r5
+   .srcstep 14 14 17 "18_array_class_main.crexx" 14 1 11 "say \"Done\""
    say "Done"
-   .srcstep 36 36 17 "18_array_class_main.crexx" 15 1 9 "return 0"
+   .srcstep 15 15 17 "18_array_class_main.crexx" 15 1 9 "return 0"
    ret 0
    .meta "18_array_class_main.main.ary"
    .meta "18_array_class_main.main.it1"
+
+process() .locals=10
+   .meta "18_array_class_main.process"="b" ".string" process() "items=.item[*]"
+   .srcstep 36 36 17 "18_array_class_main.crexx" 17 1 29 "process: procedure = .string"
+   numsci 18,1,1
+   .srcstep 16 16 17 "18_array_class_main.crexx" 18 9 22 "    arg items = .Item[]"
+   .meta "18_array_class_main.process.items"="b" ".item[*]" a1
+   .srcstep 17 17 17 "18_array_class_main.crexx" 19 5 44 "    say \"Inside process, Items.0 =\" items.0"
+   .traceevent "C" 4 "R" "V" "r" 3 17 17 0 "items" ""
+   getattrs r4,a1,0
+   itos r4
+   .traceevent "V" 6 "R" "S" "r" 4 17 17 0 "items" ""
+   sconcat r4,"Inside process, Items.0 =",r4
+   .traceevent "O" 4 "R" "S" "r" 4 17 17 0 "" ""
+   say r4
+   .srcstep 19 19 17 "18_array_class_main.crexx" 20 5 19 "    if items.0 < 1 then return \"\""
+   .traceevent "C" 4 "R" "V" "r" 4 19 19 0 "items" ""
+   getattrs r3,a1,0
+   .traceevent "V" 6 "R" "I" "r" 3 19 19 0 "items" ""
+   ilt r3,r3,1
+   .traceevent "O" 4 "R" "B" "r" 3 19 19 0 "" ""
+   brf l59iffalse,r3
+   .srcstep 20 20 17 "18_array_class_main.crexx" 20 20 24 "    if items.0 < 1 then return \"\""
+   .srcstep 18 18 17 "18_array_class_main.crexx" 20 25 34 "    if items.0 < 1 then return \"\""
+   ret ""
+l59iffalse:
+   .srcstep 21 21 17 "18_array_class_main.crexx" 22 5 17 "    it = items.1"
+   .meta "18_array_class_main.process.it"="b" ".item" r0
+   minlinkattr1 r4,a1,1
+   .traceevent "V" 6 "R" "O" "r" 4 21 21 0 "items" ""
+   copy r0,r4
+   .traceevent "A" 6 "R" "O" "r" 0 21 21 0 "it" ""
+   unlink r4
+   .srcstep 24 24 17 "18_array_class_main.crexx" 23 5 21 "    val = it.get_val()"
+   .srcstep 22 22 33 "18_array_class_main.crexx" 23 11 13 "    val = it.get_val()"
+   .traceevent "V" 6 "R" "O" "r" 0 22 22 0 "it" ""
+   .traceevent "A" 6 "R" "O" "r" 0 22 22 0 "§this" ""
+   .srcstep 23 23 6 "array_class_lib.crexx" 7 1 26 "get_val: method = .string"
+   .traceevent "V" 6 "R" "O" "r" 0 0 0 0 "§this" ""
+   assertinitialized r0
+   linkattr1 r4,r0,1
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "val" ""
+   copy r2,r4
+   .traceevent "A" 6 "R" "S" "r" 2 0 0 0 "val" ""
+   unlink r4
+   .srcstep 33 33 17 "18_array_class_main.crexx" 25 5 7 "    do i = 1 to items.0"
+   .srcstep 25 25 17 "18_array_class_main.crexx" 25 8 13 "    do i = 1 to items.0"
+   .meta "18_array_class_main.process.i"="b" ".int" r4
+   .meta "18_array_class_main.process.val"="b" ".string" r2
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 25 25 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 25 25 0 "i" ""
+   .srcstep 26 26 17 "18_array_class_main.crexx" 25 14 24 "    do i = 1 to items.0"
+   .traceevent "C" 4 "R" "V" "r" 6 0 0 0 "items" ""
+   getattrs r7,a1,0
+   .traceevent "V" 6 "R" "I" "r" 7 0 0 0 "items" ""
+l70dostart:
+   .srcstep 26 26 17 "18_array_class_main.crexx" 25 14 24 "    do i = 1 to items.0"
+   igt r8,r4,r7
+   brt l70doend,r8
+   .srcstep 28 28 17 "18_array_class_main.crexx" 26 9 23 "        it_i = items[i]"
+   .meta "18_array_class_main.process.it_i"="b" ".item" r3
+   .traceevent "V" 6 "R" "I" "r" 4 28 28 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 4 28 28 0 "items" ""
+   minlinkattr1 r9,a1,r4,0
+   .traceevent "V" 6 "R" "O" "r" 9 28 28 0 "items" ""
+   copy r3,r9
+   .traceevent "A" 6 "R" "O" "r" 3 28 28 0 "it_i" ""
+   unlink r9
+   .srcstep 31 31 17 "18_array_class_main.crexx" 27 9 29 "        val_i = it_i.get_val()"
+   .srcstep 29 29 33 "18_array_class_main.crexx" 27 17 21 "        val_i = it_i.get_val()"
+   .traceevent "V" 6 "R" "O" "r" 3 29 29 0 "it_i" ""
+   .traceevent "A" 6 "R" "O" "r" 3 29 29 0 "§this" ""
+   .srcstep 30 30 6 "array_class_lib.crexx" 7 1 26 "get_val: method = .string"
+   .traceevent "V" 6 "R" "O" "r" 3 0 0 0 "§this" ""
+   assertinitialized r3
+   linkattr1 r9,r3,1
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "val" ""
+   copy r5,r9
+   .traceevent "A" 6 "R" "S" "r" 5 0 0 0 "val_i" ""
+   unlink r9
+   .srcstep 32 32 17 "18_array_class_main.crexx" 28 9 18 "        say val_i"
+   .meta "18_array_class_main.process.val_i"="b" ".string" r5
+   .traceevent "V" 6 "R" "S" "r" 5 32 32 0 "val_i" ""
+   say r5
+l70doinc:
+   .srcstep 27 27 17 "18_array_class_main.crexx" 25 8 9 "    do i = 1 to items.0"
+   inc r4
+   .srcstep 34 34 17 "18_array_class_main.crexx" 29 5 8 "    end"
+   br l70dostart
+l70doend:
+   endlife r3
+   .meta "18_array_class_main.process.i"
+   .meta "18_array_class_main.process.it_i"
+   .meta "18_array_class_main.process.val_i"
+   .srcstep 35 35 17 "18_array_class_main.crexx" 30 5 15 "    return val"
+   .traceevent "V" 6 "R" "S" "r" 2 35 35 0 "val" ""
+   ret r2
+   .meta "18_array_class_main.process.it"
+   .meta "18_array_class_main.process.items"
+   .meta "18_array_class_main.process.val"
+
+/* Imported Declaration from file: array_class_lib.crexx */
+
+§array_class_lib.item.get_val() .expose=array_class_lib.item.get_val
+   .meta "array_class_lib.item.get_val"="b" ".string" §array_class_lib.item.get_val() ""

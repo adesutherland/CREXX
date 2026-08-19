@@ -1,0 +1,123 @@
+/* Version-2 decimal-arithmetic RFC 4648 Base64 workload for NetRexx.
+ * The historical source remains unchanged. Decode maps codepoints by direct
+ * arithmetic ranges while retaining decimal Rexx arithmetic and byte[]
+ * storage as the disclosed JVM substrate.
+ */
+options nobinary decimal
+
+class base64_roundtrip_v2
+  method main(args=String[]) static
+    repetitions=1
+    if args.length>=1 then repetitions=Rexx args[0]
+    if repetitions<1 then do
+      say 'FAIL: repetitions must be positive'
+      exit 1
+    end
+
+    input=byte[1024]
+    loop offset=0 to 1023
+      value=(offset*31+7)//256
+      if value>127 then value=value-256
+      input[offset]=Rexx(value)
+    end
+
+    encoded=String ''
+    decoded=byte[]
+    loop iteration=1 to repetitions
+      encoded=encode(input)
+      decoded=decode(encoded)
+    end
+
+    if encoded.length()\=1368 then do
+      say 'FAIL: expected encoded length 1368, got' encoded.length()
+      exit 1
+    end
+    if \java.util.Arrays.equals(input,decoded) then do
+      say 'FAIL: decoded bytes differ from input'
+      exit 1
+    end
+    checksum=0
+    loop encodedByte over decoded
+      checksum=checksum+java.lang.Byte.toUnsignedInt(encodedByte)
+    end
+    if checksum\=130560 then do
+      say 'FAIL: expected checksum 130560, got' checksum
+      exit 1
+    end
+    say 'benchmark=base64_roundtrip_v2 repetitions='repetitions 'encoded_length='encoded.length() 'checksum='checksum
+    say 'PASS: Base64 Roundtrip v2 NetRexx decimal port'
+
+  method encode(data=byte[]) static returns String
+    alphabet=String 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+    result=StringBuilder()
+    offset=0
+    loop while offset<data.length
+      remaining=data.length-offset
+      byte1=java.lang.Byte.toUnsignedInt(data[offset])
+      byte2=0
+      byte3=0
+      if remaining>1 then byte2=java.lang.Byte.toUnsignedInt(data[offset+1])
+      if remaining>2 then byte3=java.lang.Byte.toUnsignedInt(data[offset+2])
+      digit1=byte1%4
+      digit2=(byte1//4)*16+byte2%16
+      digit3=(byte2//16)*4+byte3%64
+      digit4=byte3//64
+      result.append(alphabet.substring(digit1,digit1+1))
+      result.append(alphabet.substring(digit2,digit2+1))
+      if remaining>1 then result.append(alphabet.substring(digit3,digit3+1))
+      else result.append('=')
+      if remaining>2 then result.append(alphabet.substring(digit4,digit4+1))
+      else result.append('=')
+      offset=offset+3
+    end
+    return result.toString()
+
+  method decode(encoded=String) static returns byte[]
+    padding=0
+    if encoded.codePointAt(encoded.length()-1)=61 then padding=padding+1
+    if encoded.codePointAt(encoded.length()-2)=61 then padding=padding+1
+    result=byte[(encoded.length()%4)*3-padding]
+    inputOffset=0
+    outputOffset=0
+    loop while inputOffset<encoded.length()
+      byte1=encoded.codePointAt(inputOffset)
+      byte2=encoded.codePointAt(inputOffset+1)
+      byte3=encoded.codePointAt(inputOffset+2)
+      byte4=encoded.codePointAt(inputOffset+3)
+      digit1=base64Digit(byte1)
+      digit2=base64Digit(byte2)
+      digit3=0
+      digit4=0
+      if byte3\=61 then digit3=base64Digit(byte3)
+      if byte4\=61 then digit4=base64Digit(byte4)
+      if digit1<0 | digit2<0 | digit3<0 | digit4<0 then do
+        say 'FAIL: invalid Base64 digit'
+        exit 1
+      end
+      value=digit1*4+digit2%16
+      if value>127 then value=value-256
+      result[outputOffset]=Rexx(value)
+      outputOffset=outputOffset+1
+      if byte3\=61 then do
+        value=(digit2//16)*16+digit3%4
+        if value>127 then value=value-256
+        result[outputOffset]=Rexx(value)
+        outputOffset=outputOffset+1
+      end
+      if byte4\=61 then do
+        value=(digit3//4)*64+digit4
+        if value>127 then value=value-256
+        result[outputOffset]=Rexx(value)
+        outputOffset=outputOffset+1
+      end
+      inputOffset=inputOffset+4
+    end
+    return result
+
+  method base64Digit(byte=Rexx) static returns Rexx
+    if byte>=65 & byte<=90 then return byte-65
+    if byte>=97 & byte<=122 then return byte-97+26
+    if byte>=48 & byte<=57 then return byte-48+52
+    if byte=43 then return 62
+    if byte=47 then return 63
+    return -1

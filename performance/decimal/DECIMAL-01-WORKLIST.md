@@ -1,6 +1,7 @@
 # DECIMAL-01 decimal correctness and performance worklist
 
-Status: **focused repair accepted; Gate 1 harness qualified; awaiting exclusive host reservation; no candidate selected**
+Status: **Stage 3 complete; D2 tuned decNumber, D3 decQuad and D4 libmpdec
+rejected; retain current mc_decimal; no production change selected**
 
 Opened: 2026-08-05
 
@@ -24,8 +25,10 @@ bounded repair of the three confirmed provider-consumption defects before any
 further work. That repair does not open broader production or candidate
 authority. Adrian accepted its focused verdict on 2026-08-05 and directed the
 programme to the second stage, Gate 1 current-provider baseline preparation.
-Timing authority remains conditional on a newly confirmed exclusive-host
-reservation.
+Timing authority remained conditional on a newly confirmed exclusive-host
+reservation. Adrian confirmed the host clear and approved execution through
+the bounded alternative-library materiality decision on 2026-08-18. This does
+not authorize production provider selection or integration.
 
 ## 2. Shared-host reservation rule
 
@@ -33,16 +36,19 @@ This Mac is shared with two other performance agents.
 
 - [x] Record that focused correctness builds/tests may run but their elapsed
   time is not performance evidence.
-- [ ] Before every timing session, ask Adrian to clear and reserve the host.
-- [ ] Wait for explicit confirmation before starting any performance cell.
-- [ ] After confirmation, audit for competing benchmark, compiler, build and
+- [x] Before this timing session, ask Adrian to clear and reserve the host.
+- [x] Receive Adrian's 2026-08-18 explicit confirmation before starting any
+  performance cell.
+- [x] After confirmation, audit for competing benchmark, compiler, build and
   test processes and capture power/thermal/load state.
-- [ ] Run formal samples serially. If competing work appears or Adrian asks for
+- [x] Run the retained formal samples serially. If competing work appears or Adrian asks for
   a pause, stop before the next cell and record the exact checkpoint.
-- [ ] Treat samples exposed to competing work as invalid rather than attempting
+- [x] Treat samples exposed to competing work as invalid rather than attempting
   to correct them statistically.
 
-No DECIMAL-01 timing is currently authorized or running.
+DECIMAL-01 Gate 1 timing and the bounded Gate 2 candidate screen are
+authorized. Every timing block still requires a fresh environment audit and
+must stop if the reservation or host state changes.
 
 ## 3. Verified opening baseline
 
@@ -264,13 +270,110 @@ design are not performance evidence and may proceed before reservation.
   CDB-1 result; public Telco material may inform its shape but restricted source
   or data is not copied.
 - [ ] Run the canonical RexxCPS provider-row guard after the host is reserved.
-- [ ] Calibrate and capture Gate 1 timing only after Adrian explicitly confirms
-  exclusive host availability.
+- [x] Calibrate and capture the retained Gate 1 L1 adapter and L2/L3 product
+  blocks after Adrian explicitly confirmed exclusive host availability.
+
+The current-provider capture is retained at
+[`2026-08-18-decimal-01-gate1-current-provider`](../evidence/2026-08-18-decimal-01-gate1-current-provider/).
+The prepared optimizer-control and canonical RexxCPS guard manifests were not
+run in that bounded capture and remain explicitly open rather than inferred
+from checksum identity.
 
 ### Gate 2 first candidate panel
 
 Queued candidates are tuned `decNumber`, `libmpdec` and fixed-34 `decQuad`.
-No candidate source or build has been opened.
+Adrian authorized this bounded panel through its materiality decision on
+2026-08-18. Candidate sources/builds remain isolated outside the repository;
+no production provider selection or integration is authorized. The screening
+and final materiality thresholds are fixed in
+[`PERFORMANCE-CLOSEOUT-PLAN.md`](../PERFORMANCE-CLOSEOUT-PLAN.md): a candidate
+must show credible L1 headroom before L2/L3 work, and only a
+correctness-qualified result of at least 10% across the predeclared
+representative L3 boundary can be called material.
+
+#### D4 libmpdec 4.0.1 disposition
+
+- [x] Pin the official 4.0.1 archive and SHA-256
+  `96d33abb4bb0070c7be0fed4246cd38416188325f820468214471938545b1ac8`;
+  record the BSD-2-Clause licence and supported toolchain/platform boundary.
+- [x] Build the upstream static library externally and pass its complete local
+  `check_local` suite. The downloadable extended test corpus was not run
+  because the upstream helper required unavailable `wget`.
+- [x] Implement an opt-in, non-default adapter with pointer-free VM-owned
+  payloads, temporary `mpd_t` views and no plugin-ABI or production-provider
+  change.
+- [x] Pass the existing full decimal-provider contract, exact numeric
+  arithmetic/conversion/comparison/context checks and a dedicated raw-copy,
+  destroy-source and in-place-arithmetic lifecycle proof.
+- [x] Capture the formal L1 screen: one warmup plus 12 balanced/interleaved
+  recorded pairs, 260 passing samples and no removed observation.
+- [x] Double-check the adverse arithmetic result with a lean-capacity adapter
+  and a direct decNumber/libmpdec core comparator.
+- [x] Reject D4 at L1. The formal adapter loses 41.66% and 26.28% arithmetic
+  throughput in Common-18 and Classic-9, and the direct-core diagnostic still
+  loses 21.90% and 5.30% after matching libmpdec's operation capacity. Only
+  comparison clears the 15% improvement threshold;
+  the required two representative modes do not. Do not run L2/L3.
+
+Evidence:
+[`2026-08-18-decimal-01-libmpdec-screen`](../evidence/2026-08-18-decimal-01-libmpdec-screen/).
+The unexecuted D2 tuned-decNumber and D3 fixed-34 decQuad routes remain recorded
+as possible future experiments; they are not part of the narrowed D4 verdict.
+
+#### D2 tuned decNumber progress
+
+- [x] Record Adrian's 2026-08-18 direction to continue the remaining Stage 3
+  candidates after reviewing D4.
+- [x] Define the complete isolated 48-build grid: `DECDPUN` 3/4/8/9,
+  `DECNUMDIGITS` 18/34/64 and `DECBUFFER` 20/36/64/128.
+- [x] Keep every grid point as a composed build and retain the current 8/64/64
+  provider as the same-session control; do not synthesize an unmeasured winner.
+- [x] Build all 48 grid plugins and pass all 48 full provider-contract checks
+  in the isolated profiling-off Release tree. Confirm the ordinary current
+  provider remains byte-identical to the prior Release candidate-control
+  build.
+- [x] Run the low-cost adapter calibration after Adrian's fresh clear-host
+  confirmation: one warmup plus eight balanced rounds, 882/882 guarded samples
+  passing. Reject the first attempt in full because XProtect overlapped its
+  final 11 seconds; retain only the subsequent clear-host capture as evidence.
+- [x] Apply the progression rule. The best balanced complete build
+  (`DECDPUN=8`, `DECNUMDIGITS=18`, `DECBUFFER=64`) is 0.23%/1.67% slower than
+  current at Common-18/Classic-9. The largest one-context gain is only 2.70%
+  and carries a 1.74% loss in the other context. No build has credible 10%
+  headroom or meets the two-mode 15% rule; stop before formal L1 and L2/L3.
+
+#### D3 fixed-34 decQuad progress
+
+- [x] Add an opt-in, non-default comparator using the already-vendored
+  `decQuad` and `decContext` sources; retain one pointer-free 16-byte decimal128
+  value directly in VM-owned sidecar storage.
+- [x] Preserve Common-18 and Classic-9 arithmetic, conversion, comparison and
+  context-sync checksums against `mc_decimal`; keep the copy/clear byte count
+  representation-specific (16 bytes for decQuad versus 44 for current
+  decNumber).
+- [x] Pass the dedicated raw-copy, destroy-source and in-place-arithmetic
+  lifecycle proof. A diagnostic run of the broader provider contract also
+  passed every assertion before it requested unsupported 50- and 200-digit
+  contexts; the remaining failures are retained as the explicit fixed-34
+  boundary, not counted as passes.
+- [x] Record that decQuad has no power primitive. The comparison adapter
+  composes only bounded integral-exponent power from decQuad multiply/divide;
+  this is **not a decQuad capability** and is not part of the D3 timing kernel.
+- [x] Add low-cost adapter and direct-core calibration manifests. Do not run
+  them until a fresh clear-host confirmation.
+- [x] Run the checksum-gated D3 adapter and direct-core calibration after
+  Adrian's clear-host confirmation: 180/180 adapter samples and 36/36 core
+  samples pass their guards with no observation removed.
+- [x] Reject D3 before a formal screen. Adapter arithmetic is 44.40%/64.76%
+  slower at Common-18/Classic-9, and direct-core arithmetic is 49.28%/66.73%
+  slower. Its 16-byte representation improves only isolated copy/clear and
+  context-sync cells; conversion and comparison remain adverse. Per Adrian's
+  stated arithmetic stop rule, do not open formal L1 or L2/L3.
+
+D3 remains a rejected fixed-precision comparator, not an arbitrary-precision
+replacement. Contexts above 34 digits and non-integral power are unsupported
+by this candidate and are labelled as such. The retained D2/D3 evidence is
+[`2026-08-18-decimal-01-stage3-calibration`](../evidence/2026-08-18-decimal-01-stage3-calibration/).
 
 ### Gate 3 public evidence and extended candidates
 
@@ -299,11 +402,11 @@ the engineering plan.
 
 ## 10. Resume checkpoint
 
-Current checkpoint: Adrian accepted the focused repair and opened Gate 1
-baseline preparation. The independent D0/D1 harness and CDB-1 arithmetic core
-are now correctness-qualified. Complete the remaining operation/semantic
-inventory, broaden authoritative vectors around the repaired findings, cover
-the remaining invalid individual-setter forms and Classic quotient rule, and
-add the original billing application extension before publication. These are
-correctness/setup actions, not performance runs. Before the first timing cell,
-ask Adrian to clear and reserve the host and wait for explicit confirmation.
+Current checkpoint: Stage 3 is complete. D4 libmpdec was rejected at formal L1;
+D2 tuned decNumber and D3 fixed-34 decQuad were rejected by valid clear-host
+calibration because neither showed credible progression headroom. Retain the
+current 8/64/64 `mc_decimal`; no provider, ABI or production change is selected.
+DECIMAL-01 has no further authorized action. The overall performance closeout
+now treats Stage 2 as complete: the unchanged concurrency replay is waived and
+RexxCPS/optimizer-integrity qualification has moved into the authorized Stage
+4 benchmark-portfolio and source-quality preparation.

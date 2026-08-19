@@ -1,0 +1,219 @@
+[0/2] Re-checking globbed directories...
+[1/219] Creating rxvm symlink to rxbvm
+[2/219] C Packing cREXX RXFNSB Library ...
+[3/219] Building optimized arraydump function example
+[4/219] Building optimized arrayformat function example
+[5/219] Bundling array-formatting function example
+[6/219] Compiling dynamic_load_provider.crexx ...
+[7/219] cREXX compile and assemble rxdb_gui ...
+[8/219] Compiling stub_plugin.crexx ...
+[9/219] Compiling kv_address_demo.crexx ...
+[10/219] Compiling cms_address_demo.crexx ...
+[11/219] Compiling cms_address_environment.crexx ...
+[12/219] Building optimized array-formatting example program
+[13/219] Building C object interpreter/CMakeFiles/rxvme.dir/library.c.o
+[14/219] Linking C executable bin/rxvme
+[15/219] Compiling sqlite_address_demo.crexx ...
+[16/219] Compiling address_cms_host.crexx ...
+[17/219] Compiling crexxsaa_variables_host.crexx ...
+[18/219] Compiling e2_active_context.crexx ...
+[19/219] Compiling address_callback_host.crexx ...
+[20/219] Compiling test_reentrancy.crexx ...
+[21/219] Compiling dynamic_load_host.crexx ...
+[22/219] Compiling PERF3-13 E5 native-doorbell control ...
+[23/219] cREXX compile, assemble, link and package rxdb ...
+[24/219] Building C object debugger/CMakeFiles/rxdb.dir/rxdb.c.o
+[25/219] Building optimized pprint compiler-exit example
+[26/219] Bundling standalone pprint compiler-exit example
+[27/219] Building exittestsupport.rxbin
+[28/219] Compiling test_trace_source_jump_helper.crexx (noopt)
+[29/219] Compiling PERF3-13 E4 program-generation controls ...
+[30/219] Linking C executable compiler/tests/test_import_discovery_snapshot
+[31/219] Linking C executable compiler/tests/test_rxcp_super_combiner
+[32/219] Linking C executable compiler/tests/test_source_provenance
+[33/219] Linking C executable compiler/tests/test_highlight_editor_diagnostics
+[34/219] Linking C executable compiler/tests/test_highlight_cache
+[35/219] Linking C executable compiler/tests/test_source_semantics
+[36/219] Compiling test_trace_source_jump_helper.crexx (opt)
+[37/219] Compiling llm_address_environment.crexx ...
+[38/219] Compiling address_llm_host.crexx ...
+[39/219] Building C object interpreter/CMakeFiles/rxbvme.dir/library.c.o
+[40/219] Compiling test_dump.crexx with exit (opt)
+[41/219] Compiling test_dump.crexx with exit (noopt)
+[42/219] Compiling test_query.crexx with exit (opt)
+[43/219] Compiling test_query.crexx with exit (noopt)
+[44/219] Compiling test_sort.crexx with exit (noopt)
+[45/219] cREXX compile, assemble, link and package standalone RexxScript runner ...
+[46/219] Compiling test_sort.crexx with exit (opt)
+[47/219] Building C object rexxscript/CMakeFiles/rexxscript_cli.dir/RexxScriptRunner.c.o
+[48/219] Compiling test_sortx.crexx with exit (noopt)
+[49/219] Compiling test_sortx.crexx with exit (opt)
+[50/219] Compiling test_address_direct.crexx with exit (noopt)
+[51/219] Compiling test_address.crexx with exit (noopt)
+[52/219] Linking Level G LLM ADDRESS fixture with its concurrency classes ...
+[53/219] Compiling test_address.crexx with exit (opt)
+[54/219] Compiling test_execio.crexx with exit (noopt)
+[55/219] Compiling test_execio.crexx with exit (opt)
+[56/219] Compiling test_add.crexx with exit (noopt)
+[57/219] Compiling test_add.crexx with exit (opt)
+[58/219] Compiling test_fsay.crexx with exit (noopt)
+[59/219] Compiling test_fsay.crexx with exit (opt)
+[60/219] Compiling test_msay.crexx with exit (noopt)
+[61/219] Compiling test_msay.crexx with exit (opt)
+[62/219] Compiling test_address_direct.crexx with exit (opt)
+[63/219] Compiling test_signal.crexx with exit (noopt)
+[64/219] Compiling test_signal.crexx with exit (opt)
+[65/219] Compiling test_parse_direct.crexx with exit (noopt)
+[66/219] Compiling test_signal_block.crexx with exit (noopt)
+[67/219] Compiling test_signal_direct.crexx with exit (noopt)
+[68/219] Compiling test_signal_block.crexx with exit (opt)
+[69/219] Compiling test_parse_compiled_patterns.crexx with exit (noopt)
+[70/219] Compiling test_signal_direct.crexx with exit (opt)
+[71/219] Compiling reference_source_invalid_signal.crexx with exit (noopt)
+[72/219] Compiling reference_source_invalid_signal.crexx with exit (opt)
+[73/219] Compiling test_trace_exit.crexx with exit (noopt)
+[74/219] Compiling test_trace_negated_string.crexx with exit (noopt)
+[75/219] Compiling test_trace_exit.crexx with exit (opt)
+[76/219] Compiling test_trace_results.crexx with exit (noopt)
+[77/219] Compiling test_trace_negated_string.crexx with exit (opt)
+[78/219] Compiling test_trace_llm.crexx with exit (noopt)
+[79/219] Compiling test_trace_results.crexx with exit (opt)
+[80/219] Compiling test_trace_llm.crexx with exit (opt)
+[81/219] Compiling test_trace_direct.crexx with exit (noopt)
+[82/219] Compiling test_parse_compiled_patterns.crexx with exit (opt)
+[83/219] Compiling test_trace_stderr.crexx with exit (noopt)
+[84/219] Compiling test_trace_stderr.crexx with exit (opt)
+[85/219] Compiling test_trace_file.crexx with exit (noopt)
+[86/219] Compiling test_trace_file.crexx with exit (opt)
+[87/219] Compiling test_trace_normal_quiet.crexx with exit (noopt)
+[88/219] Compiling test_parse_direct.crexx with exit (opt)
+[89/219] Compiling test_parse.crexx with exit (noopt)
+[90/219] Compiling test_trace_normal_quiet.crexx with exit (opt)
+[91/219] Compiling test_trace_normal_command.crexx with exit (noopt)
+[92/219] Compiling test_trace_env.crexx with exit (noopt)
+[93/219] Compiling test_trace_normal_command.crexx with exit (opt)
+[94/219] Compiling test_trace_event_batch.crexx with exit (noopt)
+[95/219] Compiling test_trace_env.crexx with exit (opt)
+[96/219] Compiling test_trace_env.crexx with exit (noopt)
+[97/219] Compiling test_trace_event_batch.crexx with exit (opt)
+[98/219] Compiling test_trace_env.crexx with exit (opt)
+[99/219] Compiling test_trace_direct.crexx with exit (opt)
+[100/219] Compiling test_trace_env_ignored.crexx with exit (noopt)
+[101/219] Compiling test_trace_env_ignored.crexx with exit (opt)
+[102/219] Compiling test_trace_source_jump.crexx with exit (noopt)
+[103/219] Compiling test_trace_namespace_commands.crexx with exit (noopt)
+[104/219] Compiling test_trace_namespace_commands.crexx with exit (opt)
+[105/219] Compiling test_rexxscript.crexx with exit (noopt)
+[106/219] Compiling test_trace_source_jump.crexx with exit (opt)
+[107/219] Compiling test_rexxscript.crexx with exit (opt)
+[108/219] Compiling test_rexxscript_direct.crexx with exit (noopt)
+[109/219] Linking C executable bin/rxdb
+[110/219] Linking C executable bin/rxbvme
+[111/219] Linking C executable bin/rxpp-sh
+[112/219] Compiling test_rexxscript_direct.crexx with exit (opt)
+[113/219] Compiling test_substr.crexx with exit (noopt)
+[114/219] Compiling test_dummy.crexx with exit (opt)
+[115/219] Compiling test_dummy.crexx with exit (noopt)
+[116/219] Compiling test_substr.crexx with exit (opt)
+[117/219] Compiling test_rxqueue.crexx with exit (noopt)
+[118/219] Compiling test_rxqueue.crexx with exit (opt)
+[119/219] Generating ts_afterword_noopt.rxbin
+[120/219] Generating ts_arraysort_errors_noopt.rxbin
+[121/219] Generating ts_stem_errors_noopt.rxbin
+[122/219] Generating ts_tinyexpr_noopt.rxbin
+[123/219] Generating crexxbrexx_noopt.rxbin
+[124/219] Generating arrays_test_noopt.rxbin
+[125/219] Generating math_test_noopt.rxbin
+[126/219] Generating stack_test_noopt.rxbin
+[127/219] Generating cipher_test_noopt.rxbin
+[128/219] Generating strings_test_noopt.rxbin
+[129/219] Generating getpi_test_noopt.rxbin
+[130/219] Generating keyaccess_test_noopt.rxbin
+[131/219] Generating llist_test_noopt.rxbin
+[132/219] Generating treemap_test_noopt.rxbin
+[133/219] Generating recv390_test_noopt.rxbin
+[134/219] Generating id_test_noopt.rxbin
+[135/219] Generating map_test_noopt.rxbin
+[136/219] Generating tcp_test_noopt.rxbin
+[137/219] Generating system_test_noopt.rxbin
+[138/219] Generating odbc_test.rxbin
+[139/219] Linking C executable bin/rexxscript
+[140/219] Generating odbc_mock_prepared.rxbin
+[141/219] Generating testOS_noopt.rxbin
+[142/219] Generating testConcurrency_noopt.rxbin
+[143/219] Generating ts_llm_providers_noopt.rxbin
+[144/219] Generating testRexxClassicBifXrange_noopt.rxbin
+[145/219] Generating odbc_sqlite_prepared.rxbin
+[146/219] cREXX compile and assemble veclib ...
+[147/219] Generating testRexxScriptCompat_noopt.rxbin
+[148/219] Generating concatenation_noopt.rxbin
+[149/219] Generating levelbfunc_noopt.rxbin
+[150/219] Building program with standalone pprint exit example
+[151/219] Generating benchmark_awfy_sieve_noopt.rxbin
+[152/219] Generating benchmark_awfy_permute_noopt.rxbin
+[153/219] Generating benchmark_awfy_mandelbrot_noopt.rxbin
+[154/219] Generating benchmark_awfy_mandelbrot_hoisted_control_noopt.rxbin
+[155/219] Generating benchmark_awfy_towers_noopt.rxbin
+[156/219] Generating benchmark_awfy_bounce_noopt.rxbin
+[157/219] Generating benchmark_awfy_storage_noopt.rxbin
+[158/219] Generating benchmark_awfy_list_noopt.rxbin
+[159/219] Generating benchmark_awfy_queens_noopt.rxbin
+[160/219] Generating benchmark_awfy_richards_noopt.rxbin
+[161/219] Generating benchmark_awfy_deltablue_noopt.rxbin
+[162/219] Generating benchmark_awfy_json_noopt.rxbin
+[163/219] Generating benchmark_awfy_havlak_noopt.rxbin
+[164/219] Generating benchmark_awfy_cd_noopt.rxbin
+[165/219] Generating benchmark_json_parse_noopt.rxbin
+[166/219] Generating benchmark_json_parser_noopt.rxbin
+[167/219] Generating benchmark_json_query_noopt.rxbin
+[168/219] Generating benchmark_base64_roundtrip_noopt.rxbin
+[169/219] Generating benchmark_base64_roundtrip_v2_noopt.rxbin
+[170/219] Generating benchmark_awfy_nbody_noopt.rxbin
+[171/219] Generating benchmark_parse_frozen_generic_noopt.rxbin
+[172/219] Generating benchmark_runner_noopt.rxbin
+[173/219] Generating benchmark_parse_frozen_noopt.rxbin
+[174/219] Generating benchmark_rexxcps_levelb_noopt.rxbin
+[175/219] Generating nr10_cross_runtime_matrix_selftest_noopt.rxbin
+[176/219] Generating benchmark_rexxcps_levelb_opaque_noopt.rxbin
+[177/219] Generating perf3_fusion_inventory_selftest_noopt.rxbin
+[178/219] Generating inlining_simple_noopt.rxbin
+[179/219] Generating nr10_lifecycle_tool_selftest_noopt.rxbin
+[180/219] Generating nr10_artifact_inventory_selftest_noopt.rxbin
+[181/219] Generating nr03_evidence_tool_selftest_noopt.rxbin
+[182/219] Generating reference_iterator_compare_rxvm_noopt.rxbin
+[183/219] Generating stringarraylist_iterator_compare_rxvm_noopt.rxbin
+[184/219] Generating stringtreemap_insert_compare_noopt.rxbin
+[185/219] Generating tinyexpr_dispatch_compare_noopt.rxbin
+[186/219] Generating binary_fastpath_compare_noopt.rxbin
+[187/219] Linking C executable tests/rxc_classdecl_static
+[188/219] Generating binary_byvalue_compare_rxvm_noopt.rxbin
+[189/219] Generating rxjson_parser_compare_noopt.rxbin
+[190/219] Generating postperf04_scalar_access_compare_noopt.rxbin
+[191/219] Generating rxjson_numeric_materialization_compare_noopt.rxbin
+[192/219] Generating jump_dispatch_compare_noopt.rxbin
+[193/219] Generating runtime_interface_lookup_compare_noopt.rxbin
+[194/219] Generating inlining_complex_noopt.rxbin
+[195/219] Generating rxpa_dynlink_run_noopt.rxbin
+[196/219] Generating rxpa_staticlink_run_noopt.rxbin
+[197/219] Generating rxpa_signal_funcs_dynamic_noopt.rxbin
+[198/219] Generating rxpa_signal_funcs_static_noopt.rxbin
+[199/219] Generating rxpa_string_funcs_dynamic_noopt.rxbin
+[200/219] Generating rxpa_string_funcs_static_noopt.rxbin
+[201/219] Generating rxpa_int_funcs_dynamic_noopt.rxbin
+[202/219] Generating rxpa_int_funcs_static_noopt.rxbin
+[203/219] Generating rxpa_float_funcs_dynamic_noopt.rxbin
+[204/219] Generating rxpa_float_funcs_static_noopt.rxbin
+[205/219] Generating rxpa_array_push_funcs_dynamic_noopt.rxbin
+[206/219] Generating rxpa_array_push_funcs_static_noopt.rxbin
+[207/219] Generating rxpa_native_payload_funcs_dynamic_noopt.rxbin
+[208/219] Generating rxpa_native_payload_funcs_static_noopt.rxbin
+[209/219] Generating rxpa_native_unwind_funcs_dynamic_noopt.rxbin
+[210/219] Generating rxpa_native_unwind_funcs_static_noopt.rxbin
+[211/219] Generating rxpa_mult_test_noopt.rxbin
+[212/219] cREXX compile, assemble, link and package crexx ...
+[213/219] Building C object crexx_driver/CMakeFiles/crexx.dir/crexx.c.o
+[214/219] Linking C executable bin/crexx
+[215/219] Compiling dynamic interface contract ...
+[216/219] Compiling dynamic interface provider ...
+[217/219] Compiling dynamic interface host ...
+[218/219] Compiling test_parse.crexx with exit (opt)

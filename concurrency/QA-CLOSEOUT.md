@@ -31,7 +31,7 @@ does not compete with the project ordering in `docs/ROADMAP.md`.
 | Gate | Status | Exit evidence |
 | --- | --- | --- |
 | QA-A test readiness | complete | solution-point review complete, direct gaps closed, enduring CTest manifest and frozen platform runners ready |
-| QA-B independent Mac closeout | active | correctness, sanitizer, stress, Release, install and portable-package proof pass; quiet AC performance replay remains |
+| QA-B independent Mac closeout | complete | correctness, sanitizer, stress, Release, install and portable-package proof pass; Adrian waived the unchanged quiet-AC replay on 2026-08-18 |
 | QA-C Linux qualification | ready, not run | clean frozen build, conformance matrix and install/package proof retained |
 | QA-D Windows qualification | complete | exact clean commit passed MSVC, Clang and GCC conformance, full CTest, TLS, stress, install and ZIP-package proof |
 | QA-E publication decision | complete: published as initial | corrected commit `53b3de77a` passed the four-platform Build CREXX matrix, development-snapshot publication and CodeQL; later native-host evidence can still block or qualify it |
@@ -145,9 +145,13 @@ The requested task-launch and seven-workload single-thread comparison reached
 the 36-pair noise ceiling and retained an unchanged Richards confirmation. It
 found no confirmed adverse guard, but the host power log proves that the whole
 campaign ran on battery. Under the performance-governance AC requirement this
-is diagnostic evidence only. A quiet AC replay of the exact retained manifests
-remains the sole open Mac QA-B item; the earlier accepted AC baselines are not
-invalidated. The diagnostic bundle is
+is diagnostic evidence only; the earlier accepted AC baselines are not
+invalidated. Mac correctness, sanitizer, stress, Release, install and portable
+package proof all pass, and later concurrency production changes retained
+clean single-thread Release guards. Adrian therefore waived an unchanged AC
+replay as unnecessary on 2026-08-18. It is not a remaining QA-B requirement
+and is reopened only by a relevant source change, concrete evidence
+inconsistency or new governed performance question. The diagnostic bundle is
 [`2026-08-16-initial-concurrency-mac-closeout`](../performance/evidence/2026-08-16-initial-concurrency-mac-closeout/).
 
 ## QA-D Windows evidence
@@ -184,8 +188,8 @@ retained `RESULT.txt` files.
 
 [`qa/INDEPENDENT-REVIEW-PROMPT.md`](qa/INDEPENDENT-REVIEW-PROMPT.md) is the
 paste-ready brief for a fresh agent. It requires an independent SP-01 through
-SP-09 evidence review, the outstanding quiet-AC replay, formal execution of the
-frozen Linux runner, and review of the completed Windows QA-D evidence. Windows
+SP-09 evidence review, formal execution of the frozen Linux runner, and review
+of the completed Mac QA-B and Windows QA-D evidence. Windows
 does not need another qualification run without a concrete evidence
 inconsistency or a new source candidate.
 

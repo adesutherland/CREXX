@@ -510,3 +510,29 @@ evidence is in `evidence/2026-07-22-nr-26-closeout/`.
 
 Sanitizer and install/package proof remain outside this approved shortest
 closeout path. No push is authorized.
+
+## Post-closeout fixed-point correctness repair — 2026-08-17
+
+The PERF3 benchmark-source closeout added AWFY Queens and exposed a latent
+optimized-code defect after the accepted NR-26 closeout. A later copy-analysis
+iteration could replace an already valid deep read substitution with an
+intermediate copy destination even though that destination's defining store
+had been omitted by the fixed point. The emitted program then read an
+unmaterialised register.
+
+The corrected proof follows the current copy chain and the reaching-definition
+order at the use. A replacement is rejected only when the copy establishing
+`target == source` is reached after a skipped definition of that source. A
+copy made before the skipped write remains valid because it denotes the
+preserved old physical value. This is a use-local mathematical rejection, not
+a broad fail-close: the regression contract requires the supported nested
+methods to remain inlined and the true recursive call to remain present.
+
+Adrian accepted the ordinary profiling-off Release verdict. The control fails
+Queens and the reduced nested-inline reproducer; the candidate passes both,
+keeps their instruction counts and file sizes unchanged, and leaves eight
+established workload/tool RXAS images byte-identical. Compiler throughput is
+neutral at the available timer resolution. Post-acceptance closeout passes the
+complete Debug build, full Debug CTest **2,224/2,224**, complete Release build,
+and focused Release **7/7** including the full NR-26 contract. Evidence is in
+`evidence/2026-08-17-rxc-flow-copy-fixed-point-repair-first-release-verdict/`.

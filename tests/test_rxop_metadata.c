@@ -733,6 +733,90 @@ int main(void) {
     effects = rxop_effects(OP_NULL_REG);
     check(effects.reads == RXOP_OP_NONE && effects.kills == RXOP_OP_1,
           "NULL kill effects regression", &op_table[OP_NULL_REG]);
+    effects = rxop_effects(OP_ASSERTINITIALIZED_REG);
+    signal = rxop_signal_contract(OP_ASSERTINITIALIZED_REG);
+    check(effects.reads == RXOP_OP_1 &&
+              effects.writes == RXOP_OP_NONE &&
+              effects.semantics == RXOP_SEM_NONE &&
+              effects.optimizer_barrier &&
+              rxop_component_reads(OP_ASSERTINITIALIZED_REG, 0) ==
+                    RXOP_COMPONENT_ATTRIBUTES &&
+              signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.static_names &&
+              strcmp(signal.static_names, "OBJECT_NOT_INITIALIZED") == 0 &&
+              (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
+          "initialized guard contract regression",
+          &op_table[OP_ASSERTINITIALIZED_REG]);
+    signal = rxop_signal_contract(OP_ASSERTTYPE_REG_STRING);
+    check(rxop_component_reads(OP_ASSERTTYPE_REG_STRING, 0) ==
+                    RXOP_COMPONENT_ATTRIBUTES &&
+              signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.static_names &&
+              strcmp(signal.static_names, "CONVERSION_ERROR") == 0 &&
+              (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
+          "type guard contract regression",
+          &op_table[OP_ASSERTTYPE_REG_STRING]);
+    effects = rxop_effects(OP_ICHKRNG_REG_REG_REG);
+    signal = rxop_signal_contract(OP_ICHKRNG_REG_REG_REG);
+    check(effects.semantics == RXOP_SEM_NONE &&
+              effects.optimizer_barrier &&
+              rxop_component_reads(OP_ICHKRNG_REG_REG_REG, 0) ==
+                    RXOP_COMPONENT_INTEGER &&
+              rxop_component_reads(OP_ICHKRNG_REG_REG_REG, 2) ==
+                    RXOP_COMPONENT_INTEGER &&
+              signal.static_names &&
+              strcmp(signal.static_names, "OUT_OF_RANGE") == 0 &&
+              (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
+          "integer range guard contract regression",
+          &op_table[OP_ICHKRNG_REG_REG_REG]);
+    effects = rxop_effects(OP_BCHECKRANGE_REG_REG_REG);
+    signal = rxop_signal_contract(OP_BCHECKRANGE_REG_REG_REG);
+    check(effects.semantics == RXOP_SEM_NONE &&
+              effects.optimizer_barrier &&
+              rxop_component_reads(OP_BCHECKRANGE_REG_REG_REG, 0) ==
+                    RXOP_COMPONENT_BINARY &&
+              rxop_component_reads(OP_BCHECKRANGE_REG_REG_REG, 1) ==
+                    RXOP_COMPONENT_INTEGER &&
+              signal.static_names &&
+              strcmp(signal.static_names, "OUT_OF_RANGE") == 0 &&
+              (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
+          "binary range guard contract regression",
+          &op_table[OP_BCHECKRANGE_REG_REG_REG]);
+    signal = rxop_signal_contract(OP_SETOBJTYPE_REG_STRING);
+    check(signal.state == RXOP_SIGNAL_STATE_NONE &&
+              rxop_component_reads(OP_SETOBJTYPE_REG_STRING, 0) ==
+                    RXOP_COMPONENT_ATTRIBUTES &&
+              rxop_component_writes(OP_SETOBJTYPE_REG_STRING, 0) ==
+                    RXOP_COMPONENT_ATTRIBUTES,
+          "object type producer contract regression",
+          &op_table[OP_SETOBJTYPE_REG_STRING]);
+    signal = rxop_signal_contract(OP_ISETATTR1_REG_INT_REG);
+    check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.static_names &&
+              strcmp(signal.static_names, "OUT_OF_RANGE") == 0 &&
+              signal.failure_writes == RXOP_OP_NONE &&
+              signal.failure_component_writes == RXOP_COMPONENT_NONE &&
+              (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE) &&
+              rxop_component_writes(OP_ISETATTR1_REG_INT_REG, 0) ==
+                    RXOP_COMPONENT_INTEGER,
+          "direct integer attribute store contract regression",
+          &op_table[OP_ISETATTR1_REG_INT_REG]);
+    effects = rxop_effects(OP_IGETUNLINK_REG_REG);
+    signal = rxop_signal_contract(OP_IGETUNLINK_REG_REG);
+    check(signal.state == RXOP_SIGNAL_STATE_NONE &&
+              effects.reads == RXOP_OP_2 &&
+              effects.writes == RXOP_OP_12 &&
+              effects.kills == RXOP_OP_1 &&
+              (effects.semantics & RXOP_SEM_ALIAS_RELEASE) &&
+              !(effects.semantics & RXOP_SEM_OPAQUE) &&
+              rxop_component_reads(OP_IGETUNLINK_REG_REG, 1) ==
+                    RXOP_COMPONENT_INTEGER &&
+              rxop_component_writes(OP_IGETUNLINK_REG_REG, 0) ==
+                    RXOP_COMPONENT_INTEGER,
+          "integer read-unlink transfer contract regression",
+          &op_table[OP_IGETUNLINK_REG_REG]);
     signal = rxop_signal_contract(OP_LOAD_REG_DECIMAL);
     check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
               signal.source == RXOP_SIGNAL_SOURCE_PLUGIN &&

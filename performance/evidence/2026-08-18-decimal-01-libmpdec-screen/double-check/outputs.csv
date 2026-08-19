@@ -1,0 +1,61 @@
+sample_id,stream,line_number,text
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-mc-common18-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-mc-common18-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-candidate-common18-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-candidate-common18-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-mc-common18-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-mc-common18-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-candidate-common18-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-candidate-common18-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-candidate-common18-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-candidate-common18-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-mc-common18-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-mc-common18-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-mc-common18-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-mc-common18-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-candidate-common18-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-candidate-common18-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-candidate-common18-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-candidate-common18-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-mc-common18-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=common digits=18 mode=arithmetic iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-adapter-common18-mpd-check-adapter-mc-common18-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-mc-classic9-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-mc-classic9-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-candidate-classic9-warmup-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-candidate-classic9-warmup-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-mc-classic9-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-mc-classic9-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-candidate-classic9-recorded-1,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-candidate-classic9-recorded-1,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-candidate-classic9-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-candidate-classic9-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-mc-classic9-recorded-2,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-mc-classic9-recorded-2,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-mc-classic9-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-mc-classic9-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-candidate-classic9-recorded-3,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-candidate-classic9-recorded-3,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-candidate-classic9-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mpd_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-candidate-classic9-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-mc-classic9-recorded-4,stdout,1,DECIMAL-ADAPTER provider=rxvm_mc_decimal standard=classic digits=9 mode=arithmetic iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-adapter-classic9-mpd-check-adapter-mc-classic9-recorded-4,stdout,2,PASS: DECIMAL-01 Gate 1 adapter payload
+timing-DECIMAL-MPD-check-core-common18-mpd-check-core-decnumber-common18-warmup-1,stdout,1,DECIMAL-CORE provider=decnumber digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-core-common18-mpd-check-core-libmpdec-common18-warmup-1,stdout,1,DECIMAL-CORE provider=libmpdec digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-core-common18-mpd-check-core-decnumber-common18-recorded-1,stdout,1,DECIMAL-CORE provider=decnumber digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-core-common18-mpd-check-core-libmpdec-common18-recorded-1,stdout,1,DECIMAL-CORE provider=libmpdec digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-core-common18-mpd-check-core-libmpdec-common18-recorded-2,stdout,1,DECIMAL-CORE provider=libmpdec digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-core-common18-mpd-check-core-decnumber-common18-recorded-2,stdout,1,DECIMAL-CORE provider=decnumber digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-core-common18-mpd-check-core-decnumber-common18-recorded-3,stdout,1,DECIMAL-CORE provider=decnumber digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-core-common18-mpd-check-core-libmpdec-common18-recorded-3,stdout,1,DECIMAL-CORE provider=libmpdec digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-core-common18-mpd-check-core-libmpdec-common18-recorded-4,stdout,1,DECIMAL-CORE provider=libmpdec digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-core-common18-mpd-check-core-decnumber-common18-recorded-4,stdout,1,DECIMAL-CORE provider=decnumber digits=18 iterations=50000000 checksum=3950.617248
+timing-DECIMAL-MPD-check-core-classic9-mpd-check-core-decnumber-classic9-warmup-1,stdout,1,DECIMAL-CORE provider=decnumber digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-core-classic9-mpd-check-core-libmpdec-classic9-warmup-1,stdout,1,DECIMAL-CORE provider=libmpdec digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-core-classic9-mpd-check-core-decnumber-classic9-recorded-1,stdout,1,DECIMAL-CORE provider=decnumber digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-core-classic9-mpd-check-core-libmpdec-classic9-recorded-1,stdout,1,DECIMAL-CORE provider=libmpdec digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-core-classic9-mpd-check-core-libmpdec-classic9-recorded-2,stdout,1,DECIMAL-CORE provider=libmpdec digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-core-classic9-mpd-check-core-decnumber-classic9-recorded-2,stdout,1,DECIMAL-CORE provider=decnumber digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-core-classic9-mpd-check-core-decnumber-classic9-recorded-3,stdout,1,DECIMAL-CORE provider=decnumber digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-core-classic9-mpd-check-core-libmpdec-classic9-recorded-3,stdout,1,DECIMAL-CORE provider=libmpdec digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-core-classic9-mpd-check-core-libmpdec-classic9-recorded-4,stdout,1,DECIMAL-CORE provider=libmpdec digits=9 iterations=50000000 checksum=3950.61725
+timing-DECIMAL-MPD-check-core-classic9-mpd-check-core-decnumber-classic9-recorded-4,stdout,1,DECIMAL-CORE provider=decnumber digits=9 iterations=50000000 checksum=3950.61725

@@ -1,0 +1,39 @@
+captured_at=2026-08-17T18:51:07+01:00
+branch=develop
+base_commit=110e298af8ea6d702669cf26533e426005141df8
+source_scope=base commit plus controlled uncommitted POSTPERF-01 files
+uname=Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+macos=26.5.2
+cpu=Apple M5
+logical_cpus=10
+power=Now drawing from 'AC Power'  -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+load=18:51  up 34 days, 11:59, 1 user, load averages: 2.19 2.27 2.41
+generator=CMAKE_GENERATOR:INTERNAL=Ninja
+build_type=CMAKE_BUILD_TYPE:STRING=Release
+vm_profiling=CREXX_VM_PROFILING:BOOL=OFF
+handler_panel=CREXX_VM_HANDLER_PANEL:STRING=profile-20
+c_compiler=CMAKE_C_COMPILER:STRING=/usr/bin/cc
+c_compiler_version=Apple clang version 21.0.0 (clang-2100.1.1.101)
+cmake_version=cmake version 4.3.2
+product_link=rxbvm
+fixture_upstream_commit=74306fec151070fd07157cefeacf19e7e0bcdc89
+dirty_scope_begin
+ M compiler/docs/inlining_design.md
+ M compiler/rxcp_inline_bind.c
+ M compiler/tests/CMakeLists.txt
+ M docs/ROADMAP.md
+ M performance/README.md
+ M performance/portfolio/manifest-v2.md
+ M tests/benchmarks/CMakeLists.txt
+ M tests/benchmarks/README.md
+ M tests/benchmarks/THIRD_PARTY_NOTICES.md
+ M tests/benchmarks/run_benchmarks.crexx
+?? cmake/CheckInlineBinaryFormalConversion.cmake
+?? compiler/tests/golden/run/inline_binary_formal_string_conversion.out
+?? compiler/tests/rexx_src/inline_binary_formal_string_conversion.crexx
+?? performance/POST-PERF3-WORKLIST.md
+?? performance/evidence/2026-08-17-postperf-01-awfy-json-compiler-repair-first-release-verdict/
+?? performance/evidence/2026-08-17-postperf-01-full-awfy-json-qualification/
+?? tests/benchmarks/awfy_json.crexx
+?? tests/benchmarks/fixtures/
+dirty_scope_end

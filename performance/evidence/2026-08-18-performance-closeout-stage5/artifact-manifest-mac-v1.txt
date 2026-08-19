@@ -1,0 +1,55 @@
+# Stage 5 fresh-build product and timed cREXX artifact inventory.
+# This is deliberately a current, bounded inventory rather than a recursive
+# historical checksum bundle.
+# role|runtime|workload|form|path
+crexx-artifact-inventory|1
+product|crexx|toolchain|compiler|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/bin/rxc
+product|crexx|toolchain|assembler|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/bin/rxas
+product|crexx|toolchain|linker|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/bin/rxlink
+product|crexx|toolchain|disassembler|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/bin/rxdas
+product|crexx|runtime|selected-executable|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/bin/rxvm
+control|crexx|runtime|threaded-executable|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/bin/rxtvm
+control|crexx|runtime|bytecode-executable|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/bin/rxbvm
+product|crexx|library|linked-rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/bin/library.rxbin
+benchmark|crexx|Sieve|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxas
+benchmark|crexx|Sieve|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin
+benchmark|crexx|Permute|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxas
+benchmark|crexx|Permute|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin
+benchmark|crexx|Bounce|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_bounce_opt.rxas
+benchmark|crexx|Bounce|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin
+benchmark|crexx|Richards|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxas
+benchmark|crexx|Richards|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin
+benchmark|crexx|Towers|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_towers_opt.rxas
+benchmark|crexx|Towers|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_towers_opt.rxbin
+benchmark|crexx|Storage|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_storage_opt.rxas
+benchmark|crexx|Storage|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_storage_opt.rxbin
+benchmark|crexx|List|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_list_opt.rxas
+benchmark|crexx|List|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_list_opt.rxbin
+benchmark|crexx|Mandelbrot|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_mandelbrot_opt.rxas
+benchmark|crexx|Mandelbrot|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_mandelbrot_opt.rxbin
+benchmark|crexx|Json|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_json_opt.rxas
+benchmark|crexx|Json|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_json_opt.rxbin
+benchmark|crexx|DeltaBlue|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_deltablue_opt.rxas
+benchmark|crexx|DeltaBlue|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_deltablue_opt.rxbin
+benchmark|crexx|CD|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_cd_opt.rxas
+benchmark|crexx|CD|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_cd_opt.rxbin
+benchmark|crexx|Havlak|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_havlak_opt.rxas
+benchmark|crexx|Havlak|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_havlak_opt.rxbin
+benchmark|crexx|Queens|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_queens_opt.rxas
+benchmark|crexx|Queens|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_queens_opt.rxbin
+benchmark|crexx|NBody|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_nbody_opt.rxas
+benchmark|crexx|NBody|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_awfy_nbody_opt.rxbin
+benchmark|crexx|Base64-v2|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_base64_roundtrip_v2_opt.rxas
+benchmark|crexx|Base64-v2|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_base64_roundtrip_v2_opt.rxbin
+benchmark|crexx|RexxCPS|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxas
+benchmark|crexx|RexxCPS|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin
+control|crexx|JSON-legacy|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_json_parser_opt.rxas
+control|crexx|JSON-legacy|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_json_parser_opt.rxbin
+control|crexx|JSON-parse|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_json_parse_opt.rxas
+control|crexx|JSON-parse|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_json_parse_opt.rxbin
+control|crexx|JSON-query|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_json_query_opt.rxas
+control|crexx|JSON-query|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_json_query_opt.rxbin
+control|crexx|PARSE-frozen|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_parse_frozen_opt.rxas
+control|crexx|PARSE-frozen|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_parse_frozen_opt.rxbin
+control|crexx|PARSE-generic|rxas|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_parse_frozen_generic_opt.rxas
+control|crexx|PARSE-generic|rxbin|/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stage5.fmZzkgCyGi/build-release/tests/benchmarks/benchmark_parse_frozen_generic_opt.rxbin

@@ -264,6 +264,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->loopstartchecks = 0;
     node->loopinc = 0;
     node->loopendchecks = 0;
+    node->branch_cleanup = 0;
     node->is_duplicate_warning = 0;
     node->node_type = type;
     node->value_type = TP_UNKNOWN;
@@ -1937,6 +1938,7 @@ void free_ast(Context *context) {
         if (t->loopstartchecks) f_output(t->loopstartchecks);
         if (t->loopinc) f_output(t->loopinc);
         if (t->loopendchecks) f_output(t->loopendchecks);
+        if (t->branch_cleanup) f_output(t->branch_cleanup);
         free(t);
         t = n;
     }

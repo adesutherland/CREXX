@@ -647,22 +647,102 @@ return nlino
  * ------------------------------------------------------------------
  */
 CMD_macro: procedure=.int
-   arg line_no=.int,line=.string
-   stype.line_no= 'D'
-     macname='##'lower(word(source.line_no,2))
-     scriptMacros[scriptMacros[0]+1]=macname
-     scriptMacro.macname.parms=subword(source.line_no,3)
-     scriptMacro.macname.parms=translate(scriptMacro.macname.parms,,',')
-     scriptMacro.macname.calls=0
-     i=.int
-     do i=line_no+1 to source.0
-        line=strip(source.i)
-        stype.i='D'
-        if upper(word(line,1))='##MEND' then leave
-        scriptMacro.macname=scriptMacro.macname||line'; '
-     end
-     scriptMacro.macname=qstripcomment('/*','*/',scriptMacro.macname)
+    arg line_no=.int, line=.string
+    stype.line_no = 'D'
+    macname = word(source.line_no,2)
+    parms   = subword(source.line_no,3)
+    body = ''
+    i=.int
+    do i=line_no+1 to source.0
+       line = strip(source.i)
+       stype.i = 'D'
+       if upper(word(line,1)) = '##MEND' then leave
+       body = body || line || '; '
+    end
+    call StoreScriptMacro macname, parms, body
+    macname = '##'lower(strip(macname,,'#'))
+    scriptMacros[scriptMacros[0]+1] = macname
 return i
+/* ----------------------------------------------------------------------
+ * StoreScriptMacro
+ *
+ * Register a script macro in the canonical internal representation.
+ *
+ * Both internally defined and externally loaded script macros must pass
+ * through this routine so that they are stored identically.
+ *
+ * macname:
+ *     canonical macro name including the ## prefix
+ *
+ * parms:
+ *     parameter definition as found on the ##MACRO statement
+ *
+ * body:
+ *     macro body without ##MACRO / ##MEND
+ * ----------------------------------------------------------------------
+ */
+StoreScriptMacro: procedure=.void
+    arg macname=.string, mparms=.string, body=.string
+    macname = '##'lower(strip(macname,,'#'))
+    mparms = strip(mparms)
+    mparms = translate(mparms,,',')
+    body = qstripcomment('/*','*/',body)
+    scriptMacro.macname       = body
+    scriptMacro.macname.parms = mparms
+    scriptMacro.macname.calls = 0
+return
+/* ----------------------------------------------------------------------
+ * LoadExternalScriptMacro
+ *
+ * Load a script macro from <syspath>/<macro-name>.rxpm and store it in
+ * scriptMacro. using the same representation as an internal ##MACRO.
+ *
+ * MACNAME is the canonical macro key and may include the ## prefix.
+ *
+ * Returns:
+ *   0  macro loaded
+ *   1  macro file missing / load failed
+ * ----------------------------------------------------------------------
+ */
+LoadExternalScriptMacro: procedure=.int
+    arg macname=.string
+    file_macname = macname
+    body=.string
+    if substr(file_macname,1,2) = '##' then file_macname = substr(file_macname,3)
+    macro_file = syspath || file_macname || '.rxpm'
+    stream = loadtext(macro_file, ';', 'noRaise')
+    if pos('-8 OPEN ERROR',stream) > 0 then do
+        scriptMacro.macname.error = 'error'
+        call rxpp_diag('warning', 'RXPP_SCRIPT_MACRO_MISSING', 'file', macro_file)
+        return 1
+    end
+    /*
+     * First record:
+     *
+     *     ##MACRO name parms...
+     */
+    sep = pos(';',stream)
+    if sep > 0 then do
+        header = strip(substr(stream,1,sep-1))
+        body   = substr(stream,sep+1)
+        scriptMacro.macname.parms = subword(header,3)
+        scriptMacro.macname.parms = translate(scriptMacro.macname.parms,,',')
+    end
+    else do
+        body = stream
+        scriptMacro.macname.parms = ''
+    end
+    /*
+     * External files contain the terminating ##MEND; internal macros
+     * do not store it.
+     */
+    mend = pos('##MEND',upper(body))
+    if mend > 0 then body = substr(body,1,mend-1)
+    body = qstripcomment('/*','*/',body)
+
+    scriptMacro.macname       = body
+    scriptMacro.macname.calls = 0
+return 0
 
 /* ------------------------------------------------------------------
  * Concatenate all parameters into a comma-separated list.
@@ -1190,23 +1270,32 @@ macroList: procedure
   arg dir= .string, extension=.string, expose macros=.string[]
   macros = .string[]
   lowalpha='abcdefghijklmnopqrstuvwxyz_0123456789'
+  dir=translate(dir,'/','\')
   out=.string[]
   err=.string[]
- 'ls 'dir'*.'extension output out error err
+ ## 'ls 'dir'*.'extension output out error err
+ 'ls 'dir output out error err
   if out.0 < 1 then return
 
-  do i=1 to out.0
-     if strip(out[i])='' then iterate
-     lpj=lastpos('.',out.i)
-     if lpj=0 then iterate
-     lpi=max(lastpos('/',out[i]),lastpos('\',out[i]))+1
-     mname=substr(out.i,lpi,lpj-lpi)
-     if strip(mname)='' then iterate
-     mext =word(substr(out.i,lpj+1),1)
-     if mext \= extension then iterate
-     if strip(translate(mname,,lowalpha))\='' then iterate
-     if strip(translate(mext,,lowalpha)) \='' then iterate
-     macros[macros[0]+1]='##'mname
+  do i = 1 to out.0
+     file = strip(out[i])
+     if file = '' then iterate
+   /* Find final extension separator. */
+     dot = lastpos('.', file)
+     if dot = 0 then iterate
+   /* Extract and validate extension. */
+     ext = lower(strip(substr(file, dot + 1)))
+     if ext \= extension then iterate
+   /* Extract filename without directory and extension. */
+     slash = max(lastpos('/', file), lastpos('\', file))
+     mname = substr(file, slash + 1, dot - slash - 1)
+     if mname = '' then iterate
+   /* Accept only names consisting of characters in LOWALPHA.
+     * TRANSLATE removes the permitted characters; anything left
+     * makes the name invalid.
+     */
+     if strip(translate(mname, , lowalpha)) \= '' then iterate
+     macros[macros[0] + 1] = '##'mname
   end
 return
 /* ------------------------------------------------------------------
@@ -1455,27 +1544,16 @@ newMacros:  procedure=.string
   arg macname=.string,line=.string,linnum=.int,ipi=.int
   original_call=.string
   source_len=.int
-  if scriptMacro.macname.error='error' then return line' ## File not available: 'syspath||macname'.rxpm'
-  if scriptMacro.macname='' then do
-     if substr(macname,1,2)='##' then macname=substr(macname,3)
-     stream=loadtext(syspath||macname'.rxpm',';','noRaise')
-     scriptMacro.macname=stream
-     if pos('-8 OPEN ERROR',stream)>0 then do
-        scriptMacro.macname.error='error'
-        missing_file=syspath||macname'.rxpm'
-        call rxpp_diag 'warning','RXPP_SCRIPT_MACRO_MISSING','file',missing_file
-        return line' ## 'rxpp_diag_text('RXPP_SCRIPT_MACRO_MISSING','file',missing_file)
-     end
-     scriptMacro.macname.calls=0
-     ipj=pos(';',scriptMacro.macname)
-     if ipj>1 then do
-        parm=substr(scriptMacro.macname,1,ipj-1)
-        scriptMacro.macname.parms=subword(parm,3)
-        scriptMacro.macname.parms=translate(scriptMacro.macname.parms,,',')
-        scriptMacro.macname=substr(scriptMacro.macname,ipj+1)
-     end
-  end
-  scriptMacroCounter=scriptMacroCounter+1
+    if scriptMacro.macname.error='error' then return line' ## File not available: 'syspath||macname'.rxpm'
+    if scriptMacro.macname = '' then do
+        rc = LoadExternalScriptMacro(macname)
+        if rc \= 0 then do
+           missing_file = syspath || strip(macname,,'#') || '.rxpm'
+           return line' ## 'rxpp_diag_text('RXPP_SCRIPT_MACRO_MISSING', 'file', missing_file)
+      end
+    end
+
+   scriptMacroCounter=scriptMacroCounter+1
   if scriptMacroCounter>500 then do
      call rxpp_diag 'warning','RXPP_EXPANSION_LIMIT','count',scriptMacroCounter
      return line
@@ -1508,8 +1586,12 @@ newMacros:  procedure=.string
    _mlino=source_origin_line[linnum]
    _file=getvar('rxpp_rexx')
    _module=rxmodule
-   REXXSCRIPT inparms' 'instructionSet EXPOSE _sysndx, _macro_calls, _file, _module, _date, _time, _macro, _mline, _mlino, _mcalls OUTPUT out RESULT result /* DEBUG */
-
+   if pos(' maclog',cflags)>0 then do
+      REXXSCRIPT inparms' 'instructionSet EXPOSE _sysndx, _macro_calls, _file, _module, _date, _time, _macro, _mline, _mlino, _mcalls OUTPUT out RESULT result debug
+   end
+   else do
+     REXXSCRIPT inparms' 'instructionSet EXPOSE _sysndx, _macro_calls, _file, _module, _date, _time, _macro, _mline, _mlino, _mcalls OUTPUT out RESULT result /* DEBUG */
+   end
    if result[1]='OK' then nop
    else do
       say '/// Macro Error at line : '_mlino
@@ -2512,31 +2594,91 @@ normalisePath: procedure=.string
 return normalised
 
 /* ---------------------------------------------------------------
- * CommentScan: Scans a line to update block-comment nesting and reports comment intersection.*
- * CommentScan(lino, depth)
- * Returns: "depth_out hit"
- * hit=1 if ANY portion of this line is in a /* */ block comment
+ * CommentScan
+ *
+ * Scan one source line and update nested block-comment depth.
+ *
+ * Quotes are significant only outside block comments.
+ * Once /* has been encountered, quote characters have no special
+ * meaning until the corresponding */ has been processed.
+ *
+ * Returns the resulting comment depth.
+ * HIT is set when any part of the line belongs to a block comment.
  * --------------------------------------------------------------- */
 CommentScan: procedure=.int
   arg line_no=.int, depth=.int, expose hit=.int
   line = source[line_no]
-  pos  = 1
-  hit = (depth > 0)          /* already inside a comment at BOL */
-  do forever
-     po = qpos('/*', line, pos)
-     pc = qpos('*/', line, pos)
-     if po = 0 & pc = 0 then leave
-     /* choose earliest marker */
-     if pc = 0 | (po > 0 & po < pc) then do  /* opening marker */
-        hit = 1
-        depth = depth + 1
-        pos = po + 2
-     end
-     else do  /* closing marker: the region up to here is comment iff depth>0 */
-        if depth > 0 then hit = 1
-        if depth > 0 then depth = depth - 1
-        pos = pc + 2
-     end
+  length = length(line)
+  pos = 1
+  hit = (depth > 0)
+  quote = ""
+  do while pos <= length
+      /*
+       * Inside a block comment.
+       *
+       * Quotes are ordinary characters here. We only care about
+       * nested comment delimiters.
+       */
+      if depth > 0 then do
+
+          if substr(line, pos, 2) = '/*' then do
+              hit = 1
+              depth = depth + 1
+              pos = pos + 2
+              iterate
+          end
+          if substr(line, pos, 2) = '*/' then do
+              hit = 1
+              depth = depth - 1
+              pos = pos + 2
+              iterate
+          end
+          hit = 1
+          pos = pos + 1
+          iterate
+      end
+      /*
+       * Outside a block comment.
+       *
+       * Comment markers inside quoted strings must be ignored.
+       */
+      ch = substr(line, pos, 1)
+      if quote <> "" then do
+          /*
+           * Handle doubled Rexx quote characters.
+           *
+           * Example:
+           *
+           *     "Peter said ""hello"""
+           */
+          if ch = quote then do
+              if pos < length & substr(line, pos + 1, 1) = quote then do
+                  pos = pos + 2
+                  iterate
+              end
+              quote = ""
+          end
+          pos = pos + 1
+          iterate
+      end
+      /*
+       * Start of a quoted string.
+       */
+      if ch = '"' | ch = "'" then do
+          quote = ch
+          pos = pos + 1
+          iterate
+      end
+      /*
+       * Start of a block comment.
+       */
+      if substr(line, pos, 2) = '/*' then do
+          hit = 1
+          depth = depth + 1
+          pos = pos + 2
+          iterate
+      end
+      pos = pos + 1
   end
   return depth
 /* ------------------------------------------------------------------

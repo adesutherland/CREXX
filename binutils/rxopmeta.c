@@ -215,6 +215,16 @@ int rxop_effect_branch_target_operand(const RxOpEffects *effects, size_t operand
 }
 
 unsigned int rxop_component_reads(int opcode, size_t operand_index) {
+    if ((opcode == OP_SETOBJTYPE_REG_STRING ||
+         opcode == OP_ASSERTTYPE_REG_STRING ||
+         opcode == OP_ASSERTINITIALIZED_REG) && operand_index == 0)
+        return RXOP_COMPONENT_ATTRIBUTES;
+    if (opcode >= OP_ICHKRNG_REG_INT_INT &&
+        opcode <= OP_ICHKRNG_INT_REG_REG)
+        return RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_BCHECKRANGE_REG_REG_REG)
+        return operand_index == 0 ? RXOP_COMPONENT_BINARY
+                                  : RXOP_COMPONENT_INTEGER;
     if (opcode == OP_CHANOPEN_REG_REG_REG_REG_REG) {
         if (operand_index == 4) return RXOP_COMPONENT_BINARY;
         if (operand_index >= 2) return RXOP_COMPONENT_INTEGER;
@@ -246,6 +256,8 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
     if (opcode == OP_ACOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_ATTRIBUTES;
     if (opcode == OP_BCOPY_REG_REG && operand_index == 1)
         return RXOP_COMPONENT_BINARY | RXOP_COMPONENT_NATIVE_PAYLOAD;
+    if (opcode == OP_IGETUNLINK_REG_REG && operand_index == 1)
+        return RXOP_COMPONENT_INTEGER;
 
     if (opcode == OP_GETATTRS_REG_REG ||
         opcode == OP_GETATTRS_REG_REG_INT)
@@ -531,6 +543,12 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
     if (opcode >= OP_DPOW_REG_REG_REG && opcode <= OP_DSEX_REG)
         return RXOP_COMPONENT_DECIMAL;
     if (opcode == OP_ACOPY_REG_REG) return RXOP_COMPONENT_ATTRIBUTES;
+    if (opcode == OP_SETOBJTYPE_REG_STRING)
+        return RXOP_COMPONENT_ATTRIBUTES;
+    if (opcode == OP_ISETATTR1_REG_INT_REG)
+        return RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_IGETUNLINK_REG_REG)
+        return RXOP_COMPONENT_INTEGER;
     if (opcode == OP_BCOPY_REG_REG)
         return RXOP_COMPONENT_BINARY | RXOP_COMPONENT_NATIVE_PAYLOAD;
     if (opcode == OP_SETATTRS_REG_REG ||

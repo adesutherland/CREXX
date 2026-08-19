@@ -34,16 +34,16 @@ set(calling_callee_header "§inline_test_mutating_method_scalar_attr_return.prob
 set(calling_caller_header "§inline_test_mutating_method_scalar_attr_return.probe.callingsingleexitcaller()")
 set(fallthrough_callee_header "§inline_test_mutating_method_scalar_attr_return.probe.fallthroughmutate()")
 set(fallthrough_caller_header "§inline_test_mutating_method_scalar_attr_return.probe.fallthroughcaller()")
-string(FIND "${rxas}" "${direct_header}" direct_start)
-string(FIND "${rxas}" "${next_header}" next_start)
-string(FIND "${rxas}" "${branch_header}" branch_start)
-string(FIND "${rxas}" "${local_branch_header}" local_branch_start)
-string(FIND "${rxas}" "${single_callee_header}" single_callee_start)
-string(FIND "${rxas}" "${single_caller_header}" single_caller_start)
-string(FIND "${rxas}" "${calling_callee_header}" calling_callee_start)
-string(FIND "${rxas}" "${calling_caller_header}" calling_caller_start)
-string(FIND "${rxas}" "${fallthrough_callee_header}" fallthrough_callee_start)
-string(FIND "${rxas}" "${fallthrough_caller_header}" fallthrough_caller_start)
+string(FIND "${rxas}" "${direct_header} .locals=" direct_start)
+string(FIND "${rxas}" "${next_header} .locals=" next_start)
+string(FIND "${rxas}" "${branch_header} .locals=" branch_start)
+string(FIND "${rxas}" "${local_branch_header} .locals=" local_branch_start)
+string(FIND "${rxas}" "${single_callee_header} .locals=" single_callee_start)
+string(FIND "${rxas}" "${single_caller_header} .locals=" single_caller_start)
+string(FIND "${rxas}" "${calling_callee_header} .locals=" calling_callee_start)
+string(FIND "${rxas}" "${calling_caller_header} .locals=" calling_caller_start)
+string(FIND "${rxas}" "${fallthrough_callee_header} .locals=" fallthrough_callee_start)
+string(FIND "${rxas}" "${fallthrough_caller_header} .locals=" fallthrough_caller_start)
 if(direct_start LESS 0 OR next_start LESS 0 OR next_start LESS_EQUAL direct_start OR
    branch_start LESS 0 OR local_branch_start LESS_EQUAL branch_start OR
    single_callee_start LESS_EQUAL local_branch_start OR
@@ -77,15 +77,21 @@ if(direct_body MATCHES "copy[ \t]+a1,r[0-9]+")
   message(FATAL_ERROR
     "Proved nested §this receiver retained a copyback copy:\n${direct_body}")
 endif()
-if(NOT branch_body MATCHES "copy[ \t]+r[0-9]+,a1" OR
-   NOT branch_body MATCHES "copy[ \t]+a1,r[0-9]+")
+if(branch_body MATCHES "call[0-9]*[ \t]+[^\n]*branchandmutate\\(\\)")
+  if(branch_body MATCHES "copy[ \t]+r[0-9]+,a1" OR
+     branch_body MATCHES "copy[ \t]+a1,r[0-9]+")
+    message(FATAL_ERROR
+      "Bounded ordinary §this receiver fallback retained inline materialisation copies:\n${branch_body}")
+  endif()
+elseif(NOT branch_body MATCHES "copy[ \t]+r[0-9]+,a1" OR
+       NOT branch_body MATCHES "copy[ \t]+a1,r[0-9]+")
   message(FATAL_ERROR
-    "Multiple-return nested §this receiver lost its conservative copy path:\n${branch_body}")
+    "Inlined multiple-return nested §this receiver lost its conservative copy path:\n${branch_body}")
 endif()
-if(local_branch_body MATCHES [=[\n[ \t]*call[0-9]*[ \t]+[^\n]*branchandmutate\(\)]=] OR
+if(NOT local_branch_body MATCHES "call[0-9]*[ \t]+[^\n]*branchandmutate\\(\\)" OR
    local_branch_body MATCHES "copy[ \t]+r[0-9]+,r1")
   message(FATAL_ERROR
-    "Established ordinary direct-object receiver path regressed:\n${local_branch_body}")
+    "Bounded ordinary direct-object receiver fallback regressed:\n${local_branch_body}")
 endif()
 if(NOT single_caller_body MATCHES "brf" OR
    single_caller_body MATCHES "copy[ \t]+r[0-9]+,a1" OR

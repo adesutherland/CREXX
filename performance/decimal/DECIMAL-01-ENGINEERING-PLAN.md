@@ -1,6 +1,7 @@
 # DECIMAL-01 decimal backend performance engineering plan
 
-Status: **approved; focused repair accepted; Gate 1 harness qualified and awaiting host reservation; no candidate selected**
+Status: **Stage 3 complete; D2 tuned decNumber, D3 decQuad and D4 libmpdec
+rejected; current mc_decimal retained; no production change selected**
 
 Date: 2026-08-05
 
@@ -569,6 +570,37 @@ enough ceiling to justify hybrid design. Retain negative results.
 **Stop:** Adrian selects no change, one arbitrary provider for integration, or
 a separately approved fixed/hybrid design panel.
 
+**2026-08-18 D4 outcome:** libmpdec 4.0.1 passed the focused provider contract
+and raw-copy lifecycle proof but failed the L1 progression rule. Its formal
+cREXX adapter arithmetic throughput was 41.66%/26.28% lower at
+Common-18/Classic-9 and conversion was about 42% lower; a lean adapter and a
+matched-capacity direct-core repeat confirmed the adverse arithmetic direction.
+D4 therefore stopped before L2/L3. That result does not classify the separate
+D2 tuned-decNumber or D3 fixed-34 decQuad experiments.
+
+**2026-08-18 D2/D3 outcome:** after Adrian confirmed the host clear, the
+complete opt-in 48-build D2 grid ran one warmup plus eight balanced calibration
+rounds against the current provider. The best balanced build was 0.23%/1.67%
+slower at Common-18/Classic-9; the largest isolated gain was only 2.70% and was
+adverse in the other context. D2 therefore has no credible 10% headroom and
+stops before formal L1 or L2/L3. The first D2 attempt is invalid in full because
+XProtect overlapped its final 11 seconds; the decision uses only the clear-host
+replacement capture.
+
+The isolated D3 comparator stores a native 16-byte decQuad, matches the
+admitted Common-18 and Classic-9 semantic checksums and passes its raw-copy
+lifecycle proof. Its adapter arithmetic was nevertheless 44.40%/64.76% slower,
+and matched direct-core arithmetic was 49.28%/66.73% slower. Copy/clear and one
+context-sync cell benefit from the compact representation, but conversion and
+comparison are adverse. Per Adrian's arithmetic stop rule, D3 also stops before
+formal L1 or L2/L3. It remains explicitly capped at 34 digits; decQuad does not
+provide power, and the adapter's bounded integral-exponent composition is
+labelled as not a decQuad capability and excluded from timing.
+
+The complete first candidate batch is closed with no change. Retain the current
+8/64/64 `mc_decimal`; do not open production integration. Evidence:
+[`2026-08-18-decimal-01-stage3-calibration`](../evidence/2026-08-18-decimal-01-stage3-calibration/).
+
 ### Gate 3 — extended/platform candidates
 
 Open D5 Intel, D6 Boost, D7 GCC and D8 native-64-bit only where Gate 2 leaves a
@@ -724,7 +756,10 @@ instruction report to be validated as part of Gate 0 and required public
 evidence to inform the extended-candidate panel. All later selection and
 production stops remain binding.
 
-The development host is shared with two other performance agents. No
-DECIMAL-01 timing may start without asking Adrian to clear and reserve the
-machine and receiving confirmation. A pause request stops work before another
-performance cell begins; the exact checkpoint remains in the worklist.
+The development host is shared with other work. Adrian confirmed it clear and
+approved Gate 1 timing plus the bounded Gate 2 materiality screen on
+2026-08-18. Every new timing block still audits the reservation, AC power,
+low-power mode, thermal/load state and competing processes. A pause request or
+invalid host stops work before another performance cell begins; the exact
+checkpoint remains in the worklist. Production provider selection and
+integration remain separate decisions.

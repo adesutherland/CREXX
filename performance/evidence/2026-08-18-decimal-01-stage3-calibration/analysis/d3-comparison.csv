@@ -1,0 +1,13 @@
+layer,workload,current_variant,candidate_variant,current_median_ns,candidate_median_ns,throughput_delta_percent,status
+adapter,DECIMAL-D3-cal-common18-arithmetic,D0-mc-current,D3-decQuad-fixed34,126159000.000000,226886000.000000,-44.395423,adverse
+adapter,DECIMAL-D3-cal-classic9-arithmetic,D0-mc-current,D3-decQuad-fixed34,146211000.000000,414895500.000000,-64.759560,adverse
+adapter,DECIMAL-D3-cal-common18-conversion,D0-mc-current,D3-decQuad-fixed34,68168000.000000,102472500.000000,-33.476786,adverse
+adapter,DECIMAL-D3-cal-classic9-conversion,D0-mc-current,D3-decQuad-fixed34,63949000.000000,109019500.000000,-41.341687,adverse
+adapter,DECIMAL-D3-cal-common18-compare,D0-mc-current,D3-decQuad-fixed34,130411500.000000,157777500.000000,-17.344678,adverse
+adapter,DECIMAL-D3-cal-classic9-compare,D0-mc-current,D3-decQuad-fixed34,134846000.000000,161444500.000000,-16.475321,adverse
+adapter,DECIMAL-D3-cal-common18-copy-clear,D0-mc-current,D3-decQuad-fixed34,78614500.000000,72205500.000000,8.876055,below-threshold
+adapter,DECIMAL-D3-cal-classic9-copy-clear,D0-mc-current,D3-decQuad-fixed34,85092000.000000,73555000.000000,15.684862,material-signal
+adapter,DECIMAL-D3-cal-common18-sync,D0-mc-current,D3-decQuad-fixed34,87068500.000000,78131500.000000,11.438408,credible-headroom-signal
+adapter,DECIMAL-D3-cal-classic9-sync,D0-mc-current,D3-decQuad-fixed34,84586500.000000,85065000.000000,-0.562511,adverse
+direct-core,DECIMAL-D3-core-common18,D0-decNumber-3.68,D3-decQuad-fixed34,249069000.000000,491094500.000000,-49.282877,adverse
+direct-core,DECIMAL-D3-core-classic9,D0-decNumber-3.68,D3-decQuad-fixed34,311807000.000000,937219500.000000,-66.730632,adverse

@@ -109,8 +109,8 @@ void output_apply_trace_source_ids(OutputFragment *output,
 void type_promotion(ASTNode *node);
 void add_variable_metadata(ASTNode* node);
 void clear_variable_metadata(ASTNode* node);
-void emit_scope_reference_lifetimes(ASTNode *node);
-void clear_scope_variable_metadata(ASTNode *node);
+void emit_scope_reference_lifetimes(OutputFragment *output, ASTNode *node);
+void clear_scope_variable_metadata(OutputFragment *output, ASTNode *node);
 void clear_global_variable_metadata(ASTNode *node);
 
 /* Metadata Helpers */

@@ -36,7 +36,7 @@ main: procedure = .int
   arg args = .string[]
 
   runtime = "all"
-  crexx_vm = "rxvm"
+  crexx_vm = "rxbvm"
   runs = 3
   repo_root = "."
   build_dir = "cmake-build-release"
@@ -111,8 +111,8 @@ main: procedure = .int
   if self_test_requested then return self_test()
   if runtime <> "all" & runtime <> "crexx" & runtime <> "oorexx" & runtime <> "netrexx" then
     return argument_error("--runtime must be all, crexx, oorexx or netrexx")
-  if crexx_vm <> "rxvm" & crexx_vm <> "rxbvm" & crexx_vm <> "both" then
-    return argument_error("--crexx-vm must be rxvm, rxbvm or both")
+  if crexx_vm <> "rxtvm" & crexx_vm <> "rxbvm" & crexx_vm <> "both" then
+    return argument_error("--crexx-vm must be rxtvm, rxbvm or both")
   if runs < 1 then return argument_error("--runs must be positive")
   if \is_absolute_path(build_dir) then build_dir = current_directory() || "/" || build_dir
   if output_path = "" then output_path = output_dir || "/samples.csv"
@@ -194,7 +194,7 @@ capture_crexx: procedure = .int
     if capture_phase("crexx", "shared", "assemble", sequence, command, "", rows) <> 0 then return 1
 
     do vm_index = 1 to 2
-      vm = "rxvm"
+      vm = "rxtvm"
       if vm_index = 2 then vm = "rxbvm"
       if crexx_vm <> "both" & crexx_vm <> vm then iterate
       vm_command = .string[]
@@ -248,6 +248,7 @@ capture_netrexx: procedure = .int
   arg repo_root = .string, netrexx_home = .string, output_dir = .string, runs = .int, ,
       sequence_offset = .int, expose rows = .string[]
   runtime_dir = output_dir || "/netrexx"
+  windows_host = is_windows_host()
   if make_directory(runtime_dir) <> 0 then return 1
   source = repo_root || "/tests/benchmarks/cross-runtime/lifecycle/lifecycle_probe.nrx"
   local_source = runtime_dir || "/lifecycle_probe.nrx"
@@ -262,7 +263,7 @@ capture_netrexx: procedure = .int
   do local_sequence = 1 to runs
     sequence = sequence_offset + local_sequence
     command = .string[]
-    if file_exists(netrexx_home || "/bin/NetRexxC.bat") then do
+    if windows_host then do
       command[1] = "cmd.exe"
       command[2] = "/d"
       command[3] = "/c"
@@ -283,12 +284,22 @@ capture_netrexx: procedure = .int
     command[1] = "java"
     command[2] = "-cp"
     classpath_separator = ":"
-    if file_exists(netrexx_home || "/bin/NetRexxC.bat") then classpath_separator = ";"
+    if windows_host then classpath_separator = ";"
     command[3] = runtime_dir || classpath_separator || netrexx_home || "/runlib/NetRexxR.jar"
     command[4] = "lifecycle_probe"
     if capture_phase("netrexx", "netrexx", "load_first_result", sequence, command, ,
         "PASS: Lifecycle Probe", rows) <> 0 then return 1
   end
+  return 0
+
+is_windows_host: procedure = .int
+  platform_out = .string[]
+  platform_err = .string[]
+  address crexx "platform" output platform_out error platform_err
+  if rc <> 0 | platform_out[0] = 0 then return 0
+  platform = lower(platform_out[1])
+  if pos("windows", platform) > 0 | pos("mingw", platform) > 0 | ,
+      pos("msys", platform) > 0 then return 1
   return 0
 
 capture_phase: procedure = .int
@@ -504,7 +515,7 @@ is_absolute_path: procedure = .int
 usage: procedure = .void
   say "Usage: run_lifecycle [options]"
   say "  --runtime all|crexx|oorexx|netrexx"
-  say "  --crexx-vm rxvm|rxbvm|both"
+  say "  --crexx-vm rxtvm|rxbvm|both"
   say "  --runs N"
   say "  --repo-root PATH"
   say "  --build-dir PATH"

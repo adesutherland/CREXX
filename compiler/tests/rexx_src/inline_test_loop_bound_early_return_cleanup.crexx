@@ -1,0 +1,47 @@
+options levelb comments_dash
+
+main: procedure = .int
+  values = .EarlyReturnValues()
+  call values.append(11)
+  call values.append(22)
+
+  if values.size() <> 0 & \values.contains(22) then missing = 1
+  else missing = 0
+  count = values.size()
+  say "missing="missing "count="count
+  if missing <> 0 | count <> 2 then return 1
+  say "PASS: inline loop-bound early-return cleanup"
+  return 0
+
+EarlyReturnValues: class
+  values_ = .int[]
+  count_ = .int
+
+  *: factory
+    count_ = 0
+    return
+
+  append: method = .void
+    arg value = .int
+    count_ = count_ + 1
+    values_[count_] = value
+    return
+
+  contains: method = .int
+    arg value = .int
+    slot = find(identity(value))
+    return slot > 0
+
+  identity: method = .int
+    arg value = .int
+    return value
+
+  find: method = .int
+    arg value = .int
+    do index = 1 to count_
+      if values_[index] = value then return index
+    end
+    return 0
+
+  size: method = .int
+    return count_

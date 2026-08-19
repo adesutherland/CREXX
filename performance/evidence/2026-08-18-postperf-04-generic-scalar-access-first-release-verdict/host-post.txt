@@ -1,0 +1,66 @@
+utc=2026-08-18T09:54:19Z
+local=2026-08-18T10:54:19+0100
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+Apple M5
+10
+ProductName:		macOS
+ProductVersion:		26.5.2
+BuildVersion:		25F84
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Battery Power:
+ lowpowermode         0
+AC Power:
+ lowpowermode         0
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+10:54  up 35 days,  4:02, 1 user, load averages: 2.32 2.70 4.00
+  598  37.1  0.5 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer -daemon
+67664  22.7  7.2 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/151.0.7922.76/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer) --type=renderer --user-data-dir=/Users/adrian/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox,sentry-ipc --bypasscsp-schemes=sentry-ipc --fetch-schemes=app,codex-sandbox,sentry-ipc --cors-schemes=codex-sandbox,sentry-ipc --streaming-schemes=app,codex-sandbox --start-stack-profiler --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-GB --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=5 --time-ticks-at-unix-epoch=-1784157951368621 --launch-time-ticks=2451675802208 --shared-files --metrics-shmem-handle=1752395122,r,8247509665184802842,14486552589890810062,2097152 --field-trial-handle=1718379636,r,11020521882076313039,8471531495406070395,262144 --enable-features=OwlHistory,OwlPrinting,ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,OwlExtensions,OwlOpenAIGoLinks --variations-seed-version --pseudonymization-salt-handle=1935764596,r,15094304488280246836,18437363677183915220,4 --trace-process-track-uuid=3190708990997080739 --seatbelt-client=100
+ 1455  19.1  0.6 /usr/libexec/avconferenced
+67632  11.2  0.7 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/151.0.7922.76/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service) --type=gpu-process --user-data-dir=/Users/adrian/Library/Application Support/Codex --start-stack-profiler --gpu-preferences=WAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAAQAAAAAAAAAADAAAAAAAAADgAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAoAAAAAAAAAAgAAAAAAAAADAAAAAEAAAAAAAAAAAAAAAgAAAAAAAAACAAAAAAAAAA= --shared-files --metrics-shmem-handle=1752395122,r,8915760799986291992,7202264115354638638,262144 --field-trial-handle=1718379636,r,11020521882076313039,8471531495406070395,262144 --enable-features=OwlHistory,OwlPrinting,ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,OwlExtensions,OwlOpenAIGoLinks --variations-seed-version --pseudonymization-salt-handle=1935764596,r,15094304488280246836,18437363677183915220,4 --trace-process-track-uuid=3190708988185955192 --seatbelt-client=43
+67651   7.1  3.6 /Applications/ChatGPT.app/Contents/Resources/codex -c features.code_mode_host=true app-server --analytics-default-enabled
+37321   6.0  0.2 /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTEncoderXPCService.xpc/Contents/MacOS/VTEncoderXPCService
+67620   5.3  2.1 /Applications/ChatGPT.app/Contents/MacOS/ChatGPT
+  747   3.4  0.2 /System/Library/DriverExtensions/AppleCentauriAlpha.dext/AppleCentauriAlpha com.apple.driver.AppleCentauriAlpha 0x1000010d8 com.apple.driver.AppleCentauriAlpha
+72123   2.0  0.1 /Applications/ChatGPT.app/Contents/Resources/codex-code-mode-host
+  609   0.6  0.1 /usr/sbin/coreaudiod
+ 1535   0.4  0.8 /System/Library/CoreServices/Finder.app/Contents/MacOS/Finder
+  650   0.2  0.3 /usr/libexec/airportd
+Apple clang version 21.0.0 (clang-2100.1.1.101)
+cmake version 4.3.2
+1.13.2
+develop
+0bea9ea1e4c3f21e2e369220f8f0f7750c78f646
+ M assembler/rxas_flow.c
+ M assembler/rxas_flow_pass.c
+ M assembler/rxas_flow_pass.h
+ M assembler/rxas_flow_proof.c
+ M assembler/rxas_flow_proof.h
+ M assembler/rxas_flow_ssa.c
+ M binutils/include/rxopeffects.h
+ M binutils/include/rxopsignals.h
+ M binutils/rxopmeta.c
+ M compiler/rxcp_inline_analysis.c
+ M compiler/rxcp_inline_bind.c
+ M compiler/rxcp_inline_internal.h
+ M compiler/rxcp_inline_rewrite.c
+ M compiler/rxcp_inline_rules.c
+ M compiler/rxcp_opt.c
+ M compiler/rxcp_val.h
+ M compiler/tests/CMakeLists.txt
+ M docs/ROADMAP.md
+ M performance/POST-PERF3-WORKLIST.md
+ M performance/ROADMAP.md
+ M tests/CMakeLists.txt
+ M tests/performance/CMakeLists.txt
+ M tests/rxas_optimizer/check_optimizer.cmake
+ M tests/test_rxop_metadata.c
+?? compiler/tests/rexx_src/inline_scalar_accessors_dep.crexx
+?? compiler/tests/rexx_src/inline_scalar_accessors_main.crexx
+?? compiler/tests/run_inline_scalar_accessors_import_opt.cmake
+?? tests/performance/check_postperf04_scalar_access_codegen.cmake
+?? tests/performance/postperf04_scalar_access_compare.crexx
+?? tests/rxas_optimizer/barrier_bcheckrange.rxas
+?? tests/rxas_optimizer/successful_guard_flow.rxas

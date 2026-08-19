@@ -58,6 +58,7 @@ typedef struct FlowSsaState {
     size_t value_offset;
     size_t value_count;
     size_t call_range_base_plus_one;
+    unsigned int dynamic_value_components;
     unsigned int flags;
 } FlowSsaState;
 
@@ -927,6 +928,7 @@ static size_t flow_ssa_build_normal_transfer(
     size_t operand;
     size_t map_offset;
     size_t value_offset;
+    unsigned int dynamic_value_components;
     unsigned int flags;
     int opcode;
     FlowSsaState state;
@@ -954,6 +956,10 @@ static size_t flow_ssa_build_normal_transfer(
     call_range_base = RXAS_FLOW_ID_NONE;
     flags = 0;
     opcode = instruction->op ? instruction->op->opcode : -1;
+    dynamic_value_components =
+            opcode == OP_ISETATTR1_REG_INT_REG ||
+            opcode == OP_IGETUNLINK_REG_REG
+            ? RXOP_COMPONENT_INTEGER : RXOP_COMPONENT_ALL;
     if (!instruction->op ||
         instruction->effects.state != RXOP_EFFECT_CLASSIFIED) {
         flags = FLOW_SSA_MAP_CLOBBER_ALL | FLOW_SSA_VALUE_CLOBBER_ALL;
@@ -1178,6 +1184,11 @@ static size_t flow_ssa_build_normal_transfer(
                 const Assembler_Token *constant_token;
                 if (!rxop_effect_writes_operand(&instruction->effects, operand))
                     continue;
+                /* IGETUNLINK's second write restores the register mapping;
+                 * it does not write the linked value.  The switch above owns
+                 * that mapping update. */
+                if (opcode == OP_IGETUNLINK_REG_REG && operand == 1)
+                    continue;
                 target = flow_ssa_operand_register(analysis, item, operand);
                 if (target == RXAS_FLOW_ID_NONE) continue;
                 components = rxop_component_writes(opcode, operand);
@@ -1335,8 +1346,22 @@ static size_t flow_ssa_build_normal_transfer(
      * metadata, retain the exact mapping result but do not attach the write to
      * an invented pre- or post-mapping storage. */
     if (map_count && value_count) {
-        value_count = 0;
-        flags |= FLOW_SSA_VALUE_CLOBBER_ALL;
+        size_t fused_destination;
+        size_t fused_mapping;
+        fused_destination = opcode == OP_IGETUNLINK_REG_REG
+                ? flow_ssa_operand_register(analysis, item, 0)
+                : RXAS_FLOW_ID_NONE;
+        fused_mapping = opcode == OP_IGETUNLINK_REG_REG
+                ? flow_ssa_operand_register(analysis, item, 1)
+                : RXAS_FLOW_ID_NONE;
+        if (fused_destination == RXAS_FLOW_ID_NONE ||
+            fused_mapping == RXAS_FLOW_ID_NONE ||
+            fused_destination == fused_mapping) {
+            value_count = 0;
+            if (opcode == OP_IGETUNLINK_REG_REG)
+                flags |= FLOW_SSA_VALUE_CLOBBER_DYNAMIC;
+            else flags |= FLOW_SSA_VALUE_CLOBBER_ALL;
+        }
     }
     if (!map_count && !value_count && !flags) {
         free(map);
@@ -1350,6 +1375,7 @@ static size_t flow_ssa_build_normal_transfer(
     state.instruction_id = instruction->id;
     state.call_range_base_plus_one =
             call_range_base == RXAS_FLOW_ID_NONE ? 0 : call_range_base + 1;
+    state.dynamic_value_components = dynamic_value_components;
     state.flags = flags;
     if (!flow_ssa_append_map_updates(
                 analysis, map, map_count, input_state, &map_offset) ||
@@ -2560,10 +2586,12 @@ static int flow_ssa_call_range_clobbers_storage(
 
 static int flow_ssa_state_clobbers_value(
         RxasFlowSsaAnalysis *analysis, const FlowSsaState *state,
-        size_t storage_id) {
+        size_t storage_id, unsigned int component) {
     if (state->flags & FLOW_SSA_VALUE_CLOBBER_ALL) return 1;
     if ((state->flags & FLOW_SSA_VALUE_CLOBBER_DYNAMIC) &&
-        flow_ssa_storage_is_dynamic(analysis, storage_id))
+        flow_ssa_storage_is_dynamic(analysis, storage_id) &&
+        (!state->dynamic_value_components ||
+         (state->dynamic_value_components & component)))
         return 1;
     return flow_ssa_call_range_clobbers_storage(
             analysis, state, storage_id);
@@ -2609,7 +2637,7 @@ static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
             }
         }
         if (!direct_update && flow_ssa_state_clobbers_value(
-                    analysis, state, storage_id)) {
+                    analysis, state, storage_id, component)) {
             if (result >= analysis->value_version_count ||
                 analysis->value_versions[result].kind !=
                         RXAS_FLOW_VALUE_UNKNOWN) {
@@ -2649,7 +2677,7 @@ static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
         }
         if (!found) {
             if (flow_ssa_state_clobbers_value(
-                        analysis, state, storage_id))
+                        analysis, state, storage_id, component))
                 result = flow_ssa_create_value_version(
                         analysis, RXAS_FLOW_VALUE_UNKNOWN,
                         RXAS_FLOW_COMPONENT_PRESENCE_UNKNOWN, component);

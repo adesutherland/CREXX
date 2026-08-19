@@ -73,22 +73,19 @@ cmake --build cmake-build-debug --target concurrency-qa --parallel 10
 If the commit or test inventory differs from the retained closeout, explain
 the difference before continuing.
 
-## 2. Finish QA-B on quiet AC power
+## 2. Review completed QA-B
 
 The correctness, Apple ASan, stress, Release, install and portable-package
 closeout is retained under `concurrency/evidence/2026-08-16-mac-closeout/`.
 Review that evidence, but do not rerun it without a concrete inconsistency.
 
-The only planned Mac execution is the governed performance replay. Confirm the
-Mac is on AC power, low-power mode is off, and the host is otherwise quiet.
-Then replay the exact retained task-launch and seven-workload manifests and the
-unchanged Richards confirmation from
-`performance/evidence/2026-08-16-initial-concurrency-mac-closeout/`. Do not edit
-the harness or manifests. Apply the mandatory Release verdict and guard rules
-from `performance/AGENTS.md`, retain samples and power-state evidence, and
-report `pass`, `guard breach`, or `invalid environment` for `rxvm` and `rxbvm`
-separately. Stop the performance slice if its mandatory guard requires Adrian's
-direction.
+The retained battery performance campaign remains diagnostic and must not be
+relabeled as AC evidence. It found no confirmed adverse guard, earlier accepted
+AC baselines remain valid, and later production changes carried clean
+single-thread Release guards. Adrian waived an unchanged quiet-AC replay on
+2026-08-18. Review this disposition and do not run a Mac performance replay
+without a relevant source change, concrete evidence inconsistency or new
+governed performance question.
 
 ## 3. Execute QA-C on Linux
 
