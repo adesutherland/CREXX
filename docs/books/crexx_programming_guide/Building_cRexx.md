@@ -37,7 +37,7 @@ On Linux and macOS, this instruction is identical. For macOS, Xcode
 batch tools need to be installed, which will provide you with git, make
 and the compiler. Brew will give easy access to Cmake and Ninja-build[^regina].
 
-[^regina]: For Linux, you will need to install git (which will be there on most distributions), cmake and gcc or clang.}
+[^regina]: For Linux, you will need to install git (which will be there on most distributions), cmake and gcc or clang. For installing the openssl development headers if needed: sudo apt update; sudo apt install libssl-dev pkg-config}
 
 On Windows, MSYS2 or WSL remain useful when a GNU-compatible environment is
 preferred. A native x64 build is also supported with the Visual Studio 2022 C
@@ -45,7 +45,7 @@ toolchain. Run CMake from an x64 Visual Studio Developer Command Prompt (or
 after calling `VsDevCmd.bat`) so `cl.exe`, the Windows SDK and the linker are
 available:
 
-```bat
+```bash
 cmake -S CREXX -B crexx-build-msvc -G Ninja ^
   -DCMAKE_BUILD_TYPE=Release -DENABLE_PARSER_MODE=OFF
 cmake --build crexx-build-msvc --parallel 8
@@ -68,9 +68,9 @@ source code. Note that the cRexx source is kept in a different directory
 on you system than where it is built in, or will run from. Now run this
 command:
 
-\begin{verbatim}
+```bash
 git clone https://github.com/adesutherland/CREXX.git
-\end{verbatim}
+```
 
 This will give you a CREXX subdirectory in the current directory,
 containing the source of cRexx and its dependencies. This is the
@@ -82,9 +82,9 @@ Clang and Visual Studio 2022 toolchains.
 Make a new subdirectory in the current directory (not in CREXX, but in
 the one that contains it), like `crexx-build'.
 
-\begin{verbatim}
+```bash
 mkdir crexx-build
-\end{verbatim}
+```
 
 and cd into that directory. Now issue the following command (we assume
 that you installed ninja, otherwise substitute `make' for the two
@@ -214,9 +214,9 @@ not supplied, CMake creates a UTC timestamp during the first configure
 of a build directory and stores it in `CMakeCache.txt`. Release and CI
 builds should pass an explicit timestamp:
 
-\begin{verbatim}
+```sh
 cmake -DCREXX_BUILD_TIMESTAMP=20260527T120000Z -S ../CREXX -B .
-\end{verbatim}
+```
 
 ## Use of cRexx to build cRexx
 

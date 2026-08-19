@@ -1,4 +1,4 @@
-# Crexxsaa host integration
+# crexxsaa host integration
 
 `crexxsaa` is the initial cRexx compatibility API for C hosts that want a
 REXXSAA-shaped entry point without taking on the full historical REXXSAA ABI.

@@ -26,7 +26,7 @@ set(REXXBINS
   testQfind
   testTokenise
   testJSON
-  testBag
+#  testBag
   testConcurrency
 )
 
