@@ -1,0 +1,2 @@
+benchmark=crexxrag_sha256 variant=pure payload_bytes=64 iterations=20000 elapsed_us=1453095 digest=C6AB9724ADE5B6A7A1EDFFFB12F3AA9181351355AF8FD08C919952AD211339DD
+PASS: CREXXRAG-SHA256 integrated gate

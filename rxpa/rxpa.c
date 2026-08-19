@@ -67,7 +67,8 @@ static void *rxpa_os_symbol(void *handle, const char *name) {
 #endif
 }
 
-static uint32_t rxpa_query_capabilities_v1(void *handle) {
+static int rxpa_query_manifest_v1(void *handle,
+                                  rxpa_plugin_manifest_v1 *manifest_copy) {
     rxpa_plugin_query_v1 query;
     const rxpa_plugin_manifest_v1 *manifest;
     size_t minimum_size = offsetof(rxpa_plugin_manifest_v1, capabilities) +
@@ -75,14 +76,15 @@ static uint32_t rxpa_query_capabilities_v1(void *handle) {
 
     query = (rxpa_plugin_query_v1)rxpa_os_symbol(
             handle, RXPA_PLUGIN_QUERY_SYMBOL_V1);
-    if (!query) return 0u;
+    if (!query) return 0;
     manifest = query();
     if (!manifest || manifest->struct_size < minimum_size ||
         manifest->abi_version != RXPA_PLUGIN_MANIFEST_ABI_V1 ||
         (manifest->capabilities & ~RXPA_PLUGIN_CAP_KNOWN_V1) != 0u) {
-        return 0u;
+        return -1;
     }
-    return manifest->capabilities;
+    *manifest_copy = *manifest;
+    return 1;
 }
 
 /* Return 1 for a valid V2 query, 0 when absent and -1 when fail-closed. */
@@ -120,6 +122,8 @@ int rxpa_open_plugin(char *dir, char *file_name, rxpa_loaded_plugin *plugin) {
     void *handle = NULL;
     initfuncs_type initializer;
     int manifest_v2_status;
+    int manifest_v1_status = 0;
+    rxpa_plugin_manifest_v1 manifest_v1;
 
     if (!file_name || !plugin) return -1;
     memset(plugin, 0, sizeof(*plugin));
@@ -201,8 +205,16 @@ int rxpa_open_plugin(char *dir, char *file_name, rxpa_loaded_plugin *plugin) {
     plugin->has_manifest_v2 = manifest_v2_status > 0;
     /* A present but malformed V2 declaration fails closed rather than
      * falling through to a possibly contradictory V1 assertion. */
-    plugin->capabilities = manifest_v2_status == 0
-            ? rxpa_query_capabilities_v1(handle) : 0u;
+    memset(&manifest_v1, 0, sizeof(manifest_v1));
+    if (manifest_v2_status == 0) {
+        manifest_v1_status = rxpa_query_manifest_v1(handle, &manifest_v1);
+    }
+    plugin->capabilities = manifest_v1_status > 0
+            ? manifest_v1.capabilities : 0u;
+    plugin->plugin_id = plugin->has_manifest_v2
+            ? plugin->manifest_v2.plugin_id
+            : (manifest_v1_status > 0 && manifest_v1.plugin_id &&
+               *manifest_v1.plugin_id ? manifest_v1.plugin_id : 0);
     rxpa_live_handles++;
     RXPA_LOADER_UNLOCK();
 
@@ -244,6 +256,7 @@ void rxpa_close_plugin(rxpa_loaded_plugin *plugin) {
     plugin->handle = NULL;
     plugin->initializer = NULL;
     plugin->capabilities = 0u;
+    plugin->plugin_id = NULL;
     plugin->has_manifest_v2 = 0;
     memset(&plugin->manifest_v2, 0, sizeof(plugin->manifest_v2));
 

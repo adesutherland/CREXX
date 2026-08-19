@@ -26,6 +26,7 @@
 
 #include <stdlib.h>
 #include <inttypes.h>
+#include <ctype.h>
 #ifdef _WIN32
 #include <windows.h>
 #define RXPA_CATALOGUE_LOCK() AcquireSRWLockExclusive(&rxpa_catalogue_lock)
@@ -99,6 +100,9 @@ struct rxpa_library_reference {
 struct static_linked_function {
     char *name;
     char *plugin_id;
+    char *option;
+    char *type;
+    char *args;
     rxpa_libfunc func;
     struct static_linked_function *next;
 };
@@ -136,6 +140,9 @@ static struct static_plugin_manifest_v2 *static_plugin_manifests_v2 = 0;
 typedef struct static_function_snapshot {
     const char *name;
     const char *plugin_id;
+    const char *option;
+    const char *type;
+    const char *args;
     rxpa_libfunc func;
     uint32_t v1_capabilities;
     unsigned char has_manifest_v2;
@@ -374,6 +381,7 @@ static int rxinimod_common(rxvm_context *context,
     context->sequence_output = 0;
 #endif
     context->location = 0;
+    context->provider_location = 0;
     context->ext_proc = 0;
     context->ext_argc = 0;
     context->ext_args = 0;
@@ -536,6 +544,7 @@ void rxfremod(rxvm_context *context) {
     (void)rxvm_memory_release(context->modules);
     rxvm_reference_context_free(&context->references);
     if (context->location) free(context->location);
+    if (context->provider_location) free(context->provider_location);
 
     /* Provider instances are context-owned and must die while the worker is
      * idle and its allocator family is still available. */
@@ -1059,7 +1068,8 @@ size_t rxvm_materialize_module_overlay(
 /* Loads a module from a file
  * returns <= 0  - Error
  *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
-int rxldmod(rxvm_context *context, char *file_name) {
+static int rxldmod_internal(rxvm_context *context, char *file_name,
+                            const char *expected_provider_id) {
     FILE *fp;
     module_file *file_module_section;
     size_t modules_processed = 0;
@@ -1079,6 +1089,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
 
     /* Determine if provided file_name already contains an extension */
     int has_ext = 0;
+    int has_plugin_ext = 0;
     if (file_name) {
         const char *last_slash = strrchr(file_name, '/');
 #ifdef _WIN32
@@ -1086,15 +1097,19 @@ int rxldmod(rxvm_context *context, char *file_name) {
         if (!last_slash || (last_bsl && last_bsl > last_slash)) last_slash = last_bsl;
 #endif
         const char *fname = last_slash ? last_slash + 1 : file_name;
-        if (strchr(fname, '.') != NULL) has_ext = 1;
+        const char *extension = strrchr(fname, '.');
+        if (extension != NULL) {
+            has_ext = 1;
+            has_plugin_ext = strcmp(extension, ".rxplugin") == 0;
+        }
     }
     const char *type_bin = has_ext ? "" : "rxbin";
 
     // Check if the file exists as an absolute path
-    if (fileexists(file_name, (char*)type_bin, 0)) {
+    if (!has_plugin_ext && fileexists(file_name, (char*)type_bin, 0)) {
         if (context->debug_mode) fprintf(stderr, "DEBUG_EXIT: Found module %s (as absolute path)\n", file_name);
         file_exists = 1;
-    } else if (location) {
+    } else if (!has_plugin_ext && location) {
         char *loc_copy = rxvm_load_memory_strdup(
                 context->worker.memory_worker,
                                                  location);
@@ -1112,7 +1127,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
             token = strtok(NULL, ";");
         }
         rxvm_load_memory_free(loc_copy);
-    } else {
+    } else if (!has_plugin_ext) {
         // Try as a relative path from the current working directory
         if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for module %s in current directory\n", file_name);
         if (fileexists(file_name, (char*)type_bin, ".")) {
@@ -1234,15 +1249,17 @@ int rxldmod(rxvm_context *context, char *file_name) {
             rxpa_functions.setsayexit = rxvm_setsayexit;
             rxpa_functions.resetsayexit = rxvm_resetsayexit;
 
-            // Load the plugin - and run the plugin initialization function
-            // Create the filename by appending ".rxplugin" to the file name
-            size_t full_file_name_size =
-                    strlen(file_name) + strlen(".rxplugin") + 1u;
+            // Load the plugin - and run the plugin initialization function.
+            // Declarative provider lookup supplies the canonical filename with
+            // its suffix; the legacy CLI also accepts an extensionless base.
+            size_t full_file_name_size = strlen(file_name) +
+                    (has_ext ? 1u : strlen(".rxplugin") + 1u);
             char *full_file_name = rxvm_load_memory_alloc(
                     context->worker.memory_worker, full_file_name_size);
             if (!full_file_name) RX_PANIC_OOM("build rxpa plugin filename",
                                                full_file_name_size, file_name);
-            sprintf(full_file_name, "%s.rxplugin", file_name);
+            if (has_ext) strcpy(full_file_name, file_name);
+            else sprintf(full_file_name, "%s.rxplugin", file_name);
 
             // Create rxpa_context and module for the addfunc callback
             previous_active_context = rxvm_active_context_enter(context);
@@ -1264,6 +1281,20 @@ int rxldmod(rxvm_context *context, char *file_name) {
             int rc = rxpa_open_plugin(
                     found_location[0] ? found_location : 0,
                     full_file_name, &loaded_plugin);
+            if (!rc) {
+                if (expected_provider_id &&
+                    (!loaded_plugin.plugin_id ||
+                     strcmp(loaded_plugin.plugin_id,
+                            expected_provider_id) != 0)) {
+                    fprintf(stderr,
+                            "ERROR: RXPA provider %s resolved to manifest id %s in %s\n",
+                            expected_provider_id,
+                            loaded_plugin.plugin_id
+                                ? loaded_plugin.plugin_id : "<missing>",
+                            full_file_name);
+                    rc = -1;
+                }
+            }
             if (!rc) {
                 current_rxpa_context->dynamic_plugin = &loaded_plugin;
                 current_rxpa_context->plugin_capabilities =
@@ -1322,6 +1353,346 @@ int rxldmod(rxvm_context *context, char *file_name) {
         }
     }
     return (int)(n); /* Module Number */
+}
+
+int rxldmod(rxvm_context *context, char *file_name) {
+    return rxldmod_internal(context, file_name, 0);
+}
+
+int rxldmod_provider(rxvm_context *context, char *provider_file,
+                     const char *expected_provider_id) {
+    if (!expected_provider_id || !*expected_provider_id) return -1;
+    return rxldmod_internal(context, provider_file, expected_provider_id);
+}
+
+static const char *provider_module_string(const module *mod, size_t offset) {
+    const string_constant *value;
+    size_t minimum;
+
+    if (!mod || !mod->segment.const_pool ||
+        offset > mod->segment.const_size ||
+        mod->segment.const_size - offset < sizeof(string_constant)) return 0;
+    value = (const string_constant *)(mod->segment.const_pool + offset);
+    if (value->base.type != STRING_CONST ||
+        value->base.size_in_pool < sizeof(string_constant)) return 0;
+    minimum = offsetof(string_constant, string) + value->string_len + 1u;
+    if (value->base.size_in_pool < minimum ||
+        value->base.size_in_pool > mod->segment.const_size - offset ||
+        value->string[value->string_len] != 0) return 0;
+    return value->string;
+}
+
+static const meta_func_constant *provider_module_function(
+        const module *mod, const char *symbol) {
+    int offset;
+    size_t visited = 0u;
+
+    if (!mod || !symbol) return 0;
+    offset = mod->meta_head;
+    while (offset != -1 && visited++ <= mod->segment.const_size / 8u + 1u) {
+        const meta_entry *entry;
+        if (offset < 0 || (size_t)offset > mod->segment.const_size ||
+            mod->segment.const_size - (size_t)offset < sizeof(meta_entry)) {
+            return 0;
+        }
+        entry = (const meta_entry *)(mod->segment.const_pool + (size_t)offset);
+        if (entry->base.type == META_FUNC &&
+            entry->base.size_in_pool >= sizeof(meta_func_constant)) {
+            const meta_func_constant *function =
+                    (const meta_func_constant *)entry;
+            const char *candidate = provider_module_string(
+                    mod, function->symbol);
+            if (candidate && strcmp(candidate, symbol) == 0) return function;
+        }
+        offset = entry->next;
+    }
+    return 0;
+}
+
+static int provider_signature_punctuation(unsigned char ch) {
+    return ch == '=' || ch == ',' || ch == '[' || ch == ']' || ch == '*';
+}
+
+/* RXPA declarations are source-like text, while rxc emits canonical RXAS
+ * signature spelling.  Normalize only lexical trivia that has no signature
+ * meaning: whitespace around punctuation, runs of other whitespace, and the
+ * source shorthand [] for the canonical unbounded array shape [*]. */
+static char *provider_signature_canonical(const char *text) {
+    size_t input_length;
+    size_t input_index = 0u;
+    size_t output_index = 0u;
+    char *result;
+
+    if (!text) text = "";
+    input_length = strlen(text);
+    if (input_length > (SIZE_MAX - 1u) / 2u) {
+        RX_PANIC_OOM("canonicalize RXPA signature", input_length, text);
+    }
+    result = malloc(input_length * 2u + 1u);
+    if (!result) {
+        RX_PANIC_OOM("canonicalize RXPA signature",
+                     input_length * 2u + 1u, text);
+    }
+    while (input_index < input_length) {
+        unsigned char ch = (unsigned char)text[input_index];
+        if (isspace(ch)) {
+            size_t next = input_index + 1u;
+            while (next < input_length &&
+                   isspace((unsigned char)text[next])) next++;
+            if (output_index && next < input_length &&
+                !provider_signature_punctuation(
+                        (unsigned char)result[output_index - 1u]) &&
+                !provider_signature_punctuation(
+                        (unsigned char)text[next])) {
+                result[output_index++] = ' ';
+            }
+            input_index = next;
+            continue;
+        }
+        if (ch == '[') {
+            size_t next = input_index + 1u;
+            while (next < input_length &&
+                   isspace((unsigned char)text[next])) next++;
+            if (next < input_length && text[next] == ']') {
+                result[output_index++] = '[';
+                result[output_index++] = '*';
+                result[output_index++] = ']';
+                input_index = next + 1u;
+                continue;
+            }
+        }
+        result[output_index++] = (char)ch;
+        input_index++;
+    }
+    if (output_index && result[output_index - 1u] == ' ') output_index--;
+    result[output_index] = 0;
+    return result;
+}
+
+static int provider_signature_text_equal(const char *left,
+                                         const char *right) {
+    char *canonical_left = provider_signature_canonical(left);
+    char *canonical_right = provider_signature_canonical(right);
+    int equal = strcmp(canonical_left, canonical_right) == 0;
+    free(canonical_left);
+    free(canonical_right);
+    return equal;
+}
+
+static int provider_module_declares(const module *mod,
+                                    const char *provider_id,
+                                    const char *symbol) {
+    int offset;
+    size_t visited = 0u;
+
+    if (!mod || !mod->native || !provider_id) return 0;
+    offset = mod->meta_head;
+    while (offset != -1 && visited++ <= mod->segment.const_size / 8u + 1u) {
+        const meta_entry *entry;
+        if (offset < 0 || (size_t)offset > mod->segment.const_size ||
+            mod->segment.const_size - (size_t)offset < sizeof(meta_entry)) {
+            return 0;
+        }
+        entry = (const meta_entry *)(mod->segment.const_pool + (size_t)offset);
+        if (entry->base.type == META_PROVIDER &&
+            entry->base.size_in_pool >= sizeof(meta_provider_constant)) {
+            const meta_provider_constant *provider =
+                    (const meta_provider_constant *)entry;
+            const char *candidate_id = provider_module_string(
+                    mod, provider->provider);
+            const char *candidate_symbol = provider_module_string(
+                    mod, provider->symbol);
+            if (candidate_id && strcmp(candidate_id, provider_id) == 0 &&
+                (!symbol || (candidate_symbol &&
+                             strcmp(candidate_symbol, symbol) == 0))) {
+                return 1;
+            }
+        }
+        offset = entry->next;
+    }
+    return 0;
+}
+
+static int provider_signature_matches(const module *required_module,
+                                      const meta_func_constant *required,
+                                      const module *native_module,
+                                      const meta_func_constant *native) {
+    const char *required_option = provider_module_string(
+            required_module, required->option);
+    const char *required_type = provider_module_string(
+            required_module, required->type);
+    const char *required_args = provider_module_string(
+            required_module, required->args);
+    const char *native_option = provider_module_string(
+            native_module, native->option);
+    const char *native_type = provider_module_string(
+            native_module, native->type);
+    const char *native_args = provider_module_string(
+            native_module, native->args);
+
+    return required_option && required_type && required_args &&
+           native_option && native_type && native_args &&
+           provider_signature_text_equal(required_option, native_option) &&
+           provider_signature_text_equal(required_type, native_type) &&
+           provider_signature_text_equal(required_args, native_args);
+}
+
+/* Returns 1 for an exact provider/callable/signature match, 0 when the
+ * provider or callable is absent, and -1 for a conflicting loaded signature. */
+static int provider_callable_loaded(rxvm_context *context,
+                                    const char *provider_id,
+                                    const char *symbol,
+                                    const module *required_module,
+                                    const meta_func_constant *required) {
+    size_t index;
+    int provider_seen = 0;
+
+    for (index = 0u; index < context->num_modules; index++) {
+        const module *candidate = context->modules[index];
+        const meta_func_constant *native;
+        if (!provider_module_declares(candidate, provider_id, 0)) continue;
+        provider_seen = 1;
+        if (!provider_module_declares(candidate, provider_id, symbol)) continue;
+        native = provider_module_function(candidate, symbol);
+        if (!native) return -1;
+        if (!provider_signature_matches(required_module, required,
+                                        candidate, native)) return -1;
+        return 1;
+    }
+    return provider_seen ? -1 : 0;
+}
+
+static int provider_id_valid(const char *provider_id) {
+    const unsigned char *cursor = (const unsigned char *)provider_id;
+    if (!provider_id ||
+        !( (*cursor >= 'A' && *cursor <= 'Z') ||
+           (*cursor >= 'a' && *cursor <= 'z') ||
+           (*cursor >= '0' && *cursor <= '9'))) return 0;
+    cursor++;
+    while (*cursor) {
+        if (!( (*cursor >= 'A' && *cursor <= 'Z') ||
+               (*cursor >= 'a' && *cursor <= 'z') ||
+               (*cursor >= '0' && *cursor <= '9') ||
+               *cursor == '.' || *cursor == '_' || *cursor == '-')) return 0;
+        cursor++;
+    }
+    return 1;
+}
+
+static int load_declared_provider(rxvm_context *context,
+                                  const char *provider_id) {
+    char *locations;
+    char *cursor;
+    char *directory;
+    int candidate_seen = 0;
+
+    if (!context->provider_location || !*context->provider_location) return 0;
+    if (!provider_id_valid(provider_id)) return 0;
+    locations = strdup(context->provider_location);
+    if (!locations) RX_PANIC_OOM("copy RXPA provider path",
+                                 strlen(context->provider_location) + 1u,
+                                 provider_id);
+    cursor = locations;
+    while (cursor) {
+        char artifact_path[MAXFILEPATH * 2u];
+        char *next = strchr(cursor, ';');
+        size_t length;
+        directory = cursor;
+        if (next) {
+            *next = 0;
+            cursor = next + 1;
+        } else cursor = 0;
+        if (!*directory) {
+            continue;
+        }
+        length = strlen(directory);
+        if (strlen(directory) + strlen(provider_id) +
+            strlen("/.rxplugin") + 1u > sizeof(artifact_path)) continue;
+        snprintf(artifact_path, sizeof(artifact_path), "%s%s%s.rxplugin",
+                 directory,
+                 length && (directory[length - 1u] == '/' ||
+                            directory[length - 1u] == '\\') ? "" : "/",
+                 provider_id);
+        if (!fileexists(artifact_path, "", 0)) continue;
+        candidate_seen = 1;
+        if (rxldmod_provider(context, artifact_path, provider_id) > 0) {
+            free(locations);
+            return 1;
+        }
+        fprintf(stderr,
+                "ERROR: rejected RXPA provider artifact %s for %s\n",
+                artifact_path, provider_id);
+    }
+    if (candidate_seen) {
+        fprintf(stderr, "ERROR: no valid RXPA provider artifact for %s\n",
+                provider_id);
+    }
+    free(locations);
+    return 0;
+}
+
+int rxvm_resolve_provider_dependencies(rxvm_context *context) {
+    size_t module_index;
+
+    if (!context) return -1;
+    for (module_index = 0u; module_index < context->num_modules;
+         module_index++) {
+        module *required_module = context->modules[module_index];
+        int offset;
+        size_t visited = 0u;
+        if (required_module->native) continue;
+        offset = required_module->meta_head;
+        while (offset != -1 &&
+               visited++ <= required_module->segment.const_size / 8u + 1u) {
+            const meta_entry *entry;
+            if (offset < 0 ||
+                (size_t)offset > required_module->segment.const_size ||
+                required_module->segment.const_size - (size_t)offset <
+                        sizeof(meta_entry)) return -1;
+            entry = (const meta_entry *)(required_module->segment.const_pool +
+                                         (size_t)offset);
+            if (entry->base.type == META_PROVIDER &&
+                entry->base.size_in_pool >= sizeof(meta_provider_constant)) {
+                const meta_provider_constant *provider =
+                        (const meta_provider_constant *)entry;
+                const char *provider_id = provider_module_string(
+                        required_module, provider->provider);
+                const char *symbol = provider_module_string(
+                        required_module, provider->symbol);
+                const meta_func_constant *required =
+                        provider_module_function(required_module, symbol);
+                int resolved;
+                if (!provider_id_valid(provider_id) ||
+                    !symbol || !*symbol ||
+                    !required) return -1;
+                resolved = provider_callable_loaded(
+                        context, provider_id, symbol,
+                        required_module, required);
+                if (resolved < 0) {
+                    fprintf(stderr,
+                            "ERROR: RXPA provider %s does not supply compatible callable %s required by %s\n",
+                            provider_id, symbol, required_module->name);
+                    return -1;
+                }
+                if (!resolved && load_declared_provider(context, provider_id)) {
+                    resolved = provider_callable_loaded(
+                            context, provider_id, symbol,
+                            required_module, required);
+                }
+                if (resolved != 1 &&
+                    (provider->flags & RXBIN_PROVIDER_REQUIRED)) {
+                    fprintf(stderr,
+                            "ERROR: required RXPA provider %s for %s (module %s) was not resolved; searched: %s\n",
+                            provider_id, symbol, required_module->name,
+                            context->provider_location
+                                ? context->provider_location : "<none>");
+                    return -1;
+                }
+            }
+            offset = entry->next;
+        }
+    }
+    return 0;
 }
 
 /* Loads a module from a memory buffer
@@ -1627,6 +1998,46 @@ static void add_member_meta_to_module(rxpa_context *context, char *owner, char *
     meta->args = s_args;
 }
 
+static void add_function_meta_to_module(rxpa_context *context,
+                                        const char *name,
+                                        const char *option,
+                                        const char *type,
+                                        const char *args,
+                                        size_t procedure_offset) {
+    meta_func_constant *meta;
+    size_t entry;
+    size_t symbol = add_native_string_to_pool(context, name);
+    size_t meta_option = add_native_string_to_pool(context, option);
+    size_t meta_type = add_native_string_to_pool(context, type);
+    size_t meta_args = add_native_string_to_pool(context, args);
+
+    entry = add_native_meta_entry(context, sizeof(*meta), META_FUNC);
+    meta = (meta_func_constant *)rxpa_constant_pool_at(context, entry);
+    meta->symbol = symbol;
+    meta->option = meta_option;
+    meta->type = meta_type;
+    meta->args = meta_args;
+    meta->func = procedure_offset;
+}
+
+static void add_provider_meta_to_module(rxpa_context *context,
+                                        const char *name,
+                                        const char *provider_id) {
+    meta_provider_constant *meta;
+    size_t entry;
+    size_t symbol;
+    size_t provider;
+
+    if (!provider_id || !*provider_id) return;
+    symbol = add_native_string_to_pool(context, name);
+    provider = add_native_string_to_pool(context, provider_id);
+    entry = add_native_meta_entry(context, sizeof(*meta), META_PROVIDER);
+    meta = (meta_provider_constant *)rxpa_constant_pool_at(context, entry);
+    meta->symbol = symbol;
+    meta->provider = provider;
+    meta->flags = RXBIN_PROVIDER_REQUIRED;
+}
+
 static void append_rxpa_proc_policy(rxpa_context *context,
                                     size_t procedure_offset,
                                     uint32_t capabilities,
@@ -1732,7 +2143,7 @@ static void bind_rxpa_runtime_policy(rxvm_context *context,
 }
 
 // Add a statically linked function to the constant pool being created
-static void add_proc_to_module(rxpa_context* context, char* index,
+static size_t add_proc_to_module(rxpa_context* context, char* index,
                                rxpa_libfunc func, uint32_t capabilities,
                                rxpa_session_instance *session_instance) {
     size_t entry_size, proc_index, exposed_proc_index;
@@ -1769,6 +2180,7 @@ static void add_proc_to_module(rxpa_context* context, char* index,
 
     proc = (proc_constant *) rxpa_constant_pool_at(context, proc_index);
     proc->exposed = exposed_proc_index;
+    return proc_index;
 }
 
 static uint32_t static_plugin_capabilities_locked(const char *plugin_id) {
@@ -1890,13 +2302,17 @@ void rxvm_register_static_plugin_manifest_v2(
 }
 
 static void append_static_function(const char *plugin_id, rxpa_libfunc func,
-                                   char *name) {
+                                   char *name, char *option, char *type,
+                                   char *args) {
     struct static_linked_function *entry;
     RXPA_CATALOGUE_LOCK();
     entry = static_linked_functions;
     while (entry) {
         if (entry->func == func && strcmp(entry->name, name) == 0 &&
-            rxpa_strings_equal(entry->plugin_id, plugin_id)) {
+            rxpa_strings_equal(entry->plugin_id, plugin_id) &&
+            rxpa_strings_equal(entry->option, option) &&
+            rxpa_strings_equal(entry->type, type) &&
+            rxpa_strings_equal(entry->args, args)) {
             RXPA_CATALOGUE_UNLOCK();
             return;
         }
@@ -1907,6 +2323,9 @@ static void append_static_function(const char *plugin_id, rxpa_libfunc func,
                              sizeof(*entry), name);
     entry->name = rxpa_catalogue_strdup(name);
     entry->plugin_id = rxpa_catalogue_strdup(plugin_id);
+    entry->option = rxpa_catalogue_strdup(option);
+    entry->type = rxpa_catalogue_strdup(type);
+    entry->args = rxpa_catalogue_strdup(args);
     entry->func = func;
     entry->next = static_linked_functions;
     static_linked_functions = entry;
@@ -1916,18 +2335,18 @@ static void append_static_function(const char *plugin_id, rxpa_libfunc func,
 static void rxvm_addfunc_owned(const char *plugin_id, rxpa_libfunc func,
                                char* name, char* option, char* type,
                                char* args) {
-    (void) option;
-    (void) type;
-    (void) args;
-
     if (current_rxpa_context) {
         rxvm_context *context = current_rxpa_context->rxvm_context;
         rxpa_session_instance *session_instance = 0;
+        const char *effective_plugin_id = plugin_id;
+        size_t procedure_offset;
         DEBUG("Loading Procedure %s from plugin %s\n", name, context->modules[context->num_modules - 1]->name);
 
         // Add the procedure to the module
         uint32_t capabilities = current_rxpa_context->plugin_capabilities;
         if (current_rxpa_context->dynamic_plugin) {
+            effective_plugin_id =
+                    current_rxpa_context->dynamic_plugin->plugin_id;
             capabilities = rxpa_loaded_plugin_procedure_capabilities(
                     current_rxpa_context->dynamic_plugin, name);
             if ((capabilities & RXPA_PROCEDURE_CAP_SESSION_AFFINE) != 0u) {
@@ -1953,11 +2372,15 @@ static void rxvm_addfunc_owned(const char *plugin_id, rxpa_libfunc func,
                         current_rxpa_context, plugin_id);
             }
         }
-        add_proc_to_module(current_rxpa_context, name, func, capabilities,
-                           session_instance);
+        procedure_offset = add_proc_to_module(current_rxpa_context, name, func,
+                                              capabilities, session_instance);
+        add_function_meta_to_module(current_rxpa_context, name, option, type,
+                                    args, procedure_offset);
+        add_provider_meta_to_module(current_rxpa_context, name,
+                                    effective_plugin_id);
     }
     else {
-        append_static_function(plugin_id, func, name);
+        append_static_function(plugin_id, func, name, option, type, args);
     }
 }
 
@@ -2101,6 +2524,9 @@ int rxldmodp(rxvm_context *context) {
                 static_plugin_manifest_v2_locked(static_func->plugin_id);
         functions[function_index].name = static_func->name;
         functions[function_index].plugin_id = static_func->plugin_id;
+        functions[function_index].option = static_func->option;
+        functions[function_index].type = static_func->type;
+        functions[function_index].args = static_func->args;
         functions[function_index].func = static_func->func;
         functions[function_index].v1_capabilities =
                 static_plugin_capabilities_locked(static_func->plugin_id);
@@ -2212,10 +2638,21 @@ int rxldmodp(rxvm_context *context) {
         }
         DEBUG("CREXX Statically Linked Native Plugin %s\n",
               functions[function_index].name);
-        add_proc_to_module(current_rxpa_context,
-                           (char *)functions[function_index].name,
-                           functions[function_index].func, capabilities,
-                           session_instance);
+        {
+            size_t procedure_offset = add_proc_to_module(
+                    current_rxpa_context,
+                    (char *)functions[function_index].name,
+                    functions[function_index].func, capabilities,
+                    session_instance);
+            add_function_meta_to_module(
+                    current_rxpa_context, functions[function_index].name,
+                    functions[function_index].option,
+                    functions[function_index].type,
+                    functions[function_index].args, procedure_offset);
+            add_provider_meta_to_module(
+                    current_rxpa_context, functions[function_index].name,
+                    functions[function_index].plugin_id);
+        }
     }
 
     for (metadata_index = 0u; metadata_index < metadata_count;

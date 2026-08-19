@@ -171,6 +171,7 @@ policy.
 
 | Theme | Source discussions | Direction |
 |-------|--------------------|-----------|
+| Runtime capability composition | [`planning/release-1/runtime-capability-composition-roadmap.md`](planning/release-1/runtime-capability-composition-roadmap.md), PERF3-07 `CAP-05`, CREXXRAG-SHA256 | Proposed architecture separating core role from default delivery: declarative native-provider dependencies and static/dynamic resolution, explicit RXBIN module initialization, partitioning of the historical `system`/`rxmath` bundles, and a compatibility-gated RXAS instruction-to-call review. The opcode disposition list and structural format boundary are accepted: existing metadata homes remain 007; a file-structure change moves to 008. Once-per-mutable-module-instance initializer semantics are also accepted, including module-local singleton-like state. `rx_hash` is proposed as standard/default rather than bootstrap or level core. No production implementation is authorized by the roadmap. |
 | Math library expansion | #384 | Existing `rxmath` is the natural home. Larger ARB / standards-inspired math work should be treated as library expansion after decimal and numeric policy settle. |
 | Regex support | #399 and closed issue #414 | RxLite now provides a pure-Rexx regex surface in `rxfnsb`. External/native regex dependencies remain a future packaging decision, not an open Release 1 blocker. |
 | System plugin portability | #398 | Keep platform coverage under normal plugin test hardening. Open a fresh issue only for a failing platform-specific test. |

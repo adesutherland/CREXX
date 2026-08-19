@@ -513,7 +513,11 @@ For functions requiring native performance or access to C-level system libraries
 
 Plugins can be compiled in two ways:
 
-1. **Dynamic Plugins (`.rxplugin`)**: Recommended for user extensions. They are discovered and loaded at runtime using the same search paths as regular `.crexx` modules.
+1. **Dynamic Plugins (`.rxplugin`)**: Recommended for user extensions. The
+   compiler discovers declarations on binary import roots. At runtime an
+   explicitly loaded legacy plugin still uses module search paths, while a
+   compiled native dependency is resolved declaratively through a trusted
+   `<provider-id>.rxplugin` artifact.
 
 2. **Static Plugins**: Built directly into the `crexx` binaries. These are typically reserved for core Standard Libraries to guarantee they are always available.
 
@@ -716,7 +720,31 @@ ENDLOADFUNCS
 
 5. **Arguments**: The exact type signature expected by the compiler. It supports standard types, array syntax (`.int[]`), and reference passing (`expose`). 
 
-During compilation, `rxc` parses this block to strictly enforce type safety when the REXX code invokes the native plugin. During execution, `rxvm` uses this block to dynamically link the `.rxplugin` shared library symbol into the execution space.
+During compilation, `rxc` parses this block to strictly enforce type safety when
+the REXX code invokes the native plugin. It also retains the manifest's stable
+provider ID and emits `.provider` metadata for used native declarations. During
+execution, `rxvm` resolves that ID to an already linked static provider or a
+trusted `<provider-id>.rxplugin`, verifies the binary's provider identity and
+signature, and only then links the callable into the execution space. No Rexx
+wrapper is required.
+
+For a provider with both delivery forms, use the build helper after declaring
+the targets:
+
+```cmake
+add_dynamic_plugin_target(_example example.c)
+add_static_plugin_target(_example example.c)
+add_rxpa_provider_package(_example)
+```
+
+It publishes `bin/providers/rx_example.rxplugin`, the canonical native archive
+`rx_example.a` (or `rx_example.lib`), and the compatibility archive
+`rx_example_static.a` (or `.lib`). `crexx -native` reads the same RXBIN
+requirements via `rxlink -p`, prefers the canonical archive, falls back to the
+compatibility name, and retains its static registration automatically. Tests
+and application-local package builds may pass
+`OUTPUT_DIRECTORY`; omitting it deliberately selects the standard
+build/install provider directory.
 
 ## 5. Declaring Native Classes and Interfaces
 

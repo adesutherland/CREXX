@@ -80,6 +80,52 @@ function(add_static_plugin_target plugin_name)
     set_target_properties(${plugin_name}_static PROPERTIES PREFIX "rx")
 endfunction()
 
+# Publish a dynamic/static RXPA pair as one declarative provider.  The stable
+# provider ID is both the PLUGIN_ID compiled into the targets and the canonical
+# artifact stem: <id>.rxplugin for dynamic loading and <id>.a/.lib for native
+# packaging.  The historical <id>_static.a/.lib archive remains available for
+# compatibility with existing consumers.
+function(add_rxpa_provider_package plugin_name)
+    cmake_parse_arguments(RXPA_PROVIDER "" "OUTPUT_DIRECTORY" "" ${ARGN})
+    set(_crexx_dynamic_target ${plugin_name})
+    set(_crexx_static_target ${plugin_name}_static)
+    set(_crexx_provider_id "rx${plugin_name}")
+    if(RXPA_PROVIDER_OUTPUT_DIRECTORY)
+        set(_crexx_provider_dir "${RXPA_PROVIDER_OUTPUT_DIRECTORY}")
+    else()
+        set(_crexx_provider_dir "${CMAKE_BINARY_DIR}/bin/providers")
+    endif()
+    set(_crexx_provider_static
+            "${_crexx_provider_dir}/${_crexx_provider_id}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+
+    if(NOT TARGET ${_crexx_dynamic_target} OR
+       NOT TARGET ${_crexx_static_target})
+        message(FATAL_ERROR
+                "add_rxpa_provider_package(${plugin_name}) requires both dynamic and static targets")
+    endif()
+
+    file(MAKE_DIRECTORY "${_crexx_provider_dir}")
+    # This helper owned the version-1 sidecar in older build trees.  Remove
+    # that exact generated artifact so an incremental build/install cannot
+    # accidentally republish the retired discovery mechanism.
+    file(REMOVE "${_crexx_provider_dir}/${_crexx_provider_id}.rxprovider")
+    add_custom_command(TARGET ${_crexx_dynamic_target} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory
+                    "${_crexx_provider_dir}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "$<TARGET_FILE:${_crexx_dynamic_target}>"
+                    "${_crexx_provider_dir}/$<TARGET_FILE_NAME:${_crexx_dynamic_target}>")
+    add_custom_command(TARGET ${_crexx_static_target} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory
+                    "${_crexx_provider_dir}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "$<TARGET_FILE:${_crexx_static_target}>"
+                    "${_crexx_provider_static}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "$<TARGET_FILE:${_crexx_static_target}>"
+                    "${_crexx_provider_dir}/$<TARGET_FILE_NAME:${_crexx_static_target}>")
+endfunction()
+
 # Function to configure the linker for a static declaration library ensuring the library is linked into the executable
 function(configure_linker_for_decl_lib target pluginId)
     if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")

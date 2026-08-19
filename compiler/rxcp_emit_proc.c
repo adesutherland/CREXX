@@ -349,6 +349,20 @@ void emit_proc(ASTNode *node, void *pl) {
                               proc_label,
                               args
                 );
+                {
+                    imported_func *imported = 0;
+                    if (src_fqfu(payload->context, 0, proc_fqn, &imported) &&
+                        imported && imported->provider_id &&
+                        *imported->provider_id) {
+                        char *with_provider = mprintf(
+                                "%s   .meta \"%s\"=\".provider\" \"%s\"\n",
+                                buf, proc_fqn, imported->provider_id);
+                        if (with_provider) {
+                            free(buf);
+                            buf = with_provider;
+                        }
+                    }
+                }
                 if (node->is_task_callable || node_is_taskwork_factory(node)) {
                     char *placeholder = rxcp_task_placeholder_hex(proc_fqn);
                     const char *task_option = node_is_taskwork_factory(node)

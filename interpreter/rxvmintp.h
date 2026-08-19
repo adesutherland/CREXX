@@ -569,6 +569,8 @@ typedef struct rxvm_context {
     unsigned char owns_runtime;
     rxvm_program_generation *program_generation;
     char *location;
+    /* Trusted, semicolon-separated RXPA provider-manifest directories. */
+    char *provider_location;
     size_t num_modules;
     size_t module_buffer_size;
     module **modules;
@@ -650,6 +652,14 @@ void rxvm_free_graph_bindings(rxvm_context *context);
  * returns 0  - Error
  *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
 int rxldmod(rxvm_context *context, char *new_module_file);
+
+/* Loads one declared provider and verifies its manifest identity before its
+ * initializer is allowed to register procedures. */
+int rxldmod_provider(rxvm_context *context, char *provider_file,
+                     const char *expected_provider_id);
+
+/* Resolves RXBIN META_PROVIDER requirements before ordinary procedure link. */
+int rxvm_resolve_provider_dependencies(rxvm_context *context);
 
 /* Loads a module from a memory buffer
  * returns 0  - Error

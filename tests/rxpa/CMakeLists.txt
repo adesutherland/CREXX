@@ -54,6 +54,63 @@ endfunction()
 
 # Create dynamic plugin module
 add_dynamic_plugin_target(_rxpa_dynlink rxpa_dynlink.c)
+
+# RCC-1/RCC-2 fixture: one stable provider identity with dynamic and static
+# delivery forms published through the production provider-package helper.
+add_dynamic_plugin_target(_rcc_provider rcc_provider.c)
+add_static_plugin_target(_rcc_provider rcc_provider.c)
+add_rxpa_provider_package(_rcc_provider
+        OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/providers")
+
+add_custom_target(rcc_provider_autoload_test ALL)
+crexx_add_rexx_opt_matrix(
+        NAME rcc_provider_autoload
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc_provider.crexx
+        TARGET_GROUP rcc_provider_autoload_test
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS library _rcc_provider _rcc_provider_static
+        TEST_LABELS "rxpa;provider;autoload")
+# The optimized matrix deliberately stages the linked image under linked_opt/;
+# exercise the explicit trusted-path route for that isolated container.
+set_tests_properties(rcc_provider_autoload_opt PROPERTIES
+        ENVIRONMENT "CREXX_PROVIDER_PATH=${CMAKE_CURRENT_BINARY_DIR}/providers")
+
+add_test(
+        NAME rcc_provider_wrong_identity_rejected
+        COMMAND ${CMAKE_COMMAND}
+                -DRUNNER=${CREXX_RXVM_EXECUTABLE}
+                -DPROGRAM=${CMAKE_CURRENT_BINARY_DIR}/rcc_provider_autoload_noopt.rxbin
+                -DWRONG_PLUGIN=$<TARGET_FILE:_rxpa_dynlink>
+                -DSCRATCH=${CMAKE_CURRENT_BINARY_DIR}/rcc_provider_rejection
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/check_provider_rejection.cmake)
+set_tests_properties(rcc_provider_wrong_identity_rejected PROPERTIES
+        LABELS "rxpa;provider;autoload;negative"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(
+        NAME rcc_provider_package_names
+        COMMAND ${CMAKE_COMMAND}
+                -DPROVIDER_DIR=${CMAKE_CURRENT_BINARY_DIR}/providers
+                -DPROVIDER_ID=rx_rcc_provider
+                -DSTATIC_SUFFIX=${CMAKE_STATIC_LIBRARY_SUFFIX}
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/check_provider_package_names.cmake)
+set_tests_properties(rcc_provider_package_names PROPERTIES
+        LABELS "rxpa;provider;package"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(
+        NAME rcc_provider_unused_import_elided
+        COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DRXAS=$<TARGET_FILE:rxas>
+                -DRXLINK=$<TARGET_FILE:rxlink>
+                -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rcc_provider_unused.crexx
+                "-DIMPORT_PATH=${CMAKE_BINARY_DIR}/bin"
+                -DSCRATCH=${CMAKE_CURRENT_BINARY_DIR}/rcc_provider_unused
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/check_unused_provider.cmake)
+set_tests_properties(rcc_provider_unused_import_elided PROPERTIES
+        LABELS "compiler;rxpa;provider;negative"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 localize_test_plugin_output(_rxpa_dynlink)
 add_dependencies(_rxpa_dynlink rxpa library rxvm rxc) # The test (not plugin) depends on rxpa, library, rxvm, and rxc
 

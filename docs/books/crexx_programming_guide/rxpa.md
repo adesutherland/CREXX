@@ -11,7 +11,11 @@ Plugin developers have the flexibility to structure their code in a way that all
 
 During the Rexx compilation process, the Rexx compiler inspects the plugin to determine the type and argument of any provided functions. This inspection helps ensure type safety. It is recommended for plugin developers to load or initialise dependencies only when an explicitly exposed initialisation Rexx function is called or when the first function is invoked (lazy initialisation) to avoid overhead during build (rather than run). In addition, for the static builds, there is macro definition **DECL\_ONLY** which allows definition / implementation code to be excluded from the static library designed to be linked to the compiler only.
 
-For dynamically packaged plugins (with the extension \*.rxplugin), the search process for these plugins mirrors how cRexx locates Rexx modules (extensions such as \*.rexx, \*.rxas, or \*.rxbin). In contrast, for static builds, the provided functions are loaded before the execution of the main() function in the core crexx solution, however these functions are placed at the end of the search order, meaning users can override static function definitions with local native or crexx modules.
+The compiler discovers dynamically packaged declarations (`*.rxplugin`) on its
+binary import roots. A used native declaration records its stable provider ID
+in the compiled module. At runtime, a matching static provider is preferred;
+otherwise `rxvm` opens the trusted `<provider-id>.rxplugin` and verifies the
+binary's manifest ID and function signature before linking it.
 
 The Plugin Architecture offers a comprehensive set of resources for developers, including a header file, macros, and a cmake configuration. These tools aim to create a convenient and efficient development environment for plugin creation.
 
@@ -20,6 +24,23 @@ The Plugin Architecture offers a comprehensive set of resources for developers, 
 User-provided plugins are recommended to be provided as dynamic `.rxplugin` files. Dynamic plugins offer several advantages: easy site-wide distribution by placing them in the same directory as cRexx binaries, project-specific customization by locating them in the project Rexx files directory, and flexible placement in any desired location using `rxc` and `rxvm` options.
 
 In contrast, static plugin packaging is more complex in terms of linking and is intended for core cRexx components that are part of every cRexx release. Static plugins are shipped within the cRexx binaries, ensuring their availability and consistency across distributions.
+
+A supported provider can publish dynamic and static forms as one package:
+
+```cmake
+add_dynamic_plugin_target(_example example.c)
+add_static_plugin_target(_example example.c)
+add_rxpa_provider_package(_example)
+```
+
+The helper places the dynamic artifact, canonical static archive
+(`<provider-id>.a` or `.lib`), and compatibility `_static` archive under
+`bin/providers`. Ordinary `rxvm` execution then needs no `-p`, and
+`crexx -native` selects and retains the static archive automatically from the
+compiled dependency record.
+Application-local providers may instead be placed in a `providers` directory
+beside the main `.rxbin`; explicit trusted directories use
+`rxvm --provider-path` or `CREXX_PROVIDER_PATH`.
 
 The choice between dynamic and static plugin packaging depends on the specific requirements and use cases: dynamic plugins provide flexibility and customization for users, while static plugins are designed to provide a robust solution for core cRexx components.
 
@@ -309,7 +330,9 @@ The cRexx Cmake build configuration should be referenced for static build suppor
 
 The following is a Rexx Level B example using the plugin. 
 
-Note that there is no manual loading of the dynamic or static plugin, instead cRexx loads the plugins using the same search rules as it uses for other Rexx modules. This means that the Rexx program (or programmer) does not need to be concerned about how the external function is provided \- Rexx, Native, Dynamic, Static \- it all has the same calling syntax. This is designed to meet the objective to simplify programming.
+There is no manual loading of a declaratively packaged dynamic or static
+provider. The Rexx program does not need to distinguish the delivery form, and
+no Rexx wrapper is required: RXPA publishes the typed signature directly.
 ```rexx <!--execdes.rexx-->
 options levelb 
 import rxfnsb

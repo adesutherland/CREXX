@@ -6,6 +6,7 @@
 
 word() .expose=rxfnsb.word
    .meta "rxfnsb.word"="b" ".string" word() "string=.string,wordnum=.int"
+   .meta "rxfnsb.word"=".provider.optional" "rx_test_words"
    .meta "rxfnsb.word"=".inline" "I4;a;b"
 
 main() .locals=0

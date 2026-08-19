@@ -58,6 +58,19 @@ struct rxvm_context *rxvm_context_create_in_runtime(rxvm_runtime *runtime) {
     return ctx;
 }
 
+int rxvm_set_provider_path(struct rxvm_context* ctx, const char* path) {
+    char *copy = 0;
+    if (!ctx) return -1;
+    if (path && *path) {
+        copy = strdup(path);
+        if (!copy) return -1;
+    }
+    free(ctx->provider_location);
+    ctx->provider_location = copy;
+    ctx->link_dirty = 1;
+    return 0;
+}
+
 void rxvm_destroy(struct rxvm_context* ctx) {
     if (ctx) {
         rxfremod(ctx);
@@ -89,6 +102,10 @@ int rxvm_link(struct rxvm_context* ctx) {
         !ctx->interface_factory_registry_dirty) {
         rxvm_memory_leave(previous);
         return 0;
+    }
+    if (rxvm_resolve_provider_dependencies(ctx) != 0) {
+        rxvm_memory_leave(previous);
+        return -1;
     }
 
     linked_any = 0;
@@ -218,7 +235,7 @@ int rxvm_call(struct rxvm_context* ctx, char* proc_name, int argc, char** argv) 
 }
 
 int rxvm_run(struct rxvm_context* ctx, int argc, char** argv) {
-    rxvm_link(ctx);
-    rxvm_prepare(ctx);
+    if (rxvm_link(ctx) != 0) return -1;
+    if (rxvm_prepare(ctx) != 0) return -1;
     return rxvm_call(ctx, "main", argc, argv);
 }

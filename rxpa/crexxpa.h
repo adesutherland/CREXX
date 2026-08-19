@@ -421,9 +421,9 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 extern "C" {
 #endif
 void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args); /* Add a function to the REXX interpreter */
-#ifndef DECL_ONLY
 void rxpa_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
                              char* name, char* option, char* type, char* args);
+#ifndef DECL_ONLY
 void rxpa_register_static_plugin_capability(const char *plugin_id,
                                             uint32_t capabilities);
 void rxpa_register_static_plugin_manifest_v2(
@@ -501,7 +501,8 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #define ADDPROC(func, name, option, type, args) \
     rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
 #else
-#define ADDPROC(func, name, option, type, args) rxpa_addfunc(0,(name),(option),(type),(args))
+#define ADDPROC(func, name, option, type, args) \
+    rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
 #endif
 #define ADDCLASS(name) rxpa_addclass((name),"b",".unknown")
 #define ADDCLASSX(name, option, type) rxpa_addclass((name),(option),(type))

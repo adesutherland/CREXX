@@ -190,6 +190,11 @@ Defined file feature bits are:
   one of those opcodes when the bit is absent and rejects every unknown feature
   bit, so the header is an enforced compatibility declaration rather than a
   hint. Zero-feature RXBIN 007 images remain valid and readable.
+- bit 4, `RXBIN007_FEATURE_NATIVE_PROVIDERS`: the metadata section contains at
+  least one `META_PROVIDER` record. The record relates a callable symbol to a
+  stable RXPA provider ID and required/optional flags; its `META_FUNC` record
+  remains the signature authority. A reader rejects provider metadata when the
+  bit is absent.
 
 Each 40-byte directory row contains `kind:u32`, `flags:u32`,
 `alignment:u32`, `reserved:u32`, `file_offset:u64`, `stored_size:u64`, and

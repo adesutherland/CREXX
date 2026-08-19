@@ -70,11 +70,27 @@ typedef struct link_config {
     string_list omits;
     char *output_path;
     char *map_path;
+    char *provider_requirements_path;
     char *location;
     int strip_source_metadata;
     int strip_inline_metadata;
     int debug_mode;
 } link_config;
+
+typedef struct provider_requirement {
+    char *provider_id;
+    char *symbol;
+    char *type;
+    char *args;
+    char *module_name;
+    uint32_t flags;
+} provider_requirement;
+
+typedef struct provider_requirement_list {
+    provider_requirement *items;
+    size_t count;
+    size_t capacity;
+} provider_requirement_list;
 
 typedef struct const_map_entry {
     size_t old_offset;
@@ -211,6 +227,183 @@ static const char *module_string_constant(module_file *module, size_t offset) {
     value = (string_constant *)((unsigned char *)module->constant + offset);
     if (value->base.type != STRING_CONST) return 0;
     return value->string;
+}
+
+static void provider_requirement_list_free(provider_requirement_list *list) {
+    size_t i;
+
+    if (!list) return;
+    for (i = 0u; i < list->count; i++) {
+        free(list->items[i].provider_id);
+        free(list->items[i].symbol);
+        free(list->items[i].type);
+        free(list->items[i].args);
+        free(list->items[i].module_name);
+    }
+    free(list->items);
+    memset(list, 0, sizeof(*list));
+}
+
+static const meta_func_constant *module_function_metadata(
+        module_file *module, const char *symbol) {
+    int offset;
+
+    if (!module || !symbol) return 0;
+    offset = module->header.meta_head;
+    while (offset != -1) {
+        meta_entry *entry =
+            (meta_entry *)((unsigned char *)module->constant + (size_t)offset);
+        if (entry->base.type == META_FUNC) {
+            const meta_func_constant *function =
+                (const meta_func_constant *)entry;
+            const char *candidate =
+                module_string_constant(module, function->symbol);
+            if (candidate && rxlink_symbol_equals(candidate, symbol)) {
+                return function;
+            }
+        }
+        offset = entry->next;
+    }
+    return 0;
+}
+
+static int append_provider_requirement(provider_requirement_list *list,
+                                       const provider_requirement *requirement) {
+    provider_requirement *items;
+    size_t capacity;
+    provider_requirement copy;
+
+    if (list->count == list->capacity) {
+        capacity = list->capacity ? list->capacity * 2u : 8u;
+        items = (provider_requirement *)realloc(
+                list->items, capacity * sizeof(*items));
+        if (!items) {
+            RX_REPORT_OOM("grow rxlink provider requirements",
+                          capacity * sizeof(*items), requirement->provider_id);
+            return 0;
+        }
+        list->items = items;
+        list->capacity = capacity;
+    }
+    memset(&copy, 0, sizeof(copy));
+    copy.provider_id = strdup(requirement->provider_id);
+    copy.symbol = strdup(requirement->symbol);
+    copy.type = strdup(requirement->type);
+    copy.args = strdup(requirement->args);
+    copy.module_name = strdup(requirement->module_name);
+    copy.flags = requirement->flags;
+    if (!copy.provider_id || !copy.symbol || !copy.type || !copy.args ||
+        !copy.module_name) {
+        free(copy.provider_id);
+        free(copy.symbol);
+        free(copy.type);
+        free(copy.args);
+        free(copy.module_name);
+        RX_REPORT_OOM("copy rxlink provider requirement",
+                      RX_OOM_UNKNOWN_SIZE, requirement->provider_id);
+        return 0;
+    }
+    list->items[list->count++] = copy;
+    return 1;
+}
+
+static int rxlink_provider_id_valid(const char *provider_id) {
+    const unsigned char *cursor = (const unsigned char *)provider_id;
+    if (!provider_id ||
+        !( (*cursor >= 'A' && *cursor <= 'Z') ||
+           (*cursor >= 'a' && *cursor <= 'z') ||
+           (*cursor >= '0' && *cursor <= '9'))) return 0;
+    cursor++;
+    while (*cursor) {
+        if (!( (*cursor >= 'A' && *cursor <= 'Z') ||
+               (*cursor >= 'a' && *cursor <= 'z') ||
+               (*cursor >= '0' && *cursor <= '9') ||
+               *cursor == '.' || *cursor == '_' || *cursor == '-')) return 0;
+        cursor++;
+    }
+    return 1;
+}
+
+static int collect_provider_requirements(const module_list *modules,
+                                         provider_requirement_list *requirements) {
+    size_t module_index;
+
+    for (module_index = 0u; module_index < modules->count; module_index++) {
+        const link_module_info *info = &modules->items[module_index];
+        module_file *module;
+        int offset;
+
+        if (!info->selected || info->omitted) continue;
+        module = info->module;
+        offset = module->header.meta_head;
+        while (offset != -1) {
+            meta_entry *entry =
+                (meta_entry *)((unsigned char *)module->constant +
+                               (size_t)offset);
+            if (entry->base.type == META_PROVIDER) {
+                const meta_provider_constant *provider =
+                    (const meta_provider_constant *)entry;
+                const char *symbol =
+                    module_string_constant(module, provider->symbol);
+                const char *provider_id =
+                    module_string_constant(module, provider->provider);
+                const meta_func_constant *function =
+                    module_function_metadata(module, symbol);
+                provider_requirement requirement;
+                size_t prior;
+
+                if (!symbol || !*symbol ||
+                    !rxlink_provider_id_valid(provider_id) ||
+                    !function) {
+                    fprintf(stderr,
+                            "ERROR: module %s has provider metadata without matching callable signature\n",
+                            info->selector_name ? info->selector_name : "<unnamed>");
+                    return 0;
+                }
+                requirement.provider_id = (char *)provider_id;
+                requirement.symbol = (char *)symbol;
+                requirement.type = (char *)module_string_constant(
+                        module, function->type);
+                requirement.args = (char *)module_string_constant(
+                        module, function->args);
+                requirement.module_name = info->selector_name
+                        ? info->selector_name : "<unnamed>";
+                requirement.flags = provider->flags;
+                if (!requirement.type || !requirement.args) return 0;
+
+                for (prior = 0u; prior < requirements->count; prior++) {
+                    provider_requirement *existing =
+                        &requirements->items[prior];
+                    if (!rxlink_symbol_equals(existing->symbol, symbol)) continue;
+                    if (strcmp(existing->provider_id, provider_id) != 0 ||
+                        strcmp(existing->type, requirement.type) != 0 ||
+                        strcmp(existing->args, requirement.args) != 0) {
+                        fprintf(stderr,
+                                "ERROR: native callable %s has incompatible provider requirements: %s in %s versus %s in %s\n",
+                                symbol,
+                                existing->provider_id,
+                                existing->module_name,
+                                provider_id,
+                                requirement.module_name);
+                        return 0;
+                    }
+                    if (strcmp(existing->module_name,
+                               requirement.module_name) == 0) {
+                        /* Duplicate metadata in one module is redundant, but
+                         * required dominates optional independent of order. */
+                        existing->flags |= requirement.flags;
+                        goto next_metadata;
+                    }
+                }
+                if (!append_provider_requirement(requirements, &requirement)) {
+                    return 0;
+                }
+            }
+next_metadata:
+            offset = entry->next;
+        }
+    }
+    return 1;
 }
 
 static char *module_instruction_string(module_file *module,
@@ -687,6 +880,7 @@ static void init_link_config(link_config *config) {
     string_list_init(&config->omits);
     config->output_path = 0;
     config->map_path = 0;
+    config->provider_requirements_path = 0;
     config->location = 0;
     config->strip_source_metadata = 0;
     config->strip_inline_metadata = 1;
@@ -700,6 +894,7 @@ static void free_link_config(link_config *config) {
     string_list_free(&config->omits);
     free(config->output_path);
     free(config->map_path);
+    free(config->provider_requirements_path);
 }
 
 static int set_single_path(char **target, const char *value) {
@@ -760,6 +955,8 @@ static int parse_control_file(link_config *config, const char *path) {
             if (!set_single_path(&config->output_path, value)) goto oom;
         } else if (keyword_equals(keyword, "MAP")) {
             if (!set_single_path(&config->map_path, value)) goto oom;
+        } else if (keyword_equals(keyword, "PROVIDERS")) {
+            if (!set_single_path(&config->provider_requirements_path, value)) goto oom;
         } else if (keyword_equals(keyword, "STRIP")) {
             if (keyword_equals(value, "SOURCE")) {
                 config->strip_source_metadata = 1;
@@ -1600,6 +1797,7 @@ static int is_meta_constant_type(enum const_pool_type type) {
         case META_MEMBER:
         case META_INLINE:
         case META_TASK_TARGET:
+        case META_PROVIDER:
             return 1;
         default:
             return 0;
@@ -1801,6 +1999,22 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
             meta->kind = source->kind;
             return *ok;
         }
+        case META_PROVIDER: {
+            meta_provider_constant *source =
+                (meta_provider_constant *)entry;
+            size_t symbol = link_constant_offset(
+                    context, output_module, input_module, source->symbol, ok);
+            size_t provider = link_constant_offset(
+                    context, output_module, input_module, source->provider, ok);
+            meta_provider_constant *meta =
+                (meta_provider_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->provider = provider;
+            meta->flags = source->flags;
+            return *ok;
+        }
         default:
             *ok = 0;
             return 0;
@@ -1955,7 +2169,8 @@ static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_
         case META_IMPLEMENTS:
         case META_MEMBER:
         case META_INLINE:
-        case META_TASK_TARGET: {
+        case META_TASK_TARGET:
+        case META_PROVIDER: {
             meta_entry *meta = (meta_entry *)entry;
             int prev = link_constant_offset_int(context, output_module, input_module, meta->prev, ok);
             int next = link_constant_offset_int(context, output_module, input_module, meta->next, ok);
@@ -2097,7 +2312,9 @@ static int build_linked_modules(rxlink_build_context *context, module_list *modu
     return 1;
 }
 
-static int write_map_file(const module_list *modules, const link_config *config) {
+static int write_map_file(const module_list *modules,
+                          const provider_requirement_list *requirements,
+                          const link_config *config) {
     FILE *fp;
     size_t i;
 
@@ -2122,7 +2339,50 @@ static int write_map_file(const module_list *modules, const link_config *config)
             }
         }
     }
+    if (requirements->count) {
+        fprintf(fp, "Native Providers:\n");
+        for (i = 0u; i < requirements->count; i++) {
+            const provider_requirement *requirement =
+                &requirements->items[i];
+            fprintf(fp, "  %s %s %s from %s\n",
+                    (requirement->flags & RXBIN_PROVIDER_REQUIRED)
+                        ? "required" : "optional",
+                    requirement->provider_id,
+                    requirement->symbol,
+                    requirement->module_name);
+        }
+    }
 
+    fclose(fp);
+    return 1;
+}
+
+static int write_provider_requirements_file(
+        const provider_requirement_list *requirements,
+        const link_config *config) {
+    FILE *fp;
+    size_t i;
+
+    if (!config->provider_requirements_path) return 1;
+    fp = openfile(config->provider_requirements_path, "",
+                  config->location, "w");
+    if (!fp) {
+        fprintf(stderr, "ERROR: opening provider requirements output %s\n",
+                config->provider_requirements_path);
+        return 0;
+    }
+    fprintf(fp, "CREXX-RXPA-REQUIREMENTS 1\n");
+    for (i = 0u; i < requirements->count; i++) {
+        const provider_requirement *requirement = &requirements->items[i];
+        fprintf(fp, "%s\t%s\t%s\t%s\t%s\t%s\n",
+                (requirement->flags & RXBIN_PROVIDER_REQUIRED)
+                    ? "required" : "optional",
+                requirement->provider_id,
+                requirement->symbol,
+                requirement->type,
+                requirement->args,
+                requirement->module_name);
+    }
     fclose(fp);
     return 1;
 }
@@ -2276,6 +2536,7 @@ static void print_help(void) {
     printf("  -c control_file Control file with INPUT/ROOT/INCLUDE/OMIT/OUTPUT/MAP/STRIP\n");
     printf("  -r root_member  Root module selector (may be repeated)\n");
     printf("  -m map_file     Write a simple link map\n");
+    printf("  -p providers    Write native-provider requirements for packaging\n");
     printf("  -l location     Working location for input/output resolution\n");
     printf("  -s              Strip source/TRACE debug metadata from linked output\n");
     printf("  -i              Preserve inline-body metadata in linked output\n");
@@ -2288,6 +2549,7 @@ int main(int argc, char *argv[]) {
     module_list modules;
     rxlink_build_context build_context;
     rxlink_output_list outputs;
+    provider_requirement_list provider_requirements;
     char *control_path = 0;
     int argi;
 
@@ -2295,6 +2557,7 @@ int main(int argc, char *argv[]) {
     memset(&modules, 0, sizeof(modules));
     build_context_init(&build_context);
     memset(&outputs, 0, sizeof(outputs));
+    memset(&provider_requirements, 0, sizeof(provider_requirements));
 
     for (argi = 1; argi < argc && argv[argi][0] == '-'; argi++) {
         if (strlen(argv[argi]) != 2) {
@@ -2314,6 +2577,11 @@ int main(int argc, char *argv[]) {
                 break;
             case 'M':
                 if (++argi >= argc || !set_single_path(&config.map_path, argv[argi])) goto fail;
+                break;
+            case 'P':
+                if (++argi >= argc ||
+                    !set_single_path(&config.provider_requirements_path,
+                                     argv[argi])) goto fail;
                 break;
             case 'S':
                 config.strip_source_metadata = 1;
@@ -2361,14 +2629,17 @@ int main(int argc, char *argv[]) {
     if (!load_input_modules(&modules, &config)) goto fail;
     if (!select_modules(&modules, &config)) goto fail;
     if (!rxlink_validate_contracts(&modules)) goto fail;
+    if (!collect_provider_requirements(&modules, &provider_requirements)) goto fail;
     if (!build_linked_modules(&build_context, &modules, &outputs)) goto fail;
     if (!outputs.count) {
         fprintf(stderr, "ERROR: no modules selected for output\n");
         goto fail;
     }
     if (!write_linked_image(&config, &build_context, &outputs)) goto fail;
-    if (!write_map_file(&modules, &config)) goto fail;
+    if (!write_map_file(&modules, &provider_requirements, &config)) goto fail;
+    if (!write_provider_requirements_file(&provider_requirements, &config)) goto fail;
 
+    provider_requirement_list_free(&provider_requirements);
     output_list_free(&outputs);
     build_context_free(&build_context);
     module_list_free(&modules);
@@ -2376,6 +2647,7 @@ int main(int argc, char *argv[]) {
     return 0;
 
 fail:
+    provider_requirement_list_free(&provider_requirements);
     output_list_free(&outputs);
     build_context_free(&build_context);
     module_list_free(&modules);

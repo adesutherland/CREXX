@@ -1647,7 +1647,14 @@ rxvml_context* rxvml_create(const char* location, unsigned flags) {
     ctx = malloc(sizeof(rxvml_context));
     if (!ctx) return NULL;
     rxinimod(&ctx->vm);
-    if (location) ctx->vm.location = strdup(location);
+    if (location) {
+        ctx->vm.location = strdup(location);
+        if (!ctx->vm.location || rxvm_set_provider_path(&ctx->vm, location)) {
+            rxfremod(&ctx->vm);
+            free(ctx);
+            return NULL;
+        }
+    }
     ctx->vm.debug_mode = flags;
     ctx->last_error = NULL;
     ctx->registry = NULL;

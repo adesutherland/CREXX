@@ -35,6 +35,7 @@ typedef struct rxpa_loaded_plugin {
     void *handle;
     void (*initializer)(rxpa_initctxptr context);
     uint32_t capabilities;
+    const char *plugin_id;
     int has_manifest_v2;
     rxpa_plugin_manifest_v2 manifest_v2;
 } rxpa_loaded_plugin;

@@ -7,7 +7,11 @@ The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loa
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `inc/rxvm.h`):
 1. **Creation**: `rxvm_create()` allocates the root `rxvm_context`.
 2. **Loading**: `rxvm_load()` ingests one or more 007 containers, validates the fixed header and six sections, materializes portable constants/metadata and the semantic graph, expands variable-integer instructions into the normal runtime image, and loads each module directory entry into an internal `module` struct. A linked container shares one materialized pool and graph across its modules; concatenated archive containers remain independently owned.
-3. **Linking**: `rxvm_link()` traverses newly loaded modules to resolve exports and external imports into a unified memory map. The call is now dirty-checked, so repeated bridge/runtime entry points become fast no-ops when no module state changed.
+3. **Provider resolution and linking**: `rxvm_link()` first resolves declared
+   `META_PROVIDER` dependencies, then traverses newly loaded modules to resolve
+   exports and external imports into a unified memory map. The call is
+   dirty-checked, so repeated bridge/runtime entry points become fast no-ops
+   when no module state changed.
 4. **Preparation**: `rxvm_prepare()` builds an owned per-module
    `execution_image` for both VM modes. Operand cells are copied and direct
    function operands are rebound to process-local `proc_runtime *` values.
@@ -23,8 +27,30 @@ the debugger-style `METALOADMODULE` instruction. The public rxfnsb wrapper is
 `loadmodule(path) -> .int`; it returns the last loaded module number, or a
 non-positive value on failure. A successful `METALOADMODULE` immediately calls
 `rxvm_link()` so existing unresolved imports can bind to procedures/classes in
-the newly loaded file. There is intentionally no automatic directory sweep:
-callers are responsible for loading the provider artifact they want.
+the newly loaded file. Undeclared late loading remains explicit; there is no
+generic native-library directory sweep. A declared native callable is
+different: `META_PROVIDER` causes provider-stem resolution before procedure
+linking.
+
+The static catalogue is checked first. Dynamic fallback opens only
+`<provider-id>.rxplugin` in, in order, the application-local `providers`
+directory, `--provider-path`, `CREXX_PROVIDER_PATH`, and the installed
+`bin/providers` beside `rxvm`. The embedding API can use
+`rxvm_set_provider_path()`; `rxvml_create(location, ...)` treats its explicit
+location list as trusted provider directories as well as module roots.
+
+The metadata provider ID is the canonical artifact stem. Before `_initfuncs`
+is called, the loader verifies that the RXPA binary manifest publishes that
+same stable provider ID. The native module then publishes `META_FUNC` and
+`META_PROVIDER` records for every registered function, allowing the resolver to
+verify provider, callable, language option, return type, and arguments before
+normal linking. Signature comparison canonicalizes RXPA's source-like lexical
+spelling (`[]`/`[*]`, insignificant whitespace around punctuation) to the RXAS
+form; provider ID, callable and actual type shape remain exact contracts. A
+required provider-resolution failure stops `rxvm_run()`
+before `main`. An optional record permits provider discovery to miss, but does
+not suppress the ordinary unresolved-procedure checks if the callable is
+actually required by the program.
 
 ## 2. Core Internal Structs
 
@@ -33,6 +59,7 @@ The root state of the VM environment. It houses the loaded modules, global confi
 ```c
 typedef struct rxvm_context {
     char *location;
+    char *provider_location;
     size_t num_modules;
     module **modules;
     struct avl_tree_node *exposed_proc_tree;

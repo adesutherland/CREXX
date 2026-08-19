@@ -17,6 +17,26 @@ first and then pass that linked image to `rxcpack`.
 
 `rxlink` is not a replacement for the VM loader. The output still contains multiple module records, and `rxvm` still performs the final runtime link/load work.
 
+## Native-provider requirements
+
+Selected `META_PROVIDER` records are preserved and checked against their
+matching `META_FUNC` signatures. `rxlink` rejects the same callable when inputs
+associate it with different stable providers, return types, or argument
+signatures. Requiring-module provenance is retained for diagnostics.
+
+Use `-p requirements-file`, or `PROVIDERS requirements-file` in a control file,
+to write the packaging projection without loading native code:
+
+```text
+CREXX-RXPA-REQUIREMENTS 1
+required<TAB>provider<TAB>callable<TAB>return-type<TAB>arguments<TAB>module
+```
+
+This is the authoritative input to `crexx -native`. Each provider value is the
+canonical artifact stem: native packaging prefers `<provider>.a`/`.lib` and
+falls back to the historical `<provider>_static.a`/`.lib` name. A native
+package therefore does not maintain a second hand-written provider list.
+
 ## Output Format
 
 RXLINK reads and writes only RXBIN 007. The complete toolchain moved atomically;

@@ -5,6 +5,39 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 set(CLASSLIBRPATH ${CMAKE_BINARY_DIR}/bin/classlib)
 
+# CREXXRAG-SHA256 is a test-only capability decision gate. It deliberately
+# exercises the real RXPA boundary without adding a production hash plugin or
+# public library API.
+include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
+add_dynamic_plugin_target(_crexxrag_sha256_gate
+        ${CMAKE_CURRENT_SOURCE_DIR}/crexxrag_sha256_gate_plugin.c)
+set_target_properties(_crexxrag_sha256_gate PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+target_include_directories(_crexxrag_sha256_gate PRIVATE
+        ${CMAKE_SOURCE_DIR}/binutils/include)
+target_link_libraries(_crexxrag_sha256_gate PRIVATE rxbin)
+
+add_executable(crexxrag_sha256_c_ceiling EXCLUDE_FROM_ALL
+        ${CMAKE_CURRENT_SOURCE_DIR}/crexxrag_sha256_c_ceiling.c)
+target_link_libraries(crexxrag_sha256_c_ceiling PRIVATE rxbin)
+
+add_custom_target(performance_crexxrag_sha256)
+add_dependencies(performance_crexxrag_sha256
+        _crexxrag_sha256_gate crexxrag_sha256_c_ceiling)
+crexx_add_rexx_opt_matrix(
+        NAME crexxrag_sha256_a_vs_d
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/crexxrag_sha256_a_vs_d.crexx
+        TARGET_GROUP performance_crexxrag_sha256
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin _crexxrag_sha256_gate
+        RUNTIME_ARGS rx_crexxrag_sha256_gate ${LIBRPATH} -a selftest
+        TEST_LABELS "performance;sha256;crexx-rag;qualification"
+        REQUIRED_OUTPUT_REGEX "PASS: CREXXRAG-SHA256 vectors"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:"
+)
+
 # These benchmarks are smoke-run under CTest so opt/noopt timing stays visible,
 # but they do not assert performance thresholds because those vary by machine.
 add_custom_target(performance_inline ALL)

@@ -2872,6 +2872,45 @@ void rxasmeil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
     const char *option_text;
 
     option_text = (const char *)option->token_value.string;
+    if (strcmp(option_text, ".provider") == 0 ||
+        strcmp(option_text, ".provider.required") == 0 ||
+        strcmp(option_text, ".provider.optional") == 0) {
+        meta_provider_constant *provider;
+        const unsigned char *p;
+        size_t s_provider;
+
+        if (payload->token_type != STRING) {
+            rxaserat(context, payload, "Provider metadata requires a string provider ID");
+            return;
+        }
+        p = (const unsigned char *)payload->token_value.string;
+        if (!*p || !((*p >= 'A' && *p <= 'Z') ||
+                     (*p >= 'a' && *p <= 'z') ||
+                     (*p >= '0' && *p <= '9'))) {
+            rxaserat(context, payload, "Provider ID must start with an ASCII letter or digit");
+            return;
+        }
+        for (; *p; p++) {
+            if (!((*p >= 'A' && *p <= 'Z') ||
+                  (*p >= 'a' && *p <= 'z') ||
+                  (*p >= '0' && *p <= '9') ||
+                  *p == '.' || *p == '_' || *p == '-')) {
+                rxaserat(context, payload, "Provider ID may contain only ASCII letters, digits, '.', '_' and '-'");
+                return;
+            }
+        }
+        entry = add_meta_entry(context, sizeof(meta_provider_constant), META_PROVIDER);
+        s_sym = add_string_to_pool(
+                context, symbol, (char *)symbol->token_value.string);
+        s_provider = add_string_to_pool(
+                context, payload, (char *)payload->token_value.string);
+        provider = (meta_provider_constant *)(context->binary.const_pool + entry);
+        provider->symbol = s_sym;
+        provider->provider = s_provider;
+        provider->flags = strcmp(option_text, ".provider.optional") == 0
+                ? 0u : RXBIN_PROVIDER_REQUIRED;
+        return;
+    }
     if (strcmp(option_text, ".task1") == 0 ||
         strcmp(option_text, ".task2") == 0 ||
         strcmp(option_text, ".task3") == 0) {
@@ -2901,7 +2940,7 @@ void rxasmeil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
     }
 
     if (strcmp(option_text, ".inline") != 0) {
-        rxaserat(context, option, "Expecting .inline or .task1/.task2/.task3 metadata option");
+        rxaserat(context, option, "Expecting .inline, .provider[.required|.optional] or .task1/.task2/.task3 metadata option");
         return;
     }
     if (payload->token_type != STRING) {

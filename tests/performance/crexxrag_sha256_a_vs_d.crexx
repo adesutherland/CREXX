@@ -1,0 +1,252 @@
+/* Test-only integrated Option A versus pure-Level-B Option D comparison. */
+options levelb
+
+import rxfnsb
+import crexxragsha256gate
+
+elapsedUs: procedure = .int
+  arg started = .int
+  elapsed = time("us") - started
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+makeGenerated: procedure = .binary
+  arg bytes = .int
+  data = .binary
+  call binresize data, bytes
+  do offset = 0 to bytes - 1
+    <at..u8>(offset) data = (offset * 31 + 7) <mod> 256
+  end
+  return data
+
+sha256Pure: procedure = .binary
+  arg data = .binary, expose constants = .int[]
+  constant MASK32 = 4294967295
+
+  length = binlength(data)
+  block_count = (length + 72) <idiv> 64
+  total_bytes = block_count * 64
+  bit_length = length * 8
+
+  state = .int[]
+  state[1] = 1779033703
+  state[2] = 3144134277
+  state[3] = 1013904242
+  state[4] = 2773480762
+  state[5] = 1359893119
+  state[6] = 2600822924
+  state[7] = 528734635
+  state[8] = 1541459225
+  words = .int[]
+
+  do block = 1 to block_count
+    block_offset = (block - 1) * 64
+    do word_index = 1 to 16
+      value = 0
+      word_offset = block_offset + (word_index - 1) * 4
+      do part = 0 to 3
+        byte_offset = word_offset + part
+        byte = 0
+        if byte_offset < length then byte = <at..u8>(byte_offset) data
+        else if byte_offset = length then byte = 128
+        else if byte_offset >= total_bytes - 8 then do
+          shift = (total_bytes - 1 - byte_offset) * 8
+          byte = (bit_length <shr> shift) <and> 255
+        end
+        value = (value <shl> 8) <or> byte
+      end
+      words[word_index] = value
+    end
+
+    do word_index = 17 to 64
+      x = words[word_index - 15]
+      sigma0 = (((x <shr> 7) <or> ((x <shl> 25) <and> MASK32)) <xor> ((x <shr> 18) <or> ((x <shl> 14) <and> MASK32))) <xor> (x <shr> 3)
+      x = words[word_index - 2]
+      sigma1 = (((x <shr> 17) <or> ((x <shl> 15) <and> MASK32)) <xor> ((x <shr> 19) <or> ((x <shl> 13) <and> MASK32))) <xor> (x <shr> 10)
+      words[word_index] = (words[word_index - 16] + sigma0 + words[word_index - 7] + sigma1) <and> MASK32
+    end
+
+    a = state[1]
+    b = state[2]
+    c = state[3]
+    d = state[4]
+    e = state[5]
+    f = state[6]
+    g = state[7]
+    h = state[8]
+    do round = 1 to 64
+      sum1 = (((e <shr> 6) <or> ((e <shl> 26) <and> MASK32)) <xor> ((e <shr> 11) <or> ((e <shl> 21) <and> MASK32))) <xor> ((e <shr> 25) <or> ((e <shl> 7) <and> MASK32))
+      choose = (e <and> f) <xor> ((<not> e) <and> g)
+      temp1 = (h + sum1 + choose + constants[round] + words[round]) <and> MASK32
+      sum0 = (((a <shr> 2) <or> ((a <shl> 30) <and> MASK32)) <xor> ((a <shr> 13) <or> ((a <shl> 19) <and> MASK32))) <xor> ((a <shr> 22) <or> ((a <shl> 10) <and> MASK32))
+      majority = (a <and> b) <xor> (a <and> c) <xor> (b <and> c)
+      temp2 = (sum0 + majority) <and> MASK32
+      h = g
+      g = f
+      f = e
+      e = (d + temp1) <and> MASK32
+      d = c
+      c = b
+      b = a
+      a = (temp1 + temp2) <and> MASK32
+    end
+
+    state[1] = (state[1] + a) <and> MASK32
+    state[2] = (state[2] + b) <and> MASK32
+    state[3] = (state[3] + c) <and> MASK32
+    state[4] = (state[4] + d) <and> MASK32
+    state[5] = (state[5] + e) <and> MASK32
+    state[6] = (state[6] + f) <and> MASK32
+    state[7] = (state[7] + g) <and> MASK32
+    state[8] = (state[8] + h) <and> MASK32
+  end
+
+  digest = .binary
+  call binresize digest, 32
+  do index = 1 to 8
+    value = state[index]
+    offset = (index - 1) * 4
+    <at..u8>(offset) digest = (value <shr> 24) <and> 255
+    <at..u8>(offset + 1) digest = (value <shr> 16) <and> 255
+    <at..u8>(offset + 2) digest = (value <shr> 8) <and> 255
+    <at..u8>(offset + 3) digest = value <and> 255
+  end
+  return digest
+
+checkVector: procedure = .int
+  arg label = .string, data = .binary, expected = .string, expose constants = .int[]
+  pure = bin2x(sha256Pure(data, constants))
+  native = bin2x(crexxragsha256gate..sha256_native(data))
+  if pure <> expected then do
+    say "FAIL: CREXXRAG-SHA256 pure vector " || label || " expected=" || expected || " actual=" || pure
+    return 1
+  end
+  if native <> expected then do
+    say "FAIL: CREXXRAG-SHA256 native vector " || label || " expected=" || expected || " actual=" || native
+    return 1
+  end
+  return 0
+initConstants: procedure = .void
+  arg expose constants = .int[]
+  constants[1] = 1116352408
+  constants[2] = 1899447441
+  constants[3] = 3049323471
+  constants[4] = 3921009573
+  constants[5] = 961987163
+  constants[6] = 1508970993
+  constants[7] = 2453635748
+  constants[8] = 2870763221
+  constants[9] = 3624381080
+  constants[10] = 310598401
+  constants[11] = 607225278
+  constants[12] = 1426881987
+  constants[13] = 1925078388
+  constants[14] = 2162078206
+  constants[15] = 2614888103
+  constants[16] = 3248222580
+  constants[17] = 3835390401
+  constants[18] = 4022224774
+  constants[19] = 264347078
+  constants[20] = 604807628
+  constants[21] = 770255983
+  constants[22] = 1249150122
+  constants[23] = 1555081692
+  constants[24] = 1996064986
+  constants[25] = 2554220882
+  constants[26] = 2821834349
+  constants[27] = 2952996808
+  constants[28] = 3210313671
+  constants[29] = 3336571891
+  constants[30] = 3584528711
+  constants[31] = 113926993
+  constants[32] = 338241895
+  constants[33] = 666307205
+  constants[34] = 773529912
+  constants[35] = 1294757372
+  constants[36] = 1396182291
+  constants[37] = 1695183700
+  constants[38] = 1986661051
+  constants[39] = 2177026350
+  constants[40] = 2456956037
+  constants[41] = 2730485921
+  constants[42] = 2820302411
+  constants[43] = 3259730800
+  constants[44] = 3345764771
+  constants[45] = 3516065817
+  constants[46] = 3600352804
+  constants[47] = 4094571909
+  constants[48] = 275423344
+  constants[49] = 430227734
+  constants[50] = 506948616
+  constants[51] = 659060556
+  constants[52] = 883997877
+  constants[53] = 958139571
+  constants[54] = 1322822218
+  constants[55] = 1537002063
+  constants[56] = 1747873779
+  constants[57] = 1955562222
+  constants[58] = 2024104815
+  constants[59] = 2227730452
+  constants[60] = 2361852424
+  constants[61] = 2428436474
+  constants[62] = 2756734187
+  constants[63] = 3204031479
+  constants[64] = 3329325298
+  return
+
+main: procedure = .int
+  arg argv = .string[]
+  constants = .int[]
+  call initConstants constants
+
+  mode = "selftest"
+  if argv[0] >= 1 then mode = lower(argv[1])
+  if mode = "selftest" then do
+    failures = 0
+    failures = failures + checkVector("empty", x2bin(""), "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855", constants)
+    failures = failures + checkVector("abc", x2bin("616263"), "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", constants)
+    failures = failures + checkVector("embedded-zero", x2bin("00010200FF"), "EF7E301027F931DFBA06C7DED4EF305797F43CC115A664F9AF9B57D08C3172C2", constants)
+    failures = failures + checkVector("generated-55", makeGenerated(55), "8AA994584139D128848EEEBC4E815639BA5AB6E6E39574195A63AC4F14F7C43B", constants)
+    failures = failures + checkVector("generated-56", makeGenerated(56), "AD574708F75C044C9B85DE64CB568EE7711FF4F36448C6242F053BA8F6CC2B63", constants)
+    failures = failures + checkVector("generated-63", makeGenerated(63), "280ED3E8FF1DF845B2E7DFE6AC6CEE817BEF20E783CC65ABC41B818B4D2FE076", constants)
+    failures = failures + checkVector("generated-64", makeGenerated(64), "C6AB9724ADE5B6A7A1EDFFFB12F3AA9181351355AF8FD08C919952AD211339DD", constants)
+    failures = failures + checkVector("generated-65", makeGenerated(65), "788367C73C7DDF4C53F65E68CC0D943E6227AB55B0E78BA63ACE822B1C6301C0", constants)
+    failures = failures + checkVector("generated-4096", makeGenerated(4096), "D41D438C379110C7F7B2C561B1F04F26C1B4549110791F8E022F48974280C13E", constants)
+    if failures > 0 then return 1
+    say "PASS: CREXXRAG-SHA256 vectors"
+    return 0
+  end
+
+  if mode <> "pure" & mode <> "native" then do
+    say "FAIL: CREXXRAG-SHA256 mode must be selftest, pure, or native"
+    return 2
+  end
+  bytes = 4096
+  iterations = 1
+  if argv[0] >= 2 then bytes = argv[2] as .int
+  if argv[0] >= 3 then iterations = argv[3] as .int
+  if bytes < 1 | iterations < 1 then do
+    say "FAIL: CREXXRAG-SHA256 bytes and iterations must be positive"
+    return 2
+  end
+
+  data = makeGenerated(bytes)
+  digest = .binary
+  started = time("us")
+  if mode = "pure" then do iteration = 1 to iterations
+    digest = sha256Pure(data, constants)
+  end
+  else do iteration = 1 to iterations
+    digest = crexxragsha256gate..sha256_native(data)
+  end
+  elapsed = elapsedUs(started)
+
+  expected = bin2x(crexxragsha256gate..sha256_native(data))
+  actual = bin2x(digest)
+  if actual <> expected then do
+    say "FAIL: CREXXRAG-SHA256 timed digest expected=" || expected || " actual=" || actual
+    return 1
+  end
+  say "benchmark=crexxrag_sha256 variant=" || mode || " payload_bytes=" || bytes || " iterations=" || iterations || " elapsed_us=" || elapsed || " digest=" || actual
+  say "PASS: CREXXRAG-SHA256 integrated gate"
+  return 0

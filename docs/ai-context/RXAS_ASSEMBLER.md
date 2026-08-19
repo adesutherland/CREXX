@@ -68,6 +68,20 @@ context->binary.binary[context->binary.inst_size++].iconst = token->integer;
 Strings, binary literals, pooled float literals, procedure mappings, debug metadata, and exported symbols are packed into `const_pool`. This is a sequential buffer of dynamically sized records. Every record starts with a `chameleon_constant` header dictating its type and byte size.
 Types include: `STRING_CONST`, `BINARY_CONST`, `FLOAT_CONST`, `PROC_CONST`, `EXPOSE_REG_CONST`, `EXPOSE_PROC_CONST`, `META_FUNC`, `META_INLINE`, `META_REG`, etc.
 
+Native-callable provenance uses `META_PROVIDER`, paired by callable symbol with
+the canonical `META_FUNC` signature:
+
+```rxas
+.meta "namespace.callable"=".provider" "stable-provider-id"
+.meta "namespace.optional"=".provider.optional" "stable-provider-id"
+```
+
+`.provider.required` is accepted as an explicit alias of `.provider`. Provider
+IDs are platform-independent and restricted to ASCII letters/digits followed by
+letters, digits, `.`, `_`, or `-`. The assembler stores only symbol, provider
+ID and required/optional flags in this record; it does not duplicate the
+callable signature. RXBIN 007 writers set the native-provider feature bit.
+
 The serialized `expose_head` chain includes both `EXPOSE_REG_CONST` and
 `EXPOSE_PROC_CONST` records. Runtime linking and other module-local walkers now
 rely on that chain instead of scanning the whole constant pool.

@@ -11,6 +11,11 @@ struct module;
 /* Creates a new VM context. Returns NULL on failure. */
 struct rxvm_context* rxvm_create();
 
+/* Replaces the trusted, semicolon-separated provider-manifest search path.
+ * An empty or NULL path disables dynamic provider discovery; statically linked
+ * providers remain available. Returns 0 on success. */
+int rxvm_set_provider_path(struct rxvm_context* ctx, const char* path);
+
 /* Destroys a VM context and frees all associated memory. */
 void rxvm_destroy(struct rxvm_context* ctx);
 

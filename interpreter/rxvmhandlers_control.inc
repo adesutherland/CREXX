@@ -863,6 +863,21 @@ RXVM_HANDLER(METALOADDATA_REG_REG_REG, VM_ADVANCE(3);
                             /* Compiler/linker relocation metadata is consumed
                              * before execution and has no source reflection. */
                             break;
+                        case META_PROVIDER:
+                            set_null_string(op1R->attributes[j], ".meta_provider");
+                            set_num_attributes(op1R->attributes[j], 3);
+                            x = (rxinteger) ((meta_provider_constant *)
+                                    (pool + i))->symbol;
+                            set_const_string(op1R->attributes[j]->attributes[0],
+                                             (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_provider_constant *)
+                                    (pool + i))->provider;
+                            set_const_string(op1R->attributes[j]->attributes[1],
+                                             (string_constant *) (pool + x));
+                            op1R->attributes[j]->attributes[2]->int_value =
+                                    (rxinteger) ((meta_provider_constant *)
+                                            (pool + i))->flags;
+                            break;
                         case STRING_CONST:
                         case FLOAT_CONST:
                         case PROC_CONST:
