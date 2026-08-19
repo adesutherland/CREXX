@@ -420,6 +420,36 @@ This allows emitted section lines to contain:
 
 ---
 
+## Emitting Sections from Within a Macro
+
+Normally, a section is emitted explicitly in the source:
+
+```rexx
+##EMIT validation
+```
+
+RXPP also allows a macro to generate an `##EMIT` directive itself.
+
+This makes it possible for a macro to define a complete code-generation workflow, including the placement of generated sections.
+
+For example:
+
+```rexx
+##MACRO EXAMPLE
+
+    .section methods hello: method
+    .section methods     say "Hello"
+    .section methods     return
+
+    .gen ##EMIT methods
+
+##MEND
+```
+
+The generated `##EMIT` directive is subsequently processed by RXPP and inserts the accumulated section contents into the generated source.
+
+This capability makes it possible to build higher-level abstractions in which a macro generates not only individual source lines, but complete source structures assembled from multiple sections.
+
 # Why Sections Are Useful
 
 A single macro call may need to generate related source in several different locations.
@@ -779,3 +809,10 @@ The new RXPP macro output statements have distinct purposes:
 | `##EMIT name`          | Current source position     |
 
 The section facility allows a macro to generate related source fragments for different parts of a program while keeping the complete definition in one macro invocation.
+
+# Advanced Features
+
+- Nested macro calls (`##MCALL`)
+- Named source blocks (`##BEGIN`, `##COPYBLOCK`)
+- Source maps (`srcmap`)
+- Task-aware code generation (`CHANNELFIELD`, `CHANNELCLASS`)

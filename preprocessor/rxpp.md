@@ -879,6 +879,48 @@ Closes the nearest open `##IF` or `##IFN` block.
 ##ENDIF
 ##ENDIF
 ```
+### `##BEGIN` and `##ENDBEGIN`
+
+Define a named, reusable source block.
+
+Use `##COPYBLOCK name` to insert a copy of the block during preprocessing.
+
+```rexx
+##BEGIN reUsableMethods
+
+/* ---------------------------------------------------------
+ * Reusable result access methods
+ * ---------------------------------------------------------
+ */
+
+found: method = .int
+    if _pos > 0 then return 1
+    return 0
+
+position: method = .int
+    return _pos
+
+##ENDBEGIN
+```
+
+The block definition itself is removed during preprocessing and does not appear in the generated source.
+
+Insert the block with:
+
+```rexx
+##COPYBLOCK reUsableMethods
+```
+
+`##BEGIN` and `##COPYBLOCK` provide a simple mechanism for reusing identical source fragments in multiple locations.
+
+Typical uses include:
+
+- groups of related methods
+- utility routines
+- common class members
+- repeated source templates
+
+Although newer RXPP features such as macros and section streams often provide a more flexible solution, `##BEGIN` remains available and is still used in some existing examples.
 
 ## 🧭 Pre-Compilation Flow
 This document illustrates the main routine of the pre-compilation process, showing when each buffer (`1buf`, `2buf`, `3buf`) and macros and variables are printed based on the `cflags` configuration.
