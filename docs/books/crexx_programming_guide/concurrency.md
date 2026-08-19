@@ -1,4 +1,4 @@
-# Concurrent programming {#concurrent-programming}
+# Concurrent programming
 
 cREXX concurrency is designed to feel like Rexx: declare work much like a
 procedure, call it with ordinary call syntax, and introduce explicit control
