@@ -8,9 +8,11 @@ The bounded current-product closure sequence is governed by
 [`PERFORMANCE-CLOSEOUT-PLAN.md`](PERFORMANCE-CLOSEOUT-PLAN.md). Stages 1-4 are
 complete: the combined candidate and current decimal decision are frozen, the
 redundant Mac concurrency replay is waived, and the reviewed/calibrated
-[`portfolio-v3`](portfolio/manifest-v3.md) boundary is green. Adrian authorized
-the Stage 5 pre-release scorecard on 2026-08-18. Documentation consolidation
-and evidence clean-down remain plan-only Stages 6-7.
+[`portfolio-v3`](portfolio/manifest-v3.md) boundary is green. The Apple Stage 5
+pre-release scorecard is complete; exact-commit formal Linux QA-C remains its
+only exit item. Stage 6 documentation consolidation has started with the
+current [`RESULTS.md`](RESULTS.md) report; Stage 7 evidence clean-down remains
+plan-only.
 
 The original programme charter and 2026-07-15 evidence review remain in
 [`docs/planning/release-1/performance-programme-report-2026-07-15.md`](../docs/planning/release-1/performance-programme-report-2026-07-15.md).
@@ -37,7 +39,8 @@ those labels using the new product mapping.
 
 | Location | Purpose |
 | --- | --- |
-| `performance/PERFORMANCE-CLOSEOUT-PLAN.md` | Complete seven-stage current-product closeout plan; Stages 1-4 complete, Stage 5 active, Stages 6-7 plan-only |
+| `performance/PERFORMANCE-CLOSEOUT-PLAN.md` | Complete seven-stage current-product closeout plan; Stages 1-4 and the Apple Stage 5 scorecard complete, formal Linux QA-C pending, Stage 6 in progress and Stage 7 plan-only |
+| `performance/RESULTS.md` | Current less-technical performance scorecard, comparison questions and release-versus-next-release disposition |
 | `performance/PERFORMANCE-CLOSEOUT-STAGE4-WORKLIST.md` | Completed Stage 4 portfolio-v3 inventory, source review, runtime capability classification and qualification ledger |
 | `performance/portfolio/manifest-v3.md` | Frozen Stage 5 source, capability, aggregation and calibrated-work contract |
 | `performance/DECISIONS.md` | Enduring accepted/rejected performance decisions, lessons and explicit reopening triggers; currently seeded with DECIMAL-01 Stage 3 |
@@ -114,6 +117,8 @@ those labels using the new product mapping.
 | `performance/evidence/2026-08-18-decimal-01-gate1-current-provider/` | Current-provider DECIMAL-01 L1 adapter and L2/L3 product capture, with invalid calibration and noisy cells explicitly retained and unexecuted guards kept open |
 | `performance/evidence/2026-08-18-decimal-01-libmpdec-screen/` | Correctness-clean libmpdec 4.0.1 candidate rejected at L1 after formal adapter timing plus lean-adapter and direct-core arithmetic attribution |
 | `performance/evidence/2026-08-18-decimal-01-stage3-calibration/` | Clear-host D2 48-build tuning and D3 fixed-34 decQuad adapter/core calibration; both rejected before formal L1, leaving current `mc_decimal` selected |
+| `performance/evidence/2026-08-18-performance-closeout-stage4/` | Green portfolio-v3 source review, capability classification, calibration and full qualification frozen in commit `81f159186` |
+| `performance/evidence/2026-08-18-performance-closeout-stage5/` | Fresh-build Apple pre-release scorecard: 89-cell timing/RSS, genuine-NetRexx and Java control separation, RexxCPS, lifecycle, artifacts, DECIMAL/concurrency dispositions and honest release findings |
 | `performance/evidence/2026-08-02-perf3-11-legacy-proof-baseline/` | Stable remaining legacy-proof inventory, exact focused acceptance floor, canonical keyhole identities, output-neutral diagnostic and 49/49 focused replay |
 | `performance/evidence/2026-08-02-perf3-11-m01-xtoy/` | Completed metadata-driven XTOY repetition migration: old ITOF floor plus 11 stronger focused deletions, total ITOD/BTOD contract, unchanged canonical images and 1,989-test closeout |
 | `performance/evidence/` | Dated provenance, commands, raw samples and summaries |
@@ -145,9 +150,10 @@ benchmark-native metric, and writes the exact argv and cREXX version to
 outside the steady-state aggregate and emits one CSV row per runtime, phase and
 sequence. The final phase is named `load_first_result` because the public CLIs
 do not expose a consistent loaded-but-not-executed boundary. Formal captures use
-`--crexx-vm both`, share the compile/assemble rows, retain separate `rxvm` and
+`--crexx-vm both`, share the compile/assemble rows, retain separate `rxtvm` and
 `rxbvm` load rows, and write the same median/IQR/MAD/noise summary fields as the
-matrix driver.
+matrix driver. The Stage 5 correction deliberately removed `rxvm` from this
+concrete-engine selector because product `rxvm` may alias either engine.
 `--append` preserves existing lifecycle rows, continues sequence numbering, and
 refreshes the summary after a policy-required noise append.
 

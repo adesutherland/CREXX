@@ -62,20 +62,23 @@ NetRexx capability result.
 | Storage | qualified ooRexx object/array port; diagnostic adaptation | not NetRexx capability - binary Java/JVM control | both canonical |
 | List | qualified ooRexx object port; cREXX remains a disclosed arena adaptation | not NetRexx capability - binary Java/JVM control | both canonical |
 | Mandelbrot | ooRexx attempted; not comparable because its decimal/XOR adaptation does not retain the canonical 500/750 results | not NetRexx capability - binary Java/JVM control | both canonical |
-| Json, full AWFY | qualified ooRexx `json.cls` DOM adaptation added in Stage 4 | failed/unresolved genuine NetRexx cell; any Java-collection parser is a Java/JVM control | both canonical |
-| DeltaBlue | failed/unresolved; source/representation review found no language prohibition, but no qualified full port | failed/unresolved genuine NetRexx cell; canonical Java is not a substitute | both canonical |
-| CD | failed/unresolved; ooRexx can express the maths and objects, but no qualified full red/black-tree port | failed/unresolved genuine NetRexx cell; canonical Java is not a substitute | both canonical |
-| Havlak | failed/unresolved; ooRexx can express the graph algorithm, but no qualified full port | failed/unresolved genuine NetRexx cell; canonical Java is not a substitute | both canonical |
+| Json, full AWFY | qualified ooRexx `json.cls` DOM adaptation added in Stage 4 | unresolved genuine NetRexx cell; any Java-collection parser is a Java/JVM control | both canonical |
+| DeltaBlue | unresolved; source/representation review found no language prohibition, but no qualified full port | unresolved genuine NetRexx cell; canonical Java is not a substitute | both canonical |
+| CD | unresolved; ooRexx can express the maths and objects, but no qualified full red/black-tree port | unresolved genuine NetRexx cell; canonical Java is not a substitute | both canonical |
+| Havlak | unresolved; ooRexx can express the graph algorithm, but no qualified full port | unresolved genuine NetRexx cell; canonical Java is not a substitute | both canonical |
 | Queens | qualified ooRexx object port added in Stage 4 | qualified NetRexx capability, decimal `Rexx` arrays, added in Stage 4 | both canonical |
-| NBody | qualified ooRexx decimal/native-`rxmath` adaptation added in Stage 4 | failed/unresolved genuine NetRexx cell; canonical Java is not a substitute | both canonical |
+| NBody | qualified ooRexx decimal/native-`rxmath` adaptation added in Stage 4 | unresolved genuine NetRexx cell; canonical Java is not a substitute | both canonical |
 | Base64 v2 | qualified ooRexx byte-string port | not NetRexx capability - primitive Java `byte[]`/`String` storage is material timed work | no upstream AWFY control |
 | RexxCPS | canonical ooRexx 2.2 | qualified disclosed NetRexx 2.2n capability, reported at its native metric and never pooled | not applicable; Regina is the separate canonical Classic control |
 
-The heavy missing ports are recorded as `failed/unresolved`, not `not
-supported`. The review found no concrete ooRexx or NetRexx language/runtime
-prohibition that would justify an unsupported claim. Stage 5 therefore emits
-no invented result for those language cells and shows the canonical Java and
-Python controls in their own columns.
+The heavy missing ports are **unresolved**, not `failed` or `not supported`:
+no qualified full port was completed, and the review found no concrete ooRexx
+or NetRexx language/runtime prohibition that would justify an unsupported
+claim. A `failed` cell would require a completed attempt that did not pass
+build, execution or correctness/equivalence qualification; there are no such
+heavy cells in the current v3 matrix. Stage 5 therefore emits no invented
+result for the unresolved cells and shows the canonical Java and Python
+controls in their own columns.
 
 ## 5. Final cREXX source-review checklist
 

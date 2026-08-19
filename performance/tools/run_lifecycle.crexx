@@ -36,7 +36,7 @@ main: procedure = .int
   arg args = .string[]
 
   runtime = "all"
-  crexx_vm = "rxvm"
+  crexx_vm = "rxbvm"
   runs = 3
   repo_root = "."
   build_dir = "cmake-build-release"
@@ -111,8 +111,8 @@ main: procedure = .int
   if self_test_requested then return self_test()
   if runtime <> "all" & runtime <> "crexx" & runtime <> "oorexx" & runtime <> "netrexx" then
     return argument_error("--runtime must be all, crexx, oorexx or netrexx")
-  if crexx_vm <> "rxvm" & crexx_vm <> "rxbvm" & crexx_vm <> "both" then
-    return argument_error("--crexx-vm must be rxvm, rxbvm or both")
+  if crexx_vm <> "rxtvm" & crexx_vm <> "rxbvm" & crexx_vm <> "both" then
+    return argument_error("--crexx-vm must be rxtvm, rxbvm or both")
   if runs < 1 then return argument_error("--runs must be positive")
   if \is_absolute_path(build_dir) then build_dir = current_directory() || "/" || build_dir
   if output_path = "" then output_path = output_dir || "/samples.csv"
@@ -194,7 +194,7 @@ capture_crexx: procedure = .int
     if capture_phase("crexx", "shared", "assemble", sequence, command, "", rows) <> 0 then return 1
 
     do vm_index = 1 to 2
-      vm = "rxvm"
+      vm = "rxtvm"
       if vm_index = 2 then vm = "rxbvm"
       if crexx_vm <> "both" & crexx_vm <> vm then iterate
       vm_command = .string[]
@@ -515,7 +515,7 @@ is_absolute_path: procedure = .int
 usage: procedure = .void
   say "Usage: run_lifecycle [options]"
   say "  --runtime all|crexx|oorexx|netrexx"
-  say "  --crexx-vm rxvm|rxbvm|both"
+  say "  --crexx-vm rxtvm|rxbvm|both"
   say "  --runs N"
   say "  --repo-root PATH"
   say "  --build-dir PATH"

@@ -1,7 +1,7 @@
 # cREXX performance closeout plan
 
-Status: **Stages 1-4 complete; Stage 5 pre-release scorecard authorized and
-active; Stages 6-7 remain plan-only**
+Status: **Stages 1-4 complete; Stage 5 Apple scorecard complete with formal
+Linux QA-C pending; Stage 6 in progress; Stage 7 remains plan-only**
 
 Approved: 2026-08-18
 
@@ -24,8 +24,12 @@ The closeout must leave:
   noise in the current tree.
 
 Adrian approved execution of Stages 1-3, Stage 4 and, conditional on a green
-Stage 4 commit, Stage 5 on 2026-08-18. Stages 6-7 are fully specified here so
-the closeout boundary is not lost, but they remain plan-only.
+Stage 4 commit, Stage 5 on 2026-08-18. Stage 4 was committed as `81f159186`,
+and the Apple Stage 5 scorecard has run against that exact fresh source.
+Stages 6-7 are fully specified here so the closeout boundary is not lost.
+Stage 6 began with the current, less-technical [`RESULTS.md`](RESULTS.md)
+scorecard report; the wider documentation-authority consolidation remains
+open. Stage 7 remains plan-only.
 
 ## 2. Standing measurement and claim rules
 
@@ -262,7 +266,9 @@ Every NetRexx row must receive exactly one evidence-backed classification:
   expressed through the supported NetRexx language surface; or
 - `not comparable`: the language can express a program, but preserving the
   timed algorithm/work contract is not feasible; or
-- `failed/unresolved`: no qualified genuine-NetRexx port exists after the
+- `failed`: a completed port attempt reached build, execution or qualification
+  but did not pass the declared correctness/equivalence gate; or
+- `unresolved`: no qualified genuine-NetRexx port was completed after the
   Stage 4 review, without misreporting the absence as a language limitation.
 
 Generated Java and HotSpot are the normal substrate of a genuine NetRexx
@@ -279,7 +285,10 @@ benchmark in scope. Each row is then classified as:
 - `not supported by ooRexx language/runtime`, naming the concrete missing
   capability;
 - `not comparable`, naming the unavoidable algorithm/work change; or
-- `failed/unresolved`, which must not be disguised as a language limitation.
+- `failed`, for a completed attempt that did not pass build, execution or the
+  correctness/equivalence gate; or
+- `unresolved`, where no qualified port was completed and no concrete
+  language/runtime prohibition was proved.
 
 An unsupported/not-comparable result needs retained source notes or a minimal
 reproducer. Performance alone is not a reason to call a language unsupported.
@@ -339,7 +348,8 @@ scorecard timings.
 
 ## 7. Stage 5 - one pre-release current-product scorecard
 
-Status: **authorized and active**
+Status: **Apple scorecard complete on 2026-08-18; exact-commit formal Linux
+QA-C pending**
 
 1. Build the ordinary profiling-off Release product from the final frozen
    closeout commit.
@@ -353,6 +363,21 @@ Status: **authorized and active**
 7. Complete formal Linux QA-C. Do not repeat Windows QA-D without a concrete
    evidence inconsistency or a relevant source change.
 
+The Apple execution qualified all 89 cells and retained a complete timing,
+RSS, lifecycle and current-artifact scorecard. The named cREXX/ooRexx
+common-five is 5.467915x/5.679203x on `rxtvm`/`rxbvm`; the separately named
+genuine-NetRexx common-four is 1.318977x/1.358087x. Honest separate-lane
+findings, including CD, DeltaBlue, Towers, Storage and Havlak, remain visible
+for a bounded final-release review. The unchanged Mac concurrency replay stays
+waived and DECIMAL retains `mc_decimal`. Evidence:
+[`2026-08-18-performance-closeout-stage5`](evidence/2026-08-18-performance-closeout-stage5/).
+
+Linux local repair validation is strong but explicitly does not issue the
+formal exact-commit QA-C result. No Linux host was attached to the Apple
+scorecard task, so the required runner on `81f15918676d92a7d3e88954d94779ed759e9db8`
+remains the only Stage 5 exit item. This is an external execution dependency,
+not a request to repeat Mac timing or Windows QA-D.
+
 Exit: one pre-release scorecard and compact raw-sample bundle for the frozen
 source candidate. If the scorecard exposes a correctness, equivalence,
 optimizer-resistance or capability-label problem, return the affected test to
@@ -362,7 +387,8 @@ findings, but must not silently pool pre- and post-revision results.
 
 ## 8. Stage 6 - enduring documentation consolidation
 
-Status: **plan only**
+Status: **in progress — current results report created; wider consolidation
+pending**
 
 Leave these authorities:
 

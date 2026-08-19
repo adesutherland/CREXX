@@ -114,18 +114,30 @@ provide the formal sampling. Calibration numbers are not scorecard results.
 | Storage | qualified adaptation | not NetRexx capability - Java/JVM control |
 | List | qualified | not NetRexx capability - Java/JVM control |
 | Mandelbrot | attempted, not comparable at canonical 500/750 | not NetRexx capability - Java/JVM control |
-| Full Json | qualified standard-library DOM adaptation | failed/unresolved genuine port |
-| DeltaBlue | failed/unresolved | failed/unresolved genuine port |
-| CD | failed/unresolved | failed/unresolved genuine port |
-| Havlak | failed/unresolved | failed/unresolved genuine port |
+| Full Json | qualified standard-library DOM adaptation | unresolved: no qualified genuine port completed |
+| DeltaBlue | unresolved: no qualified full port completed | unresolved: no qualified genuine port completed |
+| CD | unresolved: no qualified full red/black-tree port completed | unresolved: no qualified genuine port completed |
+| Havlak | unresolved: no qualified full graph port completed | unresolved: no qualified genuine port completed |
 | Queens | qualified | qualified |
-| NBody | qualified decimal/native-math adaptation | failed/unresolved genuine port |
+| NBody | qualified decimal/native-math adaptation | unresolved: no qualified genuine port completed |
 | Base64 v2 | qualified byte-string port | not NetRexx capability - Java/JVM control |
 | RexxCPS | canonical 2.2 | qualified disclosed 2.2n capability |
 
-No failed port is described as unsupported: Stage 4 found no proved language
-prohibition. Missing cells remain visible in the scorecard as
-`failed/unresolved`; no Java result fills them.
+`failed` and `unresolved` are distinct. `failed` means that a completed port
+attempt reached build, execution or qualification and did not pass its declared
+gate. `unresolved` means that no correctness-qualified port was completed and
+no concrete language/runtime prohibition was proved. All current heavy missing
+v3 rows above are unresolved, not failed. For example, ooRexx can express CD's
+maths and objects, but no full red/black-tree port was completed; a NetRexx
+Full-Json implementation whose material parser state is Java collections would
+be a Java/JVM control rather than the missing genuine-NetRexx port.
+
+This differs from ooRexx Mandelbrot, where an executable attempt exists but its
+decimal/XOR adaptation does not preserve the canonical results and is therefore
+`not comparable`. It also differs from NetRexx Towers, whose executable binary
+port is retained as a Java/JVM control rather than claimed as NetRexx
+capability. No unresolved or failed cell is described as unsupported, and no
+Java result fills it.
 
 ## Qualification and evidence boundary
 
