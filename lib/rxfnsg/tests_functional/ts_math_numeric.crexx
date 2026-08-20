@@ -1,27 +1,9 @@
 /* Focused RCC-5C exact integer and precision-preserving decimal tests. */
 options levelb
 
+import numerictestsupport
 import rxint
 import rxdecimal
-
-check_int: procedure = .int
-  arg expected = .int, actual = .int, label = .string
-  if expected = actual then return 0
-  say "FAIL: RCC-5C" label "expected" expected "got" actual
-  return 1
-
-decimal_abs: procedure = .decimal
-  numeric digits inherited
-  arg value = .decimal
-  if value < 0 then return 0 - value
-  return value
-
-check_decimal: procedure = .int
-  numeric digits inherited
-  arg expected = .decimal, actual = .decimal, tolerance = .decimal, label = .string
-  if decimal_abs(expected - actual) <= tolerance then return 0
-  say "FAIL: RCC-5C" label "expected" expected "got" actual "tolerance" tolerance
-  return 1
 
 test_integer_signals: procedure = .int
   failures = 0
@@ -93,46 +75,47 @@ test_decimal_ln_signal: procedure = .int
 test_decimal_9: procedure = .int
   numeric digits 9
   failures = 0
-  failures = failures + check_decimal("1.41421356" as .decimal, rxdecimal..sqrt(2), "1E-8" as .decimal, "decimal-9 sqrt")
-  failures = failures + check_decimal("2.71828183" as .decimal, rxdecimal..exp(1), "1E-8" as .decimal, "decimal-9 exp")
-  failures = failures + check_decimal(1, rxdecimal..ln(rxdecimal..euler()), "1E-8" as .decimal, "decimal-9 ln")
-  failures = failures + check_decimal("0.5" as .decimal, rxdecimal..sin(rxdecimal..pi() / 6), "1E-8" as .decimal, "decimal-9 sin")
-  failures = failures + check_decimal(-1, rxdecimal..cos(rxdecimal..pi()), "1E-8" as .decimal, "decimal-9 cos")
+  failures = failures + numerictestsupport..check_decimal_equal(rxdecimal..sqrt(4), 2, "decimal-9 exact sqrt")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..sqrt(2), "1.41421356" as .decimal, "1E-8" as .decimal, 0, "decimal-9 sqrt")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..exp(1), "2.71828183" as .decimal, "1E-8" as .decimal, 0, "decimal-9 exp")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..ln(rxdecimal..euler()), 1, "1E-8" as .decimal, 0, "decimal-9 ln")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..sin(rxdecimal..pi() / 6), "0.5" as .decimal, "1E-8" as .decimal, 0, "decimal-9 sin")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..cos(rxdecimal..pi()), -1, "1E-8" as .decimal, 0, "decimal-9 cos")
   return failures
 
 test_decimal_18: procedure = .int
   numeric digits 18
   failures = 0
-  failures = failures + check_decimal("1.41421356237309505" as .decimal, rxdecimal..sqrt(2), "1E-17" as .decimal, "decimal-18 sqrt")
-  failures = failures + check_decimal("2.71828182845904524" as .decimal, rxdecimal..exp(1), "1E-17" as .decimal, "decimal-18 exp")
-  failures = failures + check_decimal(1, rxdecimal..ln(rxdecimal..euler()), "1E-17" as .decimal, "decimal-18 ln")
-  failures = failures + check_decimal("0.5" as .decimal, rxdecimal..sin(rxdecimal..pi() / 6), "1E-17" as .decimal, "decimal-18 sin")
-  failures = failures + check_decimal(-1, rxdecimal..cos(rxdecimal..pi()), "1E-17" as .decimal, "decimal-18 cos")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..sqrt(2), "1.41421356237309505" as .decimal, "1E-17" as .decimal, 0, "decimal-18 sqrt")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..exp(1), "2.71828182845904524" as .decimal, "1E-17" as .decimal, 0, "decimal-18 exp")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..ln(rxdecimal..euler()), 1, "1E-17" as .decimal, 0, "decimal-18 ln")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..sin(rxdecimal..pi() / 6), "0.5" as .decimal, "1E-17" as .decimal, 0, "decimal-18 sin")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..cos(rxdecimal..pi()), -1, "1E-17" as .decimal, 0, "decimal-18 cos")
   return failures
 
 test_decimal_64: procedure = .int
   numeric digits 64
   failures = 0
-  failures = failures + check_decimal(2, rxdecimal..sqrt(2) * rxdecimal..sqrt(2), "1E-62" as .decimal, "decimal-64 sqrt")
-  failures = failures + check_decimal(rxdecimal..euler(), rxdecimal..exp(1), "1E-62" as .decimal, "decimal-64 exp")
-  failures = failures + check_decimal(1, rxdecimal..ln(rxdecimal..euler()), "1E-62" as .decimal, "decimal-64 ln")
-  failures = failures + check_decimal("0.5" as .decimal, rxdecimal..sin(rxdecimal..pi() / 6), "1E-62" as .decimal, "decimal-64 sin")
-  failures = failures + check_decimal(-1, rxdecimal..cos(rxdecimal..pi()), "1E-62" as .decimal, "decimal-64 cos")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..sqrt(2) * rxdecimal..sqrt(2), 2, "1E-62" as .decimal, 0, "decimal-64 sqrt")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..exp(1), rxdecimal..euler(), "1E-62" as .decimal, 0, "decimal-64 exp")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..ln(rxdecimal..euler()), 1, "1E-62" as .decimal, 0, "decimal-64 ln")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..sin(rxdecimal..pi() / 6), "0.5" as .decimal, "1E-62" as .decimal, 0, "decimal-64 sin")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..cos(rxdecimal..pi()), -1, "1E-62" as .decimal, 0, "decimal-64 cos")
   return failures
 
 main: procedure = .int
   failures = 0
-  failures = failures + check_int(6, rxint..gcd(54, 24), "gcd")
-  failures = failures + check_int(6, rxint..gcd(-54, 24), "gcd signed")
-  failures = failures + check_int(0, rxint..gcd(0, 0), "gcd zero")
-  failures = failures + check_int(42, rxint..lcm(-21, 6), "lcm")
-  failures = failures + check_int(0, rxint..isqrt(0), "isqrt zero")
-  failures = failures + check_int(3, rxint..isqrt(15), "isqrt floor")
-  failures = failures + check_int(3037000499, rxint..isqrt(9223372036854775807), "isqrt rxinteger maximum")
-  failures = failures + check_int(24, rxint..powmod(2, 10, 1000), "powmod")
-  failures = failures + check_int(7, rxint..powmod(-2, 5, 13), "powmod signed base")
-  failures = failures + check_int(529, rxint..powmod(9223372036854775806, 2, 9223372036854775783), "powmod overflow-safe multiply")
-  failures = failures + check_int(2432902008176640000, rxint..factorial(20), "factorial boundary")
+  failures = failures + numerictestsupport..check_int_equal(rxint..gcd(54, 24), 6, "gcd")
+  failures = failures + numerictestsupport..check_int_equal(rxint..gcd(-54, 24), 6, "gcd signed")
+  failures = failures + numerictestsupport..check_int_equal(rxint..gcd(0, 0), 0, "gcd zero")
+  failures = failures + numerictestsupport..check_int_equal(rxint..lcm(-21, 6), 42, "lcm")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(0), 0, "isqrt zero")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(15), 3, "isqrt floor")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(9223372036854775807), 3037000499, "isqrt rxinteger maximum")
+  failures = failures + numerictestsupport..check_int_equal(rxint..powmod(2, 10, 1000), 24, "powmod")
+  failures = failures + numerictestsupport..check_int_equal(rxint..powmod(-2, 5, 13), 7, "powmod signed base")
+  failures = failures + numerictestsupport..check_int_equal(rxint..powmod(9223372036854775806, 2, 9223372036854775783), 529, "powmod overflow-safe multiply")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(20), 2432902008176640000, "factorial boundary")
   failures = failures + test_integer_signals()
   failures = failures + test_decimal_signals()
   failures = failures + test_decimal_9()

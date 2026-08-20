@@ -46,6 +46,15 @@ Domain and range behaviour follows the platform C implementation: operations
 such as a negative square root return IEEE NaN, poles can return infinity, and
 signed zero is preserved where the corresponding C function specifies it.
 
+The black-box float contract suite is
+`lib/plugins/float/rxfloat_test.crexx`. Its typed assertions live in the pure
+Level B `tests/support/numeric_test_support.crexx` module and are shared with
+the integer and decimal suites. The helper is test machinery rather than a
+source of expected values. The suite covers every canonical procedure, every
+compatibility alias, and the representative IEEE/domain boundaries promised
+above. The risk-weighted requirements for all three numeric families are in the
+[RCC-5 mathematics validation strategy](../../planning/release-1/mathematics-validation-strategy.md).
+
 ## Native integer: `rxint`
 
 `rxint` supplies checked algorithms over the signed native `.int` type:

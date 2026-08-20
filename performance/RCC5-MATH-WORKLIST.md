@@ -1,8 +1,8 @@
 # RCC-5A/B/C mathematics composition worklist
 
-Status: RCC-5A is complete. RCC-5B implementation and its first Release verdict
-are accepted, with focused mathematical-contract coverage still open. RCC-5C
-remains in progress; RCC-5D+ is not started.
+Status: RCC-5A and focused RCC-5B are complete; the RCC-5B first Release
+verdict is accepted. Consolidated full QA remains deferred to the end of
+RCC-5. RCC-5C remains in progress; RCC-5D+ is not started.
 
 Approved by Adrian: 2026-08-20.
 
@@ -184,27 +184,30 @@ follow-up rather than being conflated with the provider-lifetime fix.
 These results qualify the implementation and accepted performance verdict; they
 are not the consolidated RCC-5 full-QA closeout.
 
-## RCC-5B focused mathematics coverage — open
+## RCC-5B focused mathematics coverage — complete
 
-The current test executes every one of the 37 canonical procedures and proves
-every `rxmath` compatibility name resolves to the same native procedure. It
-independently checks the repaired `hypot`, representative `pow`, `fmod`, roots,
-constants, `atan2`, `expm1`, `log1p`, NaN, infinity, and signed-zero cases.
+The reusable black-box suite now executes every one of the 37 canonical
+procedures against independent expected values and proves every `rxmath`
+compatibility name resolves to the same result. It covers trigonometric,
+hyperbolic, exponential/logarithmic, rounding/remainder, root, special-function
+and constant families, including representative domains, poles, NaN/infinity,
+signed zero, negative inputs, half-way rounding, negative remainder, and the
+repaired/scaled `hypot` cases.
 
-That is complete surface-binding coverage, but not complete mathematical
-contract coverage. Most procedures currently have only one nominal invocation
-whose result is compared with its compatibility alias; the same defect on both
-names would pass. Focused RCC-5B completion therefore still requires:
+The shared pure Level B `numerictestsupport` module applies typed
+absolute-plus-relative binary64 assertions. It is test machinery rather than a
+mathematical oracle: expected values and tolerances remain owned by the float
+contract suite. The same module supplies exact integer and typed decimal
+assertions for RCC-5C. A source-surface guard fails if a future registered
+procedure lacks either an expected-value canonical call or an `rxmath`
+compatibility call. Native-boundary tests separately prove missing and extra
+argument signals for nullary, unary, and binary RXPA procedures because typed
+source rejects those malformed calls before execution.
 
-- independent known-value or identity checks for every procedure family;
-- representative domain, pole, NaN/infinity, signed-zero, and negative-input
-  cases where the platform C contract defines them;
-- rounding half-way/sign cases and negative remainder behavior;
-- explicit native wrong-arity signal tests for nullary, unary, and binary
-  procedures; and
-- tolerances appropriate to portable binary64 results rather than broad exact
-  equality, except where the mathematical result is exactly representable.
-
-This bounded library test expansion does not require another broad CTest,
-sanitizer, install, package, or performance sweep. Those belong to the single
-RCC-5 closeout.
+The optimized/no-opt `rxbvm`/`rxtvm` contract cells, structural surface guard,
+and native arity test pass 6/6. This completes focused RCC-5B without claiming
+exhaustive host-libm qualification. The approved risk-weighted float,
+integer, and decimal scenario requirements are defined in
+[`mathematics-validation-strategy.md`](../docs/planning/release-1/mathematics-validation-strategy.md).
+They govern RCC-5C completion and do not run or replace the single consolidated
+RCC-5 full-QA closeout.

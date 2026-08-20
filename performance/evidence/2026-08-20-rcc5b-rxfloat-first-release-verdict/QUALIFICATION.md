@@ -33,6 +33,11 @@ to `rxas_flow_value_node()` retaining a pointer across `flow_ssa_grow()`.
 This is independent of RCC-5B and the RXPA provider-lifetime correction and is
 recorded for a separately authorized investigation.
 
-Focused mathematical-contract coverage for RCC-5B remains open as recorded in
-the controlling worklist. RCC-5A is complete; RCC-5C remains in progress; and
-RCC-5D+ has not started.
+The later focused float-contract expansion independently covers all 37
+canonical procedures, every compatibility alias, and nullary/unary/binary
+native arity failures. Its final optimized/no-opt, both-VM, structural, and
+native-boundary set passes 6/6. The shared comparator is typed test support,
+not the source of those expected values. RCC-5A and focused RCC-5B are
+complete; RCC-5C remains in progress under the separate mathematics validation
+strategy; and RCC-5D+ has not started. Consolidated full QA remains an
+end-of-RCC-5 activity.

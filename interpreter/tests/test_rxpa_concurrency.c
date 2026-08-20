@@ -85,6 +85,9 @@ static uint32_t context_procedure_capabilities(rxvm_context *context,
                                                const char *name);
 static rxvm_native_invoker context_procedure_invoker(
         rxvm_context *context, const char *name);
+static int expect_float_native_arity_signal(rxvm_context *context,
+                                            const char *procedure_name,
+                                            int argument_count);
 
 static int value_string_equals(const value *actual, const char *expected) {
     size_t expected_length = strlen(expected);
@@ -665,6 +668,13 @@ static int test_float_static_binding(void) {
                 rxvm_callfunc_direct) {
         failed = 1;
     }
+    if (!failed) {
+        failed += expect_float_native_arity_signal(&first, "rxfloat.pi", 1);
+        failed += expect_float_native_arity_signal(&first, "rxfloat.sqrt", 0);
+        failed += expect_float_native_arity_signal(&first, "rxfloat.sqrt", 2);
+        failed += expect_float_native_arity_signal(&first, "rxfloat.hypot", 1);
+        failed += expect_float_native_arity_signal(&first, "rxfloat.hypot", 3);
+    }
     rxfremod(&second);
     rxfremod(&first);
     if (failed) {
@@ -672,6 +682,62 @@ static int test_float_static_binding(void) {
         return 1;
     }
     return 0;
+}
+
+static int expect_float_native_arity_signal(rxvm_context *context,
+                                            const char *procedure_name,
+                                            int argument_count) {
+    proc_runtime *procedure = context_find_procedure(context, procedure_name);
+    rxvm_memory_worker *previous_worker;
+    rxvm_context *previous_context;
+    value arguments[3];
+    value *argument_values[3];
+    value result;
+    value signal;
+    int index;
+    int failed = 0;
+
+    if (!procedure || argument_count < 0 || argument_count > 3) return 1;
+    value_init(&result);
+    value_init(&signal);
+    for (index = 0; index < 3; index++) {
+        value_init(&arguments[index]);
+        set_float(&arguments[index], (double)(index + 1));
+        argument_values[index] = &arguments[index];
+    }
+
+    previous_worker = rxvm_memory_enter(context->worker.memory_worker);
+    if (rxvm_worker_begin_execution(&context->worker) !=
+            RXVM_WORKER_TRANSITION_OK) {
+        rxvm_memory_leave(previous_worker);
+        failed = 1;
+        goto cleanup;
+    }
+    rxpa_compatibility_execution_enter(&context->rxpa_compatibility);
+    previous_context = rxvm_active_context_enter(context);
+    rxvm_call_native_procedure(
+            procedure, argument_count,
+            argument_count ? argument_values : NULL, &result, &signal);
+    rxvm_active_context_leave(previous_context);
+    rxpa_compatibility_execution_leave(&context->rxpa_compatibility);
+    if (rxvm_worker_end_execution(&context->worker) !=
+            RXVM_WORKER_TRANSITION_OK) {
+        failed = 1;
+    }
+    rxvm_memory_leave(previous_worker);
+    if (signal.int_value != SIGNAL_INVALID_ARGUMENTS) {
+        fprintf(stderr,
+                "RXPA float arity mismatch: procedure=%s arguments=%d signal=%lld\n",
+                procedure_name, argument_count,
+                (long long)signal.int_value);
+        failed = 1;
+    }
+
+cleanup:
+    clear_value(&signal);
+    clear_value(&result);
+    for (index = 2; index >= 0; index--) clear_value(&arguments[index]);
+    return failed;
 }
 
 static void legacy_probe(rxinteger numargs, rxpa_attribute_value *args,

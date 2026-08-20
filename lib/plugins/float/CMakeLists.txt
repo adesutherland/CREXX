@@ -55,6 +55,35 @@ endif()
 
 if(BUILD_TESTING)
     add_custom_target(rxfloat_test ALL)
+    set(_numeric_test_support_base
+            "${CMAKE_CURRENT_BINARY_DIR}/numeric_test_support")
+    set(_numeric_test_support_rxbin
+            "${_numeric_test_support_base}.rxbin")
+    set(_numeric_test_support_source
+            "${CMAKE_SOURCE_DIR}/tests/support/numeric_test_support.crexx")
+    add_custom_command(
+            OUTPUT "${_numeric_test_support_rxbin}"
+            BYPRODUCTS "${_numeric_test_support_base}.rxas"
+            COMMAND $<TARGET_FILE:rxc> -n
+                    -i "${CMAKE_BINARY_DIR}/bin"
+                    -o numeric_test_support
+                    "${_numeric_test_support_source}"
+            COMMAND $<TARGET_FILE:rxas> -n
+                    -o numeric_test_support numeric_test_support
+            DEPENDS rxc rxas compiler_exit_bin library
+                    "${_numeric_test_support_source}"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+    add_custom_target(rxfloat_numeric_test_support
+            DEPENDS "${_numeric_test_support_rxbin}")
+    add_dependencies(rxfloat_test rxfloat_numeric_test_support)
+    add_test(
+            NAME rxfloat_contract_surface_coverage
+            COMMAND ${CMAKE_COMMAND}
+                    -DPROVIDER_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rxfloat.c
+                    -DCONTRACT_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rxfloat_test.crexx
+                    -P ${CMAKE_CURRENT_SOURCE_DIR}/check_contract_surface.cmake)
+    set_tests_properties(rxfloat_contract_surface_coverage PROPERTIES
+            LABELS "library;plugins;rxpa;math;float;contract")
     set(_rxfloat_runners rxbvm)
     if(TARGET rxtvm)
         list(APPEND _rxfloat_runners rxtvm)
@@ -67,10 +96,13 @@ if(BUILD_TESTING)
                 TARGET_GROUP rxfloat_test
                 RUNNER ${_rxfloat_runner}
                 IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+                RXC_FLAGS -s ${CMAKE_SOURCE_DIR}/tests/support
                 DEPENDS library float float_static
-                RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
+                        rxfloat_numeric_test_support
+                RUNTIME_ARGS ${_numeric_test_support_base}
+                        ${CMAKE_BINARY_DIR}/bin/library
                 TEST_LABELS "library;plugins;rxpa;math;float"
-                REQUIRED_OUTPUT_REGEX "PASS: rxfloat scalar and compatibility contracts"
+                REQUIRED_OUTPUT_REGEX "PASS: rxfloat mathematical contract and compatibility aliases"
                 FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
     endforeach()
 endif()

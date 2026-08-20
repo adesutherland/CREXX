@@ -1,0 +1,100 @@
+/* Pure Level B typed assertions shared by numeric contract suites. */
+options levelb floats_binary
+
+namespace numerictestsupport expose check_bool check_int_equal check_float_close check_float_nan check_float_positive_infinity check_float_negative_infinity check_float_positive_zero check_float_negative_zero check_decimal_equal check_decimal_close
+
+check_bool: procedure = .int
+  arg condition = .boolean, label = .string
+  if condition then return 0
+  say "FAIL: numeric test" label
+  return 1
+
+check_int_equal: procedure = .int
+  arg actual = .int, expected = .int, label = .string
+  if actual = expected then return 0
+  say "FAIL: numeric test" label "expected" expected "got" actual
+  return 1
+
+check_float_close: procedure = .int
+  arg actual = .float, expected = .float, absolute_tolerance = .float, relative_tolerance = .float, label = .string
+  if actual <> actual then do
+    say "FAIL: numeric test" label "unexpected NaN"
+    return 1
+  end
+  if absolute_tolerance < 0.0 | relative_tolerance < 0.0 then do
+    say "FAIL: numeric test" label "negative float tolerance"
+    return 1
+  end
+  if actual = expected then return 0
+
+  difference = actual - expected
+  if difference < 0.0 then difference = 0.0 - difference
+  scale = actual
+  if scale < 0.0 then scale = 0.0 - scale
+  expected_scale = expected
+  if expected_scale < 0.0 then expected_scale = 0.0 - expected_scale
+  if expected_scale > scale then scale = expected_scale
+  tolerance = absolute_tolerance + relative_tolerance * scale
+  if difference <= tolerance then return 0
+
+  say "FAIL: numeric test" label "expected" expected "got" actual "tolerance" tolerance
+  return 1
+
+check_float_nan: procedure = .int
+  arg actual = .float, label = .string
+  if actual <> actual then return 0
+  say "FAIL: numeric test" label "expected NaN got" actual
+  return 1
+
+check_float_positive_infinity: procedure = .int
+  arg actual = .float, positive_infinity = .float, label = .string
+  if actual = positive_infinity then return 0
+  say "FAIL: numeric test" label "expected positive infinity got" actual
+  return 1
+
+check_float_negative_infinity: procedure = .int
+  arg actual = .float, negative_infinity = .float, label = .string
+  if actual = negative_infinity then return 0
+  say "FAIL: numeric test" label "expected negative infinity got" actual
+  return 1
+
+check_float_positive_zero: procedure = .int
+  arg actual = .float, positive_infinity = .float, label = .string
+  if actual = 0.0 & 1.0 / actual = positive_infinity then return 0
+  say "FAIL: numeric test" label "expected positive zero got" actual
+  return 1
+
+check_float_negative_zero: procedure = .int
+  arg actual = .float, negative_infinity = .float, label = .string
+  if actual = 0.0 & 1.0 / actual = negative_infinity then return 0
+  say "FAIL: numeric test" label "expected negative zero got" actual
+  return 1
+
+check_decimal_equal: procedure = .int
+  numeric digits inherited
+  arg actual = .decimal, expected = .decimal, label = .string
+  if actual = expected then return 0
+  say "FAIL: numeric test" label "expected" expected "got" actual
+  return 1
+
+check_decimal_close: procedure = .int
+  numeric digits inherited
+  arg actual = .decimal, expected = .decimal, absolute_tolerance = .decimal, relative_tolerance = .decimal, label = .string
+  if absolute_tolerance < 0 | relative_tolerance < 0 then do
+    say "FAIL: numeric test" label "negative decimal tolerance"
+    return 1
+  end
+  if actual = expected then return 0
+
+  difference = actual - expected
+  if difference < 0 then difference = 0 - difference
+  scale = actual
+  if scale < 0 then scale = 0 - scale
+  expected_scale = expected
+  if expected_scale < 0 then expected_scale = 0 - expected_scale
+  if expected_scale > scale then scale = expected_scale
+  tolerance = absolute_tolerance + relative_tolerance * scale
+  if difference <= tolerance then return 0
+
+  say "FAIL: numeric test" label "expected" expected "got" actual "tolerance" tolerance
+  return 1
