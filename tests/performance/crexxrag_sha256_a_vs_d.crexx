@@ -3,6 +3,7 @@ options levelb
 
 import rxfnsb
 import crexxragsha256gate
+import rxhash
 
 elapsedUs: procedure = .int
   arg started = .int
@@ -117,12 +118,17 @@ checkVector: procedure = .int
   arg label = .string, data = .binary, expected = .string, expose constants = .int[]
   pure = bin2x(sha256Pure(data, constants))
   native = bin2x(crexxragsha256gate..sha256_native(data))
+  production = bin2x(rxhash..sha256(data))
   if pure <> expected then do
     say "FAIL: CREXXRAG-SHA256 pure vector " || label || " expected=" || expected || " actual=" || pure
     return 1
   end
   if native <> expected then do
     say "FAIL: CREXXRAG-SHA256 native vector " || label || " expected=" || expected || " actual=" || native
+    return 1
+  end
+  if production <> expected then do
+    say "FAIL: CREXXRAG-SHA256 production vector " || label || " expected=" || expected || " actual=" || production
     return 1
   end
   return 0
@@ -217,8 +223,8 @@ main: procedure = .int
     return 0
   end
 
-  if mode <> "pure" & mode <> "native" then do
-    say "FAIL: CREXXRAG-SHA256 mode must be selftest, pure, or native"
+  if mode <> "pure" & mode <> "native" & mode <> "production" then do
+    say "FAIL: CREXXRAG-SHA256 mode must be selftest, pure, native, or production"
     return 2
   end
   bytes = 4096
@@ -236,8 +242,11 @@ main: procedure = .int
   if mode = "pure" then do iteration = 1 to iterations
     digest = sha256Pure(data, constants)
   end
-  else do iteration = 1 to iterations
+  else if mode = "native" then do iteration = 1 to iterations
     digest = crexxragsha256gate..sha256_native(data)
+  end
+  else do iteration = 1 to iterations
+    digest = rxhash..sha256(data)
   end
   elapsed = elapsedUs(started)
 

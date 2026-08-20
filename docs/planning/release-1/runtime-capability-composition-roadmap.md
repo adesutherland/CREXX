@@ -1,9 +1,10 @@
 # Runtime Capability Composition Roadmap
 
-Status: approved roadmap in progress. RCC-1 through RCC-3 are implemented;
-RCC-4 and later gates remain unimplemented unless separately noted.
+Status: approved roadmap in progress. RCC-1 through RCC-4 are implemented in
+the current tree; RCC-5 and later gates remain unimplemented unless separately
+noted.
 
-Date: 2026-08-19.
+Date: 2026-08-20.
 
 Decision state on 2026-08-19: the RXBIN format-boundary rule, opcode disposition
 list, once-per-mutable-module-instance initializer contract, the
@@ -37,11 +38,10 @@ normal product without making it part of the bootstrap closure. "Native" and
 "always easy to find" are implementation and delivery properties, not reasons
 by themselves to call something core.
 
-For clarity, this proposal uses `rx_hash` only as the provisional native
-provider and package ID. The public namespace is deliberately undecided:
-`rxhash` is already the mnemonic of RXAS opcode 513, so reusing that spelling
-for the public namespace would obscure two different contracts. RCC-0 must
-approve the final names; neither should encode a platform filename.
+The approved provider and package ID is `rx_hash`; its public namespace is
+`rxhash`, and the first callable is `rxhash.sha256()`. The namespace and the
+existing RXAS `rxhash` mnemonic are distinct contracts. Provider metadata uses
+the stable provider ID, never a platform filename.
 
 ### Current hash names are not one facility
 
@@ -50,9 +50,10 @@ approve the final names; neither should encode a platform filename.
   a Rexx wrapper around this instruction.
 - Existing RXPA `rxmath.fnv1a()` is a separate historical native FNV-1a
   implementation inside the mixed `rxmath` plugin.
-- Proposed provider `rx_hash` does not yet exist as production code. It is the
-  selected native home for SHA-256 and a possible later consolidation point for
-  explicitly named digest, checksum, and non-cryptographic hash APIs.
+- Production provider `rx_hash` publishes
+  `rxhash.sha256(data = .binary) = .binary`. It is the selected native home for
+  SHA-256 and a possible later consolidation point for explicitly named
+  digest, checksum, and non-cryptographic hash APIs.
 
 The roadmap's instruction-performance warning concerns only replacement of the
 existing RXAS FNV-1a opcode. It does not suggest delaying the selected native
@@ -441,14 +442,14 @@ metadata cases, and smaller cold handler/tooling surfaces.
 | RCC-1: provider identity and dependency path — **implemented** | Add stable provider identity to compiler import provenance, RXAS metadata, RXBIN serialization, `rxlink` union/conflict logic, diagnostics, and inspection tools. | A linked image reports its exact native requirements without loading or running them. Old/new format behavior is deterministic. |
 | RCC-2: runtime and native-package resolution — **implemented** | Implement static-first trusted autoload, binary manifest-ID verification, installed/app-local lookup, failure diagnostics, and automatic static archive selection for native packaging. | The same test image runs under ordinary `rxvm`/`rxbvm` and native packaging without `-p` or a user-maintained provider list; missing/wrong providers fail before execution. |
 | RCC-3: explicit module initialization — **implemented** | Implement initializer metadata, per-module-instance state, VM ready-state, deterministic ordering, at-most-one attempt, late-load transaction, embedded/task-provider behavior, signal/failure tests, and documentation. | Every declared initializer reaches `READY` once per mutable module instance after dependencies/link/preparation and before that instance is observable on both VM modes. |
-| RCC-4: production `rx_hash` | Build the small process-reentrant provider, publish the approved binary SHA-256 API directly through RXPA, ship dynamic and static forms, and connect it to dependency autoload. | Standard vectors, embedded zeroes, boundary lengths, both VMs, native package, install/package, concurrency, and `crexx-rag` integration pass. Retain the accepted performance evidence and remeasure only if the production path materially differs. |
+| RCC-4: production `rx_hash` — **implemented** | The small process-reentrant provider publishes `rxhash.sha256(data = .binary) = .binary` directly through RXPA, ships dynamic and static forms, and uses declarative dependency autoload. | Standard vectors, embedded zeroes, boundary lengths, both VMs, native package, scratch install/package, static/dynamic concurrency, and a read-only `crexx-rag` Level G consumer contract pass on macOS. The accepted first-Release verdict found the production path equivalent to the prototype; Linux/Windows product qualification remains RCC-8 work. |
 | RCC-5: split historical bundles | Extract and qualify the scalar math, stats, filesystem, platform, ID, hash/checksum, developer, and legacy surfaces. Update the component catalogue and packaging from actual transitive dependencies. | No broad `system` or `rxmath` status hides unrelated APIs; the `crexx` driver links only its narrow required providers. |
 | RCC-6: file-instruction replacement | Add `rx_io`, dual-lower/migrate the 14 `F*` forms, prove handle ownership and behavior, measure code/startup/call effects, and select the compatibility retirement point. | The call path is equivalent and acceptable; old opcodes are retained or tombstoned according to the approved format policy. |
 | RCC-7: measured instruction review | Evaluate existing RXAS `rxhash`, host utilities, then sockets/reflection only in the recorded order and as separate decisions. | Each family has a keep/convert disposition backed by use, performance, ownership, size, and compatibility evidence. |
 | RCC-8: release qualification | Cross-platform build/install/package, both VMs, native/embedded/late-load, security-path, failure, concurrency, and documentation closeout. | The product can explain and mechanically report every required provider and initializer; default installations work without manual runtime lists. |
 
-RCC-4 through RCC-8 are not automatically authorized by approval of RCC-1
-through RCC-3. Each later production architecture or language/format decision
+RCC-5 through RCC-8 are not automatically authorized by approval of RCC-1
+through RCC-4. Each later production architecture or language/format decision
 remains
 subject to the repository's normal approval and, where performance-sensitive,
 first-Release-verdict gates.

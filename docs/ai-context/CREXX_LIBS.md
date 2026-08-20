@@ -620,7 +620,7 @@ Current bundled classification is deliberately conservative:
 
 | Classification | Bundled examples | Rule |
 | --- | --- | --- |
-| Plugin-wide process-reentrant | `cipher`, `stack`, `strings`, `getpi`, `id` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. |
+| Plugin-wide process-reentrant | `cipher`, `rx_hash`, `stack`, `strings`, `getpi`, `id` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. |
 | Mixed per-procedure | `rxmath` | Ordinary math procedures are process-reentrant; `rxmath.inlinec` remains legacy because it uses fixed process/file names. |
 | Per-VM session | `odbc` | Database procedures are session-affine; `odbc.show_message` is process-reentrant; old hosts use the plugin's default session. |
 | Unqualified | All other bundled plugins | Remain legacy and serialized until their complete state, dependencies, failure paths and teardown have been audited. |
@@ -656,10 +656,10 @@ The VM passes arguments as opaque handles mapped to internal VM registers. The R
   storage. The plugin retains ownership of the source buffer and must release
   it after `SETSTRING()` when that buffer was allocated by the plugin.
 
-- `SETNATIVEPAYLOAD()` / `GETNATIVEPAYLOAD()`: Attach or read a hidden
-  native binary payload for object-shaped native values. Use this only with a
-  clear copy/finalizer contract; ordinary Rexx code still sees an object value,
-  not a C pointer.
+- `SETNATIVEPAYLOAD()` / `GETNATIVEPAYLOAD()`: Attach or read binary payload
+  storage. This is the RXPA path for ordinary `.binary` arguments and results,
+  as used by `rxhash.sha256()`. Object-shaped native payloads additionally
+  require a clear copy/finalizer contract; Rexx code never sees a C pointer.
 
 - `RETURN`: The specific target register designated for the function's return value.
 
@@ -756,6 +756,26 @@ add_dynamic_plugin_target(_example_mock PROVIDER_ID rx_example mock.c)
 Its delivered artifact must still use the canonical `rx_example.rxplugin`
 stem. `PROVIDER_ID` is not an aliasing mechanism: the runtime requires the
 requested artifact stem and embedded manifest identity to agree.
+
+### Standard `rx_hash` provider
+
+`rx_hash` is a B+G standard/default provider, not compiler or VM core. It is
+built and installed in dynamic and static forms and currently publishes:
+
+```rexx
+import rxhash
+
+digest = rxhash..sha256(data)
+```
+
+The exact signature is `rxhash.sha256(data = .binary) = .binary`. The result
+is the 32 raw digest bytes; use `bin2x()` when hexadecimal text is required.
+Embedded zero bytes are data, and the input is not mutated. `rxc` records the
+provider ID `rx_hash` in RXBIN metadata for a retained call. `rxvm` and
+`rxbvm` then find the trusted `rx_hash.rxplugin` automatically, while
+`crexx -native` selects `rx_hash.a` (or `.lib`) and retains its registration
+anchor. No Rexx declaration wrapper or explicit runtime provider argument is
+required in a standard build or installation.
 
 ## 5. Declaring Native Classes and Interfaces
 

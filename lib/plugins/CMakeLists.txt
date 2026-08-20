@@ -15,6 +15,7 @@ add_subdirectory(arrays)
 add_subdirectory(rxmath)
 add_subdirectory(stack)
 add_subdirectory(cipher)
+add_subdirectory(hash)
 add_subdirectory(strings)
 add_subdirectory(getpi)
 add_subdirectory(keyaccess)
@@ -99,12 +100,14 @@ endif()
 # plugins exist.  Attach the production static forms here, then exercise every
 # qualified dynamic plugin through two simultaneous VM contexts.
 configure_linker_for_static_lib(test_rxpa_concurrency _cipher)
+configure_linker_for_static_lib(test_rxpa_concurrency _hash)
 configure_linker_for_static_lib(test_rxpa_concurrency _stack)
 configure_linker_for_static_lib(test_rxpa_concurrency _id)
 configure_linker_for_static_lib(test_rxpa_concurrency _rxmath)
 target_link_libraries(test_rxpa_concurrency rxpashim)
 add_dependencies(test_rxpa_concurrency
         _cipher _cipher_static
+        _hash _hash_static
         _stack _stack_static
         _strings _getpi
         _id _id_static)
@@ -114,6 +117,9 @@ add_dependencies(test_rxpa_concurrency _rxpa_session_failure)
 add_test(NAME rxpa_bundled_cipher_concurrency
         COMMAND test_rxpa_concurrency bundled
                 "$<TARGET_FILE_DIR:_cipher>" "$<TARGET_FILE_NAME:_cipher>" cipher)
+add_test(NAME rxpa_bundled_hash_concurrency
+        COMMAND test_rxpa_concurrency bundled
+                "$<TARGET_FILE_DIR:_hash>" "$<TARGET_FILE_NAME:_hash>" hash)
 add_test(NAME rxpa_bundled_stack_concurrency
         COMMAND test_rxpa_concurrency bundled
                 "$<TARGET_FILE_DIR:_stack>" "$<TARGET_FILE_NAME:_stack>" stack)
@@ -135,6 +141,7 @@ add_test(NAME rxpa_dynamic_session_factory_failure_rollback
                 "$<TARGET_FILE_NAME:_rxpa_session_failure>")
 set_tests_properties(
         rxpa_bundled_cipher_concurrency
+        rxpa_bundled_hash_concurrency
         rxpa_bundled_stack_concurrency
         rxpa_bundled_strings_concurrency
         rxpa_bundled_getpi_concurrency

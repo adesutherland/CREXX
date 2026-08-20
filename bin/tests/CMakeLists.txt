@@ -433,6 +433,11 @@ add_crexx_native_test(
         EXPECT_OUTPUT "native address ok\n"
 )
 add_crexx_native_test(
+        crexx_native_rx_hash_provider
+        rexx_src/native_rx_hash.crexx
+        EXPECT_OUTPUT "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD\n"
+)
+add_crexx_native_test(
         crexx_native_default_link_strip
         rexx_src/explicit_header.crexx
         EXPECT_DAS_ABSENT ".srcstep"
@@ -468,6 +473,7 @@ crexx_label_smoke_tests(
         crexx_status_diagnostics
         crexx_source_root_compile_only
         crexx_native_explicit_header_smoke
+        crexx_native_rx_hash_provider
         crexx_native_default_link_strip
 )
 

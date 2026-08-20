@@ -88,6 +88,15 @@ LLM providers use the same client and private backend. See
 [Concurrent HTTP client and server](../crexx_library_reference/concurrent_http.md)
 for the complete surface and examples.
 
+## Binary SHA-256
+
+The standard/default native provider `rx_hash` exposes
+`rxhash.sha256(data = .binary) = .binary` to both Level B and Level G. Import
+`rxhash` directly; no Rexx wrapper is needed. The compiler records the native
+provider dependency, ordinary VMs discover the installed provider, and native
+packaging selects its static archive automatically. See
+[Binary hashing with `rxhash`](../crexx_library_reference/rxhash.md).
+
 ## ADDRESS and Trace Support
 
 `_address.rexx` contains the Rexx-side ADDRESS protocol support used by

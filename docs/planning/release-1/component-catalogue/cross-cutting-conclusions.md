@@ -2,7 +2,7 @@
 
 ## Outcome
 
-The repository now has a maintained, source-grounded catalogue of 2,154
+The repository now has a maintained, source-grounded catalogue of 2,158
 language, library, BIF, class/member, native registration, plugin, exit, tool,
 debugger, preprocessor, macro, example, and residual-source identities. The
 catalogue is sufficient to begin Eel1 product-boundary decisions, but the Stage
@@ -130,7 +130,7 @@ workload without promising production debugger quality.
 
 ## 7. Native plugins need a narrow integration policy
 
-The 27 `lib/plugins` directories range from required tool integration to
+The 28 `lib/plugins` directories range from required tool integration to
 incomplete residue. Their default-build status is not a useful taxonomy.
 
 The proposed policy is:
@@ -246,7 +246,7 @@ re-engineering or packaging change:
 6. RXPP as default tooling, `precomp` as internal core, and the shipped macro
    libraries demoted until repaired/tested;
 7. RXDB as developer-only experimental tooling;
-8. the 27-plugin disposition table, especially `system`, native collection
+8. the 28-plugin disposition table, especially `system`, native collection
    duplicates, network alternatives, and decimal-provider roles;
 9. compiler-exit bundle partitioning;
 10. manifest-driven delivery profiles replacing the broad `bin` install sweep;

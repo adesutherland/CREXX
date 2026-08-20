@@ -167,3 +167,17 @@ State: complete; reviewed. Decisions are ready for the later approval stage.
 - Conclusions distinguish current repository fact, provisional recommendation, and future implementation work.
 - The requested later Level B re-engineering is explicitly out of scope and was not performed.
 - No source, build, install, packaging, or public contract file outside this documentation catalogue was changed by this task; unrelated profiling work remains untouched.
+
+## Post-stage maintenance: RCC-4 `rx_hash`
+
+On 2026-08-20 the separately approved RCC-4 implementation added one
+`lib/plugins/hash` package ID and one public `rxhash.sha256` registration ID.
+Together with earlier post-stage additions, the maintained inventory is now
+**2,158 unique IDs**: 423 unique native RXPA registrations and 149
+package/tool/source/demo/example/PoC entries,
+with 28 `lib/plugins` directories. The underlying registration-site count is
+424 because the pre-existing duplicate `console.setcolor` site still maps to
+one public contract. The Stage 1-7 numerical statements above remain the
+historical review snapshots that were true when those stages closed; current
+purpose, reconciliation, quality, and provisional-classification tables include
+the RCC-4 additions.

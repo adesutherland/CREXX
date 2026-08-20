@@ -167,6 +167,7 @@ native.
 | fpool | incomplete local package | T0 | D0 | unknown | Local CMake names `fpool.c` and a test, but Stage 2 found neither C nor Rexx source and the root does not select it. | high |
 | getpi | mixed, C callable path | T2; passed focused run | D0 | high | Demonstrator code performs fixed 10-million or 1-million iteration calculations and otherwise returns `3.14`; inappropriate as a general numeric contract. | high |
 | gui | mixed, C/GTK | T1 conditional | D1 | high | Very broad stateful widget/process/file surface behind one plugin; requires GTK/platform lifecycle and error-path testing. | medium |
+| hash | pure native SHA-256 provider | T3; vectors, dual-VM concurrency, native and scratch-package tests | D3 | low; production path measured against the accepted native control | Binary-safe complete-digest API with declarative dynamic/static delivery. Incremental/file streaming remains a separate contract. | high |
 | id | mixed, seven native units | T2 registered | D1-D2 | medium | Multiple identifier algorithms share one adapter. Needs vector, uniqueness/ordering, entropy, clock, and concurrency evidence by algorithm. | medium |
 | keyaccess | mixed, C persistence engine | T2 registered | D1-D2 | high | Manual files, cache, transactions, backup, compaction, and heap ownership make integrity/fault-injection tests essential. | high |
 | llist | mixed, C handle registry | T2 registered | D1 | high | Manual nodes, navigation state, pointer registry, and explicit cleanup expand leak/use-after-free risk; overlaps pure-Rexx collections. | high |

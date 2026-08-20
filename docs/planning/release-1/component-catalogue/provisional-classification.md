@@ -25,7 +25,7 @@ mixed package.
 
 Every public leaf inherits the classification of its syntax family, source
 selector, or containing package unless an exception is stated. This supplies a
-classification for all 2,154 raw IDs without duplicating the leaf catalogue.
+classification for all 2,158 raw IDs without duplicating the leaf catalogue.
 
 ## Language syntax contracts
 
@@ -210,6 +210,7 @@ host/integration contracts unless explicitly tied to B tooling, not Level C.
 | `fpool` | removal candidate | source-only/not shipped | incomplete |
 | `getpi` | example | developer-only | demonstrator |
 | `gui` | integration | opt-in | experimental/GTK-dependent |
+| `hash` (`rx_hash`, public namespace `rxhash`) | B+G standard | default | supported SHA-256 surface; process-reentrant, binary-safe, dynamic/static declarative packaging |
 | `id` | integration | opt-in with `classlib_native` | provisional |
 | `keyaccess` | integration | opt-in with `classlib_native` | experimental pending integrity evidence |
 | `llist` | optional duplicate | developer-only | experimental |

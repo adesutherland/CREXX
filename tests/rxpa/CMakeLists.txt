@@ -12,7 +12,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
 add_custom_target(cri07_rxpa_sdk_consumer_prereqs
-        DEPENDS rxc rxas rxvm rxbvm library)
+        DEPENDS rxc rxas rxvm rxbvm crexx library _hash _hash_static)
 
 add_test(
         NAME rxpa_external_sdk_consumer
@@ -24,13 +24,14 @@ add_test(
                 -DCREXX_SOURCE_DIR=${CMAKE_SOURCE_DIR}
                 -DCMAKE_GENERATOR_NAME=${CMAKE_GENERATOR}
                 -DEXE_SUFFIX=${CMAKE_EXECUTABLE_SUFFIX}
+                -DSTATIC_SUFFIX=${CMAKE_STATIC_LIBRARY_SUFFIX}
                 -DPACKAGE_RELATIVE_DIR=${CREXX_CMAKE_PACKAGE_INSTALL_DIR}
                 -DCONSUMER_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/external_sdk
                 -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/rxpa_external_sdk_consumer_ws
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_external_sdk_consumer.cmake
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxpa_external_sdk_consumer PROPERTIES
-        LABELS "install;package;rxpa;external-consumer"
+        LABELS "install;package;rxpa;external-consumer;hash;crexx-rag"
         RUN_SERIAL TRUE
         TIMEOUT 240)
 

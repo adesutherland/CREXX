@@ -109,6 +109,7 @@ and unoptimized Rexx smoke executions.
 | `PKG-RXPA-fpool` | unreferenced | dynamic | single runtime test | not selected |
 | `PKG-RXPA-getpi` | default | dynamic | opt matrix | dynamic present |
 | `PKG-RXPA-gui` | `ENABLE_GTK` | dynamic + GTK3 | single runtime test | not selected |
+| `PKG-RXPA-hash` | default | dynamic + static provider package | dual-VM opt matrix, concurrency, native and install/package tests | both forms and canonical provider artifacts present |
 | `PKG-RXPA-id` | default | dynamic + static | template opt matrix | both present |
 | `PKG-RXPA-keyaccess` | default | dynamic + static | opt matrix; noopt smoke labelled | both present |
 | `PKG-RXPA-llist` | default | dynamic + static | opt matrix | both present |
@@ -130,8 +131,8 @@ and unoptimized Rexx smoke executions.
 | `PKG-RXPA-testrx` | unreferenced; no CMake | none | none | source directory only |
 | `PKG-RXPA-treemap` | default | dynamic + static | template opt matrix | both present |
 
-This accounts for all 27 plugin directories. The current cross-platform default
-is broad: 14 directories are selected before platform/feature conditions. It
+This accounts for all 28 plugin directories. The current cross-platform default
+is broad: 15 directories are selected before platform/feature conditions. It
 includes several small demonstrations and legacy alternatives alongside
 runtime integrations.
 
@@ -204,7 +205,7 @@ registered test name as proof of semantic completeness.
 | `D03-01` | Eight typed BIF-reference names are intrinsic, reserved, contextual, or documentation-only rather than ordinary `rxfnsb` exports. | Prevents false missing-source findings; syntax/BIF purpose and role must be explicit. | Classify in Stage 6; documentation cleanup requires later approval. |
 | `D03-02` | The old `lib/rxmath` source tree has no CMake entry point, while `lib/plugins/rxmath` is an active default native plugin. | Two unlike implementations share a product name. | Treat as separate source and plugin items; disposition is an approval decision. |
 | `D03-03` | `lib/rxfnsb/rxas` contains many deprecated/residual implementations; only `_elapsed` and the ADDRESS bridge are selected. | Filesystem presence otherwise overstates active RXAS content. | Active and residual IDs remain separate. |
-| `D03-04` | Fourteen RXPA plugin directories are selected by default, including legacy alternatives and demonstrations. | Current build presence is not a reliable core/quality signal. | Stage 6 proposes roles and delivery independently. |
+| `D03-04` | Fifteen RXPA plugin directories are selected by default, including legacy alternatives and demonstrations. | Current build presence is not a reliable core/quality signal. | Stage 6 proposes roles and delivery independently. |
 | `D03-05` | Root install copies the whole build `bin/` tree. | Default build, package contents, and incidental artifacts are coupled. | Record proposed delivery allowlists in Stage 6; no packaging change now. |
 | `D03-06` | Several plugin directories have complete local CMake/tests but are commented or unreferenced at the plugin root. | Their local tests are not registered in normal configurations. | Classify as opt-in, developer, source-only, or removal candidates. |
 | `D03-07` | The linked library faithfully exposes internal-looking underscore symbols because the sources namespace-expose them. | Public metadata and likely intended internal status disagree. | Keep as public raw contracts; Stage 6 may propose internalisation, never silently delete them. |
