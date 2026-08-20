@@ -95,11 +95,19 @@ calculate: procedure = .decimal
 
 The initial surface is `sqrt`, `exp`, `ln`, `sin`, `cos`, `pi`, and `euler`.
 Each public procedure inherits the caller's numeric context, computes with a
-bounded 18-, 32-, or 64-digit work context, and rounds once when returning to
-the caller. Negative square-root arguments and non-positive logarithm
-arguments raise `INVALID_ARGUMENTS`.
+bounded 18-, 32-, 64-, or 96-digit work context, and rounds once when returning
+to the caller. The surface is qualified through a 64-digit caller context; the
+96-digit tier provides 32 internal guard digits at that boundary. Negative
+square-root arguments and non-positive logarithm arguments raise
+`INVALID_ARGUMENTS`.
 
 An ordinary dotted source literal is converted directly from its original
 spelling when the surrounding typed context expects `.decimal`; it is not
 first rounded to binary64. Explicit `.float(...)` conversion and `options
 floats_binary` remain binary boundaries.
+
+The exact-integer and decimal contract suites are
+`lib/rxfnsg/tests_functional/ts_math_integer_contract.crexx` and
+`ts_math_decimal_contract.crexx`. Their offline oracle commands, versions,
+rounding policy, and reviewed SHA-256 identities are retained in
+`math-reference-provenance.md` beside the suites.

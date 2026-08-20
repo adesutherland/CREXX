@@ -1,5 +1,5 @@
 /* Pure Level B typed assertions shared by numeric contract suites. */
-options levelb floats_binary
+options levelb
 
 namespace numerictestsupport expose check_bool check_int_equal check_float_close check_float_nan check_float_positive_infinity check_float_negative_infinity check_float_positive_zero check_float_negative_zero check_decimal_equal check_decimal_close
 
@@ -37,7 +37,7 @@ check_float_close: procedure = .int
   tolerance = absolute_tolerance + relative_tolerance * scale
   if difference <= tolerance then return 0
 
-  say "FAIL: numeric test" label "expected" expected "got" actual "tolerance" tolerance
+  say "FAIL: numeric test" label "expected" expected "got" actual "difference" difference "tolerance" tolerance
   return 1
 
 check_float_nan: procedure = .int

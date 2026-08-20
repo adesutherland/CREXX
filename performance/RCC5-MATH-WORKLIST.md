@@ -1,8 +1,9 @@
 # RCC-5A/B/C mathematics composition worklist
 
-Status: RCC-5A and focused RCC-5B are complete; the RCC-5B first Release
-verdict is accepted. Consolidated full QA remains deferred to the end of
-RCC-5. RCC-5C remains in progress; RCC-5D+ is not started.
+Status: RCC-5A, focused RCC-5B, and RCC-5C are complete; the RCC-5B first
+Release verdict is accepted. RCC-5D+ is not started. Consolidated sanitizer,
+install/package, and documentation closeout remains deferred to the end of
+RCC-5.
 
 Approved by Adrian: 2026-08-20.
 
@@ -87,13 +88,14 @@ Rejected alternatives:
 ### Decimal mathematics
 
 **Selected:** use Level B algorithms directly over `.decimal`, inherit the
-caller's numeric context, compute with bounded guard digits up to the current
-64-digit provider capacity, and round the returned value in the caller's
-context. The initial foundation uses Newton iteration for square root,
+caller's numeric context, qualify caller precision through 64 digits, compute
+with bounded 18-, 32-, 64-, and 96-digit work tiers, and round the returned
+value in the caller's context. The 96-digit tier retains 32 guard digits at the
+qualified ceiling. The initial foundation uses Newton iteration for square root,
 halving plus a convergent series for exponential, repeated square-root range
 reduction plus the atanh series for logarithm, and quadrant-reduced Taylor
-recurrences for sine and cosine. Constants carry enough decimal digits for the
-current provider limit.
+recurrences for sine and cosine. Constants carry independently checked guard
+digits beyond the qualified caller ceiling.
 
 Rejected alternatives:
 
@@ -211,3 +213,33 @@ integer, and decimal scenario requirements are defined in
 [`mathematics-validation-strategy.md`](../docs/planning/release-1/mathematics-validation-strategy.md).
 They govern RCC-5C completion and do not run or replace the single consolidated
 RCC-5 full-QA closeout.
+
+## RCC-5C integer and decimal libraries — complete
+
+The reusable RCC-5C suites now cover every `rxint` and `rxdecimal` export in
+optimized and no-opt images on both concrete VMs. Integer coverage includes
+bounded exhaustive independent-oracle grids, exact limit-adjacent results,
+`INT64_MIN`, overflow-safe modular multiplication, all factorials through 20,
+and operation-specific domain/overflow signals. Decimal coverage exercises
+caller digits 9, 10, 18, 19, 32, 33, and 64; exact constants and roots;
+exponential/logarithmic convergence and reduction boundaries; all
+trigonometric quadrants; values on both sides of `pi/2`, `pi`, and a full
+period; and positive/negative multi-period reduction.
+
+The tests exposed and closed two production defects: `rxint.lcm` now checks
+the representable magnitude before multiplication so overflow carries the
+`RXINT.LCM` identity, and the 64-digit decimal caller path now computes in a
+96-digit work tier instead of losing trailing precision without guard digits.
+The shared test helper also stopped applying file-wide binary-float treatment
+to explicitly declared decimal assertions.
+
+Offline GNU `bc` 7.0.3 and Python 3.14.6 generators, exact commands, rounding
+policy, and reviewed content hashes are retained in
+[`math-reference-provenance.md`](../lib/rxfnsg/tests_functional/math-reference-provenance.md).
+The eight execution cells plus structural guard passed 10/10 including their
+artifact fixture. Following a complete Debug build, Adrian's requested broad
+review run passed 2,302/2,302 CTests in 213 seconds.
+
+This closes RCC-5C only. The broad Debug result is useful retained evidence,
+but it is not the consolidated RCC-5 sanitizer/install/package closeout while
+RCC-5D+ remains unimplemented.

@@ -1,10 +1,10 @@
 # Runtime Capability Composition Roadmap
 
-Status: approved roadmap in progress. RCC-1 through RCC-5B are complete at
+Status: approved roadmap in progress. RCC-1 through RCC-5C are complete at
 their focused subphase boundaries; the RCC-5B first Release verdict is
-accepted. Consolidated full QA remains deferred to the end of RCC-5. RCC-5C
-remains in progress. Later RCC-5 partitions and RCC-6 through RCC-8 remain
-unimplemented unless separately noted.
+accepted. Later RCC-5 partitions and RCC-6 through RCC-8 remain unimplemented
+unless separately noted. Consolidated sanitizer/install/package closeout
+remains deferred to the end of RCC-5.
 
 Date: 2026-08-20.
 
@@ -461,13 +461,13 @@ metadata cases, and smaller cold handler/tooling surfaces.
 | RCC-4: production `rx_hash` — **implemented** | The small process-reentrant provider publishes `rxhash.sha256(data = .binary) = .binary` directly through RXPA, ships dynamic and static forms, and uses declarative dependency autoload. | Standard vectors, embedded zeroes, boundary lengths, both VMs, native package, scratch install/package, static/dynamic concurrency, and a read-only `crexx-rag` Level G consumer contract pass on macOS. The accepted first-Release verdict found the production path equivalent to the prototype; Linux/Windows product qualification remains RCC-8 work. |
 | RCC-5A: level and mathematics contract — **complete** | Record Level B bootstrap versus Level G availability as independent from implementation language, and lock the `rxfloat`, `rxint`, `rxdecimal`, and later packed `rxstats` boundaries. | The public family has explicit availability, implementation, precision, algorithm, compatibility, and performance contracts. |
 | RCC-5B: native scalar float provider — **focused complete; verdict accepted** | Extract scalar libm functions into process-reentrant provider `rxfloat`, publish canonical `rxfloat` names and direct `rxmath` compatibility aliases, repair defects, and qualify automatic dynamic/static resolution. | Scalar binary-float math is coherent, tested, automatically loaded/packaged, and meets the accepted first-Release verdict. |
-| RCC-5C: integer and decimal standard libraries — **approved, in progress** | Add Level-B-authored `rxint` exact checked algorithms and `rxdecimal` context-preserving algorithms over `mc_decimal`; apply the approved [mathematics validation strategy](mathematics-validation-strategy.md). | Exact integer boundaries and independently expected decimal precision/domain/convergence behavior pass focused cross-VM optimized/no-opt coverage. |
+| RCC-5C: integer and decimal standard libraries — **complete** | Add Level-B-authored `rxint` exact checked algorithms and `rxdecimal` context-preserving algorithms over `mc_decimal`; apply the approved [mathematics validation strategy](mathematics-validation-strategy.md). | Exact integer boundaries and independently expected decimal precision/domain/convergence behavior pass focused cross-VM optimized/no-opt coverage. The requested broad Debug review also passed 2,302/2,302 tests after a complete build. |
 | RCC-5D+: remaining historical-bundle splits | Extract and qualify stats after `BINARY-01`, filesystem, platform, ID, hash/checksum, developer, and legacy surfaces. Update the component catalogue and packaging from actual transitive dependencies. | No broad `system` or `rxmath` status hides unrelated APIs; the `crexx` driver links only its narrow required providers. |
 | RCC-6: file-instruction replacement | Add `rx_io`, dual-lower/migrate the 14 `F*` forms, prove handle ownership and behavior, measure code/startup/call effects, and select the compatibility retirement point. | The call path is equivalent and acceptable; old opcodes are retained or tombstoned according to the approved format policy. |
 | RCC-7: measured instruction review | Evaluate existing RXAS `rxhash`, host utilities, then sockets/reflection only in the recorded order and as separate decisions. | Each family has a keep/convert disposition backed by use, performance, ownership, size, and compatibility evidence. |
 | RCC-8: release qualification | Cross-platform build/install/package, both VMs, native/embedded/late-load, security-path, failure, concurrency, and documentation closeout. | The product can explain and mechanically report every required provider and initializer; default installations work without manual runtime lists. |
 
-RCC-5A through RCC-5C are separately authorized; RCC-5A is complete. RCC-5D
+RCC-5A through RCC-5C are separately authorized and complete. RCC-5D
 and later work is not automatically authorized by that approval. Each later
 production architecture or language/format decision remains subject to the
 repository's normal approval and, where performance-sensitive,

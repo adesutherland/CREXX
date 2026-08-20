@@ -58,16 +58,18 @@ gcd: procedure = .int
 lcm: procedure = .int
   arg first = .int, second = .int
   minimum = -9223372036854775807 - 1
-  zero = 0
+  maximum = 9223372036854775807
 
   if first = 0 | second = 0 then return 0
+  if first = minimum | second = minimum then
+    assembler signal "OVERFLOW_UNDERFLOW", "RXINT.LCM result exceeds rxinteger"
   divisor = gcd(first, second)
   quotient = first <idiv> divisor
-  product = quotient * second
-  if product = minimum then
+  if quotient < 0 then quotient = 0 - quotient
+  if second < 0 then second = 0 - second
+  if quotient > maximum <idiv> second then
     assembler signal "OVERFLOW_UNDERFLOW", "RXINT.LCM result exceeds rxinteger"
-  if product < 0 then product = zero - product
-  return product
+  return quotient * second
 
 /**
  * Return floor(sqrt(value)) using overflow-safe binary search.

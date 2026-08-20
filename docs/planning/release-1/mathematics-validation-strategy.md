@@ -1,7 +1,7 @@
 # RCC-5 mathematics validation strategy
 
-Status: approved strategy; RCC-5B float contract coverage is implemented and
-RCC-5C integer/decimal expansion remains in progress.
+Status: implemented. RCC-5B float coverage and RCC-5C integer/decimal coverage
+meet the focused completion gates below.
 
 Approved by Adrian: 2026-08-20.
 
@@ -56,8 +56,9 @@ correlated errors can cancel.
 - Integer expected values are exact checked-in literals or fixtures generated
   by an arbitrary-precision integer implementation.
 - Decimal transcendental vectors are generated offline at least 32 guard
-  digits beyond the 64-digit provider ceiling, then rounded independently for
-  every tested caller context.
+  digits beyond the qualified 64-digit caller ceiling. Exact constants are
+  rounded independently for every tested caller context; approximate vectors
+  retain their guard digits and use explicit tolerances.
 - Float finite values use independently established constants or
   higher-precision vectors rounded to binary64. The suite does not compare a C
   maths call with a second call to the same C maths routine.
@@ -169,8 +170,8 @@ primary oracle is independent high-precision data, not float conversion and not
 an inverse call through another `rxdecimal` function.
 
 All public procedures are tested at caller precisions 9, 18, 32, and 64. The
-work-context switching boundaries additionally require cases at 10 and 19
-digits. Expected values are supplied as decimal strings so they never pass
+work-context switching boundaries additionally require cases at 10, 19, and
+33 digits. Expected values are supplied as decimal strings so they never pass
 through binary float.
 
 ### Constants and context
@@ -228,11 +229,12 @@ silent low-precision result is never an acceptable outcome.
 
 - `lib/plugins/float/rxfloat_test.crexx` remains the RCC-5B float contract
   suite.
-- `lib/rxfnsg/tests_functional/ts_math_numeric.crexx` is the current RCC-5C
-  integration smoke suite and exercises the shared integer/decimal assertions.
-- The deeper integer and decimal cases defined above may be split into focused
-  source files for maintainability, but their CTest labels and structural
-  guards must make omitted procedures or contexts visible.
+- `lib/rxfnsg/tests_functional/ts_math_numeric.crexx` remains the compact
+  integer/decimal integration smoke suite.
+- `ts_math_integer_contract.crexx` and `ts_math_decimal_contract.crexx` own the
+  deeper RCC-5C scenarios. `check_math_contract_surface.cmake` guards every
+  export and caller context, while `math-reference-provenance.md` binds the
+  retained offline generators and checked-in values.
 
 RCC-5C is complete only when the integer and decimal scenario sets above pass
 in the four optimized/no-opt and concrete-VM cells, their independent fixture
@@ -240,3 +242,9 @@ provenance is retained, and every exported procedure is structurally covered.
 The one consolidated broad CTest/sanitizer/install closeout remains an
 end-of-RCC-5 activity; this strategy does not require rerunning it after each
 focused test increment.
+
+RCC-5C met this gate on 2026-08-20: all eight contract execution cells and the
+structural guard passed (10/10 including the shared artifact fixture). After a
+complete Debug rebuild, the requested broad review run passed 2,302/2,302
+CTest cases. That broad Debug result does not claim the later consolidated
+RCC-5 sanitizer/install/package closeout while RCC-5D+ remains outstanding.

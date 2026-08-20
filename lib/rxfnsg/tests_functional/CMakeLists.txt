@@ -67,6 +67,51 @@ foreach(_math_numeric_runner IN LISTS _math_numeric_runners)
     FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
 endforeach()
 
+add_test(
+  NAME rcc5c_math_contract_surface_coverage
+  COMMAND ${CMAKE_COMMAND}
+    -DINTEGER_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/../rexx/integer.crexx
+    -DINTEGER_CONTRACT=${CMAKE_CURRENT_SOURCE_DIR}/ts_math_integer_contract.crexx
+    -DDECIMAL_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/../rexx/decimal.crexx
+    -DDECIMAL_CONTRACT=${CMAKE_CURRENT_SOURCE_DIR}/ts_math_decimal_contract.crexx
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/check_math_contract_surface.cmake)
+set_tests_properties(rcc5c_math_contract_surface_coverage PROPERTIES
+  LABELS "library;math;integer;decimal;levelg;contract")
+
+foreach(_math_contract_suite IN ITEMS integer decimal)
+  set(_math_contract_target "ts_math_${_math_contract_suite}_contract")
+  set(_math_contract_source
+    "${CMAKE_CURRENT_SOURCE_DIR}/${_math_contract_target}.crexx")
+  if(_math_contract_suite STREQUAL "integer")
+    set(_math_contract_output "PASS: RCC-5C exact integer contract")
+  else()
+    set(_math_contract_output "PASS: RCC-5C decimal mathematics contract")
+  endif()
+
+  add_custom_target("${_math_contract_target}")
+  add_dependencies(testrxfnsg "${_math_contract_target}")
+  add_dependencies("${_math_contract_target}" rxfnsg_numeric_test_support)
+
+  foreach(_math_contract_runner IN LISTS _math_numeric_runners)
+    crexx_add_rexx_opt_matrix(
+      NAME "${_math_contract_target}_${_math_contract_runner}"
+      SOURCE "${_math_contract_source}"
+      TARGET_GROUP "${_math_contract_target}"
+      RUNNER "${_math_contract_runner}"
+      IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+      RXC_FLAGS -x -s ${CMAKE_SOURCE_DIR}/tests/support
+      DEPENDS library classlib rxfnsg rxfnsg_numeric_test_support
+        "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+        "${_math_contract_source}"
+      RUNTIME_ARGS ${_numeric_test_support_base} ${LIBRPATH}
+        ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
+      TEST_LABELS
+        "library;math;${_math_contract_suite};levelg;contract;${_math_contract_runner}"
+      REQUIRED_OUTPUT_REGEX "${_math_contract_output}"
+      FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+  endforeach()
+endforeach()
+
 unset(_prev_target)
 foreach(_binfile IN LISTS REXXBINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
