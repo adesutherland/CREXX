@@ -388,6 +388,8 @@ walker_result rewrite_constructor_walker(walker_direction direction,
 
                     if (val) {
                         /* x = .int(10) -> DEFINE x = .int ; ASSIGN x = 10 */
+                        char *target_str = rx_strndup(target->node_string,
+                                                     target->node_string_length);
                         ASTRewriteTemplate *define_tmpl = ast_rw_add(ast_rw_add(
                             ast_rw_new(DEFINE, "="),
                             ast_rw_reuse(target)),
@@ -396,9 +398,10 @@ walker_result rewrite_constructor_walker(walker_direction direction,
 
                         ASTRewriteTemplate *assign_tmpl = ast_rw_add(ast_rw_add(
                             ast_rw_new(ASSIGN, "="),
-                            ast_rw_new(VAR_TARGET, target->node_string)), /* Duplicate target */
+                            ast_rw_new(VAR_TARGET, target_str)), /* Duplicate target */
                             ast_rw_reuse(val)
                         );
+                        free(target_str);
 
                         ASTRewriteTemplate *wrapper = ast_rw_add(ast_rw_add(
                             ast_rw_children(),

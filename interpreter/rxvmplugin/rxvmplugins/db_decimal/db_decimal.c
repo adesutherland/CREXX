@@ -283,16 +283,21 @@ static size_t getDigits(decplugin *plugin) {
     return ((dbcontext*)(plugin->base.private_context))->digits;
 }
 
-/* Get the required string size for the rxvmplugin context */
-static size_t getRequiredStringSize(decplugin *plugin) {
-    return plugin->num_context->digits + 14;
+/* Long-double storage has a fixed host precision, but retain the same
+ * value-aware sizing contract as the arbitrary-precision provider. */
+static size_t getRequiredStringSize(decplugin *plugin, const value *number) {
+    size_t digits = plugin->num_context
+            ? plugin->num_context->digits : DEFAULT_NUMERIC_DIGITS;
+    (void)number;
+    if ((size_t)LDBL_DECIMAL_DIG > digits) digits = (size_t)LDBL_DECIMAL_DIG;
+    return digits > SIZE_MAX - 14u ? SIZE_MAX : digits + 14u;
 }
 
 static void decimalExtract(decplugin *plugin, char *coefficient,
                            rxinteger *exponent, value *decimal);
 
 static void initLocalStringValue(decplugin *plugin, value *local) {
-    size_t capacity = getRequiredStringSize(plugin);
+    size_t capacity = getRequiredStringSize(plugin, NULL);
     memset(local, 0, sizeof(*local));
     if (!plugin->reserve_string(local, capacity))
         RX_PANIC_OOM("reserve db_decimal temporary string sidecar", capacity,
@@ -338,7 +343,7 @@ static void decimalFromString(decplugin *plugin, value *result, const char *stri
 
 /* Convert a rxvmplugin number to a string */
 /* The string must be allocated by the caller and should be at least
- * getRequiredStringSize() bytes */
+ * getRequiredStringSize(plugin, number) bytes */
 static void decimalToString(decplugin *plugin, const value *number, char *string) {
     numeric_context default_context = {
         DEFAULT_NUMERIC_DIGITS, DEFAULT_NUMERIC_FUZZ, DEFAULT_NUMERIC_FORM,
@@ -751,7 +756,8 @@ static void trim_numeric_trailing_zeros(char *str) {
 /* Extract the coefficient, exponent and sign from a rxvmplugin number.
  * - `decimal` contains the float value.
  * - `coefficient' will store the coefficient as a string (or nan, inf, -inf).
- *    It must be allocated by the caller and should be at least getRequiredStringSize()
+ *    It must be allocated by the caller and should be at least
+ *    getRequiredStringSize(plugin, decimal)
  *    bytes (too big but simple for the caller)
  * - `exponent` will store the exponent as an integer.
  * Normalized, round to context precision/digits, trim trailing zeros.

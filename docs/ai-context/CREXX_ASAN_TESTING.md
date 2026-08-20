@@ -82,6 +82,22 @@ driver smoke coverage. Missing those build prerequisites can produce false
 focused failures from absent disassembly tools or native link inputs rather
 than ASan/LSan regressions.
 
+### Apple dynamic-provider lifetime
+
+The Apple Clang ASan runtime does not support leak detection on the current
+macOS toolchain, so use `--build-leaks off` and `--leaks off` there for address
+sanitizer work. This is a platform limitation, not permission to disable leak
+checks on supported Linux sanitizer builds.
+
+The compiler may open, close, and later reopen the same RXPA provider while it
+resolves transitive imports. Apple's ASan runtime does not reliably unpoison
+an instrumented DSO's globals across `dlclose()` and reload. In Apple-ASan
+builds only, `rxpa_close_plugin()` therefore performs its normal logical close
+and handle-count update but leaves the OS DSO resident until process exit.
+Plugin initializers, procedures, and globals remain instrumented. Ordinary
+Debug, Release, Linux sanitizer, and Windows builds retain normal physical
+unload behavior.
+
 ## Full Workflow
 
 For a proper full ASan/LSan check:

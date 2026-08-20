@@ -110,6 +110,41 @@ static void test_ast_execute_rewrite_marks_synthetic(void) {
     fre_cntx(context);
 }
 
+static void test_ast_execute_rewrite_replaces_with_sibling_list(void) {
+    Context *context;
+    ASTNode *root;
+    ASTNode *target;
+    ASTNode *following;
+    ASTNode *rewritten;
+    ASTRewriteTemplate *template;
+
+    context = cntx_f();
+    root = ast_ft(context, REXX_UNIVERSE);
+    target = ast_ft(context, NOP);
+    following = ast_ft(context, SAY);
+    add_ast(root, target);
+    add_sbtr(target, following);
+
+    template = ast_rw_add(ast_rw_add(
+        ast_rw_children(),
+        ast_rw_new(DEFINE, "=")),
+        ast_rw_new(ASSIGN, "="));
+    rewritten = ast_execute_rewrite(context, target, template);
+
+    expect_true(root->child == rewritten, "list rewrite should replace the original child");
+    expect_true(rewritten->node_type == DEFINE, "list rewrite should retain its first replacement");
+    expect_true(rewritten->sibling != 0 && rewritten->sibling->node_type == ASSIGN,
+                "list rewrite should retain its second replacement");
+    expect_true(rewritten->sibling->sibling == following,
+                "list rewrite should preserve the original following sibling");
+    expect_true(rewritten->parent == root && rewritten->sibling->parent == root,
+                "list rewrite should parent every replacement sibling");
+    expect_true(target->sibling == rewritten->sibling,
+                "list rewrite should let the active walker continue at the second replacement");
+
+    fre_cntx(context);
+}
+
 static void test_source_diagnostics_sync_to_source_tree(void) {
     Context *context;
     ASTNode *root;
@@ -330,6 +365,7 @@ int main(void) {
     test_add_ast_inherits_source_anchor();
     test_ast_fstk_preserves_source_anchor();
     test_ast_execute_rewrite_marks_synthetic();
+    test_ast_execute_rewrite_replaces_with_sibling_list();
     test_source_diagnostics_sync_to_source_tree();
     test_synthetic_diagnostics_mark_internal();
     test_reporting_anchor_helpers();

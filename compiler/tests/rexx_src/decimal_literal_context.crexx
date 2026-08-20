@@ -1,0 +1,56 @@
+options levelb
+
+accept_decimal: procedure = .decimal
+  numeric digits inherited
+  arg value = .decimal
+  return value
+
+return_decimal: procedure = .decimal
+  numeric digits inherited
+  return 0.1000000000000000000000000000001
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL: decimal literal context" label
+  return 1
+
+main: procedure = .int
+  numeric digits 32
+  expected = 0.1000000000000000000000000000001d
+
+  direct = .decimal
+  direct = 0.1000000000000000000000000000001
+  if direct <> expected then return fail("assignment")
+
+  if accept_decimal(0.1000000000000000000000000000001) <> expected then
+    return fail("argument")
+  if return_decimal() <> expected then return fail("return")
+
+  cast_value = 0.1000000000000000000000000000001 as .decimal
+  if cast_value <> expected then return fail("cast")
+  constructor_value = .decimal(0.1000000000000000000000000000001)
+  if constructor_value <> expected then return fail("constructor")
+
+  negative = .decimal
+  negative = -0.1000000000000000000000000000001
+  if negative <> 0 - expected then return fail("unary expression")
+
+  sum = .decimal
+  sum = 0.1000000000000000000000000000001 + 0.2
+  if sum <> expected + 0.2d then return fail("literal expression")
+
+  base = 1d
+  mixed = base + 0.1000000000000000000000000000001
+  if mixed <> 1d + expected then return fail("mixed decimal expression")
+
+  exponent_value = .decimal
+  exponent_value = 1.234567890123456789012345678901e-20
+  if exponent_value <> 1.234567890123456789012345678901e-20d then
+    return fail("exponent spelling")
+
+  explicit_float = .float(0.1000000000000000000000000000001)
+  float_roundtrip = explicit_float as .decimal
+  if float_roundtrip = expected then return fail("explicit float boundary")
+
+  say "PASS: exact contextual decimal literals"
+  return 0

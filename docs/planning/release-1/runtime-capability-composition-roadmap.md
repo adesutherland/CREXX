@@ -1,8 +1,10 @@
 # Runtime Capability Composition Roadmap
 
-Status: approved roadmap in progress. RCC-1 through RCC-4 are implemented in
-the current tree; RCC-5 and later gates remain unimplemented unless separately
-noted.
+Status: approved roadmap in progress. RCC-1 through RCC-4 and RCC-5A are
+complete. RCC-5B implementation and its first Release verdict are accepted,
+with focused mathematical-contract coverage still open. RCC-5C remains in
+progress. Later RCC-5 partitions and RCC-6 through RCC-8 remain unimplemented
+unless separately noted.
 
 Date: 2026-08-20.
 
@@ -37,6 +39,16 @@ In particular, **core** means required language, runtime, or toolchain closure;
 normal product without making it part of the bootstrap closure. "Native" and
 "always easy to find" are implementation and delivery properties, not reasons
 by themselves to call something core.
+
+Level, implementation language, and availability are independent axes. Level
+B is the bootstrap-capable language subset and will increasingly host
+bootstrap implementations; Level G is the normally installed standard product
+profile. A library can be authored entirely in Level B and callable from a
+Level B program without being guaranteed by the Level B bootstrap closure. In
+that case it is **Level-B-authored, Level-G-standard**. Conversely a native
+provider can expose Level-B-compatible signatures while remaining guaranteed
+only in Level G. “Works when present” must not be confused with “available in
+the bootstrap profile.”
 
 The approved provider and package ID is `rx_hash`; its public namespace is
 `rxhash`, and the first callable is `rxhash.sha256()`. The namespace and the
@@ -97,8 +109,10 @@ all source immediately.
 | socket/TLS mechanism used by the current Level G HTTP stack | Level G core mechanism / required with that runtime profile | current VM-owned registry and instructions | Keep for the first roadmap stages. Reconsider only after a session-aware core-provider model has proven equivalent ownership, worker, TLS, and failure behavior. |
 | low-level `rx_io` handle and byte/text stream mechanism | level core implementation **if it replaces the current `F*` instructions** | small context/session-owned provider, statically available in required runtime profiles | Recommended first extraction. Use small integer handles with context teardown, never a `FILE *` cast into `.int`. Public filesystem conveniences remain standard. |
 | `rx_hash` | B+G standard / default | small process-reentrant provider; dynamic for ordinary runtime use and static archive for native packaging | Selected home for SHA-256 and, after compatibility review, named non-cryptographic hashes/checksums. Not an all-assets native library. |
-| scalar `rxmath` | B+G standard / default after repair and contract review | process-reentrant libm-backed provider | Contains only coherent scalar math and constants. It is not language numeric semantics and is not Level C math merely because names overlap. |
-| `rxstats` | optional, possibly standard later | separate provider or Rexx library according to measurement | Mean, deviation, covariance, correlation, and regression do not belong in the scalar math provider by accident. |
+| scalar `rxfloat` (`rxmath` compatibility aliases) | Level G standard/default | process-reentrant native `rxfloat` provider backed by platform libm | Contains only coherent scalar binary-float math and constants. Its signatures are callable from Level B when the provider is installed, but it is not bootstrap closure or language numeric semantics. |
+| `rxint` | Level G standard/default | Level-B-authored checked integer algorithms | Exact integer mathematics belongs in the standard math family without forcing a native dependency or claiming bootstrap availability. |
+| `rxdecimal` | Level G standard/default | Level-B-authored algorithms over core `mc_decimal` arithmetic | Preserves caller-selected decimal precision; use of a core primitive does not make this higher-level library core. |
+| `rxstats` | Level G standard after `BINARY-01` | separate native bulk provider over packed `rxinteger`/`rxfloat` storage | Statistics is the black-and-white Level G case: useful standard functionality, but neither language nor bootstrap closure. It must not inherit the boxed historical implementation or scalar-call shape. |
 | `rxfs` | B+G standard / default | adapter over the low-level I/O/OS mechanism | Directory and file-name operations: cwd, list, test, create, remove, rename, and append. |
 | `rxplatform` | standard or optional by function | narrow native provider | OS, host, user, uptime, clipboard, and beep need separate portability/privacy/UI dispositions; they must not all inherit one `system` status. |
 | process and ADDRESS services | level core mechanism where required; public conveniences standard | existing structured process/channel/ADDRESS architecture | Do not revive the commented historical pipe procedures as the architecture. Use the current typed process and environment model. |
@@ -138,8 +152,10 @@ bundle would promote its accidents.
 
 | Current area | Destination | Recommendation |
 |---|---|---|
-| libm scalar functions and `pi`/`euler` | repaired `rxmath` | Standard/default after domain, range, signal, NaN/Inf, platform, and naming tests. |
-| mean/deviation/covariance/correlation/regression | `rxstats` | Separate contract and quality gate; optional initially. |
+| libm scalar functions and `pi`/`euler` | native `rxfloat`, canonical namespace `rxfloat`; direct `rxmath` aliases | Level G standard/default after domain, range, signal, NaN/Inf, platform, naming, and first-Release performance gates. |
+| integer mathematics | Level-B-authored `rxint` | Level G standard/default. Use exact checked algorithms such as Euclid, overflow-safe integer square root, and modular exponentiation; no blanket native plugin. |
+| decimal mathematics | Level-B-authored `rxdecimal` over `mc_decimal` | Level G standard/default. Inherit the caller's numeric context, use bounded guard digits, and do not round-trip through binary float. |
+| mean/deviation/covariance/correlation/regression | native bulk `rxstats` after `BINARY-01` | Level G standard. Separate contract and quality gate; do not promote the historical boxed scalar-call implementation. |
 | DJB2, Murmur, FNV-1a, CRC32 | the new hash provider under explicitly approved public names | Separate cryptographic digests, checksums, and table/container hashes in the API. Preserve compatibility aliases only by explicit decision. |
 | UUID | `rxid` | Use a qualified random source and UUID contract; not mathematics. |
 | `inlinec` | removal or developer experiment | Never standard or core. Native compilation/execution is a tool/security boundary. |
@@ -443,16 +459,25 @@ metadata cases, and smaller cold handler/tooling surfaces.
 | RCC-2: runtime and native-package resolution — **implemented** | Implement static-first trusted autoload, binary manifest-ID verification, installed/app-local lookup, failure diagnostics, and automatic static archive selection for native packaging. | The same test image runs under ordinary `rxvm`/`rxbvm` and native packaging without `-p` or a user-maintained provider list; missing/wrong providers fail before execution. |
 | RCC-3: explicit module initialization — **implemented** | Implement initializer metadata, per-module-instance state, VM ready-state, deterministic ordering, at-most-one attempt, late-load transaction, embedded/task-provider behavior, signal/failure tests, and documentation. | Every declared initializer reaches `READY` once per mutable module instance after dependencies/link/preparation and before that instance is observable on both VM modes. |
 | RCC-4: production `rx_hash` — **implemented** | The small process-reentrant provider publishes `rxhash.sha256(data = .binary) = .binary` directly through RXPA, ships dynamic and static forms, and uses declarative dependency autoload. | Standard vectors, embedded zeroes, boundary lengths, both VMs, native package, scratch install/package, static/dynamic concurrency, and a read-only `crexx-rag` Level G consumer contract pass on macOS. The accepted first-Release verdict found the production path equivalent to the prototype; Linux/Windows product qualification remains RCC-8 work. |
-| RCC-5: split historical bundles | Extract and qualify the scalar math, stats, filesystem, platform, ID, hash/checksum, developer, and legacy surfaces. Update the component catalogue and packaging from actual transitive dependencies. | No broad `system` or `rxmath` status hides unrelated APIs; the `crexx` driver links only its narrow required providers. |
+| RCC-5A: level and mathematics contract — **complete** | Record Level B bootstrap versus Level G availability as independent from implementation language, and lock the `rxfloat`, `rxint`, `rxdecimal`, and later packed `rxstats` boundaries. | The public family has explicit availability, implementation, precision, algorithm, compatibility, and performance contracts. |
+| RCC-5B: native scalar float provider — **implementation/verdict accepted; focused coverage open** | Extract scalar libm functions into process-reentrant provider `rxfloat`, publish canonical `rxfloat` names and direct `rxmath` compatibility aliases, repair defects, and qualify automatic dynamic/static resolution. | Scalar binary-float math is coherent, tested, automatically loaded/packaged, and meets the accepted first-Release verdict. |
+| RCC-5C: integer and decimal standard libraries — **approved, in progress** | Add Level-B-authored `rxint` exact checked algorithms and `rxdecimal` context-preserving algorithms over `mc_decimal`. | Exact integer boundaries and decimal precision/domain/convergence behavior pass focused cross-VM optimized/no-opt coverage. |
+| RCC-5D+: remaining historical-bundle splits | Extract and qualify stats after `BINARY-01`, filesystem, platform, ID, hash/checksum, developer, and legacy surfaces. Update the component catalogue and packaging from actual transitive dependencies. | No broad `system` or `rxmath` status hides unrelated APIs; the `crexx` driver links only its narrow required providers. |
 | RCC-6: file-instruction replacement | Add `rx_io`, dual-lower/migrate the 14 `F*` forms, prove handle ownership and behavior, measure code/startup/call effects, and select the compatibility retirement point. | The call path is equivalent and acceptable; old opcodes are retained or tombstoned according to the approved format policy. |
 | RCC-7: measured instruction review | Evaluate existing RXAS `rxhash`, host utilities, then sockets/reflection only in the recorded order and as separate decisions. | Each family has a keep/convert disposition backed by use, performance, ownership, size, and compatibility evidence. |
 | RCC-8: release qualification | Cross-platform build/install/package, both VMs, native/embedded/late-load, security-path, failure, concurrency, and documentation closeout. | The product can explain and mechanically report every required provider and initializer; default installations work without manual runtime lists. |
 
-RCC-5 through RCC-8 are not automatically authorized by approval of RCC-1
-through RCC-4. Each later production architecture or language/format decision
-remains
-subject to the repository's normal approval and, where performance-sensitive,
+RCC-5A through RCC-5C are separately authorized; RCC-5A is complete. RCC-5D
+and later work is not automatically authorized by that approval. Each later
+production architecture or language/format decision remains subject to the
+repository's normal approval and, where performance-sensitive,
 first-Release-verdict gates.
+
+RCC-5 uses one consolidated full-QA and documentation closeout after its final
+approved subphase. Intermediate subphases run focused correctness and any
+mandatory first-Release verdict only. Broader evidence gathered for an
+intermediate subphase is retained, but does not require the same broad suite to
+be repeated for every following subphase.
 
 ## Approval questions
 

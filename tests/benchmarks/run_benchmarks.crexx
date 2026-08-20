@@ -217,17 +217,9 @@ benchmark_command: procedure = .string[]
   command = .string[]
   command[1] = build_dir || "/bin/" || vm_name
   command[2] = build_dir || "/tests/benchmarks/" || benchmark_base(benchmark_name) || "_" || mode || ".rxbin"
+  command[3] = build_dir || "/bin/library.rxbin"
+  command[4] = "-a"
   argument_slot = 5
-  if benchmark_name = "cd" then do
-    command[3] = "rx_rxmath"
-    command[4] = build_dir || "/bin/library.rxbin"
-    command[5] = "-a"
-    argument_slot = 6
-  end
-  else do
-    command[3] = build_dir || "/bin/library.rxbin"
-    command[4] = "-a"
-  end
   select
     when benchmark_name = "sieve" then command[argument_slot] = "50"
     when benchmark_name = "permute" then command[argument_slot] = "50"

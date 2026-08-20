@@ -1,0 +1,144 @@
+/* Focused RCC-5C exact integer and precision-preserving decimal tests. */
+options levelb
+
+import rxint
+import rxdecimal
+
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: RCC-5C" label "expected" expected "got" actual
+  return 1
+
+decimal_abs: procedure = .decimal
+  numeric digits inherited
+  arg value = .decimal
+  if value < 0 then return 0 - value
+  return value
+
+check_decimal: procedure = .int
+  numeric digits inherited
+  arg expected = .decimal, actual = .decimal, tolerance = .decimal, label = .string
+  if decimal_abs(expected - actual) <= tolerance then return 0
+  say "FAIL: RCC-5C" label "expected" expected "got" actual "tolerance" tolerance
+  return 1
+
+test_integer_signals: procedure = .int
+  failures = 0
+  do
+    ignored = rxint..isqrt(-1)
+    say "FAIL: RCC-5C ISQRT negative did not signal"
+    failures = failures + 1
+  on signal invalid_arguments
+    nop
+  end
+  do
+    ignored = rxint..powmod(2, -1, 5)
+    say "FAIL: RCC-5C POWMOD negative exponent did not signal"
+    failures = failures + 1
+  on signal invalid_arguments
+    nop
+  end
+  do
+    ignored = rxint..powmod(2, 3, 0)
+    say "FAIL: RCC-5C POWMOD invalid modulus did not signal"
+    failures = failures + 1
+  on signal invalid_arguments
+    nop
+  end
+  do
+    ignored = rxint..gcd(-9223372036854775807 - 1, 0)
+    say "FAIL: RCC-5C GCD unrepresentable result did not signal"
+    failures = failures + 1
+  on signal overflow_underflow
+    nop
+  end
+  do
+    ignored = rxint..lcm(-9223372036854775807 - 1, 1)
+    say "FAIL: RCC-5C LCM overflow did not signal"
+    failures = failures + 1
+  on signal overflow_underflow
+    nop
+  end
+  do
+    ignored = rxint..factorial(21)
+    say "FAIL: RCC-5C FACTORIAL overflow did not signal"
+    failures = failures + 1
+  on signal overflow_underflow
+    nop
+  end
+  return failures
+
+test_decimal_signals: procedure = .int
+  return test_decimal_sqrt_signal() + test_decimal_ln_signal()
+
+test_decimal_sqrt_signal: procedure = .int
+  do
+    ignored = rxdecimal..sqrt(-1)
+    say "FAIL: RCC-5C decimal SQRT negative did not signal"
+  on signal invalid_arguments
+    return 0
+  end
+  return 1
+
+test_decimal_ln_signal: procedure = .int
+  do
+    ignored = rxdecimal..ln(0)
+    say "FAIL: RCC-5C decimal LN zero did not signal"
+  on signal invalid_arguments
+    return 0
+  end
+  return 1
+
+test_decimal_9: procedure = .int
+  numeric digits 9
+  failures = 0
+  failures = failures + check_decimal("1.41421356" as .decimal, rxdecimal..sqrt(2), "1E-8" as .decimal, "decimal-9 sqrt")
+  failures = failures + check_decimal("2.71828183" as .decimal, rxdecimal..exp(1), "1E-8" as .decimal, "decimal-9 exp")
+  failures = failures + check_decimal(1, rxdecimal..ln(rxdecimal..euler()), "1E-8" as .decimal, "decimal-9 ln")
+  failures = failures + check_decimal("0.5" as .decimal, rxdecimal..sin(rxdecimal..pi() / 6), "1E-8" as .decimal, "decimal-9 sin")
+  failures = failures + check_decimal(-1, rxdecimal..cos(rxdecimal..pi()), "1E-8" as .decimal, "decimal-9 cos")
+  return failures
+
+test_decimal_18: procedure = .int
+  numeric digits 18
+  failures = 0
+  failures = failures + check_decimal("1.41421356237309505" as .decimal, rxdecimal..sqrt(2), "1E-17" as .decimal, "decimal-18 sqrt")
+  failures = failures + check_decimal("2.71828182845904524" as .decimal, rxdecimal..exp(1), "1E-17" as .decimal, "decimal-18 exp")
+  failures = failures + check_decimal(1, rxdecimal..ln(rxdecimal..euler()), "1E-17" as .decimal, "decimal-18 ln")
+  failures = failures + check_decimal("0.5" as .decimal, rxdecimal..sin(rxdecimal..pi() / 6), "1E-17" as .decimal, "decimal-18 sin")
+  failures = failures + check_decimal(-1, rxdecimal..cos(rxdecimal..pi()), "1E-17" as .decimal, "decimal-18 cos")
+  return failures
+
+test_decimal_64: procedure = .int
+  numeric digits 64
+  failures = 0
+  failures = failures + check_decimal(2, rxdecimal..sqrt(2) * rxdecimal..sqrt(2), "1E-62" as .decimal, "decimal-64 sqrt")
+  failures = failures + check_decimal(rxdecimal..euler(), rxdecimal..exp(1), "1E-62" as .decimal, "decimal-64 exp")
+  failures = failures + check_decimal(1, rxdecimal..ln(rxdecimal..euler()), "1E-62" as .decimal, "decimal-64 ln")
+  failures = failures + check_decimal("0.5" as .decimal, rxdecimal..sin(rxdecimal..pi() / 6), "1E-62" as .decimal, "decimal-64 sin")
+  failures = failures + check_decimal(-1, rxdecimal..cos(rxdecimal..pi()), "1E-62" as .decimal, "decimal-64 cos")
+  return failures
+
+main: procedure = .int
+  failures = 0
+  failures = failures + check_int(6, rxint..gcd(54, 24), "gcd")
+  failures = failures + check_int(6, rxint..gcd(-54, 24), "gcd signed")
+  failures = failures + check_int(0, rxint..gcd(0, 0), "gcd zero")
+  failures = failures + check_int(42, rxint..lcm(-21, 6), "lcm")
+  failures = failures + check_int(0, rxint..isqrt(0), "isqrt zero")
+  failures = failures + check_int(3, rxint..isqrt(15), "isqrt floor")
+  failures = failures + check_int(3037000499, rxint..isqrt(9223372036854775807), "isqrt rxinteger maximum")
+  failures = failures + check_int(24, rxint..powmod(2, 10, 1000), "powmod")
+  failures = failures + check_int(7, rxint..powmod(-2, 5, 13), "powmod signed base")
+  failures = failures + check_int(529, rxint..powmod(9223372036854775806, 2, 9223372036854775783), "powmod overflow-safe multiply")
+  failures = failures + check_int(2432902008176640000, rxint..factorial(20), "factorial boundary")
+  failures = failures + test_integer_signals()
+  failures = failures + test_decimal_signals()
+  failures = failures + test_decimal_9()
+  failures = failures + test_decimal_18()
+  failures = failures + test_decimal_64()
+
+  if failures > 0 then return 1
+  say "PASS: RCC-5C integer and decimal algorithms"
+  return 0

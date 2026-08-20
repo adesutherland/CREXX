@@ -1,0 +1,417 @@
+sample_id,stream,line_number,text
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-warmup-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-warmup-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-warmup-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-warmup-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-2,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-2,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-2,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-2,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-3,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-3,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-3,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-3,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-4,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-4,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-4,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-4,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-5,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-5,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-5,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-5,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-6,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-6,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-6,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-6,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-7,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-7,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-7,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-7,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-8,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-8,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-8,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-8,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-9,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-9,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-9,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-9,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-10,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-10,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-10,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-10,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-11,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-11,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-11,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-11,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-12,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-candidate-recorded-12,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-12,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxbvm-opt-nbody-rxbvm-opt-control-recorded-12,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-warmup-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-warmup-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-warmup-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-warmup-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-2,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-2,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-2,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-2,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-3,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-3,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-3,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-3,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-4,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-4,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-4,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-4,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-5,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-5,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-5,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-5,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-6,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-6,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-6,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-6,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-7,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-7,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-7,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-7,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-8,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-8,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-8,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-8,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-9,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-9,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-9,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-9,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-10,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-10,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-10,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-10,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-11,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-11,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-11,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-11,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-12,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-candidate-recorded-12,stdout,2,PASS: AWFY NBody
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-12,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxbvm-noopt-nbody-rxbvm-noopt-control-recorded-12,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-warmup-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-warmup-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-warmup-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-warmup-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-2,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-2,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-2,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-2,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-3,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-3,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-3,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-3,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-4,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-4,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-4,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-4,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-5,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-5,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-5,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-5,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-6,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-6,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-6,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-6,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-7,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-7,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-7,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-7,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-8,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-8,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-8,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-8,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-9,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-9,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-9,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-9,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-10,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-10,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-10,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-10,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-11,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-11,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-11,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-11,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-12,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-candidate-recorded-12,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-12,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.169085988990948
+timing-NBody-rxtvm-opt-nbody-rxtvm-opt-control-recorded-12,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-warmup-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-warmup-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-warmup-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-warmup-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-1,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-1,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-2,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-2,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-2,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-2,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-3,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-3,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-3,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-3,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-4,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-4,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-4,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-4,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-5,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-5,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-5,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-5,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-6,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-6,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-6,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-6,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-7,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-7,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-7,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-7,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-8,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-8,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-8,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-8,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-9,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-9,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-9,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-9,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-10,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-10,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-10,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-10,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-11,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-11,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-11,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-11,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-12,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-candidate-recorded-12,stdout,2,PASS: AWFY NBody
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-12,stdout,1,benchmark=awfy_nbody steps=250000 energy=-0.16908598899094
+timing-NBody-rxtvm-noopt-nbody-rxtvm-noopt-control-recorded-12,stdout,2,PASS: AWFY NBody
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-warmup-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-warmup-1,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-warmup-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-warmup-1,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-1,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-1,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-2,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-2,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-2,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-2,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-3,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-3,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-3,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-3,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-4,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-4,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-4,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-4,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-5,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-5,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-5,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-5,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-6,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-6,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-6,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-6,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-7,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-7,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-7,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-7,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-8,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-8,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-8,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-8,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-9,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-9,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-9,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-9,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-10,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-10,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-10,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-10,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-11,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-11,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-11,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-11,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-12,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-candidate-recorded-12,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-12,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-opt-cd-rxbvm-opt-control-recorded-12,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-warmup-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-warmup-1,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-warmup-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-warmup-1,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-1,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-1,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-2,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-2,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-2,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-2,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-3,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-3,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-3,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-3,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-4,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-4,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-4,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-4,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-5,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-5,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-5,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-5,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-6,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-6,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-6,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-6,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-7,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-7,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-7,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-7,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-8,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-8,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-8,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-8,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-9,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-9,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-9,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-9,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-10,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-10,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-10,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-10,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-11,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-11,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-11,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-11,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-12,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-candidate-recorded-12,stdout,2,PASS: AWFY CD
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-12,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxbvm-noopt-cd-rxbvm-noopt-control-recorded-12,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-warmup-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-warmup-1,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-warmup-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-warmup-1,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-1,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-1,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-2,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-2,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-2,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-2,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-3,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-3,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-3,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-3,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-4,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-4,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-4,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-4,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-5,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-5,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-5,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-5,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-6,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-6,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-6,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-6,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-7,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-7,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-7,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-7,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-8,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-8,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-8,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-8,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-9,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-9,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-9,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-9,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-10,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-10,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-10,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-10,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-11,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-11,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-11,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-11,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-12,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-candidate-recorded-12,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-12,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-opt-cd-rxtvm-opt-control-recorded-12,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-warmup-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-warmup-1,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-warmup-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-warmup-1,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-1,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-1,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-1,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-2,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-2,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-2,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-2,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-3,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-3,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-3,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-3,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-4,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-4,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-4,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-4,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-5,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-5,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-5,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-5,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-6,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-6,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-6,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-6,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-7,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-7,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-7,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-7,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-8,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-8,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-8,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-8,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-9,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-9,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-9,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-9,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-10,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-10,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-10,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-10,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-11,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-11,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-11,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-11,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-12,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-candidate-recorded-12,stdout,2,PASS: AWFY CD
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-12,stdout,1,benchmark=awfy_cd aircraft=10 frames=200 collisions=390 adaptation=indexed-red-black-tree-native-math
+timing-CD-rxtvm-noopt-cd-rxtvm-noopt-control-recorded-12,stdout,2,PASS: AWFY CD

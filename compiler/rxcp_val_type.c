@@ -2256,6 +2256,9 @@ walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case OP_TYPE_CAST:
+                if (child2 && child2->target_type == TP_DECIMAL) {
+                    rxcp_contextualize_exact_decimal_literals(context, child1);
+                }
                 if (!type_node_is_runtime_type_target(child2) || child1->value_dims != 0) {
                     mknd_err(node, "TYPE_MISMATCH");
                 } else if (child2->target_type == TP_OBJECT && child1->value_type != TP_OBJECT) {

@@ -17,7 +17,10 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
   path for current compiler output, while name-based intrinsic dispatch belongs
   to RexxScript)
 
-- `lib/rxmath/` (Math extensions)
+- `lib/plugins/float/` (native scalar binary-float mathematics)
+
+- `lib/rxfnsg/rexx/integer.crexx` and `decimal.crexx` (Level-G standard
+  integer and decimal mathematics authored in Level B)
 
 - `lib/plugins/` (General-purpose extensions like `fileio`, `regex`, `strings`, `socket`, etc.)
 
@@ -620,8 +623,7 @@ Current bundled classification is deliberately conservative:
 
 | Classification | Bundled examples | Rule |
 | --- | --- | --- |
-| Plugin-wide process-reentrant | `cipher`, `rx_hash`, `stack`, `strings`, `getpi`, `id` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. |
-| Mixed per-procedure | `rxmath` | Ordinary math procedures are process-reentrant; `rxmath.inlinec` remains legacy because it uses fixed process/file names. |
+| Plugin-wide process-reentrant | `cipher`, `rx_hash`, `rxfloat`, `stack`, `strings`, `getpi`, `id` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. `rxfloat` also publishes direct `rxmath` scalar compatibility names; the historical `inlinec`, statistics, hash and UUID mixture is removed. |
 | Per-VM session | `odbc` | Database procedures are session-affine; `odbc.show_message` is process-reentrant; old hosts use the plugin's default session. |
 | Unqualified | All other bundled plugins | Remain legacy and serialized until their complete state, dependencies, failure paths and teardown have been audited. |
 
@@ -703,7 +705,7 @@ This is accomplished using the `LOADFUNCS` mapping block, which binds the C func
 // Publish functions to the cREXX compiler and VM
 LOADFUNCS
 //       C Function       REXX Namespace & Name      Opt  Return Type   Argument Signature
-ADDPROC( add_integers,    "rxmath.add_integers",     "b", ".int",       "i1 = .int, i2 = .int" );
+ADDPROC( add_integers,    "rxexample.add_integers",  "b", ".int",       "i1 = .int, i2 = .int" );
 ADDPROC( string_concat,   "rxstr.string_concat",     "b", ".string",    "s1 = .string, s2 = .string" );
 ENDLOADFUNCS
 ```
@@ -712,7 +714,7 @@ ENDLOADFUNCS
 
 1. **C Function**: The literal name of the C function defined by `PROCEDURE(...)`.
 
-2. **REXX Namespace & Name**: How the function will be called from REXX code (e.g., `import rxmath; x = add_integers(1, 2)`).
+2. **REXX Namespace & Name**: How the function will be called from REXX code (e.g., `import rxexample; x = add_integers(1, 2)`).
 
 3. **Option**: The target cREXX language level (`"b"` for Level B, `"c"` for Level C).
 

@@ -83,7 +83,10 @@ struct decplugin {
     // Functions provided by the plugin
     void (*syncNumericContext)(decplugin *plugin); // Sync a numeric context into the plugin (should be called by the client after changing the context)
     size_t (*getDigits)(decplugin *plugin); // Get the number of digits in the rxvmplugin context (maybe smaller than num_context->digits)
-    size_t (*getRequiredStringSize)(decplugin *plugin); // Get the required string size for the rxvmplugin context
+    /* Size a conversion buffer for both the active context and, when supplied,
+     * the stored value. Values can legitimately cross a numeric-context
+     * boundary with more digits than the callee's current precision. */
+    size_t (*getRequiredStringSize)(decplugin *plugin, const value *number);
     void (*decimalFromString)(decplugin *plugin, value *result, const char *input); // Convert a string to a rxvmplugin number
     void (*decimalToString)(decplugin *plugin, const value *input, char *result); // Convert a rxvmplugin number to a string
     /* Total for every rxinteger; clears stale plugin diagnostics. Allocation

@@ -18,6 +18,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define RXVM_MEMORY_HAS_ASAN 1
+#endif
+#endif
+#if defined(__SANITIZE_ADDRESS__) && !defined(RXVM_MEMORY_HAS_ASAN)
+#define RXVM_MEMORY_HAS_ASAN 1
+#endif
+#ifdef RXVM_MEMORY_HAS_ASAN
+#include <sanitizer/asan_interface.h>
+#endif
+
 #if defined(_MSC_VER)
 #define RXVM_MEMORY_THREAD_LOCAL __declspec(thread)
 #else
@@ -187,6 +199,24 @@ static const uint32_t rxvm_memory_byte_sizes[RXVM_MEMORY_BYTE_CLASS_COUNT] = {
     1024u, 2048u, 4096u, 8192u, 16384u
 };
 
+static void rxvm_memory_asan_unpoison(void *pointer, size_t size) {
+#ifdef RXVM_MEMORY_HAS_ASAN
+    __asan_unpoison_memory_region(pointer, size);
+#else
+    (void)pointer;
+    (void)size;
+#endif
+}
+
+static void rxvm_memory_asan_poison(void *pointer, size_t size) {
+#ifdef RXVM_MEMORY_HAS_ASAN
+    __asan_poison_memory_region(pointer, size);
+#else
+    (void)pointer;
+    (void)size;
+#endif
+}
+
 static void *rxvm_memory_system_slab_allocate(void) {
 #ifdef _WIN32
     return _aligned_malloc(RXVM_MEMORY_SLAB_SIZE, RXVM_MEMORY_SLAB_SIZE);
@@ -201,6 +231,7 @@ static void *rxvm_memory_system_slab_allocate(void) {
 }
 
 static void rxvm_memory_system_slab_free(void *pointer) {
+    rxvm_memory_asan_unpoison(pointer, RXVM_MEMORY_SLAB_SIZE);
 #ifdef _WIN32
     _aligned_free(pointer);
 #else
@@ -333,6 +364,7 @@ static void rxvm_memory_slab_prepare(rxvm_memory_slab *slab,
                                      uint8_t class_id) {
     uint32_t slot_size = rxvm_memory_class_slot_size(class_id);
 
+    rxvm_memory_asan_unpoison(slab, RXVM_MEMORY_SLAB_SIZE);
     memset(slab, 0, sizeof(*slab));
     slab->context = context;
     slab->owner = worker;
@@ -530,7 +562,9 @@ static void *rxvm_memory_alloc_standard(rxvm_memory_worker *worker,
 
     if (slab->local_free) {
         result = slab->local_free;
+        rxvm_memory_asan_unpoison(result, sizeof(void *));
         slab->local_free = *(void **)result;
+        rxvm_memory_asan_unpoison(result, slab->slot_size);
     } else {
         result = rxvm_memory_slab_payload(slab) +
                  (size_t)slab->bump_count * slab->slot_size;
@@ -623,6 +657,12 @@ static rxvm_memory_extent *rxvm_memory_find_extent(const void *pointer) {
     if (!pointer) return 0;
     extent = (rxvm_memory_extent *)((const unsigned char *)pointer -
                                     sizeof(*extent));
+#ifdef RXVM_MEMORY_HAS_ASAN
+    /* A standard slot can immediately follow an ASan-poisoned free slot.
+     * Do not inspect that neighbouring storage as a speculative extent
+     * header; the subsequent slab lookup will classify the pointer. */
+    if (__asan_region_is_poisoned(extent, sizeof(*extent))) return 0;
+#endif
     if (extent->magic != RXVM_MEMORY_EXTENT_MAGIC) {
         return 0;
     }
@@ -653,11 +693,15 @@ static rxvm_memory_result rxvm_memory_release_standard(rxvm_memory_slab *slab,
     {
         void *free_slot = slab->local_free;
         while (free_slot) {
+            void *next_free;
             if (free_slot == pointer) {
                 worker->stats.invalid_frees++;
                 return RXVM_MEMORY_INVALID_POINTER;
             }
-            free_slot = *(void **)free_slot;
+            rxvm_memory_asan_unpoison(free_slot, sizeof(void *));
+            next_free = *(void **)free_slot;
+            rxvm_memory_asan_poison(free_slot, slab->slot_size);
+            free_slot = next_free;
         }
     }
 #endif
@@ -668,6 +712,10 @@ static rxvm_memory_result rxvm_memory_release_standard(rxvm_memory_slab *slab,
     }
     *(void **)pointer = slab->local_free;
     slab->local_free = pointer;
+    /* The free-list link lives inside the released slot.  Poison the complete
+     * slot so ASan reports stale VM-value writes at their origin; allocation
+     * briefly unpoisons the link before returning the storage to its caller. */
+    rxvm_memory_asan_poison(pointer, slab->slot_size);
     slab->live_count--;
     rxvm_memory_stats_free(worker, slab->class_id, slab->slot_size, 0);
 

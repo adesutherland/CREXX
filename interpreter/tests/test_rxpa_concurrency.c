@@ -635,7 +635,7 @@ static int test_static_replay(void) {
     return 0;
 }
 
-static int test_rxmath_static_binding(void) {
+static int test_float_static_binding(void) {
     rxvm_context first;
     rxvm_context second;
     int failed = 0;
@@ -644,18 +644,21 @@ static int test_rxmath_static_binding(void) {
     rxinimod(&first);
     rxinimod(&second);
     if (rxldmodp(&first) <= 0 ||
+        context_procedure_capabilities(&first, "rxfloat.pi") !=
+                RXPA_PROCEDURE_CAP_PROCESS_REENTRANT ||
+        context_procedure_invoker(&first, "rxfloat.pi") !=
+                rxvm_callfunc_direct ||
         context_procedure_capabilities(&first, "rxmath.pi") !=
                 RXPA_PROCEDURE_CAP_PROCESS_REENTRANT ||
         context_procedure_invoker(&first, "rxmath.pi") !=
-                rxvm_callfunc_direct ||
-        context_procedure_capabilities(&first, "rxmath.inlinec") != 0u ||
-        context_procedure_invoker(&first, "rxmath.inlinec") !=
                 rxvm_callfunc_direct) {
         failed = 1;
     }
     if (rxldmodp(&second) <= 0 ||
-        context_procedure_invoker(&first, "rxmath.inlinec") != rxvm_callfunc ||
-        context_procedure_invoker(&second, "rxmath.inlinec") != rxvm_callfunc ||
+        context_procedure_invoker(&first, "rxfloat.pi") !=
+                rxvm_callfunc_direct ||
+        context_procedure_invoker(&second, "rxfloat.pi") !=
+                rxvm_callfunc_direct ||
         context_procedure_invoker(&first, "rxmath.pi") !=
                 rxvm_callfunc_direct ||
         context_procedure_invoker(&second, "rxmath.pi") !=
@@ -665,7 +668,7 @@ static int test_rxmath_static_binding(void) {
     rxfremod(&second);
     rxfremod(&first);
     if (failed) {
-        fprintf(stderr, "Static rxmath mixed procedure policy failed\n");
+        fprintf(stderr, "Static rxfloat canonical/compatibility binding failed\n");
         return 1;
     }
     return 0;
@@ -1116,10 +1119,11 @@ static int test_procedure_manifest(const char *directory,
     if (!failed &&
         (!plugin.has_manifest_v2 || plugin.capabilities != 0u ||
          rxpa_loaded_plugin_procedure_capabilities(
-                 &plugin, "rxmath.pi") !=
+                 &plugin, "rxfloat.pi") !=
                  RXPA_PROCEDURE_CAP_PROCESS_REENTRANT ||
          rxpa_loaded_plugin_procedure_capabilities(
-                 &plugin, "rxmath.inlinec") != 0u)) {
+                 &plugin, "rxmath.pi") !=
+                 RXPA_PROCEDURE_CAP_PROCESS_REENTRANT)) {
         failed = 1;
     }
     if (rc == 0) rxpa_close_plugin(&plugin);
@@ -1209,8 +1213,8 @@ static int call_plugin_procedure(rxvm_context *context, const char *kind) {
         set_null_string(&arguments[0], "Monte Carlo");
     } else if (strcmp(kind, "id") == 0) {
         procedure_name = "id._uuidv7";
-    } else if (strcmp(kind, "rxmath") == 0) {
-        procedure_name = "rxmath.pi";
+    } else if (strcmp(kind, "float") == 0) {
+        procedure_name = "rxfloat.pi";
     } else {
         failed = 1;
         procedure_name = "";
@@ -1267,7 +1271,7 @@ static int call_plugin_procedure(rxvm_context *context, const char *kind) {
         failed = !result.string_value || result.string_length != 36u ||
                  result.string_value[8] != '-' || result.string_value[13] != '-' ||
                  result.string_value[18] != '-' || result.string_value[23] != '-';
-    } else if (strcmp(kind, "rxmath") == 0) {
+    } else if (strcmp(kind, "float") == 0) {
         failed = result.float_value < 3.1415 || result.float_value > 3.1417;
     }
     if (failed) {
@@ -1481,8 +1485,8 @@ int main(int argc, char **argv) {
     if (strcmp(argv[1], "session-malformed") == 0) {
         return test_malformed_session_manifest();
     }
-    if (strcmp(argv[1], "rxmath-static") == 0) {
-        return test_rxmath_static_binding();
+    if (strcmp(argv[1], "float-static") == 0) {
+        return test_float_static_binding();
     }
     if (strcmp(argv[1], "binding") == 0) return test_branch_free_binding();
     if (strcmp(argv[1], "bound-legacy") == 0) {

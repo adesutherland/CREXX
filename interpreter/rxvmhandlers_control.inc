@@ -1599,7 +1599,8 @@ RXVM_HANDLER(DTOS_REG,
     VM_ADVANCE(1);
     DEBUG("TRACE - DTOS R%lu\n", REG_IDX(1));
     /* Determine how long the string needs to be */
-    size_t string_size = current_frame->decimal->getRequiredStringSize(current_frame->decimal);
+    size_t string_size = current_frame->decimal->getRequiredStringSize(
+            current_frame->decimal, op1R);
     /* Ensure the string buffer is big enough */
     extend_string_buffer(op1R, string_size);
     /* Convert */
@@ -2224,7 +2225,8 @@ RXVM_HANDLER(DPOW_REG_DECIMAL_REG,
 RXVM_HANDLER(DEXTR_REG_REG_REG,
     VM_ADVANCE(3);
     DEBUG("TRACE - DEXTR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-    prep_string_buffer(op1R, current_frame->decimal->getRequiredStringSize(current_frame->decimal));
+    prep_string_buffer(op1R, current_frame->decimal->getRequiredStringSize(
+            current_frame->decimal, op3R));
     current_frame->decimal->decimalExtract(current_frame->decimal, op1R->string_value, &(op2R->int_value), op3R);
     finish_ascii_string_write(op1R, strlen(op1R->string_value));
     DISPATCH;

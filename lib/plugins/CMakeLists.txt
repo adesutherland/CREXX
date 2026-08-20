@@ -12,7 +12,7 @@ add_dynamic_plugin_target(_rxpa_session_failure
 # These are the plugins that are built for Windows, macOS and Linux
 #
 add_subdirectory(arrays)
-add_subdirectory(rxmath)
+add_subdirectory(float)
 add_subdirectory(stack)
 add_subdirectory(cipher)
 add_subdirectory(hash)
@@ -103,7 +103,7 @@ configure_linker_for_static_lib(test_rxpa_concurrency _cipher)
 configure_linker_for_static_lib(test_rxpa_concurrency _hash)
 configure_linker_for_static_lib(test_rxpa_concurrency _stack)
 configure_linker_for_static_lib(test_rxpa_concurrency _id)
-configure_linker_for_static_lib(test_rxpa_concurrency _rxmath)
+configure_linker_for_static_lib(test_rxpa_concurrency float)
 target_link_libraries(test_rxpa_concurrency rxpashim)
 add_dependencies(test_rxpa_concurrency
         _cipher _cipher_static
@@ -111,7 +111,7 @@ add_dependencies(test_rxpa_concurrency
         _stack _stack_static
         _strings _getpi
         _id _id_static)
-add_dependencies(test_rxpa_concurrency _rxmath _rxmath_static)
+add_dependencies(test_rxpa_concurrency float float_static)
 add_dependencies(test_rxpa_concurrency _rxpa_session_failure)
 
 add_test(NAME rxpa_bundled_cipher_concurrency
@@ -132,9 +132,9 @@ add_test(NAME rxpa_bundled_getpi_concurrency
 add_test(NAME rxpa_bundled_id_concurrency
         COMMAND test_rxpa_concurrency bundled
                 "$<TARGET_FILE_DIR:_id>" "$<TARGET_FILE_NAME:_id>" id)
-add_test(NAME rxpa_rxmath_dynamic_mixed_policy
-        COMMAND test_rxpa_concurrency mixed
-                "$<TARGET_FILE_DIR:_rxmath>" "$<TARGET_FILE_NAME:_rxmath>" rxmath)
+add_test(NAME rxpa_bundled_float_concurrency
+        COMMAND test_rxpa_concurrency bundled
+                "$<TARGET_FILE_DIR:float>" "$<TARGET_FILE_NAME:float>" float)
 add_test(NAME rxpa_dynamic_session_factory_failure_rollback
         COMMAND test_rxpa_concurrency session-load-failure
                 "$<TARGET_FILE_DIR:_rxpa_session_failure>"
@@ -146,7 +146,7 @@ set_tests_properties(
         rxpa_bundled_strings_concurrency
         rxpa_bundled_getpi_concurrency
         rxpa_bundled_id_concurrency
-        rxpa_rxmath_dynamic_mixed_policy
+        rxpa_bundled_float_concurrency
         rxpa_dynamic_session_factory_failure_rollback
         PROPERTIES LABELS "interpreter;worker;plugins;rxpa;bundled")
 

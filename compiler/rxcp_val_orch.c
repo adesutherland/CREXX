@@ -1174,11 +1174,67 @@ void promote_symbol_from_target(Context *context, ASTNode *node) {
     }
 }
 
+/* An ordinary dotted literal defaults to binary float when it has no expected
+ * type.  Once the surrounding typed surface establishes a decimal result,
+ * preserve the source spelling instead of rounding through binary64 and then
+ * emitting FTOD.  Numeric expression nodes are retargeted only when they
+ * contain such a source literal; explicit casts/constructors are deliberate
+ * representation boundaries and are therefore not traversed here.
+ *
+ * OPTIONS FLOATS_BINARY remains an explicit request for binary treatment.
+ * OPTIONS FLOATS_DECIMAL is handled earlier by float2decimal_walker(). */
+int rxcp_contextualize_exact_decimal_literals(Context *context,
+                                               ASTNode *node) {
+    ASTNode *child;
+    int changed;
+
+    if (!context || !node || context->floats_binary) return 0;
+
+    if (node->node_type == FLOAT) {
+        node->node_type = DECIMAL;
+        ast_set_value_type(0, node, TP_DECIMAL, 0, 0, 0, 0);
+        ast_set_target_type(0, node, TP_DECIMAL, 0, 0, 0, 0);
+        return 1;
+    }
+
+    switch (node->node_type) {
+        case OP_PLUS:
+        case OP_NEG:
+        case OP_ADD:
+        case OP_MINUS:
+        case OP_MULT:
+        case OP_POWER:
+        case OP_DIV:
+        case OP_IDIV:
+        case OP_MOD:
+            break;
+        default:
+            return 0;
+    }
+
+    changed = 0;
+    for (child = node->child; child; child = child->sibling) {
+        if (rxcp_contextualize_exact_decimal_literals(context, child)) changed = 1;
+    }
+    if (!changed) return 0;
+
+    ast_set_value_type(0, node, TP_DECIMAL, 0, 0, 0, 0);
+    ast_set_target_type(0, node, TP_DECIMAL, 0, 0, 0, 0);
+    for (child = node->child; child; child = child->sibling) {
+        ast_set_target_type(0, child, TP_DECIMAL, 0, 0, 0, 0);
+    }
+    return 1;
+}
+
 /* Validates a node promotion is correct adding error nodes if not */
 void validate_node_promotion(Context *context, ASTNode* node) {
     size_t i;
     if (node->target_type == TP_UNKNOWN) return; /* Can't validate yet - will be done later after the target is set */
     if (node->value_type == TP_UNKNOWN) return; /* Can't validate yet - will be done later after the value is set */
+
+    if (node->target_type == TP_DECIMAL && node->target_dims == 0) {
+        rxcp_contextualize_exact_decimal_literals(context, node);
+    }
 
     /* Ignore error nodes */
     if (node->node_type == ERROR) return;

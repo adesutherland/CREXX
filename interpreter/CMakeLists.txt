@@ -741,8 +741,8 @@ add_test(NAME rxpa_session_factory_failure_rollback
         COMMAND test_rxpa_concurrency session-failure)
 add_test(NAME rxpa_session_manifest_fail_closed
         COMMAND test_rxpa_concurrency session-malformed)
-add_test(NAME rxpa_rxmath_static_mixed_policy
-        COMMAND test_rxpa_concurrency rxmath-static)
+add_test(NAME rxpa_float_static_alias_binding
+        COMMAND test_rxpa_concurrency float-static)
 add_test(NAME rxpa_legacy_call_serialization
         COMMAND test_rxpa_concurrency legacy)
 add_test(NAME rxpa_process_reentrant_overlap
@@ -768,7 +768,7 @@ set_tests_properties(
         rxpa_static_session_lifecycle
         rxpa_session_factory_failure_rollback
         rxpa_session_manifest_fail_closed
-        rxpa_rxmath_static_mixed_policy
+        rxpa_float_static_alias_binding
         rxpa_legacy_call_serialization
         rxpa_process_reentrant_overlap
         rxpa_legacy_recursive_reentry
@@ -790,7 +790,7 @@ crexx_label_concurrency_tests(SP01
         rxpa_static_session_lifecycle
         rxpa_session_factory_failure_rollback
         rxpa_session_manifest_fail_closed
-        rxpa_rxmath_static_mixed_policy
+        rxpa_float_static_alias_binding
         rxpa_legacy_call_serialization
         rxpa_process_reentrant_overlap
         rxpa_legacy_recursive_reentry

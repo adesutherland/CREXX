@@ -1,0 +1,84 @@
+/* rxfloat canonical and rxmath compatibility contract */
+options levelb
+
+import rxfloat
+import rxmath
+
+check: procedure = .int
+  arg ok = .boolean, label = .string
+  if \ok then do
+    say "FAIL: rxfloat" label
+    return 1
+  end
+  return 0
+
+close: procedure = .boolean
+  arg actual = .float, expected = .float, tolerance = .float
+  return rxfloat..fabs(actual - expected) <= tolerance
+
+main: procedure = .int
+  failures = 0
+
+  failures = failures + check(rxfloat..sqrt(16.0) = 4.0, "sqrt")
+  failures = failures + check(rxfloat..hypot(3.0, 4.0) = 5.0, "hypot uses both arguments")
+  failures = failures + check(rxfloat..pow(2.0, 10.0) = 1024.0, "pow")
+  failures = failures + check(rxfloat..fmod(7.0, 4.0) = 3.0, "fmod")
+  failures = failures + check(rxfloat..floor(rxfloat..pi()) = 3.0, "pi/floor")
+  failures = failures + check(rxfloat..ceil(rxfloat..pi()) = 4.0, "pi/ceil")
+  failures = failures + check(rxfloat..atan2(1.0, 0.0) > 1.5, "atan2 quadrant")
+  failures = failures + check(close(rxfloat..expm1(0.00000001), 0.00000001000000005, 0.000000000000000001), "expm1")
+  failures = failures + check(close(rxfloat..log1p(0.00000001), 0.00000000999999995, 0.000000000000000001), "log1p")
+
+  nan_value = rxfloat..sqrt(-1.0)
+  positive_infinity = rxfloat..exp(1000.0)
+  negative_infinity = rxfloat..log(0.0)
+  negative_zero = -1.0 / positive_infinity
+  failures = failures + check(nan_value <> nan_value, "domain NaN")
+  failures = failures + check(rxfloat..acos(2.0) <> rxfloat..acos(2.0), "acos domain NaN")
+  failures = failures + check(positive_infinity > rxfloat..pow10(300.0), "positive infinity")
+  failures = failures + check(negative_infinity < 0.0 - rxfloat..pow10(300.0), "negative infinity")
+  failures = failures + check(rxfloat..atan2(negative_zero, -1.0) < -3.0, "signed negative zero")
+  failures = failures + check(rxfloat..atan2(0.0, -1.0) > 3.0, "signed positive zero")
+
+  /* Every retained compatibility declaration binds to the same procedure. */
+  failures = failures + check(rxmath..acos(0.5) = rxfloat..acos(0.5), "rxmath acos alias")
+  failures = failures + check(rxmath..asin(0.5) = rxfloat..asin(0.5), "rxmath asin alias")
+  failures = failures + check(rxmath..atan(0.5) = rxfloat..atan(0.5), "rxmath atan alias")
+  failures = failures + check(rxmath..cos(0.5) = rxfloat..cos(0.5), "rxmath cos alias")
+  failures = failures + check(rxmath..cosh(0.5) = rxfloat..cosh(0.5), "rxmath cosh alias")
+  failures = failures + check(rxmath..exp(0.5) = rxfloat..exp(0.5), "rxmath exp alias")
+  failures = failures + check(rxmath..exp2(0.5) = rxfloat..exp2(0.5), "rxmath exp2 alias")
+  failures = failures + check(rxmath..expm1(0.5) = rxfloat..expm1(0.5), "rxmath expm1 alias")
+  failures = failures + check(rxmath..log(2.0) = rxfloat..log(2.0), "rxmath log alias")
+  failures = failures + check(rxmath..log2(2.0) = rxfloat..log2(2.0), "rxmath log2 alias")
+  failures = failures + check(rxmath..log10(10.0) = rxfloat..log10(10.0), "rxmath log10 alias")
+  failures = failures + check(rxmath..log1p(0.5) = rxfloat..log1p(0.5), "rxmath log1p alias")
+  failures = failures + check(rxmath..ceil(1.25) = rxfloat..ceil(1.25), "rxmath ceil alias")
+  failures = failures + check(rxmath..floor(1.25) = rxfloat..floor(1.25), "rxmath floor alias")
+  failures = failures + check(rxmath..fabs(-1.25) = rxfloat..fabs(-1.25), "rxmath fabs alias")
+  failures = failures + check(rxmath..round(1.25) = rxfloat..round(1.25), "rxmath round alias")
+  failures = failures + check(rxmath..trunc(1.25) = rxfloat..trunc(1.25), "rxmath trunc alias")
+  failures = failures + check(rxmath..sin(0.5) = rxfloat..sin(0.5), "rxmath sin alias")
+  failures = failures + check(rxmath..sinh(0.5) = rxfloat..sinh(0.5), "rxmath sinh alias")
+  failures = failures + check(rxmath..sqrt(2.0) = rxfloat..sqrt(2.0), "rxmath sqrt alias")
+  failures = failures + check(rxmath..cbrt(8.0) = rxfloat..cbrt(8.0), "rxmath cbrt alias")
+  failures = failures + check(rxmath..tan(0.5) = rxfloat..tan(0.5), "rxmath tan alias")
+  failures = failures + check(rxmath..tanh(0.5) = rxfloat..tanh(0.5), "rxmath tanh alias")
+  failures = failures + check(rxmath..erf(0.5) = rxfloat..erf(0.5), "rxmath erf alias")
+  failures = failures + check(rxmath..erfc(0.5) = rxfloat..erfc(0.5), "rxmath erfc alias")
+  failures = failures + check(rxmath..tgamma(3.0) = rxfloat..tgamma(3.0), "rxmath tgamma alias")
+  failures = failures + check(rxmath..lgamma(3.0) = rxfloat..lgamma(3.0), "rxmath lgamma alias")
+  failures = failures + check(rxmath..asinh(1.0) = rxfloat..asinh(1.0), "rxmath asinh alias")
+  failures = failures + check(rxmath..acosh(2.0) = rxfloat..acosh(2.0), "rxmath acosh alias")
+  failures = failures + check(rxmath..atanh(0.5) = rxfloat..atanh(0.5), "rxmath atanh alias")
+  failures = failures + check(rxmath..pow(2.0, 3.0) = rxfloat..pow(2.0, 3.0), "rxmath pow alias")
+  failures = failures + check(rxmath..fmod(7.0, 4.0) = rxfloat..fmod(7.0, 4.0), "rxmath fmod alias")
+  failures = failures + check(rxmath..hypot(3.0, 4.0) = rxfloat..hypot(3.0, 4.0), "rxmath hypot alias")
+  failures = failures + check(rxmath..atan2(1.0, 2.0) = rxfloat..atan2(1.0, 2.0), "rxmath atan2 alias")
+  failures = failures + check(rxmath..pow10(2.0) = rxfloat..pow10(2.0), "rxmath pow10 alias")
+  failures = failures + check(rxmath..pi() = rxfloat..pi(), "rxmath pi alias")
+  failures = failures + check(rxmath..euler() = rxfloat..euler(), "rxmath euler alias")
+
+  if failures > 0 then return 1
+  say "PASS: rxfloat scalar and compatibility contracts"
+  return 0

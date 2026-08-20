@@ -166,6 +166,15 @@ f = .float(i)
 d = .decimal("42.50")
 ```
 
+An ordinary dotted literal remains binary `.float` when no surrounding type
+requires decimal. When a decimal assignment, argument, return, cast,
+constructor, or decimal expression establishes the expected type, the compiler
+parses the literal's original source spelling directly as `.decimal`; it does
+not round through binary64 first. For example, `d = 0.1` is exact when `d` is
+declared `.decimal`. An explicit `.float(...)` boundary and `options
+floats_binary` retain binary treatment. The `d` suffix is also an explicit
+decimal spelling, such as `0.1d`.
+
 The checked cast form can also be used for scalar conversions:
 
 ```rexx

@@ -23,7 +23,7 @@ static int test_decimalToString_total_contract(void) {
     int errors = 0;
 
     value_init(&number);
-    output = malloc(plugin->getRequiredStringSize(plugin));
+    output = malloc(plugin->getRequiredStringSize(plugin, NULL));
     plugin->base.signal_number = 999;
     plugin->base.signal_string = "stale";
     plugin->decimalToString(plugin, &number, output);
@@ -58,7 +58,7 @@ static int test_decimalFromInt_total_contract(void) {
     int errors = 0;
 
     value_init(&number);
-    output = malloc(plugin->getRequiredStringSize(plugin));
+    output = malloc(plugin->getRequiredStringSize(plugin, NULL));
     plugin->base.signal_number = 999;
     plugin->base.signal_string = "stale";
     plugin->decimalFromInt(plugin, &number, 42);
@@ -84,7 +84,7 @@ int aTestFromToInt(char* expected, int64_t int_input) {
     value_init(&a);
 
     /* Make a string buffer to hold the result as a string */
-    output = malloc(plugin->getRequiredStringSize(plugin));
+    output = malloc(plugin->getRequiredStringSize(plugin, NULL));
 
     printf("\nTesting with %s\n", expected);
     plugin->decimalFromInt(plugin, &a, int_input);
@@ -1000,6 +1000,36 @@ int test_decimalExtract() {
     errors += testDecimalExtract("1234567890123456789012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890e-300",
         "1.23456789012345678901234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789",
         -150);
+
+    /* A stored decimal can cross into a narrower numeric context without
+     * losing its existing coefficient. Buffer sizing must account for the
+     * value as well as the active context. */
+    {
+        value wide;
+        rxinteger exponent;
+        char *coefficient;
+        size_t required;
+
+        value_init(&wide);
+        plugin->num_context->digits = 50;
+        plugin->syncNumericContext(plugin);
+        plugin->decimalFromString(
+                plugin, &wide, "123456789012345678901234567890");
+        plugin->num_context->digits = 18;
+        plugin->syncNumericContext(plugin);
+        required = plugin->getRequiredStringSize(plugin, &wide);
+        coefficient = malloc(required);
+        plugin->decimalExtract(plugin, coefficient, &exponent, &wide);
+        if (strcmp(coefficient, "1.2345678901234567890123456789") != 0 ||
+            exponent != 29 || required < strlen(coefficient) + 1u) {
+            printf("Error - value-aware decimal extraction buffer sizing\n");
+            errors++;
+        }
+        free(coefficient);
+        clear_value(&wide);
+        plugin->num_context->digits = 200;
+        plugin->syncNumericContext(plugin);
+    }
 
     return errors;
 }

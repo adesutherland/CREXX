@@ -49,6 +49,7 @@ int rxcp_same_reference_value_and_target_type(ASTNode *node);
 int rxcp_same_reference_value_type(ASTNode *left, ASTNode *right);
 void promote_symbol_from_target(Context *context, ASTNode *node);
 void validate_node_promotion(Context *context, ASTNode* node);
+int rxcp_contextualize_exact_decimal_literals(Context *context, ASTNode *node);
 void validate_node_promotion_for_ref(Context *context, ASTNode* node);
 
 /* Monotonic Gatekeepers */

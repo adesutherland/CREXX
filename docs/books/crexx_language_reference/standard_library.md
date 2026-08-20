@@ -97,6 +97,15 @@ provider dependency, ordinary VMs discover the installed provider, and native
 packaging selects its static archive automatically. See
 [Binary hashing with `rxhash`](../crexx_library_reference/rxhash.md).
 
+## Mathematics
+
+The Level G standard mathematics family separates native scalar `rxfloat`,
+checked `rxint`, and precision-preserving `rxdecimal`. Provider metadata makes
+the native float library automatic for interpreted and native packaging; the
+integer and decimal modules are Level-B-authored library code. See
+[Mathematics](../crexx_library_reference/mathematics.md) for the complete
+surface and availability boundary.
+
 ## ADDRESS and Trace Support
 
 `_address.rexx` contains the Rexx-side ADDRESS protocol support used by

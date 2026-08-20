@@ -19,6 +19,29 @@ set(RXFNSG_RPATH ${CMAKE_BINARY_DIR}/bin/rxfnsg)
 
 add_custom_target(testrxfnsg ALL)
 
+add_custom_target(ts_math_numeric)
+add_dependencies(testrxfnsg ts_math_numeric)
+
+set(_math_numeric_runners rxbvm)
+if(TARGET rxtvm)
+  list(APPEND _math_numeric_runners rxtvm)
+endif()
+
+foreach(_math_numeric_runner IN LISTS _math_numeric_runners)
+  crexx_add_rexx_opt_matrix(
+    NAME "ts_math_numeric_${_math_numeric_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_math_numeric.crexx"
+    TARGET_GROUP ts_math_numeric
+    RUNNER "${_math_numeric_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x
+    DEPENDS library classlib rxfnsg "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin" "${CMAKE_CURRENT_SOURCE_DIR}/ts_math_numeric.crexx"
+    RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
+    TEST_LABELS "library;math;integer;decimal;levelg;${_math_numeric_runner}"
+    REQUIRED_OUTPUT_REGEX "PASS: RCC-5C integer and decimal algorithms"
+    FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+endforeach()
+
 unset(_prev_target)
 foreach(_binfile IN LISTS REXXBINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)

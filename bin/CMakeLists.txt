@@ -84,6 +84,6 @@ configure_linker_for_static_lib_rel(crexx system _system)
 target_link_libraries(crexx rxvml rxpashim)
 
 add_dependencies(crexx rxvme rxvml rxpa avl_tree rxbin platform
-        _system _system_static _hash _hash_static)
+        _system _system_static _hash _hash_static float float_static)
 
 add_subdirectory(tests)

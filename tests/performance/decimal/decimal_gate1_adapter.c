@@ -103,7 +103,7 @@ static int run_conversion(decplugin *plugin, size_t iterations, char *checksum) 
         if (plugin_failed(plugin)) goto fail;
         total += strlen(checksum);
     }
-    (void)snprintf(checksum, plugin->getRequiredStringSize(plugin), "%zu", total);
+    (void)snprintf(checksum, plugin->getRequiredStringSize(plugin, NULL), "%zu", total);
     clear_decimal_value(&number);
     return 0;
 
@@ -142,7 +142,7 @@ static int run_compare(decplugin *plugin, size_t iterations, char *checksum) {
         if (plugin->decimalCompare(plugin, &late_low, &late_high) < 0) hits += 4;
         if (plugin_failed(plugin)) goto fail;
     }
-    (void)snprintf(checksum, plugin->getRequiredStringSize(plugin), "%zu", hits);
+    (void)snprintf(checksum, plugin->getRequiredStringSize(plugin, NULL), "%zu", hits);
     clear_decimal_value(&late_high);
     clear_decimal_value(&late_low);
     clear_decimal_value(&early_high);
@@ -176,7 +176,7 @@ static int run_copy_clear(decplugin *plugin, size_t iterations, char *checksum) 
         bytes += rxvm_value_decimal_length(&copy);
         clear_decimal_value(&copy);
     }
-    (void)snprintf(checksum, plugin->getRequiredStringSize(plugin), "%zu", bytes);
+    (void)snprintf(checksum, plugin->getRequiredStringSize(plugin, NULL), "%zu", bytes);
     clear_decimal_value(&source);
     return 0;
 
@@ -195,7 +195,7 @@ static int run_sync(decplugin *plugin, size_t iterations, char *checksum) {
         if (plugin_failed(plugin)) return 1;
         total += plugin->getDigits(plugin);
     }
-    (void)snprintf(checksum, plugin->getRequiredStringSize(plugin), "%zu", total);
+    (void)snprintf(checksum, plugin->getRequiredStringSize(plugin, NULL), "%zu", total);
     return 0;
 }
 
@@ -251,7 +251,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    checksum = (char *)malloc(plugin->getRequiredStringSize(plugin));
+    checksum = (char *)malloc(plugin->getRequiredStringSize(plugin, NULL));
     if (checksum == NULL) {
         fprintf(stderr, "FAIL: checksum allocation\n");
         plugin->base.free((rxvm_plugin *)plugin);

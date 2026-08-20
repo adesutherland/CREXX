@@ -30,8 +30,8 @@
  * see THIRD_PARTY_NOTICES.md. Vector, aircraft and motion records retain value
  * semantics. Benchmark-private indexed red/black trees preserve the upstream
  * ordered-map algorithm while stable integer handles lower object identity.
- * The existing rxmath sin, cos and sqrt functions are the disclosed native
- * mathematics substrate.
+ * The rxmath compatibility sin, cos and sqrt declarations resolve to the
+ * disclosed native rxfloat provider.
  */
 options levelb comments_dash
 import rxfnsb

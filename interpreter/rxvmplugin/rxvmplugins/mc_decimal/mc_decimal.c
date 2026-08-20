@@ -136,9 +136,21 @@ static size_t getDigits(decplugin *plugin) {
     return ((decContext*)(plugin->base.private_context))->digits;
 }
 
-/* Get the required string size for the rxvmplugin context */
-static size_t getRequiredStringSize(decplugin *plugin) {
-    return ((decContext*)(plugin->base.private_context))->digits + 14;
+/* Get the required string size for the active context and stored value. A
+ * decimal may have been produced in a wider caller/work context, so sizing
+ * solely from the current context can under-allocate DTOS/DEXTR output. */
+static size_t getRequiredStringSize(decplugin *plugin, const value *number) {
+    decContext *context = (decContext *)plugin->base.private_context;
+    size_t digits = context->digits > 0 ? (size_t)context->digits : 0u;
+
+    if (number && number->decimal_value &&
+        rxvm_value_decimal_length(number) != 0) {
+        const decNumber *dn = (const decNumber *)number->decimal_value;
+        if (dn->digits > 0 && (size_t)dn->digits > digits) {
+            digits = (size_t)dn->digits;
+        }
+    }
+    return digits > SIZE_MAX - 14u ? SIZE_MAX : digits + 14u;
 }
 
 static void decNumberToCREXXString(decplugin *plugin, decNumber *number, char *buffer) {
@@ -236,7 +248,7 @@ static void decimalFromString(decplugin *plugin, value *result, const char *stri
 
 /* Convert a rxvmplugin number to a string */
 /* The string must be allocated by the caller and should be at least
- * getRequiredStringSize() bytes */
+ * getRequiredStringSize(plugin, number) bytes */
 static void decimalToString(decplugin *plugin, const value *number, char *string) {
     decNumber *dn = number->decimal_value;
 
@@ -346,7 +358,7 @@ void decimalToDouble(decplugin *plugin, const value *input, double *result) {
     }
 
     // For finite values, convert to string and then to double
-    size_t bufferSize = getRequiredStringSize(plugin);
+    size_t bufferSize = getRequiredStringSize(plugin, input);
     char *buffer = malloc(bufferSize);
     if (buffer == NULL) {
         RX_PANIC_OOM("malloc mc_decimal double conversion buffer", bufferSize, "decimal value");
@@ -519,10 +531,10 @@ static void trim_numeric_trailing_zeros(char *str) {
 /* Extract the coefficient, exponent and sign from a rxvmplugin number.
  * - `decimal` contains the float value.
  * - `coefficient' will store the coefficient as a string (or nan, inf, -inf).
- *    It must be allocated by the caller and should be at least getRequiredStringSize()
- *    bytes (too big but simple for the caller)
+ *    It must be allocated by the caller and should be at least
+ *    getRequiredStringSize(plugin, decimal) bytes.
  * - `exponent` will store the exponent as an integer.
- * Normalized, round to context precision/digits, trim trailing zeros.
+ * Normalized without discarding stored precision; trailing zeros are trimmed.
  */
 static void decimalExtract(decplugin *plugin, char *coefficient, rxinteger *exponent, value *decimal) {
     const Unit *up;

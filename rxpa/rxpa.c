@@ -38,6 +38,19 @@
 
 typedef void (*initfuncs_type)(rxpa_initctxptr);
 
+/*
+ * Apple's ASan runtime does not reliably unpoison DSO globals after a
+ * dlclose()/reload cycle.  The compiler legitimately opens the same provider
+ * more than once while resolving transitive imports, so keep ASan-instrumented
+ * plugins resident until process exit on that platform.  The logical handle
+ * count and every production build retain the normal close contract.
+ */
+#if defined(__APPLE__) && defined(__clang__)
+#if __has_feature(address_sanitizer)
+#define RXPA_KEEP_DSO_RESIDENT 1
+#endif
+#endif
+
 #ifdef _WIN32
 static SRWLOCK rxpa_loader_lock = SRWLOCK_INIT;
 #define RXPA_LOADER_LOCK() AcquireSRWLockExclusive(&rxpa_loader_lock)
@@ -54,6 +67,8 @@ static void rxpa_os_close(void *handle) {
     if (!handle) return;
 #ifdef _WIN32
     FreeLibrary((HMODULE)handle);
+#elif defined(RXPA_KEEP_DSO_RESIDENT)
+    (void)handle;
 #else
     dlclose(handle);
 #endif

@@ -154,8 +154,9 @@ static size_t getDigits(decplugin *plugin) {
     return context_digits(plugin);
 }
 
-static size_t getRequiredStringSize(decplugin *plugin) {
+static size_t getRequiredStringSize(decplugin *plugin, const value *number) {
     (void)plugin;
+    (void)number;
     return DECQUAD_CANDIDATE_STRING;
 }
 
@@ -217,9 +218,9 @@ static void decimalExtract(decplugin *plugin, char *coefficient,
 
 static void init_local_string(decplugin *plugin, value *local) {
     memset(local, 0, sizeof(*local));
-    if (!plugin->reserve_string(local, getRequiredStringSize(plugin))) {
+    if (!plugin->reserve_string(local, getRequiredStringSize(plugin, NULL))) {
         RX_PANIC_OOM("reserve decQuad formatting sidecar",
-                     getRequiredStringSize(plugin), "decimal formatting");
+                     getRequiredStringSize(plugin, NULL), "decimal formatting");
     }
 }
 
