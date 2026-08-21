@@ -1278,9 +1278,20 @@ static int call_plugin_procedure(rxvm_context *context, const char *kind) {
         argument_count = 1;
         set_null_string(&arguments[0], "Monte Carlo");
     } else if (strcmp(kind, "id") == 0) {
-        procedure_name = "id._uuidv7";
+        procedure_name = "rxid.uuid7";
     } else if (strcmp(kind, "float") == 0) {
         procedure_name = "rxfloat.pi";
+    } else if (strcmp(kind, "stats") == 0) {
+        procedure_name = "rxstats.mean";
+        argument_count = 1;
+        set_num_attributes(&arguments[0], 3);
+        set_float(arguments[0].attributes[0], 1.0);
+        set_float(arguments[0].attributes[1], 2.0);
+        set_float(arguments[0].attributes[2], 3.0);
+    } else if (strcmp(kind, "fs") == 0) {
+        procedure_name = "rxfs.cwd";
+    } else if (strcmp(kind, "platform") == 0) {
+        procedure_name = "rxplatform.osname";
     } else {
         failed = 1;
         procedure_name = "";
@@ -1339,6 +1350,10 @@ static int call_plugin_procedure(rxvm_context *context, const char *kind) {
                  result.string_value[18] != '-' || result.string_value[23] != '-';
     } else if (strcmp(kind, "float") == 0) {
         failed = result.float_value < 3.1415 || result.float_value > 3.1417;
+    } else if (strcmp(kind, "stats") == 0) {
+        failed = result.float_value != 2.0;
+    } else if (strcmp(kind, "fs") == 0 || strcmp(kind, "platform") == 0) {
+        failed = !result.string_value || result.string_length == 0u;
     }
     if (failed) {
         fprintf(stderr,

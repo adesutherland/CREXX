@@ -76,7 +76,7 @@ recommendation to change the rule in this task.
 |---|---|---|
 | `rxc`, `rxas`, `rxlink` | separate native compiler, assembler, and linker targets with extensive subsystem tests | executables are emitted under `bin` and swept into install |
 | `rxdas`, `rxcpack` | native disassembler and RXBIN-to-C packager; disassembler has round-trip coverage | emitted under `bin` and swept into install |
-| `crexx` | Level B driver compiled and native-packaged through the toolchain; depends on core tools, runtimes, `system`, and library images | emitted under `bin` and swept into install |
+| `crexx` | Level B driver compiled and native-packaged through the toolchain; depends on core tools, runtimes, narrow `rxfs`, and library images | emitted under `bin` and swept into install; native provider selection follows linked RXBIN metadata |
 | `rxvm`, `rxbvm` | two dispatch variants over deliberately separate VM core object variants | emitted under `bin` and swept into install |
 | `rxvme`, `rxbvme` | the same dispatch variants with the packed Level B library | emitted under `bin` and swept into install |
 | `rxvml`, `rxbvml` | embeddable static runtime variants used by native packaging/hosts | archives are emitted under `bin` and therefore swept into install |
@@ -109,8 +109,12 @@ and unoptimized Rexx smoke executions.
 | `PKG-RXPA-fpool` | unreferenced | dynamic | single runtime test | not selected |
 | `PKG-RXPA-getpi` | default | dynamic | opt matrix | dynamic present |
 | `PKG-RXPA-gui` | `ENABLE_GTK` | dynamic + GTK3 | single runtime test | not selected |
-| `PKG-RXPA-hash` | default | dynamic + static provider package | dual-VM opt matrix, concurrency, native and install/package tests | both forms and canonical provider artifacts present |
-| `PKG-RXPA-id` | default | dynamic + static | template opt matrix | both present |
+| `PKG-RXPA-float` | default | dynamic + static provider package | dual-VM opt matrix, contract guard, concurrency, native and install/package tests | both forms and canonical provider artifacts present |
+| `PKG-RXPA-stats` | default | dynamic + static provider package | dual-VM opt matrix, offset/error contract, concurrency, native and install/package tests | transitional boxed surface; both forms present |
+| `PKG-RXPA-hash` | default | dynamic + static provider package | dual-VM opt matrix, concurrency, native and install/package tests | five-leaf binary surface; both forms present |
+| `PKG-RXPA-id` | default | dynamic + static provider package | dual-VM opt matrix, concurrency and install/package tests | six canonical leaves; both forms present |
+| `PKG-RXPA-fs` | default | dynamic + static provider package | dual-VM opt matrix, concurrency and install/package tests | both forms present; required by `crexx` |
+| `PKG-RXPA-platform` | default | dynamic + static provider package | dual-VM opt matrix, concurrency and install/package tests | target `_platform` publishes provider ID `rxplatform`; both forms present |
 | `PKG-RXPA-keyaccess` | default | dynamic + static | opt matrix; noopt smoke labelled | both present |
 | `PKG-RXPA-llist` | default | dynamic + static | opt matrix | both present |
 | `PKG-RXPA-map` | default | dynamic; static target commented | opt matrix with pass expression | dynamic present |
@@ -121,20 +125,19 @@ and unoptimized Rexx smoke executions.
 | `PKG-RXPA-process` | commented | dynamic; static target commented | template opt matrix | not selected |
 | `PKG-RXPA-recv390` | default | dynamic + static | template opt matrix | both present |
 | `PKG-RXPA-regex` | commented on Windows | dynamic + external `regex` | single runtime test | not selected |
-| `PKG-RXPA-rxmath` | default | dynamic + static | opt matrix; noopt smoke labelled | both present |
 | `PKG-RXPA-rxml` | Windows | dynamic | single runtime test | not selected on macOS |
 | `PKG-RXPA-rxtcp` | default | dynamic + static | opt matrix with loopback lock | both present |
 | `PKG-RXPA-socket` | `CREXX_BUILD_LEGACY_SOCKET_PLUGIN`, default off | dynamic + OpenSSL | template opt matrix with pass expression | not selected; root calls it deprecated and directs users to VM sockets/`rxsocket` |
 | `PKG-RXPA-stack` | default | dynamic + static | opt matrix; noopt smoke labelled | both present |
 | `PKG-RXPA-strings` | default | dynamic | opt matrix; noopt smoke labelled | dynamic present |
-| `PKG-RXPA-system` | default | dynamic + static | opt matrix plus direct smoke | both present; static target is a dependency of first-party tools |
 | `PKG-RXPA-testrx` | unreferenced; no CMake | none | none | source directory only |
 | `PKG-RXPA-treemap` | default | dynamic + static | template opt matrix | both present |
 
-This accounts for all 28 plugin directories. The current cross-platform default
-is broad: 15 directories are selected before platform/feature conditions. It
-includes several small demonstrations and legacy alternatives alongside
-runtime integrations.
+The RCC-5 overlay accounts for 30 plugin package IDs: four narrow packages were
+added and the broad `rxmath`/`system` packages retired from the post-RCC-4
+28-package state. Current cross-platform selection is still broader than the
+eventual manifest-driven profiles and includes demonstrations/legacy
+alternatives alongside supported providers.
 
 ## VM plugin reconciliation
 
@@ -164,7 +167,7 @@ registered test name as proof of semantic completeness.
 | RXPP | seven focused tests: smoke, source map, shell mapping/lookup/tokens, diagnostics, and diagnostic catalogues | good tooling-path evidence; not a catalogue of all preprocessor scripts |
 | RXPP support files | the RXPP smoke expands and compiles `SQUARE`; token tests identify a macro call | no systematic functional tests were found for the other 63 macro definitions, the six `mathlib` procedures, or empty `syslib` |
 | RXDB | one usage smoke executes the packed debugger and checks its CLI help | no automated stepping, watch, module-load, trace-event, or UI-state contract test was found |
-| default RXPA plugins | opt/noopt tests registered for arrays, stack, cipher, strings, getpi, keyaccess, llist, treemap, recv390, map, rxmath, rxtcp, and system in the configured tree | predominantly smoke-level; conditional/unreferenced plugins are absent from this configuration |
+| default RXPA plugins | opt/noopt tests registered for arrays, stack, cipher, strings, getpi, keyaccess, llist, treemap, recv390, map, rxtcp, and the RCC-5 `rxfloat`, `rxstats`, `rx_hash`, `rxid`, `rxfs`, and `rxplatform` providers | older packages remain predominantly smoke-level; RCC-5 providers add contract, concurrency, autoload and package evidence; conditional/unreferenced plugins are absent from this configuration |
 | compiler exits | compiler suites exercise exits and linked `rxcexits`; certified language exits have focused syntax/runtime coverage | the bundle contains demonstrator exits whose inclusion is not itself evidence of core status |
 | VM decimal plugins | dedicated static/dynamic/manual/full and archive-link tests | alternatives have different runtime roles and cannot be classified as one interchangeable contract without further conformance work |
 
@@ -203,7 +206,7 @@ registered test name as proof of semantic completeness.
 | ID | Reconciled discrepancy | Effect on later stages | Resolution boundary |
 |---|---|---|---|
 | `D03-01` | Eight typed BIF-reference names are intrinsic, reserved, contextual, or documentation-only rather than ordinary `rxfnsb` exports. | Prevents false missing-source findings; syntax/BIF purpose and role must be explicit. | Classify in Stage 6; documentation cleanup requires later approval. |
-| `D03-02` | The old `lib/rxmath` source tree has no CMake entry point, while `lib/plugins/rxmath` is an active default native plugin. | Two unlike implementations share a product name. | Treat as separate source and plugin items; disposition is an approval decision. |
+| `D03-02` | Historical finding: the old `lib/rxmath` source tree had no CMake entry point while `lib/plugins/rxmath` was active. RCC-5 retired the mixed plugin and moved scalar compatibility names into `rxfloat`. | The unbuilt source tree remains separately catalogued; it is not an active provider or contract. | Superseded for the native product by the approved RCC-5 overlay. |
 | `D03-03` | `lib/rxfnsb/rxas` contains many deprecated/residual implementations; only `_elapsed` and the ADDRESS bridge are selected. | Filesystem presence otherwise overstates active RXAS content. | Active and residual IDs remain separate. |
 | `D03-04` | Fifteen RXPA plugin directories are selected by default, including legacy alternatives and demonstrations. | Current build presence is not a reliable core/quality signal. | Stage 6 proposes roles and delivery independently. |
 | `D03-05` | Root install copies the whole build `bin/` tree. | Default build, package contents, and incidental artifacts are coupled. | Record proposed delivery allowlists in Stage 6; no packaging change now. |

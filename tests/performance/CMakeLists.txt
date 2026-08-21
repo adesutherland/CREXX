@@ -281,10 +281,10 @@ foreach(_decimal_runner IN ITEMS rxvm rxbvm)
     endforeach()
 endforeach()
 
-# crexx_add_rexx_opt_matrix registers optimized images with the shared runtime
-# fixture, while these NR-15 target groups are deliberately not part of ALL.
-# Make the same serialized fixture own both groups so an isolated CTest run can
-# generate the four noopt images instead of depending on a warm build tree.
+# These NR-15 target groups are deliberately not part of ALL and contain a
+# mixed artifact set beyond their ordinary opt-matrix images.  Keep the same
+# serialized fixture owning the complete groups so an isolated CTest run does
+# not depend on a warm build tree.
 add_dependencies(linked_opt_runtime_artifacts
         performance_nr15_stem_semantics
         performance_nr15_stem_access

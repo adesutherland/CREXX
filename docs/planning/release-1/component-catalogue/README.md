@@ -1,6 +1,8 @@
 # Release 1 Component Catalogue
 
-Status: working catalogue through approved stages 2-7. Classifications remain provisional until the separate approval stage.
+Status: working catalogue through approved stages 2-7, with approved RCC-4 and
+RCC-5 post-stage maintenance overlays. Historical stage counts remain labelled
+as snapshots; classifications outside the approved overlays remain provisional.
 
 ## Purpose
 
@@ -35,6 +37,7 @@ A C-language implementation is not automatically a Level C contract. Level C Cla
 | `provisional-classification.md` | Stage 6 contract-level, product-role, delivery, composition, and maturity proposals. |
 | `cross-cutting-conclusions.md` | Stage 7 conclusions, gaps, priorities, and decisions requiring approval. |
 | `stage-reviews.md` | Completeness and task-compliance review performed after every stage. |
+| `rcc5-provider-maintenance.md` | Current RCC-5A-E mathematics/provider identities, exact scoped deltas, consumers, delivery and retired pre-release surfaces. |
 
 ## Stable ID conventions
 

@@ -19,6 +19,12 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 
 - `lib/plugins/float/` (native scalar binary-float mathematics)
 
+- `lib/plugins/stats/` (transitional boxed-array native statistics)
+
+- `lib/plugins/hash/`, `id/`, `fs/`, and `platform/` (narrow declarative
+  native providers replacing the historical mixed `rxmath` and broad `system`
+  bundles)
+
 - `lib/rxfnsg/rexx/integer.crexx` and `decimal.crexx` (Level-G standard
   integer and decimal mathematics authored in Level B)
 
@@ -623,7 +629,7 @@ Current bundled classification is deliberately conservative:
 
 | Classification | Bundled examples | Rule |
 | --- | --- | --- |
-| Plugin-wide process-reentrant | `cipher`, `rx_hash`, `rxfloat`, `stack`, `strings`, `getpi`, `id` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. `rxfloat` also publishes direct `rxmath` scalar compatibility names; the historical `inlinec`, statistics, hash and UUID mixture is removed. |
+| Plugin-wide process-reentrant | `cipher`, `rx_hash`, `rxfloat`, `rxstats`, `rxid`, `rxfs`, `rxplatform`, `stack`, `strings`, `getpi` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. `rxfloat` also publishes direct `rxmath` scalar compatibility names; the historical `inlinec`, statistics, hash and UUID mixture and the broad `system` provider are removed. |
 | Per-VM session | `odbc` | Database procedures are session-affine; `odbc.show_message` is process-reentrant; old hosts use the plugin's default session. |
 | Unqualified | All other bundled plugins | Remain legacy and serialized until their complete state, dependencies, failure paths and teardown have been audited. |
 
@@ -762,22 +768,49 @@ requested artifact stem and embedded manifest identity to agree.
 ### Standard `rx_hash` provider
 
 `rx_hash` is a B+G standard/default provider, not compiler or VM core. It is
-built and installed in dynamic and static forms and currently publishes:
+built and installed in dynamic and static forms and publishes SHA-256 plus
+four named 32-bit hash/checksum procedures:
 
 ```rexx
 import rxhash
 
 digest = rxhash..sha256(data)
+table_hash = rxhash..djb2(data)
+seeded_hash = rxhash..murmur3(data, seed)
+fnv_hash = rxhash..fnv1a(data)
+checksum = rxhash..crc32(data)
 ```
 
-The exact signature is `rxhash.sha256(data = .binary) = .binary`. The result
-is the 32 raw digest bytes; use `bin2x()` when hexadecimal text is required.
-Embedded zero bytes are data, and the input is not mutated. `rxc` records the
-provider ID `rx_hash` in RXBIN metadata for a retained call. `rxvm` and
-`rxbvm` then find the trusted `rx_hash.rxplugin` automatically, while
-`crexx -native` selects `rx_hash.a` (or `.lib`) and retains its registration
-anchor. No Rexx declaration wrapper or explicit runtime provider argument is
-required in a standard build or installation.
+The exact SHA-256 signature is
+`rxhash.sha256(data = .binary) = .binary`; the result is the 32 raw digest
+bytes, so use `bin2x()` when hexadecimal text is required. `djb2`, `fnv1a`,
+and `crc32` accept one `.binary`; `murmur3` also accepts an `.int` seed. Each
+returns the algorithm's unsigned 32-bit bit pattern represented in `.int`.
+Embedded zero bytes are data, and inputs are not mutated. No historical
+`rxmath` aliases are retained.
+
+`rxc` records provider ID `rx_hash` in RXBIN metadata for a retained call.
+`rxvm` and `rxbvm` then find the trusted `rx_hash.rxplugin` automatically,
+while `crexx -native` selects `rx_hash.a` (or `.lib`) and retains its
+registration anchor. No Rexx declaration wrapper or explicit runtime provider
+argument is required in a standard build or installation.
+
+### RCC-5D/E providers
+
+The remaining RCC-5D/E providers use the same declarative dynamic/static
+delivery route:
+
+| Provider ID | Public namespace and procedures | Contract note |
+|---|---|---|
+| `rxstats` | `rxstats.mean`, `stddev`, `covariance`, `correlation`, `regression` | Transitional boxed `.float[]` Level G statistics. Compensated shifted-origin accumulation plus a compensated second pass protects ill-conditioned central moments. `BINARY-01`/RCC-5F replaces the boxed argument representation. |
+| `rxid` | `rxid.uuid4`, `uuid7`, `ulid`, `nanoid`, `snowflake`, `base58` | Bundled optional Level G identifier strings, callable from B when installed; random forms use platform cryptographic randomness and generation failures signal. |
+| `rxfs` | `rxfs.cwd`, `loadpath`, `chdir`, `isdir`, `mkdir`, `rmdir`, `delete`, `rename`, `isfile`, `listdir`, `append` | Narrow filesystem and directory operations. Return/status contracts are documented in the library reference. |
+| `rxplatform` | `rxplatform.uptime`, `user`, `host`, `osname`, `sleep` | Bundled optional Level G host/platform information and millisecond sleep, callable from B when installed. Clipboard, beep, process-global and developer functions from the old draft `system` surface were retired. |
+
+The source CMake target for `rxplatform` is named `_platform` to avoid a target
+collision, but `PROVIDER_ID rxplatform` makes its manifest, artifact stem,
+RXBIN dependency, runtime lookup, and native archive identity consistently
+`rxplatform`.
 
 ## 5. Declaring Native Classes and Interfaces
 

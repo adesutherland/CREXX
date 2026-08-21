@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(rx_hash_plugin C)
 
-set(CMAKE_C_STANDARD 90)
+set(CMAKE_C_STANDARD 99)
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
@@ -44,8 +44,8 @@ if(BUILD_TESTING)
                 IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
                 DEPENDS library _hash _hash_static
                 RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
-                TEST_LABELS "library;plugins;rxpa;hash;sha256"
-                REQUIRED_OUTPUT_REGEX "PASS: rxhash.sha256 vectors"
+                TEST_LABELS "library;plugins;rxpa;hash;sha256;checksum"
+                REQUIRED_OUTPUT_REGEX "PASS: rxhash digest and checksum vectors"
                 FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
     endforeach()
 endif()

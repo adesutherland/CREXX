@@ -1,0 +1,921 @@
+sample_id,stream,line_number,text
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-legacy-recorded-1,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=386942 calls_per_second=41349.8663882442 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-candidate-recorded-1,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=391387 calls_per_second=40880.254070779 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-legacy-recorded-1,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=378770 calls_per_second=42241.9938221084 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-candidate-recorded-1,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=376111 calls_per_second=42540.6329514425 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-candidate-recorded-2,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=376892 calls_per_second=42452.4797554737 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-legacy-recorded-2,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=375913 calls_per_second=42563.0398523063 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-candidate-recorded-2,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=371769 calls_per_second=43037.4775734394 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-legacy-recorded-2,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=375749 calls_per_second=42581.6169836779 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-legacy-recorded-3,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=374118 calls_per_second=42767.2552510171 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-candidate-recorded-3,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=373301 calls_per_second=42860.8549133273 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-legacy-recorded-3,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=378154 calls_per_second=42310.8045928378 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-candidate-recorded-3,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=372050 calls_per_second=43004.9724499395 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-candidate-recorded-4,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=371895 calls_per_second=43022.8962475968 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-legacy-recorded-4,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=376475 calls_per_second=42499.5019589614 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-candidate-recorded-4,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=376824 calls_per_second=42460.1405430652 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-legacy-recorded-4,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=380378 calls_per_second=42063.4211231985 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-legacy-recorded-5,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=376269 calls_per_second=42522.7696142919 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-candidate-recorded-5,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=375894 calls_per_second=42565.1912507249 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-legacy-recorded-5,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=387677 calls_per_second=41271.4708378367 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-candidate-recorded-5,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=378605 calls_per_second=42260.4033227242 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-candidate-recorded-6,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=378907 calls_per_second=42226.7205409243 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-legacy-recorded-6,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=380626 calls_per_second=42036.0143552989 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-candidate-recorded-6,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=375090 calls_per_second=42656.429123677 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-legacy-recorded-6,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=376166 calls_per_second=42534.4129985166 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-legacy-recorded-7,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=386119 calls_per_second=41438.0022739104 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-candidate-recorded-7,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=377679 calls_per_second=42364.0181212087 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-legacy-recorded-7,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=377494 calls_per_second=42384.7796256364 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-candidate-recorded-7,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=375940 calls_per_second=42559.9829760068 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-candidate-recorded-8,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=372377 calls_per_second=42967.207963972 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-legacy-recorded-8,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=378748 calls_per_second=42244.4474954323 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-candidate-recorded-8,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=376904 calls_per_second=42451.1281387303 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-legacy-recorded-8,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=380600 calls_per_second=42038.8859695218 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-legacy-recorded-9,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=378798 calls_per_second=42238.8713773568 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-candidate-recorded-9,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=374822 calls_per_second=42686.9287288366 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-legacy-recorded-9,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=385163 calls_per_second=41540.854131887 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-candidate-recorded-9,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=384913 calls_per_second=41567.8348094245 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-candidate-recorded-10,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=377401 calls_per_second=42395.2241779963 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxtvm-rxstats-legacy-recorded-10,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=388762 calls_per_second=41156.2858509834 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-candidate-recorded-10,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=4000 offset=0 elapsed_us=374525 calls_per_second=42720.7796542287 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-256x4000-rxbvm-rxstats-legacy-recorded-10,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=4000 offset=0 elapsed_us=380523 calls_per_second=42047.3926674603 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-legacy-recorded-1,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1250 calls_per_second=32000 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-candidate-recorded-1,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1255 calls_per_second=31872.5099601594 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-legacy-recorded-1,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1238 calls_per_second=32310.1777059774 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-candidate-recorded-1,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=2486 calls_per_second=16090.1045856798 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-candidate-recorded-2,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=2133 calls_per_second=18752.9301453352 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-legacy-recorded-2,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1709 calls_per_second=23405.5002925688 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-candidate-recorded-2,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1515 calls_per_second=26402.6402640264 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-legacy-recorded-2,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1516 calls_per_second=26385.2242744063 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-legacy-recorded-3,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1458 calls_per_second=27434.8422496571 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-candidate-recorded-3,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1393 calls_per_second=28715.0035893755 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-legacy-recorded-3,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1417 calls_per_second=28228.6520818631 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-candidate-recorded-3,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1504 calls_per_second=26595.7446808511 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-candidate-recorded-4,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1431 calls_per_second=27952.4807826695 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-legacy-recorded-4,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1460 calls_per_second=27397.2602739726 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-candidate-recorded-4,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1531 calls_per_second=26126.7145656434 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-legacy-recorded-4,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1367 calls_per_second=29261.1558156547 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-legacy-recorded-5,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1545 calls_per_second=25889.9676375405 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-candidate-recorded-5,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1307 calls_per_second=30604.4376434583 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-legacy-recorded-5,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1351 calls_per_second=29607.6980014804 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-candidate-recorded-5,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1382 calls_per_second=28943.5600578871 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-candidate-recorded-6,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1288 calls_per_second=31055.900621118 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-legacy-recorded-6,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1337 calls_per_second=29917.7262528048 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-candidate-recorded-6,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1364 calls_per_second=29325.5131964809 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-legacy-recorded-6,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1273 calls_per_second=31421.8381775334 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-legacy-recorded-7,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1360 calls_per_second=29411.7647058824 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-candidate-recorded-7,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1390 calls_per_second=28776.9784172662 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-legacy-recorded-7,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1364 calls_per_second=29325.5131964809 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-candidate-recorded-7,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1367 calls_per_second=29261.1558156547 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-candidate-recorded-8,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1322 calls_per_second=30257.1860816944 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-legacy-recorded-8,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1390 calls_per_second=28776.9784172662 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-candidate-recorded-8,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1373 calls_per_second=29133.2847778587 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-legacy-recorded-8,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1394 calls_per_second=28694.4045911047 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-legacy-recorded-9,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1373 calls_per_second=29133.2847778587 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-candidate-recorded-9,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1434 calls_per_second=27894.0027894003 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-legacy-recorded-9,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1367 calls_per_second=29261.1558156547 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-candidate-recorded-9,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1440 calls_per_second=27777.7777777778 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-candidate-recorded-10,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1350 calls_per_second=29629.6296296296 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxtvm-rxstats-offset-legacy-recorded-10,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1375 calls_per_second=29090.9090909091 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-candidate-recorded-10,stdout,1,benchmark=rcc5de_rxstats variant=candidate observations=256 iterations=10 offset=1000000000000 elapsed_us=1368 calls_per_second=29239.7660818713 mean=1000000000007.97 stddev=4.92445644053579 covariance=72.7503772938953 correlation=0.999999477647786 checksum=10000000000866.4
+timing-RCC5DE-rxstats-offset-1e12-rxbvm-rxstats-offset-legacy-recorded-10,stdout,1,benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=10 offset=1000000000000 elapsed_us=1376 calls_per_second=29069.7674418605 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=10000000000866.4
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260820)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-1,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260821)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-1,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260821)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-2,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260820)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-2,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260820)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-3,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260821)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-3,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260821)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-4,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260820)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-4,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260820)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-5,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260821)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-5,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260821)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-6,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260820)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-6,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260820)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-7,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260821)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-7,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260821)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-8,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260820)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-8,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260820)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-9,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260821)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-9,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260821)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-new-help-recorded-10,stdout,42,all options can also be prefixed with --
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,1,[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g298f412dc0e4.dirty [0m (macOS 64 20260820)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,2,cREXX License (MIT)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,3,"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,4,See https://github.com/adesutherland/CREXX for project details
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,5,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,6,Arguments are: in_file_specification... [--option]...
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,7,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,8,The following options are available:
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,9,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,10,-help              -- display (this) help info
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,11,-args              -- pass remaining argv entries to the program (final option)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,12,-version           -- display the version number
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,13,-exec              -- execute the compiled rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,14,-noexec            -- compile only; do not execute with rxvme
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,15,-compile           -- enable compilation to rxbin (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,16,-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,17,-native            -- package a native executable from the compiled program
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,18,-nonative          -- disable native packaging (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,19,-verbose[0-4]      -- report on progress; default verbose0
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,20,-[no]colo[u]r      -- enable or disable colo[u]r output
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,21,-[no]optimi[s|z]e  -- enable or disable optimization
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,22,-keep              -- keep compile/link intermediates (default)
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,23,-nokeep            -- delete compile/link intermediates after the run
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,24,-decimal           -- use decimal arithmetic
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,25,"-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin"
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,26,-s[path]           -- additional source import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,27,-i[path]           -- additional raw binary import root for the rxc phase
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,28,--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,29,--diagnostics mode -- rxc diagnostics: localized or raw
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,30,--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,31,--no-localisation  -- use raw diagnostic code/parameter rendering
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,32,--linkmap path     -- write an rxlink map file when using -native
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,33,--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,34,--link-keep-inline -- keep inline-body metadata in the linked native image
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,35,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,36,Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,37,and .crexx/.crx are Level G.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,38,"Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l."
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,39,Native packaging uses rxlink before rxcpack; declared provider archives and explicit
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,40,plugin/static libraries are linked with platform-appropriate retention flags.
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,41,
+timing-RCC5E-crexx-driver-help-driver-old-help-recorded-10,stdout,42,all options can also be prefixed with --

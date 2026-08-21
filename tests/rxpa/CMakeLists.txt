@@ -12,7 +12,12 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
 add_custom_target(cri07_rxpa_sdk_consumer_prereqs
-        DEPENDS rxc rxas rxvm rxbvm crexx library _hash _hash_static)
+        DEPENDS rxc rxas rxvm rxbvm crexx library
+                _hash _hash_static
+                stats stats_static
+                id id_static
+                fs fs_static
+                _platform _platform_static)
 
 add_test(
         NAME rxpa_external_sdk_consumer
@@ -31,7 +36,7 @@ add_test(
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_external_sdk_consumer.cmake
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxpa_external_sdk_consumer PROPERTIES
-        LABELS "install;package;rxpa;external-consumer;hash;crexx-rag"
+        LABELS "install;package;rxpa;external-consumer;hash;crexx-rag;rcc-5d;rcc-5e"
         RUN_SERIAL TRUE
         TIMEOUT 240)
 
@@ -379,10 +384,9 @@ foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
     if(_rexxtest STREQUAL "signal_funcs")
         list(APPEND _runtime_expectations
                 EXPECTED_EXIT_CODE 3
-                EXPECTED_FAILURE_DESCRIPTION "SIGNAL ERROR at bytecode address 9"
+                EXPECTED_FAILURE_DESCRIPTION "native SIGNAL ERROR message"
                 REQUIRED_OUTPUT_REGEX
-                    "PANIC: \\(SIGNAL ERROR\\)"
-                    "address 9 \\(0x9\\)"
+                    "PANIC: .*\\(SIGNAL ERROR\\)"
                 FORBIDDEN_OUTPUT_REGEX
                     "Error - should not reach here"
         )

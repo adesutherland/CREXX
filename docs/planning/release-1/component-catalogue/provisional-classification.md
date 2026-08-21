@@ -23,9 +23,11 @@ Level B source file containing inline `assembler` is still Rexx-authored but
 has a hybrid call path. A package containing Rexx adapters and C providers is a
 mixed package.
 
-Every public leaf inherits the classification of its syntax family, source
-selector, or containing package unless an exception is stated. This supplies a
-classification for all 2,158 raw IDs without duplicating the leaf catalogue.
+Every public leaf in the Stage 2 snapshot inherits the classification of its
+syntax family, source selector, or containing package unless an exception is
+stated. The approved RCC-5 overlay in
+[`rcc5-provider-maintenance.md`](rcc5-provider-maintenance.md) supersedes the
+historical `rxmath`, `system`, private `id`, and `mylib1` rows.
 
 ## Language syntax contracts
 
@@ -170,7 +172,7 @@ records why they should not currently be called “standard”.
 |---|---|---|---|---|---|
 | `TOOL-rxc`, `TOOL-rxas`, `TOOL-rxlink` | shared B/G/C/L toolchain | level core | required | pure native, with generated parser sources and linked Rexx exits | supported typed path; C/L maturity separate |
 | `TOOL-rxdas`, `TOOL-rxcpack` | shared binary/native packaging tooling | level core | required for development/native packaging | pure native | supported |
-| `TOOL-crexx` | B-authored user/toolchain driver | standard entry point | default | pure Level B Rexx source, generated C package, hybrid process/system path | provisional-supported |
+| `TOOL-crexx` | B-authored user/toolchain driver | standard entry point | default | pure Level B Rexx source, generated C package, hybrid native-tool and narrow `rxfs` path | provisional-supported |
 | `TOOL-rxvm`, `TOOL-rxbvm`, `LIB-rxvml`, `LIB-rxbvml` | shared runtime | level core | required | pure native | supported, performance baseline required |
 | `TOOL-rxvme`, `TOOL-rxbvme` | B-packed convenience runtimes | standard | default | mixed native VM plus generated/packed B bytecode | supported |
 | `LIB-crexxsaa`, `TOOL-crexxsaa` | host API/integration | integration | default | pure native | provisional-supported API |
@@ -210,8 +212,12 @@ host/integration contracts unless explicitly tied to B tooling, not Level C.
 | `fpool` | removal candidate | source-only/not shipped | incomplete |
 | `getpi` | example | developer-only | demonstrator |
 | `gui` | integration | opt-in | experimental/GTK-dependent |
-| `hash` (`rx_hash`, public namespace `rxhash`) | B+G standard | default | supported SHA-256 surface; process-reentrant, binary-safe, dynamic/static declarative packaging |
-| `id` | integration | opt-in with `classlib_native` | provisional |
+| `float` (`rxfloat`; scalar `rxmath` compatibility names) | G standard callable from B when installed | default | process-reentrant native libm provider; 37 canonical procedures, direct compatibility registrations, dynamic/static declarative packaging and accepted performance verdict |
+| `stats` (`rxstats`) | G standard | default | process-reentrant transitional boxed-array provider and RCC-5F oracle; stable algorithms, explicit rejection contracts and accepted performance verdict |
+| `hash` (`rx_hash`, public namespace `rxhash`) | B+G standard | default | SHA-256 plus four named 32-bit hash/checksum procedures; process-reentrant, binary-safe, dynamic/static declarative packaging |
+| `id` (`rxid`) | G optional, callable from B when installed | bundled and used by `classlib_native` | six canonical identifier procedures; process-reentrant dynamic/static provider using platform CSPRNGs where randomness is required |
+| `fs` (`rxfs`) | B+G standard | default and required by the `crexx` driver | eleven narrow filesystem procedures; process-reentrant dynamic/static provider |
+| `platform` (`rxplatform`) | G optional host integration, callable from B when installed | bundled and used by `classlib_native` | five narrow host/timing procedures; process-reentrant dynamic/static provider; privacy/portability remain explicit contract concerns |
 | `keyaccess` | integration | opt-in with `classlib_native` | experimental pending integrity evidence |
 | `llist` | optional duplicate | developer-only | experimental |
 | `map` | optional native collection | opt-in | provisional/experimental |
@@ -222,13 +228,11 @@ host/integration contracts unless explicitly tied to B tooling, not Level C.
 | `process` | integration | opt-in | experimental/unselected by default |
 | `recv390` | specialist integration | opt-in | provisional |
 | `regex` | optional alternate implementation | developer-only | experimental; semantics not reconciled |
-| `rxmath` | optional native numeric library | opt-in | provisional; not Level C math |
 | `rxml` | integration | opt-in | experimental/platform-limited |
 | `rxtcp` | deprecated/legacy network alternative | developer-only | deprecation candidate |
 | `socket` | deprecated network alternative | source-only/not shipped | explicitly deprecated |
 | `stack` | optional duplicate | developer-only | deprecation candidate |
 | `strings` | optional native accelerator/legacy surface | developer-only pending semantics and safety review | experimental |
-| `system` | first-party tool integration | default; required by tools that use it, not by the light B library contract | provisional-supported subset; broad API needs partitioning |
 | `testrx` | removal candidate | source-only/not shipped | residue |
 | `treemap` | optional duplicate | developer-only | experimental |
 

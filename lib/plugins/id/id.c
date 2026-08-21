@@ -28,18 +28,6 @@ RXPA_PLUGIN_PROCESS_REENTRANT
 #endif
 
 /* --------------------------------------------------------------------
-   Bring in UUIDv4 API + implementation
-   Files expected next to this file (or in your include path):
-     - uuid4.h
-     - uuid4.c
--------------------------------------------------------------------- */
-#ifndef UUID4_H
-#  include "uuid4.h"
-#endif
-/* Pull implementation directly into this TU */
-#include "uuid4.c"
-
-/* --------------------------------------------------------------------
    Bring in UUIDv7 API + implementation
    Files expected next to this file (or in your include path):
      - uuidv7.h
@@ -98,31 +86,13 @@ RXPA_PLUGIN_PROCESS_REENTRANT
 
 /* ----------------------- CREXX Procedures ----------------------- */
 
-/* UUIDv4 via uuid4.c */
-PROCEDURE(uuid) {
-    UUID4_STATE_T state;
-    UUID4_T u4;
-    char buffer[UUID4_STR_BUFFER_SIZE];
-
-    id_state_enter();
-    uuid4_seed(&state);
-    uuid4_gen(&state, &u4);
-    id_state_leave();
-
-    if (!uuid4_to_s(u4, buffer, sizeof(buffer)))
-        RETURNSTR("-8");
-
-    RETURNSTR(buffer);
-    PROCRETURN
-    ENDPROC
-}
-
-/* Compatibility UUIDv4 name, now backed by the plugin CSPRNG. */
-PROCEDURE(uuidt) {
+/* UUIDv4 backed by the platform CSPRNG used by the UUIDv7 implementation. */
+PROCEDURE(uuid4) {
     char out[37];
     uint8_t b[16];
 
-    if (!uuidv7_csprng(b, sizeof(b))) RETURNSTRX("-8");
+    if (!uuidv7_csprng(b, sizeof(b)))
+        RETURNSIGNAL(SIGNAL_FAILURE, "RXID.UUID4 random source failed")
 
     b[6] = (b[6] & 0x0F) | 0x40;  /* version 4 */
     b[8] = (b[8] & 0x3F) | 0x80;  /* variant 10 */
@@ -154,7 +124,7 @@ PROCEDURE(uuidv7) {
         uuidv_to_string(u7, s);
         RETURNSTR(s);
     } else {
-        RETURNSTR("ERROR: uuidv7_generate failed");
+        RETURNSIGNAL(SIGNAL_FAILURE, "RXID.UUID7 generation failed")
     }
     ENDPROC
 }
@@ -170,7 +140,7 @@ PROCEDURE(ulid) {
         ulid_to_string(u, s);
         RETURNSTR(s);
     } else {
-        RETURNSTR("ERROR: ulid_generate failed");
+        RETURNSIGNAL(SIGNAL_FAILURE, "RXID.ULID generation failed")
     }
     ENDPROC
 }
@@ -180,7 +150,7 @@ PROCEDURE(nanoid) {
     if (nanoid_generate(s)) {
         RETURNSTR(s);
     } else {
-        RETURNSTR("ERROR: nanoid_generate failed");
+        RETURNSIGNAL(SIGNAL_FAILURE, "RXID.NANOID generation failed")
     }
     ENDPROC
 }
@@ -189,7 +159,7 @@ PROCEDURE(snowflake) {
     if (snowflake_next_str(s)) {
         RETURNSTR(s);
     } else {
-        RETURNSTR("ERROR: snowflake_next failed");
+        RETURNSIGNAL(SIGNAL_FAILURE, "RXID.SNOWFLAKE generation failed")
     }
     ENDPROC
 }
@@ -199,18 +169,17 @@ PROCEDURE(base58) {
     if (base58id_generate(s, sizeof s)) {
         RETURNSTR(s);
     } else {
-        RETURNSTR("ERROR: base58id_generate failed");
+        RETURNSIGNAL(SIGNAL_FAILURE, "RXID.BASE58 generation failed")
     }
     ENDPROC
 }
 
 /* --------------------- Registration block --------------------- */
 LOADFUNCS
-    ADDPROC(uuid,   "id._uuid",   "b", ".string", "");
-    ADDPROC(uuidt,  "id._uuidt",  "b", ".string", "");
-    ADDPROC(uuidv7, "id._uuidv7",  "b", ".string", "");
-    ADDPROC(ulid,   "id._ulid",    "b", ".string", "");
-    ADDPROC(nanoid, "id._nanoid",   "b", ".string", "");
-    ADDPROC(snowflake,"id._snowflake","b",".string", "");
-    ADDPROC(base58,"id._base58",    "b", ".string", "");
+    ADDPROC(uuid4, "rxid.uuid4", "b", ".string", "");
+    ADDPROC(uuidv7, "rxid.uuid7", "b", ".string", "");
+    ADDPROC(ulid, "rxid.ulid", "b", ".string", "");
+    ADDPROC(nanoid, "rxid.nanoid", "b", ".string", "");
+    ADDPROC(snowflake, "rxid.snowflake", "b", ".string", "");
+    ADDPROC(base58, "rxid.base58", "b", ".string", "");
 ENDLOADFUNCS

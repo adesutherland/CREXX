@@ -136,9 +136,8 @@ add_custom_command(
 
 add_executable(rexxscript_cli "${REXXSCRIPT_RUNNER_C}")
 set_target_properties(rexxscript_cli PROPERTIES OUTPUT_NAME rexxscript)
-configure_linker_for_static_lib_rel(rexxscript_cli system _system)
 target_link_libraries(rexxscript_cli rxvml rxpashim)
-add_dependencies(rexxscript_cli rxvme rxvml rxpa avl_tree platform _system _system_static)
+add_dependencies(rexxscript_cli rxvme rxvml rxpa avl_tree platform)
 
 # The compiler-exit RexxScript fixtures are declared before this subdirectory
 # and also name the consolidated image as a file prerequisite. Ninja can infer

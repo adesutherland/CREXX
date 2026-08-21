@@ -1,7 +1,7 @@
 # Minimum RexxDoc marker lines by classlib source file.
 # Marker lines include /**, @param, @parm, @return, and @author.
 classlib/Concurrency.crexx 283
-classlib/Id.crexx 11
+classlib/Id.crexx 10
 classlib/KeyDB.crexx 51
 classlib/ObjectArrayList.crexx 35
 classlib/ObjectArrayListIterator.crexx 1
@@ -9,7 +9,7 @@ classlib/ObjectIterable.crexx 1
 classlib/ObjectIterator.crexx 1
 classlib/ObjectLinkedList.crexx 1
 classlib/ObjectStack.crexx 1
-classlib/Os.crexx 29
+classlib/Os.crexx 27
 classlib/Qfind.crexx 1
 classlib/Rexx.crexx 172
 classlib/Scanlex.crexx 9

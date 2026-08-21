@@ -13,6 +13,7 @@ add_dynamic_plugin_target(_rxpa_session_failure
 #
 add_subdirectory(arrays)
 add_subdirectory(float)
+add_subdirectory(stats)
 add_subdirectory(stack)
 add_subdirectory(cipher)
 add_subdirectory(hash)
@@ -22,10 +23,11 @@ add_subdirectory(keyaccess)
 add_subdirectory(llist)
 add_subdirectory(treemap)
 add_subdirectory(id)
+add_subdirectory(fs)
+add_subdirectory(platform)
 add_subdirectory(recv390)
 add_subdirectory(map)
 add_subdirectory(rxtcp)
-add_subdirectory(system)
 
 option(CREXX_BUILD_LEGACY_SOCKET_PLUGIN
        "Build the deprecated OpenSSL-backed dynamic socket plugin"
@@ -102,16 +104,24 @@ endif()
 configure_linker_for_static_lib(test_rxpa_concurrency _cipher)
 configure_linker_for_static_lib(test_rxpa_concurrency _hash)
 configure_linker_for_static_lib(test_rxpa_concurrency _stack)
-configure_linker_for_static_lib(test_rxpa_concurrency _id)
+configure_linker_for_static_lib(test_rxpa_concurrency id)
 configure_linker_for_static_lib(test_rxpa_concurrency float)
+configure_linker_for_static_lib(test_rxpa_concurrency stats)
+configure_linker_for_static_lib(test_rxpa_concurrency fs)
+configure_linker_for_static_lib(test_rxpa_concurrency _platform
+        PROVIDER_ID rxplatform)
 target_link_libraries(test_rxpa_concurrency rxpashim)
 add_dependencies(test_rxpa_concurrency
         _cipher _cipher_static
         _hash _hash_static
         _stack _stack_static
         _strings _getpi
-        _id _id_static)
+        id id_static)
 add_dependencies(test_rxpa_concurrency float float_static)
+add_dependencies(test_rxpa_concurrency
+        stats stats_static
+        fs fs_static
+        _platform _platform_static)
 add_dependencies(test_rxpa_concurrency _rxpa_session_failure)
 
 add_test(NAME rxpa_bundled_cipher_concurrency
@@ -131,10 +141,19 @@ add_test(NAME rxpa_bundled_getpi_concurrency
                 "$<TARGET_FILE_DIR:_getpi>" "$<TARGET_FILE_NAME:_getpi>" getpi)
 add_test(NAME rxpa_bundled_id_concurrency
         COMMAND test_rxpa_concurrency bundled
-                "$<TARGET_FILE_DIR:_id>" "$<TARGET_FILE_NAME:_id>" id)
+                "$<TARGET_FILE_DIR:id>" "$<TARGET_FILE_NAME:id>" id)
 add_test(NAME rxpa_bundled_float_concurrency
         COMMAND test_rxpa_concurrency bundled
                 "$<TARGET_FILE_DIR:float>" "$<TARGET_FILE_NAME:float>" float)
+add_test(NAME rxpa_bundled_stats_concurrency
+        COMMAND test_rxpa_concurrency bundled
+                "$<TARGET_FILE_DIR:stats>" "$<TARGET_FILE_NAME:stats>" stats)
+add_test(NAME rxpa_bundled_fs_concurrency
+        COMMAND test_rxpa_concurrency bundled
+                "$<TARGET_FILE_DIR:fs>" "$<TARGET_FILE_NAME:fs>" fs)
+add_test(NAME rxpa_bundled_platform_concurrency
+        COMMAND test_rxpa_concurrency bundled
+                "$<TARGET_FILE_DIR:_platform>" "$<TARGET_FILE_NAME:_platform>" platform)
 add_test(NAME rxpa_dynamic_session_factory_failure_rollback
         COMMAND test_rxpa_concurrency session-load-failure
                 "$<TARGET_FILE_DIR:_rxpa_session_failure>"
@@ -147,6 +166,9 @@ set_tests_properties(
         rxpa_bundled_getpi_concurrency
         rxpa_bundled_id_concurrency
         rxpa_bundled_float_concurrency
+        rxpa_bundled_stats_concurrency
+        rxpa_bundled_fs_concurrency
+        rxpa_bundled_platform_concurrency
         rxpa_dynamic_session_factory_failure_rollback
         PROPERTIES LABELS "interpreter;worker;plugins;rxpa;bundled")
 

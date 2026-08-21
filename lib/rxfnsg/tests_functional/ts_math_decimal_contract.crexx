@@ -136,6 +136,25 @@ test_context: procedure = .int
   failures = failures + test_secondary_properties(tolerance, context_label)
   return failures
 
+/* Compact extension cell covering every export beyond the old 64-digit edge. */
+test_precision_extension: procedure = .int
+  numeric digits inherited
+  arg expected_digits = .int, tolerance = .decimal, context_label = .string, pi_expected = .decimal, euler_expected = .decimal
+  failures = 0
+  observed_digits = .int
+  failures = failures + numerictestsupport..check_decimal_equal(rxdecimal..pi(), pi_expected, context_label || " pi")
+  failures = failures + numerictestsupport..check_decimal_equal(rxdecimal..euler(), euler_expected, context_label || " euler")
+  failures = failures + check_close(rxdecimal..sqrt(2), "1.4142135623730950488016887242096980785696718753769480731766797379907324784621070388503875343276415727350138462309122970249248360558507372126441214970999358314132226659275055927557999505011527820605714701095599716059702745" as .decimal, tolerance, context_label || " sqrt two")
+  failures = failures + check_close(rxdecimal..exp(1), "2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274274663919320030599218174135966290435729003342952605956307381323286279434907632338298807531952510190115738341879307021540" as .decimal, tolerance, context_label || " exp one")
+  failures = failures + check_close(rxdecimal..ln(2), "0.6931471805599453094172321214581765680755001343602552541206800094933936219696947156058633269964186875420014810205706857336855202357581305570326707516350759619307275708283714351903070386238916734711233501153644979552391204" as .decimal, tolerance, context_label || " ln two")
+  failures = failures + check_close(rxdecimal..sin(1), "0.8414709848078965066525023216302989996225630607983710656727517099919104043912396689486397435430526958543490379079206742932591189209918988811934103277292124094807919558267666069999077640119784087827325663474848028702986561" as .decimal, tolerance, context_label || " sin one")
+  failures = failures + check_close(rxdecimal..cos(1), "0.5403023058681397174009366074429766037323104206179222276700972553811003947744717645179518560871830893435717311600300890978606337600216634564065122654173185847179711644744794942331179245513932543359435177567028925963757361" as .decimal, tolerance, context_label || " cos one")
+  failures = failures + check_close(rxdecimal..sin("100000000000000000000.125" as .decimal), "-0.5449690135294570508376638759665759640008084005666792948803991079910618201686857741830889814516062092276462845867671425444419354971862933254305888532717845789633012464059518988741261049338719268455910166305607611082140269" as .decimal, tolerance, context_label || " sin large angle")
+  failures = failures + check_close(rxdecimal..cos("100000000000000000000.125" as .decimal), "0.8384561850763165894423368098069755234566553703445013100148792549236822373044710706765646013266472871276174684664458161978263546893927975006306261028941026253652572577567079306653258419174713408288500478316203178080590026" as .decimal, tolerance, context_label || " cos large angle")
+  assembler getnumdgts observed_digits
+  failures = failures + numerictestsupport..check_int_equal(observed_digits, expected_digits, context_label || " caller precision preserved")
+  return failures
+
 test_digits_9: procedure = .int
   numeric digits 9
   return test_context("1E-8" as .decimal, "digits 9", "3.14159265" as .decimal, "2.71828183" as .decimal)
@@ -163,6 +182,33 @@ test_digits_33: procedure = .int
 test_digits_64: procedure = .int
   numeric digits 64
   return test_context("1E-62" as .decimal, "digits 64", "3.141592653589793238462643383279502884197169399375105820974944592" as .decimal, "2.718281828459045235360287471352662497757247093699959574966967628" as .decimal)
+
+test_digits_65: procedure = .int
+  numeric digits 65
+  return test_precision_extension(65, "1E-63" as .decimal, "digits 65", "3.1415926535897932384626433832795028841971693993751058209749445923" as .decimal, "2.7182818284590452353602874713526624977572470936999595749669676277" as .decimal)
+
+test_digits_96: procedure = .int
+  numeric digits 96
+  return test_precision_extension(96, "1E-94" as .decimal, "digits 96", "3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534212" as .decimal, "2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852517" as .decimal)
+
+test_digits_97: procedure = .int
+  numeric digits 97
+  return test_precision_extension(97, "1E-95" as .decimal, "digits 97", "3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117" as .decimal, "2.718281828459045235360287471352662497757247093699959574966967627724076630353547594571382178525166" as .decimal)
+
+test_digits_128: procedure = .int
+  numeric digits 128
+  return test_precision_extension(128, "1E-126" as .decimal, "digits 128", "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446" as .decimal, "2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274274663919320030599218174136" as .decimal)
+
+/* The widest cached constants must round back into a narrower caller context. */
+test_constant_cache_downround: procedure = .int
+  numeric digits 65
+  failures = 0
+  observed_digits = .int
+  failures = failures + numerictestsupport..check_decimal_equal(rxdecimal..pi(), "3.1415926535897932384626433832795028841971693993751058209749445923" as .decimal, "pi cache downround")
+  failures = failures + numerictestsupport..check_decimal_equal(rxdecimal..euler(), "2.7182818284590452353602874713526624977572470936999595749669676277" as .decimal, "euler cache downround")
+  assembler getnumdgts observed_digits
+  failures = failures + numerictestsupport..check_int_equal(observed_digits, 65, "cache downround caller precision preserved")
+  return failures
 
 test_domain_signals: procedure = .int
   failures = 0
@@ -205,6 +251,11 @@ main: procedure = .int
   failures = failures + test_digits_32()
   failures = failures + test_digits_33()
   failures = failures + test_digits_64()
+  failures = failures + test_digits_65()
+  failures = failures + test_digits_96()
+  failures = failures + test_digits_97()
+  failures = failures + test_digits_128()
+  failures = failures + test_constant_cache_downround()
   failures = failures + test_domain_signals()
 
   if failures > 0 then return 1

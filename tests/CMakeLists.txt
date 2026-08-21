@@ -304,6 +304,37 @@ add_custom_target(linked_opt_sweep
         COMMENT "Running linked opt-runtime coverage through CTest"
 )
 
+# SAN-002: retain the two allocator-poisoning manifestations as minimal Level B
+# cases under both concrete dispatch VMs and both optimized image modes.
+set(_san002_runners rxbvm)
+if(TARGET rxtvm)
+  list(APPEND _san002_runners rxtvm)
+endif()
+foreach(_san002_case IN ITEMS concat_after_wide_decimal wide_decimal_extract)
+  set(_san002_target "san002_${_san002_case}")
+  set(_san002_source
+          "${CMAKE_CURRENT_SOURCE_DIR}/sanitizers/${_san002_target}.crexx")
+  if(_san002_case STREQUAL "concat_after_wide_decimal")
+    set(_san002_output "PASS: SAN-002 concat after wide decimal")
+  else()
+    set(_san002_output "PASS: SAN-002 wide decimal extract")
+  endif()
+  add_custom_target("${_san002_target}")
+  foreach(_san002_runner IN LISTS _san002_runners)
+    crexx_add_rexx_opt_matrix(
+            NAME "${_san002_target}_${_san002_runner}"
+            SOURCE "${_san002_source}"
+            TARGET_GROUP "${_san002_target}"
+            RUNNER "${_san002_runner}"
+            DEPENDS library rxlink "${_san002_runner}"
+            RUNTIME_ARGS "${CMAKE_BINARY_DIR}/bin/library"
+            TEST_LABELS
+              "sanitizer;san-002;interpreter;${_san002_runner}"
+            REQUIRED_OUTPUT_REGEX "${_san002_output}"
+            FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+  endforeach()
+endforeach()
+
 set(ASMTESTBINS ascommon.rxbin asutf.rxbin)
 set(REXXTESTBINS basic.rxbin levelbfunc.rxbin)
 

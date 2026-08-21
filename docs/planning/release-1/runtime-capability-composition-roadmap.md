@@ -112,11 +112,11 @@ all source immediately.
 | scalar `rxfloat` (`rxmath` compatibility aliases) | Level G standard/default | process-reentrant native `rxfloat` provider backed by platform libm | Contains only coherent scalar binary-float math and constants. Its signatures are callable from Level B when the provider is installed, but it is not bootstrap closure or language numeric semantics. |
 | `rxint` | Level G standard/default | Level-B-authored checked integer algorithms | Exact integer mathematics belongs in the standard math family without forcing a native dependency or claiming bootstrap availability. |
 | `rxdecimal` | Level G standard/default | Level-B-authored algorithms over core `mc_decimal` arithmetic | Preserves caller-selected decimal precision; use of a core primitive does not make this higher-level library core. |
-| `rxstats` | Level G standard after `BINARY-01` | separate native bulk provider over packed `rxinteger`/`rxfloat` storage | Statistics is the black-and-white Level G case: useful standard functionality, but neither language nor bootstrap closure. It must not inherit the boxed historical implementation or scalar-call shape. |
+| `rxstats` | Level G standard/default | process-reentrant native provider; transitional boxed `.float[]` surface before the packed contract | Statistics is the black-and-white Level G case: useful standard functionality, but neither language nor bootstrap closure. RCC-5D publishes the boxed surface as a tested semantic oracle; `BINARY-01` and RCC-5F replace its argument representation rather than preserving that pre-release shape. |
 | `rxfs` | B+G standard / default | adapter over the low-level I/O/OS mechanism | Directory and file-name operations: cwd, list, test, create, remove, rename, and append. |
-| `rxplatform` | standard or optional by function | narrow native provider | OS, host, user, uptime, clipboard, and beep need separate portability/privacy/UI dispositions; they must not all inherit one `system` status. |
+| `rxplatform` | Level G optional, bundled in the normal distribution | narrow process-reentrant native provider | Publishes uptime, user, host, OS name, and millisecond sleep. Clipboard and beep were retired with the broad pre-release `system` surface rather than promoted into this provider. Its signatures remain callable from Level B when installed. |
 | process and ADDRESS services | level core mechanism where required; public conveniences standard | existing structured process/channel/ADDRESS architecture | Do not revive the commented historical pipe procedures as the architecture. Use the current typed process and environment model. |
-| `rxid` | optional until its randomness and contract are qualified; standard/default is a later promotion | cryptographically appropriate platform implementation | UUID generation does not belong in `rxmath`. |
+| `rxid` | Level G optional, bundled in the normal distribution | process-reentrant native provider using platform CSPRNGs where randomness is required | Publishes UUIDv4, UUIDv7, ULID, NanoID, Snowflake, and Base58 identities; identifier generation does not belong in `rxmath`. Its signatures remain callable from Level B when installed. |
 | pure Rexx regex and JSON | retain their independently classified library roles | Rexx implementation, with native alternatives only when justified | Do not make native merely for consistency with this roadmap. |
 | ODBC, GUI, XML, external regex, LLM/vector/database providers | integration or optional / opt-in | independently packaged providers | External service/library/platform dependencies remain outside core. |
 
@@ -130,8 +130,8 @@ commented out, so they are not a basis for a public contract.
 | Current area | Destination | Recommendation |
 |---|---|---|
 | `getdir`, `getCWD`, `getloadpath`, `setdir`, directory/file test/create/remove/rename/list, `append` | low-level `rx_io` plus public `rxfs` | Standard/default public API; only the low-level handle mechanism becomes core if it replaces instructions. |
-| `opsys`, `userid`, `host`, `sysuptime` | `rxplatform` | Review privacy, portability, naming, and error contracts; standard or optional per function. |
-| clipboard and beep | platform UI provider | Optional. They are not headless/server core. |
+| `opsys`, `userid`, `host`, `sysuptime`, `_wait` | `rxplatform` | Implemented as `osname`, `user`, `host`, `uptime`, and `sleep` with explicit error/argument contracts. |
+| clipboard and beep | retired | Not promoted: they are not headless/server standard capability. |
 | `getglobal`, `setglobal` | no new core home | Deprecate or confine as legacy. Unscoped process-shared mutable state conflicts with multi-VM ownership. |
 | `lmodules` | developer/reflection tooling | Developer-only unless a stable inspection API is separately designed. |
 | `parse`, `parsex` | no native promotion | Keep the language/library parser authoritative; do not duplicate it in `system`. |
@@ -155,7 +155,7 @@ bundle would promote its accidents.
 | libm scalar functions and `pi`/`euler` | native `rxfloat`, canonical namespace `rxfloat`; direct `rxmath` aliases | Level G standard/default after domain, range, signal, NaN/Inf, platform, naming, and first-Release performance gates. |
 | integer mathematics | Level-B-authored `rxint` | Level G standard/default. Use exact checked algorithms such as Euclid, overflow-safe integer square root, and modular exponentiation; no blanket native plugin. |
 | decimal mathematics | Level-B-authored `rxdecimal` over `mc_decimal` | Level G standard/default. Inherit the caller's numeric context, use bounded guard digits, and do not round-trip through binary float. |
-| mean/deviation/covariance/correlation/regression | native bulk `rxstats` after `BINARY-01` | Level G standard. Separate contract and quality gate; do not promote the historical boxed scalar-call implementation. |
+| mean/deviation/covariance/correlation/regression | transitional boxed native `rxstats`, then packed RCC-5F surface | Level G standard. RCC-5D replaces the defective algorithms and qualifies the semantics now; `BINARY-01`/RCC-5F replace the boxed argument contract for bulk performance. |
 | DJB2, Murmur, FNV-1a, CRC32 | the new hash provider under explicitly approved public names | Separate cryptographic digests, checksums, and table/container hashes in the API. Preserve compatibility aliases only by explicit decision. |
 | UUID | `rxid` | Use a qualified random source and UUID contract; not mathematics. |
 | `inlinec` | removal or developer experiment | Never standard or core. Native compilation/execution is a tool/security boundary. |
@@ -462,16 +462,19 @@ metadata cases, and smaller cold handler/tooling surfaces.
 | RCC-5A: level and mathematics contract — **complete** | Record Level B bootstrap versus Level G availability as independent from implementation language, and lock the `rxfloat`, `rxint`, `rxdecimal`, and later packed `rxstats` boundaries. | The public family has explicit availability, implementation, precision, algorithm, compatibility, and performance contracts. |
 | RCC-5B: native scalar float provider — **focused complete; verdict accepted** | Extract scalar libm functions into process-reentrant provider `rxfloat`, publish canonical `rxfloat` names and direct `rxmath` compatibility aliases, repair defects, and qualify automatic dynamic/static resolution. | Scalar binary-float math is coherent, tested, automatically loaded/packaged, and meets the accepted first-Release verdict. |
 | RCC-5C: integer and decimal standard libraries — **complete** | Add Level-B-authored `rxint` exact checked algorithms and `rxdecimal` context-preserving algorithms over `mc_decimal`; apply the approved [mathematics validation strategy](mathematics-validation-strategy.md). | Exact integer boundaries and independently expected decimal precision/domain/convergence behavior pass focused cross-VM optimized/no-opt coverage. The requested broad Debug review also passed 2,302/2,302 tests after a complete build. |
-| RCC-5D+: remaining historical-bundle splits | Extract and qualify stats after `BINARY-01`, filesystem, platform, ID, hash/checksum, developer, and legacy surfaces. Update the component catalogue and packaging from actual transitive dependencies. | No broad `system` or `rxmath` status hides unrelated APIs; the `crexx` driver links only its narrow required providers. |
+| RCC-5D: transitional statistics provider — **implemented; verdict accepted; proportional QA complete** | Extract and qualify boxed-array `rxstats` as an independent process-reentrant Level G provider and semantic oracle for the later packed surface. | Five procedures have explicit rejection contracts, cancellation-resistant algorithms, four toolchain/VM cells, concurrency and automatic dynamic/static packaging; the accepted first-Release verdict is guard-clean. |
+| RCC-5E: remaining historical-bundle split — **implemented; proportional QA complete** | Move hash/checksum, identifier, filesystem and platform capabilities to narrow providers; retire developer, UI and legacy draft surfaces rather than preserving aliases. Update catalogue, packaging and driver dependencies from actual use. | `rx_hash`, `rxid`, `rxfs`, and `rxplatform` carry the retained contracts; the broad `system` and mixed `rxmath` providers are absent and the driver depends only on narrow providers. |
+| RCC-5F: packed statistics qualification — **pending `BINARY-01`** | Replace the boxed `rxstats` arguments with aligned packed host-native `rxfloat`/`rxinteger` storage and record the later `rxvector` dependency. | Bulk semantics match the RCC-5D oracle while the packed surface passes correctness, ownership, alignment, concurrency, package and performance gates. |
 | RCC-6: file-instruction replacement | Add `rx_io`, dual-lower/migrate the 14 `F*` forms, prove handle ownership and behavior, measure code/startup/call effects, and select the compatibility retirement point. | The call path is equivalent and acceptable; old opcodes are retained or tombstoned according to the approved format policy. |
 | RCC-7: measured instruction review | Evaluate existing RXAS `rxhash`, host utilities, then sockets/reflection only in the recorded order and as separate decisions. | Each family has a keep/convert disposition backed by use, performance, ownership, size, and compatibility evidence. |
 | RCC-8: release qualification | Cross-platform build/install/package, both VMs, native/embedded/late-load, security-path, failure, concurrency, and documentation closeout. | The product can explain and mechanically report every required provider and initializer; default installations work without manual runtime lists. |
 
-RCC-5A through RCC-5C are separately authorized and complete. RCC-5D
-and later work is not automatically authorized by that approval. Each later
-production architecture or language/format decision remains subject to the
-repository's normal approval and, where performance-sensitive,
-first-Release-verdict gates.
+RCC-5A through RCC-5E are authorized and implemented. Adrian accepted the
+RCC-5D first-Release verdict on 2026-08-21. `BINARY-01` and RCC-5F remain
+separate approved-direction work and do not acquire a final source/ownership
+contract from the transitional boxed provider. Later production architecture
+or language/format decisions remain subject to the repository's normal
+approval and, where performance-sensitive, first-Release-verdict gates.
 
 RCC-5 uses one consolidated full-QA and documentation closeout after its final
 approved subphase. Intermediate subphases run focused correctness and any
@@ -479,17 +482,17 @@ mandatory first-Release verdict only. Broader evidence gathered for an
 intermediate subphase is retained, but does not require the same broad suite to
 be repeated for every following subphase.
 
-## Approval questions
+## Resolved approval questions
 
-The immediate decisions needed before implementation are:
+The following decisions are accepted and implemented:
 
-1. Approve `rx_hash` as **standard/default, not core**, while requiring zero-
+1. Classify `rx_hash` as **standard/default, not core**, while requiring zero-
    configuration discovery for normal installed use.
-2. Approve the rule that only required execution/toolchain closure is core, and
+2. Apply the rule that only required execution/toolchain closure is core, and
    that the current `system` and `rxmath` bundles must be partitioned rather
    than promoted wholesale.
-3. Approve the declarative provider-dependency direction and static-first,
-   trusted dynamic fallback; leave exact metadata encoding to RCC-0.
+3. Use declarative provider dependencies with static-first, trusted dynamic
+   fallback and the existing metadata homes.
 
 The RXBIN boundary rule, instruction-family disposition list and explicit
 callable-ID, **once-per-mutable-module-instance** initializer lifecycle and

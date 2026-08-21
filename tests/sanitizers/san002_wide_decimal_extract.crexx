@@ -1,0 +1,38 @@
+/* SAN-002 manifestation B: DEXTR writes a wider returned decimal while an
+ * adjacent minimum-class string slot is allocator-poisoned. */
+options levelb comments_dash numeric_classic
+
+wide_decimal: procedure = .decimal
+  numeric digits 32
+  return "12345678901234567890123456789012" as .decimal
+
+main: procedure = .int
+  numeric digits 18
+  number = wide_decimal()
+  coefficient = .string
+  guard = .string
+  exponent = .int
+
+  /* Allocate two minimum-class buffers in order, then grow the second one.
+   * Its released 32-byte slot remains poisoned immediately after the first.
+   * Context-only DEXTR sizing retained coefficient's 32-byte allocation and
+   * decimalExtract() wrote the wider coefficient into the poisoned slot. */
+  assembler load coefficient,"c"
+  assembler load guard,"g"
+  assembler concat guard,guard,"0123456789012345678901234567890123456789"
+  assembler dextr coefficient,exponent,number
+
+  if exponent <> 31 then do
+    say "FAIL: SAN-002 decimal extract exponent" exponent
+    return 1
+  end
+  if coefficient <> "1.2345678901234567890123456789012" then do
+    say "FAIL: SAN-002 decimal extract coefficient" coefficient
+    return 1
+  end
+  if guard <> "g0123456789012345678901234567890123456789" then do
+    say "FAIL: SAN-002 decimal extract guard" guard
+    return 1
+  end
+  say "PASS: SAN-002 wide decimal extract"
+  return 0

@@ -6,10 +6,10 @@
 
 /**
  * Level-B-authored decimal algorithms over the core mc_decimal arithmetic.
- * Public entry points inherit the caller's precision. Computation selects an
- * 18, 32, 64, or 96 digit work context, then the public frame rounds once into
- * the caller's context. The 96-digit tier supplies guard digits at the
- * qualified 64-digit caller ceiling.
+ * Public entry points inherit the caller's precision. Existing work contexts
+ * remain 18, 32, 64, and 96 digits through the original 64-digit qualification
+ * range. Wider callers compute at caller precision plus 32 guard digits. The
+ * public frame restores the caller's context and rounds once on return.
  *
  * @docType runtime-module
  */
@@ -18,23 +18,28 @@ options levelb
 namespace rxdecimal expose sqrt exp ln sin cos pi euler
 import rxfnsb
 
+_rxdecimal_initialise: initialiser expose _rxdecimal_pi_cache _rxdecimal_pi_cache_digits _rxdecimal_e_cache _rxdecimal_e_cache_digits
+  _rxdecimal_pi_cache = .decimal
+  _rxdecimal_pi_cache_digits = 0
+  _rxdecimal_e_cache = .decimal
+  _rxdecimal_e_cache_digits = 0
+
 _rxdecimal_abs: procedure = .decimal
   numeric digits inherited
   arg value = .decimal
   if value < 0 then return 0 - value
   return value
 
-_rxdecimal_pi_work: procedure = .decimal
-  numeric digits inherited
-  value = .decimal
-  value = "3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808648" as .decimal
-  return value
-
-_rxdecimal_e_work: procedure = .decimal
-  numeric digits inherited
-  value = .decimal
-  value = "2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642742746639193" as .decimal
-  return value
+/** Select work precision without imposing a public decimal ceiling. */
+_rxdecimal_work_digits: procedure = .int
+  arg caller_digits = .int
+  if caller_digits <= 9 then return 18
+  if caller_digits <= 18 then return 32
+  if caller_digits <= 32 then return 64
+  if caller_digits <= 64 then return 96
+  if caller_digits > 2147483615 then
+    assembler signal "OVERFLOW_UNDERFLOW", "RXDECIMAL working precision exceeds the numeric-context range"
+  return caller_digits + 32
 
 /** Newton iteration in the selected work context. */
 _rxdecimal_sqrt_work: procedure = .decimal
@@ -50,6 +55,45 @@ _rxdecimal_sqrt_work: procedure = .decimal
   end
   assembler signal "FAILURE", "RXDECIMAL.SQRT did not converge"
   return 0
+
+/** Quadratically convergent Gauss-Legendre calculation of pi. */
+_rxdecimal_pi_calculate: procedure = .decimal
+  numeric digits inherited
+  a = .decimal
+  b = .decimal
+  t = .decimal
+  p = .decimal
+  a = 1
+  b = _rxdecimal_sqrt_work("0.5" as .decimal)
+  t = "0.25" as .decimal
+  p = 1
+  do iteration = 1 to 32
+    next_a = (a + b) / 2
+    next_b = _rxdecimal_sqrt_work(a * b)
+    stable = 0
+    if next_a = a then do
+      if next_b = b then stable = 1
+    end
+    difference = a - next_a
+    t = t - p * difference * difference
+    a = next_a
+    b = next_b
+    p = 2 * p
+    if stable then return (a + b) * (a + b) / (4 * t)
+  end
+  assembler signal "FAILURE", "RXDECIMAL.PI did not converge"
+  return 0
+
+/** Cache the widest pi value calculated in this mutable module instance. */
+_rxdecimal_pi_work: procedure = .decimal expose _rxdecimal_pi_cache _rxdecimal_pi_cache_digits
+  numeric digits inherited
+  requested_digits = .int
+  assembler getnumdgts requested_digits
+  if _rxdecimal_pi_cache_digits < requested_digits then do
+    _rxdecimal_pi_cache = _rxdecimal_pi_calculate()
+    _rxdecimal_pi_cache_digits = requested_digits
+  end
+  return _rxdecimal_pi_cache + 0
 
 /** Halving and Taylor recurrence in the selected work context. */
 _rxdecimal_exp_work: procedure = .decimal
@@ -79,6 +123,19 @@ _rxdecimal_exp_work: procedure = .decimal
     total = total * total
   end
   return total
+
+/** Cache Euler's number at the widest requested work precision. */
+_rxdecimal_e_work: procedure = .decimal expose _rxdecimal_e_cache _rxdecimal_e_cache_digits
+  numeric digits inherited
+  requested_digits = .int
+  assembler getnumdgts requested_digits
+  if _rxdecimal_e_cache_digits < requested_digits then do
+    one = .decimal
+    one = 1
+    _rxdecimal_e_cache = _rxdecimal_exp_work(one)
+    _rxdecimal_e_cache_digits = requested_digits
+  end
+  return _rxdecimal_e_cache + 0
 
 /** Repeated-square-root reduction and atanh series for natural logarithm. */
 _rxdecimal_ln_work: procedure = .decimal
@@ -170,118 +227,6 @@ _rxdecimal_cos_work: procedure = .decimal
   end
   return sign_value * total
 
-/* Fixed work-context adapters. */
-_rxdecimal_sqrt_18: procedure = .decimal
-  numeric digits 18
-  arg value = .decimal
-  return _rxdecimal_sqrt_work(value)
-_rxdecimal_sqrt_32: procedure = .decimal
-  numeric digits 32
-  arg value = .decimal
-  return _rxdecimal_sqrt_work(value)
-_rxdecimal_sqrt_64: procedure = .decimal
-  numeric digits 64
-  arg value = .decimal
-  return _rxdecimal_sqrt_work(value)
-_rxdecimal_sqrt_96: procedure = .decimal
-  numeric digits 96
-  arg value = .decimal
-  return _rxdecimal_sqrt_work(value)
-
-_rxdecimal_exp_18: procedure = .decimal
-  numeric digits 18
-  arg value = .decimal
-  return _rxdecimal_exp_work(value)
-_rxdecimal_exp_32: procedure = .decimal
-  numeric digits 32
-  arg value = .decimal
-  return _rxdecimal_exp_work(value)
-_rxdecimal_exp_64: procedure = .decimal
-  numeric digits 64
-  arg value = .decimal
-  return _rxdecimal_exp_work(value)
-_rxdecimal_exp_96: procedure = .decimal
-  numeric digits 96
-  arg value = .decimal
-  return _rxdecimal_exp_work(value)
-
-_rxdecimal_ln_18: procedure = .decimal
-  numeric digits 18
-  arg value = .decimal
-  return _rxdecimal_ln_work(value)
-_rxdecimal_ln_32: procedure = .decimal
-  numeric digits 32
-  arg value = .decimal
-  return _rxdecimal_ln_work(value)
-_rxdecimal_ln_64: procedure = .decimal
-  numeric digits 64
-  arg value = .decimal
-  return _rxdecimal_ln_work(value)
-_rxdecimal_ln_96: procedure = .decimal
-  numeric digits 96
-  arg value = .decimal
-  return _rxdecimal_ln_work(value)
-
-_rxdecimal_sin_18: procedure = .decimal
-  numeric digits 18
-  arg value = .decimal
-  return _rxdecimal_sin_work(value)
-_rxdecimal_sin_32: procedure = .decimal
-  numeric digits 32
-  arg value = .decimal
-  return _rxdecimal_sin_work(value)
-_rxdecimal_sin_64: procedure = .decimal
-  numeric digits 64
-  arg value = .decimal
-  return _rxdecimal_sin_work(value)
-_rxdecimal_sin_96: procedure = .decimal
-  numeric digits 96
-  arg value = .decimal
-  return _rxdecimal_sin_work(value)
-
-_rxdecimal_cos_18: procedure = .decimal
-  numeric digits 18
-  arg value = .decimal
-  return _rxdecimal_cos_work(value)
-_rxdecimal_cos_32: procedure = .decimal
-  numeric digits 32
-  arg value = .decimal
-  return _rxdecimal_cos_work(value)
-_rxdecimal_cos_64: procedure = .decimal
-  numeric digits 64
-  arg value = .decimal
-  return _rxdecimal_cos_work(value)
-_rxdecimal_cos_96: procedure = .decimal
-  numeric digits 96
-  arg value = .decimal
-  return _rxdecimal_cos_work(value)
-
-_rxdecimal_pi_18: procedure = .decimal
-  numeric digits 18
-  return _rxdecimal_pi_work()
-_rxdecimal_pi_32: procedure = .decimal
-  numeric digits 32
-  return _rxdecimal_pi_work()
-_rxdecimal_pi_64: procedure = .decimal
-  numeric digits 64
-  return _rxdecimal_pi_work()
-_rxdecimal_pi_96: procedure = .decimal
-  numeric digits 96
-  return _rxdecimal_pi_work()
-
-_rxdecimal_e_18: procedure = .decimal
-  numeric digits 18
-  return _rxdecimal_e_work()
-_rxdecimal_e_32: procedure = .decimal
-  numeric digits 32
-  return _rxdecimal_e_work()
-_rxdecimal_e_64: procedure = .decimal
-  numeric digits 64
-  return _rxdecimal_e_work()
-_rxdecimal_e_96: procedure = .decimal
-  numeric digits 96
-  return _rxdecimal_e_work()
-
 /**
  * Return the non-negative decimal square root.
  *
@@ -295,11 +240,12 @@ sqrt: procedure = .decimal
   if value < 0 then
     assembler signal "INVALID_ARGUMENTS", "RXDECIMAL.SQRT requires a non-negative value"
   caller_digits = .int
+  work_digits = .int
   assembler getnumdgts caller_digits
-  if caller_digits <= 9 then result = _rxdecimal_sqrt_18(value)
-  else if caller_digits <= 18 then result = _rxdecimal_sqrt_32(value)
-  else if caller_digits <= 32 then result = _rxdecimal_sqrt_64(value)
-  else result = _rxdecimal_sqrt_96(value)
+  work_digits = _rxdecimal_work_digits(caller_digits)
+  assembler setnumdgts work_digits
+  result = _rxdecimal_sqrt_work(value)
+  assembler setnumdgts caller_digits
   return result + 0
 
 /**
@@ -312,11 +258,12 @@ exp: procedure = .decimal
   numeric digits inherited
   arg value = .decimal
   caller_digits = .int
+  work_digits = .int
   assembler getnumdgts caller_digits
-  if caller_digits <= 9 then result = _rxdecimal_exp_18(value)
-  else if caller_digits <= 18 then result = _rxdecimal_exp_32(value)
-  else if caller_digits <= 32 then result = _rxdecimal_exp_64(value)
-  else result = _rxdecimal_exp_96(value)
+  work_digits = _rxdecimal_work_digits(caller_digits)
+  assembler setnumdgts work_digits
+  result = _rxdecimal_exp_work(value)
+  assembler setnumdgts caller_digits
   return result + 0
 
 /**
@@ -332,11 +279,12 @@ ln: procedure = .decimal
   if value <= 0 then
     assembler signal "INVALID_ARGUMENTS", "RXDECIMAL.LN requires a positive value"
   caller_digits = .int
+  work_digits = .int
   assembler getnumdgts caller_digits
-  if caller_digits <= 9 then result = _rxdecimal_ln_18(value)
-  else if caller_digits <= 18 then result = _rxdecimal_ln_32(value)
-  else if caller_digits <= 32 then result = _rxdecimal_ln_64(value)
-  else result = _rxdecimal_ln_96(value)
+  work_digits = _rxdecimal_work_digits(caller_digits)
+  assembler setnumdgts work_digits
+  result = _rxdecimal_ln_work(value)
+  assembler setnumdgts caller_digits
   return result + 0
 
 /**
@@ -349,11 +297,12 @@ sin: procedure = .decimal
   numeric digits inherited
   arg value = .decimal
   caller_digits = .int
+  work_digits = .int
   assembler getnumdgts caller_digits
-  if caller_digits <= 9 then result = _rxdecimal_sin_18(value)
-  else if caller_digits <= 18 then result = _rxdecimal_sin_32(value)
-  else if caller_digits <= 32 then result = _rxdecimal_sin_64(value)
-  else result = _rxdecimal_sin_96(value)
+  work_digits = _rxdecimal_work_digits(caller_digits)
+  assembler setnumdgts work_digits
+  result = _rxdecimal_sin_work(value)
+  assembler setnumdgts caller_digits
   return result + 0
 
 /**
@@ -366,31 +315,34 @@ cos: procedure = .decimal
   numeric digits inherited
   arg value = .decimal
   caller_digits = .int
+  work_digits = .int
   assembler getnumdgts caller_digits
-  if caller_digits <= 9 then result = _rxdecimal_cos_18(value)
-  else if caller_digits <= 18 then result = _rxdecimal_cos_32(value)
-  else if caller_digits <= 32 then result = _rxdecimal_cos_64(value)
-  else result = _rxdecimal_cos_96(value)
+  work_digits = _rxdecimal_work_digits(caller_digits)
+  assembler setnumdgts work_digits
+  result = _rxdecimal_cos_work(value)
+  assembler setnumdgts caller_digits
   return result + 0
 
 /** @return pi rounded in the caller's numeric context */
 pi: procedure = .decimal
   numeric digits inherited
   caller_digits = .int
+  work_digits = .int
   assembler getnumdgts caller_digits
-  if caller_digits <= 9 then result = _rxdecimal_pi_18()
-  else if caller_digits <= 18 then result = _rxdecimal_pi_32()
-  else if caller_digits <= 32 then result = _rxdecimal_pi_64()
-  else result = _rxdecimal_pi_96()
+  work_digits = _rxdecimal_work_digits(caller_digits)
+  assembler setnumdgts work_digits
+  result = _rxdecimal_pi_work()
+  assembler setnumdgts caller_digits
   return result + 0
 
 /** @return Euler's number rounded in the caller's numeric context */
 euler: procedure = .decimal
   numeric digits inherited
   caller_digits = .int
+  work_digits = .int
   assembler getnumdgts caller_digits
-  if caller_digits <= 9 then result = _rxdecimal_e_18()
-  else if caller_digits <= 18 then result = _rxdecimal_e_32()
-  else if caller_digits <= 32 then result = _rxdecimal_e_64()
-  else result = _rxdecimal_e_96()
+  work_digits = _rxdecimal_work_digits(caller_digits)
+  assembler setnumdgts work_digits
+  result = _rxdecimal_e_work()
+  assembler setnumdgts caller_digits
   return result + 0

@@ -207,9 +207,10 @@ set(CLASSLIB_NATIVE_MEMBER_BUILD_DEPS
   rxas
   library
   compiler_exit_bin
-  _id
+  id
   _keyaccess
-  _system
+  fs
+  _platform
 )
 
 set(_classlib_native_member_clean_stamp "${CMAKE_CURRENT_BINARY_DIR}/classlib_native_member_clean.stamp")
@@ -295,7 +296,7 @@ add_custom_target(classlib_native ALL
   DEPENDS "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin"
 )
 
-add_dependencies(classlib_native library _id _keyaccess _system)
+add_dependencies(classlib_native library id _keyaccess fs _platform)
 
 add_test(
   NAME classlib_rxdas_inline_preserve_smoke

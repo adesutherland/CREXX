@@ -381,7 +381,7 @@ case "$phase" in
         ;;
     focused-lsan)
         run_cmake_build focused-build --target rxc rxdas crexx linked_opt_runtime_artifacts \
-            _system_static _treemap_static _llist_static _keyaccess_static _id_static
+            fs_static _platform_static _treemap_static _llist_static _keyaccess_static id_static
         run_ctest focused-lsan
         ;;
     rerun-failed)

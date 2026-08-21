@@ -7,7 +7,6 @@ x = .Id()
 failures = 0
 failures = failures + check_non_empty("uuid", x.uuid())
 failures = failures + check_non_empty("uuidV7", x.uuidV7())
-failures = failures + check_non_empty("uuidt", x.uuidt())
 failures = failures + check_non_empty("ulid", x.ulid())
 failures = failures + check_non_empty("nanoId", x.nanoId())
 failures = failures + check_non_empty("snowflake", x.snowflake())

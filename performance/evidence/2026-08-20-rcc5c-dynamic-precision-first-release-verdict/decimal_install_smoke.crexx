@@ -1,0 +1,26 @@
+/* Scratch-installed bytecode and native packaging proof for caller digits 128. */
+options levelb
+import rxdecimal
+
+main: procedure = .int
+  numeric digits 128
+  observed_digits = .int
+  if rxdecimal..pi() <> "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446" as .decimal then do
+    say "FAIL: installed RXDECIMAL.PI digits 128"
+    return 1
+  end
+  if rxdecimal..euler() <> "2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274274663919320030599218174136" as .decimal then do
+    say "FAIL: installed RXDECIMAL.EULER digits 128"
+    return 1
+  end
+  if rxdecimal..sqrt(2) <> "1.4142135623730950488016887242096980785696718753769480731766797379907324784621070388503875343276415727350138462309122970249248361" as .decimal then do
+    say "FAIL: installed RXDECIMAL.SQRT digits 128"
+    return 1
+  end
+  assembler getnumdgts observed_digits
+  if observed_digits <> 128 then do
+    say "FAIL: installed RXDECIMAL changed caller precision"
+    return 1
+  end
+  say "PASS: installed RXDECIMAL caller digits 128"
+  return 0

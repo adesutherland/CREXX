@@ -116,10 +116,10 @@ All public RXPA registrations beneath a package inherit the package domain.
 | Domain | Packages |
 |---|---|
 | `P03` text/regex | `PKG-RXPA-strings`, `PKG-RXPA-regex` |
-| `P04` numeric | `PKG-RXPA-getpi`, `PKG-RXPA-rxmath`, `PKG-RXVM-mc-decimal`, `PKG-RXVM-db-decimal` |
+| `P04` numeric | `PKG-RXPA-getpi`, `PKG-RXPA-float`, `PKG-RXPA-stats`, `PKG-RXVM-mc-decimal`, `PKG-RXVM-db-decimal`; Rexx `rxint` and `rxdecimal` exports |
 | `P05` crypto/identifier | `PKG-RXPA-cipher`, `PKG-RXPA-hash`, `PKG-RXPA-id`, `PKG-RXFNSB-NATIVE-DES` |
 | `P06` collections | `PKG-RXPA-arrays`, `PKG-RXPA-llist`, `PKG-RXPA-map`, `PKG-RXPA-matrix`, `PKG-RXPA-stack`, `PKG-RXPA-treemap` |
-| `P07` local system | `PKG-RXPA-console`, `PKG-RXPA-fileio`, `PKG-RXPA-fpool`, `PKG-RXPA-pipe`, `PKG-RXPA-process`, `PKG-RXPA-system` |
+| `P07` local system | `PKG-RXPA-console`, `PKG-RXPA-fileio`, `PKG-RXPA-fpool`, `PKG-RXPA-pipe`, `PKG-RXPA-process`, `PKG-RXPA-fs`, `PKG-RXPA-platform` |
 | `P08` network | `PKG-RXPA-rxtcp`, `PKG-RXPA-socket` |
 | `P11` external adapters | `PKG-RXPA-gui`, `PKG-RXPA-keyaccess`, `PKG-RXPA-odbc`, `PKG-RXPA-pick`, `PKG-RXPA-recv390`, `PKG-RXPA-rxml` |
 | `P15` sample residue | `PKG-RXPA-testrx` |

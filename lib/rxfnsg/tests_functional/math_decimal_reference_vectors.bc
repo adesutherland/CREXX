@@ -1,5 +1,5 @@
 /* Offline oracle input for ts_math_decimal_contract.crexx. */
-scale=110
+scale=220
 pi=4*a(1)
 
 "pi"
@@ -118,3 +118,8 @@ c(-31.5)
 s(3141.5)
 "cos thousand periods"
 c(3141.5)
+
+"sin large high-precision angle"
+s(10^20+.125)
+"cos large high-precision angle"
+c(10^20+.125)

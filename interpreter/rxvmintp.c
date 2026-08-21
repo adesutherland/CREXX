@@ -5083,6 +5083,13 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
     } else {
         int_num = signal->int_value;
         value_zero(interrupt_object[int_num]);
+        if (signal->string_length) {
+            /* RXPA value strings are length-delimited and need not carry a
+             * trailing NUL.  Preserve the explicit length rather than using
+             * strlen() past the provider-owned buffer. */
+            set_string(interrupt_object[int_num], signal->string_value,
+                       signal->string_length);
+        }
     }
 
     // Set the interrupt

@@ -181,3 +181,18 @@ one public contract. The Stage 1-7 numerical statements above remain the
 historical review snapshots that were true when those stages closed; current
 purpose, reconciliation, quality, and provisional-classification tables include
 the RCC-4 additions.
+
+## Post-stage maintenance: RCC-5A-E provider split
+
+On 2026-08-21 the approved RCC-5 work replaced the mixed native `rxmath` and
+broad `system` packages with `rxfloat`, transitional `rxstats`, `rxfs`, and
+`rxplatform`; canonicalized `rxid`; extended `rx_hash`; and added the Rexx-
+authored `rxint`/`rxdecimal` family. The scoped catalogue reconciliation is in
+[`rcc5-provider-maintenance.md`](rcc5-provider-maintenance.md).
+
+The overlay accounts exactly for the RCC-5 native/package/source-export delta,
+records actual first-party consumers, and names every removed draft family. It
+does not manufacture a new repository-wide aggregate from the Stage 2 number,
+because unrelated product work has added library/source leaves in parallel.
+The Stage 1-7 totals and the RCC-4 total above remain dated review snapshots,
+not current-tree count claims.

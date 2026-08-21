@@ -44,7 +44,7 @@ require_namespace_contract(rxint "${INTEGER_SOURCE}" "${INTEGER_CONTRACT}")
 require_namespace_contract(rxdecimal "${DECIMAL_SOURCE}" "${DECIMAL_CONTRACT}")
 
 file(READ "${DECIMAL_CONTRACT}" decimal_contract_text)
-foreach(required_digits IN ITEMS 9 10 18 19 32 33 64)
+foreach(required_digits IN ITEMS 9 10 18 19 32 33 64 65 96 97 128)
     string(REGEX MATCH
            "numeric[ \t]+digits[ \t]+${required_digits}([^0-9]|$)"
            context_match "${decimal_contract_text}")

@@ -1,0 +1,42 @@
+/* RCC-5D first-Release verdict: frozen historical boxed rxmath provider. */
+options levelb floats_binary
+
+import rxfnsb
+import rxmath
+
+elapsedUs: procedure = .int
+  arg started = .int
+  elapsed = time("us") - started
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+main: procedure = .int
+  arg arguments = .string[]
+  iterations = 4000
+  offset = 0.0
+  if arguments[0] > 0 then iterations = arguments[1]
+  if arguments[0] > 1 then offset = arguments[2]
+  x = .float[]
+  y = .float[]
+  do index = 1 to 256
+    x[index] = offset + ((index - 1) <mod> 17)
+    y[index] = 3.0 * x[index] + 7.0
+  end
+
+  checksum = 0.0
+  mean = 0.0
+  deviation = 0.0
+  covariance = 0.0
+  correlation = 0.0
+  started = time("us")
+  do iteration = 1 to iterations
+    mean = rxmath..mean(x)
+    deviation = rxmath..stddev(x)
+    covariance = rxmath..covar(x, y)
+    correlation = rxmath..correl(x, y)
+    checksum = checksum + mean + deviation + covariance + correlation
+  end
+  elapsed = elapsedUs(started)
+  calls_per_second = ((iterations * 4) as .float) * 1000000.0 / (elapsed as .float)
+  say "benchmark=rcc5de_rxstats variant=legacy observations=256 iterations=" || iterations || " offset=" || offset || " elapsed_us=" || elapsed || " calls_per_second=" || calls_per_second || " mean=" || mean || " stddev=" || deviation || " covariance=" || covariance || " correlation=" || correlation || " checksum=" || checksum
+  return 0

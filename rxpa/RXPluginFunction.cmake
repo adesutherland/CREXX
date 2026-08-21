@@ -78,8 +78,16 @@ endfunction()
 
 # Create a static link module - declaration and definition/implementation
 function(add_static_plugin_target plugin_name)
-    # Assuming the rest of the source files are passed as additional arguments
-    set(sources ${ARGN})
+    # A static provider can use a stable provider identity which differs from
+    # its CMake target name (for example when the natural target name is
+    # already occupied by a core library).
+    cmake_parse_arguments(RXPA_PLUGIN "" "PROVIDER_ID" "" ${ARGN})
+    set(sources ${RXPA_PLUGIN_UNPARSED_ARGUMENTS})
+    if(RXPA_PLUGIN_PROVIDER_ID)
+        set(_crexx_plugin_id "${RXPA_PLUGIN_PROVIDER_ID}")
+    else()
+        set(_crexx_plugin_id "rx${plugin_name}")
+    endif()
 
     if(NOT sources)
         message(FATAL_ERROR "No source files provided for static rxpa plugin ${plugin_name}")
@@ -88,8 +96,13 @@ function(add_static_plugin_target plugin_name)
     # Create a static library version of the plugin
     add_library(${plugin_name}_static STATIC ${sources})
     _crexx_configure_rxpa_plugin_target(${plugin_name}_static)
-    target_compile_definitions(${plugin_name}_static PRIVATE "PLUGIN_ID=rx${plugin_name}")
-    set_target_properties(${plugin_name}_static PROPERTIES PREFIX "rx")
+    target_compile_definitions(${plugin_name}_static PRIVATE "PLUGIN_ID=${_crexx_plugin_id}")
+    if(RXPA_PLUGIN_PROVIDER_ID)
+        set_target_properties(${plugin_name}_static PROPERTIES
+                PREFIX "" OUTPUT_NAME "${_crexx_plugin_id}_static")
+    else()
+        set_target_properties(${plugin_name}_static PROPERTIES PREFIX "rx")
+    endif()
 endfunction()
 
 # Publish a dynamic/static RXPA pair as one declarative provider.  The stable
@@ -98,10 +111,14 @@ endfunction()
 # packaging.  The historical <id>_static.a/.lib archive remains available for
 # compatibility with existing consumers.
 function(add_rxpa_provider_package plugin_name)
-    cmake_parse_arguments(RXPA_PROVIDER "" "OUTPUT_DIRECTORY" "" ${ARGN})
+    cmake_parse_arguments(RXPA_PROVIDER "" "OUTPUT_DIRECTORY;PROVIDER_ID" "" ${ARGN})
     set(_crexx_dynamic_target ${plugin_name})
     set(_crexx_static_target ${plugin_name}_static)
-    set(_crexx_provider_id "rx${plugin_name}")
+    if(RXPA_PROVIDER_PROVIDER_ID)
+        set(_crexx_provider_id "${RXPA_PROVIDER_PROVIDER_ID}")
+    else()
+        set(_crexx_provider_id "rx${plugin_name}")
+    endif()
     if(RXPA_PROVIDER_OUTPUT_DIRECTORY)
         set(_crexx_provider_dir "${RXPA_PROVIDER_OUTPUT_DIRECTORY}")
     else()
@@ -160,12 +177,18 @@ endfunction()
 
 # Function to configure the linker for a static definition library ensuring the library is linked into the executable
 function(configure_linker_for_static_lib target pluginId)
+    cmake_parse_arguments(RXPA_STATIC_LINK "" "PROVIDER_ID" "" ${ARGN})
+    if(RXPA_STATIC_LINK_PROVIDER_ID)
+        set(_crexx_static_provider_id "${RXPA_STATIC_LINK_PROVIDER_ID}")
+    else()
+        set(_crexx_static_provider_id "rx${pluginId}")
+    endif()
     if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
         # For Visual Studio Compiler
         if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-            set(_crexx_plugin_init_symbol "rx${pluginId}_init_")
+            set(_crexx_plugin_init_symbol "${_crexx_static_provider_id}_init_")
         else()
-            set(_crexx_plugin_init_symbol "_rx${pluginId}_init_")
+            set(_crexx_plugin_init_symbol "_${_crexx_static_provider_id}_init_")
         endif()
         target_link_libraries(${target} ${pluginId}_static)
         target_link_options(${target} PRIVATE "/INCLUDE:${_crexx_plugin_init_symbol}")

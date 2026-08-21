@@ -3,6 +3,36 @@
 Use `tools/asan-run.sh` for AddressSanitizer and LeakSanitizer runs. Do not
 hand-run broad ASan builds or ctests unless the runner itself is broken.
 
+## Defect ownership and closure
+
+`docs/SANITIZER-WORKLIST.md` is the canonical live register for maintained
+sanitizer findings.  Every first-party finding receives a stable `SAN-nnn`
+entry as soon as it is observed, including defects exposed while testing an
+unrelated activity.  "Independent" and "pre-existing" are attribution labels,
+not dispositions.  Dated evidence may support an entry but may not replace it.
+
+An open `SAN-nnn` item blocks consolidated QA and release completion.  A
+narrower activity may remain functionally qualified only when it names the
+blocking item explicitly.  The entry must retain the exact failing command and
+log, affected revision, smallest permanent reproducer, owner or next action,
+and closure checks.
+
+Closure requires all of the following:
+
+1. a permanent focused regression that fails for the original reason without
+   the repair;
+2. the same focused build/test shape passing in normal Debug and the maintained
+   sanitizer tree;
+3. the original broader trigger passing after a clean enough rebuild to avoid
+   stale generated artifacts; and
+4. the applicable full platform sanitizer gate passing.  Apple AddressSanitizer
+   does not supply LeakSanitizer, so leak closure additionally requires a
+   supported Linux ASan/LSan run.
+
+Do not suppress, exclude, or disable a supported sanitizer to obtain closure.
+An explicitly approved temporary exception stays open and release-blocking
+until the underlying defect is repaired and requalified.
+
 ## Runner
 
 The runner keeps every command in a timestamped log directory:
@@ -172,6 +202,28 @@ continue with the sanitizer tree rather than blocking the whole investigation.
 `--phase build`; use `--phase full` when a complete rebuild is required.
 If `cmake-build-debug` is not configured locally, skip the plain Debug check and
 record that the command was validated only in the sanitizer tree.
+
+## Mandatory CI gates
+
+`.github/workflows/sanitizers.yml` runs two non-optional full sanitizer jobs on
+pushes and pull requests to `develop` or `master`:
+
+* Linux x64 runs AddressSanitizer with LeakSanitizer enabled for both the build
+  and complete CTest phases.
+* macOS arm64 runs AddressSanitizer with leak detection disabled because the
+  Apple runtime does not provide supported LeakSanitizer coverage.
+
+Both jobs configure fresh Debug trees and invoke `tools/asan-run.sh --phase
+full`.  The instrumented build therefore executes generated-product tools such
+as `rxc`, `rxas`, and `rxlink` under the sanitizer before CTest starts.  Do not
+replace these jobs with a CTest-only step or mark either job
+`continue-on-error`.  Logs are uploaded even when a job fails so the first
+build-time or test-time report remains attributable.
+
+After the workflow is committed, configure its stable `Linux x64 ASan/LSan`
+and `macOS arm64 ASan` check names as required checks in the repository's
+branch protection or ruleset.  Workflow YAML cannot set that repository-level
+merge policy by itself.
 
 ## Exploratory UBSan
 

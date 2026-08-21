@@ -56,7 +56,7 @@ correlated errors can cancel.
 - Integer expected values are exact checked-in literals or fixtures generated
   by an arbitrary-precision integer implementation.
 - Decimal transcendental vectors are generated offline at least 32 guard
-  digits beyond the qualified 64-digit caller ceiling. Exact constants are
+  digits beyond the qualified 128-digit caller boundary. Exact constants are
   rounded independently for every tested caller context; approximate vectors
   retain their guard digits and use explicit tolerances.
 - Float finite values use independently established constants or
@@ -169,10 +169,12 @@ range reduction, termination, work-context selection, and final rounding. The
 primary oracle is independent high-precision data, not float conversion and not
 an inverse call through another `rxdecimal` function.
 
-All public procedures are tested at caller precisions 9, 18, 32, and 64. The
-work-context switching boundaries additionally require cases at 10, 19, and
-33 digits. Expected values are supplied as decimal strings so they never pass
-through binary float.
+All public procedures are tested at caller precisions 9, 18, 32, 64, 65, 96,
+97, and 128. The fixed work-context switching boundaries additionally require
+cases at 10, 19, and 33 digits. The 65 cell crosses the former assurance
+boundary, 96/97 cross the former widest work tier, and 128 is the documented
+qualification boundary rather than a runtime maximum. Expected values are
+supplied as decimal strings so they never pass through binary float.
 
 ### Constants and context
 
@@ -246,5 +248,21 @@ focused test increment.
 RCC-5C met this gate on 2026-08-20: all eight contract execution cells and the
 structural guard passed (10/10 including the shared artifact fixture). After a
 complete Debug rebuild, the requested broad review run passed 2,302/2,302
-CTest cases. That broad Debug result does not claim the later consolidated
-RCC-5 sanitizer/install/package closeout while RCC-5D+ remains outstanding.
+CTest cases. RCC-5D and RCC-5E subsequently split statistics and the remaining
+historical native bundles. Their focused contract, concurrency, automatic-load,
+install and native-package coverage is maintained alongside this mathematics
+suite; the one post-acceptance broad closeout is recorded in the RCC-5
+worklist rather than repeated per subphase.
+
+The accepted caller-relative precision follow-up removed the fixed 64-digit
+assurance ceiling without adding another runtime ceiling. Its independent
+constant, root, exponential, logarithmic, trigonometric, large-angle, and
+caller-context cells qualify all seven exports through 128 digits while
+retaining the original 9-through-64 regression matrix. Final qualification
+passes focused Debug and Apple-ASan 5/5, complete Debug and profiling-off
+Release 2,302/2,302, and scratch-installed bytecode/native 128-digit smokes.
+The formerly blocking RXAS SSA use-after-free and the independently retained
+wide-decimal buffer defect now have permanent regressions and repaired Apple-
+ASan proof. Supported Linux ASan/LSan remains the platform closure gate tracked
+as SAN-001 and SAN-002; this strategy does not relabel an Apple-only pass as
+complete cross-platform sanitizer closure.

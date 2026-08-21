@@ -1,0 +1,15 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+    Start    1: linked_opt_runtime_artifacts_build
+1/2 Test    #1: linked_opt_runtime_artifacts_build ...   Passed   39.99 sec
+    Start 2050: benchmark_awfy_towers_opt
+2/2 Test #2050: benchmark_awfy_towers_opt ............   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+benchmark     =   0.05 sec*proc (1 test)
+language      =   0.05 sec*proc (1 test)
+linked_opt    =   0.05 sec*proc (1 test)
+smoke         =   0.05 sec*proc (1 test)
+
+Total Test time (real) =  40.08 sec

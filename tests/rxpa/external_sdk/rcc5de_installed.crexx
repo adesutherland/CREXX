@@ -1,0 +1,22 @@
+options levelg floats_binary
+
+import rxfnsb
+import rxstats
+import rxhash
+import rxid
+import rxfs
+import rxplatform
+
+main: procedure = .int
+  values = .float[]
+  values[1] = 1.0
+  values[2] = 2.0
+  values[3] = 3.0
+  if rxstats..mean(values) <> 2.0 then return 1
+  if bin2x(rxhash..sha256("616263"x as .binary)) <> "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD" then return 2
+  identifier = rxid..uuid4()
+  if length(identifier) <> 36 | substr(identifier, 15, 1) <> "4" then return 3
+  if length(rxfs..cwd()) = 0 then return 4
+  if length(rxplatform..osname()) = 0 then return 5
+  say "PASS: installed RCC-5D/E providers"
+  return 0

@@ -39,8 +39,9 @@ The same scalar procedures are published as direct `rxmath` compatibility
 names by the `rxfloat` provider. The compatibility names do not load a second
 library and add no Rexx call layer. New code should import `rxfloat`.
 Historical `rxmath` statistics, hashes, UUID generation, and `inlinec` are not
-part of this provider. Statistics will use a separately qualified bulk
-`rxstats` surface after native packed numeric storage is implemented.
+part of this provider. RCC-5D supplies a separately loadable transitional
+boxed-array `rxstats` surface. `BINARY-01` and RCC-5F will replace that
+pre-release argument representation with aligned packed numeric storage.
 
 Domain and range behaviour follows the platform C implementation: operations
 such as a negative square root return IEEE NaN, poles can return infinity, and
@@ -94,11 +95,14 @@ calculate: procedure = .decimal
 ```
 
 The initial surface is `sqrt`, `exp`, `ln`, `sin`, `cos`, `pi`, and `euler`.
-Each public procedure inherits the caller's numeric context, computes with a
-bounded 18-, 32-, 64-, or 96-digit work context, and rounds once when returning
-to the caller. The surface is qualified through a 64-digit caller context; the
-96-digit tier provides 32 internal guard digits at that boundary. Negative
-square-root arguments and non-positive logarithm arguments raise
+Each public procedure inherits the caller's numeric context and rounds once
+when returning to the caller. Work precision is 18 digits through caller 9,
+32 through caller 18, 64 through caller 32, and 96 through caller 64. Wider
+callers use their requested precision plus 32 guard digits; this is selected
+dynamically and does not introduce another fixed ceiling. The surface is
+qualified through a 128-digit caller context. That qualification boundary is
+the tested assurance limit, not the implementation's runtime maximum.
+Negative square-root arguments and non-positive logarithm arguments raise
 `INVALID_ARGUMENTS`.
 
 An ordinary dotted source literal is converted directly from its original
