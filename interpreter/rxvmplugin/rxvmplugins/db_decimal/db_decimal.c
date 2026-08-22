@@ -288,8 +288,12 @@ static size_t getDigits(decplugin *plugin) {
 static size_t getRequiredStringSize(decplugin *plugin, const value *number) {
     size_t digits = plugin->num_context
             ? plugin->num_context->digits : DEFAULT_NUMERIC_DIGITS;
+    /* C90 has LDBL_DIG but not the C11 LDBL_DECIMAL_DIG macro. Four extra
+     * significant digits conservatively cover the supported binary long-
+     * double formats; this value sizes storage and does not set precision. */
+    size_t host_digits = (size_t)LDBL_DIG + 4u;
     (void)number;
-    if ((size_t)LDBL_DECIMAL_DIG > digits) digits = (size_t)LDBL_DECIMAL_DIG;
+    if (host_digits > digits) digits = host_digits;
     return digits > SIZE_MAX - 14u ? SIZE_MAX : digits + 14u;
 }
 
