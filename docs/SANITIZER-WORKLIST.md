@@ -14,6 +14,27 @@ release-complete claim until that gate passes.
 
 ## Qualification infrastructure repairs
 
+### SAN-QA-002 — composite control-flow test timeout under parallel ASan
+
+Status: repaired; focused normal-Debug and Linux ASan/LSan replays are green,
+with complete exact-commit qualification pending.
+
+- Scope: test infrastructure only; no production compiler or runtime code.
+- Failure: the leak-enabled Linux full CTest run timed out
+  `do_forever_return_contract` at its fixed 120-second test limit while eight
+  instrumented compiler tests were active. The same exact test passed alone
+  with leak detection in 33.22 seconds and emitted no sanitizer diagnostic.
+  The full-run failure and isolated replay are retained in
+  `20260822-231527-ctest` and `20260822-234647-ctest` respectively.
+- Repair: use the repository's established 300-second long-test allowance for
+  this composite compile/assemble/two-VM/negative-diagnostic contract.
+- Focused proof: the repaired test passes normal Debug in 12.24 seconds at
+  `cmake-build-debug/asan-logs/20260822-234817-ctest` and leak-enabled Linux
+  ASan/LSan in 33.87 seconds at
+  `cmake-build-debugasan/asan-logs/20260822-234906-ctest`.
+- Acceptance: the focused test must pass in normal Debug and leak-enabled
+  Linux ASan/LSan, followed by the complete supported Linux sanitizer gate.
+
 ### SAN-QA-001 — ASan static control kernels require PIC
 
 Status: repaired; the exact normal-Debug and Linux ASan/LSan fixture that

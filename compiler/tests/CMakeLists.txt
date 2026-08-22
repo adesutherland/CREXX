@@ -2659,7 +2659,7 @@ add_test(
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(do_forever_return_contract PROPERTIES
         LABELS "compiler;control-flow;runtime;optimizer"
-        TIMEOUT 120)
+        TIMEOUT 300)
 
 add_test(
         NAME parse_levelg_contract
