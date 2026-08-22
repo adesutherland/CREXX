@@ -503,4 +503,10 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/
         DESTINATION bin
         FILES_MATCHING
         PATTERN "*"
-        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
+        # These exact names were historical test-only performance controls in
+        # the shared build bin directory. Keep incremental stale artifacts out
+        # of installs after their targets moved to tests/performance/.
+        PATTERN "rx_rcc5f_stats_boxed.rxplugin" EXCLUDE
+        PATTERN "rx_rcc5f_stats_direct.rxplugin" EXCLUDE
+        PATTERN "rx_rxvector01_direct.rxplugin" EXCLUDE)

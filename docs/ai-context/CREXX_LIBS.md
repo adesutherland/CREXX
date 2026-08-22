@@ -21,6 +21,9 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 
 - `lib/plugins/stats/` (packed-float native statistics)
 
+- `lib/plugins/vector/` (exact packed-vector computation and explicit portable
+  float32 conversion)
+
 - `lib/plugins/hash/`, `id/`, `fs/`, and `platform/` (narrow declarative
   native providers replacing the historical mixed `rxmath` and broad `system`
   bundles)
@@ -629,7 +632,7 @@ Current bundled classification is deliberately conservative:
 
 | Classification | Bundled examples | Rule |
 | --- | --- | --- |
-| Plugin-wide process-reentrant | `cipher`, `rx_hash`, `rxfloat`, `rxstats`, `rxid`, `rxfs`, `rxplatform`, `stack`, `strings`, `getpi` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. `rxfloat` also publishes direct `rxmath` scalar compatibility names; the historical `inlinec`, statistics, hash and UUID mixture and the broad `system` provider are removed. |
+| Plugin-wide process-reentrant | `cipher`, `rx_hash`, `rxfloat`, `rxstats`, `rxvector`, `rxid`, `rxfs`, `rxplatform`, `stack`, `strings`, `getpi` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. `rxfloat` also publishes direct `rxmath` scalar compatibility names; the historical `inlinec`, statistics, hash and UUID mixture and the broad `system` provider are removed. |
 | Per-VM session | `odbc` | Database procedures are session-affine; `odbc.show_message` is process-reentrant; old hosts use the plugin's default session. |
 | Unqualified | All other bundled plugins | Remain legacy and serialized until their complete state, dependencies, failure paths and teardown have been audited. |
 
@@ -809,6 +812,7 @@ delivery route:
 | Provider ID | Public namespace and procedures | Contract note |
 |---|---|---|
 | `rxstats` | `rxstats.mean`, `stddev`, `covariance`, `correlation`, `regression` | Level G statistics over borrowed read-only `.packedfloat` payloads. Compensated shifted-origin accumulation plus a compensated second pass protects ill-conditioned central moments; regression returns immutable `.linearfit`. Boxed arrays, `.packedint`, and raw `.binary` are not production overloads. |
+| `rxvector` | `rxvector.decodef32le`, `encodef32le`, `cosine`, `topkcosine` | Level G exact vector computation over borrowed `.packedfloat`/`.packedint` payloads, with explicit canonical little-endian float32 conversion. The provider is stateless and process-reentrant; prepared/ANN indexes are not part of this contract. |
 | `rxid` | `rxid.uuid4`, `uuid7`, `ulid`, `nanoid`, `snowflake`, `base58` | Bundled optional Level G identifier strings, callable from B when installed; random forms use platform cryptographic randomness and generation failures signal. |
 | `rxfs` | `rxfs.cwd`, `loadpath`, `chdir`, `isdir`, `mkdir`, `rmdir`, `delete`, `rename`, `isfile`, `listdir`, `append` | Narrow filesystem and directory operations. Return/status contracts are documented in the library reference. |
 | `rxplatform` | `rxplatform.uptime`, `user`, `host`, `osname`, `sleep` | Bundled optional Level G host/platform information and millisecond sleep, callable from B when installed. Clipboard, beep, process-global and developer functions from the old draft `system` surface were retired. |

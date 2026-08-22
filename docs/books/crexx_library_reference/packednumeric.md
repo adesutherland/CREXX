@@ -47,6 +47,12 @@ call without an intermediate reference, object copy, or element boxing.
 `rxstats` does not accept `.packedint`: integer statistics require a separate
 accumulation-precision decision rather than byte reinterpretation.
 
+`rxvector` borrows `.packedfloat` matrices and queries plus `.packedint`
+identities through the same zero-copy call boundary. Its explicit
+`decodef32le` and `encodef32le` procedures are the conversion boundary between
+portable stored float32 bytes and host-native computation; a packed owner is
+never itself a portable file or wire encoding.
+
 The representation uses the current host's width, byte order, alignment, and
 numeric representation. It is suitable for in-process numerical kernels and
 native providers, but not for files, persistence, network protocols, or

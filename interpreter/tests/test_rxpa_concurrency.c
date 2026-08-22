@@ -1290,6 +1290,18 @@ static int call_plugin_procedure(rxvm_context *context, const char *kind) {
                                sizeof(packed_values), NULL, 0u) != 0) {
             failed = 1;
         }
+    } else if (strcmp(kind, "vector") == 0) {
+        const double left_values[2] = {1.0, 0.0};
+        const double right_values[2] = {0.6, 0.8};
+
+        procedure_name = "rxvector.cosine";
+        argument_count = 2;
+        if (set_native_payload(&arguments[0], left_values,
+                               sizeof(left_values), NULL, 0u) != 0 ||
+            set_native_payload(&arguments[1], right_values,
+                               sizeof(right_values), NULL, 0u) != 0) {
+            failed = 1;
+        }
     } else if (strcmp(kind, "fs") == 0) {
         procedure_name = "rxfs.cwd";
     } else if (strcmp(kind, "platform") == 0) {
@@ -1354,6 +1366,9 @@ static int call_plugin_procedure(rxvm_context *context, const char *kind) {
         failed = result.float_value < 3.1415 || result.float_value > 3.1417;
     } else if (strcmp(kind, "stats") == 0) {
         failed = result.float_value != 2.0;
+    } else if (strcmp(kind, "vector") == 0) {
+        failed = result.float_value < 0.599999999999999 ||
+                 result.float_value > 0.600000000000001;
     } else if (strcmp(kind, "fs") == 0 || strcmp(kind, "platform") == 0) {
         failed = !result.string_value || result.string_length == 0u;
     }

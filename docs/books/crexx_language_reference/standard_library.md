@@ -106,6 +106,14 @@ integer and decimal modules are Level-B-authored library code. See
 [Mathematics](../crexx_library_reference/mathematics.md) for the complete
 surface and availability boundary.
 
+## Packed vectors
+
+The Level G standard/default `rxvector` native provider supplies explicit
+`f32le` conversion, exact cosine similarity, and deterministic bounded top-k
+search over `.packedfloat` and `.packedint` owners. Portable persistence stays
+separate from host-native computation. See
+[Packed vectors](../crexx_library_reference/rxvector.md).
+
 ## ADDRESS and Trace Support
 
 `_address.rexx` contains the Rexx-side ADDRESS protocol support used by

@@ -14,6 +14,7 @@ add_dynamic_plugin_target(_rxpa_session_failure
 add_subdirectory(arrays)
 add_subdirectory(float)
 add_subdirectory(stats)
+add_subdirectory(vector)
 add_subdirectory(stack)
 add_subdirectory(cipher)
 add_subdirectory(hash)
@@ -107,6 +108,7 @@ configure_linker_for_static_lib(test_rxpa_concurrency _stack)
 configure_linker_for_static_lib(test_rxpa_concurrency id)
 configure_linker_for_static_lib(test_rxpa_concurrency float)
 configure_linker_for_static_lib(test_rxpa_concurrency stats)
+configure_linker_for_static_lib(test_rxpa_concurrency vector)
 configure_linker_for_static_lib(test_rxpa_concurrency fs)
 configure_linker_for_static_lib(test_rxpa_concurrency _platform
         PROVIDER_ID rxplatform)
@@ -120,6 +122,7 @@ add_dependencies(test_rxpa_concurrency
 add_dependencies(test_rxpa_concurrency float float_static)
 add_dependencies(test_rxpa_concurrency
         stats stats_static
+        vector vector_static
         fs fs_static
         _platform _platform_static)
 add_dependencies(test_rxpa_concurrency _rxpa_session_failure)
@@ -148,6 +151,9 @@ add_test(NAME rxpa_bundled_float_concurrency
 add_test(NAME rxpa_bundled_stats_concurrency
         COMMAND test_rxpa_concurrency bundled
                 "$<TARGET_FILE_DIR:stats>" "$<TARGET_FILE_NAME:stats>" stats)
+add_test(NAME rxpa_bundled_vector_concurrency
+        COMMAND test_rxpa_concurrency bundled
+                "$<TARGET_FILE_DIR:vector>" "$<TARGET_FILE_NAME:vector>" vector)
 add_test(NAME rxpa_bundled_fs_concurrency
         COMMAND test_rxpa_concurrency bundled
                 "$<TARGET_FILE_DIR:fs>" "$<TARGET_FILE_NAME:fs>" fs)
@@ -167,6 +173,7 @@ set_tests_properties(
         rxpa_bundled_id_concurrency
         rxpa_bundled_float_concurrency
         rxpa_bundled_stats_concurrency
+        rxpa_bundled_vector_concurrency
         rxpa_bundled_fs_concurrency
         rxpa_bundled_platform_concurrency
         rxpa_dynamic_session_factory_failure_rollback

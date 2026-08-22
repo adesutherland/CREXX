@@ -66,6 +66,10 @@ set(required_sdk_files
         "${prefix}/bin/providers/rxstats.rxplugin"
         "${prefix}/bin/providers/rxstats${STATIC_SUFFIX}"
         "${prefix}/bin/providers/rxstats_static${STATIC_SUFFIX}"
+        "${prefix}/bin/rxvector.rxplugin"
+        "${prefix}/bin/providers/rxvector.rxplugin"
+        "${prefix}/bin/providers/rxvector${STATIC_SUFFIX}"
+        "${prefix}/bin/providers/rxvector_static${STATIC_SUFFIX}"
         "${prefix}/bin/rxid.rxplugin"
         "${prefix}/bin/providers/rxid.rxplugin"
         "${prefix}/bin/providers/rxid${STATIC_SUFFIX}"
@@ -83,6 +87,16 @@ set(required_sdk_files
 foreach(required_file IN LISTS required_sdk_files)
     if(NOT EXISTS "${required_file}")
         message(FATAL_ERROR "Scratch SDK is missing ${required_file}")
+    endif()
+endforeach()
+
+foreach(test_only_plugin IN ITEMS
+        "${prefix}/bin/rx_rcc5f_stats_boxed.rxplugin"
+        "${prefix}/bin/rx_rcc5f_stats_direct.rxplugin"
+        "${prefix}/bin/rx_rxvector01_direct.rxplugin")
+    if(EXISTS "${test_only_plugin}")
+        message(FATAL_ERROR
+                "Scratch SDK published test-only provider ${test_only_plugin}")
     endif()
 endforeach()
 

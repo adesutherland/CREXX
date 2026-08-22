@@ -547,11 +547,17 @@ _crexx_configure_rxpa_plugin_target(rcc5f_stats_kernel)
 target_link_libraries(rcc5f_stats_kernel PRIVATE ${CREXX_MATH_LIBRARY})
 
 add_dynamic_plugin_target(_rcc5f_stats_boxed rcc5f_stats_boxed.c)
-set_target_properties(_rcc5f_stats_boxed PROPERTIES EXCLUDE_FROM_ALL TRUE)
+set_target_properties(_rcc5f_stats_boxed PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 target_link_libraries(_rcc5f_stats_boxed PRIVATE ${CREXX_MATH_LIBRARY})
 
 add_dynamic_plugin_target(_rcc5f_stats_direct rcc5f_stats_direct.c)
-set_target_properties(_rcc5f_stats_direct PROPERTIES EXCLUDE_FROM_ALL TRUE)
+set_target_properties(_rcc5f_stats_direct PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 target_include_directories(_rcc5f_stats_direct PRIVATE
         ${CMAKE_SOURCE_DIR}/lib/plugins/stats)
 target_link_libraries(_rcc5f_stats_direct PRIVATE
@@ -620,6 +626,43 @@ foreach(_rcc5f_variant IN ITEMS packed boxed direct)
             REQUIRED_OUTPUT_REGEX ${_rcc5f_pass}
             FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
 endforeach()
+
+# RXVECTOR-01 compares the approved public packed provider with a pure Level B
+# oracle and a one-call direct control compiled from the exact production
+# kernel. The target is explicit so normal builds do not construct the large
+# representative measurement workload.
+add_library(rxvector01_kernel STATIC EXCLUDE_FROM_ALL
+        ${CMAKE_SOURCE_DIR}/lib/plugins/vector/rxvector.c)
+target_compile_definitions(rxvector01_kernel PRIVATE RXVECTOR_KERNEL_ONLY)
+target_include_directories(rxvector01_kernel PRIVATE
+        ${CMAKE_SOURCE_DIR}/lib/plugins/vector)
+_crexx_configure_rxpa_plugin_target(rxvector01_kernel)
+target_link_libraries(rxvector01_kernel PRIVATE ${CREXX_MATH_LIBRARY})
+
+add_dynamic_plugin_target(_rxvector01_direct rxvector01_direct.c)
+set_target_properties(_rxvector01_direct PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+target_include_directories(_rxvector01_direct PRIVATE
+        ${CMAKE_SOURCE_DIR}/lib/plugins/vector)
+target_link_libraries(_rxvector01_direct PRIVATE
+        rxvector01_kernel ${CREXX_MATH_LIBRARY})
+
+add_custom_target(performance_rxvector01)
+add_dependencies(performance_rxvector01
+        vector rxfnsg _rxvector01_direct)
+crexx_add_rexx_opt_matrix(
+        NAME rxvector01_compare
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxvector01_compare.crexx
+        TARGET_GROUP performance_rxvector01
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library rxfnsg vector _rxvector01_direct compiler_exit_bin
+        RUNTIME_ARGS $<TARGET_FILE:_rxvector01_direct> ${LIBRPATH}
+                     ${CMAKE_BINARY_DIR}/bin/rxfnsg -a public 1
+        TEST_LABELS "performance;vector;packed;rxvector01"
+        REQUIRED_OUTPUT_REGEX "PASS: RXVECTOR-01 exact comparison"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
 
 add_custom_target(performance_tinyexpr_dispatch ALL)
 crexx_add_rexx_opt_matrix(
