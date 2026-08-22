@@ -14,6 +14,55 @@ release-complete claim until that gate passes.
 
 ## Live items
 
+### SAN-004 — statement-form parallel pending-result class ownership
+
+Status: repaired with a permanent minimal regression; focused Linux Debug and
+ASan/LSan qualification and the original pooled-HTTP trigger are green, with
+the complete supported Linux gate in progress.
+
+- Surface: `compiler/rxcp_task_lower.c`, teardown of pending typed-object task
+  results created by statement-form `DO PARALLEL` lowering.
+- Failure: four direct `strdup()` leaks totalling 80 bytes while the Linux x64
+  sanitizer build compiles the optimized `ts_http_pooled` images.
+- Root cause: `task_pending_add()` owns copies of both `handle_name` and
+  `result_class`.  Parallel block-expression teardown released both, but the
+  statement-form success and failure paths released only `handle_name` before
+  freeing the pending array.
+- Trigger: Linux x64 Sanitizer QA run
+  [32593095785](https://github.com/adesutherland/CREXX/actions/runs/32593095785)
+  fails while generating the optimized `ts_http_pooled` images with
+  `SUMMARY: AddressSanitizer: 80 byte(s) leaked in 4 allocation(s)`.
+- Affected revision: `653c1293f1b2f84faa75e86bddd50cce6979723a`.
+- Permanent reproducer:
+  `compiler/tests/rexx_src/san004_task_pending_object_result.crexx` assigns two
+  typed-object task results inside statement-form `DO PARALLEL`; its direct
+  optimized compiler test is labelled `san-004` and `sanitizer`.
+- Repair: centralize pending-result teardown in `task_pending_clear()`, release
+  both owned strings and the array on every statement/expression success or
+  failure path, and reset the plan's pending storage state.
+- Focused proof: the unfixed normal-Debug control passes in
+  `cmake-build-debug/asan-logs/20260822-210428-ctest`, while the same unfixed
+  leak-enabled cell reports two direct allocations totalling 20 bytes in
+  `cmake-build-debugasan/asan-logs/20260822-210434-ctest`.  The repaired cells
+  pass in `20260822-210534-ctest` and `20260822-210540-ctest`.
+- Original-trigger proof: the repaired leak-enabled `ts_http_pooled` target
+  regenerates all four pooled-HTTP images without a sanitizer finding in
+  `cmake-build-debugasan/asan-logs/20260822-210605-build`; the immediately
+  repeated incremental proof passes in `20260822-213117-build`.  The related
+  normal-Debug panel passes 14/14 in `20260822-211330-ctest`, covering the
+  minimal compiler cell, all four pooled-HTTP runtime modes, Level-G task
+  lowering, and imported typed-object task methods.
+- Output proof: the optimized reproducer RXAS is byte-identical before and
+  after the repair, with SHA-256
+  `5d34d6c7878e073bcd1d34bb635ad2da872499079ea904a4433025db379ca2a1`.
+- Owner/next action: pass the original optimized `ts_http_pooled` build trigger
+  leak-enabled, then complete the supported Linux ASan/LSan build plus CTest
+  gate on the exact repaired release-QA candidate.
+- Closure: retained CI and minimal unfixed LSan evidence, repaired focused
+  Debug/ASan test, byte-identical optimized RXAS, the original pooled-HTTP
+  build trigger, applicable task/parallel tests, and a complete supported Linux
+  ASan/LSan build plus CTest gate.
+
 ### SAN-003 — inline capture symbol shape replaced without releasing ownership
 
 Status: repaired with permanent regressions; focused Linux Debug and ASan/LSan

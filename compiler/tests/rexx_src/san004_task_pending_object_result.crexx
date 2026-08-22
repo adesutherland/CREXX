@@ -1,0 +1,53 @@
+/* SAN-004: statement-form DO PARALLEL owns pending typed-object result names. */
+options levelg
+import concurrency
+
+namespace san004_task_pending_object_result
+
+resultbox: class
+  _value = .int
+
+  *: factory
+    arg value = .int
+    _value = value
+    return
+
+  from_channel: factory
+    arg encoded = .channelvalue
+    _value = encoded.as_integer()
+    return
+
+  to_channel: method = .channelvalue
+    return .channelvalue.integer_value(_value)
+
+  value: method = .int
+    return _value
+
+workbox: class
+  _base = .int
+
+  *: factory
+    arg base = .int
+    _base = base
+    return
+
+  from_channel: factory
+    arg encoded = .channelvalue
+    _base = encoded.as_integer()
+    return
+
+  to_channel: method = .channelvalue
+    return .channelvalue.integer_value(_base)
+
+  make_result: task = .resultbox
+    arg value = .int
+    return .resultbox(_base + value)
+
+main: procedure = .int
+  worker = .workbox(20)
+  do parallel
+    first = worker.make_result(0)
+    second = worker.make_result(2)
+  end
+  if first.value() + second.value() <> 42 then return 1
+  return 0

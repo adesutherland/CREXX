@@ -3560,6 +3560,14 @@ set_tests_properties(
         san003_inline_scoped_array_actual_run_noopt
         san003_inline_scoped_array_actual_run_opt
         PROPERTIES LABELS "sanitizer;san-003;compiler;inlining;regression")
+add_test(NAME san004_task_pending_object_result_compile
+        COMMAND $<TARGET_FILE:rxc>
+                -x --no-exe-import --import-rxas
+                -i ${CMAKE_BINARY_DIR}/bin
+                -o ${CMAKE_CURRENT_BINARY_DIR}/san004_task_pending_object_result_compile
+                ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/san004_task_pending_object_result.crexx)
+set_tests_properties(san004_task_pending_object_result_compile PROPERTIES
+        LABELS "sanitizer;san-004;compiler;levelg;concurrency;regression")
 add_crexx_run_test(inline_test_computed_receiver_copyback rexx_src/inline_test_computed_receiver_copyback.crexx)
 add_crexx_run_test(inline_test_loop_bound_early_return_cleanup rexx_src/inline_test_loop_bound_early_return_cleanup.crexx)
 add_crexx_run_test(structured_exit_crossed_loop_cleanup rexx_src/structured_exit_crossed_loop_cleanup.crexx)
