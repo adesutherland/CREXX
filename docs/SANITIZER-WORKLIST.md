@@ -14,6 +14,55 @@ release-complete claim until that gate passes.
 
 ## Live items
 
+### SAN-003 — inline capture symbol shape replaced without releasing ownership
+
+Status: repaired with permanent regressions; focused Linux Debug and ASan/LSan
+qualification is green, with the complete supported Linux gate in progress.
+
+- Surface: `compiler/rxcp_remap_build.c`, value-shape copying into an existing
+  inline capture symbol.
+- Failure: eight direct four-byte leaks from `rxcp_remap_copy_dims()` while the
+  optimized compiler builds `lib/rxfnsb/rexx/trace.crexx`.
+- Root cause: fixed-point inlining can reuse a deterministic temporary symbol.
+  The value-shape copy helpers replace its owned dimension metadata with fresh
+  allocations without first releasing the previous shape.
+- Trigger: Linux x64 Sanitizer QA run
+  [32585975224](https://github.com/adesutherland/CREXX/actions/runs/32585975224)
+  fails during the instrumented build of `lib/rxfnsb/rexx/trace.rxbin` with
+  `SUMMARY: AddressSanitizer: 32 byte(s) leaked in 8 allocation(s)`.
+- Affected revision: `62c96aa4d2435f8479924393cee7922a68775985`.
+- Permanent reproducer:
+  `compiler/tests/rexx_src/san003_inline_scoped_array_actual.crexx`, registered
+  in optimized and unoptimized runtime modes.  Optimized compilation repeatedly
+  attempts a method call that passes a class-attribute `.string[]` by value,
+  creates the deterministic scoped-argument capture symbol, then rejects the
+  candidate at the profitability gate.  The runtime cells retain a semantic
+  result check.
+- Repair: allocate the complete replacement value shape first, release the
+  existing symbol-owned dimensions and class only after allocation succeeds,
+  then install the new shape.  This preserves the supported optimized inline
+  attempt and also leaves the old shape intact if allocation fails.
+- Focused proof: the unfixed optimized compile reports the same 32-byte/eight-
+  allocation leak in
+  `cmake-build-debugasan/asan-logs/20260822-191323-ctest/ctest.log` while the
+  normal-Debug semantic controls pass in `20260822-191337-ctest`.  The repaired
+  direct compile and original `trace.crexx` build trigger pass leak-enabled in
+  `20260822-192120-ctest` and `20260822-192126-build`; the combined permanent
+  SAN-003 and four-cell `rxfs` panel passes 7/7 in `20260822-192836-ctest`, and
+  29 applicable inliner tests pass in both normal Debug and Linux ASan/LSan in
+  `20260822-192909-ctest` and `20260822-193021-ctest`.  The complete ordinary
+  Linux Debug build and 2,362/2,362 CTest gate pass in
+  `cmake-build-debug/asan-logs/20260822-193230-full`.
+- Output proof: the optimized reproducer RXAS is byte-identical before and
+  after the repair, with SHA-256
+  `5fda0341f2af6b01e9236235b48eff831511221a3a8b65eaf23c0284e087c096`.
+- Owner/next action: complete the supported Linux ASan/LSan build plus CTest
+  gate on the exact release-QA candidate revision.
+- Closure: retained unfixed LSan evidence, repaired focused Debug/ASan test,
+  byte-identical optimized RXAS across the repair, the original `trace.crexx`
+  build trigger, applicable inliner tests, and a complete supported Linux
+  ASan/LSan build plus CTest gate.
+
 ### SAN-001 — RXAS SSA value pointer retained across growth
 
 Status: repaired and accepted for RCC-5 publication; open under RCC-8 release

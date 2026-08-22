@@ -3547,6 +3547,19 @@ add_crexx_run_test(inline_test_loop_bound_expr rexx_src/inline_test_loop_bound_e
 add_crexx_run_test(inline_test_member_receiver_expr rexx_src/inline_test_member_receiver_expr.crexx)
 add_crexx_run_test(inline_test_named_factory_selector rexx_src/inline_test_named_factory_selector.crexx)
 add_crexx_run_test(inline_test_factory_arg_scope rexx_src/inline_test_factory_arg_scope.crexx)
+add_crexx_run_test(san003_inline_scoped_array_actual
+        rexx_src/san003_inline_scoped_array_actual.crexx)
+add_test(NAME san003_inline_scoped_array_actual_compile
+        COMMAND $<TARGET_FILE:rxc>
+                -x --no-exe-import --import-rxas
+                -i ${CMAKE_BINARY_DIR}/bin
+                -o ${CMAKE_CURRENT_BINARY_DIR}/san003_inline_scoped_array_actual_compile
+                ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/san003_inline_scoped_array_actual.crexx)
+set_tests_properties(
+        san003_inline_scoped_array_actual_compile
+        san003_inline_scoped_array_actual_run_noopt
+        san003_inline_scoped_array_actual_run_opt
+        PROPERTIES LABELS "sanitizer;san-003;compiler;inlining;regression")
 add_crexx_run_test(inline_test_computed_receiver_copyback rexx_src/inline_test_computed_receiver_copyback.crexx)
 add_crexx_run_test(inline_test_loop_bound_early_return_cleanup rexx_src/inline_test_loop_bound_early_return_cleanup.crexx)
 add_crexx_run_test(structured_exit_crossed_loop_cleanup rexx_src/structured_exit_crossed_loop_cleanup.crexx)
