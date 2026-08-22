@@ -11,11 +11,13 @@ entry as soon as it is observed, including defects exposed while testing an
 unrelated activity.  "Independent" and "pre-existing" are attribution labels,
 not dispositions.  Dated evidence may support an entry but may not replace it.
 
-An open `SAN-nnn` item blocks consolidated QA and release completion.  A
-narrower activity may remain functionally qualified only when it names the
-blocking item explicitly.  The entry must retain the exact failing command and
-log, affected revision, smallest permanent reproducer, owner or next action,
-and closure checks.
+An open `SAN-nnn` item blocks cross-platform sanitizer-clean and release
+completion claims. A bounded implementation phase may close only after Adrian
+explicitly assigns its outstanding platform proof to a named later release-QA
+gate. That handoff must name the live item, current repair evidence and the
+release-QA owner; it does not close or downgrade the item. The entry must retain
+the exact failing command and log, affected revision, smallest permanent
+reproducer, owner or next action, and closure checks.
 
 Closure requires all of the following:
 

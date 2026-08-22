@@ -1,10 +1,11 @@
 # Runtime Capability Composition Roadmap
 
-Status: approved roadmap in progress. RCC-1 through RCC-5F are implemented,
-and the separate BINARY-01 prerequisite is accepted. RCC-5 is consolidated
-Release/Debug/install/package/documentation and Apple-ASan qualified; supported
-Linux ASan/LSan remains its sole closure blocker. RCC-6 through RCC-8 remain
-unimplemented unless separately noted.
+Status: approved roadmap in progress. RCC-1 through RCC-5F are published
+complete, and the separate BINARY-01 prerequisite is accepted. RCC-5 has green
+consolidated Release/Debug/install/package/documentation and Apple-ASan
+qualification. Adrian assigned supported Linux ASan/LSan for live SAN-001 and
+SAN-002 to RCC-8 release QA; RCC-6 through RCC-8 remain unimplemented unless
+separately noted.
 
 Date: 2026-08-22.
 
@@ -464,15 +465,17 @@ metadata cases, and smaller cold handler/tooling surfaces.
 | RCC-5C: integer and decimal standard libraries — **complete** | Add Level-B-authored `rxint` exact checked algorithms and `rxdecimal` context-preserving algorithms over `mc_decimal`; apply the approved [mathematics validation strategy](mathematics-validation-strategy.md). | Exact integer boundaries and independently expected decimal precision/domain/convergence behavior pass focused cross-VM optimized/no-opt coverage. The requested broad Debug review also passed 2,302/2,302 tests after a complete build. |
 | RCC-5D: transitional statistics provider — **implemented; verdict accepted; proportional QA complete** | Extract and qualify boxed-array `rxstats` as an independent process-reentrant Level G provider and semantic oracle for the later packed surface. | Five procedures have explicit rejection contracts, cancellation-resistant algorithms, four toolchain/VM cells, concurrency and automatic dynamic/static packaging; the accepted first-Release verdict is guard-clean. |
 | RCC-5E: remaining historical-bundle split — **implemented; proportional QA complete** | Move hash/checksum, identifier, filesystem and platform capabilities to narrow providers; retire developer, UI and legacy draft surfaces rather than preserving aliases. Update catalogue, packaging and driver dependencies from actual use. | `rx_hash`, `rxid`, `rxfs`, and `rxplatform` carry the retained contracts; the broad `system` and mixed `rxmath` providers are absent and the driver depends only on narrow providers. |
-| RCC-5F: packed statistics qualification — **implemented; verdict accepted; Mac QA complete** | Replace the boxed `rxstats` arguments with accepted BINARY-01 aligned packed host-native `rxfloat` storage and record the later `rxvector` dependency. | Bulk semantics match the RCC-5D oracle with exact finite/error contracts; the packed path is clear favorable over boxed access on both VMs and remains close to the direct native scan control. Consolidated Release/Debug/install/package/documentation and Apple-ASan QA is complete; supported Linux ASan/LSan is the remaining RCC-5 closure gate. |
+| RCC-5F: packed statistics qualification — **complete and published** | Replace the boxed `rxstats` arguments with accepted BINARY-01 aligned packed host-native `rxfloat` storage and record the later `rxvector` dependency. | Bulk semantics match the RCC-5D oracle with exact finite/error contracts; the packed path is clear favorable over boxed access on both VMs and remains close to the direct native scan control. Consolidated Release/Debug/install/package/documentation and Apple-ASan QA is green. Supported Linux ASan/LSan for live SAN-001/002 is assigned to RCC-8 release QA. |
 | RCC-6: file-instruction replacement | Add `rx_io`, dual-lower/migrate the 14 `F*` forms, prove handle ownership and behavior, measure code/startup/call effects, and select the compatibility retirement point. | The call path is equivalent and acceptable; old opcodes are retained or tombstoned according to the approved format policy. |
 | RCC-7: measured instruction review | Evaluate existing RXAS `rxhash`, host utilities, then sockets/reflection only in the recorded order and as separate decisions. | Each family has a keep/convert disposition backed by use, performance, ownership, size, and compatibility evidence. |
-| RCC-8: release qualification | Cross-platform build/install/package, both VMs, native/embedded/late-load, security-path, failure, concurrency, and documentation closeout. | The product can explain and mechanically report every required provider and initializer; default installations work without manual runtime lists. |
+| RCC-8: release qualification | Cross-platform build/install/package, both VMs, native/embedded/late-load, security-path, failure, concurrency, documentation closeout, and the supported Linux ASan/LSan gate for live SAN-001/002. | The product can explain and mechanically report every required provider and initializer; default installations work without manual runtime lists; every release-blocking SAN item is closed on its supported platform. |
 
-RCC-5A through RCC-5F are authorized and implemented. Adrian accepted the
-RCC-5D first-Release verdict on 2026-08-21, the separate BINARY-01 baseline on
-2026-08-22, and authorized continuation after the RCC-5F packed contract and
-its clear-favorable first Release verdict. The boxed provider now survives
+RCC-5A through RCC-5F are authorized, implemented, and published complete.
+Adrian accepted the RCC-5D first-Release verdict on 2026-08-21, the separate
+BINARY-01 baseline on 2026-08-22, and authorized continuation after the RCC-5F
+packed contract and its clear-favorable first Release verdict, then approved
+RCC-5 publication on 2026-08-22 with supported Linux ASan/LSan assigned to
+RCC-8 release QA. The boxed provider now survives
 only as test-oracle material. Later production architecture or language/format
 decisions remain subject to the repository's normal approval and, where
 performance-sensitive, first-Release-verdict gates.

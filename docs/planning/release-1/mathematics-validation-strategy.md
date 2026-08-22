@@ -263,6 +263,7 @@ passes focused Debug and Apple-ASan 5/5, complete Debug and profiling-off
 Release 2,302/2,302, and scratch-installed bytecode/native 128-digit smokes.
 The formerly blocking RXAS SSA use-after-free and the independently retained
 wide-decimal buffer defect now have permanent regressions and repaired Apple-
-ASan proof. Supported Linux ASan/LSan remains the platform closure gate tracked
-as SAN-001 and SAN-002; this strategy does not relabel an Apple-only pass as
-complete cross-platform sanitizer closure.
+ASan proof. Adrian approved RCC-5 publication with supported Linux ASan/LSan
+assigned to RCC-8 release QA under live SAN-001 and SAN-002. This strategy does
+not relabel the Apple-only pass as complete cross-platform sanitizer closure or
+remove the later release-blocking gate.

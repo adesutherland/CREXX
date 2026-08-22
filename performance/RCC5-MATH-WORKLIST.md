@@ -1,13 +1,13 @@
 # RCC-5 mathematics and historical-provider composition worklist
 
-Status: RCC-5A through RCC-5F and the caller-relative 128-digit follow-up are
-implemented; all required first Release verdicts are accepted. RCC-5F replaces
-the boxed statistics surface with the approved `.packedfloat` contract and
-immutable `.linearfit`; its Release gate is clear favorable on both VMs. The
-consolidated Debug, Release, install/package, documentation, and Apple-ASan
-gates are complete. Supported Linux ASan/LSan is the sole remaining platform
-closure blocker, so RCC-5 is implemented and Mac-qualified but not yet
-cross-platform sanitizer-closed.
+Status: **complete and published**. RCC-5A through RCC-5F and the caller-relative
+128-digit follow-up are implemented; all required first Release verdicts are
+accepted. RCC-5F replaces the boxed statistics surface with the approved
+`.packedfloat` contract and immutable `.linearfit`; its Release gate is clear
+favorable on both VMs. Consolidated Debug, Release, install/package,
+documentation, and Apple-ASan qualification is complete. Adrian assigned the
+remaining supported Linux ASan/LSan proof for SAN-001 and SAN-002 to RCC-8
+release QA; this is not a cross-platform sanitizer-clean or release-ready claim.
 
 Approved by Adrian: 2026-08-20.
 
@@ -512,7 +512,7 @@ Apple-ASan build and 5/5 decimal cells, and fresh installed bytecode/native
 the retained SAN-001 `rxas_flow_value_node()` heap-use-after-free while
 assembling optimized AWFY Towers before CTest.
 
-## Consolidated RCC-5 qualification — Mac complete, Linux pending
+## Consolidated RCC-5 qualification and publication — complete
 
 The current profiling-off Release implementation passes its focused 19/19
 provider, both-VM, optimized/no-opt, compiler import, concurrency, RexxDoc,
@@ -542,5 +542,8 @@ Mac qualification. Automatic Linux x64 ASan/LSan and macOS arm64 ASan jobs are
 defined in `.github/workflows/sanitizers.yml` and use the full runner phase,
 including instrumented build-time execution. Their stable names still require
 repository-level required-check configuration. No local Linux runtime is
-available, so supported Linux ASan/LSan remains the sole sanitizer-closure
-blocker and both SAN entries remain live.
+available. On 2026-08-22 Adrian approved RCC-5 closure and publication, with
+that supported Linux ASan/LSan proof explicitly transferred to RCC-8 release
+QA. SAN-001 and SAN-002 remain live and release-blocking until the exact later
+release-QA candidate passes that gate; the handoff does not qualify the
+repository as cross-platform sanitizer-clean.

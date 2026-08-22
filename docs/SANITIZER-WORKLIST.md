@@ -6,16 +6,18 @@ sanitizer configurations.  Repository policy and closure requirements are in
 [`CREXX_ASAN_TESTING.md`](ai-context/CREXX_ASAN_TESTING.md).
 
 Status at 2026-08-22: repairs and current Mac qualification are green; platform
-closure remains active. Consolidated current Apple-ASan passes 2,356/2,356,
-but any cross-platform sanitizer-clean or release claim remains blocked until
-every open item below is closed on supported Linux ASan/LSan.
+closure remains active. Consolidated current Apple-ASan passes 2,356/2,356.
+Adrian approved RCC-5 publication with the missing supported Linux ASan/LSan
+proof assigned to RCC-8 release QA. This phase handoff does not close the live
+items below: they continue to block any cross-platform sanitizer-clean or
+release-complete claim until that gate passes.
 
 ## Live items
 
 ### SAN-001 — RXAS SSA value pointer retained across growth
 
-Status: repaired in the approved worktree; open pending the complete platform
-sanitizer gates.
+Status: repaired and accepted for RCC-5 publication; open under RCC-8 release
+QA pending the complete supported Linux sanitizer gate.
 
 - Surface: `assembler/rxas_flow_ssa.c`, `rxas_flow_value_node()`.
 - Failure: heap-use-after-free at the write to `version->source_value_id` after
@@ -52,15 +54,17 @@ sanitizer gates.
   consolidated current RCC-5 build and 2,356/2,356 CTest gate also pass with no
   sanitizer report in `20260822-104056-full`; its instrumented build includes
   the original optimized Towers trigger.
-- Next action: complete the supported Linux ASan/LSan gate.
+- Owner/next action: RCC-8 release QA; complete the supported Linux ASan/LSan
+  gate on the exact release-QA candidate revision.
 - Closure: focused Debug/ASan regression, optimized Towers artifact, applicable
   RXAS contract tests, ordinary Release performance verdict, and complete
   Apple-ASan plus supported Linux ASan/LSan gates.
 
 ### SAN-002 — RXVM string-buffer ownership across return and reuse
 
-Status: repaired in `f95f906de` with permanent regressions now retained; open
-pending the complete platform sanitizer gates.
+Status: repaired in `f95f906de`, accepted for RCC-5 publication, and retained
+with permanent regressions; open under RCC-8 release QA pending the complete
+supported Linux sanitizer gate.
 
 - Surface: decimal-to-string/extract capacity calculation for a value produced
   under a wider numeric context and returned to a narrower caller context.
@@ -112,7 +116,8 @@ pending the complete platform sanitizer gates.
   consolidated current RCC-5 build and 2,356/2,356 CTest gate also pass with no
   sanitizer report in `20260822-104056-full`, including all eight permanent
   SAN-002 cells.
-- Next action: complete the supported Linux ASan/LSan gate.
+- Owner/next action: RCC-8 release QA; complete the supported Linux ASan/LSan
+  gate on the exact release-QA candidate revision.
 - Closure: permanent optimized/no-opt tests under both concrete VMs, focused
   Debug/ASan checks, any required ordinary Release performance verdict, and the
   complete platform sanitizer gates.

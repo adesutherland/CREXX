@@ -53,9 +53,9 @@ ordinary dataset. On the offset probe it reaches 91.221% and 90.922%.
   second monolithic 2,356-test Debug invocation was run.
 - Complete Apple-ASan build and CTest: 2,356/2,356 passed with no sanitizer
   report in `cmake-build-debugasan/asan-logs/20260822-104056-full`.
-- The repository's supported Linux ASan/LSan gate remains unavailable locally
-  and therefore remains the sole sanitizer/platform closure blocker recorded
-  in `docs/SANITIZER-WORKLIST.md`.
+- Adrian approved RCC-5 publication on 2026-08-22 and assigned the unavailable
+  supported Linux ASan/LSan proof for live SAN-001/002 to RCC-8 release QA. The
+  handoff remains release-blocking and is not a cross-platform clean claim.
 
 ## Evidence
 
