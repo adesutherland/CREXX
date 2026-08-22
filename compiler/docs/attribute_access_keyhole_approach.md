@@ -20,6 +20,13 @@ safe-access cleanup belongs in the RXAS keyhole optimiser.
   unlinks. The compiler must not use `acopy` as hidden RexxValue cache-flag
   maintenance for these views. A future explicit compiler flag-copy semantic
   would have to lower to `acopy`, but there is no current compiler use case.
+- A binary-memory instruction is the deliberate narrow exception to that
+  detached-value rule. When its base is an exact `register.0.binary` view, the
+  compiler passes the receiver register directly to the one consuming
+  instruction. A child binary attribute is linked only for that instruction
+  and then unlinked. The borrow cannot escape into an ordinary expression or
+  survive a call, return, resize, or later instruction; all other complex-view
+  reads retain the detached-copy rule above.
 - `RexxValue` owns its cache coherency. The VM value fields for string, binary,
   integer, float, decimal, object, and the public status-flag bands are
   independent storage. A library method that materializes or invalidates a
@@ -42,6 +49,16 @@ safe-access cleanup belongs in the RXAS keyhole optimiser.
 
 The compiler emits correct, direct sequences first. RXAS then removes local
 redundancy when the queue hazard model proves it safe:
+
+- Packed and encoded binary-memory operations over `register.0.binary` need no
+  keyhole cleanup: source emission already names the receiver directly (for
+  example `pgetf result,a1,index`). A direct final inlined packed load donates
+  that scalar register to its `BLOCK_EXPR` and falls through to the block-end
+  label, so the getter adds neither a scalar copy nor a branch. Its setter
+  writes the receiver directly. An exact accessor may also omit the ordinary
+  method-entry `assertinitialized` when the caller proves a direct factory
+  receiver or a non-aliased local with one dominating factory binding;
+  unknown and uninitialized shapes retain the guard.
 
 - `copy rA,rB` followed immediately by `acopy rA,rB` keeps the full `copy` and
   drops the redundant status-only copy because VM `copy_value()` already copies

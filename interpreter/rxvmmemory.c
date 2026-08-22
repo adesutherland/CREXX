@@ -80,6 +80,15 @@ static void rxvm_memory_mutex_unlock(rxvm_memory_mutex *mutex) {
 #define RXVM_MEMORY_SLAB_FLAG_AVAILABLE 0x01u
 #define RXVM_MEMORY_SLAB_FLAG_EMPTY 0x02u
 
+_Static_assert(sizeof(rxinteger) == 8u,
+               "Release 1 packed int requires 64-bit rxinteger");
+_Static_assert(sizeof(double) == 8u,
+               "Release 1 packed float requires 64-bit rxfloat");
+_Static_assert(RXVM_MEMORY_ALIGNMENT % _Alignof(rxinteger) == 0u,
+               "VM binary allocation must align rxinteger");
+_Static_assert(RXVM_MEMORY_ALIGNMENT % _Alignof(double) == 0u,
+               "VM binary allocation must align rxfloat");
+
 typedef struct rxvm_memory_slab rxvm_memory_slab;
 typedef struct rxvm_memory_extent rxvm_memory_extent;
 

@@ -1,0 +1,227 @@
+/* Focused Level G packed numeric ownership and API contract. */
+options levelb
+
+import rxfnsg
+import rxfnsb
+
+check_float_negative_size: procedure = .int
+  do
+    ignored = .packedfloat(-1)
+    say "FAIL: packedfloat negative size did not signal"
+    return 1
+  on signal out_of_range as problem
+    if pos("PACKEDFLOAT", translate(problem.message())) > 0 then return 0
+    say "FAIL: packedfloat negative size identity" problem.message()
+    return 1
+  end
+  return 1
+
+check_int_overflow_size: procedure = .int
+  item_width = <sizeof..int>
+  too_large = 9223372036854775807 / item_width + 1
+  do
+    ignored = .packedint(too_large)
+    say "FAIL: packedint overflow size did not signal"
+    return 1
+  on signal out_of_range as problem
+    if pos("PACKEDINT", translate(problem.message())) > 0 then return 0
+    say "FAIL: packedint overflow size identity" problem.message()
+    return 1
+  end
+  return 1
+
+check_float_partial_binary: procedure = .int
+  data = .binary
+  call binresize data, <sizeof..float> + 1
+  do
+    ignored = .packedfloat.fromBinary(data)
+    say "FAIL: packedfloat partial binary did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if pos("PACKEDFLOAT", translate(problem.message())) > 0 then return 0
+    say "FAIL: packedfloat partial binary identity" problem.message()
+    return 1
+  end
+  return 1
+
+check_int_partial_binary: procedure = .int
+  data = .binary
+  call binresize data, <sizeof..int> - 1
+  do
+    ignored = .packedint.fromBinary(data)
+    say "FAIL: packedint partial binary did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if pos("PACKEDINT", translate(problem.message())) > 0 then return 0
+    say "FAIL: packedint partial binary identity" problem.message()
+    return 1
+  end
+  return 1
+
+check_float_read_bounds: procedure = .int
+  arg values = .packedfloat
+  do
+    ignored = values.get(-1)
+    say "FAIL: packedfloat negative get did not signal"
+    return 1
+  on signal out_of_range
+    return 0
+  end
+  return 1
+
+check_int_write_bounds: procedure = .int
+  arg values = .packedint
+  original = values.get(0)
+  original_size = values.size()
+  do
+    call values.set(values.size(), 999)
+    say "FAIL: packedint boundary set did not signal"
+    return 1
+  on signal out_of_range
+    if values.size() <> original_size | values.get(0) <> original then do
+      say "FAIL: packedint boundary set changed the object"
+      return 1
+    end
+    return 0
+  end
+  return 1
+
+check_float_negative_resize: procedure = .int
+  arg values = .packedfloat
+  original_size = values.size()
+  do
+    call values.resize(-1)
+    say "FAIL: packedfloat negative resize did not signal"
+    return 1
+  on signal out_of_range
+    if values.size() <> original_size then do
+      say "FAIL: packedfloat negative resize changed the object"
+      return 1
+    end
+    return 0
+  end
+  return 1
+
+main: procedure = .int
+  failures = 0
+
+  floats = .packedfloat(3)
+  if floats.size() <> 3 then do
+    say "FAIL: packedfloat initial size"
+    failures = failures + 1
+  end
+  if floats.get(0) <> 0.0 | floats.get(2) <> 0.0 then do
+    say "FAIL: packedfloat zero initialization"
+    failures = failures + 1
+  end
+  call floats.set(0, 1.25)
+  call floats.set(2, -7.5)
+  if floats.get(0) <> 1.25 | floats.get(2) <> -7.5 then do
+    say "FAIL: packedfloat get/set"
+    failures = failures + 1
+  end
+  call floats.resize(5)
+  if floats.size() <> 5 | floats.get(0) <> 1.25 | floats.get(2) <> -7.5 | floats.get(3) <> 0.0 | floats.get(4) <> 0.0 then do
+    say "FAIL: packedfloat resize growth"
+    failures = failures + 1
+  end
+  call floats.fill(2.5)
+  if floats.get(0) <> 2.5 | floats.get(4) <> 2.5 then do
+    say "FAIL: packedfloat fill"
+    failures = failures + 1
+  end
+  call floats.resize(2)
+  float_payload_ref = floats.binary()
+  if <refvalid>(float_payload_ref) = 0 then do
+    say "FAIL: packedfloat binary reference validity"
+    failures = failures + 1
+  end
+  float_payload = dereference float_payload_ref
+  if floats.size() <> 2 | binlength(float_payload) <> 2 * <sizeof..float> then do
+    say "FAIL: packedfloat resize shrink/binary length"
+    failures = failures + 1
+  end
+
+  float_source = .binary
+  call binresize float_source, 2 * <sizeof..float>
+  <packed..float>(0) float_source = 4.5
+  <packed..float>(1) float_source = 8.25
+  float_copy = .packedfloat.fromBinary(float_source)
+  <packed..float>(0) float_source = 99.0
+  if float_copy.get(0) <> 4.5 | float_copy.get(1) <> 8.25 then do
+    say "FAIL: packedfloat fromBinary ownership"
+    failures = failures + 1
+  end
+  float_copy_ref = float_copy.binary()
+  float_live = dereference float_copy_ref
+  <packed..float>(1) float_live = 66.0
+  if float_copy.get(1) <> 66.0 then do
+    say "FAIL: packedfloat binary live borrow"
+    failures = failures + 1
+  end
+  float_snapshot = snapshot float_copy_ref
+  <packed..float>(1) float_snapshot = 77.0
+  if float_copy.get(1) <> 66.0 then do
+    say "FAIL: packedfloat binary snapshot ownership"
+    failures = failures + 1
+  end
+
+  integers = .packedint(3)
+  call integers.set(0, -9223372036854775807 - 1)
+  call integers.set(1, 0)
+  call integers.set(2, 9223372036854775807)
+  if integers.get(0) <> -9223372036854775807 - 1 | integers.get(1) <> 0 | integers.get(2) <> 9223372036854775807 then do
+    say "FAIL: packedint native range"
+    failures = failures + 1
+  end
+  call integers.resize(5)
+  if integers.size() <> 5 | integers.get(0) <> -9223372036854775807 - 1 | integers.get(3) <> 0 | integers.get(4) <> 0 then do
+    say "FAIL: packedint resize growth"
+    failures = failures + 1
+  end
+  call integers.fill(-17)
+  if integers.get(0) <> -17 | integers.get(4) <> -17 then do
+    say "FAIL: packedint fill"
+    failures = failures + 1
+  end
+
+  int_source = .binary
+  call binresize int_source, 2 * <sizeof..int>
+  <packed..int>(0) int_source = 41
+  <packed..int>(1) int_source = 42
+  int_copy = .packedint.fromBinary(int_source)
+  <packed..int>(0) int_source = 99
+  int_copy_ref = int_copy.binary()
+  int_live = dereference int_copy_ref
+  <packed..int>(1) int_live = 100
+  if int_copy.get(1) <> 100 then do
+    say "FAIL: packedint binary live borrow"
+    failures = failures + 1
+  end
+  int_snapshot = snapshot int_copy_ref
+  <packed..int>(1) int_snapshot = 101
+  if int_copy.get(0) <> 41 | int_copy.get(1) <> 100 then do
+    say "FAIL: packedint ownership boundaries"
+    failures = failures + 1
+  end
+
+  empty_float = .packedfloat(0)
+  empty_int = .packedint(0)
+  call empty_float.fill(1.0)
+  call empty_int.fill(1)
+  if empty_float.size() <> 0 | empty_int.size() <> 0 then do
+    say "FAIL: packed numeric empty values"
+    failures = failures + 1
+  end
+
+  failures = failures + check_float_negative_size()
+  failures = failures + check_int_overflow_size()
+  failures = failures + check_float_partial_binary()
+  failures = failures + check_int_partial_binary()
+  failures = failures + check_float_read_bounds(floats)
+  failures = failures + check_int_write_bounds(integers)
+  failures = failures + check_float_negative_resize(floats)
+
+  if failures > 0 then return 1
+  say "PASS: Level G packedfloat and packedint contract"
+  return 0

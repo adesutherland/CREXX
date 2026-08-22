@@ -97,6 +97,7 @@ typedef struct RxcpBinaryStorageInfo {
 } RxcpBinaryStorageInfo;
 
 int rxcp_binary_storage_info(ASTNode *type_node, RxcpBinaryStorageInfo *info);
+int rxcp_packed_storage_info(ASTNode *type_node, RxcpBinaryStorageInfo *info);
 int rxcp_binary_storage_is_valid(ASTNode *type_node);
 int rxcp_binary_storage_is_fixed(ASTNode *type_node);
 int rxcp_binary_storage_sizeof(ASTNode *type_node);

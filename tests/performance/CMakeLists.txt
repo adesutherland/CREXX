@@ -474,6 +474,67 @@ set_tests_properties(postperf04_scalar_access_codegen PROPERTIES
         FIXTURES_REQUIRED linked_opt_runtime_artifacts
 )
 
+add_custom_target(performance_binary_packed_float ALL)
+crexx_add_rexx_opt_matrix(
+        NAME binary_packed_float_compare
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_packed_float_compare.crexx
+        TARGET_GROUP performance_binary_packed_float
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH} -a 1000 2 packed-read
+        TEST_LABELS "performance;binary;packed;binary01"
+)
+foreach(_crexx_mode IN ITEMS noopt opt)
+    set_tests_properties(binary_packed_float_compare_${_crexx_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: BINARY-01 packed float compare"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    )
+endforeach()
+_crexx_register_runtime_test(
+        NAME binary_packed_float_compare_rxbvm_opt
+        RUNNER rxbvm
+        PROGRAM binary_packed_float_compare_opt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH} -a 1000 2 packed-read
+        TEST_LABELS "performance;binary;packed;binary01"
+)
+set_tests_properties(binary_packed_float_compare_rxbvm_opt PROPERTIES
+        PASS_REGULAR_EXPRESSION "PASS: BINARY-01 packed float compare"
+        FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+)
+
+add_custom_target(performance_packed_numeric_class)
+crexx_add_rexx_opt_matrix(
+        NAME packed_numeric_class_compare
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/packed_numeric_class_compare.crexx
+        TARGET_GROUP performance_packed_numeric_class
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        RXC_FLAGS -x
+        DEPENDS library classlib rxfnsg compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH} ${CLASSLIBRPATH} ${CMAKE_BINARY_DIR}/bin/rxfnsg
+                     -a 1000 2 wrapper-int-read
+        TEST_LABELS "performance;binary;packed;binary01;levelg"
+)
+foreach(_crexx_mode IN ITEMS noopt opt)
+    set_tests_properties(packed_numeric_class_compare_${_crexx_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: BINARY-01 packed numeric class compare"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    )
+endforeach()
+_crexx_register_runtime_test(
+        NAME packed_numeric_class_compare_rxbvm_opt
+        RUNNER rxbvm
+        PROGRAM packed_numeric_class_compare_opt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH} ${CLASSLIBRPATH} ${CMAKE_BINARY_DIR}/bin/rxfnsg
+                     -a 1000 2 wrapper-int-read
+        TEST_LABELS "performance;binary;packed;binary01;levelg"
+)
+set_tests_properties(packed_numeric_class_compare_rxbvm_opt PROPERTIES
+        PASS_REGULAR_EXPRESSION "PASS: BINARY-01 packed numeric class compare"
+        FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+)
+
 add_custom_target(performance_tinyexpr_dispatch ALL)
 crexx_add_rexx_opt_matrix(
         NAME tinyexpr_dispatch_compare

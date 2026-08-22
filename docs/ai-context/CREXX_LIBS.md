@@ -812,6 +812,43 @@ collision, but `PROVIDER_ID rxplatform` makes its manifest, artifact stem,
 RXBIN dependency, runtime lookup, and native archive identity consistently
 `rxplatform`.
 
+### Level G packed numeric owners
+
+The `rxfnsg` Rexx library publishes `.packedfloat` and `.packedint` as the
+comfortable Release 1 Level G owners of the Level B host-native packed numeric
+surface:
+
+```rexx
+import rxfnsg
+
+values = .packedfloat(3)
+call values.set(2, 100.0)
+say values.get(2)
+
+indexes = .packedint(16)
+call indexes.fill(-1)
+```
+
+Both classes provide `*(size)`, `fromBinary(data)`, `size()`, `get(index)`,
+`set(index, value)`, `resize(size)`, `fill(value)`, and `binary()`. Counts and
+indexes are item-based and zero-based. Construction and growth zero-fill;
+`fromBinary` is an explicit inbound copy boundary. `binary()` returns a weak
+mutable `reference .binary`: `dereference` creates a scoped live alias without
+copying, while `snapshot` is the explicit outbound copy boundary. The packed
+owner must outlive the reference.
+
+The owned storage is the class object's `register.0.binary` component rather
+than a separate Rexx binary attribute. Native providers may therefore receive
+a declared `.packedfloat` or `.packedint` argument and consume its payload
+directly; the caller does not invoke `binary()` and no intermediate Rexx byte
+copy is required. The payload remains host-local and must use the raw encoded
+binary route for files, persistence, wire formats, or incompatible hosts.
+
+The classes deliberately wrap the existing `<packed..float>` and
+`<packed..int>` Level B instructions. They do not change ordinary `.float[]`
+or `.int[]` arrays and do not yet provide `x[index]` syntax; both are
+post-release language work.
+
 ## 5. Declaring Native Classes and Interfaces
 
 RXPA can also publish class/interface contract metadata to the compiler and VM.

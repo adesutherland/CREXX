@@ -1,0 +1,2 @@
+benchmark=packed_numeric_class_compare variant=wrapper-int-read cells=200000 iterations=10 elapsed_us=15104 items_per_second=132415254 checksum=2000000
+PASS: BINARY-01 packed numeric class compare

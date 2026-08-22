@@ -624,6 +624,33 @@ static int block_expr_has_crossed_cleanup_exit(ASTNode *node,
     return 0;
 }
 
+/* An inlined packed getter ends in a single scalar load followed by a direct
+ * LEAVE_WITH.  The load temporary is already the exact value required by the
+ * surrounding expression, so let it become the BLOCK_EXPR result rather than
+ * copying it through a second scalar register.  Keep assignment-destination
+ * coalescing in preference when it is available, and reject every early,
+ * nested or cleanup-crossing exit. */
+static int final_packed_leave_can_donate_result(ASTNode *node) {
+    ASTNode *instrs;
+    ASTNode *block_expr;
+    ASTNode *value;
+
+    if (!node || node->node_type != LEAVE_WITH || node->sibling ||
+        !(instrs = node->parent) || instrs->node_type != INSTRUCTIONS ||
+        !(block_expr = instrs->parent) || block_expr->node_type != BLOCK_EXPR ||
+        node->association != block_expr || block_expr->register_num != UNSET_REGISTER ||
+        block_expr->value_dims != 0 ||
+        (block_expr->value_type != TP_INTEGER && block_expr->value_type != TP_FLOAT) ||
+        !(value = node->child) || value->sibling || value->node_type != OP_PACKED_AT ||
+        value->value_dims != 0 || value->value_type != block_expr->value_type ||
+        value->register_num < 0 || value->register_type != 'r' ||
+        inline_block_expr_assignment_target_register(block_expr, NULL, NULL) ||
+        block_expr_has_crossed_cleanup_exit(block_expr, block_expr)) {
+        return 0;
+    }
+    return 1;
+}
+
 static void assign_block_expr_result_register(ASTNode *node) {
     if (!node || node->node_type != BLOCK_EXPR ||
         node->register_num != UNSET_REGISTER) return;
@@ -1288,8 +1315,12 @@ walker_result register_walker(walker_direction direction,
             }
 
             case OP_BINARY_AT:
+            case OP_PACKED_AT:
                 if (child1) child1->register_num = DONT_ASSIGN_REGISTER;
-                if (child2 && is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+                if (node->node_type == OP_BINARY_AT &&
+                    child2 && is_constant(child2)) {
+                    child2->register_num = DONT_ASSIGN_REGISTER;
+                }
                 break;
 
             case OP_BINARY_FOR:
@@ -1580,6 +1611,7 @@ walker_result register_walker(walker_direction direction,
             }
 
             case OP_BINARY_AT:
+            case OP_PACKED_AT:
                 if (!rxcp_binary_memory_is_lhs(node) &&
                     (!node->parent || node->parent->node_type != OP_BINARY_FOR) &&
                     node->register_num != DONT_ASSIGN_REGISTER) {
@@ -1799,7 +1831,12 @@ walker_result register_walker(walker_direction direction,
                  * Do not flush deferred block-scope locals: object/reference
                  * locals may still be needed by the copied block result.
                  */
-                if (child1) return_child_reg(child1);
+                if (child1 && final_packed_leave_can_donate_result(node)) {
+                    node->association->register_num = child1->register_num;
+                    node->association->register_type = child1->register_type;
+                } else if (child1) {
+                    return_child_reg(child1);
+                }
                 break;
 
             case BLOCK_EXPR:

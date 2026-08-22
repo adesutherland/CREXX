@@ -1084,6 +1084,18 @@ reuse/grow the private physical binary capacity in blocks. It raises
 to zero. `BFILL`
 fills the current logical byte range and requires a byte value in `0..255`.
 
+The packed numeric opcodes are a separate host-native view over ordinary binary
+storage. `PGETI`/`PSETI` access exact `rxinteger` items and `PGETF`/`PSETF`
+access exact VM `double` items. Their integer operand is a zero-based item index,
+not a byte offset. The VM checks negative indexes, checked multiplication by the
+host item width, and the entire item range against the logical binary length
+before reading or writing. It transfers each item with `memcpy`, so the access
+is strict-aliasing safe even though ordinary binary allocation supplies the
+required host alignment. These opcodes do not tag the binary or change RXBIN
+metadata: a caller selects the interpretation on each access. Binary constants
+are readable only after compiler materialization into ordinary aligned runtime
+binary storage; no packed setter accepts a constant destination.
+
 The Release 1 binary-memory VM surface also includes target-sized copy from a
 byte offset (`BCOPY`), zero-terminated UTF-8 text fields (`BGETS`/`BSETS`),
 string-constant extraction (`SGET`), different-register and same-register

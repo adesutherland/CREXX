@@ -233,6 +233,10 @@ slot, not its string slot. Binary-memory VM instructions exposed at RXAS are:
 - `bseti64 rBin,rOffset,rValue`
 - `bsetf32 rBin,rOffset,rFloat`
 - `bsetf64 rBin,rOffset,rFloat`
+- `pgeti rOut,rBin,rIndex`
+- `pseti rBin,rIndex,rValue`
+- `pgetf rOut,rBin,rIndex`
+- `psetf rBin,rIndex,rFloat`
 - `bcheckrange rBin,rOffset,rLen`
 - `bgets rString,rBin,rOffset`
 - `bgets rString,0x...,rOffset`
@@ -265,6 +269,17 @@ out-of-range reads, while typed reads raise `OUT_OF_RANGE`. Typed writes raise
 the target storage type's range. `bgeti64`/`bseti64` are the Release 1 `.int`
 storage form. `bgetf32`/`bsetf32` store IEEE binary32 values and widen/narrow
 through the VM float register; `bgetf64`/`bsetf64` store IEEE binary64 values.
+
+`pgeti`/`pseti` and `pgetf`/`psetf` are the distinct Release 1 host-native
+packed-item surface. Their index is a zero-based item number rather than a byte
+offset. Integer items have the exact host `rxinteger` representation and float
+items have the exact host VM `double` representation. They deliberately do not
+provide endian or width conversion, and the same binary bytes may be viewed as
+either item type on different accesses. A negative index, index multiplication
+overflow, or an item that does not fit wholly inside the binary's logical byte
+length raises `OUT_OF_RANGE` before a write. RXAS accepts register operands for
+these operations; the compiler materializes a readable binary constant into an
+aligned runtime binary register before emitting `pgeti` or `pgetf`.
 
 `bresize` sets the logical byte length and zero-fills newly exposed bytes. The
 VM may keep a larger private physical capacity, grown in blocks and reused

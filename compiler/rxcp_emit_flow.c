@@ -40,6 +40,20 @@ static const char *signal_block_catch_all_names[] = {
         "CHANNEL_ERROR", "TASK_FAILURE", "OTHER", 0
 };
 
+/* A direct final BLOCK_EXPR exit is immediately followed by the block-end
+ * label. Cleanup and signal unwind are still emitted; only the branch to the
+ * next instruction is redundant. */
+static int leave_with_falls_through_to_block_end(ASTNode *node) {
+    ASTNode *instrs;
+
+    if (!node || node->node_type != LEAVE_WITH || node->sibling ||
+        !(instrs = node->parent) || instrs->node_type != INSTRUCTIONS ||
+        !instrs->parent || instrs->parent->node_type != BLOCK_EXPR) {
+        return 0;
+    }
+    return node->association == instrs->parent;
+}
+
 typedef struct signal_emit_names {
     char **items;
     size_t count;
@@ -1284,10 +1298,12 @@ void emit_flow(ASTNode *node, void *pl) {
                                            node->association);
                 signal_emit_unwind_for_control(node->output, node,
                                                node->association);
-                temp1 = mprintf("   br l%dbexprend\n",
-                                node->association->node_number);
-                output_append_text(node->output, temp1);
-                free(temp1);
+                if (!leave_with_falls_through_to_block_end(node)) {
+                    temp1 = mprintf("   br l%dbexprend\n",
+                                    node->association->node_number);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                }
             }
             break;
 

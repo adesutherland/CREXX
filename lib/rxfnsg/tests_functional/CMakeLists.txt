@@ -112,6 +112,27 @@ foreach(_math_contract_suite IN ITEMS integer decimal)
   endforeach()
 endforeach()
 
+add_custom_target(ts_packed_numeric)
+add_dependencies(testrxfnsg ts_packed_numeric)
+
+foreach(_packed_numeric_runner IN LISTS _math_numeric_runners)
+  crexx_add_rexx_opt_matrix(
+    NAME "ts_packed_numeric_${_packed_numeric_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_packed_numeric.crexx"
+    TARGET_GROUP ts_packed_numeric
+    RUNNER "${_packed_numeric_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x
+    DEPENDS library classlib rxfnsg
+      "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+      "${CMAKE_CURRENT_SOURCE_DIR}/ts_packed_numeric.crexx"
+    RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
+    TEST_LABELS
+      "library;binary;packed;binary01;levelg;${_packed_numeric_runner}"
+    REQUIRED_OUTPUT_REGEX "PASS: Level G packedfloat and packedint contract"
+    FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+endforeach()
+
 unset(_prev_target)
 foreach(_binfile IN LISTS REXXBINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)

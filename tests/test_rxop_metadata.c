@@ -1152,8 +1152,8 @@ int main(void) {
           &op_table[OP_RESERVED_466]);
     effects = rxop_effects(OP_CHANOPEN_REG_REG_REG_REG_REG);
     signal = rxop_signal_contract(OP_CHANOPEN_REG_REG_REG_REG_REG);
-    check(OP_MAX_INSTRUCTIONS == 655 && rxop_effect_count() == 655 &&
-              rxop_signal_contract_count() == 655 &&
+    check(OP_MAX_INSTRUCTIONS == 659 && rxop_effect_count() == 659 &&
+              rxop_signal_contract_count() == 659 &&
               effects.state == RXOP_EFFECT_CLASSIFIED &&
               rxop_effect_reads_operand(&effects, 2) &&
               rxop_effect_reads_operand(&effects, 4) &&
@@ -1179,6 +1179,48 @@ int main(void) {
                    RXOP_COMPONENT_NATIVE_PAYLOAD),
           "Gate F channel metadata contract regression",
           &op_table[OP_CHANOPEN_REG_REG_REG_REG_REG]);
+    effects = rxop_effects(OP_PGETI_REG_REG_REG);
+    signal = rxop_signal_contract(OP_PGETI_REG_REG_REG);
+    check(effects.state == RXOP_EFFECT_CLASSIFIED &&
+              effects.reads == RXOP_OP_23 &&
+              effects.writes == RXOP_OP_1 &&
+              effects.kills == RXOP_OP_1 &&
+              rxop_component_reads(OP_PGETI_REG_REG_REG, 1) ==
+                  RXOP_COMPONENT_BINARY &&
+              rxop_component_reads(OP_PGETI_REG_REG_REG, 2) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_writes(OP_PGETI_REG_REG_REG, 0) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_clears(OP_PGETI_REG_REG_REG, 0) ==
+                  (RXOP_COMPONENT_REFERENCE |
+                   RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.static_names &&
+              strcmp(signal.static_names, "OUT_OF_RANGE") == 0 &&
+              (signal.properties & RXOP_SIGNAL_PROP_SUCCESS_STABLE),
+          "packed integer read metadata regression",
+          &op_table[OP_PGETI_REG_REG_REG]);
+    effects = rxop_effects(OP_PSETF_REG_REG_REG);
+    signal = rxop_signal_contract(OP_PSETF_REG_REG_REG);
+    check(effects.state == RXOP_EFFECT_CLASSIFIED &&
+              effects.reads == RXOP_OP_ALL &&
+              effects.writes == RXOP_OP_1 &&
+              effects.kills == RXOP_OP_NONE &&
+              rxop_component_reads(OP_PSETF_REG_REG_REG, 0) ==
+                  RXOP_COMPONENT_BINARY &&
+              rxop_component_reads(OP_PSETF_REG_REG_REG, 1) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_reads(OP_PSETF_REG_REG_REG, 2) ==
+                  RXOP_COMPONENT_FLOAT &&
+              rxop_component_writes(OP_PSETF_REG_REG_REG, 0) ==
+                  RXOP_COMPONENT_BINARY &&
+              signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.static_names &&
+              strcmp(signal.static_names, "OUT_OF_RANGE") == 0,
+          "packed float write metadata regression",
+          &op_table[OP_PSETF_REG_REG_REG]);
     effects = rxop_effects(OP_CNOP_REG_REG_REG_REG_REG_REG_REG_REG_REG);
     check(rxop_format_operand_count(
               op_table[OP_CNOP_REG_REG_REG_REG_REG_REG_REG_REG_REG].format) == 9 &&

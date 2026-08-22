@@ -743,6 +743,7 @@ static int inline_meta_node_is_exportable(ASTNode *node) {
         case OP_BINARY_FOR:
         case OP_BINARY_LENGTH:
         case OP_BINARY_COMPARE:
+        case OP_PACKED_AT:
         case OP_SIZEOF:
         case OP_ARGS:
         case OP_ARG_VALUE:

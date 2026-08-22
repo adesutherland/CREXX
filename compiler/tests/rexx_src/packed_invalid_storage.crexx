@@ -1,0 +1,11 @@
+options levelb
+
+main: procedure = .int
+  data = .binary
+  s = ""
+  f = 0.0
+
+  s = <packed..string>(0) data
+  f = <packed..f32>(0) data
+  f = <packed..decimal>(0) data
+  return 0

@@ -5,7 +5,8 @@ implemented; all required first Release verdicts are accepted. RCC-5D/E
 proportional qualification is complete: full Debug passes 2,324/2,324,
 focused Release passes 37/37, and focused Apple ASan passes 42/42. SAN-001 and
 SAN-002 are repaired with permanent regressions and a complete 2,310/2,310
-Apple-ASan gate; consolidated RCC-5 QA remains an end-of-phase activity and
+Apple-ASan gate. The separate BINARY-01 prerequisite is accepted and RCC-5F is
+unblocked; consolidated RCC-5 QA remains an end-of-phase activity and
 sanitizer closure remains blocked by the required supported Linux ASan/LSan
 gate.
 

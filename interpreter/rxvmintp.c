@@ -418,6 +418,21 @@ static int rxvm_rxinteger_to_size(rxinteger value, size_t *result) {
     return 1;
 }
 
+static int rxvm_packed_range(value *buffer,
+                             rxinteger item_index,
+                             size_t item_width,
+                             size_t *offset) {
+    size_t index;
+    size_t byte_offset;
+
+    if (!rxvm_rxinteger_to_size(item_index, &index)) return 0;
+    if (!rxvm_checked_size_mul(index, item_width, &byte_offset)) return 0;
+    if (byte_offset > buffer->binary_length) return 0;
+    if (item_width > buffer->binary_length - byte_offset) return 0;
+    if (offset) *offset = byte_offset;
+    return 1;
+}
+
 static uint16_t rxvm_bswap16(uint16_t value) {
     return (uint16_t)((value >> 8) | (value << 8));
 }

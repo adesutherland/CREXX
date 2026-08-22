@@ -1582,6 +1582,8 @@ const char *ast_ndtp(NodeType type) {
             return "OP_BINARY_LENGTH";
         case OP_BINARY_COMPARE:
             return "OP_BINARY_COMPARE";
+        case OP_PACKED_AT:
+            return "OP_PACKED_AT";
         case OP_SIZEOF:
             return "OP_SIZEOF";
         case OP_TYPEOF:

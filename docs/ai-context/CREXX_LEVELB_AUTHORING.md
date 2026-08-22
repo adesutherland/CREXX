@@ -287,6 +287,38 @@ list. Release 1 does not import constants across source, RXAS, or RXBIN module
 boundaries. Cross-module constants and wildcard expose forms such as `TOKEN_*`
 are Release 2 ergonomics/design candidates, not Release 1 syntax commitments.
 
+### Choose encoded fields or host-native packed items deliberately
+
+Use the established `<at..type>(byte_offset)` surface for portable binary
+formats. Those integer and float fields have explicit widths and canonical
+little-endian encoding.
+
+Use `<packed..int>(item_index)` or `<packed..float>(item_index)` only for
+host-local numeric storage where the exact VM representations are required:
+
+```rexx
+values = .binary
+call binresize values, 3 * 8
+
+<packed..float>(0) values = 100.0
+<packed..float>(1) values = 125.5
+say <packed..float>(1) values
+```
+
+Packed indexes are zero-based item numbers. `.int` means the exact host
+`rxinteger` representation and `.float` means the exact host VM `double`
+representation. The buffer has no stored type tag: the same bytes can be read
+through either packed view. The buffer length and `binresize` remain byte based,
+and a packed store never resizes it. Packed access is therefore unsuitable for
+files, protocols, persistent cross-platform data, or data exchanged between
+hosts with different native representations.
+
+Only `.int` and `.float` are valid packed suffixes in Release 1. Ordinary binary
+allocation provides native alignment, readable binary constants are materialized
+into aligned runtime storage, and packed constants remain read-only. Invalid or
+overflowing indexes and partial trailing items raise `OUT_OF_RANGE` before any
+write occurs.
+
 ### Explicit register views are system-programmer syntax
 
 Normal classes should use ordinary attributes. Runtime and VM-integration

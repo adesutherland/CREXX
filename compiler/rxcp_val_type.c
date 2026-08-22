@@ -270,8 +270,13 @@ static int binary_memory_storage_info(Context *context, ASTNode *node, RxcpBinar
     ASTNode *type_node = 0;
 
     if (!rxcp_binary_memory_at_parts(node, &type_node, 0, 0) ||
-        !rxcp_binary_storage_info(type_node, info)) {
-        mknd_err(node, "BINARY_MEMORY_INVALID_STORAGE_TYPE");
+        !(node->node_type == OP_PACKED_AT
+              ? rxcp_packed_storage_info(type_node, info)
+              : rxcp_binary_storage_info(type_node, info))) {
+        mknd_err(type_node ? type_node : node,
+                 node->node_type == OP_PACKED_AT
+                     ? "PACKED_INVALID_STORAGE_TYPE"
+                     : "BINARY_MEMORY_INVALID_STORAGE_TYPE");
         return 0;
     }
     return 1;
@@ -1416,6 +1421,7 @@ walker_result set_node_types_walker(walker_direction direction,
 
             case OP_BINARY_AT:
             case OP_BINARY_FOR:
+            case OP_PACKED_AT:
                 if (node->value_type == TP_UNKNOWN) {
                     RxcpBinaryStorageInfo info;
                     if (binary_memory_storage_info(context, node, &info)) {
@@ -2248,6 +2254,10 @@ walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case OP_BINARY_AT:
+                validate_binary_memory_at(context, node);
+                break;
+
+            case OP_PACKED_AT:
                 validate_binary_memory_at(context, node);
                 break;
 

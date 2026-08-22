@@ -1,10 +1,10 @@
 # Runtime Capability Composition Roadmap
 
-Status: approved roadmap in progress. RCC-1 through RCC-5C are complete at
-their focused subphase boundaries; the RCC-5B first Release verdict is
-accepted. Later RCC-5 partitions and RCC-6 through RCC-8 remain unimplemented
-unless separately noted. Consolidated sanitizer/install/package closeout
-remains deferred to the end of RCC-5.
+Status: approved roadmap in progress. RCC-1 through RCC-5E are complete at
+their focused subphase boundaries, and the separate BINARY-01 prerequisite is
+accepted. RCC-5F is unblocked; RCC-6 through RCC-8 remain unimplemented unless
+separately noted. Consolidated sanitizer/install/package closeout remains
+deferred to the end of RCC-5.
 
 Date: 2026-08-20.
 
@@ -464,17 +464,18 @@ metadata cases, and smaller cold handler/tooling surfaces.
 | RCC-5C: integer and decimal standard libraries — **complete** | Add Level-B-authored `rxint` exact checked algorithms and `rxdecimal` context-preserving algorithms over `mc_decimal`; apply the approved [mathematics validation strategy](mathematics-validation-strategy.md). | Exact integer boundaries and independently expected decimal precision/domain/convergence behavior pass focused cross-VM optimized/no-opt coverage. The requested broad Debug review also passed 2,302/2,302 tests after a complete build. |
 | RCC-5D: transitional statistics provider — **implemented; verdict accepted; proportional QA complete** | Extract and qualify boxed-array `rxstats` as an independent process-reentrant Level G provider and semantic oracle for the later packed surface. | Five procedures have explicit rejection contracts, cancellation-resistant algorithms, four toolchain/VM cells, concurrency and automatic dynamic/static packaging; the accepted first-Release verdict is guard-clean. |
 | RCC-5E: remaining historical-bundle split — **implemented; proportional QA complete** | Move hash/checksum, identifier, filesystem and platform capabilities to narrow providers; retire developer, UI and legacy draft surfaces rather than preserving aliases. Update catalogue, packaging and driver dependencies from actual use. | `rx_hash`, `rxid`, `rxfs`, and `rxplatform` carry the retained contracts; the broad `system` and mixed `rxmath` providers are absent and the driver depends only on narrow providers. |
-| RCC-5F: packed statistics qualification — **pending `BINARY-01`** | Replace the boxed `rxstats` arguments with aligned packed host-native `rxfloat`/`rxinteger` storage and record the later `rxvector` dependency. | Bulk semantics match the RCC-5D oracle while the packed surface passes correctness, ownership, alignment, concurrency, package and performance gates. |
+| RCC-5F: packed statistics qualification — **unblocked; next RCC-5 subphase** | Replace the boxed `rxstats` arguments with accepted BINARY-01 aligned packed host-native `rxfloat`/`rxinteger` storage and record the later `rxvector` dependency. | Bulk semantics match the RCC-5D oracle while the packed surface passes correctness, ownership, alignment, concurrency, package and performance gates. |
 | RCC-6: file-instruction replacement | Add `rx_io`, dual-lower/migrate the 14 `F*` forms, prove handle ownership and behavior, measure code/startup/call effects, and select the compatibility retirement point. | The call path is equivalent and acceptable; old opcodes are retained or tombstoned according to the approved format policy. |
 | RCC-7: measured instruction review | Evaluate existing RXAS `rxhash`, host utilities, then sockets/reflection only in the recorded order and as separate decisions. | Each family has a keep/convert disposition backed by use, performance, ownership, size, and compatibility evidence. |
 | RCC-8: release qualification | Cross-platform build/install/package, both VMs, native/embedded/late-load, security-path, failure, concurrency, and documentation closeout. | The product can explain and mechanically report every required provider and initializer; default installations work without manual runtime lists. |
 
 RCC-5A through RCC-5E are authorized and implemented. Adrian accepted the
-RCC-5D first-Release verdict on 2026-08-21. `BINARY-01` and RCC-5F remain
-separate approved-direction work and do not acquire a final source/ownership
-contract from the transitional boxed provider. Later production architecture
-or language/format decisions remain subject to the repository's normal
-approval and, where performance-sensitive, first-Release-verdict gates.
+RCC-5D first-Release verdict on 2026-08-21 and the separate BINARY-01 baseline
+on 2026-08-22. RCC-5F is now unblocked but does not acquire a final
+source/ownership contract from the transitional boxed provider. Later
+production architecture or language/format decisions remain subject to the
+repository's normal approval and, where performance-sensitive,
+first-Release-verdict gates.
 
 RCC-5 uses one consolidated full-QA and documentation closeout after its final
 approved subphase. Intermediate subphases run focused correctness and any

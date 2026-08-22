@@ -677,3 +677,7 @@ X(CHANSTART_REG_REG_REG_REG_REG, 651, "RRRRR", FLOW_NEXT, FLG_OPT_BARRIER, "Star
 X(CHANWAIT_REG_REG_REG_REG, 652, "RRRR", FLOW_NEXT, FLG_OPT_BARRIER, "Wait for channel completion op1=status op2=completion op3=channel op4=wait microseconds")
 X(CHANCANCEL_REG_REG_REG_REG, 653, "RRRR", FLOW_NEXT, FLG_OPT_BARRIER, "Cancel channel ticket op1=status op2=channel op3=ticket op4=reason")
 X(CHANCLOSE_REG_REG_REG, 654, FMT_R_R_R, FLOW_NEXT, FLG_OPT_BARRIER, "Close channel op1=status op2=channel op3=mode")
+X(PGETI_REG_REG_REG, 655, FMT_R_R_R, FLOW_NEXT, 0, "Host-native rxinteger read op1=op2[item op3]")
+X(PSETI_REG_REG_REG, 656, FMT_R_R_R, FLOW_NEXT, 0, "Host-native rxinteger write op1[item op2]=op3")
+X(PGETF_REG_REG_REG, 657, FMT_R_R_R, FLOW_NEXT, 0, "Host-native rxfloat read op1=op2[item op3]")
+X(PSETF_REG_REG_REG, 658, FMT_R_R_R, FLOW_NEXT, 0, "Host-native rxfloat write op1[item op2]=op3")

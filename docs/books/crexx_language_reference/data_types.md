@@ -239,6 +239,16 @@ prefix = "ff"x as .binary
 packet = prefix || "OK"      /* bytes ff 4f 4b */
 ```
 
+Runtime-owned `.binary` storage is aligned for the host's native `.int` and
+`.float` representations. Level B can use that guarantee through zero-based
+`<packed..int>(item)` and `<packed..float>(item)` reads and writes. These are
+explicit host-native views over bytes, not new value types and not portable
+encodings. See [Binary Memory](binary_memory.md#host-native-packed-numeric-items).
+Release 1 Level G provides explicit `.packedint` and `.packedfloat` owner
+classes in `rxfnsg`; those classes wrap this same representation and do not
+change ordinary arrays. Automatically packed ordinary `.int[]` and `.float[]`
+arrays remain a post-release Level G roadmap item.
+
 Level B string length, indexing, slicing, search, and reversal use Unicode
 codepoints. They do not use UTF-8 bytes and do not imply grapheme boundaries.
 Normalization and full case folding are explicit future Level G services; no
