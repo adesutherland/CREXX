@@ -540,6 +540,8 @@ set_tests_properties(packed_numeric_class_compare_rxbvm_opt PROPERTIES
 # accumulation kernel. Neither provider is installed or part of Level G.
 add_library(rcc5f_stats_kernel STATIC EXCLUDE_FROM_ALL
         ${CMAKE_SOURCE_DIR}/lib/plugins/stats/rxstats.c)
+set_target_properties(rcc5f_stats_kernel PROPERTIES
+        POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(rcc5f_stats_kernel PRIVATE RXSTATS_KERNEL_ONLY)
 target_include_directories(rcc5f_stats_kernel PRIVATE
         ${CMAKE_SOURCE_DIR}/lib/plugins/stats)
@@ -633,6 +635,8 @@ endforeach()
 # representative measurement workload.
 add_library(rxvector01_kernel STATIC EXCLUDE_FROM_ALL
         ${CMAKE_SOURCE_DIR}/lib/plugins/vector/rxvector.c)
+set_target_properties(rxvector01_kernel PROPERTIES
+        POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(rxvector01_kernel PRIVATE RXVECTOR_KERNEL_ONLY)
 target_include_directories(rxvector01_kernel PRIVATE
         ${CMAKE_SOURCE_DIR}/lib/plugins/vector)

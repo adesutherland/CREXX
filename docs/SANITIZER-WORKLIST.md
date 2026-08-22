@@ -12,6 +12,34 @@ proof assigned to RCC-8 release QA. This phase handoff does not close the live
 items below: they continue to block any cross-platform sanitizer-clean or
 release-complete claim until that gate passes.
 
+## Qualification infrastructure repairs
+
+### SAN-QA-001 — ASan static control kernels require PIC
+
+Status: repaired; the exact normal-Debug and Linux ASan/LSan fixture that
+exposed the defect is green, with complete exact-commit qualification pending.
+
+- Surface: the test-only `rcc5f_stats_kernel` and `rxvector01_kernel` static
+  controls in `tests/performance/CMakeLists.txt`.
+- Failure: the Linux sanitizer fixture could not link either static kernel
+  into its direct-control shared plugin because ASan instrumentation introduced
+  non-PIC `R_X86_64_PC32` relocations.  GitHub Sanitizer QA run
+  [32596937877](https://github.com/adesutherland/CREXX/actions/runs/32596937877)
+  and local run `cmake-build-debugasan/asan-logs/20260822-213156-full` retain
+  the exact `recompile with -fPIC` diagnostics.
+- Repair: declare `POSITION_INDEPENDENT_CODE ON` on both static kernel targets.
+  These controls are already linked into module libraries; the property makes
+  that existing target relationship valid under instrumented ELF builds and
+  does not change production providers or benchmark work.
+- Focused proof: the complete linked-runtime fixture passes normally in
+  `cmake-build-debug/asan-logs/20260822-221819-ctest`.  The first repaired ASan
+  replay rebuilt 924/1,251 invalidated artifacts before reaching the fixture's
+  1,800-second CTest timeout without a link or sanitizer error; its retained
+  incremental replay passes in
+  `cmake-build-debugasan/asan-logs/20260822-230331-ctest`.
+- Owner/next action: complete the supported Linux ASan/LSan build plus CTest
+  gate and replay GitHub Sanitizer QA on the exact committed repair.
+
 ## Live items
 
 ### SAN-004 — statement-form parallel pending-result class ownership
