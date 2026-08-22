@@ -67,6 +67,7 @@ addressexit: class
         expose_end = .int
         sandbox_start = .int
         sandbox_end = .int
+        command_expr = .string
         auto_expose = .string[]
         section = .string
         depth = .int
@@ -178,6 +179,10 @@ addressexit: class
         if error_start > 0 & error_end < error_start then return error_result(error_start - 1, "ADDRESS ERROR clause requires an operand")
         if expose_start > 0 & expose_end < expose_start then return error_result(expose_start - 1, "ADDRESS EXPOSE clause requires an operand")
         if sandbox_start > 0 & sandbox_end < sandbox_start then return error_result(sandbox_start - 1, "ADDRESS SANDBOX clause requires an operand")
+        command_expr = emitTokenRange(tokens, command_start, command_end)
+        if command_end = command_start & command_expr = "=" then do
+           return error_result(command_start,"ADDRESS expression is incomplete or invalid; for stems, check for invalid tails.")
+        end
         if redirectNeedsResolution(tokens, input_start, input_end) then return pending_result()
         if redirectNeedsResolution(tokens, output_start, output_end) then return pending_result()
         if redirectNeedsResolution(tokens, error_start, error_end) then return pending_result()
@@ -206,7 +211,7 @@ addressexit: class
 
         if sandbox_start > 0 then replacement = "rc=_address_with_sandbox(" || env_expr
         else replacement = "rc=_address(" || env_expr
-        replacement = replacement || "," || emitTokenRange(tokens, command_start, command_end)
+        replacement = replacement || "," || command_expr
         replacement = replacement || "," || buildRedirect(tokens, input_start, input_end, "IN")
         replacement = replacement || "," || buildRedirect(tokens, output_start, output_end, "OUT")
         replacement = replacement || "," || buildRedirect(tokens, error_start, error_end, "OUT")
