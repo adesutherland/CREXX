@@ -23,7 +23,6 @@ main() .locals=9
    iadd r1,r0,1
    .traceevent "O" 4 "R" "I" "r" 1 5 5 0 "" ""
    icopy r2,r1
-   br l151bexprend
 l151bexprend:
    itos r2
    concat r2,"int-read=",r2
@@ -42,7 +41,6 @@ l151bexprend:
    .traceevent "A" 6 "R" "I" "r" 2 7 7 0 "value" ""
    .srcstep 8 8 17 "arg_semantics_scalar.crexx" 26 3 15 "  return value"
    .traceevent "V" 6 "R" "I" "r" 2 10 10 0 "value" ""
-   br l160bexprend
 l160bexprend:
    itos r2
    concat r2,"int-mut=",r2
@@ -73,7 +71,6 @@ l160bexprend:
    load r2,"mix:read"
    .traceevent "L" 4 "R" "S" "r" 2 17 17 0 "" ""
    scopy r1,r2
-   br l191bexprend
 l191bexprend:
    concat r1,"str-read=",r1
    .traceevent "O" 4 "R" "S" "r" 1 17 17 0 "" ""
@@ -104,7 +101,6 @@ l191bexprend:
    concat r1,r2,":local"
    .traceevent "O" 4 "R" "S" "r" 1 25 25 0 "" ""
    scopy r6,r1
-   br l200bexprend
 l200bexprend:
    concat r6,"str-mut=",r6
    .traceevent "O" 4 "R" "S" "r" 6 25 25 0 "" ""
@@ -137,7 +133,6 @@ l200bexprend:
    concat r2,r6,":local"
    .traceevent "O" 4 "R" "S" "r" 2 34 34 0 "" ""
    scopy r1,r2
-   br l222bexprend
 l222bexprend:
    concat r6,"str-temp=",r1
    .traceevent "O" 4 "R" "S" "r" 6 34 34 0 "" ""

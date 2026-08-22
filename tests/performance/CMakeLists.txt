@@ -535,6 +535,92 @@ set_tests_properties(packed_numeric_class_compare_rxbvm_opt PROPERTIES
         FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
 )
 
+# RCC-5F keeps the former boxed surface as a test-only numerical/performance
+# oracle and compiles a one-call native control from the exact production
+# accumulation kernel. Neither provider is installed or part of Level G.
+add_library(rcc5f_stats_kernel STATIC EXCLUDE_FROM_ALL
+        ${CMAKE_SOURCE_DIR}/lib/plugins/stats/rxstats.c)
+target_compile_definitions(rcc5f_stats_kernel PRIVATE RXSTATS_KERNEL_ONLY)
+target_include_directories(rcc5f_stats_kernel PRIVATE
+        ${CMAKE_SOURCE_DIR}/lib/plugins/stats)
+_crexx_configure_rxpa_plugin_target(rcc5f_stats_kernel)
+target_link_libraries(rcc5f_stats_kernel PRIVATE ${CREXX_MATH_LIBRARY})
+
+add_dynamic_plugin_target(_rcc5f_stats_boxed rcc5f_stats_boxed.c)
+set_target_properties(_rcc5f_stats_boxed PROPERTIES EXCLUDE_FROM_ALL TRUE)
+target_link_libraries(_rcc5f_stats_boxed PRIVATE ${CREXX_MATH_LIBRARY})
+
+add_dynamic_plugin_target(_rcc5f_stats_direct rcc5f_stats_direct.c)
+set_target_properties(_rcc5f_stats_direct PROPERTIES EXCLUDE_FROM_ALL TRUE)
+target_include_directories(_rcc5f_stats_direct PRIVATE
+        ${CMAKE_SOURCE_DIR}/lib/plugins/stats)
+target_link_libraries(_rcc5f_stats_direct PRIVATE
+        rcc5f_stats_kernel ${CREXX_MATH_LIBRARY})
+
+add_custom_target(performance_rcc5f_rxstats)
+add_dependencies(performance_rcc5f_rxstats
+        stats rxfnsg _rcc5f_stats_boxed _rcc5f_stats_direct)
+
+crexx_add_rexx_opt_matrix(
+        NAME rcc5f_rxstats_packed
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc5f_rxstats_packed.crexx
+        TARGET_GROUP performance_rcc5f_rxstats
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library rxfnsg stats compiler_exit_bin
+        RUNTIME_ARGS $<TARGET_FILE:stats> ${LIBRPATH}
+                     ${CMAKE_BINARY_DIR}/bin/rxfnsg
+        TEST_LABELS "performance;math;stats;packed;rcc5f"
+        REQUIRED_OUTPUT_REGEX "PASS: RCC-5F packed statistics workload"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+
+crexx_add_rexx_opt_matrix(
+        NAME rcc5f_rxstats_boxed
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc5f_rxstats_boxed.crexx
+        TARGET_GROUP performance_rcc5f_rxstats
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library _rcc5f_stats_boxed compiler_exit_bin
+        RUNTIME_ARGS $<TARGET_FILE:_rcc5f_stats_boxed> ${LIBRPATH}
+        TEST_LABELS "performance;math;stats;boxed;oracle;rcc5f"
+        REQUIRED_OUTPUT_REGEX "PASS: RCC-5F boxed statistics oracle workload"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+
+crexx_add_rexx_opt_matrix(
+        NAME rcc5f_rxstats_direct
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc5f_rxstats_direct.crexx
+        TARGET_GROUP performance_rcc5f_rxstats
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library rxfnsg _rcc5f_stats_direct compiler_exit_bin
+        RUNTIME_ARGS $<TARGET_FILE:_rcc5f_stats_direct> ${LIBRPATH}
+                     ${CMAKE_BINARY_DIR}/bin/rxfnsg
+        TEST_LABELS "performance;math;stats;packed;direct-control;rcc5f"
+        REQUIRED_OUTPUT_REGEX "PASS: RCC-5F direct statistics control"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+
+foreach(_rcc5f_variant IN ITEMS packed boxed direct)
+    if(_rcc5f_variant STREQUAL "packed")
+        set(_rcc5f_runtime_args $<TARGET_FILE:stats> ${LIBRPATH}
+                ${CMAKE_BINARY_DIR}/bin/rxfnsg)
+        set(_rcc5f_pass "PASS: RCC-5F packed statistics workload")
+    elseif(_rcc5f_variant STREQUAL "boxed")
+        set(_rcc5f_runtime_args $<TARGET_FILE:_rcc5f_stats_boxed>
+                ${LIBRPATH})
+        set(_rcc5f_pass "PASS: RCC-5F boxed statistics oracle workload")
+    else()
+        set(_rcc5f_runtime_args $<TARGET_FILE:_rcc5f_stats_direct>
+                ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/rxfnsg)
+        set(_rcc5f_pass "PASS: RCC-5F direct statistics control")
+    endif()
+    _crexx_register_runtime_test(
+            NAME rcc5f_rxstats_${_rcc5f_variant}_rxbvm_opt
+            RUNNER rxbvm
+            PROGRAM rcc5f_rxstats_${_rcc5f_variant}_opt
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            RUNTIME_ARGS ${_rcc5f_runtime_args}
+            TEST_LABELS "performance;math;stats;rcc5f;rxbvm"
+            REQUIRED_OUTPUT_REGEX ${_rcc5f_pass}
+            FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+endforeach()
+
 add_custom_target(performance_tinyexpr_dispatch ALL)
 crexx_add_rexx_opt_matrix(
         NAME tinyexpr_dispatch_compare

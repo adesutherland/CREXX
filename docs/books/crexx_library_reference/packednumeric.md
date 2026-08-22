@@ -41,6 +41,12 @@ without asking Rexx to call `binary()` or create an intermediate binary value.
 copying, while `payload = snapshot values.binary()` explicitly makes an owned
 copy. A raw native payload pointer must not be retained across a call or resize.
 
+`rxstats` is the first standard bulk consumer. Its native procedures accept a
+`.packedfloat` owner directly and borrow `register.0.binary` read-only for the
+call without an intermediate reference, object copy, or element boxing.
+`rxstats` does not accept `.packedint`: integer statistics require a separate
+accumulation-precision decision rather than byte reinterpretation.
+
 The representation uses the current host's width, byte order, alignment, and
 numeric representation. It is suitable for in-process numerical kernels and
 native providers, but not for files, persistence, network protocols, or

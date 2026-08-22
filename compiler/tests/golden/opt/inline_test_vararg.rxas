@@ -18,7 +18,6 @@ main() .locals=19
    load r2,10
    .traceevent "L" 4 "R" "I" "r" 2 4 4 0 "" ""
    icopy r3,r2
-   br l109bexprend
 l109bexprend:
    .meta "inline_test_vararg.main.__inline_varg_array_50"
    itos r3
@@ -46,7 +45,6 @@ l109bexprend:
    load r3,12
    .traceevent "L" 4 "R" "I" "r" 3 10 10 0 "" ""
    icopy r6,r3
-   br l118bexprend
 l118bexprend:
    .meta "inline_test_vararg.main.__inline_varg_array_50"
    itos r6
@@ -75,7 +73,6 @@ l118bexprend:
    load r6,16
    .traceevent "L" 4 "R" "I" "r" 6 16 16 0 "" ""
    icopy r9,r6
-   br l141bexprend
 l141bexprend:
    .meta "inline_test_vararg.main.__inline_varg_array_64"
    iadd r0,r9,1
@@ -108,7 +105,6 @@ l141bexprend:
    load r9,0
    .traceevent "L" 4 "R" "B" "r" 9 23 23 0 "" ""
    icopy r12,r9
-   br l164bexprend
 l164bexprend:
    .meta "inline_test_vararg.main.__inline_varg_array_74"
    itos r12
@@ -143,7 +139,6 @@ l164bexprend:
    load r12,1
    .traceevent "L" 4 "R" "B" "r" 12 30 30 0 "" ""
    icopy r16,r12
-   br l182bexprend
 l182bexprend:
    .meta "inline_test_vararg.main.__inline_varg_array_74"
    itos r16

@@ -436,6 +436,12 @@ void* rxvm_getnativepayload(rxpa_attribute_value attributeValue,
     return get_native_payload((value*)attributeValue, out_length, out_ops, out_flags);
 }
 
+/* Test the language-level typed-object initialization flag without raising. */
+int rxvm_isinitialized(rxpa_attribute_value attributeValue) {
+    value* val = (value*)attributeValue;
+    return val && !value_is_uninitialized_object(val);
+}
+
 /* Get the number of child attributes */
 rxinteger rxvm_getnumattrs(rxpa_attribute_value attributeValue) {
     value* val = (value*)attributeValue;

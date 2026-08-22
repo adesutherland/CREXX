@@ -52,7 +52,6 @@ l8dostart:
    load r4,0
    .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
    icopy r3,r4
-   br l60bexprend
 l60bexprend:
    itos r3
    say r3

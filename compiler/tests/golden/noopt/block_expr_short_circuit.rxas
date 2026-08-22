@@ -26,7 +26,6 @@ main() .locals=6
    load r1,1
    .traceevent "L" 4 "R" "I" "r" 1 6 6 0 "" ""
    icopy r2,r1
-   br l16bexprend
 l16bexprend:
    icopy r3,r2
 l17andend:
@@ -54,7 +53,6 @@ l20iffalse:
    load r3,0
    .traceevent "L" 4 "R" "I" "r" 3 12 12 0 "" ""
    icopy r1,r3
-   br l32bexprend
 l32bexprend:
    icopy r4,r1
 l33orend:
@@ -80,7 +78,6 @@ l35iffalse:
    load r4,1
    .traceevent "L" 4 "R" "I" "r" 4 19 19 0 "" ""
    icopy r3,r4
-   br l47bexprend
 l47bexprend:
    icopy r5,r3
 l48andend:

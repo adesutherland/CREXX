@@ -167,6 +167,7 @@ typedef void* (*rxpa_func_getnativepayload)(rxpa_attribute_value attributeValue,
                                             size_t *out_length,
                                             const rxpa_native_payload_ops **out_ops,
                                             unsigned int *out_flags); /* Get a native binary payload */
+typedef int (*rxpa_func_isinitialized)(rxpa_attribute_value attributeValue); /* Test typed-object initialization without raising */
 
 // Array / Object Functions - these access the child attributes of an attribute value
 /* Get the number of child attributes */
@@ -218,6 +219,8 @@ struct RXPA_INITCTX_TAG {
     // Exit Function Management
     rxpa_set_say_exit setsayexit;
     rxpa_reset_say_exit resetsayexit;
+    /* Appended so existing initializer-field offsets remain stable. */
+    rxpa_func_isinitialized isinitialized;
 };
 #undef RXPA_INITCTX_TAG
 
@@ -282,6 +285,7 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define GETFARRAY(pnum,index) GETFLOAT(GETATTR(pnum, index))
 #define SETNATIVEPAYLOAD(attr, payload, length, ops, flags) _rxpa_context->setnativepayload((attr),(payload),(length),(ops),(flags))
 #define GETNATIVEPAYLOAD(attr, out_length, out_ops, out_flags) _rxpa_context->getnativepayload((attr),(out_length),(out_ops),(out_flags))
+#define ISINITIALIZED(attr) _rxpa_context->isinitialized((attr))
 #define GETNUMATTRS(attr) _rxpa_context->getnumattrs((attr))
 #define GETARRAYHI(attr) _rxpa_context->getnumattrs((attr))
 #define SETNUMATTRS(attr, num) _rxpa_context->setnumattrs((attr),(num))
@@ -445,6 +449,7 @@ int rxpa_setnativepayload(rxpa_attribute_value attributeValue, const void *paylo
 void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
                             const rxpa_native_payload_ops **out_ops,
                             unsigned int *out_flags); /* Get a native binary payload */
+int rxpa_isinitialized(rxpa_attribute_value attributeValue); /* Test typed-object initialization without raising */
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue); /* Get the number of child attributes */
 void rxpa_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs); /* Set the number of child attributes */
 rxpa_attribute_value rxpa_getattr(rxpa_attribute_value attributeValue, rxinteger index); /* Get the nth child attribute */
@@ -523,6 +528,7 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #define GETFLOAT(attr) rxpa_getfloat((attr))
 #define SETNATIVEPAYLOAD(attr, payload, length, ops, flags) rxpa_setnativepayload((attr),(payload),(length),(ops),(flags))
 #define GETNATIVEPAYLOAD(attr, out_length, out_ops, out_flags) rxpa_getnativepayload((attr),(out_length),(out_ops),(out_flags))
+#define ISINITIALIZED(attr) rxpa_isinitialized((attr))
 #define GETNUMATTRS(attr) rxpa_getnumattrs((attr))
 #define SETNUMATTRS(attr, num) rxpa_setnumattrs((attr),(num))
 #define GETATTR(attr, index) rxpa_getattr((attr),(index))

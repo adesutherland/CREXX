@@ -38,7 +38,7 @@ main() .locals=16
    linkattr1 r2,r1,1
    .traceevent "V" 6 "R" "S" "r" 2 10 10 0 "name" ""
    scopy r5,r2
-   unlinkbr r2,l198bexprend
+   unlink r2
 l198bexprend:
    say r5
    .srcstep 15 15 17 "inline_test_class_methods.crexx" 7 3 28 "  call box.setLabel(\"beta\")"
@@ -68,7 +68,7 @@ l198bexprend:
    linkattr1 r5,r1,1
    .traceevent "V" 6 "R" "S" "r" 5 20 20 0 "name" ""
    scopy r6,r5
-   unlinkbr r5,l233bexprend
+   unlink r5
 l233bexprend:
    say r6
    .srcstep 21 21 17 "inline_test_class_methods.crexx" 9 3 22 "  say box.prefix(\"p\")"
@@ -110,7 +110,7 @@ l233bexprend:
    linkattr1 r8,r1,1
    .traceevent "V" 6 "R" "S" "r" 8 32 32 0 "name" ""
    scopy r6,r8
-   unlinkbr r8,l321bexprend
+   unlink r8
 l321bexprend:
    say r6
    .srcstep 39 39 17 "inline_test_class_methods.crexx" 12 3 36 "  saved = box.setAndReport(\"delta\")"
@@ -154,7 +154,7 @@ l321bexprend:
    linkattr1 r8,r1,1
    .traceevent "V" 6 "R" "S" "r" 8 45 45 0 "name" ""
    scopy r5,r8
-   unlinkbr r8,l383bexprend
+   unlink r8
 l383bexprend:
    say r5
    .srcstep 53 53 17 "inline_test_class_methods.crexx" 15 3 34 "  say box.setAndReport(\"epsilon\")"
@@ -196,7 +196,7 @@ l392bexprend:
    linkattr1 r11,r1,1
    .traceevent "V" 6 "R" "S" "r" 11 58 58 0 "name" ""
    scopy r8,r11
-   unlinkbr r11,l416bexprend
+   unlink r11
 l416bexprend:
    say r8
    .srcstep 59 59 17 "inline_test_class_methods.crexx" 17 3 33 "  say .Box(\"direct\").prefix(\"q\")"
@@ -295,12 +295,11 @@ l416bexprend:
    linkattr1 r3,a1,1
    .traceevent "V" 6 "R" "S" "r" 3 89 89 0 "name" ""
    scopy r4,r3
-   unlinkbr r3,l224bexprend
+   unlink r3
 l224bexprend:
    concat r4,r2,r4
    .traceevent "O" 4 "R" "S" "r" 4 89 89 0 "" ""
    scopy r5,r4
-   br l186bexprend
 l186bexprend:
    ret r5
    .meta "inline_test_class_methods.box.prefix.tag"

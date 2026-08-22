@@ -96,9 +96,12 @@ function(_crexx_resolve_module_path raw workdir out_var)
         set(_candidate "${raw}")
     endif()
 
-    if(EXISTS "${_candidate}")
+    # Runtime arguments may also be existing files (for example an explicit
+    # .rxplugin).  Only serialized bytecode belongs in the rxlink input set;
+    # leave every other existing file for the VM unchanged.
+    if("${_candidate}" MATCHES "\\.rxbin$" AND EXISTS "${_candidate}")
         set(${out_var} "${_candidate}" PARENT_SCOPE)
-    elseif(NOT "${_candidate}" MATCHES "\\.rxbin$" AND EXISTS "${_candidate}.rxbin")
+    elseif(NOT "${_candidate}" MATCHES "\\.[^/\\\\]+$" AND EXISTS "${_candidate}.rxbin")
         set(${out_var} "${_candidate}.rxbin" PARENT_SCOPE)
     else()
         set(${out_var} "" PARENT_SCOPE)

@@ -20,7 +20,6 @@ main() .locals=6
    load r3,0
    .traceevent "L" 4 "R" "I" "r" 3 4 4 0 "" ""
    icopy r4,r3
-   br l19bexprend
 l19bexprend:
    .meta "block_expr_basic.main.a"
    iadd r1,r4,10
@@ -45,13 +44,11 @@ l19bexprend:
    load r3,0
    .traceevent "L" 4 "R" "I" "r" 3 11 11 0 "" ""
    icopy r2,r3
-   br l39bexprend
 l39bexprend:
    .meta "block_expr_basic.main.x"
    iadd r2,r2,100
    .traceevent "O" 4 "R" "I" "r" 2 11 11 0 "" ""
    icopy r5,r2
-   br l43bexprend
 l43bexprend:
    icopy r0,r5
    .traceevent "A" 6 "R" "I" "r" 0 11 11 0 "nested" ""
@@ -66,7 +63,6 @@ l43bexprend:
    load r5,1
    .traceevent "L" 4 "R" "I" "r" 5 15 15 0 "" ""
    icopy r4,r5
-   br l54bexprend
 l54bexprend:
    .meta "block_expr_basic.main.y"
    iadd r4,r4,1

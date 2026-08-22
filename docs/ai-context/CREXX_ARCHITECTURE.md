@@ -454,6 +454,15 @@ That metadata is sufficient for import reconstruction of class/interface
 headers without parsing procedure bodies. Imported stubs are not re-exported as
 new local contracts, and richer imported stubs replace poorer duplicates.
 
+Dynamic RXPA discovery stages initializer callbacks before reconstructing any
+declaration. The initializer runs under the platform loader mutex, so `ADDPROC`
+and class/interface callbacks only collect their metadata at that point. After
+the initializer returns and releases the mutex, `rxc` imports class/interface
+metadata first and then parses the procedure declarations while the provider
+remains open. This ordering permits a native procedure to return a namespaced
+Rexx class such as `.rxstats..linearfit` without recursively reopening the
+provider or deadlocking the loader.
+
 ### Runtime dispatch
 
 Created objects carry their concrete class identity. The VM then resolves

@@ -51,7 +51,6 @@ l51iffalse:
    load r5,0
    .traceevent "L" 4 "R" "I" "r" 5 12 12 0 "" ""
    icopy r4,r5
-   br l46bexprend
 l46bexprend:
    icopy r3,r4
    .traceevent "A" 6 "R" "I" "r" 3 12 12 0 "__inline_unused_17" ""

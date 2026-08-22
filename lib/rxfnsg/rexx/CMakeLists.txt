@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.24)
 
 set(RXFNSG_REXX_MODULES
-  integer
-  decimal
-  packednumeric
-  httpcodec
+        integer
+        decimal
+        packednumeric
+        statsvalue
+        httpcodec
   httpcore
   http
   httpserver

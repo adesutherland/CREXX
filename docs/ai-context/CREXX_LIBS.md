@@ -19,7 +19,7 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 
 - `lib/plugins/float/` (native scalar binary-float mathematics)
 
-- `lib/plugins/stats/` (transitional boxed-array native statistics)
+- `lib/plugins/stats/` (packed-float native statistics)
 
 - `lib/plugins/hash/`, `id/`, `fs/`, and `platform/` (narrow declarative
   native providers replacing the historical mixed `rxmath` and broad `system`
@@ -669,6 +669,12 @@ The VM passes arguments as opaque handles mapped to internal VM registers. The R
   as used by `rxhash.sha256()`. Object-shaped native payloads additionally
   require a clear copy/finalizer contract; Rexx code never sees a C pointer.
 
+- `ISINITIALIZED()`: Non-raising test of the language-level typed-object
+  initialization flag. Payload-consuming functions use this before treating a
+  zero-length object payload as an initialized empty value. RXPA does not reject
+  bare typed objects automatically because ordinary procedures may legitimately
+  accept one in order to inspect its initialization state.
+
 - `RETURN`: The specific target register designated for the function's return value.
 
 ### Error Handling
@@ -795,14 +801,14 @@ while `crexx -native` selects `rx_hash.a` (or `.lib`) and retains its
 registration anchor. No Rexx declaration wrapper or explicit runtime provider
 argument is required in a standard build or installation.
 
-### RCC-5D/E providers
+### RCC-5D through RCC-5F providers
 
-The remaining RCC-5D/E providers use the same declarative dynamic/static
+The remaining RCC-5 providers use the same declarative dynamic/static
 delivery route:
 
 | Provider ID | Public namespace and procedures | Contract note |
 |---|---|---|
-| `rxstats` | `rxstats.mean`, `stddev`, `covariance`, `correlation`, `regression` | Transitional boxed `.float[]` Level G statistics. Compensated shifted-origin accumulation plus a compensated second pass protects ill-conditioned central moments. `BINARY-01`/RCC-5F replaces the boxed argument representation. |
+| `rxstats` | `rxstats.mean`, `stddev`, `covariance`, `correlation`, `regression` | Level G statistics over borrowed read-only `.packedfloat` payloads. Compensated shifted-origin accumulation plus a compensated second pass protects ill-conditioned central moments; regression returns immutable `.linearfit`. Boxed arrays, `.packedint`, and raw `.binary` are not production overloads. |
 | `rxid` | `rxid.uuid4`, `uuid7`, `ulid`, `nanoid`, `snowflake`, `base58` | Bundled optional Level G identifier strings, callable from B when installed; random forms use platform cryptographic randomness and generation failures signal. |
 | `rxfs` | `rxfs.cwd`, `loadpath`, `chdir`, `isdir`, `mkdir`, `rmdir`, `delete`, `rename`, `isfile`, `listdir`, `append` | Narrow filesystem and directory operations. Return/status contracts are documented in the library reference. |
 | `rxplatform` | `rxplatform.uptime`, `user`, `host`, `osname`, `sleep` | Bundled optional Level G host/platform information and millisecond sleep, callable from B when installed. Clipboard, beep, process-global and developer functions from the old draft `system` surface were retired. |
@@ -843,6 +849,14 @@ a declared `.packedfloat` or `.packedint` argument and consume its payload
 directly; the caller does not invoke `binary()` and no intermediate Rexx byte
 copy is required. The payload remains host-local and must use the raw encoded
 binary route for files, persistence, wire formats, or incompatible hosts.
+
+RXPA's `ISINITIALIZED(value)` helper lets such a provider preserve the ordinary
+typed-object `OBJECT_NOT_INITIALIZED` boundary before borrowing the payload.
+It is appended to `rxpa_initctx`, so earlier field offsets remain stable, but
+the initializer context has no negotiated size. This pre-release extension is
+therefore a rebuild-together boundary: do not mix a plugin compiled against the
+current `crexxpa.h` with an older host binary. The compiler scan stub and both
+dynamic and static VM initializer contexts must populate every appended helper.
 
 The classes deliberately wrap the existing `<packed..float>` and
 `<packed..int>` Level B instructions. They do not change ordinary `.float[]`

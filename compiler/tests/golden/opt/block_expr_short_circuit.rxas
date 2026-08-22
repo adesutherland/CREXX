@@ -31,7 +31,6 @@ main() .locals=3
    load r1,1
    .traceevent "L" 4 "R" "I" "r" 1 8 8 0 "" ""
    icopy r2,r1
-   br l47bexprend
 l47bexprend:
    brf l51iffalse,r2
    .srcstep 9 9 17 "block_expr_short_circuit.crexx" 20 1 4 "end then say calls"

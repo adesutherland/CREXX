@@ -18,7 +18,6 @@ main() .locals=3
    call1 r2,right(),r1
    .traceevent "F" 4 "R" "I" "r" 2 4 4 0 "right" ""
    icopy r1,r2
-   br l43bexprend
 l43bexprend:
    itos r1
    say r1

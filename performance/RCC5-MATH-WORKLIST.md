@@ -1,14 +1,13 @@
 # RCC-5 mathematics and historical-provider composition worklist
 
-Status: RCC-5A through RCC-5E and the caller-relative 128-digit follow-up are
-implemented; all required first Release verdicts are accepted. RCC-5D/E
-proportional qualification is complete: full Debug passes 2,324/2,324,
-focused Release passes 37/37, and focused Apple ASan passes 42/42. SAN-001 and
-SAN-002 are repaired with permanent regressions and a complete 2,310/2,310
-Apple-ASan gate. The separate BINARY-01 prerequisite is accepted and RCC-5F is
-unblocked; consolidated RCC-5 QA remains an end-of-phase activity and
-sanitizer closure remains blocked by the required supported Linux ASan/LSan
-gate.
+Status: RCC-5A through RCC-5F and the caller-relative 128-digit follow-up are
+implemented; all required first Release verdicts are accepted. RCC-5F replaces
+the boxed statistics surface with the approved `.packedfloat` contract and
+immutable `.linearfit`; its Release gate is clear favorable on both VMs. The
+consolidated Debug, Release, install/package, documentation, and Apple-ASan
+gates are complete. Supported Linux ASan/LSan is the sole remaining platform
+closure blocker, so RCC-5 is implemented and Mac-qualified but not yet
+cross-platform sanitizer-closed.
 
 Approved by Adrian: 2026-08-20.
 
@@ -26,8 +25,10 @@ This work may:
 - replace defective, dormant, or numerically weak implementations with known
   appropriate algorithms and focused correctness coverage.
 
-It does not implement `BINARY-01`, promote the current statistics surface,
-retire an RXAS opcode, change numeric types or contexts, or alter RXBIN format.
+RCC-5 did not itself implement `BINARY-01`; that independently accepted
+prerequisite enabled the separately approved RCC-5F packed statistics section
+below. RCC-5 does not retire an RXAS opcode, change numeric types or contexts,
+or alter RXBIN format.
 After the first production performance edit, minimum correctness is followed
 immediately by the mandatory profiling-off Release verdict and a stop for
 Adrian's direction.
@@ -150,6 +151,90 @@ Apple ASan. This is deliberately not a repeated consolidated RCC-5 sanitizer
 or cross-platform closeout: that single broad gate runs after RCC-5F, in line
 with the approved subphase-efficiency rule above.
 
+## RCC-5F packed statistics production design selection
+
+Approved by Adrian: 2026-08-22.
+
+**Selected:** keep one production statistics implementation: the
+process-reentrant native `rxstats` provider. Replace the five transitional
+boxed `.float[]` signatures in place with dense `.packedfloat` arguments:
+
+| Procedure | Result | Contract |
+|---|---|---|
+| `mean(values = .packedfloat)` | `.float` | Arithmetic mean of at least one finite value. |
+| `stddev(values = .packedfloat)` | `.float` | Sample standard deviation of at least two finite values. |
+| `covariance(x = .packedfloat, y = .packedfloat)` | `.float` | Sample covariance of equal-length inputs containing at least two finite pairs. |
+| `correlation(x = .packedfloat, y = .packedfloat)` | `.float` | Pearson correlation of equal-length finite inputs with non-zero variance on both sides. |
+| `regression(x = .packedfloat, y = .packedfloat)` | `.linearfit` | Ordinary least-squares linear fit of equal-length finite inputs with non-zero x variance. |
+
+`.linearfit` is an immutable Level-G value class in the `rxstats` namespace.
+It exposes `slope()` and `intercept()` plus a two-scalar value factory. Its
+small packed payload is private: it publishes no positional, mutation, resize,
+or binary-reference surface. This Rexx value class is not a second Rexx
+implementation of the statistics algorithms.
+
+The native procedures declare `.packedfloat` arguments and consume each
+owner's exact `register.0.binary` payload directly. They borrow it read-only
+for the duration of the call, never retain its pointer, and perform no
+`binary()` call, reference/dereference, Rexx wrapper, boxed element access, or
+whole-buffer copy. The caller must not mutate or resize an input concurrently
+with a call. Payload length determines the item count and must be an exact
+multiple of the native `rxfloat` width. The implementation uses alias-safe
+native loads and retains the RCC-5D compensated shifted-origin and conditional
+second-pass algorithms.
+
+All input values must be finite. NaN or infinity raises `INVALID_ARGUMENTS`;
+finite inputs that produce a non-finite statistical result raise
+`OVERFLOW_UNDERFLOW`. Existing count, paired-length, and zero-variance
+rejections retain `INVALID_ARGUMENTS`. Bare uninitialized owners retain the
+ordinary `OBJECT_NOT_INITIALIZED` language signal.
+
+The production provider accepts `.packedfloat`, not `.packedint`. BINARY-01
+deliberately has no hidden numeric-kind tag, and integer statistics would need
+a separately approved conversion and accumulation-precision contract. RCC-5F
+also does not publish offset, range, stride, weights, missing-value masks,
+multidimensional layouts, or accelerator selection. Those view and backend
+questions belong to the later `rxvector` design; it must reuse the accepted
+packed storage rather than create another representation.
+
+The boxed signatures and their exposed regression outputs are removed without
+production aliases or conversion wrappers. The old implementation and its
+datasets remain test-only oracle material.
+
+Rejected alternatives:
+
+1. Keep boxed overloads or conversion wrappers. This preserves the draft
+   surface and makes accidental whole-buffer conversion look supported.
+2. Accept raw `.binary` plus a kind flag. This discards the approved class
+   type check and recreates a hidden representation contract in each caller.
+3. Accept both packed integer and float values through one generic signature.
+   The payload has no kind tag, and silently reinterpreting integer bytes as
+   float is not a valid numeric conversion.
+4. Add offset/count/stride arguments now. This would pre-empt the ownership and
+   view contract that RCC-5F is explicitly required to leave to `rxvector`.
+5. Retain regression's exposed slope/intercept arguments or return a positional
+   two-item buffer. The immutable named result is clearer and does not expose
+   its private storage layout.
+
+The focused Release gate compares packed production calls with the retained
+boxed oracle and a direct native payload-scan control under both concrete VMs.
+The packed path must be clearly favorable to boxed access in both VM modes;
+any neutral/adverse result, whole-buffer copy, or residual boxed element loop
+requires rework rather than qualification. Consolidated Debug, sanitizer,
+install/package, cross-platform, documentation, and SAN closeout is the single
+end-of-RCC-5 gate.
+
+The gate passes. Against the retained boxed oracle, packed production improves
+paired median call rate by 2054.025% on `rxbvm` (12/12 favorable) and
+2062.894% on `rxtvm` (24/24 retained pairs favorable). The `1e12`
+cancellation probe improves by 2055.093% and 2080.291% respectively, with
+identical mean, deviation, covariance, correlation, and checksum output. The
+public packed path reaches 90.757-91.562% of the direct native control on the
+ordinary dataset and 90.922-91.221% on the offset dataset. One permitted
+unchanged `rxtvm` rerun is retained alongside the original noisy samples; no
+sample was removed and no guard fired. Evidence is in
+[`2026-08-22-rcc5f-packed-stats-first-release-verdict`](evidence/2026-08-22-rcc5f-packed-stats-first-release-verdict/).
+
 ## Availability and implementation decision
 
 The public mathematics family is guaranteed by the normal Level G product, not
@@ -163,7 +248,7 @@ compatible but no longer bootstrap-self-contained.
 | `rxfloat` | process-reentrant native libm provider `rxfloat` | Level G standard |
 | `rxint` | Level B algorithms | Level G standard |
 | `rxdecimal` | Level B algorithms over `mc_decimal` | Level G standard |
-| `rxstats` | transitional boxed native provider; later packed bulk provider | Level G standard; boxed surface replaced after `BINARY-01` |
+| `rxstats` | process-reentrant native bulk provider over borrowed `.packedfloat` payloads | Level G standard; boxed surface removed pre-release |
 
 ## Production design selection
 
@@ -427,7 +512,22 @@ Apple-ASan build and 5/5 decimal cells, and fresh installed bytecode/native
 the retained SAN-001 `rxas_flow_value_node()` heap-use-after-free while
 assembling optimized AWFY Towers before CTest.
 
-## Sanitizer remediation and platform closeout — Linux pending
+## Consolidated RCC-5 qualification — Mac complete, Linux pending
+
+The current profiling-off Release implementation passes its focused 19/19
+provider, both-VM, optimized/no-opt, compiler import, concurrency, RexxDoc,
+fresh scratch install/autoload, and native-package panel. Normal Debug broad
+closure ran all 2,356 tests: 2,290 passed immediately and 66 compiler/codegen
+goldens exposed stale expectations from the already accepted BINARY-01
+lowering. After reviewed mechanical expectation updates, the exact failed
+surface plus its build fixture passed 67/67. This is broad-plus-targeted
+closure, not a second monolithic 2,356-test invocation.
+
+The complete current Apple-ASan instrumented build and all 2,356 CTests pass
+with no sanitizer report in
+`cmake-build-debugasan/asan-logs/20260822-104056-full`. The gate includes the
+new packed statistics, native result-class import, concurrent provider load and
+call, installed consumer/native package, and all permanent SAN-002 cells.
 
 SAN-001 now retains the exact 64-value RXAS growth regression, a repaired
 Debug/Apple-ASan proof, optimized Towers and 70-test flow/proof qualification,
@@ -436,13 +536,11 @@ wide-return/narrow-caller decimal cases across optimized/unoptimized `rxbvm`
 and `rxtvm`; a counterfactual run reproduces both original use-after-poison
 stacks, establishing one value-aware DEXTR capacity defect rather than SAN-003.
 
-The final complete Apple-ASan build and CTest gate passes 2,310/2,310 in
-`cmake-build-debugasan/asan-logs/20260821-112920-full`. A missing no-opt
-performance artifact found by the first broad attempt was corrected by making
-the shared serialized CTest fixture own both mode artifacts; the clean full
-rerun includes the repaired dependency graph. Automatic Linux x64 ASan/LSan
-and macOS arm64 ASan jobs are defined in `.github/workflows/sanitizers.yml` and
-use the full runner phase, including instrumented build-time execution. Their
-stable names still require repository-level required-check configuration. No
-local Linux runtime is available, so supported Linux ASan/LSan remains the
-sole sanitizer-closure blocker and both SAN entries remain live.
+The earlier complete Apple-ASan 2,310/2,310 result remains useful repair
+evidence; the current 2,356/2,356 result supersedes it for consolidated RCC-5
+Mac qualification. Automatic Linux x64 ASan/LSan and macOS arm64 ASan jobs are
+defined in `.github/workflows/sanitizers.yml` and use the full runner phase,
+including instrumented build-time execution. Their stable names still require
+repository-level required-check configuration. No local Linux runtime is
+available, so supported Linux ASan/LSan remains the sole sanitizer-closure
+blocker and both SAN entries remain live.

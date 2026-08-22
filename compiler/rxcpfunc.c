@@ -2478,6 +2478,7 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
 static char* plugin_being_loaded = "statically linked";
 static const char *plugin_being_loaded_provider_id = 0;
 static Context* plugin_being_loaded_context = 0;
+static struct static_linked_function *plugin_being_loaded_functions = 0;
 static struct static_linked_metadata *plugin_being_loaded_metadata = 0;
 
 static void append_rxpa_metadata(struct static_linked_metadata **head, char *kind, char *symbol,
@@ -2589,6 +2590,9 @@ void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_len
                             unsigned int *out_flags)  /* Get a native binary payload */
     { disablerFunction("rxpa_getnativepayload"); return NULL; }
 
+int rxpa_isinitialized(rxpa_attribute_value attributeValue)
+    { disablerFunction("rxpa_isinitialized"); return 0; }
+
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue)  /* Get the number of child attributes */
     { disablerFunction("rxpa_getnumattrs"); return 0; }
 
@@ -2625,16 +2629,21 @@ void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char*
 void rxpa_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
                              char* name, char* option, char* type, char* args) {
     if (plugin_being_loaded_context) {
-        imported_func *imported;
-        if (plugin_being_loaded_metadata) {
-            import_rxpa_metadata_list(plugin_being_loaded_context, plugin_being_loaded, plugin_being_loaded_metadata);
-            free_rxpa_metadata_list(&plugin_being_loaded_metadata);
-        }
-        if (plugin_being_loaded_context->debug_mode >= 2) printf("Importing Procedures - Loading %s\n", name);
-        imported = rximpf_provider_f(plugin_being_loaded_context,
-                                     plugin_being_loaded,
-                                     name, option, type, args, 0, 0, 0,
-                                     plugin_id);
+        struct static_linked_function **tail =
+                &plugin_being_loaded_functions;
+        struct static_linked_function *pending =
+                malloc(sizeof(struct static_linked_function));
+
+        (void)func;
+        if (!pending) return;
+        pending->provider_id = (char *)plugin_id;
+        pending->name = name;
+        pending->option = option;
+        pending->type = type;
+        pending->args = args;
+        pending->next = 0;
+        while (*tail) tail = &(*tail)->next;
+        *tail = pending;
     }
     else {
         // Add to the list of statically linked functions
@@ -2687,11 +2696,14 @@ void rxpa_addmember(char* owner, char* kind, char* member, char* type, char* arg
 
 static void loadPluginFileForFunctions(Context *context, char* file_name, char* location) {
     rxpa_loaded_plugin loaded_plugin;
+    struct static_linked_function *pending_functions;
+    struct static_linked_metadata *pending_metadata;
 
     /* Update context */
     plugin_being_loaded = file_name;
     plugin_being_loaded_provider_id = 0;
     plugin_being_loaded_context = context;
+    plugin_being_loaded_functions = 0;
     plugin_being_loaded_metadata = 0;
 
     // Create the rxpa_initctxptr context
@@ -2717,6 +2729,7 @@ static void loadPluginFileForFunctions(Context *context, char* file_name, char* 
     rxpa_context.swapattrs = rxpa_swapattrs;
     rxpa_context.setsayexit = rxpa_setsayexit;
     rxpa_context.resetsayexit = rxpa_resetsayexit;
+    rxpa_context.isinitialized = rxpa_isinitialized;
 
     if (context->debug_mode >= 2) printf("Importing Procedures - Reading CREXX Plugin file %s for possible procedure imports\n", file_name);
 
@@ -2728,7 +2741,6 @@ static void loadPluginFileForFunctions(Context *context, char* file_name, char* 
     }
     if (!rc) {
         if (context->debug_mode >= 2) printf("Importing Procedures - CREXX Plugin %s loaded successfully\n", file_name);
-        import_rxpa_metadata_list(context, file_name, plugin_being_loaded_metadata);
     }
     else {
         fprintf(stderr,
@@ -2737,9 +2749,45 @@ static void loadPluginFileForFunctions(Context *context, char* file_name, char* 
                 file_name, rc);
     }
 
-    free_rxpa_metadata_list(&plugin_being_loaded_metadata);
+    /*
+     * RXPA initializers run under the loader mutex.  Importing a synthesized
+     * declaration from inside ADDPROC can need another provider or a Rexx
+     * class module, which may re-enter the loader and deadlock.  End the
+     * callback collection phase first, then parse metadata and declarations
+     * after rxpa_initialize_plugin() has released that mutex.  Keep the DSO
+     * open until every callback-owned string has been consumed.
+     */
+    pending_functions = plugin_being_loaded_functions;
+    pending_metadata = plugin_being_loaded_metadata;
+    plugin_being_loaded_functions = 0;
+    plugin_being_loaded_metadata = 0;
     plugin_being_loaded_provider_id = 0;
     plugin_being_loaded_context = 0;
+
+    if (!rc) {
+        struct static_linked_function *pending = pending_functions;
+
+        import_rxpa_metadata_list(context, file_name, pending_metadata);
+        while (pending) {
+            struct static_linked_function *next = pending->next;
+
+            if (context->debug_mode >= 2)
+                printf("Importing Procedures - Loading %s\n", pending->name);
+            (void)rximpf_provider_f(context, file_name,
+                                    pending->name, pending->option,
+                                    pending->type, pending->args,
+                                    0, 0, 0, pending->provider_id);
+            free(pending);
+            pending = next;
+        }
+        pending_functions = 0;
+    }
+    while (pending_functions) {
+        struct static_linked_function *next = pending_functions->next;
+        free(pending_functions);
+        pending_functions = next;
+    }
+    free_rxpa_metadata_list(&pending_metadata);
     if (loaded_plugin.handle) rxpa_close_plugin(&loaded_plugin);
 }
 

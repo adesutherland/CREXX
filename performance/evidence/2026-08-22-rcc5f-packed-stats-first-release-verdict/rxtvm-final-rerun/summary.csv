@@ -1,0 +1,7 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+rxtvm-boxed,RCC5F-rxstats-256x4000,crexx,rxtvm,boxed-oracle,G,no,steady-state-kernel,16000-calls,benchmark_rate,12,42072.712165,42828.374447,43173.303520,43315.813002,43666.215449,210.008768,0.486432,3.690946,no
+rxtvm-packed,RCC5F-rxstats-256x4000,crexx,rxtvm,packed-production,G,no,steady-state-kernel,16000-calls,benchmark_rate,12,913346.272406,922589.403939,936812.863636,947292.082394,953459.269412,12299.220563,1.312879,4.281858,no
+rxtvm-direct,RCC5F-rxstats-256x4000,crexx,rxtvm,direct-native-control,G,no,steady-state-kernel,16000-calls,benchmark_rate,12,994530.084535,1010909.087677,1023148.740248,1027156.693048,1039095.986492,7382.579550,0.721555,4.355760,no
+rxtvm-boxed-offset,RCC5F-rxstats-offset-1e12,crexx,rxtvm,boxed-oracle,G,no,cancellation-probe,16000-calls,benchmark_rate,12,34596.015836,40037.290736,41564.881640,42390.145047,43342.814574,1107.854226,2.665361,21.043723,yes
+rxtvm-packed-offset,RCC5F-rxstats-offset-1e12,crexx,rxtvm,packed-production,G,no,cancellation-probe,16000-calls,benchmark_rate,12,825678.604603,896492.245917,914416.345939,933067.392586,950288.056067,18991.378490,2.076885,13.627212,yes
+rxtvm-direct-offset,RCC5F-rxstats-offset-1e12,crexx,rxtvm,direct-native-control,G,no,cancellation-probe,16000-calls,benchmark_rate,12,867820.144275,989690.256185,1005720.227396,1014520.517996,1024000.000000,9057.734112,0.900622,15.529155,yes

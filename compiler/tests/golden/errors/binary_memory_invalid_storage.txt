@@ -1,2 +1,2 @@
-Error in binary_memory_invalid_storage.crexx @ 6:7 - #BINARY_MEMORY_INVALID_STORAGE_TYPE, "<at..u64>(0) data"
+Error in binary_memory_invalid_storage.crexx @ 6:10 - #BINARY_MEMORY_INVALID_STORAGE_TYPE, "..u64"
 1 error(s) in source file

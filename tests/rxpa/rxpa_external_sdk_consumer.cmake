@@ -191,12 +191,12 @@ foreach(mode IN ITEMS opt noopt)
     if(mode STREQUAL "noopt")
         set(mode_flag -n)
     endif()
-    run_checked("compile installed RCC-5D/E consumer ${mode}"
+    run_checked("compile installed RCC-5 consumer ${mode}"
             COMMAND "${rxc}" -i "${prefix}/bin" ${mode_flag}
                     -o "${WORK_ROOT}/rcc5de-installed-${mode}"
                     "${consumer_source}/rcc5de_installed.crexx"
             WORKING_DIRECTORY "${WORK_ROOT}")
-    run_checked("assemble installed RCC-5D/E consumer ${mode}"
+    run_checked("assemble installed RCC-5 consumer ${mode}"
             COMMAND "${rxas}" ${mode_flag}
                     -o "${WORK_ROOT}/rcc5de-installed-${mode}.rxbin"
                     "${WORK_ROOT}/rcc5de-installed-${mode}"
@@ -205,25 +205,25 @@ endforeach()
 
 foreach(vm IN ITEMS "${rxvm}" "${rxbvm}")
     foreach(mode IN ITEMS opt noopt)
-        run_checked("autoload installed RCC-5D/E providers with ${vm} ${mode}"
+        run_checked("autoload installed RCC-5 providers with ${vm} ${mode}"
                 COMMAND "${vm}" "${WORK_ROOT}/rcc5de-installed-${mode}"
-                        "${prefix}/bin/library"
+                        "${prefix}/bin/library" "${prefix}/bin/rxfnsg"
                 WORKING_DIRECTORY "${WORK_ROOT}")
-        if(NOT last_stdout STREQUAL "PASS: installed RCC-5D/E providers\n")
+        if(NOT last_stdout STREQUAL "PASS: installed RCC-5 providers\n")
             message(FATAL_ERROR
-                    "Installed RCC-5D/E output mismatch for ${vm} ${mode}:\n${last_stdout}")
+                    "Installed RCC-5 output mismatch for ${vm} ${mode}:\n${last_stdout}")
         endif()
     endforeach()
 endforeach()
 
-run_checked("native-package installed RCC-5D/E consumer"
-        COMMAND "${crexx}" -native rcc5de_installed.crexx
+run_checked("native-package installed RCC-5 consumer"
+        COMMAND "${crexx}" -native -l rxfnsg rcc5de_installed.crexx
         WORKING_DIRECTORY "${consumer_source}")
-run_checked("run native-packaged installed RCC-5D/E consumer"
+run_checked("run native-packaged installed RCC-5 consumer"
         COMMAND "${consumer_source}/rcc5de_installed${EXE_SUFFIX}"
         WORKING_DIRECTORY "${consumer_source}")
-if(NOT last_stdout STREQUAL "PASS: installed RCC-5D/E providers\n")
-    message(FATAL_ERROR "Installed native RCC-5D/E output mismatch:\n${last_stdout}")
+if(NOT last_stdout STREQUAL "PASS: installed RCC-5 providers\n")
+    message(FATAL_ERROR "Installed native RCC-5 output mismatch:\n${last_stdout}")
 endif()
 
 execute_process(

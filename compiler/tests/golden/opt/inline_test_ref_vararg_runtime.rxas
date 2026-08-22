@@ -29,7 +29,6 @@ main() .locals=6
    load r1,3
    .traceevent "L" 4 "R" "I" "r" 1 6 6 0 "" ""
    icopy r0,r1
-   br l124bexprend
 l124bexprend:
    itos r0
    say r0

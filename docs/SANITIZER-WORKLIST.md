@@ -5,8 +5,10 @@ sanitizer configurations.  Repository policy and closure requirements are in
 [`AGENTS.md`](../AGENTS.md) and
 [`CREXX_ASAN_TESTING.md`](ai-context/CREXX_ASAN_TESTING.md).
 
-Status at 2026-08-21: active remediation.  Consolidated RCC-5 QA and any release
-claim remain blocked until every open item below is closed.
+Status at 2026-08-22: repairs and current Mac qualification are green; platform
+closure remains active. Consolidated current Apple-ASan passes 2,356/2,356,
+but any cross-platform sanitizer-clean or release claim remains blocked until
+every open item below is closed on supported Linux ASan/LSan.
 
 ## Live items
 
@@ -45,9 +47,11 @@ sanitizer gates.
   2026-08-21.  The retained 36-pair assembly result is neutral around zero,
   clears the 3% guard, preserves exact output and bytecode, and is recorded in
   `performance/evidence/2026-08-21-san-001-ssa-release-verdict/`.
-- Platform proof: the complete Apple-ASan build and 2,310/2,310 CTest gate pass
-  in `cmake-build-debugasan/asan-logs/20260821-112920-full`.  Its instrumented
-  build also passes the original optimized Towers trigger.
+- Platform proof: the earlier complete Apple-ASan build and 2,310/2,310 CTest
+  gate pass in `cmake-build-debugasan/asan-logs/20260821-112920-full`. The
+  consolidated current RCC-5 build and 2,356/2,356 CTest gate also pass with no
+  sanitizer report in `20260822-104056-full`; its instrumented build includes
+  the original optimized Towers trigger.
 - Next action: complete the supported Linux ASan/LSan gate.
 - Closure: focused Debug/ASan regression, optimized Towers artifact, applicable
   RXAS contract tests, ordinary Release performance verdict, and complete
@@ -103,9 +107,11 @@ pending the complete platform sanitizer gates.
   edit was needed during reconstruction, and therefore no new first-Release
   performance verdict was triggered beyond the already accepted RCC-5B/C
   verdicts.
-- Platform proof: the complete Apple-ASan build and 2,310/2,310 CTest gate pass
-  in `cmake-build-debugasan/asan-logs/20260821-112920-full`, including all eight
-  permanent SAN-002 cells.
+- Platform proof: the earlier complete Apple-ASan build and 2,310/2,310 CTest
+  gate pass in `cmake-build-debugasan/asan-logs/20260821-112920-full`. The
+  consolidated current RCC-5 build and 2,356/2,356 CTest gate also pass with no
+  sanitizer report in `20260822-104056-full`, including all eight permanent
+  SAN-002 cells.
 - Next action: complete the supported Linux ASan/LSan gate.
 - Closure: permanent optimized/no-opt tests under both concrete VMs, focused
   Debug/ASan checks, any required ordinary Release performance verdict, and the

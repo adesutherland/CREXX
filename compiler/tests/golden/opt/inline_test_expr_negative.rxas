@@ -36,12 +36,10 @@ l8dostart:
    iadd r5,r4,1
    .traceevent "O" 4 "R" "I" "r" 5 8 8 0 "" ""
    icopy r3,r5
-   br l72bexprend
 l72bexprend:
    .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "val" ""
    .srcstep 9 9 17 "inline_test_expr_negative.crexx" 14 3 13 "  return val"
    .traceevent "V" 6 "R" "I" "r" 3 13 13 0 "val" ""
-   br l68bexprend
 l68bexprend:
    brf l28iffalse,r3
    .srcstep 14 14 17 "inline_test_expr_negative.crexx" 6 28 29 "    if identity(addOne(i)) | 0 then say \"truthy\" i"

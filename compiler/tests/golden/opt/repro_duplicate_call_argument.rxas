@@ -16,7 +16,6 @@ main() .locals=2
    load r0,77
    .traceevent "L" 4 "R" "I" "r" 0 3 3 0 "" ""
    icopy r1,r0
-   br l62bexprend
 l62bexprend:
    itos r1
    say r1
@@ -28,7 +27,6 @@ l62bexprend:
    load r1,"same:same"
    .traceevent "L" 4 "R" "S" "r" 1 7 7 0 "" ""
    scopy r0,r1
-   br l76bexprend
 l76bexprend:
    say r0
    .srcstep 8 8 17 "repro_duplicate_call_argument.crexx" 10 3 11 "  say text"

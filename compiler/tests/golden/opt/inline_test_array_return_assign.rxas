@@ -38,7 +38,6 @@ main() .locals=11
    .srcstep 7 7 17 "inline_test_array_return_assign.crexx" 17 3 14 "  return temp"
    .traceevent "V" 6 "R" "S" "r" 2 9 9 0 "temp" ""
    copy r3,r2
-   br l84bexprend
 l84bexprend:
    endlife r2
    .meta "inline_test_array_return_assign.main.temp"
@@ -78,7 +77,6 @@ l84bexprend:
    .srcstep 14 14 17 "inline_test_array_return_assign.crexx" 17 3 14 "  return temp"
    .traceevent "V" 6 "R" "S" "r" 6 16 16 0 "temp" ""
    copy r3,r6
-   br l108bexprend
 l108bexprend:
    endlife r6
    .meta "inline_test_array_return_assign.main.temp"
@@ -101,7 +99,6 @@ l108bexprend:
    unlink r9
    .traceevent "O" 4 "R" "S" "r" 8 20 20 0 "" ""
    scopy r10,r8
-   br l132bexprend
 l132bexprend:
    endlife r6
    say r10

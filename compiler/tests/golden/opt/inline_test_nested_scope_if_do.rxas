@@ -51,7 +51,6 @@ l57iffalse:
    .srcstep 11 11 17 "inline_test_nested_scope_if_do.crexx" 18 3 13 "  return val"
    .traceevent "V" 6 "R" "I" "r" 0 13 13 0 "val" ""
    icopy r4,r0
-   br l52bexprend
 l52bexprend:
    itos r4
    say r4

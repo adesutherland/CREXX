@@ -1,0 +1,10 @@
+/* `.packedint` is not a `.packedfloat` statistics argument. */
+options levelb
+
+import rxfnsg
+import rxstats
+
+main: procedure = .int
+  values = .packedint(1)
+  ignored = rxstats..mean(values)
+  return 0

@@ -39,9 +39,9 @@ The same scalar procedures are published as direct `rxmath` compatibility
 names by the `rxfloat` provider. The compatibility names do not load a second
 library and add no Rexx call layer. New code should import `rxfloat`.
 Historical `rxmath` statistics, hashes, UUID generation, and `inlinec` are not
-part of this provider. RCC-5D supplies a separately loadable transitional
-boxed-array `rxstats` surface. `BINARY-01` and RCC-5F will replace that
-pre-release argument representation with aligned packed numeric storage.
+part of this provider. `rxstats` is the separate packed `.packedfloat` bulk
+statistics provider; it uses the BINARY-01 storage boundary and does not retain
+the pre-release boxed-array surface.
 
 Domain and range behaviour follows the platform C implementation: operations
 such as a negative square root return IEEE NaN, poles can return infinity, and

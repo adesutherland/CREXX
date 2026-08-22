@@ -33,7 +33,6 @@ l8dostart:
    iadd r3,r0,1
    .traceevent "O" 4 "R" "I" "r" 3 8 8 0 "" ""
    icopy r4,r3
-   br l44bexprend
 l44bexprend:
    isub r5,0,r4
    itos r5
@@ -49,7 +48,6 @@ l44bexprend:
    iadd r5,r0,1
    .traceevent "O" 4 "R" "I" "r" 5 12 12 0 "" ""
    icopy r4,r5
-   br l53bexprend
 l53bexprend:
    icopy r3,r4
    itos r3

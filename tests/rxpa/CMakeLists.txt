@@ -12,7 +12,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
 add_custom_target(cri07_rxpa_sdk_consumer_prereqs
-        DEPENDS rxc rxas rxvm rxbvm crexx library
+        DEPENDS rxc rxas rxvm rxbvm crexx library rxfnsg
                 _hash _hash_static
                 stats stats_static
                 id id_static
@@ -36,9 +36,21 @@ add_test(
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_external_sdk_consumer.cmake
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxpa_external_sdk_consumer PROPERTIES
-        LABELS "install;package;rxpa;external-consumer;hash;crexx-rag;rcc-5d;rcc-5e"
+        LABELS "install;package;rxpa;external-consumer;hash;crexx-rag;rcc-5d;rcc-5e;rcc-5f;stats;packed"
         RUN_SERIAL TRUE
         TIMEOUT 240)
+
+add_test(
+        NAME rxpa_native_return_class_import
+        COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DIMPORT_PATH=${CMAKE_BINARY_DIR}/bin
+                -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rxpa_native_return_class_import.crexx
+                -DOUTPUT_BASE=${CMAKE_CURRENT_BINARY_DIR}/rxpa_native_return_class_import
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/check_native_return_class_import.cmake)
+set_tests_properties(rxpa_native_return_class_import PROPERTIES
+        LABELS "compiler;rxpa;provider;metadata;class;regression;rcc-5f"
+        TIMEOUT 30)
 
 function(localize_test_plugin_output target)
     # Keep test-only plugins out of the shared release bin directory.

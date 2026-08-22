@@ -16,7 +16,6 @@ main() .locals=6
    load r1,30
    .traceevent "L" 4 "R" "I" "r" 1 4 4 0 "" ""
    icopy r2,r1
-   br l174bexprend
 l174bexprend:
    iadd r2,r2,11
    itos r2
@@ -30,7 +29,6 @@ l174bexprend:
    load r1,20
    .traceevent "L" 4 "R" "I" "r" 1 7 7 0 "" ""
    icopy r3,r1
-   br l196bexprend
 l196bexprend:
    icopy r2,r3
    .traceevent "A" 6 "R" "I" "r" 2 7 7 0 "value" ""
@@ -42,7 +40,6 @@ l196bexprend:
    concat r3,r3,"]"
    .traceevent "O" 4 "R" "S" "r" 3 10 10 0 "" ""
    scopy r1,r3
-   br l192bexprend
 l192bexprend:
    concat r2,"prefix:",r1
    .traceevent "O" 4 "R" "S" "r" 2 10 10 0 "" ""
@@ -59,7 +56,6 @@ l192bexprend:
    load r2,10
    .traceevent "L" 4 "R" "I" "r" 2 13 13 0 "" ""
    icopy r1,r2
-   br l224bexprend
 l224bexprend:
    icopy r3,r1
    .traceevent "A" 6 "R" "I" "r" 3 13 13 0 "left" ""
@@ -68,7 +64,6 @@ l224bexprend:
    iadd r2,r3,9
    .traceevent "O" 4 "R" "I" "r" 2 16 16 0 "" ""
    icopy r1,r2
-   br l220bexprend
 l220bexprend:
    itos r1
    say r1
@@ -100,7 +95,6 @@ l220bexprend:
    load r3,1
    .traceevent "L" 4 "R" "I" "r" 3 25 25 0 "" ""
    icopy r2,r3
-   br l240bexprend
 l240bexprend:
    brf l69iffalse,r2
    .srcstep 26 26 17 "inline_test_composed_expr_contexts.crexx" 17 26 30 "  if one() & bump(calls) then say \"and-hit\" calls"
@@ -127,7 +121,6 @@ l69ifend:
    load r3,1
    .traceevent "L" 4 "R" "I" "r" 3 33 33 0 "" ""
    icopy r2,r3
-   br l249bexprend
 l249bexprend:
    brf l81iffalse,r2
    .srcstep 34 34 17 "inline_test_composed_expr_contexts.crexx" 20 27 31 "  if zero() | bump(calls) then say \"or-hit\" calls"

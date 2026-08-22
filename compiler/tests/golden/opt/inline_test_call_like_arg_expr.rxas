@@ -41,7 +41,6 @@ l8dostart:
    iadd r7,r6,1
    .traceevent "O" 4 "R" "I" "r" 7 10 10 0 "" ""
    icopy r4,r7
-   br l94bexprend
 l94bexprend:
    .traceevent "A" 6 "R" "I" "r" 4 10 10 0 "initialvalue" ""
    .srcstep 11 11 17 "inline_test_call_like_arg_expr.crexx" 21 5 23 "    val = initialValue"
@@ -68,7 +67,6 @@ l94bexprend:
    iadd r8,r6,1
    .traceevent "O" 4 "R" "I" "r" 8 18 18 0 "" ""
    icopy r7,r8
-   br l125bexprend
 l125bexprend:
    .traceevent "A" 6 "R" "I" "r" 7 18 18 0 "amount" ""
    .srcstep 19 19 6 "inline_test_call_like_arg_expr.crexx" 24 3 22 "  bump: method = .int"
@@ -82,7 +80,6 @@ l125bexprend:
    unlink r8
    .traceevent "O" 4 "R" "I" "r" 6 22 22 0 "" ""
    icopy r9,r6
-   br l118bexprend
 l118bexprend:
    itos r9
    say r9

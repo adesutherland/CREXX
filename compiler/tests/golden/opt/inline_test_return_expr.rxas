@@ -33,7 +33,6 @@ l8dostart:
    call1 r5,addOne(),r0
    .traceevent "F" 4 "R" "I" "r" 5 8 8 0 "addone" ""
    icopy r4,r5
-   br l49bexprend
 l49bexprend:
    itos r4
    say r4

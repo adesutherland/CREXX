@@ -32,7 +32,6 @@ l25dostart:
    btoi r2
    .traceevent "O" 4 "R" "I" "r" 2 0 0 0 "" ""
    icopy r3,r2
-   br l99bexprend
 l99bexprend:
    brf l25doend,r3
    .srcstep 9 9 17 "inline_test_condition_contexts.crexx" 14 5 18 "    say \"while\" i"
@@ -80,7 +79,6 @@ l43doinc:
    btoi r4
    .traceevent "O" 4 "R" "I" "r" 4 0 0 0 "" ""
    icopy r3,r4
-   br l108bexprend
 l108bexprend:
    brt l43doend,r3
    .srcstep 21 21 17 "inline_test_condition_contexts.crexx" 22 3 6 "  end"

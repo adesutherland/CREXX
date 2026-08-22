@@ -1,0 +1,33 @@
+/* RCC-5F direct native payload-scan control workload. */
+options levelb floats_binary
+
+import rxfnsb
+import rxfnsg
+import rcc5fdirect
+
+elapsedUs: procedure = .int
+  arg started = .int
+  elapsed = time("us") - started
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+main: procedure = .int
+  arg arguments = .string[]
+  iterations = 4000
+  offset = 0.0
+  if arguments[0] > 0 then iterations = arguments[1]
+  if arguments[0] > 1 then offset = arguments[2]
+  x = .packedfloat(256)
+  y = .packedfloat(256)
+  do index = 0 to 255
+    call x.set(index, offset + (index <mod> 17))
+    call y.set(index, 3.0 * x.get(index) + 7.0)
+  end
+
+  started = time("us")
+  checksum = rcc5fdirect..run(x, y, iterations)
+  elapsed = elapsedUs(started)
+  calls_per_second = ((iterations * 4) as .float) * 1000000.0 / (elapsed as .float)
+  say "benchmark=rcc5f_rxstats variant=direct observations=256 iterations=" || iterations || " offset=" || offset || " elapsed_us=" || elapsed || " calls_per_second=" || calls_per_second || " checksum=" || checksum
+  say "PASS: RCC-5F direct statistics control"
+  return 0

@@ -23,6 +23,16 @@ endif()
 
 if(BUILD_TESTING)
     add_custom_target(rxstats_test ALL)
+    add_test(
+            NAME rxstats_packedint_rejected
+            COMMAND ${CMAKE_COMMAND}
+                    -DRXC=$<TARGET_FILE:rxc>
+                    -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rxstats_packedint_rejected.crexx
+                    -DIMPORT_PATH=${CMAKE_BINARY_DIR}/bin
+                    -DOUTPUT_BASE=${CMAKE_CURRENT_BINARY_DIR}/rxstats_packedint_rejected
+                    -P ${CMAKE_CURRENT_SOURCE_DIR}/check_packedint_rejected.cmake)
+    set_tests_properties(rxstats_packedint_rejected PROPERTIES
+            LABELS "library;plugins;rxpa;math;stats;packed;negative")
     set(_rxstats_runners rxbvm)
     if(TARGET rxtvm)
         list(APPEND _rxstats_runners rxtvm)
@@ -35,10 +45,11 @@ if(BUILD_TESTING)
                 TARGET_GROUP rxstats_test
                 RUNNER ${_rxstats_runner}
                 IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
-                DEPENDS library stats stats_static
+                DEPENDS library rxfnsg float float_static stats stats_static
                 RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
-                TEST_LABELS "library;plugins;rxpa;math;stats;transitional"
-                REQUIRED_OUTPUT_REGEX "PASS: rxstats transitional boxed-array contract"
+                        ${CMAKE_BINARY_DIR}/bin/rxfnsg
+                TEST_LABELS "library;plugins;rxpa;math;stats;packed"
+                REQUIRED_OUTPUT_REGEX "PASS: rxstats packed-float contract"
                 FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
     endforeach()
 endif()

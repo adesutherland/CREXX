@@ -47,6 +47,7 @@ int rxvm_setnativepayload(rxpa_attribute_value attributeValue, const void *paylo
                           const rxpa_native_payload_ops *ops, unsigned int flags);
 void* rxvm_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
                             const rxpa_native_payload_ops **out_ops, unsigned int *out_flags);
+int rxvm_isinitialized(rxpa_attribute_value attributeValue);
 rxinteger rxvm_getnumattrs(rxpa_attribute_value attributeValue);
 void rxvm_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs);
 rxpa_attribute_value rxvm_getattr(rxpa_attribute_value attributeValue, rxinteger index);
@@ -124,6 +125,10 @@ int rxpa_setnativepayload(rxpa_attribute_value attributeValue, const void *paylo
 void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
                             const rxpa_native_payload_ops **out_ops, unsigned int *out_flags) {
     return rxvm_getnativepayload(attributeValue, out_length, out_ops, out_flags);
+}
+
+int rxpa_isinitialized(rxpa_attribute_value attributeValue) {
+    return rxvm_isinitialized(attributeValue);
 }
 
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue) {

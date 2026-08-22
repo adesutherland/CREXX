@@ -1,0 +1,43 @@
+/* RCC-5F retained test-only boxed statistics oracle workload. */
+options levelb floats_binary
+
+import rxfnsb
+import rcc5fboxed
+
+elapsedUs: procedure = .int
+  arg started = .int
+  elapsed = time("us") - started
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+main: procedure = .int
+  arg arguments = .string[]
+  iterations = 4000
+  offset = 0.0
+  if arguments[0] > 0 then iterations = arguments[1]
+  if arguments[0] > 1 then offset = arguments[2]
+  x = .float[]
+  y = .float[]
+  do index = 1 to 256
+    x[index] = offset + ((index - 1) <mod> 17)
+    y[index] = 3.0 * x[index] + 7.0
+  end
+
+  checksum = 0.0
+  mean = 0.0
+  deviation = 0.0
+  covariance = 0.0
+  correlation = 0.0
+  started = time("us")
+  do iteration = 1 to iterations
+    mean = rcc5fboxed..mean(x)
+    deviation = rcc5fboxed..stddev(x)
+    covariance = rcc5fboxed..covariance(x, y)
+    correlation = rcc5fboxed..correlation(x, y)
+    checksum = checksum + mean + deviation + covariance + correlation
+  end
+  elapsed = elapsedUs(started)
+  calls_per_second = ((iterations * 4) as .float) * 1000000.0 / (elapsed as .float)
+  say "benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=" || iterations || " offset=" || offset || " elapsed_us=" || elapsed || " calls_per_second=" || calls_per_second || " mean=" || mean || " stddev=" || deviation || " covariance=" || covariance || " correlation=" || correlation || " checksum=" || checksum
+  say "PASS: RCC-5F boxed statistics oracle workload"
+  return 0

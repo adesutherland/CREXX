@@ -21,7 +21,6 @@ main() .locals=3
    load r0,3
    .traceevent "L" 4 "R" "I" "r" 0 4 4 0 "" ""
    icopy r2,r0
-   br l125bexprend
 l125bexprend:
    itos r2
    say r2
@@ -30,7 +29,6 @@ l125bexprend:
    .srcstep 5 5 17 "inline_test_ref_vararg.crexx" 24 3 15 "  return arg[2]"
    .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "second" ""
    icopy r2,r1
-   br l129bexprend
 l129bexprend:
    itos r2
    say r2
@@ -40,7 +38,6 @@ l129bexprend:
    load r2,1
    .traceevent "L" 4 "R" "B" "r" 2 10 10 0 "" ""
    icopy r0,r2
-   br l133bexprend
 l133bexprend:
    itos r0
    say r0
@@ -50,7 +47,6 @@ l133bexprend:
    load r2,0
    .traceevent "L" 4 "R" "B" "r" 2 13 13 0 "" ""
    icopy r0,r2
-   br l137bexprend
 l137bexprend:
    itos r0
    say r0
@@ -61,7 +57,6 @@ l137bexprend:
    call1 r2,bumpOne(),r1
    .traceevent "F" 4 "R" "I" "r" 2 16 16 0 "bumpone" ""
    icopy r0,r2
-   br l141bexprend
 l141bexprend:
    itos r0
    say r0

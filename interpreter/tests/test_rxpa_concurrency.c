@@ -1282,12 +1282,14 @@ static int call_plugin_procedure(rxvm_context *context, const char *kind) {
     } else if (strcmp(kind, "float") == 0) {
         procedure_name = "rxfloat.pi";
     } else if (strcmp(kind, "stats") == 0) {
+        const double packed_values[3] = {1.0, 2.0, 3.0};
+
         procedure_name = "rxstats.mean";
         argument_count = 1;
-        set_num_attributes(&arguments[0], 3);
-        set_float(arguments[0].attributes[0], 1.0);
-        set_float(arguments[0].attributes[1], 2.0);
-        set_float(arguments[0].attributes[2], 3.0);
+        if (set_native_payload(&arguments[0], packed_values,
+                               sizeof(packed_values), NULL, 0u) != 0) {
+            failed = 1;
+        }
     } else if (strcmp(kind, "fs") == 0) {
         procedure_name = "rxfs.cwd";
     } else if (strcmp(kind, "platform") == 0) {
