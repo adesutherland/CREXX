@@ -5,20 +5,40 @@ sanitizer configurations.  Repository policy and closure requirements are in
 [`AGENTS.md`](../AGENTS.md) and
 [`CREXX_ASAN_TESTING.md`](ai-context/CREXX_ASAN_TESTING.md).
 
-Status at 2026-08-22: repairs and current Mac qualification are green; platform
-closure remains active. Consolidated current Apple-ASan passes 2,356/2,356.
-Adrian approved RCC-5 publication with the missing supported Linux ASan/LSan
-proof assigned to RCC-8 release QA. This phase handoff does not close the live
-items below: they continue to block any cross-platform sanitizer-clean or
-release-complete claim until that gate passes.
+Status at 2026-08-23: every finding in this register is repaired and the
+supported Linux ASan/LSan closure gate passes 2,363/2,363 on exact commit
+`e3de72939df0dacf22c0793371233ed439227437` at
+`cmake-build-debugasan/asan-logs/20260823-074630-full`. GitHub Sanitizer QA run
+[32623796998](https://github.com/adesutherland/CREXX/actions/runs/32623796998)
+also passes both Linux x64 ASan/LSan and macOS arm64 ASan on that commit.
+SAN-001 through SAN-005 and SAN-QA-001 through SAN-QA-007 are therefore closed
+as sanitizer findings.
+
+A later production process-channel repair in `c87809d2b` is not a sanitizer
+finding. Its exact three-test process panel passes ordinary Debug at
+`cmake-build-debug/asan-logs/20260823-100116-ctest` and leak-enabled Linux
+ASan/LSan at `cmake-build-debugasan/asan-logs/20260823-100525-ctest`; the full
+ordinary Debug gate then passes 2,363/2,363 at
+`cmake-build-debug/asan-logs/20260823-100548-full`.
+
+## Platform coverage at task close
+
+- Apple ASan on the maintained macOS host does not provide supported leak
+  detection. This is not a sanitizer-closure gap: the GitHub Linux x64
+  ASan/LSan lane is the leak-closure authority, while the macOS arm64 lane
+  supplies Apple-platform address-safety coverage.
+- GitHub Build CREXX supplies the final-head MinSizeRel build, CTest and package
+  coverage across Linux, macOS and Windows. GitHub Sanitizer QA supplies the
+  final-head Linux x64 ASan/LSan and macOS arm64 ASan gates.
+- No reproducible sanitizer or product defect from this campaign remains open.
 
 ## Qualification infrastructure repairs
 
 ### SAN-QA-007 — RXQUEUE export variants share a temporary file
 
-Status: repaired; the exact macOS arm64 ASan failure is retained and focused
-normal-Debug plus Linux ASan/LSan proof is green, with complete exact-commit
-qualification pending.
+Status: closed; the exact macOS arm64 ASan failure is retained, focused
+normal-Debug and Linux ASan/LSan proof is green, and the complete Linux plus
+GitHub sanitizer gates pass on `e3de72939`.
 
 - Scope: CTest scheduling for `ts_rxqueue_noopt` and `ts_rxqueue_opt` only;
   queue implementation, export/import behavior, test operations, and assertions
@@ -45,8 +65,8 @@ qualification pending.
 
 ### SAN-QA-006 — RXPA signature matrix exceeds short ASan timeout
 
-Status: repaired; focused normal-Debug and Linux ASan/LSan replays are green,
-with complete exact-commit qualification pending.
+Status: closed; focused normal-Debug and Linux ASan/LSan replays and the
+complete supported Linux sanitizer gate pass on `e3de72939`.
 
 - Scope: the CTest timeout for `rxpa_signature_diagnostics` only; compiler,
   RXPA, optimizer, diagnostic assertions, and runtime behavior are unchanged.
@@ -73,8 +93,8 @@ with complete exact-commit qualification pending.
 
 ### SAN-QA-005 — parser snapshot tests require full-suite isolation
 
-Status: repaired; focused normal-Debug and Linux ASan/LSan replays are green,
-with complete exact-commit qualification pending.
+Status: closed; focused normal-Debug and Linux ASan/LSan replays and the
+complete supported Linux sanitizer gate pass on `e3de72939`.
 
 - Scope: CTest scheduling for the three preprocessor syntax-highlighting tests;
   parser, preprocessor, and compiler behavior is unchanged.
@@ -98,8 +118,8 @@ with complete exact-commit qualification pending.
 
 ### SAN-QA-004 — E6 measurements contend under parallel ASan
 
-Status: repaired; the exact six-cell Linux ASan/LSan replay is green, with
-complete exact-commit qualification pending.
+Status: closed; the exact six-cell Linux ASan/LSan replay and the complete
+supported Linux sanitizer gate pass on `e3de72939`.
 
 - Scope: CTest scheduling for E6 performance-measurement cells only; benchmark
   workloads, VM behavior, iteration counts, and 120-second limits are
@@ -127,8 +147,8 @@ complete exact-commit qualification pending.
 
 ### SAN-QA-003 — ASan fake stack defeats POSIX doorbell slot lookup
 
-Status: repaired; focused normal-Debug and Linux ASan/LSan qualification is
-green, with the complete exact-commit gate pending.
+Status: closed; focused normal-Debug and Linux ASan/LSan qualification and the
+complete supported Linux sanitizer gate pass on `e3de72939`.
 
 - Scope: the POSIX native-doorbell signal handler under address
   instrumentation; ordinary production dispatch and executor semantics are
@@ -161,8 +181,8 @@ green, with the complete exact-commit gate pending.
 
 ### SAN-QA-002 — composite control-flow test timeout under parallel ASan
 
-Status: repaired; focused normal-Debug and Linux ASan/LSan replays are green,
-with complete exact-commit qualification pending.
+Status: closed; focused normal-Debug and Linux ASan/LSan replays and the
+complete supported Linux sanitizer gate pass on `e3de72939`.
 
 - Scope: test infrastructure only; no production compiler or runtime code.
 - Failure: the leak-enabled Linux full CTest run timed out
@@ -182,8 +202,8 @@ with complete exact-commit qualification pending.
 
 ### SAN-QA-001 — ASan static control kernels require PIC
 
-Status: repaired; the exact normal-Debug and Linux ASan/LSan fixture that
-exposed the defect is green, with complete exact-commit qualification pending.
+Status: closed; the exact normal-Debug and Linux ASan/LSan fixture and the
+complete supported Linux sanitizer gate pass on `e3de72939`.
 
 - Surface: the test-only `rcc5f_stats_kernel` and `rxvector01_kernel` static
   controls in `tests/performance/CMakeLists.txt`.
@@ -203,16 +223,16 @@ exposed the defect is green, with complete exact-commit qualification pending.
   1,800-second CTest timeout without a link or sanitizer error; its retained
   incremental replay passes in
   `cmake-build-debugasan/asan-logs/20260822-230331-ctest`.
-- Owner/next action: complete the supported Linux ASan/LSan build plus CTest
-  gate and replay GitHub Sanitizer QA on the exact committed repair.
+- Closure proof: the supported Linux ASan/LSan build plus CTest gate and
+  GitHub Sanitizer QA pass on `e3de72939`.
 
-## Live items
+## Closed campaign findings
 
 ### SAN-005 — linked-list test exits with owned nodes
 
-Status: repaired using the plugin's documented teardown; focused Linux Debug
-and ASan/LSan qualification is green, with the complete supported Linux gate
-pending.
+Status: closed using the plugin's documented teardown; focused Linux Debug and
+ASan/LSan qualification and the complete supported Linux gate pass on
+`e3de72939`.
 
 - Surface: the optimized and unoptimized linked-runtime variants of
   `lib/plugins/llist/llist_test.crexx`; plugin allocation and API semantics are
@@ -240,9 +260,9 @@ pending.
 
 ### SAN-004 — statement-form parallel pending-result class ownership
 
-Status: repaired with a permanent minimal regression; focused Linux Debug and
-ASan/LSan qualification and the original pooled-HTTP trigger are green, with
-the complete supported Linux gate in progress.
+Status: closed with a permanent minimal regression; focused Linux Debug and
+ASan/LSan qualification, the original pooled-HTTP trigger, and the complete
+supported Linux gate pass on `e3de72939`.
 
 - Surface: `compiler/rxcp_task_lower.c`, teardown of pending typed-object task
   results created by statement-form `DO PARALLEL` lowering.
@@ -279,9 +299,9 @@ the complete supported Linux gate in progress.
 - Output proof: the optimized reproducer RXAS is byte-identical before and
   after the repair, with SHA-256
   `5d34d6c7878e073bcd1d34bb635ad2da872499079ea904a4433025db379ca2a1`.
-- Owner/next action: pass the original optimized `ts_http_pooled` build trigger
-  leak-enabled, then complete the supported Linux ASan/LSan build plus CTest
-  gate on the exact repaired release-QA candidate.
+- Closure proof: the original optimized `ts_http_pooled` trigger and the
+  complete supported Linux ASan/LSan build plus CTest gate pass on
+  `e3de72939`.
 - Closure: retained CI and minimal unfixed LSan evidence, repaired focused
   Debug/ASan test, byte-identical optimized RXAS, the original pooled-HTTP
   build trigger, applicable task/parallel tests, and a complete supported Linux
@@ -289,8 +309,8 @@ the complete supported Linux gate in progress.
 
 ### SAN-003 — inline capture symbol shape replaced without releasing ownership
 
-Status: repaired with permanent regressions; focused Linux Debug and ASan/LSan
-qualification is green, with the complete supported Linux gate in progress.
+Status: closed with permanent regressions; focused Linux Debug and ASan/LSan
+qualification and the complete supported Linux gate pass on `e3de72939`.
 
 - Surface: `compiler/rxcp_remap_build.c`, value-shape copying into an existing
   inline capture symbol.
@@ -329,8 +349,8 @@ qualification is green, with the complete supported Linux gate in progress.
 - Output proof: the optimized reproducer RXAS is byte-identical before and
   after the repair, with SHA-256
   `5fda0341f2af6b01e9236235b48eff831511221a3a8b65eaf23c0284e087c096`.
-- Owner/next action: complete the supported Linux ASan/LSan build plus CTest
-  gate on the exact release-QA candidate revision.
+- Closure proof: the complete supported Linux ASan/LSan build plus CTest gate
+  passes on `e3de72939`.
 - Closure: retained unfixed LSan evidence, repaired focused Debug/ASan test,
   byte-identical optimized RXAS across the repair, the original `trace.crexx`
   build trigger, applicable inliner tests, and a complete supported Linux
@@ -338,8 +358,8 @@ qualification is green, with the complete supported Linux gate in progress.
 
 ### SAN-001 — RXAS SSA value pointer retained across growth
 
-Status: repaired and accepted for RCC-5 publication; open under RCC-8 release
-QA pending the complete supported Linux sanitizer gate.
+Status: closed for sanitizer assurance; the repair remains accepted for RCC-5
+publication and the complete supported Linux gate passes on `e3de72939`.
 
 - Surface: `assembler/rxas_flow_ssa.c`, `rxas_flow_value_node()`.
 - Failure: heap-use-after-free at the write to `version->source_value_id` after
@@ -376,17 +396,16 @@ QA pending the complete supported Linux sanitizer gate.
   consolidated current RCC-5 build and 2,356/2,356 CTest gate also pass with no
   sanitizer report in `20260822-104056-full`; its instrumented build includes
   the original optimized Towers trigger.
-- Owner/next action: RCC-8 release QA; complete the supported Linux ASan/LSan
-  gate on the exact release-QA candidate revision.
+- Closure proof: the supported Linux ASan/LSan gate passes on `e3de72939`.
 - Closure: focused Debug/ASan regression, optimized Towers artifact, applicable
   RXAS contract tests, ordinary Release performance verdict, and complete
   Apple-ASan plus supported Linux ASan/LSan gates.
 
 ### SAN-002 — RXVM string-buffer ownership across return and reuse
 
-Status: repaired in `f95f906de`, accepted for RCC-5 publication, and retained
-with permanent regressions; open under RCC-8 release QA pending the complete
-supported Linux sanitizer gate.
+Status: closed for sanitizer assurance; the `f95f906de` repair remains
+accepted for RCC-5 publication, its permanent regressions remain active, and
+the complete supported Linux gate passes on `e3de72939`.
 
 - Surface: decimal-to-string/extract capacity calculation for a value produced
   under a wider numeric context and returned to a narrower caller context.
@@ -438,8 +457,7 @@ supported Linux sanitizer gate.
   consolidated current RCC-5 build and 2,356/2,356 CTest gate also pass with no
   sanitizer report in `20260822-104056-full`, including all eight permanent
   SAN-002 cells.
-- Owner/next action: RCC-8 release QA; complete the supported Linux ASan/LSan
-  gate on the exact release-QA candidate revision.
+- Closure proof: the supported Linux ASan/LSan gate passes on `e3de72939`.
 - Closure: permanent optimized/no-opt tests under both concrete VMs, focused
   Debug/ASan checks, any required ordinary Release performance verdict, and the
   complete platform sanitizer gates.

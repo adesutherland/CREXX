@@ -6,8 +6,9 @@ accepted. RCC-5F replaces the boxed statistics surface with the approved
 `.packedfloat` contract and immutable `.linearfit`; its Release gate is clear
 favorable on both VMs. Consolidated Debug, Release, install/package,
 documentation, and Apple-ASan qualification is complete. Adrian assigned the
-remaining supported Linux ASan/LSan proof for SAN-001 and SAN-002 to RCC-8
-release QA; this is not a cross-platform sanitizer-clean or release-ready claim.
+supported Linux ASan/LSan proof for SAN-001 and SAN-002 to RCC-8 release QA;
+that complete 2,363-test gate now passes on `e3de72939`, and GitHub supplies
+final-head cross-platform Release and sanitizer coverage.
 
 Approved by Adrian: 2026-08-20.
 

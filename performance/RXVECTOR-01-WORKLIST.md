@@ -1,8 +1,9 @@
 # RXVECTOR-01 exact packed vector provider
 
-Status: first ordinary-Release verdict accepted by Adrian and macOS closeout
-complete on 2026-08-22. Supported Linux sanitizer/cross-platform qualification
-remains later release QA.
+Status: first ordinary-Release verdict accepted by Adrian, macOS closeout
+complete on 2026-08-22, and supported Linux sanitizer qualification complete
+on 2026-08-23. Final-head cross-platform Release coverage is supplied by the
+GitHub Build CREXX and Sanitizer QA workflows.
 
 Approved by Adrian: 2026-08-22.
 
