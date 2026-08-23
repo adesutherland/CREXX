@@ -43,7 +43,6 @@ l48iffalse:
    itos r0
    .traceevent "V" 6 "R" "S" "r" 0 11 11 0 "val" ""
    scopy r4,r0
-   br l43bexprend
 l43bexprend:
    say r4
 l8doinc:

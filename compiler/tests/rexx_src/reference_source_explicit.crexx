@@ -51,6 +51,15 @@ main: procedure = .int
   call box.setValue(12)
   if readInt(attr_ref) <> 12 then return fail("attr ref live")
 
+  register_zero = .RegisterZeroInt(5)
+  register_zero_ref = register_zero.valueRef()
+  if <refvalid>(register_zero_ref) = 0 then return fail("register-zero ref invalid")
+  register_zero_live = dereference register_zero_ref
+  register_zero_live = 8
+  if register_zero.getValue() <> 8 then return fail("register-zero ref write")
+  call register_zero.setValue(13)
+  if snapshot register_zero_ref <> 13 then return fail("register-zero ref live")
+
   say "PASS: Reference Source Explicit"
   return 0
 
@@ -88,6 +97,25 @@ Box: class
 
   selfRef: method = reference .Box
     return reference self
+
+  valueRef: method = reference .int
+    return reference value
+
+  setValue: method = .void
+    arg next = .int
+    value = next
+    return
+
+  getValue: method = .int
+    return value
+
+RegisterZeroInt: class
+  value = .int with register.0.int
+
+  *: factory
+    arg seed = .int
+    value = seed
+    return
 
   valueRef: method = reference .int
     return reference value

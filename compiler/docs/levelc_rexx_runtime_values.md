@@ -70,6 +70,16 @@ Binary views use the binary-only `bcopy` instruction rather than generic
 `copy`, so `.binary with register.N.binary` access moves byte payload and byte
 cursor state without moving public/compiler/library status flags.
 
+One bounded consumption has a stricter no-copy contract. If a packed or
+encoded binary-memory operation uses an exact `register.0.binary` view as its
+base, emission names the receiver register directly. For a child binary
+attribute the compiler may instead link the component for exactly that
+operation and then unlink it. This compiler-managed transient borrow cannot
+escape; reading the binary attribute as an ordinary value still follows the
+detached `bcopy` rule. A source API that intentionally exposes a longer live
+view must return `reference .binary`, leaving the caller to choose
+`dereference` for a scoped alias or `snapshot` for a copy.
+
 The VM fields inside one value are independent storage. Cache coherency belongs
 to `RexxValue`: a method that materializes or invalidates a string, binary,
 integer, float, or decimal representation must update the library/user flags

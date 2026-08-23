@@ -1,0 +1,5 @@
+comparison,metric,pairs,before_median,after_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total,guard_hit
+rxstats-rxbvm,calls_per_second,12,42151.308164,43195.618585,0.601062,2.058800,3.139842,3.284496,4.675099,2.712523,1.993152,3.431894,clear_favorable,12,12,no
+rxstats-rxtvm,calls_per_second,12,42062.185980,42694.474614,-0.872998,0.691632,2.076740,2.574935,3.925259,1.605856,0.654707,2.557004,clear_favorable,9,12,no
+rxstats-offset-rxbvm,calls_per_second,12,29476.803038,30154.649135,-3.792570,-0.220873,2.210913,3.727250,7.097792,2.040200,0.179852,3.900548,clear_favorable,8,12,no
+rxstats-offset-rxtvm,calls_per_second,12,29684.703291,30166.341438,-2.916074,-0.011604,1.584938,2.673079,4.038893,1.238625,-0.068715,2.545965,noisy_inconclusive,9,12,no

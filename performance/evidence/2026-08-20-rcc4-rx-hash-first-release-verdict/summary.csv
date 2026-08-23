@@ -1,0 +1,3 @@
+payload_bytes,iterations,vm,control_n,production_n,control_median_us,production_median_us,production_delta_percent,control_mib_s,production_mib_s,correctness
+4096,10000,rxbvm,5,15,94274,93749,-0.556887,414.351,416.671,pass
+4096,10000,rxtvm,15,5,94766,93273,-1.575460,412.200,418.798,pass

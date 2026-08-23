@@ -35,8 +35,8 @@ Level B adaptations for the language's value-copy object semantics.
 reduction and red/black-tree algorithms from the CD sources at the same pinned
 commit. Copyright (c) 2001-2010 Purdue University and Copyright (C) 2015 Apple
 Inc.; the complete upstream revised-BSD notice is retained in the source file.
-The indexed nodes/occurrences and `rxmath` boundary are disclosed Level B
-adaptations.
+The indexed nodes/occurrences and `rxmath` compatibility boundary, supplied by
+the canonical native `rxfloat` provider, are disclosed Level B adaptations.
 
 `awfy_havlak.crexx` derives its CFG builder, Havlak/Tarjan loop recognizer,
 union-find and loop-structure graph from the Google Havlak sources at the same

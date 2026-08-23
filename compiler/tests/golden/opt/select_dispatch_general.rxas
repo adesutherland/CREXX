@@ -76,7 +76,6 @@ l20doend:
    load r5,-701
    .traceevent "L" 4 "R" "I" "r" 5 16 16 0 "" ""
    icopy r4,r5
-   br l737bexprend
 l737bexprend:
    itos r4
    say r4

@@ -1,0 +1,133 @@
+/* RXVECTOR-01 same-data pure/public/direct Release comparison. */
+options levelb floats_binary
+
+import rxfnsg
+import rxfnsb
+import rxvector
+import rxvector01direct
+
+elapsed_us: procedure = .int
+  arg started = .int
+  elapsed = time("us") - started
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+vector_sqrt: procedure = .float
+  arg value = .float
+  if value <= 0.0 then return 0.0
+  estimate = value
+  if estimate < 1.0 then estimate = 1.0
+  do 32
+    estimate = (estimate + value / estimate) / 2.0
+  end
+  return estimate
+
+pure_topk: procedure = .float
+  arg vectors = .packedfloat, identities = .packedint, dimensions = .int, query_vector = .packedfloat, requested = .int
+  query_norm = 0.0
+  do dimension_index = 0 to dimensions - 1
+    query_value = query_vector.get(dimension_index)
+    query_norm = query_norm + query_value * query_value
+  end
+  result_ids = .int[]
+  result_scores = .float[]
+  do row_index = 0 to identities.size() - 1
+    dot = 0.0
+    row_norm = 0.0
+    row_start = row_index * dimensions
+    do dimension_index = 0 to dimensions - 1
+      row_value = vectors.get(row_start + dimension_index)
+      query_value = query_vector.get(dimension_index)
+      dot = dot + row_value * query_value
+      row_norm = row_norm + row_value * row_value
+    end
+    score = dot / vector_sqrt(row_norm * query_norm)
+    identity = identities.get(row_index)
+    insert_at = result_ids.0 + 1
+    do result_index = 1 to result_ids.0
+      if score > result_scores[result_index] | (score = result_scores[result_index] & identity < result_ids[result_index]) then do
+        insert_at = result_index
+        leave
+      end
+    end
+    if insert_at <= requested then do
+      upper = result_ids.0 + 1
+      if upper > requested then upper = requested
+      do result_index = upper to insert_at + 1 by -1
+        result_ids[result_index] = result_ids[result_index - 1]
+        result_scores[result_index] = result_scores[result_index - 1]
+      end
+      result_ids[insert_at] = identity
+      result_scores[insert_at] = score
+    end
+  end
+  checksum = 0.0
+  do result_index = 1 to result_ids.0
+    checksum = checksum + result_ids[result_index]
+    checksum = checksum + result_scores[result_index]
+  end
+  return checksum
+
+public_topk: procedure = .float
+  arg vectors = .packedfloat, identities = .packedint, dimensions = .int, query_vector = .packedfloat, requested = .int
+  result_ids = .packedint(0)
+  result_scores = .packedfloat(0)
+  call rxvector..topkcosine(vectors, identities, dimensions, query_vector, requested, result_ids, result_scores)
+  checksum = 0.0
+  do result_index = 0 to result_ids.size() - 1
+    checksum = checksum + result_ids.get(result_index)
+    checksum = checksum + result_scores.get(result_index)
+  end
+  return checksum
+
+main: procedure = .int
+  arg args = .string[]
+  if args.0 < 1 then return 2
+  variant = args[1]
+  iterations = 1
+  if args.0 >= 2 then iterations = args[2] as .int
+  rows = 11684
+  dimensions = 768
+  requested = 10
+
+  vectors = .packedfloat(rows * dimensions)
+  identities = .packedint(rows)
+  query_vector = .packedfloat(dimensions)
+  call query_vector.set(0, 1.0)
+  do identity = 1 to rows
+    row_start = (identity - 1) * dimensions
+    call identities.set(identity - 1, identity)
+    if identity = 101 then call vectors.set(row_start, 1.0)
+    else if identity = 202 | identity = 303 then do
+      call vectors.set(row_start, 0.8)
+      call vectors.set(row_start + 1, 0.6)
+    end
+    else if identity = 404 then do
+      call vectors.set(row_start, 0.6)
+      call vectors.set(row_start + 1, 0.8)
+    end
+    else call vectors.set(row_start + 1, 1.0)
+  end
+
+  checksum = 0.0
+  started = time("us")
+  if variant = "pure" then do iteration = 1 to iterations
+    checksum = checksum + pure_topk(vectors, identities, dimensions, query_vector, requested)
+  end
+  else if variant = "public" then do iteration = 1 to iterations
+    checksum = checksum + public_topk(vectors, identities, dimensions, query_vector, requested)
+  end
+  else if variant = "direct" then checksum = rxvector01direct..topk(vectors, identities, dimensions, query_vector, requested, iterations)
+  else return 2
+  elapsed = elapsed_us(started)
+
+  expected = 1034.2 * iterations
+  difference = checksum - expected
+  if difference < 0.0 then difference = -difference
+  if difference > 0.000000001 then do
+    say "FAIL: RXVECTOR-01 checksum" variant checksum expected
+    return 1
+  end
+  say "benchmark=rxvector01 variant=" || variant || " rows=" || rows || " dimensions=" || dimensions || " requested=" || requested || " iterations=" || iterations || " elapsed_us=" || elapsed || " checksum=" || checksum
+  say "PASS: RXVECTOR-01 exact comparison"
+  return 0

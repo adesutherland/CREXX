@@ -285,7 +285,7 @@ int rxc_parser_mode_main(int stdio_mode, int port, const char *file_name, int de
     }
 
 #define CREXX_EP_RULES \
-        "keywords=say,if,then,else,select,when,otherwise,do,end,to,by,for,while,until,forever,leave,iterate,procedure,expose,return,exit,pull,parse,arg\n" \
+        "keywords=say,if,then,else,select,when,otherwise,do,end,to,by,for,while,until,forever,leave,iterate,procedure,initialiser,expose,return,exit,pull,parse,arg\n" \
         "operators=+,-,*,/,=,<,>,(,),{,},,,;\n" \
         "line_comment=--\n" \
         "block_start=/*\n" \

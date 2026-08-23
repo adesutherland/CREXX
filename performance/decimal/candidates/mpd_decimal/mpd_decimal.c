@@ -212,7 +212,8 @@ static size_t getDigits(decplugin *plugin) {
     return (size_t)arithmetic_context(plugin)->prec;
 }
 
-static size_t getRequiredStringSize(decplugin *plugin) {
+static size_t getRequiredStringSize(decplugin *plugin, const value *number) {
+    (void)number;
     return getDigits(plugin) + 32u;
 }
 
@@ -416,9 +417,9 @@ static void decimalToString(decplugin *plugin, const value *number,
         strcpy(string, mpd_isnegative(&input) ? "-0" : "0");
         return;
     }
-    coefficient = (char *)malloc(getRequiredStringSize(plugin));
+    coefficient = (char *)malloc(getRequiredStringSize(plugin, number));
     if (!coefficient) RX_PANIC_OOM("format libmpdec candidate value",
-                                   getRequiredStringSize(plugin),
+                                   getRequiredStringSize(plugin, number),
                                    "decimal value");
     decimalExtract(plugin, coefficient, &exponent, (value *)number);
     format_components(plugin, coefficient, exponent, input.exp, string);

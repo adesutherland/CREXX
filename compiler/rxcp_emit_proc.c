@@ -349,6 +349,20 @@ void emit_proc(ASTNode *node, void *pl) {
                               proc_label,
                               args
                 );
+                {
+                    imported_func *imported = 0;
+                    if (src_fqfu(payload->context, 0, proc_fqn, &imported) &&
+                        imported && imported->provider_id &&
+                        *imported->provider_id) {
+                        char *with_provider = mprintf(
+                                "%s   .meta \"%s\"=\".provider\" \"%s\"\n",
+                                buf, proc_fqn, imported->provider_id);
+                        if (with_provider) {
+                            free(buf);
+                            buf = with_provider;
+                        }
+                    }
+                }
                 if (node->is_task_callable || node_is_taskwork_factory(node)) {
                     char *placeholder = rxcp_task_placeholder_hex(proc_fqn);
                     const char *task_option = node_is_taskwork_factory(node)
@@ -362,6 +376,15 @@ void emit_proc(ASTNode *node, void *pl) {
                     if (with_task) {
                         free(buf);
                         buf = with_task;
+                    }
+                }
+                if (node->is_initializer) {
+                    char *with_initializer = mprintf(
+                            "%s   .meta \"%s\"=\".initializer\" \".void\" %s() \"\"\n",
+                            buf, proc_fqn, proc_label);
+                    if (with_initializer) {
+                        free(buf);
+                        buf = with_initializer;
                     }
                 }
                 if (node->output) output_prepend_text(buf, node->output);
@@ -442,6 +465,15 @@ void emit_proc(ASTNode *node, void *pl) {
                     if (with_task) {
                         free(buf);
                         buf = with_task;
+                    }
+                }
+                if (node->is_initializer) {
+                    char *with_initializer = mprintf(
+                            "%s   .meta \"%s\"=\".initializer\" \".void\" %s() \"\"\n",
+                            buf, proc_fqn, proc_label);
+                    if (with_initializer) {
+                        free(buf);
+                        buf = with_initializer;
                     }
                 }
                 if (node->output) output_prepend_text(buf, node->output);

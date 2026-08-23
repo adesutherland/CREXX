@@ -1,0 +1,4 @@
+Error in packed_invalid_storage.crexx @ 8:14 - #PACKED_INVALID_STORAGE_TYPE, "..string"
+Error in packed_invalid_storage.crexx @ 9:14 - #PACKED_INVALID_STORAGE_TYPE, "..f32"
+Error in packed_invalid_storage.crexx @ 10:14 - #PACKED_INVALID_STORAGE_TYPE, "..decimal"
+3 error(s) in source file

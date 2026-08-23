@@ -19,6 +19,120 @@ set(RXFNSG_RPATH ${CMAKE_BINARY_DIR}/bin/rxfnsg)
 
 add_custom_target(testrxfnsg ALL)
 
+add_custom_target(ts_math_numeric)
+add_dependencies(testrxfnsg ts_math_numeric)
+
+set(_numeric_test_support_base
+  "${CMAKE_CURRENT_BINARY_DIR}/numeric_test_support")
+set(_numeric_test_support_rxbin
+  "${_numeric_test_support_base}.rxbin")
+set(_numeric_test_support_source
+  "${CMAKE_SOURCE_DIR}/tests/support/numeric_test_support.crexx")
+add_custom_command(
+  OUTPUT "${_numeric_test_support_rxbin}"
+  BYPRODUCTS "${_numeric_test_support_base}.rxas"
+  COMMAND $<TARGET_FILE:rxc> -n
+    -i "${CMAKE_BINARY_DIR}/bin"
+    -o numeric_test_support
+    "${_numeric_test_support_source}"
+  COMMAND $<TARGET_FILE:rxas> -n
+    -o numeric_test_support numeric_test_support
+  DEPENDS rxc rxas compiler_exit_bin library
+    "${_numeric_test_support_source}"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+add_custom_target(rxfnsg_numeric_test_support
+  DEPENDS "${_numeric_test_support_rxbin}")
+add_dependencies(ts_math_numeric rxfnsg_numeric_test_support)
+
+set(_math_numeric_runners rxbvm)
+if(TARGET rxtvm)
+  list(APPEND _math_numeric_runners rxtvm)
+endif()
+
+foreach(_math_numeric_runner IN LISTS _math_numeric_runners)
+  crexx_add_rexx_opt_matrix(
+    NAME "ts_math_numeric_${_math_numeric_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_math_numeric.crexx"
+    TARGET_GROUP ts_math_numeric
+    RUNNER "${_math_numeric_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x -s ${CMAKE_SOURCE_DIR}/tests/support
+    DEPENDS library classlib rxfnsg rxfnsg_numeric_test_support
+      "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+      "${CMAKE_CURRENT_SOURCE_DIR}/ts_math_numeric.crexx"
+    RUNTIME_ARGS ${_numeric_test_support_base} ${LIBRPATH}
+      ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
+    TEST_LABELS "library;math;integer;decimal;levelg;${_math_numeric_runner}"
+    REQUIRED_OUTPUT_REGEX "PASS: RCC-5C integer and decimal algorithms"
+    FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+endforeach()
+
+add_test(
+  NAME rcc5c_math_contract_surface_coverage
+  COMMAND ${CMAKE_COMMAND}
+    -DINTEGER_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/../rexx/integer.crexx
+    -DINTEGER_CONTRACT=${CMAKE_CURRENT_SOURCE_DIR}/ts_math_integer_contract.crexx
+    -DDECIMAL_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/../rexx/decimal.crexx
+    -DDECIMAL_CONTRACT=${CMAKE_CURRENT_SOURCE_DIR}/ts_math_decimal_contract.crexx
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/check_math_contract_surface.cmake)
+set_tests_properties(rcc5c_math_contract_surface_coverage PROPERTIES
+  LABELS "library;math;integer;decimal;levelg;contract")
+
+foreach(_math_contract_suite IN ITEMS integer decimal)
+  set(_math_contract_target "ts_math_${_math_contract_suite}_contract")
+  set(_math_contract_source
+    "${CMAKE_CURRENT_SOURCE_DIR}/${_math_contract_target}.crexx")
+  if(_math_contract_suite STREQUAL "integer")
+    set(_math_contract_output "PASS: RCC-5C exact integer contract")
+  else()
+    set(_math_contract_output "PASS: RCC-5C decimal mathematics contract")
+  endif()
+
+  add_custom_target("${_math_contract_target}")
+  add_dependencies(testrxfnsg "${_math_contract_target}")
+  add_dependencies("${_math_contract_target}" rxfnsg_numeric_test_support)
+
+  foreach(_math_contract_runner IN LISTS _math_numeric_runners)
+    crexx_add_rexx_opt_matrix(
+      NAME "${_math_contract_target}_${_math_contract_runner}"
+      SOURCE "${_math_contract_source}"
+      TARGET_GROUP "${_math_contract_target}"
+      RUNNER "${_math_contract_runner}"
+      IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+      RXC_FLAGS -x -s ${CMAKE_SOURCE_DIR}/tests/support
+      DEPENDS library classlib rxfnsg rxfnsg_numeric_test_support
+        "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+        "${_math_contract_source}"
+      RUNTIME_ARGS ${_numeric_test_support_base} ${LIBRPATH}
+        ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
+      TEST_LABELS
+        "library;math;${_math_contract_suite};levelg;contract;${_math_contract_runner}"
+      REQUIRED_OUTPUT_REGEX "${_math_contract_output}"
+      FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+  endforeach()
+endforeach()
+
+add_custom_target(ts_packed_numeric)
+add_dependencies(testrxfnsg ts_packed_numeric)
+
+foreach(_packed_numeric_runner IN LISTS _math_numeric_runners)
+  crexx_add_rexx_opt_matrix(
+    NAME "ts_packed_numeric_${_packed_numeric_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_packed_numeric.crexx"
+    TARGET_GROUP ts_packed_numeric
+    RUNNER "${_packed_numeric_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x
+    DEPENDS library classlib rxfnsg
+      "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+      "${CMAKE_CURRENT_SOURCE_DIR}/ts_packed_numeric.crexx"
+    RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
+    TEST_LABELS
+      "library;binary;packed;binary01;levelg;${_packed_numeric_runner}"
+    REQUIRED_OUTPUT_REGEX "PASS: Level G packedfloat and packedint contract"
+    FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+endforeach()
+
 unset(_prev_target)
 foreach(_binfile IN LISTS REXXBINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)

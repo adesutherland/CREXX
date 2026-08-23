@@ -1,0 +1,9 @@
+options levelb
+namespace initializer_direct_call
+
+boot: initialiser
+  return
+
+main: procedure
+  call boot
+  return

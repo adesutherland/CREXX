@@ -1,0 +1,125 @@
+/* Offline oracle input for ts_math_decimal_contract.crexx. */
+scale=220
+pi=4*a(1)
+
+"pi"
+pi
+"euler"
+e(1)
+
+"sqrt two"
+sqrt(2)
+"sqrt sub-unit"
+sqrt(.2)
+"sqrt below square"
+sqrt(8.9999999999)
+"sqrt above square"
+sqrt(9.0000000001)
+
+"exp one"
+e(1)
+"exp small positive"
+e(.1)
+"exp small negative"
+e(-.1)
+"exp negative"
+e(-1)
+"exp below halving boundary"
+e(.4999999999)
+"exp halving boundary"
+e(.5)
+"exp above halving boundary"
+e(.5000000001)
+"exp ten"
+e(10)
+"exp minus ten"
+e(-10)
+
+"ln two"
+l(2)
+"ln one half"
+l(.5)
+"ln below one"
+l(.9999999999)
+"ln above one"
+l(1.0000000001)
+"ln lower reduction boundary"
+l(.75)
+"ln below reduction boundary"
+l(.7499999999)
+"ln upper reduction boundary"
+l(1.5)
+"ln above reduction boundary"
+l(1.5000000001)
+"ln ten"
+l(10)
+"ln small magnitude"
+l(10^-50)
+"ln large magnitude"
+l(10^50)
+
+"sin one"
+s(1)
+"sin minus one"
+s(-1)
+"cos one"
+c(1)
+"sin quadrant two"
+s(2)
+"cos quadrant two"
+c(2)
+"sin quadrant three"
+s(4)
+"cos quadrant three"
+c(4)
+"sin quadrant four"
+s(5)
+"cos quadrant four"
+c(5)
+
+"sin below half pi"
+s(pi/2-.00001)
+"sin above half pi"
+s(pi/2+.00001)
+"cos below half pi"
+c(pi/2-.00001)
+"cos above half pi"
+c(pi/2+.00001)
+"sin below pi"
+s(pi-.00001)
+"sin above pi"
+s(pi+.00001)
+"cos below pi"
+c(pi-.00001)
+"cos above pi"
+c(pi+.00001)
+"period minus input"
+2*pi-.00001
+"period plus input"
+2*pi+.00001
+"sin below period"
+s(2*pi-.00001)
+"cos below period"
+c(2*pi-.00001)
+"sin above period"
+s(2*pi+.00001)
+"cos above period"
+c(2*pi+.00001)
+
+"sin ten periods"
+s(31.5)
+"cos ten periods"
+c(31.5)
+"sin negative ten periods"
+s(-31.5)
+"cos negative ten periods"
+c(-31.5)
+"sin thousand periods"
+s(3141.5)
+"cos thousand periods"
+c(3141.5)
+
+"sin large high-precision angle"
+s(10^20+.125)
+"cos large high-precision angle"
+c(10^20+.125)

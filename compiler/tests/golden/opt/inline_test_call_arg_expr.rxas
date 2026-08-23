@@ -36,7 +36,6 @@ l8dostart:
    iadd r5,r4,1
    .traceevent "O" 4 "R" "I" "r" 5 8 8 0 "" ""
    icopy r3,r5
-   br l68bexprend
 l68bexprend:
    .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "val" ""
    .srcstep 10 10 17 "inline_test_call_arg_expr.crexx" 13 3 15 "  if val > 100 then return 100"
@@ -54,7 +53,6 @@ l77iffalse:
    .srcstep 12 12 17 "inline_test_call_arg_expr.crexx" 14 3 13 "  return val"
    .traceevent "V" 6 "R" "I" "r" 3 14 14 0 "val" ""
    icopy r5,r3
-   br l64bexprend
 l64bexprend:
    itos r5
    say r5

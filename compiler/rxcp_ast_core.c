@@ -310,6 +310,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->is_implicit_main = 0;
     node->is_interface_default_method = 0;
     node->is_task_callable = 0;
+    node->is_initializer = 0;
     node->is_internal_diagnostic = 0;
     node->is_source_diagnostic_recorded = 0;
     node->mark_internal_diagnostics = 0;
@@ -445,6 +446,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->is_implicit_main = node->is_implicit_main;
     new_node->is_interface_default_method = node->is_interface_default_method;
     new_node->is_task_callable = node->is_task_callable;
+    new_node->is_initializer = node->is_initializer;
     new_node->is_internal_diagnostic = node->is_internal_diagnostic;
     new_node->mark_internal_diagnostics = node->mark_internal_diagnostics;
     new_node->force_local_scope = node->force_local_scope;
@@ -1580,6 +1582,8 @@ const char *ast_ndtp(NodeType type) {
             return "OP_BINARY_LENGTH";
         case OP_BINARY_COMPARE:
             return "OP_BINARY_COMPARE";
+        case OP_PACKED_AT:
+            return "OP_PACKED_AT";
         case OP_SIZEOF:
             return "OP_SIZEOF";
         case OP_TYPEOF:

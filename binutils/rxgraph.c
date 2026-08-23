@@ -3394,6 +3394,8 @@ static size_t rx_graph_crexx_meta_size(enum const_pool_type type) {
         case META_SOURCE_STEP: return sizeof(meta_source_step_constant);
         case META_TRACE_EVENT: return sizeof(meta_trace_event_constant);
         case META_TASK_TARGET: return sizeof(meta_task_target_constant);
+        case META_PROVIDER: return sizeof(meta_provider_constant);
+        case META_INITIALIZER: return sizeof(meta_initializer_constant);
         default: return 0u;
     }
 }

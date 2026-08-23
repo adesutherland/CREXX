@@ -256,6 +256,16 @@ The source-step and trace-event forms are:
 most `.meta` payload formats unless an instruction or linking feature documents
 the record explicitly.
 
+One documented generated form declares a native provider dependency without
+duplicating the adjacent callable signature:
+
+```rxas
+.meta "namespace.callable"=".provider" "provider-id"
+```
+
+Use `.provider.optional` for a best-effort dependency;
+`.provider.required` is an explicit alias of the default required form.
+
 ## Minimal Example
 
 ```rxas

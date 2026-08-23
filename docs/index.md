@@ -28,6 +28,8 @@ designs.
 - [Concurrent programming](books/crexx_programming_guide/concurrency.md)
 - [Concurrency classes](books/crexx_library_reference/concurrency.md)
 - [Concurrent HTTP client and server](books/crexx_library_reference/concurrent_http.md)
+- [Mathematics](books/crexx_library_reference/mathematics.md)
+- [Packed vectors](books/crexx_library_reference/rxvector.md)
 - [Language levels](books/crexx_language_reference/crexx_levels.md)
 - [Data types](books/crexx_language_reference/data_types.md)
 - [Statements](books/crexx_language_reference/statements.md)

@@ -105,46 +105,63 @@ static int rxcp_remap_copy_class(char **target, const char *source) {
     return *target != NULL;
 }
 
+static int rxcp_remap_replace_symbol_value_shape(Symbol *target,
+                                                 ValueType type,
+                                                 size_t dims,
+                                                 const int *dim_base,
+                                                 const int *dim_elements,
+                                                 const char *value_class) {
+    int *new_dim_base;
+    int *new_dim_elements;
+    char *new_value_class;
+
+    if (!target) return 0;
+
+    new_dim_base = NULL;
+    new_dim_elements = NULL;
+    new_value_class = NULL;
+
+    if (!rxcp_remap_copy_dims(&new_dim_base, dim_base, dims)) goto fail;
+    if (!rxcp_remap_copy_dims(&new_dim_elements, dim_elements, dims)) goto fail;
+    if (!rxcp_remap_copy_class(&new_value_class, value_class)) goto fail;
+
+    free(target->dim_base);
+    free(target->dim_elements);
+    free(target->value_class);
+    target->type = type;
+    target->value_dims = dims;
+    target->dim_base = new_dim_base;
+    target->dim_elements = new_dim_elements;
+    target->value_class = new_value_class;
+    return 1;
+
+fail:
+    free(new_dim_base);
+    free(new_dim_elements);
+    free(new_value_class);
+    return 0;
+}
+
 int rxcp_remap_copy_node_value_shape_to_symbol(Symbol *target, const ASTNode *source) {
     if (!target || !source) return 0;
 
-    target->type = source->value_type;
-    target->value_dims = source->value_dims;
-
-    if (!rxcp_remap_copy_dims(&target->dim_base,
-                              source->value_dim_base,
-                              source->value_dims)) {
-        return 0;
-    }
-    if (!rxcp_remap_copy_dims(&target->dim_elements,
-                              source->value_dim_elements,
-                              source->value_dims)) {
-        return 0;
-    }
-    if (!rxcp_remap_copy_class(&target->value_class, source->value_class)) return 0;
-
-    return 1;
+    return rxcp_remap_replace_symbol_value_shape(target,
+                                                 source->value_type,
+                                                 source->value_dims,
+                                                 source->value_dim_base,
+                                                 source->value_dim_elements,
+                                                 source->value_class);
 }
 
 int rxcp_remap_copy_symbol_value_shape(Symbol *target, const Symbol *source) {
     if (!target || !source) return 0;
 
-    target->type = source->type;
-    target->value_dims = source->value_dims;
-
-    if (!rxcp_remap_copy_dims(&target->dim_base,
-                              source->dim_base,
-                              source->value_dims)) {
-        return 0;
-    }
-    if (!rxcp_remap_copy_dims(&target->dim_elements,
-                              source->dim_elements,
-                              source->value_dims)) {
-        return 0;
-    }
-    if (!rxcp_remap_copy_class(&target->value_class, source->value_class)) return 0;
-
-    return 1;
+    return rxcp_remap_replace_symbol_value_shape(target,
+                                                 source->type,
+                                                 source->value_dims,
+                                                 source->dim_base,
+                                                 source->dim_elements,
+                                                 source->value_class);
 }
 
 Scope *rxcp_remap_create_scope(Context *context,

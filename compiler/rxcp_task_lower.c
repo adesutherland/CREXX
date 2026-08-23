@@ -991,6 +991,20 @@ static int task_pending_add(RxcpParallelPlan *plan,
     return 1;
 }
 
+static void task_pending_clear(RxcpParallelPlan *plan) {
+    size_t i;
+
+    if (!plan) return;
+    for (i = 0; i < plan->pending_count; i++) {
+        free(plan->pending[i].handle_name);
+        free(plan->pending[i].result_class);
+    }
+    free(plan->pending);
+    plan->pending = 0;
+    plan->pending_count = 0;
+    plan->pending_capacity = 0;
+}
+
 static int task_node_uses_symbol(ASTNode *node,
                                  Symbol *symbol,
                                  int reads,
@@ -1434,7 +1448,6 @@ static int task_lower_parallel_do(Context *context, ASTNode *node) {
     Scope *scope;
     RxcpParallelPlan plan;
     char *scope_name;
-    size_t i;
 
     if (!context || !node || node->node_type != PARALLEL_DO || !node->scope) return 0;
     source_instructions = node->child;
@@ -1508,15 +1521,13 @@ static int task_lower_parallel_do(Context *context, ASTNode *node) {
         add_ast(node, statement);
     }
     add_ast(node, protected_block);
-    for (i = 0; i < plan.pending_count; i++) free(plan.pending[i].handle_name);
-    free(plan.pending);
+    task_pending_clear(&plan);
     free(scope_name);
     context->changed_flags |= FLAG_VAL_TRANS | FLAG_ORCH | FLAG_VAL_SYM | FLAG_VAL_TYPE;
     return 1;
 
 failed:
-    for (i = 0; i < plan.pending_count; i++) free(plan.pending[i].handle_name);
-    free(plan.pending);
+    task_pending_clear(&plan);
     free(scope_name);
     return 0;
 }
@@ -1532,7 +1543,6 @@ static int task_lower_parallel_block_expression(Context *context,
     Scope *scope;
     RxcpParallelPlan plan;
     char *scope_name;
-    size_t i;
 
     if (!context || !node || node->node_type != PARALLEL_BLOCK_EXPR ||
         !node->scope) return 0;
@@ -1604,22 +1614,14 @@ static int task_lower_parallel_block_expression(Context *context,
     node->scope = scope;
     node->child = 0;
     add_ast(node, outer);
-    for (i = 0; i < plan.pending_count; i++) {
-        free(plan.pending[i].handle_name);
-        free(plan.pending[i].result_class);
-    }
-    free(plan.pending);
+    task_pending_clear(&plan);
     free(scope_name);
     context->changed_flags |= FLAG_VAL_TRANS | FLAG_ORCH |
                               FLAG_VAL_SYM | FLAG_VAL_TYPE;
     return 1;
 
 failed:
-    for (i = 0; i < plan.pending_count; i++) {
-        free(plan.pending[i].handle_name);
-        free(plan.pending[i].result_class);
-    }
-    free(plan.pending);
+    task_pending_clear(&plan);
     free(scope_name);
     return 0;
 }

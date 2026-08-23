@@ -100,7 +100,7 @@ int rexbscan(Context* s) {
   intrinsic_type_list = intrinsic_type_ws intrinsic_type (intrinsic_type_ws "," intrinsic_type_ws intrinsic_type)* intrinsic_type_ws;
   intrinsic_generics = [.] "[" intrinsic_type_list "]";
   intrinsic_angle = intrinsic_head intrinsic_generics? ">";
-  intrinsic_at_angle = 'AT' ((".." simple) | intrinsic_generics) ">";
+  intrinsic_prefix_angle = ('AT'|'PACKED') ((".." simple) | intrinsic_generics) ">";
   class = [.] (qualified|simple);
   namedfactory = class "." simple;
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
@@ -153,7 +153,7 @@ int rexbscan(Context* s) {
     "=" { RET(TK_EQUAL); }
     not ob "=" | "<" ob ">" | ">" ob "<" { RET(TK_NEQ); }
     ">" { RET(TK_GT); }
-    "<" / intrinsic_at_angle {
+    "<" / intrinsic_prefix_angle {
       s->lexer_intrinsic_mode = 1;
       RET(TK_INTRINSIC_PREFIX_LT);
     }
@@ -215,6 +215,7 @@ int rexbscan(Context* s) {
     'FACTORY' { RET(TK_FACTORY); }
     'IF' { RET(TK_IF); }
     'IMPORT' { RET(TK_IMPORT); }
+    'INITIALISER' { RET(TK_INITIALISER); }
     'IS' { RET(TK_IS); }
   //  'INPUT' { RET(TK_INPUT); }
   //  'INTERPRET' { RET(TK_INTERPRET); }

@@ -225,6 +225,17 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
     if (opcode == OP_BCHECKRANGE_REG_REG_REG)
         return operand_index == 0 ? RXOP_COMPONENT_BINARY
                                   : RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_PGETI_REG_REG_REG || opcode == OP_PGETF_REG_REG_REG)
+        return operand_index == 1 ? RXOP_COMPONENT_BINARY
+                                  : RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_PSETI_REG_REG_REG)
+        return operand_index == 0 ? RXOP_COMPONENT_BINARY
+                                  : RXOP_COMPONENT_INTEGER;
+    if (opcode == OP_PSETF_REG_REG_REG) {
+        if (operand_index == 0) return RXOP_COMPONENT_BINARY;
+        if (operand_index == 1) return RXOP_COMPONENT_INTEGER;
+        return RXOP_COMPONENT_FLOAT;
+    }
     if (opcode == OP_CHANOPEN_REG_REG_REG_REG_REG) {
         if (operand_index == 4) return RXOP_COMPONENT_BINARY;
         if (operand_index >= 2) return RXOP_COMPONENT_INTEGER;
@@ -517,6 +528,15 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
         opcode == OP_CHANCLOSE_REG_REG_REG)
         return operand_index == 0 ? RXOP_COMPONENT_INTEGER
                                   : RXOP_COMPONENT_NONE;
+    if (opcode == OP_PGETI_REG_REG_REG)
+        return operand_index == 0 ? RXOP_COMPONENT_INTEGER
+                                  : RXOP_COMPONENT_NONE;
+    if (opcode == OP_PGETF_REG_REG_REG)
+        return operand_index == 0 ? RXOP_COMPONENT_FLOAT
+                                  : RXOP_COMPONENT_NONE;
+    if (opcode == OP_PSETI_REG_REG_REG || opcode == OP_PSETF_REG_REG_REG)
+        return operand_index == 0 ? RXOP_COMPONENT_BINARY
+                                  : RXOP_COMPONENT_NONE;
     if (opcode == OP_NULLN_REG_REG || opcode == OP_NULLN_REG_REG_REG ||
         opcode == OP_NULLN_REG_REG_REG_REG)
         return RXOP_COMPONENT_ALL;
@@ -639,6 +659,8 @@ unsigned int rxop_component_clears(int opcode, size_t operand_index) {
         opcode == OP_STEMKEYAT_REG_REG_REG ||
         opcode == OP_STEMVALUEAT_REG_REG_REG ||
         opcode == OP_STEMSIZE_REG_REG ||
+        opcode == OP_PGETI_REG_REG_REG ||
+        opcode == OP_PGETF_REG_REG_REG ||
         (opcode >= OP_REQ_REG_REG_REG &&
          opcode <= OP_RLTE_REG_STRING_REG))
         return RXOP_COMPONENT_REFERENCE |

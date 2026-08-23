@@ -423,6 +423,25 @@ static int class_attribute_is_complex(Symbol *symbol) {
     return 0;
 }
 
+static int class_attribute_is_binary_memory_base(ASTNode *node) {
+    ASTNode *base = 0;
+    ASTNode *parent;
+
+    if (!node || !node->symbolNode || !node->symbolNode->symbol) return 0;
+    if (!class_owner_for_attribute_symbol(node->symbolNode->symbol)) return 0;
+
+    parent = node->parent;
+    if (!rxcp_binary_memory_is_access(parent) ||
+        !rxcp_binary_memory_at_parts(parent, 0, &base, 0)) {
+        return 0;
+    }
+    return base == node;
+}
+
+static int class_attribute_is_reference_target(ASTNode *node) {
+    return node && node->parent && node->parent->node_type == OP_REFERENCE;
+}
+
 static walker_result emit_walker(walker_direction direction,
                                   ASTNode* node,
                                   void *pl) {
@@ -943,6 +962,7 @@ static walker_result emit_walker(walker_direction direction,
             case OP_SIZEOF:
             case OP_BINARY_LENGTH:
             case OP_BINARY_AT:
+            case OP_PACKED_AT:
             case OP_BINARY_FOR:
             case OP_BINARY_COMPARE:
             case OP_TYPEOF:
@@ -988,22 +1008,68 @@ static walker_result emit_walker(walker_direction direction,
                         free(temp1);
                     } else {
                         int complex = class_attribute_is_complex(node->symbolNode->symbol);
-                        int link_reg_num = complex ? node->additional_registers : node->register_num;
-                        char link_reg_type = complex ? 'r' : node->register_type;
+                        int binary_memory_base =
+                                complex && class_attribute_is_binary_memory_base(node);
+                        int reference_target =
+                                complex && class_attribute_is_reference_target(node);
+                        int transient_component = binary_memory_base || reference_target;
+                        int direct_component_owner =
+                                index == 0 &&
+                                (reference_target ||
+                                 (binary_memory_base &&
+                                  node->symbolNode->symbol->type == TP_BINARY &&
+                                  class_attribute_view_equals(node->symbolNode->symbol, "binary")));
+                        int link_reg_num = complex && !transient_component ?
+                                           node->additional_registers : node->register_num;
+                        char link_reg_type = complex && !transient_component ?
+                                             'r' : node->register_type;
 
-                        if (index == 0) {
+                        if (direct_component_owner) {
+                            /*
+                             * register.0.binary is the binary component of the
+                             * receiver itself. A binary-memory operation has an
+                             * exact component contract, so use that storage as a
+                             * transient non-escaping borrow. This avoids both the
+                             * typed-view payload copy and an unnecessary local
+                             * link/unlink pair. An explicit reference to any
+                             * register.0 view likewise targets the receiver's
+                             * physical value rather than a detached local copy.
+                             */
+                            node->register_type = this_type;
+                            node->register_num = this_num;
+                        } else if (index == 0) {
                             temp1 = mprintf("   link %c%d,%c%d\n",
                                             link_reg_type, link_reg_num,
                                             this_type, this_num);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
                         } else {
                             temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n",
                                             link_reg_type, link_reg_num,
                                             this_type, this_num, index);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
                         }
-                        output_append_text(node->output, temp1);
-                        free(temp1);
 
-                        if (complex) {
+                        if (direct_component_owner) {
+                            /* The owner register remains bound for its normal lifetime. */
+                        } else if (transient_component) {
+                            /*
+                             * A binary-memory operation borrows the selected
+                             * component only until that operation has consumed
+                             * it. An explicit reference similarly captures the
+                             * underlying linked locator before cleanup instead
+                             * of referring to a detached temporary. Stores
+                             * therefore mutate the owner in place, while reads
+                             * avoid detaching and copying the whole binary merely
+                             * to consume one bounded value.
+                             */
+                            temp1 = mprintf("   unlink %c%d\n",
+                                            node->register_type,
+                                            node->register_num);
+                            node_cleanup_replace_text(node, temp1);
+                            free(temp1);
+                        } else if (complex) {
                             temp1 = mprintf("   %scopy %c%d,r%d\n"
                                             "   unlink r%d\n",
                                             tp_prefix,
@@ -1436,7 +1502,9 @@ static walker_result emit_walker(walker_direction direction,
                     ASTNode *offset = 0;
 
                     if (rxcp_binary_memory_at_parts(child1, &type_node, &base, &offset) &&
-                        rxcp_binary_storage_info(type_node, &info) &&
+                        (child1->node_type == OP_PACKED_AT
+                             ? rxcp_packed_storage_info(type_node, &info)
+                             : rxcp_binary_storage_info(type_node, &info)) &&
                         base &&
                         offset) {
                         if (info.is_fixed) {

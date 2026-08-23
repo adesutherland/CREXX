@@ -85,12 +85,27 @@ static uint32_t context_procedure_capabilities(rxvm_context *context,
                                                const char *name);
 static rxvm_native_invoker context_procedure_invoker(
         rxvm_context *context, const char *name);
+static int expect_float_native_arity_signal(rxvm_context *context,
+                                            const char *procedure_name,
+                                            int argument_count);
 
 static int value_string_equals(const value *actual, const char *expected) {
     size_t expected_length = strlen(expected);
     return actual && actual->string_value &&
            actual->string_length == expected_length &&
            memcmp(actual->string_value, expected, expected_length) == 0;
+}
+
+static int value_binary_equals(value *actual,
+                               const unsigned char *expected,
+                               size_t expected_length) {
+    size_t actual_length = 0u;
+    void *actual_payload = get_native_payload(actual, &actual_length,
+                                              NULL, NULL);
+    return actual_length == expected_length &&
+           (expected_length == 0u ||
+            (actual_payload &&
+             memcmp(actual_payload, expected, expected_length) == 0));
 }
 
 static void gate_lock(call_gate *gate) {
@@ -546,6 +561,7 @@ static void run_static_context(void) {
         context_procedure_capabilities(&context, "e3b.static_probe") !=
                 RXPA_PLUGIN_CAP_PROCESS_REENTRANT ||
         call_plugin_procedure(&context, "cipher") != 0 ||
+        call_plugin_procedure(&context, "hash") != 0 ||
         call_plugin_procedure(&context, "stack") != 0 ||
         call_plugin_procedure(&context, "id") != 0) {
         gate_lock(&static_gate);
@@ -622,7 +638,7 @@ static int test_static_replay(void) {
     return 0;
 }
 
-static int test_rxmath_static_binding(void) {
+static int test_float_static_binding(void) {
     rxvm_context first;
     rxvm_context second;
     int failed = 0;
@@ -631,31 +647,97 @@ static int test_rxmath_static_binding(void) {
     rxinimod(&first);
     rxinimod(&second);
     if (rxldmodp(&first) <= 0 ||
+        context_procedure_capabilities(&first, "rxfloat.pi") !=
+                RXPA_PROCEDURE_CAP_PROCESS_REENTRANT ||
+        context_procedure_invoker(&first, "rxfloat.pi") !=
+                rxvm_callfunc_direct ||
         context_procedure_capabilities(&first, "rxmath.pi") !=
                 RXPA_PROCEDURE_CAP_PROCESS_REENTRANT ||
         context_procedure_invoker(&first, "rxmath.pi") !=
-                rxvm_callfunc_direct ||
-        context_procedure_capabilities(&first, "rxmath.inlinec") != 0u ||
-        context_procedure_invoker(&first, "rxmath.inlinec") !=
                 rxvm_callfunc_direct) {
         failed = 1;
     }
     if (rxldmodp(&second) <= 0 ||
-        context_procedure_invoker(&first, "rxmath.inlinec") != rxvm_callfunc ||
-        context_procedure_invoker(&second, "rxmath.inlinec") != rxvm_callfunc ||
+        context_procedure_invoker(&first, "rxfloat.pi") !=
+                rxvm_callfunc_direct ||
+        context_procedure_invoker(&second, "rxfloat.pi") !=
+                rxvm_callfunc_direct ||
         context_procedure_invoker(&first, "rxmath.pi") !=
                 rxvm_callfunc_direct ||
         context_procedure_invoker(&second, "rxmath.pi") !=
                 rxvm_callfunc_direct) {
         failed = 1;
     }
+    if (!failed) {
+        failed += expect_float_native_arity_signal(&first, "rxfloat.pi", 1);
+        failed += expect_float_native_arity_signal(&first, "rxfloat.sqrt", 0);
+        failed += expect_float_native_arity_signal(&first, "rxfloat.sqrt", 2);
+        failed += expect_float_native_arity_signal(&first, "rxfloat.hypot", 1);
+        failed += expect_float_native_arity_signal(&first, "rxfloat.hypot", 3);
+    }
     rxfremod(&second);
     rxfremod(&first);
     if (failed) {
-        fprintf(stderr, "Static rxmath mixed procedure policy failed\n");
+        fprintf(stderr, "Static rxfloat canonical/compatibility binding failed\n");
         return 1;
     }
     return 0;
+}
+
+static int expect_float_native_arity_signal(rxvm_context *context,
+                                            const char *procedure_name,
+                                            int argument_count) {
+    proc_runtime *procedure = context_find_procedure(context, procedure_name);
+    rxvm_memory_worker *previous_worker;
+    rxvm_context *previous_context;
+    value arguments[3];
+    value *argument_values[3];
+    value result;
+    value signal;
+    int index;
+    int failed = 0;
+
+    if (!procedure || argument_count < 0 || argument_count > 3) return 1;
+    value_init(&result);
+    value_init(&signal);
+    for (index = 0; index < 3; index++) {
+        value_init(&arguments[index]);
+        set_float(&arguments[index], (double)(index + 1));
+        argument_values[index] = &arguments[index];
+    }
+
+    previous_worker = rxvm_memory_enter(context->worker.memory_worker);
+    if (rxvm_worker_begin_execution(&context->worker) !=
+            RXVM_WORKER_TRANSITION_OK) {
+        rxvm_memory_leave(previous_worker);
+        failed = 1;
+        goto cleanup;
+    }
+    rxpa_compatibility_execution_enter(&context->rxpa_compatibility);
+    previous_context = rxvm_active_context_enter(context);
+    rxvm_call_native_procedure(
+            procedure, argument_count,
+            argument_count ? argument_values : NULL, &result, &signal);
+    rxvm_active_context_leave(previous_context);
+    rxpa_compatibility_execution_leave(&context->rxpa_compatibility);
+    if (rxvm_worker_end_execution(&context->worker) !=
+            RXVM_WORKER_TRANSITION_OK) {
+        failed = 1;
+    }
+    rxvm_memory_leave(previous_worker);
+    if (signal.int_value != SIGNAL_INVALID_ARGUMENTS) {
+        fprintf(stderr,
+                "RXPA float arity mismatch: procedure=%s arguments=%d signal=%lld\n",
+                procedure_name, argument_count,
+                (long long)signal.int_value);
+        failed = 1;
+    }
+
+cleanup:
+    clear_value(&signal);
+    clear_value(&result);
+    for (index = 2; index >= 0; index--) clear_value(&arguments[index]);
+    return failed;
 }
 
 static void legacy_probe(rxinteger numargs, rxpa_attribute_value *args,
@@ -1103,10 +1185,11 @@ static int test_procedure_manifest(const char *directory,
     if (!failed &&
         (!plugin.has_manifest_v2 || plugin.capabilities != 0u ||
          rxpa_loaded_plugin_procedure_capabilities(
-                 &plugin, "rxmath.pi") !=
+                 &plugin, "rxfloat.pi") !=
                  RXPA_PROCEDURE_CAP_PROCESS_REENTRANT ||
          rxpa_loaded_plugin_procedure_capabilities(
-                 &plugin, "rxmath.inlinec") != 0u)) {
+                 &plugin, "rxmath.pi") !=
+                 RXPA_PROCEDURE_CAP_PROCESS_REENTRANT)) {
         failed = 1;
     }
     if (rc == 0) rxpa_close_plugin(&plugin);
@@ -1142,6 +1225,12 @@ static char *copy_text(const char *text) {
 }
 
 static int call_plugin_procedure(rxvm_context *context, const char *kind) {
+    static const unsigned char sha256_abc[32] = {
+        0xba, 0x78, 0x16, 0xbf, 0x8f, 0x01, 0xcf, 0xea,
+        0x41, 0x41, 0x40, 0xde, 0x5d, 0xae, 0x22, 0x23,
+        0xb0, 0x03, 0x61, 0xa3, 0x96, 0x17, 0x7a, 0x9c,
+        0xb4, 0x10, 0xff, 0x61, 0xf2, 0x00, 0x15, 0xad
+    };
     const char *procedure_name;
     proc_runtime *procedure;
     rxvm_memory_worker *previous_worker;
@@ -1168,6 +1257,12 @@ static int call_plugin_procedure(rxvm_context *context, const char *kind) {
         procedure_name = "cipher.md5";
         argument_count = 1;
         set_null_string(&arguments[0], "abc");
+    } else if (strcmp(kind, "hash") == 0) {
+        procedure_name = "rxhash.sha256";
+        argument_count = 1;
+        if (set_native_payload(&arguments[0], "abc", 3u, NULL, 0u) != 0) {
+            failed = 1;
+        }
     } else if (strcmp(kind, "stack") == 0) {
         procedure_name = "stack.push";
         argument_count = 2;
@@ -1183,9 +1278,34 @@ static int call_plugin_procedure(rxvm_context *context, const char *kind) {
         argument_count = 1;
         set_null_string(&arguments[0], "Monte Carlo");
     } else if (strcmp(kind, "id") == 0) {
-        procedure_name = "id._uuidv7";
-    } else if (strcmp(kind, "rxmath") == 0) {
-        procedure_name = "rxmath.pi";
+        procedure_name = "rxid.uuid7";
+    } else if (strcmp(kind, "float") == 0) {
+        procedure_name = "rxfloat.pi";
+    } else if (strcmp(kind, "stats") == 0) {
+        const double packed_values[3] = {1.0, 2.0, 3.0};
+
+        procedure_name = "rxstats.mean";
+        argument_count = 1;
+        if (set_native_payload(&arguments[0], packed_values,
+                               sizeof(packed_values), NULL, 0u) != 0) {
+            failed = 1;
+        }
+    } else if (strcmp(kind, "vector") == 0) {
+        const double left_values[2] = {1.0, 0.0};
+        const double right_values[2] = {0.6, 0.8};
+
+        procedure_name = "rxvector.cosine";
+        argument_count = 2;
+        if (set_native_payload(&arguments[0], left_values,
+                               sizeof(left_values), NULL, 0u) != 0 ||
+            set_native_payload(&arguments[1], right_values,
+                               sizeof(right_values), NULL, 0u) != 0) {
+            failed = 1;
+        }
+    } else if (strcmp(kind, "fs") == 0) {
+        procedure_name = "rxfs.cwd";
+    } else if (strcmp(kind, "platform") == 0) {
+        procedure_name = "rxplatform.osname";
     } else {
         failed = 1;
         procedure_name = "";
@@ -1228,6 +1348,9 @@ static int call_plugin_procedure(rxvm_context *context, const char *kind) {
     } else if (strcmp(kind, "cipher") == 0) {
         failed = !value_string_equals(
                 &result, "900150983cd24fb0d6963f7d28e17f72");
+    } else if (strcmp(kind, "hash") == 0) {
+        failed = !value_binary_equals(&result, sha256_abc,
+                                      sizeof(sha256_abc));
     } else if (strcmp(kind, "stack") == 0) {
         failed = result.int_value != 1 || arguments[0].num_attributes != 1u ||
                  !value_string_equals(arguments[0].attributes[0], "alpha");
@@ -1239,8 +1362,15 @@ static int call_plugin_procedure(rxvm_context *context, const char *kind) {
         failed = !result.string_value || result.string_length != 36u ||
                  result.string_value[8] != '-' || result.string_value[13] != '-' ||
                  result.string_value[18] != '-' || result.string_value[23] != '-';
-    } else if (strcmp(kind, "rxmath") == 0) {
+    } else if (strcmp(kind, "float") == 0) {
         failed = result.float_value < 3.1415 || result.float_value > 3.1417;
+    } else if (strcmp(kind, "stats") == 0) {
+        failed = result.float_value != 2.0;
+    } else if (strcmp(kind, "vector") == 0) {
+        failed = result.float_value < 0.599999999999999 ||
+                 result.float_value > 0.600000000000001;
+    } else if (strcmp(kind, "fs") == 0 || strcmp(kind, "platform") == 0) {
+        failed = !result.string_value || result.string_length == 0u;
     }
     if (failed) {
         fprintf(stderr,
@@ -1453,8 +1583,8 @@ int main(int argc, char **argv) {
     if (strcmp(argv[1], "session-malformed") == 0) {
         return test_malformed_session_manifest();
     }
-    if (strcmp(argv[1], "rxmath-static") == 0) {
-        return test_rxmath_static_binding();
+    if (strcmp(argv[1], "float-static") == 0) {
+        return test_float_static_binding();
     }
     if (strcmp(argv[1], "binding") == 0) return test_branch_free_binding();
     if (strcmp(argv[1], "bound-legacy") == 0) {

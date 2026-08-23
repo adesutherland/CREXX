@@ -3,6 +3,38 @@
 Use `tools/asan-run.sh` for AddressSanitizer and LeakSanitizer runs. Do not
 hand-run broad ASan builds or ctests unless the runner itself is broken.
 
+## Defect ownership and closure
+
+`docs/SANITIZER-WORKLIST.md` is the canonical live register for maintained
+sanitizer findings.  Every first-party finding receives a stable `SAN-nnn`
+entry as soon as it is observed, including defects exposed while testing an
+unrelated activity.  "Independent" and "pre-existing" are attribution labels,
+not dispositions.  Dated evidence may support an entry but may not replace it.
+
+An open `SAN-nnn` item blocks cross-platform sanitizer-clean and release
+completion claims. A bounded implementation phase may close only after Adrian
+explicitly assigns its outstanding platform proof to a named later release-QA
+gate. That handoff must name the live item, current repair evidence and the
+release-QA owner; it does not close or downgrade the item. The entry must retain
+the exact failing command and log, affected revision, smallest permanent
+reproducer, owner or next action, and closure checks.
+
+Closure requires all of the following:
+
+1. a permanent focused regression that fails for the original reason without
+   the repair;
+2. the same focused build/test shape passing in normal Debug and the maintained
+   sanitizer tree;
+3. the original broader trigger passing after a clean enough rebuild to avoid
+   stale generated artifacts; and
+4. the applicable full platform sanitizer gate passing.  Apple AddressSanitizer
+   does not supply LeakSanitizer, so leak closure additionally requires a
+   supported Linux ASan/LSan run.
+
+Do not suppress, exclude, or disable a supported sanitizer to obtain closure.
+An explicitly approved temporary exception stays open and release-blocking
+until the underlying defect is repaired and requalified.
+
 ## Runner
 
 The runner keeps every command in a timestamped log directory:
@@ -82,6 +114,22 @@ driver smoke coverage. Missing those build prerequisites can produce false
 focused failures from absent disassembly tools or native link inputs rather
 than ASan/LSan regressions.
 
+### Apple dynamic-provider lifetime
+
+The Apple Clang ASan runtime does not support leak detection on the current
+macOS toolchain, so use `--build-leaks off` and `--leaks off` there for address
+sanitizer work. This is a platform limitation, not permission to disable leak
+checks on supported Linux sanitizer builds.
+
+The compiler may open, close, and later reopen the same RXPA provider while it
+resolves transitive imports. Apple's ASan runtime does not reliably unpoison
+an instrumented DSO's globals across `dlclose()` and reload. In Apple-ASan
+builds only, `rxpa_close_plugin()` therefore performs its normal logical close
+and handle-count update but leaves the OS DSO resident until process exit.
+Plugin initializers, procedures, and globals remain instrumented. Ordinary
+Debug, Release, Linux sanitizer, and Windows builds retain normal physical
+unload behavior.
+
 ## Full Workflow
 
 For a proper full ASan/LSan check:
@@ -156,6 +204,28 @@ continue with the sanitizer tree rather than blocking the whole investigation.
 `--phase build`; use `--phase full` when a complete rebuild is required.
 If `cmake-build-debug` is not configured locally, skip the plain Debug check and
 record that the command was validated only in the sanitizer tree.
+
+## Mandatory CI gates
+
+`.github/workflows/sanitizers.yml` runs two non-optional full sanitizer jobs on
+pushes and pull requests to `develop` or `master`:
+
+* Linux x64 runs AddressSanitizer with LeakSanitizer enabled for both the build
+  and complete CTest phases.
+* macOS arm64 runs AddressSanitizer with leak detection disabled because the
+  Apple runtime does not provide supported LeakSanitizer coverage.
+
+Both jobs configure fresh Debug trees and invoke `tools/asan-run.sh --phase
+full`.  The instrumented build therefore executes generated-product tools such
+as `rxc`, `rxas`, and `rxlink` under the sanitizer before CTest starts.  Do not
+replace these jobs with a CTest-only step or mark either job
+`continue-on-error`.  Logs are uploaded even when a job fails so the first
+build-time or test-time report remains attributable.
+
+After the workflow is committed, configure its stable `Linux x64 ASan/LSan`
+and `macOS arm64 ASan` check names as required checks in the repository's
+branch protection or ruleset.  Workflow YAML cannot set that repository-level
+merge policy by itself.
 
 ## Exploratory UBSan
 

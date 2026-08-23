@@ -72,13 +72,17 @@ static uint64_t g_last_ms = 0;
 static uint16_t g_last_ra = 0;
 static uint64_t g_last_rb = 0;
 
-static void random_12bits(uint16_t *out) {
-    uint16_t x = 0; uuidv7_csprng(&x, sizeof x);
+static int random_12bits(uint16_t *out) {
+    uint16_t x = 0;
+    if (!uuidv7_csprng(&x, sizeof x)) return 0;
     *out = (uint16_t)(x & 0x0FFFu);
+    return 1;
 }
-static void random_62bits(uint64_t *out) {
-    uint64_t x = 0; uuidv7_csprng(&x, sizeof x);
+static int random_62bits(uint64_t *out) {
+    uint64_t x = 0;
+    if (!uuidv7_csprng(&x, sizeof x)) return 0;
     *out = x & ((1ULL << 62) - 1ULL);
+    return 1;
 }
 
 int uuidv7_generate(uint8_t uuid[16]) {
@@ -87,16 +91,14 @@ int uuidv7_generate(uint8_t uuid[16]) {
     uint16_t ra; uint64_t rb;
 
     if (ms != g_last_ms) {
-        random_12bits(&ra);
-        random_62bits(&rb);
+        if (!random_12bits(&ra) || !random_62bits(&rb)) return 0;
     } else {
         ra = g_last_ra;
         rb = g_last_rb + 1ULL;
         if (rb >= (1ULL << 62)) { rb = 0; ra = (uint16_t)((ra + 1) & 0x0FFFu); }
         if (rb == 0 && ra == 0) {
             do { ms = uuidv7_now_ms(); } while (ms == g_last_ms);
-            random_12bits(&ra);
-            random_62bits(&rb);
+            if (!random_12bits(&ra) || !random_62bits(&rb)) return 0;
         }
     }
     g_last_ms = ms; g_last_ra = ra; g_last_rb = rb;

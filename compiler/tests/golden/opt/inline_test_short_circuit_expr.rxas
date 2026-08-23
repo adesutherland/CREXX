@@ -38,7 +38,6 @@ main() .locals=8
    load r2,0
    .traceevent "L" 4 "R" "I" "r" 2 12 12 0 "" ""
    icopy r3,r2
-   br l95bexprend
 l95bexprend:
    not r4,r3
    .traceevent "P" 4 "R" "B" "r" 4 12 12 0 "" ""
@@ -67,7 +66,6 @@ l43ifend:
    load r4,1
    .traceevent "L" 4 "R" "I" "r" 4 21 21 0 "" ""
    icopy r3,r4
-   br l107bexprend
 l107bexprend:
    brf l55iffalse,r3
    .srcstep 22 22 17 "inline_test_short_circuit_expr.crexx" 19 26 30 "  if 1 & probe(1, calls) then say \"and-right-ok\""
@@ -94,7 +92,6 @@ l55ifend:
    load r3,1
    .traceevent "L" 4 "R" "I" "r" 3 30 30 0 "" ""
    icopy r7,r3
-   br l119bexprend
 l119bexprend:
    brf l67iffalse,r7
    .srcstep 31 31 17 "inline_test_short_circuit_expr.crexx" 23 26 30 "  if 0 | probe(1, calls) then say \"or-right-ok\""

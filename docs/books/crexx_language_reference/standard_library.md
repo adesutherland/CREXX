@@ -88,6 +88,32 @@ LLM providers use the same client and private backend. See
 [Concurrent HTTP client and server](../crexx_library_reference/concurrent_http.md)
 for the complete surface and examples.
 
+## Binary SHA-256
+
+The standard/default native provider `rx_hash` exposes
+`rxhash.sha256(data = .binary) = .binary` to both Level B and Level G. Import
+`rxhash` directly; no Rexx wrapper is needed. The compiler records the native
+provider dependency, ordinary VMs discover the installed provider, and native
+packaging selects its static archive automatically. See
+[Binary hashing with `rxhash`](../crexx_library_reference/rxhash.md).
+
+## Mathematics
+
+The Level G standard mathematics family separates native scalar `rxfloat`,
+checked `rxint`, and precision-preserving `rxdecimal`. Provider metadata makes
+the native float library automatic for interpreted and native packaging; the
+integer and decimal modules are Level-B-authored library code. See
+[Mathematics](../crexx_library_reference/mathematics.md) for the complete
+surface and availability boundary.
+
+## Packed vectors
+
+The Level G standard/default `rxvector` native provider supplies explicit
+`f32le` conversion, exact cosine similarity, and deterministic bounded top-k
+search over `.packedfloat` and `.packedint` owners. Portable persistence stays
+separate from host-native computation. See
+[Packed vectors](../crexx_library_reference/rxvector.md).
+
 ## ADDRESS and Trace Support
 
 `_address.rexx` contains the Rexx-side ADDRESS protocol support used by

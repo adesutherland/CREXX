@@ -192,8 +192,39 @@ ASTNode* ast_execute_rewrite(Context *ctx, ASTNode *target_to_replace, ASTRewrit
     ASTNode *new_root = execute_rewrite_recursive(ctx, tmpl, target_to_replace);
     
     if (new_root) {
-        /* Physically swap in tree */
-        ast_rpl(target_to_replace, new_root);
+        /* Physically swap in tree.  RW_CHILDREN replaces one node with a
+         * sibling list, whereas ast_rpl() deliberately replaces it with one
+         * node and therefore overwrites new_root->sibling. */
+        if (tmpl->action == RW_CHILDREN && new_root->sibling) {
+            ASTNode *parent = target_to_replace->parent;
+            ASTNode *old_sibling = target_to_replace->sibling;
+            ASTNode *replacement = new_root;
+            ASTNode *replacement_tail = new_root;
+            ASTNode *previous = NULL;
+
+            if (parent) {
+                previous = parent->child;
+                while (previous && previous->sibling != target_to_replace) {
+                    previous = previous->sibling;
+                }
+                if (parent->child == target_to_replace) {
+                    parent->child = new_root;
+                } else if (previous) {
+                    previous->sibling = new_root;
+                }
+            }
+
+            while (replacement) {
+                replacement->parent = parent;
+                replacement_tail = replacement;
+                replacement = replacement->sibling;
+            }
+            replacement_tail->sibling = old_sibling;
+            target_to_replace->parent = NULL;
+            target_to_replace->sibling = NULL;
+        } else {
+            ast_rpl(target_to_replace, new_root);
+        }
 
         /* Restore the sibling pointer on the replaced node so that ast_wlkr's
          * 'node = node->sibling' loop can continue walking the rest of the tree

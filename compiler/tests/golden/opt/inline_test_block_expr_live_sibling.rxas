@@ -63,12 +63,11 @@ main() .locals=8
    linkattr1 r4,r5,1
    .traceevent "V" 6 "R" "S" "r" 4 13 13 0 "name" ""
    scopy r2,r4
-   unlinkbr r4,l316bexprend
+   unlink r4
 l316bexprend:
    concat r2,r3,r2
    .traceevent "O" 4 "R" "S" "r" 2 13 13 0 "" ""
    scopy r1,r2
-   br l247bexprend
 l247bexprend:
    concat r1,r1,"|"
    .traceevent "O" 4 "R" "S" "r" 1 13 13 0 "" ""
@@ -78,7 +77,6 @@ l247bexprend:
    unlink r6
    .traceevent "O" 4 "R" "S" "r" 1 13 13 0 "" ""
    scopy r7,r1
-   br l147bexprend
 l147bexprend:
    say r7
    .srcstep 14 14 17 "inline_test_block_expr_live_sibling.crexx" 6 3 11 "  return 0"
@@ -177,12 +175,11 @@ l147bexprend:
    linkattr1 r4,r5,1
    .traceevent "V" 6 "R" "S" "r" 4 35 35 0 "name" ""
    scopy r3,r4
-   unlinkbr r4,l263bexprend
+   unlink r4
 l263bexprend:
    concat r3,r1,r3
    .traceevent "O" 4 "R" "S" "r" 3 35 35 0 "" ""
    scopy r2,r3
-   br l187bexprend
 l187bexprend:
    concat r2,r2,"|"
    .traceevent "O" 4 "R" "S" "r" 2 35 35 0 "" ""

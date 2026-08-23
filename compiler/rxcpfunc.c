@@ -66,6 +66,10 @@ typedef struct {
 static int load_another_file(Context *context);
 static size_t module_stem_length(const char *name);
 static void mark_source_import_interface_default_methods(Context *stub_ctx, ASTNode *contract_node);
+static imported_func *rximpf_provider_f(
+        Context* context, char* file_name, char *fqname, char *options,
+        char *type, char *args, char *implementation, char is_variable,
+        char is_task_callable, const char *provider_id);
 
 #define GET_INDEX(i) avl_tree_entry((i), struct tree_wrapper, index_node)->func->fqname
 #define GET_VALUE(i) avl_tree_entry((i), struct tree_wrapper, index_node)->func
@@ -847,6 +851,15 @@ static int add_func(Context *context, imported_func *func) {
         }
 
         if (func->is_task_callable != existing_func->is_task_callable) {
+            add_inconsistent_duplicate(existing_func, func);
+            return 1;
+        }
+
+        /* Provider identity is part of a native callable declaration.  A
+         * same-signature duplicate from another provider must not make the
+         * selected deployment dependency depend on import enumeration order. */
+        if (safe_strcmp(func->provider_id,
+                        existing_func->provider_id) != 0) {
             add_inconsistent_duplicate(existing_func, func);
             return 1;
         }
@@ -2463,7 +2476,9 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
 
 // RXPA Disabler Function
 static char* plugin_being_loaded = "statically linked";
+static const char *plugin_being_loaded_provider_id = 0;
 static Context* plugin_being_loaded_context = 0;
+static struct static_linked_function *plugin_being_loaded_functions = 0;
 static struct static_linked_metadata *plugin_being_loaded_metadata = 0;
 
 static void append_rxpa_metadata(struct static_linked_metadata **head, char *kind, char *symbol,
@@ -2575,6 +2590,9 @@ void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_len
                             unsigned int *out_flags)  /* Get a native binary payload */
     { disablerFunction("rxpa_getnativepayload"); return NULL; }
 
+int rxpa_isinitialized(rxpa_attribute_value attributeValue)
+    { disablerFunction("rxpa_isinitialized"); return 0; }
+
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue)  /* Get the number of child attributes */
     { disablerFunction("rxpa_getnumattrs"); return 0; }
 
@@ -2604,17 +2622,33 @@ void rxpa_resetsayexit()  /* Reset Say exit function */
 // This is the callback function for loadPluginFileForFunctions() when the plugin adds functions,
 // oir is called during initialising a statically linked plugin
 void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args) {
+    rxpa_addfunc_for_plugin(plugin_being_loaded_provider_id,
+                           func, name, option, type, args);
+}
+
+void rxpa_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
+                             char* name, char* option, char* type, char* args) {
     if (plugin_being_loaded_context) {
-        if (plugin_being_loaded_metadata) {
-            import_rxpa_metadata_list(plugin_being_loaded_context, plugin_being_loaded, plugin_being_loaded_metadata);
-            free_rxpa_metadata_list(&plugin_being_loaded_metadata);
-        }
-        if (plugin_being_loaded_context->debug_mode >= 2) printf("Importing Procedures - Loading %s\n", name);
-        rximpf_f(plugin_being_loaded_context, plugin_being_loaded, name, option, type, args, 0, 0, 0);
+        struct static_linked_function **tail =
+                &plugin_being_loaded_functions;
+        struct static_linked_function *pending =
+                malloc(sizeof(struct static_linked_function));
+
+        (void)func;
+        if (!pending) return;
+        pending->provider_id = (char *)plugin_id;
+        pending->name = name;
+        pending->option = option;
+        pending->type = type;
+        pending->args = args;
+        pending->next = 0;
+        while (*tail) tail = &(*tail)->next;
+        *tail = pending;
     }
     else {
         // Add to the list of statically linked functions
         struct static_linked_function *new_static_func = malloc(sizeof(struct static_linked_function));
+        new_static_func->provider_id = (char *)plugin_id;
         new_static_func->name = name;
         new_static_func->option = option;
         new_static_func->type = type;
@@ -2661,10 +2695,15 @@ void rxpa_addmember(char* owner, char* kind, char* member, char* type, char* arg
 }
 
 static void loadPluginFileForFunctions(Context *context, char* file_name, char* location) {
+    rxpa_loaded_plugin loaded_plugin;
+    struct static_linked_function *pending_functions;
+    struct static_linked_metadata *pending_metadata;
 
     /* Update context */
     plugin_being_loaded = file_name;
+    plugin_being_loaded_provider_id = 0;
     plugin_being_loaded_context = context;
+    plugin_being_loaded_functions = 0;
     plugin_being_loaded_metadata = 0;
 
     // Create the rxpa_initctxptr context
@@ -2690,14 +2729,18 @@ static void loadPluginFileForFunctions(Context *context, char* file_name, char* 
     rxpa_context.swapattrs = rxpa_swapattrs;
     rxpa_context.setsayexit = rxpa_setsayexit;
     rxpa_context.resetsayexit = rxpa_resetsayexit;
+    rxpa_context.isinitialized = rxpa_isinitialized;
 
     if (context->debug_mode >= 2) printf("Importing Procedures - Reading CREXX Plugin file %s for possible procedure imports\n", file_name);
 
     // Load the plugin - and run the plugin initialization function
-    int rc = load_plugin(&rxpa_context, location, file_name);
+    int rc = rxpa_open_plugin(location, file_name, &loaded_plugin);
+    if (!rc) {
+        plugin_being_loaded_provider_id = loaded_plugin.plugin_id;
+        rc = rxpa_initialize_plugin(&loaded_plugin, &rxpa_context);
+    }
     if (!rc) {
         if (context->debug_mode >= 2) printf("Importing Procedures - CREXX Plugin %s loaded successfully\n", file_name);
-        import_rxpa_metadata_list(context, file_name, plugin_being_loaded_metadata);
     }
     else {
         fprintf(stderr,
@@ -2706,7 +2749,46 @@ static void loadPluginFileForFunctions(Context *context, char* file_name, char* 
                 file_name, rc);
     }
 
-    free_rxpa_metadata_list(&plugin_being_loaded_metadata);
+    /*
+     * RXPA initializers run under the loader mutex.  Importing a synthesized
+     * declaration from inside ADDPROC can need another provider or a Rexx
+     * class module, which may re-enter the loader and deadlock.  End the
+     * callback collection phase first, then parse metadata and declarations
+     * after rxpa_initialize_plugin() has released that mutex.  Keep the DSO
+     * open until every callback-owned string has been consumed.
+     */
+    pending_functions = plugin_being_loaded_functions;
+    pending_metadata = plugin_being_loaded_metadata;
+    plugin_being_loaded_functions = 0;
+    plugin_being_loaded_metadata = 0;
+    plugin_being_loaded_provider_id = 0;
+    plugin_being_loaded_context = 0;
+
+    if (!rc) {
+        struct static_linked_function *pending = pending_functions;
+
+        import_rxpa_metadata_list(context, file_name, pending_metadata);
+        while (pending) {
+            struct static_linked_function *next = pending->next;
+
+            if (context->debug_mode >= 2)
+                printf("Importing Procedures - Loading %s\n", pending->name);
+            (void)rximpf_provider_f(context, file_name,
+                                    pending->name, pending->option,
+                                    pending->type, pending->args,
+                                    0, 0, 0, pending->provider_id);
+            free(pending);
+            pending = next;
+        }
+        pending_functions = 0;
+    }
+    while (pending_functions) {
+        struct static_linked_function *next = pending_functions->next;
+        free(pending_functions);
+        pending_functions = next;
+    }
+    free_rxpa_metadata_list(&pending_metadata);
+    if (loaded_plugin.handle) rxpa_close_plugin(&loaded_plugin);
 }
 
 static void parseRxasFileForFunctions(Context *context, char* file_name, char* location) {
@@ -3172,9 +3254,12 @@ static int load_another_file(Context *context) {
         import_rxpa_metadata_list(context, "statically-linked", metadata);
 
         while (static_func) {
-            rximpf_f(context, "statically-linked",
-                     static_func->name, static_func->option, static_func->type,
-                     static_func->args, 0, 0, 0);
+            imported_func *imported = rximpf_provider_f(
+                    context, "statically-linked",
+                    static_func->name, static_func->option, static_func->type,
+                    static_func->args, 0, 0, 0,
+                    static_func->provider_id);
+            (void)imported;
             static_func = static_func->next;
         }
 
@@ -3624,8 +3709,10 @@ static void mark_imported_task_callable(ASTNode *node) {
     }
 }
 
-imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *options, char *type, char *args,
-                        char *implementation, char is_variable, char is_task_callable)  {
+static imported_func *rximpf_provider_f(
+        Context* context, char* file_name, char *fqname, char *options,
+        char *type, char *args, char *implementation, char is_variable,
+        char is_task_callable, const char *provider_id)  {
     imported_func *func;
     char *buffer;
     char *name;
@@ -3646,6 +3733,8 @@ imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *o
     func->context = 0;
     func->is_variable = is_variable; /* Is a function or a Variable */
     func->is_task_callable = is_task_callable;
+    func->provider_id = provider_id && *provider_id
+            ? strdup(provider_id) : 0;
     func->duplicate = 0;
     func->error_state = 0;
     func->error_field = 0;
@@ -3776,6 +3865,15 @@ imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *o
     return func;
 }
 
+imported_func *rximpf_f(Context* context, char* file_name, char *fqname,
+                        char *options, char *type, char *args,
+                        char *implementation, char is_variable,
+                        char is_task_callable) {
+    return rximpf_provider_f(context, file_name, fqname, options, type, args,
+                             implementation, is_variable, is_task_callable,
+                             0);
+}
+
 /* Free an imported_func */
 void freimpfc(imported_func *func) {
     if (func->namespace) free(func->namespace);
@@ -3786,6 +3884,7 @@ void freimpfc(imported_func *func) {
     if (func->type) free(func->type);
     if (func->args) free(func->args);
     if (func->implementation) free(func->implementation);
+    if (func->provider_id) free(func->provider_id);
     if (func->context) fre_cntx(func->context);
     if (func->duplicate) freimpfc(func->duplicate);
     free(func);

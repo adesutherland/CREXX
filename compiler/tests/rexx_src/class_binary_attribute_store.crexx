@@ -1,0 +1,68 @@
+options levelb
+namespace class_binary_attribute_store
+import rxfnsb
+
+main: procedure = .int
+  slot = .BinarySlot(32)
+  call slot.setPackedFloat(0, 1.25)
+  call slot.setEncodedFloat(8, -2.5)
+  call slot.setPackedInt(2, -41)
+  call slot.setEncodedInt(24, 9223372036854775807)
+
+  if slot.getPackedFloat(0) <> 1.25 then return 1
+  if slot.getEncodedFloat(8) <> -2.5 then return 2
+  if slot.getPackedInt(2) <> -41 then return 3
+  if slot.getEncodedInt(24) <> 9223372036854775807 then return 4
+  if binlength(slot.binary()) <> 32 then return 5
+
+  say "ok"
+  return 0
+
+BinarySlot: class
+  _data = .binary with register.0.binary
+
+  *: factory
+    arg byte_length = .int
+    data = .binary
+    call binresize data, byte_length
+    _data = data
+    return
+
+  setPackedFloat: method = .void
+    arg index = .int, value = .float
+    <packed..float>(index) _data = value
+    return
+
+  getPackedFloat: method = .float
+    arg index = .int
+    return <packed..float>(index) _data
+
+  setEncodedFloat: method = .void
+    arg offset = .int, value = .float
+    <at..f64>(offset) _data = value
+    return
+
+  getEncodedFloat: method = .float
+    arg offset = .int
+    return <at..f64>(offset) _data
+
+  setPackedInt: method = .void
+    arg index = .int, value = .int
+    <packed..int>(index) _data = value
+    return
+
+  getPackedInt: method = .int
+    arg index = .int
+    return <packed..int>(index) _data
+
+  setEncodedInt: method = .void
+    arg offset = .int, value = .int
+    <at..i64>(offset) _data = value
+    return
+
+  getEncodedInt: method = .int
+    arg offset = .int
+    return <at..i64>(offset) _data
+
+  binary: method = .binary
+    return _data

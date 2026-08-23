@@ -302,7 +302,7 @@ static uint64_t rxbin007_read_u64_at(const unsigned char *data) {
 }
 
 static int rxbin007_is_metadata(enum const_pool_type type) {
-    return type >= META_FUNC && type <= META_TASK_TARGET;
+    return type >= META_FUNC && type <= META_INITIALIZER;
 }
 
 static size_t rxbin007_bounded_strlen(const char *text, size_t available) {
@@ -363,7 +363,7 @@ static int rxbin007_scan_pool(rxbin007_pool *pool, const char *context) {
         }
         entry = (chameleon_constant *)(pool->data + offset);
         minimum = sizeof(chameleon_constant);
-        if (entry->type < STRING_CONST || entry->type > META_TASK_TARGET ||
+        if (entry->type < STRING_CONST || entry->type > META_INITIALIZER ||
             entry->size_in_pool < minimum || (entry->size_in_pool & 7u) ||
             entry->size_in_pool > pool->size - offset) {
             rxbin007_set_error("RXBIN 007 %s has an invalid constant entry at offset %lu",
@@ -783,6 +783,19 @@ static int rxbin007_encode_entry_payload(const rxbin007_pool *pool,
             return rxbin007_payload_ref(payload, pool, entry->symbol) &&
                    rxbin007_payload_ref(payload, pool, entry->binding) &&
                    rxbin007_u32(payload, entry->kind);
+        }
+        case META_PROVIDER: {
+            const meta_provider_constant *entry =
+                (const meta_provider_constant *)base;
+            return rxbin007_payload_ref(payload, pool, entry->symbol) &&
+                   rxbin007_payload_ref(payload, pool, entry->provider) &&
+                   rxbin007_u32(payload, entry->flags);
+        }
+        case META_INITIALIZER: {
+            const meta_initializer_constant *entry =
+                (const meta_initializer_constant *)base;
+            return rxbin007_payload_ref(payload, pool, entry->symbol) &&
+                   rxbin007_payload_ref(payload, pool, entry->function);
         }
         case META_SOURCE_STEP: {
             const meta_source_step_constant *entry = (const meta_source_step_constant *)base;
@@ -1293,6 +1306,19 @@ int write_modules(module_file *const *input_modules,
 
     memset(sections, 0, sizeof(sections));
     feature_flags = 0u;
+    for (i = 0u; i < pool_count; i++) {
+        uint32_t entry_index;
+        for (entry_index = 0u;
+             entry_index < pools[i].entry_count;
+             entry_index++) {
+            if (pools[i].entries[entry_index].entry->type == META_PROVIDER) {
+                feature_flags |= RXBIN007_FEATURE_NATIVE_PROVIDERS;
+            } else if (pools[i].entries[entry_index].entry->type ==
+                       META_INITIALIZER) {
+                feature_flags |= RXBIN007_FEATURE_INITIALIZERS;
+            }
+        }
+    }
     for (i = 0u; i < RXBIN007_SECTION_COUNT; i++) {
         sections[i].kind = (uint32_t)i + 1u;
         sections[i].alignment = 8u;
@@ -1537,7 +1563,7 @@ static int rxbin007_parse_record_section(const rxbin007_section_view *section,
             !rxbin007_reader_u32(&reader, &flags) ||
             !rxbin007_reader_u64(&reader, &payload_size) ||
             pool_index >= pool_count || id == RXBIN007_NONE || id >= maximum_records ||
-            type > META_TASK_TARGET || flags ||
+            type > META_INITIALIZER || flags ||
             metadata != rxbin007_is_metadata((enum const_pool_type)type) ||
             payload_size > (uint64_t)(reader.end - reader.cursor) ||
             !rxbin007_pool_read_grow(&pools[pool_index], id + 1u)) return 0;
@@ -1558,6 +1584,24 @@ static int rxbin007_parse_record_section(const rxbin007_section_view *section,
         }
     }
     return reader.cursor == reader.end;
+}
+
+static int rxbin007_pool_reads_have_type(const rxbin007_pool_read *pools,
+                                         uint32_t pool_count,
+                                         enum const_pool_type type) {
+    uint32_t pool_index;
+
+    for (pool_index = 0u; pool_index < pool_count; pool_index++) {
+        uint32_t record_index;
+        for (record_index = 0u;
+             record_index < pools[pool_index].record_count;
+             record_index++) {
+            const rxbin007_record_view *record =
+                &pools[pool_index].records[record_index];
+            if (record->present && record->type == (uint32_t)type) return 1;
+        }
+    }
+    return 0;
 }
 
 static size_t rxbin007_native_size(const rxbin007_record_view *record) {
@@ -1623,6 +1667,8 @@ static size_t rxbin007_native_size(const rxbin007_record_view *record) {
         case META_SOURCE_STEP: base_size = sizeof(meta_source_step_constant); goto metadata;
         case META_TRACE_EVENT: base_size = sizeof(meta_trace_event_constant); goto metadata;
         case META_TASK_TARGET: base_size = sizeof(meta_task_target_constant); goto metadata;
+        case META_PROVIDER: base_size = sizeof(meta_provider_constant); goto metadata;
+        case META_INITIALIZER: base_size = sizeof(meta_initializer_constant); goto metadata;
         default:
             return 0u;
 metadata:
@@ -1951,6 +1997,28 @@ static int rxbin007_fill_record(rxbin007_pool_read *pool, uint32_t id) {
                 entry->kind < 1u || entry->kind > 3u ||
                 !rxbin007_payload_done(&reader)) return 0;
             return 1;
+        }
+        case META_PROVIDER: {
+            meta_provider_constant *entry = (meta_provider_constant *)base;
+            if (!rxbin007_reader_ref_kind(&reader, pool, RXBIN007_REF_STRING, 0,
+                                          &entry->symbol) ||
+                !rxbin007_reader_ref_kind(&reader, pool, RXBIN007_REF_STRING, 0,
+                                          &entry->provider) ||
+                !rxbin007_reader_u32(&reader, &entry->flags) ||
+                (entry->flags & ~RXBIN_PROVIDER_KNOWN_FLAGS) != 0u ||
+                !rxbin007_payload_done(&reader)) return 0;
+            return 1;
+        }
+        case META_INITIALIZER: {
+            meta_initializer_constant *entry =
+                (meta_initializer_constant *)base;
+            return rxbin007_reader_ref_kind(&reader, pool,
+                                            RXBIN007_REF_STRING, 0,
+                                            &entry->symbol) &&
+                   rxbin007_reader_ref_kind(&reader, pool,
+                                            RXBIN007_REF_PROCEDURE, 0,
+                                            &entry->function) &&
+                   rxbin007_payload_done(&reader);
         }
         case META_SOURCE_STEP: {
             meta_source_step_constant *entry = (meta_source_step_constant *)base;
@@ -2495,6 +2563,20 @@ static int rxbin007_parse_image(const unsigned char *image,
             (uint32_t)total_records,
             &pools,
             &pool_count)) goto error;
+    if (rxbin007_pool_reads_have_type(pools, pool_count, META_PROVIDER) &&
+        !(feature_flags & RXBIN007_FEATURE_NATIVE_PROVIDERS)) {
+        rxbin007_set_error(
+                "RXBIN 007 provider metadata requires feature flag 0x%08x",
+                (unsigned int)RXBIN007_FEATURE_NATIVE_PROVIDERS);
+        goto error;
+    }
+    if (rxbin007_pool_reads_have_type(pools, pool_count, META_INITIALIZER) &&
+        !(feature_flags & RXBIN007_FEATURE_INITIALIZERS)) {
+        rxbin007_set_error(
+                "RXBIN 007 initializer metadata requires feature flag 0x%08x",
+                (unsigned int)RXBIN007_FEATURE_INITIALIZERS);
+        goto error;
+    }
     for (i = 0u; i < pool_count; i++) {
         if (!rxbin007_materialize_pool(&pools[i])) goto error;
     }

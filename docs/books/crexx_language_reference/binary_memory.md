@@ -137,6 +137,45 @@ main: procedure = .int
   return 0
 ```
 
+## Host-Native Packed Numeric Items
+
+Release 1 Level B also provides a deliberately host-native numerical view over
+the same `.binary` storage:
+
+```rexx
+values = .binary
+call binresize values, count * <sizeof..float>
+<packed..float>(0) values = 100.0
+first = <packed..float>(0) values
+third = <packed..float>(2) values
+```
+
+The only accepted forms are `<packed..int>(index) binary` and
+`<packed..float>(index) binary`, including use as assignment targets. Indexes
+are zero-based native-item positions: `2` means the third item. `<blen>` and
+`binresize` remain byte-based, and stores never grow the binary value.
+
+`packed..int` uses exactly the host representation of `.int` (`rxinteger`),
+and `packed..float` uses exactly the host representation of `.float`
+(`rxfloat`). Runtime-owned binary storage is aligned for both native types.
+Access outside the complete logical byte extent raises `OUT_OF_RANGE` before a
+write changes the value.
+
+This is a numerical-kernel and native-provider surface, not an interchange
+format. It performs no endian conversion, width conversion, or portability
+check. The access spelling supplies the interpretation and `.binary` carries no
+hidden item-kind tag. Use `<at..type>` for files, protocols, persistence,
+unaligned data, fixed-width values, or selected byte order.
+
+Only `int` and `float` are valid packed suffixes. Other scalar, object, string,
+decimal, and encoded-width suffixes are compiler errors. The Level G `rxfnsg`
+library wraps these instructions with explicit `.packedint` and `.packedfloat`
+owner classes. They retain zero-based item access through `get` and `set` and
+store their payload directly in the class object's binary component. Ordinary
+`.int[]` and `.float[]` arrays keep their current representation in Release 1;
+automatic packed ordinary arrays and custom `x[index]` indexing remain a
+post-release Level G roadmap item.
+
 ## Variable-Size Reads And Writes
 
 Variable-size reads materialize ordinary Rexx values:
@@ -362,6 +401,8 @@ Existing keys that must continue to be used:
 | `CANNOT_CAST_BINARY` | Binary data cannot be converted to text without an explicit encoding. | Binary bytes would become text without explicit valid UTF-8 conversion. |
 | `INVALID_SIZEOF_SYNTAX` | SIZEOF intrinsic has invalid syntax. | `<sizeof>` is malformed. |
 | `INTRINSIC_GENERIC_TYPES_UNSUPPORTED` | Intrinsic type parameter lists are not supported in Release 1. | A parsed generic intrinsic type-list form is valid syntax but unsupported in Release 1. |
+| `PACKED_INDEX_REQUIRED` | Packed numeric access requires a zero-based item-index argument. | A packed native item read or write omits its item index. |
+| `PACKED_INVALID_STORAGE_TYPE` | Packed numeric access supports only native int and float items. | A `packed` intrinsic names any other suffix. |
 
 Compare diagnostics are:
 

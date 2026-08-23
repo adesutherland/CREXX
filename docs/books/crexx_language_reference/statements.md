@@ -429,6 +429,33 @@ proc2: procedure = .void expose var
 
 This is distinct from `ARG expose`, which exposes a call argument by reference.
 
+## INITIALISER
+
+`INITIALISER` declares a private procedure that the VM runs automatically
+before its mutable module instance becomes executable.
+
+```rexx
+name: initialiser
+name: initialiser expose state cache
+```
+
+A module may contain zero or more initializers. They run once per mutable
+module instance in declaration order. An initializer has no arguments and an
+implicit `.void` return type. It may use a bare `return`, but it cannot declare
+`arg` parameters or return a value.
+
+The label has the module's normal namespace-qualified identity in metadata and
+diagnostics, but it is not a callable or exportable procedure. A direct call to
+the label and a file-level `namespace ... expose` of the label are compile
+errors. The optional initializer-level `expose` clause binds module-global
+variables into the initializer body; it does not expose the initializer itself.
+
+The VM runs initializers after native-provider resolution, linking, and
+execution-image preparation, and before `main` or a public host call. A call
+from an initializer into an unready module initializes the target module first;
+an initialization cycle fails rather than entering a partially initialized
+module.
+
 ## SAY
 
 SAY \[ expr \] ;

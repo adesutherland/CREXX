@@ -1,0 +1,9 @@
+phase,round,vm,kind,variant,position,elapsed_us,items_per_second,checksum
+warmup,1,rxbvm,read,packed-read,1,13258,150852315,1000000
+warmup,1,rxbvm,read,encoded-read,2,22805,87700065,1000000
+warmup,1,rxbvm,write,packed-write,3,19058,104942806,200019
+warmup,1,rxbvm,write,encoded-write,4,38126,52457640,200019
+warmup,1,rxtvm,read,packed-read,5,10246,195198126,1000000
+warmup,1,rxtvm,read,encoded-read,6,25466,78536087,1000000
+warmup,1,rxtvm,write,packed-write,7,23070,86692674,200019
+warmup,1,rxtvm,write,encoded-write,8,42511,47046646,200019

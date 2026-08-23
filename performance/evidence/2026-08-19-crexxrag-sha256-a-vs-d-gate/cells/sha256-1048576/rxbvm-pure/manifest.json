@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "capture_tool": "run_cross_runtime.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g2ff2a345a216 20260819",
+  "workload": "sha256-1048576",
+  "runtime": "rxbvm",
+  "variant": "pure",
+  "lifecycle": "process",
+  "warmups": 1,
+  "recorded_runs": 3,
+  "sampling": "serial",
+  "correctness_expectation": "PASS: CREXXRAG-SHA256 integrated gate",
+  "metric_prefix": "elapsed_us=",
+  "command": ["cmake-build-release/bin/rxbvm","cmake-build-release/tests/performance/crexxrag_sha256_a_vs_d_opt_linked.rxbin","/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/performance/rx_crexxrag_sha256_gate","-a","pure","1048576","2"],
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "os=macos",
+  "started_utc": "2026-08-19T12:11:49+0000",
+  "completed_utc": "2026-08-19T12:11:54+0000",
+  "result": "pass"
+}

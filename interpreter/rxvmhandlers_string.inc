@@ -1872,6 +1872,81 @@ RXVM_HANDLER(BCHECKRANGE_REG_REG_REG, VM_ADVANCE(3);
     DISPATCH;
 
 /* ------------------------------------------------------------------------------------
+ *  Host-native packed numeric item access. Bounds are checked in items;
+ *  memcpy keeps the scalar load/store strict-aliasing safe.
+ *  -----------------------------------------------------------------------------------
+ */
+
+)
+
+RXVM_HANDLER(PGETI_REG_REG_REG, VM_ADVANCE(3);
+    DEBUG("TRACE - PGETI R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        rxinteger result;
+        if (!rxvm_packed_range(op2R, op3R->int_value, sizeof(result), &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            memcpy(&result, op2R->binary_value + offset, sizeof(result));
+            REG_RETURN_INT(result)
+        }
+    }
+    DISPATCH;
+
+
+)
+
+RXVM_HANDLER(PSETI_REG_REG_REG, VM_ADVANCE(3);
+    DEBUG("TRACE - PSETI R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        rxinteger source = op3R->int_value;
+        if (!rxvm_packed_range(op1R, op2R->int_value, sizeof(source), &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            memcpy(op1R->binary_value + offset, &source, sizeof(source));
+        }
+    }
+    DISPATCH;
+
+
+)
+
+RXVM_HANDLER(PGETF_REG_REG_REG, VM_ADVANCE(3);
+    DEBUG("TRACE - PGETF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        double result;
+        if (!rxvm_packed_range(op2R, op3R->int_value, sizeof(result), &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            memcpy(&result, op2R->binary_value + offset, sizeof(result));
+            REG_RETURN_FLOAT(result)
+        }
+    }
+    DISPATCH;
+
+
+)
+
+RXVM_HANDLER(PSETF_REG_REG_REG, VM_ADVANCE(3);
+    DEBUG("TRACE - PSETF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        double source = op3R->float_value;
+        if (!rxvm_packed_range(op1R, op2R->int_value, sizeof(source), &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            memcpy(op1R->binary_value + offset, &source, sizeof(source));
+        }
+    }
+    DISPATCH;
+
+/* ------------------------------------------------------------------------------------
  *  Binary memory strings, moves, and zero-copy compares
  *  -----------------------------------------------------------------------------------
  */

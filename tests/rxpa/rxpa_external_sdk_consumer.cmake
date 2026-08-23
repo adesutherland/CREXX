@@ -13,7 +13,9 @@ foreach(consumer_file IN ITEMS
         CMakeLists.txt
         sdk_probe.c
         sdk_probe.crexx
-        sdk_const_probe.cpp)
+        sdk_const_probe.cpp
+        rx_hash_installed.crexx
+        rcc5de_installed.crexx)
     file(COPY_FILE
             "${CONSUMER_SOURCE_DIR}/${consumer_file}"
             "${consumer_source}/${consumer_file}")
@@ -56,11 +58,45 @@ set(required_sdk_files
         "${prefix}/${PACKAGE_RELATIVE_DIR}/CREXXConfigVersion.cmake"
         "${prefix}/${PACKAGE_RELATIVE_DIR}/CREXXTargets.cmake"
         "${prefix}/${PACKAGE_RELATIVE_DIR}/RXPluginFunction.cmake"
+        "${prefix}/bin/rx_hash.rxplugin"
+        "${prefix}/bin/providers/rx_hash.rxplugin"
+        "${prefix}/bin/providers/rx_hash${STATIC_SUFFIX}"
+        "${prefix}/bin/providers/rx_hash_static${STATIC_SUFFIX}"
+        "${prefix}/bin/rxstats.rxplugin"
+        "${prefix}/bin/providers/rxstats.rxplugin"
+        "${prefix}/bin/providers/rxstats${STATIC_SUFFIX}"
+        "${prefix}/bin/providers/rxstats_static${STATIC_SUFFIX}"
+        "${prefix}/bin/rxvector.rxplugin"
+        "${prefix}/bin/providers/rxvector.rxplugin"
+        "${prefix}/bin/providers/rxvector${STATIC_SUFFIX}"
+        "${prefix}/bin/providers/rxvector_static${STATIC_SUFFIX}"
+        "${prefix}/bin/rxid.rxplugin"
+        "${prefix}/bin/providers/rxid.rxplugin"
+        "${prefix}/bin/providers/rxid${STATIC_SUFFIX}"
+        "${prefix}/bin/providers/rxid_static${STATIC_SUFFIX}"
+        "${prefix}/bin/rxfs.rxplugin"
+        "${prefix}/bin/providers/rxfs.rxplugin"
+        "${prefix}/bin/providers/rxfs${STATIC_SUFFIX}"
+        "${prefix}/bin/providers/rxfs_static${STATIC_SUFFIX}"
+        "${prefix}/bin/rxplatform.rxplugin"
+        "${prefix}/bin/providers/rxplatform.rxplugin"
+        "${prefix}/bin/providers/rxplatform${STATIC_SUFFIX}"
+        "${prefix}/bin/providers/rxplatform_static${STATIC_SUFFIX}"
         "${prefix}/BUILDINFO"
         "${prefix}/VERSION")
 foreach(required_file IN LISTS required_sdk_files)
     if(NOT EXISTS "${required_file}")
         message(FATAL_ERROR "Scratch SDK is missing ${required_file}")
+    endif()
+endforeach()
+
+foreach(test_only_plugin IN ITEMS
+        "${prefix}/bin/rx_rcc5f_stats_boxed.rxplugin"
+        "${prefix}/bin/rx_rcc5f_stats_direct.rxplugin"
+        "${prefix}/bin/rx_rxvector01_direct.rxplugin")
+    if(EXISTS "${test_only_plugin}")
+        message(FATAL_ERROR
+                "Scratch SDK published test-only provider ${test_only_plugin}")
     endif()
 endforeach()
 
@@ -120,6 +156,89 @@ set(rxc "${prefix}/bin/rxc${EXE_SUFFIX}")
 set(rxas "${prefix}/bin/rxas${EXE_SUFFIX}")
 set(rxvm "${prefix}/bin/rxvm${EXE_SUFFIX}")
 set(rxbvm "${prefix}/bin/rxbvm${EXE_SUFFIX}")
+set(crexx "${prefix}/bin/crexx${EXE_SUFFIX}")
+
+foreach(mode IN ITEMS opt noopt)
+    set(mode_flag)
+    if(mode STREQUAL "noopt")
+        set(mode_flag -n)
+    endif()
+    run_checked("compile installed rx_hash consumer ${mode}"
+            COMMAND "${rxc}" -i "${prefix}/bin" ${mode_flag}
+                    -o "${WORK_ROOT}/rx-hash-installed-${mode}"
+                    "${consumer_source}/rx_hash_installed.crexx"
+            WORKING_DIRECTORY "${WORK_ROOT}")
+    run_checked("assemble installed rx_hash consumer ${mode}"
+            COMMAND "${rxas}" ${mode_flag}
+                    -o "${WORK_ROOT}/rx-hash-installed-${mode}.rxbin"
+                    "${WORK_ROOT}/rx-hash-installed-${mode}"
+            WORKING_DIRECTORY "${WORK_ROOT}")
+endforeach()
+
+foreach(vm IN ITEMS "${rxvm}" "${rxbvm}")
+    foreach(mode IN ITEMS opt noopt)
+        run_checked("autoload installed rx_hash with ${vm} ${mode}"
+                COMMAND "${vm}" "${WORK_ROOT}/rx-hash-installed-${mode}"
+                        "${prefix}/bin/library"
+                WORKING_DIRECTORY "${WORK_ROOT}")
+        if(NOT last_stdout STREQUAL
+           "EF7E301027F931DFBA06C7DED4EF305797F43CC115A664F9AF9B57D08C3172C2\n")
+            message(FATAL_ERROR
+                    "Installed rx_hash output mismatch for ${vm} ${mode}:\n${last_stdout}")
+        endif()
+    endforeach()
+endforeach()
+
+run_checked("native-package installed rx_hash consumer"
+        COMMAND "${crexx}" -native rx_hash_installed.crexx
+        WORKING_DIRECTORY "${consumer_source}")
+run_checked("run native-packaged installed rx_hash consumer"
+        COMMAND "${consumer_source}/rx_hash_installed${EXE_SUFFIX}"
+        WORKING_DIRECTORY "${consumer_source}")
+if(NOT last_stdout STREQUAL
+   "EF7E301027F931DFBA06C7DED4EF305797F43CC115A664F9AF9B57D08C3172C2\n")
+    message(FATAL_ERROR "Installed native rx_hash output mismatch:\n${last_stdout}")
+endif()
+
+foreach(mode IN ITEMS opt noopt)
+    set(mode_flag)
+    if(mode STREQUAL "noopt")
+        set(mode_flag -n)
+    endif()
+    run_checked("compile installed RCC-5 consumer ${mode}"
+            COMMAND "${rxc}" -i "${prefix}/bin" ${mode_flag}
+                    -o "${WORK_ROOT}/rcc5de-installed-${mode}"
+                    "${consumer_source}/rcc5de_installed.crexx"
+            WORKING_DIRECTORY "${WORK_ROOT}")
+    run_checked("assemble installed RCC-5 consumer ${mode}"
+            COMMAND "${rxas}" ${mode_flag}
+                    -o "${WORK_ROOT}/rcc5de-installed-${mode}.rxbin"
+                    "${WORK_ROOT}/rcc5de-installed-${mode}"
+            WORKING_DIRECTORY "${WORK_ROOT}")
+endforeach()
+
+foreach(vm IN ITEMS "${rxvm}" "${rxbvm}")
+    foreach(mode IN ITEMS opt noopt)
+        run_checked("autoload installed RCC-5 providers with ${vm} ${mode}"
+                COMMAND "${vm}" "${WORK_ROOT}/rcc5de-installed-${mode}"
+                        "${prefix}/bin/library" "${prefix}/bin/rxfnsg"
+                WORKING_DIRECTORY "${WORK_ROOT}")
+        if(NOT last_stdout STREQUAL "PASS: installed RCC-5 providers\n")
+            message(FATAL_ERROR
+                    "Installed RCC-5 output mismatch for ${vm} ${mode}:\n${last_stdout}")
+        endif()
+    endforeach()
+endforeach()
+
+run_checked("native-package installed RCC-5 consumer"
+        COMMAND "${crexx}" -native -l rxfnsg rcc5de_installed.crexx
+        WORKING_DIRECTORY "${consumer_source}")
+run_checked("run native-packaged installed RCC-5 consumer"
+        COMMAND "${consumer_source}/rcc5de_installed${EXE_SUFFIX}"
+        WORKING_DIRECTORY "${consumer_source}")
+if(NOT last_stdout STREQUAL "PASS: installed RCC-5 providers\n")
+    message(FATAL_ERROR "Installed native RCC-5 output mismatch:\n${last_stdout}")
+endif()
 
 execute_process(
         COMMAND "${rxc}" -i "${prefix}/bin" -o "${WORK_ROOT}/missing-import"
@@ -202,7 +321,17 @@ set(manifest_files ${required_sdk_files}
         "${WORK_ROOT}/sdk-probe-opt.rxas"
         "${WORK_ROOT}/sdk-probe-opt.rxbin"
         "${WORK_ROOT}/sdk-probe-noopt.rxas"
-        "${WORK_ROOT}/sdk-probe-noopt.rxbin")
+        "${WORK_ROOT}/sdk-probe-noopt.rxbin"
+        "${WORK_ROOT}/rx-hash-installed-opt.rxas"
+        "${WORK_ROOT}/rx-hash-installed-opt.rxbin"
+        "${WORK_ROOT}/rx-hash-installed-noopt.rxas"
+        "${WORK_ROOT}/rx-hash-installed-noopt.rxbin"
+        "${consumer_source}/rx_hash_installed${EXE_SUFFIX}"
+        "${WORK_ROOT}/rcc5de-installed-opt.rxas"
+        "${WORK_ROOT}/rcc5de-installed-opt.rxbin"
+        "${WORK_ROOT}/rcc5de-installed-noopt.rxas"
+        "${WORK_ROOT}/rcc5de-installed-noopt.rxbin"
+        "${consumer_source}/rcc5de_installed${EXE_SUFFIX}")
 foreach(manifest_file IN LISTS manifest_files)
     file(SHA256 "${manifest_file}" manifest_hash)
     file(APPEND "${manifest}" "${manifest_hash}  ${manifest_file}\n")

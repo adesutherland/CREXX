@@ -1,0 +1,52 @@
+options levelb
+
+import rxfnsb
+import rxhash
+
+makeGenerated: procedure = .binary
+  arg bytes = .int
+  data = .binary
+  call binresize data, bytes
+  do offset = 0 to bytes - 1
+    <at..u8>(offset) data = (offset * 31 + 7) <mod> 256
+  end
+  return data
+
+checkVector: procedure = .int
+  arg label = .string, data = .binary, expected = .string
+  actual = bin2x(rxhash..sha256(data))
+  if actual <> expected then do
+    say "FAIL: rxhash.sha256 vector " || label || " expected=" || expected || " actual=" || actual
+    return 1
+  end
+  return 0
+
+checkHash32: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual = expected then return 0
+  say "FAIL:" label "expected=" expected "actual=" actual
+  return 1
+
+main: procedure = .int
+  failures = 0
+  failures = failures + checkVector("empty", x2bin(""), "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855")
+  failures = failures + checkVector("abc", x2bin("616263"), "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")
+  failures = failures + checkVector("embedded-zero", x2bin("00010200FF"), "EF7E301027F931DFBA06C7DED4EF305797F43CC115A664F9AF9B57D08C3172C2")
+  failures = failures + checkVector("generated-55", makeGenerated(55), "8AA994584139D128848EEEBC4E815639BA5AB6E6E39574195A63AC4F14F7C43B")
+  failures = failures + checkVector("generated-56", makeGenerated(56), "AD574708F75C044C9B85DE64CB568EE7711FF4F36448C6242F053BA8F6CC2B63")
+  failures = failures + checkVector("generated-63", makeGenerated(63), "280ED3E8FF1DF845B2E7DFE6AC6CEE817BEF20E783CC65ABC41B818B4D2FE076")
+  failures = failures + checkVector("generated-64", makeGenerated(64), "C6AB9724ADE5B6A7A1EDFFFB12F3AA9181351355AF8FD08C919952AD211339DD")
+  failures = failures + checkVector("generated-65", makeGenerated(65), "788367C73C7DDF4C53F65E68CC0D943E6227AB55B0E78BA63ACE822B1C6301C0")
+  failures = failures + checkVector("generated-4096", makeGenerated(4096), "D41D438C379110C7F7B2C561B1F04F26C1B4549110791F8E022F48974280C13E")
+  failures = failures + checkHash32("djb2 hello", rxhash..djb2("hello" as .binary), 261238937)
+  failures = failures + checkHash32("murmur3 hello", rxhash..murmur3("hello" as .binary, 0), 613153351)
+  failures = failures + checkHash32("fnv1a hello", rxhash..fnv1a("hello" as .binary), 1335831723)
+  failures = failures + checkHash32("crc32 hello", rxhash..crc32("hello" as .binary), 907060870)
+  embedded = x2bin("610062")
+  failures = failures + checkHash32("djb2 embedded zero", rxhash..djb2(embedded), 193482728)
+  failures = failures + checkHash32("murmur3 embedded zero", rxhash..murmur3(embedded, 0), 1871496870)
+  failures = failures + checkHash32("fnv1a embedded zero", rxhash..fnv1a(embedded), 284404690)
+  failures = failures + checkHash32("crc32 embedded zero", rxhash..crc32(embedded), 367556721)
+  if failures > 0 then return 1
+  say "PASS: rxhash digest and checksum vectors"
+  return 0

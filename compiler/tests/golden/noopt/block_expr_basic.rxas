@@ -32,7 +32,6 @@ l16iffalse:
    load r4,0
    .traceevent "L" 4 "R" "I" "r" 4 7 7 0 "" ""
    icopy r3,r4
-   br l19bexprend
 l19bexprend:
    .meta "block_expr_basic.main.a"
    iadd r1,r3,10
@@ -67,13 +66,11 @@ l36iffalse:
    load r3,0
    .traceevent "L" 4 "R" "I" "r" 3 17 17 0 "" ""
    icopy r2,r3
-   br l39bexprend
 l39bexprend:
    .meta "block_expr_basic.main.x"
    iadd r4,r2,100
    .traceevent "O" 4 "R" "I" "r" 4 17 17 0 "" ""
    icopy r2,r4
-   br l43bexprend
 l43bexprend:
    icopy r0,r2
    .traceevent "A" 6 "R" "I" "r" 0 17 17 0 "nested" ""
@@ -91,7 +88,6 @@ l43bexprend:
    .srcstep 20 20 17 "block_expr_basic.crexx" 21 3 15 "  leave with y"
    .traceevent "V" 6 "R" "I" "r" 4 22 22 0 "y" ""
    icopy r3,r4
-   br l54bexprend
 l54bexprend:
    .meta "block_expr_basic.main.y"
    iadd r4,r3,1

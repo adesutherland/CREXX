@@ -1,0 +1,6 @@
+options levelb
+
+main: procedure = .int
+  constant DATA = '0000000000000000'x as .binary
+  <packed..int>(0) DATA = 1
+  return 0

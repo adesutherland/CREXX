@@ -2727,8 +2727,31 @@ void rxasmete(Assembler_Context *context, Assembler_Token *kind, Assembler_Token
 
 /* Function Metadata */
 void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args) {
-    size_t entry = add_meta_entry(context,sizeof(meta_func_constant),META_FUNC);
+    size_t entry;
     size_t sentry;
+
+    if (strcmp((const char *)option->token_value.string, ".initializer") == 0) {
+        meta_initializer_constant *initializer;
+        size_t function;
+
+        if (strcmp((const char *)type->token_value.string, ".void") != 0 ||
+            ((const char *)args->token_value.string)[0] != 0) {
+            rxaserat(context, option,
+                     "Initializer metadata requires a no-argument .void callable");
+            return;
+        }
+        entry = add_meta_entry(
+                context, sizeof(meta_initializer_constant), META_INITIALIZER);
+        sentry = add_string_to_pool(
+                context, symbol, (char *)symbol->token_value.string);
+        function = add_func_to_pool(context, func);
+        initializer = (meta_initializer_constant *)(context->binary.const_pool + entry);
+        initializer->symbol = sentry;
+        initializer->function = function;
+        return;
+    }
+
+    entry = add_meta_entry(context,sizeof(meta_func_constant),META_FUNC);
 
     /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
     sentry = add_string_to_pool(context, symbol, (char*)symbol->token_value.string);
@@ -2872,6 +2895,45 @@ void rxasmeil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
     const char *option_text;
 
     option_text = (const char *)option->token_value.string;
+    if (strcmp(option_text, ".provider") == 0 ||
+        strcmp(option_text, ".provider.required") == 0 ||
+        strcmp(option_text, ".provider.optional") == 0) {
+        meta_provider_constant *provider;
+        const unsigned char *p;
+        size_t s_provider;
+
+        if (payload->token_type != STRING) {
+            rxaserat(context, payload, "Provider metadata requires a string provider ID");
+            return;
+        }
+        p = (const unsigned char *)payload->token_value.string;
+        if (!*p || !((*p >= 'A' && *p <= 'Z') ||
+                     (*p >= 'a' && *p <= 'z') ||
+                     (*p >= '0' && *p <= '9'))) {
+            rxaserat(context, payload, "Provider ID must start with an ASCII letter or digit");
+            return;
+        }
+        for (; *p; p++) {
+            if (!((*p >= 'A' && *p <= 'Z') ||
+                  (*p >= 'a' && *p <= 'z') ||
+                  (*p >= '0' && *p <= '9') ||
+                  *p == '.' || *p == '_' || *p == '-')) {
+                rxaserat(context, payload, "Provider ID may contain only ASCII letters, digits, '.', '_' and '-'");
+                return;
+            }
+        }
+        entry = add_meta_entry(context, sizeof(meta_provider_constant), META_PROVIDER);
+        s_sym = add_string_to_pool(
+                context, symbol, (char *)symbol->token_value.string);
+        s_provider = add_string_to_pool(
+                context, payload, (char *)payload->token_value.string);
+        provider = (meta_provider_constant *)(context->binary.const_pool + entry);
+        provider->symbol = s_sym;
+        provider->provider = s_provider;
+        provider->flags = strcmp(option_text, ".provider.optional") == 0
+                ? 0u : RXBIN_PROVIDER_REQUIRED;
+        return;
+    }
     if (strcmp(option_text, ".task1") == 0 ||
         strcmp(option_text, ".task2") == 0 ||
         strcmp(option_text, ".task3") == 0) {
@@ -2901,7 +2963,7 @@ void rxasmeil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
     }
 
     if (strcmp(option_text, ".inline") != 0) {
-        rxaserat(context, option, "Expecting .inline or .task1/.task2/.task3 metadata option");
+        rxaserat(context, option, "Expecting .inline, .provider[.required|.optional] or .task1/.task2/.task3 metadata option");
         return;
     }
     if (payload->token_type != STRING) {

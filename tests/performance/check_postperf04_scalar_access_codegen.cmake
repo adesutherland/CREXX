@@ -47,9 +47,9 @@ string(SUBSTRING "${opt_rxbin_rxas}" ${main_start} ${main_length} main_rxas)
 string(REGEX MATCHALL "(^|\n)[ \t]*assertinitialized[ \t]+"
         main_initialization_guards "${main_rxas}")
 list(LENGTH main_initialization_guards main_initialization_guard_count)
-if(NOT main_initialization_guard_count EQUAL 1)
+if(NOT main_initialization_guard_count EQUAL 0)
     message(FATAL_ERROR
-            "Optimized POSTPERF-04 main() must retain only the computed-receiver factory-call guard; found ${main_initialization_guard_count}")
+            "Optimized POSTPERF-04 main() has a proved initialized receiver and must not retain a factory-call guard; found ${main_initialization_guard_count}")
 endif()
 
 foreach(control IN ITEMS

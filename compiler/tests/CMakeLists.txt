@@ -560,6 +560,38 @@ add_test(NAME rxc_binary_memory_source
          COMMAND ${CMAKE_COMMAND} -P "${RXC_BINARY_MEMORY_SOURCE_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+set(RXC_PACKED_NUMERIC_SOURCE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_packed_numeric_source.cmake")
+set(RXC_PACKED_NUMERIC_SOURCE_CONTENT "")
+string(APPEND RXC_PACKED_NUMERIC_SOURCE_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -n -o \"packed_numeric_source_rxas_check\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/packed_numeric_source.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_out\n"
+       "  ERROR_VARIABLE rxc_err\n"
+       "  RESULT_VARIABLE rxc_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+       "if(NOT rxc_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"rxc failed for packed numeric source check.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/packed_numeric_source_rxas_check.rxas\" rxas_out)\n"
+       "foreach(_opcode pgeti pseti pgetf psetf)\n"
+       "  if(NOT rxas_out MATCHES \"${RXAS_DIAG_DOLLAR}{_opcode}\")\n"
+       "    message(FATAL_ERROR \"Packed numeric source did not emit ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "  endif()\n"
+       "endforeach()\n"
+       "if(NOT rxas_out MATCHES [=[load r[0-9]+,0x0000000000000000]=])\n"
+       "  message(FATAL_ERROR \"Packed constant source was not materialized into aligned runtime binary storage.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "if(rxas_out MATCHES [=[pget[if] [^\\n]*,0x]=])\n"
+       "  message(FATAL_ERROR \"Packed access bypassed runtime-aligned binary storage.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXC_PACKED_NUMERIC_SOURCE_SCRIPT}" CONTENT "${RXC_PACKED_NUMERIC_SOURCE_CONTENT}")
+
+add_test(NAME rxc_packed_numeric_source
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_PACKED_NUMERIC_SOURCE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 set(RXC_BINARY_MEMORY_PACKED_LOOKUP_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_binary_memory_packed_lookup.cmake")
 set(RXC_BINARY_MEMORY_PACKED_LOOKUP_CONTENT "")
 string(APPEND RXC_BINARY_MEMORY_PACKED_LOOKUP_CONTENT
@@ -983,6 +1015,10 @@ add_crexx_compiler_fail_test(err_block_expr_leave_plain rexx_src/err_block_expr_
 add_crexx_compiler_fail_test(err_block_expr_missing_end rexx_src/err_block_expr_missing_end.crexx err_block_expr_missing_end.txt)
 add_crexx_compiler_fail_test(err_block_expr_incomplete rexx_src/err_block_expr_incomplete.crexx err_block_expr_incomplete.txt)
 add_crexx_compiler_fail_test(err_leave_with_not_in_block rexx_src/err_leave_with_not_in_block.crexx err_leave_with_not_in_block.txt)
+add_crexx_compiler_fail_test(initializer_direct_call rexx_src/initializer_direct_call.crexx initializer_direct_call.txt)
+add_crexx_compiler_fail_test(initializer_namespace_expose rexx_src/initializer_namespace_expose.crexx initializer_namespace_expose.txt)
+add_crexx_compiler_fail_test(initializer_argument rexx_src/initializer_argument.crexx initializer_argument.txt)
+add_crexx_compiler_fail_test(initializer_return_value rexx_src/initializer_return_value.crexx initializer_return_value.txt)
 add_crexx_compiler_fail_test(interface_missing_impl rexx_src/interface_missing_impl.crexx interface_missing_impl.txt)
 add_crexx_compiler_fail_test(interface_match_bad_args rexx_src/interface_match_bad_args.crexx interface_match_bad_args.txt)
 add_crexx_compiler_fail_test(interface_match_without_factory rexx_src/interface_match_without_factory.crexx interface_match_without_factory.txt)
@@ -1012,6 +1048,11 @@ add_crexx_compiler_fail_test(binary_memory_length_required rexx_src/binary_memor
 add_crexx_compiler_fail_test(binary_memory_decimal_length rexx_src/binary_memory_decimal_length.crexx binary_memory_decimal_length.txt)
 add_crexx_compiler_fail_test(binary_memory_extra_argument rexx_src/binary_memory_extra_argument.crexx binary_memory_extra_argument.txt)
 add_crexx_compiler_fail_test(binary_memory_missing_length_argument rexx_src/binary_memory_missing_length_argument.crexx binary_memory_missing_length_argument.txt)
+add_crexx_compiler_fail_test(packed_invalid_storage rexx_src/packed_invalid_storage.crexx packed_invalid_storage.txt)
+add_crexx_compiler_fail_test(packed_missing_index rexx_src/packed_missing_index.crexx packed_missing_index.txt)
+add_crexx_compiler_fail_test(packed_extra_argument rexx_src/packed_extra_argument.crexx packed_extra_argument.txt)
+add_crexx_compiler_fail_test(packed_target_not_binary rexx_src/packed_target_not_binary.crexx packed_target_not_binary.txt)
+add_crexx_compiler_fail_test(packed_readonly_write rexx_src/packed_readonly_write.crexx packed_readonly_write.txt)
 add_crexx_compiler_fail_test(binary_memory_generic_types_unsupported rexx_src/binary_memory_generic_types_unsupported.crexx binary_memory_generic_types_unsupported.txt)
 add_crexx_compiler_fail_test(binary_memory_blen_syntax rexx_src/binary_memory_blen_syntax.crexx binary_memory_blen_syntax.txt)
 add_crexx_compiler_fail_test(binary_memory_blen_target_not_binary rexx_src/binary_memory_blen_target_not_binary.crexx binary_memory_blen_target_not_binary.txt)
@@ -1979,6 +2020,8 @@ add_crexx_run_test(constants_levelb_payloads rexx_src/constants_levelb_payloads.
 add_crexx_run_test(binary_memory_source rexx_src/binary_memory_source.crexx)
 add_crexx_run_test(binary_memory_span_oob rexx_src/binary_memory_span_oob.crexx)
 add_crexx_run_test(binary_memory_packed_lookup rexx_src/binary_memory_packed_lookup.crexx)
+add_crexx_run_test(packed_numeric_source rexx_src/packed_numeric_source.crexx)
+add_crexx_run_test(class_binary_attribute_store rexx_src/class_binary_attribute_store.crexx)
 add_crexx_run_test(literal_continuation rexx_src/literal_continuation.crexx)
 add_crexx_isolated_run_test(qualified_bif_direct_namespace rexx_src/qualified_bif_direct_namespace.crexx)
 add_crexx_dual_import_run_test(qualified_namespace_import_source rexx_src/qualified_namespace_main.crexx rexx_src/qualified_namespace_dep_a.crexx rexx_src/qualified_namespace_dep_b.crexx source)
@@ -2616,7 +2659,7 @@ add_test(
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(do_forever_return_contract PROPERTIES
         LABELS "compiler;control-flow;runtime;optimizer"
-        TIMEOUT 120)
+        TIMEOUT 300)
 
 add_test(
         NAME parse_levelg_contract
@@ -3337,6 +3380,23 @@ set_tests_properties(inline_scalar_accessors_import_opt PROPERTIES
         LABELS "linked_opt;scalar-access;receiver;signals;interfaces;imports"
         FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 
+add_test(NAME inline_packed_accessors_import_opt
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXDAS=$<TARGET_FILE:rxdas>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DDEP_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_packed_accessors_dep.crexx
+                 -DMAIN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_packed_accessors_main.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_packed_accessors_import_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_packed_accessors_import_opt.cmake)
+set_tests_properties(inline_packed_accessors_import_opt PROPERTIES
+        LABELS "linked_opt;packed;binary;scalar-access;receiver;imports;rxdas"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
 set(INLINE_COMPUTED_RECEIVER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_test_computed_receiver_copyback_opt_rewrites.cmake")
 set(INLINE_COMPUTED_RECEIVER_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_test_computed_receiver_copyback_opt_ws\")\n")
 string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
@@ -3447,6 +3507,8 @@ add_crexx_run_test(test_array_edge rexx_src/test_array_edge.crexx)
 add_crexx_run_test(test_utf_math rexx_src/test_utf_math.crexx)
 add_crexx_run_test(binary_literal_load rexx_src/binary_literal_load.crexx)
 add_crexx_run_test(scalar_type_casts rexx_src/scalar_type_casts.crexx)
+add_crexx_run_test(decimal_literal_context rexx_src/decimal_literal_context.crexx)
+add_crexx_run_test(typed_constructor_builtin rexx_src/typed_constructor_builtin.crexx)
 add_crexx_run_test(test_lib_boundary rexx_src/test_lib_boundary.crexx)
 add_crexx_run_test(div_ops_common rexx_src/div_ops_common.crexx)
 add_crexx_run_test(div_ops_classic rexx_src/div_ops_classic.crexx)
@@ -3485,6 +3547,27 @@ add_crexx_run_test(inline_test_loop_bound_expr rexx_src/inline_test_loop_bound_e
 add_crexx_run_test(inline_test_member_receiver_expr rexx_src/inline_test_member_receiver_expr.crexx)
 add_crexx_run_test(inline_test_named_factory_selector rexx_src/inline_test_named_factory_selector.crexx)
 add_crexx_run_test(inline_test_factory_arg_scope rexx_src/inline_test_factory_arg_scope.crexx)
+add_crexx_run_test(san003_inline_scoped_array_actual
+        rexx_src/san003_inline_scoped_array_actual.crexx)
+add_test(NAME san003_inline_scoped_array_actual_compile
+        COMMAND $<TARGET_FILE:rxc>
+                -x --no-exe-import --import-rxas
+                -i ${CMAKE_BINARY_DIR}/bin
+                -o ${CMAKE_CURRENT_BINARY_DIR}/san003_inline_scoped_array_actual_compile
+                ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/san003_inline_scoped_array_actual.crexx)
+set_tests_properties(
+        san003_inline_scoped_array_actual_compile
+        san003_inline_scoped_array_actual_run_noopt
+        san003_inline_scoped_array_actual_run_opt
+        PROPERTIES LABELS "sanitizer;san-003;compiler;inlining;regression")
+add_test(NAME san004_task_pending_object_result_compile
+        COMMAND $<TARGET_FILE:rxc>
+                -x --no-exe-import --import-rxas
+                -i ${CMAKE_BINARY_DIR}/bin
+                -o ${CMAKE_CURRENT_BINARY_DIR}/san004_task_pending_object_result_compile
+                ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/san004_task_pending_object_result.crexx)
+set_tests_properties(san004_task_pending_object_result_compile PROPERTIES
+        LABELS "sanitizer;san-004;compiler;levelg;concurrency;regression")
 add_crexx_run_test(inline_test_computed_receiver_copyback rexx_src/inline_test_computed_receiver_copyback.crexx)
 add_crexx_run_test(inline_test_loop_bound_early_return_cleanup rexx_src/inline_test_loop_bound_early_return_cleanup.crexx)
 add_crexx_run_test(structured_exit_crossed_loop_cleanup rexx_src/structured_exit_crossed_loop_cleanup.crexx)

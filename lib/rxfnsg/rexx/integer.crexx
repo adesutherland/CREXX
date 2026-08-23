@@ -1,0 +1,165 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Exact checked integer mathematics for the Level G standard library.
+ */
+
+/**
+ * Level-B-authored algorithms over the native signed rxinteger type.
+ *
+ * @docType runtime-module
+ */
+options levelb comments_dash
+
+namespace rxint expose gcd lcm isqrt powmod factorial
+
+/**
+ * Return the non-negative greatest common divisor.
+ *
+ * The Euclidean loop keeps operands non-positive so INT64_MIN is accepted
+ * without first attempting an unrepresentable absolute value.
+ *
+ * @param first native signed integer
+ * @param second native signed integer
+ * @return non-negative greatest common divisor; gcd(0, 0) is zero
+ * @signal OVERFLOW_UNDERFLOW the mathematical result is 2**63
+ */
+gcd: procedure = .int
+  arg first = .int, second = .int
+  minimum = -9223372036854775807 - 1
+  zero = 0
+
+  if first > 0 then first = zero - first
+  if second > 0 then second = zero - second
+  if first = -1 | second = -1 then return 1
+
+  do while second <> 0
+    remainder = first <mod> second
+    first = second
+    second = remainder
+    if first = -1 | second = -1 then return 1
+  end
+
+  if first = minimum then
+    assembler signal "OVERFLOW_UNDERFLOW", "RXINT.GCD result exceeds rxinteger"
+  return zero - first
+
+/**
+ * Return the non-negative least common multiple.
+ *
+ * Division by the GCD precedes multiplication so no avoidable intermediate
+ * overflow is introduced.
+ *
+ * @param first native signed integer
+ * @param second native signed integer
+ * @return non-negative least common multiple; zero if either input is zero
+ * @signal OVERFLOW_UNDERFLOW the exact result is not representable
+ */
+lcm: procedure = .int
+  arg first = .int, second = .int
+  minimum = -9223372036854775807 - 1
+  maximum = 9223372036854775807
+
+  if first = 0 | second = 0 then return 0
+  if first = minimum | second = minimum then
+    assembler signal "OVERFLOW_UNDERFLOW", "RXINT.LCM result exceeds rxinteger"
+  divisor = gcd(first, second)
+  quotient = first <idiv> divisor
+  if quotient < 0 then quotient = 0 - quotient
+  if second < 0 then second = 0 - second
+  if quotient > maximum <idiv> second then
+    assembler signal "OVERFLOW_UNDERFLOW", "RXINT.LCM result exceeds rxinteger"
+  return quotient * second
+
+/**
+ * Return floor(sqrt(value)) using overflow-safe binary search.
+ *
+ * @param value non-negative native signed integer
+ * @return greatest integer whose square does not exceed value
+ * @signal INVALID_ARGUMENTS value is negative
+ */
+isqrt: procedure = .int
+  arg value = .int
+
+  if value < 0 then
+    assembler signal "INVALID_ARGUMENTS", "RXINT.ISQRT requires a non-negative value"
+  low = 0
+  high = value
+  if high > 3037000499 then high = 3037000499
+
+  do while low < high
+    middle = low + (high - low + 1) <idiv> 2
+    if middle <= value <idiv> middle then low = middle
+    else high = middle - 1
+  end
+  return low
+
+/** Add two normalized modular residues without overflowing rxinteger. */
+_rxint_addmod: procedure = .int
+  arg first = .int, second = .int, modulus = .int
+  gap = modulus - second
+  if first >= gap then return first - gap
+  return first + second
+
+/** Multiply normalized modular residues by repeated doubling. */
+_rxint_mulmod: procedure = .int
+  arg first = .int, second = .int, modulus = .int
+  result = 0
+  do while second > 0
+    if second <mod> 2 <> 0 then result = _rxint_addmod(result, first, modulus)
+    second = second <idiv> 2
+    if second > 0 then first = _rxint_addmod(first, first, modulus)
+  end
+  return result
+
+/**
+ * Return base**exponent modulo modulus without overflowing intermediates.
+ *
+ * Repeated squaring uses modular addition/doubling rather than unchecked
+ * multiplication, so every intermediate remains a normalized rxinteger.
+ *
+ * @param base native signed integer base
+ * @param exponent non-negative native signed integer exponent
+ * @param modulus positive native signed integer modulus
+ * @return normalized residue in [0, modulus)
+ * @signal INVALID_ARGUMENTS exponent is negative or modulus is not positive
+ */
+powmod: procedure = .int
+  arg base = .int, exponent = .int, modulus = .int
+
+  if exponent < 0 then
+    assembler signal "INVALID_ARGUMENTS", "RXINT.POWMOD requires a non-negative exponent"
+  if modulus <= 0 then
+    assembler signal "INVALID_ARGUMENTS", "RXINT.POWMOD requires a positive modulus"
+
+  base = base <mod> modulus
+  if base < 0 then base = base + modulus
+  result = 1 <mod> modulus
+
+  do while exponent > 0
+    if exponent <mod> 2 <> 0 then result = _rxint_mulmod(result, base, modulus)
+    exponent = exponent <idiv> 2
+    if exponent > 0 then base = _rxint_mulmod(base, base, modulus)
+  end
+  return result
+
+/**
+ * Return value factorial using checked native multiplication.
+ *
+ * @param value integer from zero through twenty
+ * @return exact factorial
+ * @signal INVALID_ARGUMENTS value is negative
+ * @signal OVERFLOW_UNDERFLOW value is greater than twenty
+ */
+factorial: procedure = .int
+  arg value = .int
+
+  if value < 0 then
+    assembler signal "INVALID_ARGUMENTS", "RXINT.FACTORIAL requires a non-negative value"
+  if value > 20 then
+    assembler signal "OVERFLOW_UNDERFLOW", "RXINT.FACTORIAL result exceeds rxinteger"
+  result = 1
+  do factor = 2 to value
+    result = result * factor
+  end
+  return result

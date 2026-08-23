@@ -159,9 +159,11 @@ function(crexx_add_rexx_opt_matrix)
         if(CREXX_TARGET_GROUP)
             add_dependencies(${CREXX_TARGET_GROUP} ${_crexx_artifact_target})
         endif()
-        if(_crexx_mode STREQUAL "opt" OR CREXX_LINKED_ALL_MODES)
-            _crexx_register_linked_opt_artifact(${_crexx_artifact_target})
-        endif()
+        # Every generated runtime test requires the serialized artifact fixture,
+        # so that fixture must own the exact image for both modes.  Registering
+        # only the optimized image leaves non-ALL noopt groups dependent on a
+        # stale warm-tree artifact and makes a clean CTest run nondeterministic.
+        _crexx_register_linked_opt_artifact(${_crexx_artifact_target})
 
         set(_crexx_runtime_test_args)
         if(CREXX_PASS_TEST_NAME_ARGUMENT)

@@ -3411,14 +3411,19 @@ int rxas_flow_value_node(
         version->source_value_id == RXAS_FLOW_ID_NONE &&
         version->source_state != RXAS_FLOW_ID_NONE &&
         version->source_register != RXAS_FLOW_ID_NONE) {
+        size_t source_state;
+        size_t source_register;
         size_t source_storage;
         size_t source_value;
+        unsigned int source_component;
+        source_state = version->source_state;
+        source_register = version->source_register;
+        source_component = version->source_component;
         source_storage = flow_ssa_resolve_storage(
-                analysis, version->source_state,
-                version->source_register);
+                analysis, source_state, source_register);
         source_value = flow_ssa_resolve_value(
-                analysis, version->source_state,
-                source_storage, version->source_component);
+                analysis, source_state, source_storage, source_component);
+        version = &analysis->value_versions[value_id];
         version->source_value_id = flow_ssa_value_canonical(
                 analysis, source_value);
     }

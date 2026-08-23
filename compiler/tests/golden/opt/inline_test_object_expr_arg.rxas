@@ -30,7 +30,6 @@ main() .locals=6
    .srcstep 6 6 17 "inline_test_object_expr_arg.crexx" 14 3 13 "  return box"
    .traceevent "V" 6 "R" "O" "r" 2 8 8 0 "box" ""
    copy r4,r2
-   br l78bexprend
 l78bexprend:
    endlife r2
    settp r4,768
@@ -73,7 +72,7 @@ renameBox() .locals=4
    linkattr1 r1,a1,1
    .traceevent "V" 6 "R" "S" "r" 1 21 21 0 "name" ""
    scopy r3,r1
-   unlinkbr r1,l139bexprend
+   unlink r1
 l139bexprend:
    ret r3
    .meta "inline_test_object_expr_arg.renamebox.box"

@@ -1,0 +1,30 @@
+recorded_rows=240
+warmup_rows=20
+output_files=260
+pass_outputs=260
+failure_markers=0
+rxbvm,float-read,direct-float-read,rows=12,positions=2 19 2 19 2 19 2 19 2 19 2 19,checksum=1000000
+rxbvm,float-read,wrapper-float-read,rows=12,positions=1 20 1 20 1 20 1 20 1 20 1 20,checksum=1000000
+rxbvm,float-write,direct-float-write,rows=12,positions=4 17 4 17 4 17 4 17 4 17 4 17,checksum=200019
+rxbvm,float-write,wrapper-float-write,rows=12,positions=3 18 3 18 3 18 3 18 3 18 3 18,checksum=200019
+rxbvm,int-read,direct-int-read,rows=12,positions=6 15 6 15 6 15 6 15 6 15 6 15,checksum=2000000
+rxbvm,int-read,encoded-int-read,rows=12,positions=7 14 7 14 7 14 7 14 7 14 7 14,checksum=2000000
+rxbvm,int-read,wrapper-int-read,rows=12,positions=5 16 5 16 5 16 5 16 5 16 5 16,checksum=2000000
+rxbvm,int-write,direct-int-write,rows=12,positions=9 12 9 12 9 12 9 12 9 12 9 12,checksum=200019
+rxbvm,int-write,encoded-int-write,rows=12,positions=10 11 10 11 10 11 10 11 10 11 10 11,checksum=200019
+rxbvm,int-write,wrapper-int-write,rows=12,positions=8 13 8 13 8 13 8 13 8 13 8 13,checksum=200019
+rxtvm,float-read,direct-float-read,rows=12,positions=12 9 12 9 12 9 12 9 12 9 12 9,checksum=1000000
+rxtvm,float-read,wrapper-float-read,rows=12,positions=11 10 11 10 11 10 11 10 11 10 11 10,checksum=1000000
+rxtvm,float-write,direct-float-write,rows=12,positions=14 7 14 7 14 7 14 7 14 7 14 7,checksum=200019
+rxtvm,float-write,wrapper-float-write,rows=12,positions=13 8 13 8 13 8 13 8 13 8 13 8,checksum=200019
+rxtvm,int-read,direct-int-read,rows=12,positions=16 5 16 5 16 5 16 5 16 5 16 5,checksum=2000000
+rxtvm,int-read,encoded-int-read,rows=12,positions=17 4 17 4 17 4 17 4 17 4 17 4,checksum=2000000
+rxtvm,int-read,wrapper-int-read,rows=12,positions=15 6 15 6 15 6 15 6 15 6 15 6,checksum=2000000
+rxtvm,int-write,direct-int-write,rows=12,positions=19 2 19 2 19 2 19 2 19 2 19 2,checksum=200019
+rxtvm,int-write,encoded-int-write,rows=12,positions=20 1 20 1 20 1 20 1 20 1 20 1,checksum=200019
+rxtvm,int-write,wrapper-int-write,rows=12,positions=18 3 18 3 18 3 18 3 18 3 18 3,checksum=200019
+1cfc3874b79c89ad63e744a6037dbb81c50a335cc1fa0f6ab89da03685427799  performance/evidence/2026-08-21-binary01-packed-class-first-release-verdict/raw/warmups.csv
+2b94304053aeafc65714c65fab83548636e3fde2eb4c289627256a772ae09356  performance/evidence/2026-08-21-binary01-packed-class-first-release-verdict/raw/samples.csv
+779b7be88a6036ba0b823be135f2ba9df549895e46ee0d5d589cf930ea1b63eb  performance/evidence/2026-08-21-binary01-packed-class-first-release-verdict/summary.csv
+babc6f44961214b4808e3ab416019906e45caa51b8111d8d423043e6e59dae0f  performance/evidence/2026-08-21-binary01-packed-class-first-release-verdict/provenance/packed_numeric_class_compare_linked.rxbin
+fdc4e934b761c21f5c50f7c6c0b92b731fe0805ffd3ec7ead826be9800b7403a  tests/performance/packed_numeric_class_compare.crexx

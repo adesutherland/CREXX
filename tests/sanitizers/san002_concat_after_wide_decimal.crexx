@@ -1,0 +1,34 @@
+/* SAN-002 manifestation A: a narrow-context DEXTR result is immediately
+ * consumed by the distinct-destination string-concat path. */
+options levelb comments_dash numeric_classic
+
+wide_decimal: procedure = .decimal
+  numeric digits 32
+  return "12345678901234567890123456789012" as .decimal
+
+main: procedure = .int
+  numeric digits 18
+  number = wide_decimal()
+  coefficient = .string
+  formatted = .string
+  exponent = .int
+
+  /* Keep two adjacent minimum-class string buffers live.  Before the
+   * value-aware DEXTR sizing repair, the 33-byte coefficient overran its
+   * 32-byte buffer into formatted.  Growing formatted for CONCAT then
+   * poisoned the final source byte before string_concat_var_const() read it. */
+  assembler load coefficient,"c"
+  assembler load formatted,"f"
+  assembler dextr coefficient,exponent,number
+  formatted = coefficient || ""
+
+  if exponent <> 31 then do
+    say "FAIL: SAN-002 concat exponent" exponent
+    return 1
+  end
+  if formatted <> "1.2345678901234567890123456789012" then do
+    say "FAIL: SAN-002 concat coefficient" formatted
+    return 1
+  end
+  say "PASS: SAN-002 concat after wide decimal"
+  return 0

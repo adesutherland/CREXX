@@ -2734,6 +2734,47 @@ static void test_sparse_use_and_liveness(Assembler_Context *context) {
 
 }
 
+/* SAN-001: value-node source resolution is lazy.  Keep the analysis at an
+ * exact value_versions capacity boundary, then ask for the first copy node.
+ * Resolving its previously untouched source appends an entry value and grows
+ * the backing array.  The public accessor must reacquire its record by ValueId
+ * rather than retain a raw pointer across that growth. */
+static void test_ssa_value_node_growth(Assembler_Context *context) {
+    FlowFixture fixture;
+    RxasFlowProcedure *procedure;
+    Assembler_Token *operands[2];
+    const RxasFlowSsaAnalysis *ssa;
+    RxasFlowValueNode node;
+    size_t index;
+    size_t value_count;
+
+    memset(&fixture, 0, sizeof(fixture));
+    for (index = 0; index < 64; index++) {
+        operands[0] = fixture_register(&fixture, (rxinteger)index);
+        operands[1] = fixture_register(&fixture, (rxinteger)(64 + index));
+        fixture_op(&fixture, "icopy", operands, 2);
+    }
+    fixture_op(&fixture, "ret", 0, 0);
+
+    procedure = rxas_flow_procedure_build(context, fixture.items,
+                                          fixture.item_count, 49);
+    check(procedure != 0, "SAN-001 SSA growth fixture construction failed");
+    if (procedure) {
+        ssa = rxas_flow_require_ssa_analysis(procedure, 49, 0);
+        value_count = rxas_flow_value_version_count(ssa, 49);
+        check(ssa && value_count == 64,
+              "SAN-001 fixture did not reach the exact 64-value boundary");
+        memset(&node, 0, sizeof(node));
+        check(ssa && rxas_flow_value_node(ssa, 49, 0, &node) &&
+              node.kind == RXAS_FLOW_VALUE_COPY &&
+              node.source_value_id != RXAS_FLOW_ID_NONE &&
+              rxas_flow_value_version_count(ssa, 49) > value_count,
+              "SAN-001 lazy source resolution did not survive SSA growth");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
 static void test_typed_copy_redirect_proof(Assembler_Context *context) {
     FlowFixture fixture;
     RxasFlowProcedure *procedure;
@@ -3671,6 +3712,7 @@ int main(void) {
     test_redundant_absent_proof(&context);
     test_redundant_self_copy_proof(&context);
     test_sparse_use_and_liveness(&context);
+    test_ssa_value_node_growth(&context);
     test_typed_copy_redirect_proof(&context);
     test_loop_proofs(&context);
     test_joined_key_reuse_proof(&context);

@@ -17,7 +17,19 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
   path for current compiler output, while name-based intrinsic dispatch belongs
   to RexxScript)
 
-- `lib/rxmath/` (Math extensions)
+- `lib/plugins/float/` (native scalar binary-float mathematics)
+
+- `lib/plugins/stats/` (packed-float native statistics)
+
+- `lib/plugins/vector/` (exact packed-vector computation and explicit portable
+  float32 conversion)
+
+- `lib/plugins/hash/`, `id/`, `fs/`, and `platform/` (narrow declarative
+  native providers replacing the historical mixed `rxmath` and broad `system`
+  bundles)
+
+- `lib/rxfnsg/rexx/integer.crexx` and `decimal.crexx` (Level-G standard
+  integer and decimal mathematics authored in Level B)
 
 - `lib/plugins/` (General-purpose extensions like `fileio`, `regex`, `strings`, `socket`, etc.)
 
@@ -513,7 +525,11 @@ For functions requiring native performance or access to C-level system libraries
 
 Plugins can be compiled in two ways:
 
-1. **Dynamic Plugins (`.rxplugin`)**: Recommended for user extensions. They are discovered and loaded at runtime using the same search paths as regular `.crexx` modules.
+1. **Dynamic Plugins (`.rxplugin`)**: Recommended for user extensions. The
+   compiler discovers declarations on binary import roots. At runtime an
+   explicitly loaded legacy plugin still uses module search paths, while a
+   compiled native dependency is resolved declaratively through a trusted
+   `<provider-id>.rxplugin` artifact.
 
 2. **Static Plugins**: Built directly into the `crexx` binaries. These are typically reserved for core Standard Libraries to guarantee they are always available.
 
@@ -616,8 +632,7 @@ Current bundled classification is deliberately conservative:
 
 | Classification | Bundled examples | Rule |
 | --- | --- | --- |
-| Plugin-wide process-reentrant | `cipher`, `stack`, `strings`, `getpi`, `id` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. |
-| Mixed per-procedure | `rxmath` | Ordinary math procedures are process-reentrant; `rxmath.inlinec` remains legacy because it uses fixed process/file names. |
+| Plugin-wide process-reentrant | `cipher`, `rx_hash`, `rxfloat`, `rxstats`, `rxvector`, `rxid`, `rxfs`, `rxplatform`, `stack`, `strings`, `getpi` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. `rxfloat` also publishes direct `rxmath` scalar compatibility names; the historical `inlinec`, statistics, hash and UUID mixture and the broad `system` provider are removed. |
 | Per-VM session | `odbc` | Database procedures are session-affine; `odbc.show_message` is process-reentrant; old hosts use the plugin's default session. |
 | Unqualified | All other bundled plugins | Remain legacy and serialized until their complete state, dependencies, failure paths and teardown have been audited. |
 
@@ -652,10 +667,16 @@ The VM passes arguments as opaque handles mapped to internal VM registers. The R
   storage. The plugin retains ownership of the source buffer and must release
   it after `SETSTRING()` when that buffer was allocated by the plugin.
 
-- `SETNATIVEPAYLOAD()` / `GETNATIVEPAYLOAD()`: Attach or read a hidden
-  native binary payload for object-shaped native values. Use this only with a
-  clear copy/finalizer contract; ordinary Rexx code still sees an object value,
-  not a C pointer.
+- `SETNATIVEPAYLOAD()` / `GETNATIVEPAYLOAD()`: Attach or read binary payload
+  storage. This is the RXPA path for ordinary `.binary` arguments and results,
+  as used by `rxhash.sha256()`. Object-shaped native payloads additionally
+  require a clear copy/finalizer contract; Rexx code never sees a C pointer.
+
+- `ISINITIALIZED()`: Non-raising test of the language-level typed-object
+  initialization flag. Payload-consuming functions use this before treating a
+  zero-length object payload as an initialized empty value. RXPA does not reject
+  bare typed objects automatically because ordinary procedures may legitimately
+  accept one in order to inspect its initialization state.
 
 - `RETURN`: The specific target register designated for the function's return value.
 
@@ -699,7 +720,7 @@ This is accomplished using the `LOADFUNCS` mapping block, which binds the C func
 // Publish functions to the cREXX compiler and VM
 LOADFUNCS
 //       C Function       REXX Namespace & Name      Opt  Return Type   Argument Signature
-ADDPROC( add_integers,    "rxmath.add_integers",     "b", ".int",       "i1 = .int, i2 = .int" );
+ADDPROC( add_integers,    "rxexample.add_integers",  "b", ".int",       "i1 = .int, i2 = .int" );
 ADDPROC( string_concat,   "rxstr.string_concat",     "b", ".string",    "s1 = .string, s2 = .string" );
 ENDLOADFUNCS
 ```
@@ -708,7 +729,7 @@ ENDLOADFUNCS
 
 1. **C Function**: The literal name of the C function defined by `PROCEDURE(...)`.
 
-2. **REXX Namespace & Name**: How the function will be called from REXX code (e.g., `import rxmath; x = add_integers(1, 2)`).
+2. **REXX Namespace & Name**: How the function will be called from REXX code (e.g., `import rxexample; x = add_integers(1, 2)`).
 
 3. **Option**: The target cREXX language level (`"b"` for Level B, `"c"` for Level C).
 
@@ -716,7 +737,135 @@ ENDLOADFUNCS
 
 5. **Arguments**: The exact type signature expected by the compiler. It supports standard types, array syntax (`.int[]`), and reference passing (`expose`). 
 
-During compilation, `rxc` parses this block to strictly enforce type safety when the REXX code invokes the native plugin. During execution, `rxvm` uses this block to dynamically link the `.rxplugin` shared library symbol into the execution space.
+During compilation, `rxc` parses this block to strictly enforce type safety when
+the REXX code invokes the native plugin. It also retains the manifest's stable
+provider ID and emits `.provider` metadata for used native declarations. During
+execution, `rxvm` resolves that ID to an already linked static provider or a
+trusted `<provider-id>.rxplugin`, verifies the binary's provider identity and
+signature, and only then links the callable into the execution space. No Rexx
+wrapper is required.
+
+For a provider with both delivery forms, use the build helper after declaring
+the targets:
+
+```cmake
+add_dynamic_plugin_target(_example example.c)
+add_static_plugin_target(_example example.c)
+add_rxpa_provider_package(_example)
+```
+
+It publishes `bin/providers/rx_example.rxplugin`, the canonical native archive
+`rx_example.a` (or `rx_example.lib`), and the compatibility archive
+`rx_example_static.a` (or `.lib`). `crexx -native` reads the same RXBIN
+requirements via `rxlink -p`, prefers the canonical archive, falls back to the
+compatibility name, and retains its static registration automatically. Tests
+and application-local package builds may pass
+`OUTPUT_DIRECTORY`; omitting it deliberately selects the standard
+build/install provider directory.
+
+A deliberate alternate implementation, such as a mock provider, may retain a
+distinct CMake target while publishing the same stable manifest identity:
+
+```cmake
+add_dynamic_plugin_target(_example_mock PROVIDER_ID rx_example mock.c)
+```
+
+Its delivered artifact must still use the canonical `rx_example.rxplugin`
+stem. `PROVIDER_ID` is not an aliasing mechanism: the runtime requires the
+requested artifact stem and embedded manifest identity to agree.
+
+### Standard `rx_hash` provider
+
+`rx_hash` is a B+G standard/default provider, not compiler or VM core. It is
+built and installed in dynamic and static forms and publishes SHA-256 plus
+four named 32-bit hash/checksum procedures:
+
+```rexx
+import rxhash
+
+digest = rxhash..sha256(data)
+table_hash = rxhash..djb2(data)
+seeded_hash = rxhash..murmur3(data, seed)
+fnv_hash = rxhash..fnv1a(data)
+checksum = rxhash..crc32(data)
+```
+
+The exact SHA-256 signature is
+`rxhash.sha256(data = .binary) = .binary`; the result is the 32 raw digest
+bytes, so use `bin2x()` when hexadecimal text is required. `djb2`, `fnv1a`,
+and `crc32` accept one `.binary`; `murmur3` also accepts an `.int` seed. Each
+returns the algorithm's unsigned 32-bit bit pattern represented in `.int`.
+Embedded zero bytes are data, and inputs are not mutated. No historical
+`rxmath` aliases are retained.
+
+`rxc` records provider ID `rx_hash` in RXBIN metadata for a retained call.
+`rxvm` and `rxbvm` then find the trusted `rx_hash.rxplugin` automatically,
+while `crexx -native` selects `rx_hash.a` (or `.lib`) and retains its
+registration anchor. No Rexx declaration wrapper or explicit runtime provider
+argument is required in a standard build or installation.
+
+### RCC-5D through RCC-5F providers
+
+The remaining RCC-5 providers use the same declarative dynamic/static
+delivery route:
+
+| Provider ID | Public namespace and procedures | Contract note |
+|---|---|---|
+| `rxstats` | `rxstats.mean`, `stddev`, `covariance`, `correlation`, `regression` | Level G statistics over borrowed read-only `.packedfloat` payloads. Compensated shifted-origin accumulation plus a compensated second pass protects ill-conditioned central moments; regression returns immutable `.linearfit`. Boxed arrays, `.packedint`, and raw `.binary` are not production overloads. |
+| `rxvector` | `rxvector.decodef32le`, `encodef32le`, `cosine`, `topkcosine` | Level G exact vector computation over borrowed `.packedfloat`/`.packedint` payloads, with explicit canonical little-endian float32 conversion. The provider is stateless and process-reentrant; prepared/ANN indexes are not part of this contract. |
+| `rxid` | `rxid.uuid4`, `uuid7`, `ulid`, `nanoid`, `snowflake`, `base58` | Bundled optional Level G identifier strings, callable from B when installed; random forms use platform cryptographic randomness and generation failures signal. |
+| `rxfs` | `rxfs.cwd`, `loadpath`, `chdir`, `isdir`, `mkdir`, `rmdir`, `delete`, `rename`, `isfile`, `listdir`, `append` | Narrow filesystem and directory operations. Return/status contracts are documented in the library reference. |
+| `rxplatform` | `rxplatform.uptime`, `user`, `host`, `osname`, `sleep` | Bundled optional Level G host/platform information and millisecond sleep, callable from B when installed. Clipboard, beep, process-global and developer functions from the old draft `system` surface were retired. |
+
+The source CMake target for `rxplatform` is named `_platform` to avoid a target
+collision, but `PROVIDER_ID rxplatform` makes its manifest, artifact stem,
+RXBIN dependency, runtime lookup, and native archive identity consistently
+`rxplatform`.
+
+### Level G packed numeric owners
+
+The `rxfnsg` Rexx library publishes `.packedfloat` and `.packedint` as the
+comfortable Release 1 Level G owners of the Level B host-native packed numeric
+surface:
+
+```rexx
+import rxfnsg
+
+values = .packedfloat(3)
+call values.set(2, 100.0)
+say values.get(2)
+
+indexes = .packedint(16)
+call indexes.fill(-1)
+```
+
+Both classes provide `*(size)`, `fromBinary(data)`, `size()`, `get(index)`,
+`set(index, value)`, `resize(size)`, `fill(value)`, and `binary()`. Counts and
+indexes are item-based and zero-based. Construction and growth zero-fill;
+`fromBinary` is an explicit inbound copy boundary. `binary()` returns a weak
+mutable `reference .binary`: `dereference` creates a scoped live alias without
+copying, while `snapshot` is the explicit outbound copy boundary. The packed
+owner must outlive the reference.
+
+The owned storage is the class object's `register.0.binary` component rather
+than a separate Rexx binary attribute. Native providers may therefore receive
+a declared `.packedfloat` or `.packedint` argument and consume its payload
+directly; the caller does not invoke `binary()` and no intermediate Rexx byte
+copy is required. The payload remains host-local and must use the raw encoded
+binary route for files, persistence, wire formats, or incompatible hosts.
+
+RXPA's `ISINITIALIZED(value)` helper lets such a provider preserve the ordinary
+typed-object `OBJECT_NOT_INITIALIZED` boundary before borrowing the payload.
+It is appended to `rxpa_initctx`, so earlier field offsets remain stable, but
+the initializer context has no negotiated size. This pre-release extension is
+therefore a rebuild-together boundary: do not mix a plugin compiled against the
+current `crexxpa.h` with an older host binary. The compiler scan stub and both
+dynamic and static VM initializer contexts must populate every appended helper.
+
+The classes deliberately wrap the existing `<packed..float>` and
+`<packed..int>` Level B instructions. They do not change ordinary `.float[]`
+or `.int[]` arrays and do not yet provide `x[index]` syntax; both are
+post-release language work.
 
 ## 5. Declaring Native Classes and Interfaces
 

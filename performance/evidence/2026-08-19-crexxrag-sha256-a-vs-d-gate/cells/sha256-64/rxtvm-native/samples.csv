@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+sha256-64,rxtvm,native,process,warmup,1,13378000,0,pass,7706,digest=C6AB9724ADE5B6A7A1EDFFFB12F3AA9181351355AF8FD08C919952AD211339DD
+sha256-64,rxtvm,native,process,recorded,1,13178000,0,pass,7453,digest=C6AB9724ADE5B6A7A1EDFFFB12F3AA9181351355AF8FD08C919952AD211339DD
+sha256-64,rxtvm,native,process,recorded,2,13320000,0,pass,7351,digest=C6AB9724ADE5B6A7A1EDFFFB12F3AA9181351355AF8FD08C919952AD211339DD
+sha256-64,rxtvm,native,process,recorded,3,13158000,0,pass,7465,digest=C6AB9724ADE5B6A7A1EDFFFB12F3AA9181351355AF8FD08C919952AD211339DD

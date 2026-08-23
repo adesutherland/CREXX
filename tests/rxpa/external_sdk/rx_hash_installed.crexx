@@ -1,0 +1,8 @@
+options levelg
+
+import rxfnsb
+import rxhash
+
+main: procedure = .int
+  say bin2x(rxhash..sha256("00010200FF"x as .binary))
+  return 0

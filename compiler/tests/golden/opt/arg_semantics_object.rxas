@@ -41,10 +41,9 @@ main() .locals=15
    linkattr1 r4,r2,1
    .traceevent "V" 6 "R" "S" "r" 4 12 12 0 "name" ""
    scopy r5,r4
-   unlinkbr r4,l173bexprend
+   unlink r4
 l173bexprend:
    scopy r6,r5
-   br l170bexprend
 l170bexprend:
    endlife r2
    concat r6,"object-read=",r6
@@ -76,7 +75,6 @@ l170bexprend:
    call1 r2,§arg_semantics_object.box.getname(),r6
    .traceevent "F" 4 "R" "S" "r" 2 21 21 0 "getname" ""
    scopy r5,r2
-   br l182bexprend
 l182bexprend:
    endlife r6
    concat r6,"object-mut=",r5
@@ -94,7 +92,7 @@ l182bexprend:
    linkattr1 r6,r0,1
    .traceevent "V" 6 "R" "S" "r" 6 26 26 0 "name" ""
    scopy r5,r6
-   unlinkbr r6,l209bexprend
+   unlink r6
 l209bexprend:
    concat r5,"object-after=",r5
    .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
@@ -116,7 +114,6 @@ l209bexprend:
    .srcstep 30 30 17 "arg_semantics_object.crexx" 33 5 11 "    return"
    .traceevent "V" 6 "R" "O" "r" 9 32 32 0 "§factory" ""
    copy r5,r9
-   br l240bexprend
 l240bexprend:
    copy r8,r5
    .traceevent "A" 6 "R" "O" "r" 8 32 32 0 "__inline_bind_218_0" ""
@@ -144,7 +141,6 @@ l240bexprend:
    call1 r12,§arg_semantics_object.box.getname(),r6
    .traceevent "F" 4 "R" "S" "r" 12 41 41 0 "getname" ""
    scopy r5,r12
-   br l234bexprend
 l234bexprend:
    endlife r6
    concat r6,"object-temp=",r5
@@ -178,7 +174,7 @@ l234bexprend:
    linkattr1 r12,r0,1
    .traceevent "V" 6 "R" "S" "r" 12 52 52 0 "name" ""
    scopy r5,r12
-   unlinkbr r12,l305bexprend
+   unlink r12
 l305bexprend:
    concat r5,"object-ref=",r5
    .traceevent "O" 4 "R" "S" "r" 5 52 52 0 "" ""

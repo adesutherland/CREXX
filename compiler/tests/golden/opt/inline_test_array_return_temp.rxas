@@ -19,7 +19,6 @@ main() .locals=4
    call1 r3,buildPair(),r2
    .traceevent "F" 4 "R" "I" "r" 3 4 4 0 "buildpair" ""
    copy r2,r3
-   br l69bexprend
 l69bexprend:
    copy r0,r2
    .traceevent "A" 6 "R" "I" "r" 0 4 4 0 "pair" ""

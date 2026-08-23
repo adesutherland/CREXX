@@ -18,7 +18,6 @@ main() .locals=3
    call1 r2,recurse(),r1
    .traceevent "F" 4 "R" "I" "r" 2 4 4 0 "recurse" ""
    icopy r1,r2
-   br l31bexprend
 l31bexprend:
    itos r1
    say r1

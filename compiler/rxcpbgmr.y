@@ -364,6 +364,37 @@ static ASTNode *intrinsic_lower_prefix(Context *context, ASTNode *intrinsic, AST
         return node;
     }
 
+    if (intrinsic_path_is_name_with_compact_type(intrinsic, "packed")) {
+        type_node = intrinsic_compact_type_node(context, intrinsic);
+        args = intrinsic_args_node(intrinsic);
+        offset = args ? ast_chdn(args, 0) : 0;
+        extra = 0;
+        if (offset) {
+            extra = offset->sibling;
+            offset->sibling = 0;
+            if (offset->node_type == NOVAL) offset = 0;
+        }
+        if (extra) {
+            ASTNode *unexpected = extra->sibling;
+            extra->sibling = 0;
+            mknd_err1(extra, "UNEXPECTED_ARGUMENT", "position", "2");
+            while (unexpected) {
+                ASTNode *next = unexpected->sibling;
+                unexpected->sibling = 0;
+                add_ast(extra, unexpected);
+                unexpected = next;
+            }
+        }
+
+        node = ast_f(context, OP_PACKED_AT, intrinsic->token);
+        add_ast(node, type_node);
+        add_ast(node, child);
+        if (offset) add_ast(node, offset);
+        else mknd_err(node, "PACKED_INDEX_REQUIRED");
+        if (extra) add_ast(node, extra);
+        return node;
+    }
+
     return ast_err(context, "UNKNOWN_NAMED_OPERATOR", intrinsic->token);
 }
 
@@ -1315,6 +1346,12 @@ when_clause(W) ::= TK_WHEN(K) expression(E) ncl0 TK_EOS.
 task_def(P)         ::= TK_LABEL(L) TK_TASK opt_method_return_type(T).
                       { P = ast_f(context, TASK_DECL, L); P->is_task_callable = 1;
                         if (T) add_ast(P,T); else add_ast(P,ast_ft(context, VOID)); }
+procedure(P)      ::= TK_LABEL(L) TK_INITIALISER.
+                      { P = ast_f(context, PROCEDURE, L); P->is_initializer = 1;
+                        add_ast(P,ast_ft(context, VOID)); }
+procedure(P)      ::= TK_LABEL(L) TK_INITIALISER expose(E).
+                      { P = ast_f(context, PROCEDURE, L); P->is_initializer = 1;
+                        add_ast(P,ast_ft(context, VOID)); add_ast(P,E); }
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL type_def(C).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,C); }
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V).

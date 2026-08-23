@@ -3,6 +3,9 @@ options levelb
 namespace e5worker expose add get identity fail spin churn loop_forever recurse_forever native_then_complete
 import e5native
 
+boot: initialiser expose state
+  state = 100
+
 add: procedure = .int expose state
   arg amount = .string
   state = state + amount

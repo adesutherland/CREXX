@@ -42,7 +42,6 @@ main() .locals=8
    unlink r4
    .traceevent "O" 4 "R" "S" "r" 3 7 7 0 "" ""
    scopy r5,r3
-   br l184bexprend
 l184bexprend:
    endlife r2
    concat r5,"array-read=",r5
@@ -70,7 +69,6 @@ l184bexprend:
    strupper r3,r2
    .srcstep 12 12 25 "upper.crexx" 44 3 16 "  return result"
    .traceevent "V" 6 "R" "S" "r" 3 14 14 0 "result" ""
-   br l329bexprend
 l329bexprend:
    .meta "arg_semantics_array.main.result"
    scopy r4,r3
@@ -95,7 +93,6 @@ l329bexprend:
    unlink r2
    .traceevent "O" 4 "R" "S" "r" 3 18 18 0 "" ""
    scopy r1,r3
-   br l200bexprend
 l200bexprend:
    endlife r5
    concat r5,"array-mut=",r1
@@ -142,7 +139,6 @@ l200bexprend:
    .srcstep 24 24 17 "arg_semantics_array.crexx" 37 3 14 "  return temp"
    .traceevent "V" 6 "R" "S" "r" 4 26 26 0 "temp" ""
    copy r3,r4
-   br l250bexprend
 l250bexprend:
    endlife r4
    .meta "arg_semantics_array.main.temp"
@@ -168,7 +164,6 @@ l250bexprend:
    strupper r3,r2
    .srcstep 31 31 25 "upper.crexx" 44 3 16 "  return result"
    .traceevent "V" 6 "R" "S" "r" 3 33 33 0 "result" ""
-   br l343bexprend
 l343bexprend:
    .meta "arg_semantics_array.main.result"
    scopy r4,r3
@@ -193,7 +188,6 @@ l343bexprend:
    unlink r2
    .traceevent "O" 4 "R" "S" "r" 3 37 37 0 "" ""
    scopy r1,r3
-   br l244bexprend
 l244bexprend:
    endlife r5
    .meta "arg_semantics_array.main.__inline_bind_226_0"
@@ -225,7 +219,6 @@ l244bexprend:
    strupper r4,r3
    .srcstep 42 42 25 "upper.crexx" 44 3 16 "  return result"
    .traceevent "V" 6 "R" "S" "r" 4 44 44 0 "result" ""
-   br l357bexprend
 l357bexprend:
    .meta "arg_semantics_array.main.result"
    scopy r5,r4

@@ -1,0 +1,6 @@
+options levelb
+namespace initializer_argument
+
+boot: initialiser
+  arg value = .int
+  return

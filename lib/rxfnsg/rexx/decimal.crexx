@@ -1,0 +1,348 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Context-preserving decimal mathematics for the Level G standard library.
+ */
+
+/**
+ * Level-B-authored decimal algorithms over the core mc_decimal arithmetic.
+ * Public entry points inherit the caller's precision. Existing work contexts
+ * remain 18, 32, 64, and 96 digits through the original 64-digit qualification
+ * range. Wider callers compute at caller precision plus 32 guard digits. The
+ * public frame restores the caller's context and rounds once on return.
+ *
+ * @docType runtime-module
+ */
+options levelb
+
+namespace rxdecimal expose sqrt exp ln sin cos pi euler
+import rxfnsb
+
+_rxdecimal_initialise: initialiser expose _rxdecimal_pi_cache _rxdecimal_pi_cache_digits _rxdecimal_e_cache _rxdecimal_e_cache_digits
+  _rxdecimal_pi_cache = .decimal
+  _rxdecimal_pi_cache_digits = 0
+  _rxdecimal_e_cache = .decimal
+  _rxdecimal_e_cache_digits = 0
+
+_rxdecimal_abs: procedure = .decimal
+  numeric digits inherited
+  arg value = .decimal
+  if value < 0 then return 0 - value
+  return value
+
+/** Select work precision without imposing a public decimal ceiling. */
+_rxdecimal_work_digits: procedure = .int
+  arg caller_digits = .int
+  if caller_digits <= 9 then return 18
+  if caller_digits <= 18 then return 32
+  if caller_digits <= 32 then return 64
+  if caller_digits <= 64 then return 96
+  if caller_digits > 2147483615 then
+    assembler signal "OVERFLOW_UNDERFLOW", "RXDECIMAL working precision exceeds the numeric-context range"
+  return caller_digits + 32
+
+/** Newton iteration in the selected work context. */
+_rxdecimal_sqrt_work: procedure = .decimal
+  numeric digits inherited
+  arg value = .decimal
+  if value = 0 then return 0
+  estimate = value
+  if estimate < 1 then estimate = 1
+  do iteration = 1 to 512
+    next = (estimate + value / estimate) / 2
+    if next = estimate then return next
+    estimate = next
+  end
+  assembler signal "FAILURE", "RXDECIMAL.SQRT did not converge"
+  return 0
+
+/** Quadratically convergent Gauss-Legendre calculation of pi. */
+_rxdecimal_pi_calculate: procedure = .decimal
+  numeric digits inherited
+  a = .decimal
+  b = .decimal
+  t = .decimal
+  p = .decimal
+  a = 1
+  b = _rxdecimal_sqrt_work("0.5" as .decimal)
+  t = "0.25" as .decimal
+  p = 1
+  do iteration = 1 to 32
+    next_a = (a + b) / 2
+    next_b = _rxdecimal_sqrt_work(a * b)
+    stable = 0
+    if next_a = a then do
+      if next_b = b then stable = 1
+    end
+    difference = a - next_a
+    t = t - p * difference * difference
+    a = next_a
+    b = next_b
+    p = 2 * p
+    if stable then return (a + b) * (a + b) / (4 * t)
+  end
+  assembler signal "FAILURE", "RXDECIMAL.PI did not converge"
+  return 0
+
+/** Cache the widest pi value calculated in this mutable module instance. */
+_rxdecimal_pi_work: procedure = .decimal expose _rxdecimal_pi_cache _rxdecimal_pi_cache_digits
+  numeric digits inherited
+  requested_digits = .int
+  assembler getnumdgts requested_digits
+  if _rxdecimal_pi_cache_digits < requested_digits then do
+    _rxdecimal_pi_cache = _rxdecimal_pi_calculate()
+    _rxdecimal_pi_cache_digits = requested_digits
+  end
+  return _rxdecimal_pi_cache + 0
+
+/** Halving and Taylor recurrence in the selected work context. */
+_rxdecimal_exp_work: procedure = .decimal
+  numeric digits inherited
+  arg value = .decimal
+  if value < 0 then return 1 / _rxdecimal_exp_work(0 - value)
+
+  reduced = value
+  squarings = 0
+  do while reduced > 0.5
+    reduced = reduced / 2
+    squarings = squarings + 1
+    if squarings > 4096 then
+      assembler signal "OVERFLOW_UNDERFLOW", "RXDECIMAL.EXP argument is outside the supported range"
+  end
+  total = .decimal
+  term = .decimal
+  total = 1
+  term = 1
+  do denominator = 1 to 4096
+    term = term * reduced / denominator
+    next = total + term
+    if next = total then leave
+    total = next
+  end
+  do squarings
+    total = total * total
+  end
+  return total
+
+/** Cache Euler's number at the widest requested work precision. */
+_rxdecimal_e_work: procedure = .decimal expose _rxdecimal_e_cache _rxdecimal_e_cache_digits
+  numeric digits inherited
+  requested_digits = .int
+  assembler getnumdgts requested_digits
+  if _rxdecimal_e_cache_digits < requested_digits then do
+    one = .decimal
+    one = 1
+    _rxdecimal_e_cache = _rxdecimal_exp_work(one)
+    _rxdecimal_e_cache_digits = requested_digits
+  end
+  return _rxdecimal_e_cache + 0
+
+/** Repeated-square-root reduction and atanh series for natural logarithm. */
+_rxdecimal_ln_work: procedure = .decimal
+  numeric digits inherited
+  arg value = .decimal
+  reduced = value
+  multiplier = 1
+  do while reduced < 0.75 | reduced > 1.5
+    reduced = _rxdecimal_sqrt_work(reduced)
+    multiplier = multiplier * 2
+  end
+
+  ratio = (reduced - 1) / (reduced + 1)
+  ratio_squared = ratio * ratio
+  term = ratio
+  total = ratio
+  denominator = 3
+  do iteration = 1 to 4096
+    term = term * ratio_squared
+    next = total + term / denominator
+    if next = total then leave
+    total = next
+    denominator = denominator + 2
+  end
+  return 2 * multiplier * total
+
+/** Reduce an angle to [-pi, pi] without converting through binary float. */
+_rxdecimal_reduce_angle: procedure = .decimal
+  numeric digits inherited
+  arg value = .decimal
+  pi_value = _rxdecimal_pi_work()
+  period = 2 * pi_value
+  quotient = trunc(value / period)
+  reduced = value - quotient * period
+  if reduced > pi_value then reduced = reduced - period
+  if reduced < 0 - pi_value then reduced = reduced + period
+  return reduced
+
+/** Quadrant reduction plus a Taylor recurrence for sine. */
+_rxdecimal_sin_work: procedure = .decimal
+  numeric digits inherited
+  arg value = .decimal
+  pi_value = _rxdecimal_pi_work()
+  half_pi = pi_value / 2
+  reduced = _rxdecimal_reduce_angle(value)
+  if reduced > half_pi then reduced = pi_value - reduced
+  if reduced < 0 - half_pi then reduced = 0 - pi_value - reduced
+
+  square = reduced * reduced
+  term = reduced
+  total = reduced
+  do index = 1 to 4096
+    denominator = (2 * index) * (2 * index + 1)
+    term = (0 - term) * square / denominator
+    next = total + term
+    if next = total then leave
+    total = next
+  end
+  return total
+
+/** Quadrant reduction plus a Taylor recurrence for cosine. */
+_rxdecimal_cos_work: procedure = .decimal
+  numeric digits inherited
+  arg value = .decimal
+  pi_value = _rxdecimal_pi_work()
+  half_pi = pi_value / 2
+  reduced = _rxdecimal_reduce_angle(value)
+  sign_value = 1
+  if reduced > half_pi then do
+    reduced = pi_value - reduced
+    sign_value = -1
+  end
+  if reduced < 0 - half_pi then do
+    reduced = 0 - pi_value - reduced
+    sign_value = -1
+  end
+
+  square = reduced * reduced
+  term = .decimal
+  total = .decimal
+  term = 1
+  total = 1
+  do index = 1 to 4096
+    denominator = (2 * index - 1) * (2 * index)
+    term = (0 - term) * square / denominator
+    next = total + term
+    if next = total then leave
+    total = next
+  end
+  return sign_value * total
+
+/**
+ * Return the non-negative decimal square root.
+ *
+ * @param value non-negative decimal value
+ * @return square root rounded in the caller's numeric context
+ * @signal INVALID_ARGUMENTS value is negative
+ */
+sqrt: procedure = .decimal
+  numeric digits inherited
+  arg value = .decimal
+  if value < 0 then
+    assembler signal "INVALID_ARGUMENTS", "RXDECIMAL.SQRT requires a non-negative value"
+  caller_digits = .int
+  work_digits = .int
+  assembler getnumdgts caller_digits
+  work_digits = _rxdecimal_work_digits(caller_digits)
+  assembler setnumdgts work_digits
+  result = _rxdecimal_sqrt_work(value)
+  assembler setnumdgts caller_digits
+  return result + 0
+
+/**
+ * Return the natural exponential.
+ *
+ * @param value decimal exponent
+ * @return e**value rounded in the caller's numeric context
+ */
+exp: procedure = .decimal
+  numeric digits inherited
+  arg value = .decimal
+  caller_digits = .int
+  work_digits = .int
+  assembler getnumdgts caller_digits
+  work_digits = _rxdecimal_work_digits(caller_digits)
+  assembler setnumdgts work_digits
+  result = _rxdecimal_exp_work(value)
+  assembler setnumdgts caller_digits
+  return result + 0
+
+/**
+ * Return the natural logarithm.
+ *
+ * @param value positive decimal value
+ * @return natural logarithm rounded in the caller's numeric context
+ * @signal INVALID_ARGUMENTS value is zero or negative
+ */
+ln: procedure = .decimal
+  numeric digits inherited
+  arg value = .decimal
+  if value <= 0 then
+    assembler signal "INVALID_ARGUMENTS", "RXDECIMAL.LN requires a positive value"
+  caller_digits = .int
+  work_digits = .int
+  assembler getnumdgts caller_digits
+  work_digits = _rxdecimal_work_digits(caller_digits)
+  assembler setnumdgts work_digits
+  result = _rxdecimal_ln_work(value)
+  assembler setnumdgts caller_digits
+  return result + 0
+
+/**
+ * Return the sine of a decimal radian angle.
+ *
+ * @param value radians
+ * @return sine rounded in the caller's numeric context
+ */
+sin: procedure = .decimal
+  numeric digits inherited
+  arg value = .decimal
+  caller_digits = .int
+  work_digits = .int
+  assembler getnumdgts caller_digits
+  work_digits = _rxdecimal_work_digits(caller_digits)
+  assembler setnumdgts work_digits
+  result = _rxdecimal_sin_work(value)
+  assembler setnumdgts caller_digits
+  return result + 0
+
+/**
+ * Return the cosine of a decimal radian angle.
+ *
+ * @param value radians
+ * @return cosine rounded in the caller's numeric context
+ */
+cos: procedure = .decimal
+  numeric digits inherited
+  arg value = .decimal
+  caller_digits = .int
+  work_digits = .int
+  assembler getnumdgts caller_digits
+  work_digits = _rxdecimal_work_digits(caller_digits)
+  assembler setnumdgts work_digits
+  result = _rxdecimal_cos_work(value)
+  assembler setnumdgts caller_digits
+  return result + 0
+
+/** @return pi rounded in the caller's numeric context */
+pi: procedure = .decimal
+  numeric digits inherited
+  caller_digits = .int
+  work_digits = .int
+  assembler getnumdgts caller_digits
+  work_digits = _rxdecimal_work_digits(caller_digits)
+  assembler setnumdgts work_digits
+  result = _rxdecimal_pi_work()
+  assembler setnumdgts caller_digits
+  return result + 0
+
+/** @return Euler's number rounded in the caller's numeric context */
+euler: procedure = .decimal
+  numeric digits inherited
+  caller_digits = .int
+  work_digits = .int
+  assembler getnumdgts caller_digits
+  work_digits = _rxdecimal_work_digits(caller_digits)
+  assembler setnumdgts work_digits
+  result = _rxdecimal_e_work()
+  assembler setnumdgts caller_digits
+  return result + 0

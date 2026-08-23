@@ -37,7 +37,6 @@ main() .locals=11
    .srcstep 6 6 17 "inline_test_array_return_expr.crexx" 15 3 14 "  return temp"
    .traceevent "V" 6 "R" "S" "r" 2 8 8 0 "temp" ""
    copy r3,r2
-   br l103bexprend
 l103bexprend:
    endlife r2
    .meta "inline_test_array_return_expr.main.temp"
@@ -58,7 +57,6 @@ l103bexprend:
    unlink r6
    .traceevent "O" 4 "R" "S" "r" 2 12 12 0 "" ""
    scopy r7,r2
-   br l97bexprend
 l97bexprend:
    endlife r1
    .meta "inline_test_array_return_expr.main.__inline_bind_73_0"
@@ -90,7 +88,6 @@ l97bexprend:
    .srcstep 17 17 17 "inline_test_array_return_expr.crexx" 15 3 14 "  return temp"
    .traceevent "V" 6 "R" "S" "r" 6 19 19 0 "temp" ""
    copy r3,r6
-   br l169bexprend
 l169bexprend:
    endlife r6
    .meta "inline_test_array_return_expr.main.temp"
@@ -111,7 +108,6 @@ l169bexprend:
    unlink r9
    .traceevent "O" 4 "R" "S" "r" 3 23 23 0 "" ""
    scopy r10,r3
-   br l163bexprend
 l163bexprend:
    endlife r7
    .meta "inline_test_array_return_expr.main.__inline_bind_139_0"

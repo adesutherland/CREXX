@@ -55,7 +55,6 @@ l64iffalse:
    load r4,0
    .traceevent "L" 4 "R" "I" "r" 4 14 14 0 "" ""
    icopy r3,r4
-   br l53bexprend
 l53bexprend:
    iadd r3,r3,10
    itos r3

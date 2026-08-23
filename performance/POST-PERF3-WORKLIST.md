@@ -422,19 +422,23 @@ may diagnose repeated range/conversion/offset cost, but it does not change the
 binary-memory language, storage invariant, instructions or runtime in this
 stage.
 
-The broader decision has transferred to central-roadmap item `BINARY-01` and
-does not block POSTPERF-04 or POSTPERF-05. Its decided direction is that
-`.binary` storage bases are aligned for supported native scalar payloads and a
-normal native typed route is indexed in whole elements. A separate raw route
-owns byte positions, fixed encodings and endian conversion.
+The broader decision has transferred to central-roadmap item
+[`BINARY-01`](BINARY-01-WORKLIST.md) and does not block POSTPERF-04 or
+POSTPERF-05. Its approved fast representation is deliberately limited to a
+contiguous, aligned sequence of host-native `rxinteger` or host-native
+`rxfloat` elements. Width, byte order, representation and alignment are those
+of the host types; the path performs no per-element conversion. A separate raw
+route owns every other width, byte position, encoding and endian requirement.
 
 The byte/interchange route is separate and explicit. It owns zero-based byte
 positions, fixed encoded widths, selected endianness, conversion and boundary
 checks for files, protocols and wire formats. Encoded `.f32` remains distinct
-from native `.float`: it necessarily converts between binary32 storage and the
-VM's binary64 value.
+from packed `rxfloat`: it necessarily converts between binary32 storage and the
+VM's binary64 value. Encoded `.i64` also remains a portable byte contract rather
+than becoming packed `rxinteger` merely because their Release 1 widths agree.
 
-Resolve the following `BINARY-01` language decisions as one coherent decision
+The native element kinds and host-representation rule are no longer open.
+Resolve the remaining `BINARY-01` language decisions as one coherent decision
 before a production edit:
 
 1. **Element origin.** Select zero-based typed indexing, matching C and the
@@ -449,7 +453,10 @@ before a production edit:
 3. **Migration policy.** If `<at..type>` changes meaning, decide between a hard
    pre-release break, a version/options-controlled transition, or a diagnostic
    migration period. Do not silently reinterpret existing source.
-4. **Raw format expression.** The raw route must make byte position, encoded
+4. **Owning shape.** Select a distinct packed value or a validated typed view
+   over aligned binary-owned storage, including mutation, slicing, alias and
+   copy rules.
+5. **Raw format expression.** The raw route must make byte position, encoded
    width and endian policy unambiguous. Exact spelling remains open; the current
    zero-based canonical-little-endian behaviour is the semantic compatibility
    control, not a commitment to retain its syntax.

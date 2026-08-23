@@ -1,0 +1,29 @@
+recorded_rows=96
+warmup_rows=8
+output_files=104
+pass_outputs=104
+failure_markers=0
+sample_shape:
+rxbvm,read,encoded-read,rows=12,positions= 2 7 2 7 2 7 2 7 2 7 2 7
+rxbvm,read,packed-read,rows=12,positions= 1 8 1 8 1 8 1 8 1 8 1 8
+rxbvm,write,encoded-write,rows=12,positions= 4 5 4 5 4 5 4 5 4 5 4 5
+rxbvm,write,packed-write,rows=12,positions= 3 6 3 6 3 6 3 6 3 6 3 6
+rxtvm,read,encoded-read,rows=12,positions= 6 3 6 3 6 3 6 3 6 3 6 3
+rxtvm,read,packed-read,rows=12,positions= 5 4 5 4 5 4 5 4 5 4 5 4
+rxtvm,write,encoded-write,rows=12,positions= 8 1 8 1 8 1 8 1 8 1 8 1
+rxtvm,write,packed-write,rows=12,positions= 7 2 7 2 7 2 7 2 7 2 7 2
+checksum_shapes:
+rxbvm,read,encoded-read,1000000,rows=12
+rxbvm,read,packed-read,1000000,rows=12
+rxbvm,write,encoded-write,200019,rows=12
+rxbvm,write,packed-write,200019,rows=12
+rxtvm,read,encoded-read,1000000,rows=12
+rxtvm,read,packed-read,1000000,rows=12
+rxtvm,write,encoded-write,200019,rows=12
+rxtvm,write,packed-write,200019,rows=12
+sha256:
+5a23fb29a8b7c4a26933737962bc3e9c5bbeb53e9f086093a8ba19e0bcabca0a  performance/evidence/2026-08-21-binary01-packed-float-first-release-verdict/raw/warmups.csv
+8a1c630cfe43ae413a5eb2bfc6d47daced67ae5129f1a6fb4e7ea8a591894ba7  performance/evidence/2026-08-21-binary01-packed-float-first-release-verdict/raw/samples.csv
+c9774a44902a7914dcb7860b7123a26b622f29b523b0f50494fa6b94b50ccf18  performance/evidence/2026-08-21-binary01-packed-float-first-release-verdict/summary.csv
+77554efc9fd75843fdc3f4d5d46f0505ccea5865ac9fa8e67f8f4dcd183622ff  cmake-build-release/tests/performance/binary_packed_float_compare_opt.rxbin
+79f813e69d72881a866e4abf4295b207e0bcdf903cd82acebae7fbc49b24f6aa  tests/performance/binary_packed_float_compare.crexx

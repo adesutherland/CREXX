@@ -56,6 +56,8 @@ static void help() {
             "Options :\n"
             "  -h              Prints help message\n"
             "  -p plugin       Load VM Plugin*\n"
+            "  --provider-path directories\n"
+            "                  Trusted ';'-separated RXPA provider directories\n"
             "  -c              Prints Copyright & License Details\n"
 #ifndef NDEBUG
             "  -d              Debug/Trace Mode\n"
@@ -81,6 +83,54 @@ static void help() {
     printf("%s",helpMessage);
 }
 
+static char *provider_application_directory(const char *module_path) {
+    const char *slash;
+    size_t prefix_length;
+    char *result;
+
+    if (!module_path || !*module_path) return 0;
+    slash = strrchr(module_path, '/');
+#ifdef _WIN32
+    {
+        const char *backslash = strrchr(module_path, '\\');
+        if (!slash || (backslash && backslash > slash)) slash = backslash;
+    }
+#endif
+    prefix_length = slash ? (size_t)(slash - module_path + 1) : 0u;
+    result = malloc(prefix_length + strlen("providers") + 1u);
+    if (!result) return 0;
+    if (prefix_length) memcpy(result, module_path, prefix_length);
+    strcpy(result + prefix_length, "providers");
+    return result;
+}
+
+static char *provider_search_path(const char *application,
+                                  const char *configured,
+                                  const char *environment,
+                                  const char *executable) {
+    const char *parts[4];
+    size_t index;
+    size_t length = 1u;
+    char *result;
+
+    parts[0] = application;
+    parts[1] = configured;
+    parts[2] = environment;
+    parts[3] = executable;
+    for (index = 0u; index < 4u; index++) {
+        if (parts[index] && *parts[index]) length += strlen(parts[index]) + 1u;
+    }
+    result = malloc(length);
+    if (!result) return 0;
+    result[0] = 0;
+    for (index = 0u; index < 4u; index++) {
+        if (!parts[index] || !*parts[index]) continue;
+        if (*result) strcat(result, ";");
+        strcat(result, parts[index]);
+    }
+    return result;
+}
+
 static void error_and_exit(char* message) {
 
     fprintf(stderr, "ERROR: %s - try \"rxvm -h\"\n", message);
@@ -97,6 +147,9 @@ int main(int argc, char *argv[]) {
     char *file_name;
     char *combined_location = 0;
     char *exe_path = 0;
+    char *application_provider_path = 0;
+    char *installed_provider_path = 0;
+    const char *configured_provider_path = 0;
     int i, j;
     int rc;
     rxvm_context context;
@@ -149,6 +202,19 @@ int main(int argc, char *argv[]) {
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
+        if (strcmp(argv[i], "--provider-path") == 0) {
+            i++;
+            if (i >= argc || !argv[i][0])
+                error_and_exit("Missing directories after --provider-path");
+            configured_provider_path = argv[i];
+            continue;
+        }
+        if (strncmp(argv[i], "--provider-path=", 16) == 0) {
+            if (!argv[i][16])
+                error_and_exit("Missing directories after --provider-path=");
+            configured_provider_path = argv[i] + 16;
+            continue;
+        }
 #ifdef CREXX_VM_PROFILING
         if (strcmp(argv[i], "--sequence-count") == 0) {
             char *end = 0;
@@ -279,8 +345,30 @@ int main(int argc, char *argv[]) {
         error_and_exit("No input files");
     }
 
-    /* Add current and executable path to location */
+    /* Configure trusted provider discovery separately from the legacy module
+     * path.  In particular, the implicit current-directory module lookup is
+     * never promoted into an unrestricted native-library search. */
     exe_path = exepath();
+    application_provider_path = provider_application_directory(argv[i]);
+    if (exe_path && *exe_path) {
+        installed_provider_path = malloc(strlen(exe_path) +
+                                         strlen("/providers") + 1u);
+        if (installed_provider_path)
+            sprintf(installed_provider_path, "%s/providers", exe_path);
+    }
+    if (!application_provider_path ||
+        ((exe_path && *exe_path) && !installed_provider_path)) {
+        error_and_exit("Unable to allocate provider search path");
+    }
+    context.provider_location = provider_search_path(
+            application_provider_path, configured_provider_path,
+            getenv("CREXX_PROVIDER_PATH"), installed_provider_path);
+    free(application_provider_path);
+    free(installed_provider_path);
+    if (!context.provider_location)
+        error_and_exit("Unable to allocate provider search path");
+
+    /* Add current and executable path to legacy module location. */
     if (context.location) {
         combined_location = malloc(strlen(context.location) + strlen(exe_path) + 5);
         sprintf(combined_location, ".;%s;%s", context.location, exe_path);

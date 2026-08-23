@@ -1,0 +1,260 @@
+/* Focused exact packed-vector, conversion and error contract. */
+options levelb floats_binary
+
+import rxfnsb
+import rxfnsg
+import rxfloat
+import rxvector
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if condition then return 0
+  say "FAIL:" label
+  return 1
+
+check_close: procedure = .int
+  arg actual = .float, expected = .float, tolerance = .float, label = .string
+  difference = actual - expected
+  if difference < 0.0 then difference = -difference
+  if difference <= tolerance then return 0
+  say "FAIL:" label "expected=" expected "actual=" actual
+  return 1
+
+check_partial_f32: procedure = .int
+  do
+    ignored = rxvector..decodef32le(x2bin("000080"))
+    say "FAIL: partial f32 did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos("RXVECTOR.DECODEF32LE", problem.message()) > 0 then return 0
+    say "FAIL: partial f32 signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_nonfinite_f32: procedure = .int
+  do
+    ignored = rxvector..decodef32le(x2bin("0000807F"))
+    say "FAIL: infinite f32 did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos("finite", problem.message()) > 0 then return 0
+    say "FAIL: infinite f32 signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_uninitialized_encode: procedure = .int
+  values = .packedfloat
+  do
+    ignored = rxvector..encodef32le(values)
+    say "FAIL: uninitialized encode did not signal"
+    return 1
+  on signal object_not_initialized as problem
+    if problem.name() = "OBJECT_NOT_INITIALIZED" then return 0
+    say "FAIL: uninitialized encode signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_nonfinite_encode: procedure = .int
+  values = .packedfloat(1)
+  call values.set(0, rxfloat..sqrt(-1.0))
+  do
+    ignored = rxvector..encodef32le(values)
+    say "FAIL: non-finite encode did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos("finite", problem.message()) > 0 then return 0
+    say "FAIL: non-finite encode signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_encode_range: procedure = .int
+  values = .packedfloat(1)
+  call values.set(0, "1.0e300" as .float)
+  do
+    ignored = rxvector..encodef32le(values)
+    say "FAIL: overflowing f32 encode did not signal"
+    return 1
+  on signal overflow_underflow as problem
+    if problem.name() = "OVERFLOW_UNDERFLOW" then return 0
+    say "FAIL: overflowing f32 signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_cosine_shape: procedure = .int
+  left = .packedfloat(1)
+  right = .packedfloat(2)
+  do
+    ignored = rxvector..cosine(left, right)
+    say "FAIL: unequal cosine did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos("equal", problem.message()) > 0 then return 0
+    say "FAIL: unequal cosine signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_zero_norm: procedure = .int
+  left = .packedfloat(2)
+  right = .packedfloat(2)
+  call right.set(0, 1.0)
+  do
+    ignored = rxvector..cosine(left, right)
+    say "FAIL: zero-norm cosine did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos("zero-norm", problem.message()) > 0 then return 0
+    say "FAIL: zero-norm signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_nonfinite_cosine: procedure = .int
+  left = .packedfloat(1)
+  right = .packedfloat(1)
+  call left.set(0, rxfloat..sqrt(-1.0))
+  call right.set(0, 1.0)
+  do
+    ignored = rxvector..cosine(left, right)
+    say "FAIL: non-finite cosine did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos("finite", problem.message()) > 0 then return 0
+    say "FAIL: non-finite cosine signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_topk_error_reset: procedure = .int
+  vectors = .packedfloat(4)
+  identities = .packedint(2)
+  query_vector = .packedfloat(2)
+  result_ids = .packedint(1)
+  result_scores = .packedfloat(1)
+  call vectors.set(0, 1.0)
+  call vectors.set(3, 1.0)
+  call identities.set(0, 1)
+  call identities.set(1, 2)
+  call query_vector.set(0, 1.0)
+  call result_ids.set(0, 99)
+  call result_scores.set(0, 99.0)
+  do
+    call rxvector..topkcosine(vectors, identities, 3, query_vector, 1, result_ids, result_scores)
+    say "FAIL: invalid top-k shape did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & result_ids.size() = 0 & result_scores.size() = 0 then return 0
+    say "FAIL: invalid top-k reset" problem.name() result_ids.size() result_scores.size()
+    return 1
+  end
+  return 1
+
+check_topk_range_reset: procedure = .int
+  vectors = .packedfloat(2)
+  identities = .packedint(1)
+  query_vector = .packedfloat(2)
+  result_ids = .packedint(1)
+  result_scores = .packedfloat(1)
+  call vectors.set(0, 1.0)
+  call identities.set(0, 1)
+  call query_vector.set(0, 1.0)
+  do
+    call rxvector..topkcosine(vectors, identities, 2, query_vector, 2, result_ids, result_scores)
+    say "FAIL: out-of-range top-k did not signal"
+    return 1
+  on signal out_of_range as problem
+    if problem.name() = "OUT_OF_RANGE" & result_ids.size() = 0 & result_scores.size() = 0 then return 0
+    say "FAIL: out-of-range top-k reset" problem.name() result_ids.size() result_scores.size()
+    return 1
+  end
+  return 1
+
+main: procedure = .int
+  failures = 0
+
+  encoded = x2bin("0000803F000020C00000003F")
+  decoded = rxvector..decodef32le(encoded)
+  failures = failures + check(decoded.size() = 3, "decoded item count")
+  failures = failures + check_close(decoded.get(0), 1.0, 0.0, "decoded positive")
+  failures = failures + check_close(decoded.get(1), -2.5, 0.0, "decoded negative")
+  failures = failures + check_close(decoded.get(2), 0.5, 0.0, "decoded fraction")
+  failures = failures + check(bin2x(rxvector..encodef32le(decoded)) = "0000803F000020C00000003F", "f32le round trip")
+  zero_payload = .binary
+  empty_values = rxvector..decodef32le(zero_payload)
+  failures = failures + check(empty_values.size() = 0 & binlength(rxvector..encodef32le(empty_values)) = 0, "empty conversion")
+
+  left = .packedfloat(2)
+  right = .packedfloat(2)
+  call left.set(0, 1.0)
+  call right.set(1, 1.0)
+  failures = failures + check_close(rxvector..cosine(left, right), 0.0, 0.0, "orthogonal cosine")
+  call right.set(0, 1.0)
+  call right.set(1, 0.0)
+  failures = failures + check_close(rxvector..cosine(left, right), 1.0, 0.0, "identical cosine")
+
+  huge_left = .packedfloat(2)
+  huge_right = .packedfloat(2)
+  call huge_left.set(0, "1.0e308" as .float)
+  call huge_left.set(1, "1.0e308" as .float)
+  call huge_right.set(0, "1.0e308" as .float)
+  call huge_right.set(1, "1.0e308" as .float)
+  failures = failures + check_close(rxvector..cosine(huge_left, huge_right), 1.0, 0.000000000000002, "scaled huge cosine")
+
+  vectors = .packedfloat(12)
+  identities = .packedint(6)
+  query_vector = .packedfloat(2)
+  result_ids = .packedint(0)
+  result_scores = .packedfloat(0)
+  call query_vector.set(0, 1.0)
+  call vectors.set(0, 1.0)
+  call vectors.set(2, 0.8)
+  call vectors.set(3, 0.6)
+  call vectors.set(4, 0.8)
+  call vectors.set(5, 0.6)
+  call vectors.set(6, 0.6)
+  call vectors.set(7, 0.8)
+  call vectors.set(9, 1.0)
+  call vectors.set(10, -1.0)
+  call identities.set(0, 50)
+  call identities.set(1, 30)
+  call identities.set(2, 20)
+  call identities.set(3, 40)
+  call identities.set(4, 10)
+  call identities.set(5, 60)
+  vectors_before = snapshot vectors.binary()
+  identities_before = snapshot identities.binary()
+  query_before = snapshot query_vector.binary()
+  call rxvector..topkcosine(vectors, identities, 2, query_vector, 5, result_ids, result_scores)
+  failures = failures + check(result_ids.size() = 5 & result_scores.size() = 5, "top-k output sizes")
+  failures = failures + check(result_ids.get(0) = 50 & result_ids.get(1) = 20 & result_ids.get(2) = 30 & result_ids.get(3) = 40 & result_ids.get(4) = 10, "top-k deterministic identity order")
+  failures = failures + check_close(result_scores.get(0), 1.0, 0.000000000000002, "top-k score one")
+  failures = failures + check_close(result_scores.get(1), 0.8, 0.000000000000002, "top-k tie score one")
+  failures = failures + check_close(result_scores.get(2), 0.8, 0.000000000000002, "top-k tie score two")
+  failures = failures + check_close(result_scores.get(3), 0.6, 0.000000000000002, "top-k fourth score")
+  failures = failures + check_close(result_scores.get(4), 0.0, 0.0, "top-k zero score")
+  failures = failures + check(bincompare(vectors_before, snapshot vectors.binary()) = 0 & bincompare(identities_before, snapshot identities.binary()) = 0 & bincompare(query_before, snapshot query_vector.binary()) = 0, "top-k input immutability")
+  call rxvector..topkcosine(vectors, identities, 2, query_vector, 0, result_ids, result_scores)
+  failures = failures + check(result_ids.size() = 0 & result_scores.size() = 0, "zero requested top-k")
+
+  failures = failures + check_partial_f32()
+  failures = failures + check_nonfinite_f32()
+  failures = failures + check_uninitialized_encode()
+  failures = failures + check_nonfinite_encode()
+  failures = failures + check_encode_range()
+  failures = failures + check_cosine_shape()
+  failures = failures + check_zero_norm()
+  failures = failures + check_nonfinite_cosine()
+  failures = failures + check_topk_error_reset()
+  failures = failures + check_topk_range_reset()
+
+  if failures <> 0 then do
+    say "FAIL: rxvector failures=" failures
+    return 1
+  end
+  say "PASS: rxvector exact packed contract"
+  return 0

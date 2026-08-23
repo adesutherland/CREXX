@@ -37,7 +37,6 @@ l8dostart:
    iadd r4,r0,1
    .traceevent "O" 4 "R" "I" "r" 4 9 9 0 "" ""
    icopy r5,r4
-   br l75bexprend
 l75bexprend:
    iadd r1,r5,10
    .traceevent "O" 4 "R" "I" "r" 1 9 9 0 "" ""

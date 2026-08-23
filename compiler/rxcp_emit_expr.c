@@ -2099,7 +2099,8 @@ void emit_expression(ASTNode *node, void *payload) {
             break;
         }
 
-        case OP_BINARY_AT: {
+        case OP_BINARY_AT:
+        case OP_PACKED_AT: {
             RxcpBinaryStorageInfo info;
             ASTNode *base = 0;
             ASTNode *offset = 0;
@@ -2113,7 +2114,9 @@ void emit_expression(ASTNode *node, void *payload) {
                 break;
             }
 
-            if (rxcp_binary_storage_info(child1, &info) &&
+            if ((node->node_type == OP_PACKED_AT
+                     ? rxcp_packed_storage_info(child1, &info)
+                     : rxcp_binary_storage_info(child1, &info)) &&
                 rxcp_binary_memory_at_parts(node, 0, &base, &offset) &&
                 base && offset) {
                 if (info.is_fixed) {

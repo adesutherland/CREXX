@@ -24,7 +24,7 @@ static int test_decimalToString_total_contract(void) {
     int errors = 0;
 
     value_init(&number);
-    output = malloc(plugin->getRequiredStringSize(plugin));
+    output = malloc(plugin->getRequiredStringSize(plugin, NULL));
     plugin->base.signal_number = 999;
     plugin->base.signal_string = "stale";
     plugin->decimalToString(plugin, &number, output);
@@ -59,7 +59,7 @@ static int test_decimalFromInt_total_contract(void) {
     int errors = 0;
 
     value_init(&number);
-    output = malloc(plugin->getRequiredStringSize(plugin));
+    output = malloc(plugin->getRequiredStringSize(plugin, NULL));
     plugin->base.signal_number = 999;
     plugin->base.signal_string = "stale";
     plugin->decimalFromInt(plugin, &number, 42);
@@ -87,7 +87,7 @@ int aTestFromToInt(char* expected, int64_t int_input) {
     value_init(&a);
 
     /* Make a string buffer to hold the result as a string */
-    output = malloc(plugin->getRequiredStringSize(plugin));
+    output = malloc(plugin->getRequiredStringSize(plugin, NULL));
 
     printf("\nTesting with %lld\n", (long long)int_input);
     plugin->decimalFromInt(plugin, &a, int_input);

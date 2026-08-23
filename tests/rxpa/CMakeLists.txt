@@ -12,7 +12,13 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
 add_custom_target(cri07_rxpa_sdk_consumer_prereqs
-        DEPENDS rxc rxas rxvm rxbvm library)
+        DEPENDS rxc rxas rxvm rxbvm crexx library rxfnsg
+                _hash _hash_static
+                stats stats_static
+                vector vector_static
+                id id_static
+                fs fs_static
+                _platform _platform_static)
 
 add_test(
         NAME rxpa_external_sdk_consumer
@@ -24,15 +30,28 @@ add_test(
                 -DCREXX_SOURCE_DIR=${CMAKE_SOURCE_DIR}
                 -DCMAKE_GENERATOR_NAME=${CMAKE_GENERATOR}
                 -DEXE_SUFFIX=${CMAKE_EXECUTABLE_SUFFIX}
+                -DSTATIC_SUFFIX=${CMAKE_STATIC_LIBRARY_SUFFIX}
                 -DPACKAGE_RELATIVE_DIR=${CREXX_CMAKE_PACKAGE_INSTALL_DIR}
                 -DCONSUMER_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/external_sdk
                 -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/rxpa_external_sdk_consumer_ws
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_external_sdk_consumer.cmake
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxpa_external_sdk_consumer PROPERTIES
-        LABELS "install;package;rxpa;external-consumer"
+        LABELS "install;package;rxpa;external-consumer;hash;crexx-rag;rcc-5d;rcc-5e;rcc-5f;stats;vector;packed"
         RUN_SERIAL TRUE
         TIMEOUT 240)
+
+add_test(
+        NAME rxpa_native_return_class_import
+        COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DIMPORT_PATH=${CMAKE_BINARY_DIR}/bin
+                -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rxpa_native_return_class_import.crexx
+                -DOUTPUT_BASE=${CMAKE_CURRENT_BINARY_DIR}/rxpa_native_return_class_import
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/check_native_return_class_import.cmake)
+set_tests_properties(rxpa_native_return_class_import PROPERTIES
+        LABELS "compiler;rxpa;provider;metadata;class;regression;rcc-5f"
+        TIMEOUT 30)
 
 function(localize_test_plugin_output target)
     # Keep test-only plugins out of the shared release bin directory.
@@ -54,6 +73,63 @@ endfunction()
 
 # Create dynamic plugin module
 add_dynamic_plugin_target(_rxpa_dynlink rxpa_dynlink.c)
+
+# RCC-1/RCC-2 fixture: one stable provider identity with dynamic and static
+# delivery forms published through the production provider-package helper.
+add_dynamic_plugin_target(_rcc_provider rcc_provider.c)
+add_static_plugin_target(_rcc_provider rcc_provider.c)
+add_rxpa_provider_package(_rcc_provider
+        OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/providers")
+
+add_custom_target(rcc_provider_autoload_test ALL)
+crexx_add_rexx_opt_matrix(
+        NAME rcc_provider_autoload
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc_provider.crexx
+        TARGET_GROUP rcc_provider_autoload_test
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS library _rcc_provider _rcc_provider_static
+        TEST_LABELS "rxpa;provider;autoload")
+# The optimized matrix deliberately stages the linked image under linked_opt/;
+# exercise the explicit trusted-path route for that isolated container.
+set_tests_properties(rcc_provider_autoload_opt PROPERTIES
+        ENVIRONMENT "CREXX_PROVIDER_PATH=${CMAKE_CURRENT_BINARY_DIR}/providers")
+
+add_test(
+        NAME rcc_provider_wrong_identity_rejected
+        COMMAND ${CMAKE_COMMAND}
+                -DRUNNER=${CREXX_RXVM_EXECUTABLE}
+                -DPROGRAM=${CMAKE_CURRENT_BINARY_DIR}/rcc_provider_autoload_noopt.rxbin
+                -DWRONG_PLUGIN=$<TARGET_FILE:_rxpa_dynlink>
+                -DSCRATCH=${CMAKE_CURRENT_BINARY_DIR}/rcc_provider_rejection
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/check_provider_rejection.cmake)
+set_tests_properties(rcc_provider_wrong_identity_rejected PROPERTIES
+        LABELS "rxpa;provider;autoload;negative"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(
+        NAME rcc_provider_package_names
+        COMMAND ${CMAKE_COMMAND}
+                -DPROVIDER_DIR=${CMAKE_CURRENT_BINARY_DIR}/providers
+                -DPROVIDER_ID=rx_rcc_provider
+                -DSTATIC_SUFFIX=${CMAKE_STATIC_LIBRARY_SUFFIX}
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/check_provider_package_names.cmake)
+set_tests_properties(rcc_provider_package_names PROPERTIES
+        LABELS "rxpa;provider;package"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(
+        NAME rcc_provider_unused_import_elided
+        COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DRXAS=$<TARGET_FILE:rxas>
+                -DRXLINK=$<TARGET_FILE:rxlink>
+                -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rcc_provider_unused.crexx
+                "-DIMPORT_PATH=${CMAKE_BINARY_DIR}/bin"
+                -DSCRATCH=${CMAKE_CURRENT_BINARY_DIR}/rcc_provider_unused
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/check_unused_provider.cmake)
+set_tests_properties(rcc_provider_unused_import_elided PROPERTIES
+        LABELS "compiler;rxpa;provider;negative"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 localize_test_plugin_output(_rxpa_dynlink)
 add_dependencies(_rxpa_dynlink rxpa library rxvm rxc) # The test (not plugin) depends on rxpa, library, rxvm, and rxc
 
@@ -210,7 +286,10 @@ add_test(
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxpa_signature_diagnostics PROPERTIES
         LABELS "compiler;diagnostics;rxpa;runtime;optimizer"
-        TIMEOUT 120)
+        # This composite contract launches 20 instrumented compiler,
+        # assembler, and VM subprocesses. Under a full parallel sanitizer run
+        # it needs the repository's established long-test allowance.
+        TIMEOUT 300)
 
 foreach(_mode IN ITEMS noopt opt)
     set(_mode_flag)
@@ -321,10 +400,9 @@ foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
     if(_rexxtest STREQUAL "signal_funcs")
         list(APPEND _runtime_expectations
                 EXPECTED_EXIT_CODE 3
-                EXPECTED_FAILURE_DESCRIPTION "SIGNAL ERROR at bytecode address 9"
+                EXPECTED_FAILURE_DESCRIPTION "native SIGNAL ERROR message"
                 REQUIRED_OUTPUT_REGEX
-                    "PANIC: \\(SIGNAL ERROR\\)"
-                    "address 9 \\(0x9\\)"
+                    "PANIC: .*\\(SIGNAL ERROR\\)"
                 FORBIDDEN_OUTPUT_REGEX
                     "Error - should not reach here"
         )

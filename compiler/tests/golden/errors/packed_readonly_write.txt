@@ -1,0 +1,2 @@
+Error in packed_readonly_write.crexx @ 5:3 - #BINARY_MEMORY_READ_ONLY, "<packed..int>(0) DATA"
+1 error(s) in source file

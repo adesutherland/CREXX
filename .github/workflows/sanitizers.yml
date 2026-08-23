@@ -1,0 +1,81 @@
+name: Sanitizer QA
+
+on:
+  push:
+    branches:
+      - develop
+      - master
+  pull_request:
+    branches:
+      - develop
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sanitizer:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x64 ASan/LSan
+            os: ubuntu-24.04
+            platform: linux
+            cmake_args: ""
+          - name: macOS arm64 ASan
+            os: macos-15
+            platform: macos
+            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=arm64"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Configure instrumented Debug build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -G Ninja -B "${RUNNER_TEMP}/debugasan" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+            -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" \
+            ${{ matrix.cmake_args }}
+
+      - name: Full instrumented build and CTest
+        shell: bash
+        run: |
+          set -euo pipefail
+          sanitizer_args=(
+            --build-dir "${RUNNER_TEMP}/debugasan"
+            --phase full
+            --build-jobs 4
+            --test-jobs 8
+            --no-live-tail
+          )
+
+          if [ "${{ matrix.platform }}" = "macos" ]; then
+            sanitizer_args+=(--build-leaks off --leaks off)
+          else
+            sanitizer_args+=(--build-leaks on --leaks on)
+          fi
+
+          tools/asan-run.sh "${sanitizer_args[@]}"
+
+      - name: Upload sanitizer logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: sanitizer-logs-${{ matrix.platform }}
+          path: ${{ runner.temp }}/debugasan/asan-logs
+          if-no-files-found: error
+          retention-days: 14

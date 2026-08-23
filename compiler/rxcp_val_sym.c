@@ -114,6 +114,17 @@ static int symbol_is_readonly_flag_view(Symbol *symbol) {
            attr_text_equals_ci(attr, "flags.readable");
 }
 
+static int symbol_has_initializer_definition(Symbol *symbol) {
+    size_t i;
+
+    if (!symbol || symbol->symbol_type != FUNCTION_SYMBOL) return 0;
+    for (i = 0u; i < sym_nond(symbol); i++) {
+        SymbolNode *link = sym_trnd(symbol, i);
+        if (link && link->node && link->node->is_initializer) return 1;
+    }
+    return 0;
+}
+
 static void validate_readonly_flag_view_writes(Symbol *symbol) {
     int i;
 
@@ -1034,6 +1045,11 @@ walker_result resolve_functions_walker(walker_direction direction,
                     }
                 }
             }
+            if (node->symbolNode && node->symbolNode->symbol &&
+                symbol_has_initializer_definition(node->symbolNode->symbol) &&
+                !ast_chld(node, ERROR, 0)) {
+                mknd_function_name_err(node, "INITIALISER_NOT_CALLABLE");
+            }
         }
 
         if (node->parent) context->current_scope = node->parent->scope;
@@ -1146,20 +1162,24 @@ walker_result exposed_symbols_walker(walker_direction direction,
                         }
                     }
                     else if (symbol->symbol_type ==  FUNCTION_SYMBOL) {
-                        temp_node = sym_proc(symbol); /* Procedure */
-                        if (temp_node) temp_node = ast_chld(temp_node, INSTRUCTIONS, NOP); /* Instructions */
-                        if (temp_node && temp_node->node_type == INSTRUCTIONS) {
-                            if (symbol->exposed == 0) {
-                                /* Link and expose - if not already processed */
-                                sym_adnd(symbol, n, 1, 1);
-                                symbol->exposed = 1;
-                                context->changed_flags |= FLAG_VAL_SYM;
+                        if (symbol_has_initializer_definition(symbol)) {
+                            mknd_err_unique(n, "INITIALISER_NOT_EXPOSABLE");
+                        } else {
+                            temp_node = sym_proc(symbol); /* Procedure */
+                            if (temp_node) temp_node = ast_chld(temp_node, INSTRUCTIONS, NOP); /* Instructions */
+                            if (temp_node && temp_node->node_type == INSTRUCTIONS) {
+                                if (symbol->exposed == 0) {
+                                    /* Link and expose - if not already processed */
+                                    sym_adnd(symbol, n, 1, 1);
+                                    symbol->exposed = 1;
+                                    context->changed_flags |= FLAG_VAL_SYM;
+                                }
                             }
-                        }
-                        else {
-                            /* Add an error - if it has not already errored */
-                            if (ast_chld(n, ERROR, 0) == 0)
-                                mknd_err(n, "IMPORTED_FUNCTION");
+                            else {
+                                /* Add an error - if it has not already errored */
+                                if (ast_chld(n, ERROR, 0) == 0)
+                                    mknd_err(n, "IMPORTED_FUNCTION");
+                            }
                         }
                     }
                     else if (symbol->symbol_type ==  CLASS_SYMBOL) {

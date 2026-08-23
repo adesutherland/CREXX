@@ -37,7 +37,8 @@
 /* current queue. PUSH, QUEUE, PULL and QUEUED always operate  */
 /* on that currently selected queue.                           */
 /*                                                            */
-/* SESSION is created lazily as the initial/default queue.     */
+/* SESSION is created by the module initializer as the         */
+/* initial/default queue.                                      */
 /* Local queues disappear when the CREXX execution ends.      */
 /*------------------------------------------------------------*/
 
@@ -247,11 +248,9 @@ return result
 /* _queue_current                                             */
 /*     Array slot of the currently selected queue.            */
 /*                                                            */
-/* _queue_ready                                               */
-/*     Lazy-initialization flag.                              */
-/*                                                            */
-/* The manager is initialized on first use. SESSION is always */
-/* created as queue slot 1 and acts as the default queue.     */
+/* The manager is initialized once for each mutable module    */
+/* instance. SESSION is always created as queue slot 1 and    */
+/* acts as the default queue.                                 */
 /*------------------------------------------------------------*/
 
 /*------------------------------------------------------------*/
@@ -297,10 +296,8 @@ return result
 /* invalid operation/argument. Query operations return data.  */
 /*------------------------------------------------------------*/
 
-rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _queue_count _queue_current _queue_ready
+rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _queue_count _queue_current
     arg operation = .string, name = "", path = ""
-
-    call _ensure_queue_manager
 
     operation = translate(operation)    /* Translate to uppercase.*/
     name = translate(name)              /* Translate to uppercase.*/
@@ -574,15 +571,12 @@ return "4"
 
 
 /*------------------------------------------------------------*/
-/* Initialize the local queue manager on first use.           */
+/* Initialize the local queue manager for this module instance.*/
 /*                                                            */
-/* Lazy initialization keeps module startup simple while      */
-/* guaranteeing that PUSH/QUEUE/PULL/QUEUED always have a     */
-/* valid SESSION queue available.                             */
+/* The VM invokes this private lifecycle entry point before   */
+/* ordinary procedures can observe the module.                */
 /*------------------------------------------------------------*/
-_ensure_queue_manager: procedure = .void expose _queue_names _queue_objects _queue_active _queue_count _queue_current _queue_ready
-
-    if _queue_ready = 1 then return
+_queue_initialise: initialiser expose _queue_names _queue_objects _queue_active _queue_count _queue_current
 
     _queue_names = .string[]
     _queue_objects = .RexxQueue[]
@@ -595,7 +589,6 @@ _ensure_queue_manager: procedure = .void expose _queue_names _queue_objects _que
 
     _queue_active = _queue_objects[1]
 
-    _queue_ready = 1
 return
 
 
@@ -617,10 +610,8 @@ return 0
 /*------------------------------------------------------------*/
 /* Insert a string at the front of the current queue (LIFO).  */
 /*------------------------------------------------------------*/
-push: procedure = .void expose _queue_ready _queue_active
+push: procedure = .void expose _queue_active
     arg value = .string
-
-    call _ensure_queue_manager
 
     active_queue = _queue_active as .RexxQueue
     call active_queue.push(value)
@@ -632,10 +623,8 @@ return
 /*------------------------------------------------------------*/
 /* Append a string to the end of the current queue (FIFO).    */
 /*------------------------------------------------------------*/
-queue: procedure = .void expose _queue_ready _queue_active
+queue: procedure = .void expose _queue_active
     arg value = .string
-
-    call _ensure_queue_manager
 
     active_queue = _queue_active as .RexxQueue
     call active_queue.queue(value)
@@ -649,9 +638,7 @@ return
 /*                                                            */
 /* Reads the default input stream when the queue is empty.    */
 /*------------------------------------------------------------*/
-pull: procedure = .string expose _queue_ready _queue_active
-
-    call _ensure_queue_manager
+pull: procedure = .string expose _queue_active
 
     active_queue = _queue_active as .RexxQueue
     value = active_queue.pull()
@@ -667,9 +654,8 @@ return value
 /* Returns an empty string when the queue is empty or entry is */
 /* out of range.                                               */
 /*------------------------------------------------------------*/
-peek: procedure = .string expose _queue_ready _queue_active
+peek: procedure = .string expose _queue_active
     arg entry=1
-    call _ensure_queue_manager
     active_queue = _queue_active as .RexxQueue
     value = active_queue.peek(entry)
 
@@ -679,9 +665,7 @@ return value
 /*------------------------------------------------------------*/
 /* Return the current number of queued entries.               */
 /*------------------------------------------------------------*/
-queued: procedure = .int expose _queue_ready _queue_active
-
-    call _ensure_queue_manager
+queued: procedure = .int expose _queue_active
 
     active_queue = _queue_active as .RexxQueue
 

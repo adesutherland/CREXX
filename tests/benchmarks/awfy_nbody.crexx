@@ -1,8 +1,8 @@
 /*
  * Level B port of the Are We Fast Yet? NBody benchmark.
  * Derived from upstream commit 74306fec151070fd07157cefeacf19e7e0bcdc89;
- * see THIRD_PARTY_NOTICES.md. The existing rxmath sqrt function is the
- * disclosed cREXX native-math substrate.
+ * see THIRD_PARTY_NOTICES.md. The rxmath compatibility sqrt declaration
+ * resolves to the disclosed native rxfloat provider.
  */
 options levelb comments_dash
 import rxmath

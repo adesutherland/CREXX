@@ -138,6 +138,32 @@ cleanup, and documentation polish come after this decision gate, not before it.
 
 ## Debugging Output Discipline
 
+- Treat every first-party ASan, LSan, or maintained sanitizer finding as a
+  repository-level blocker, even when it is independent of the change that
+  exposed it.  Before continuing unrelated closeout work, give the finding a
+  stable `SAN-nnn` entry in `docs/SANITIZER-WORKLIST.md` with its reproducer,
+  retained log, affected revision, owner/next action, and closure test.  A
+  dated evidence note alone is not a valid disposition.
+- Do not describe a release candidate, release, or cross-platform sanitizer
+  pass as complete or sanitizer-clean while a first-party `SAN-nnn` item is
+  open. A bounded implementation phase may close only when Adrian explicitly
+  assigns the outstanding platform proof to a named later release-QA gate. The
+  phase record must name every open `SAN-nnn`, its current repair evidence and
+  its release-QA owner; the handoff does not close or downgrade the item and
+  does not support a sanitizer-clean or release-ready claim. "Pre-existing"
+  and "independent" identify attribution; they do not lower priority or permit
+  an ownerless deferral.
+- Close a `SAN-nnn` item only after retaining a permanent focused regression,
+  passing the same focused command in normal Debug and the maintained
+  sanitizer build, and completing the broad platform sanitizer gate required
+  by `docs/ai-context/CREXX_ASAN_TESTING.md`.  Unsupported platform facilities
+  such as Apple LeakSanitizer must be recorded as capability limits and covered
+  on a supported platform instead.
+- Do not add a sanitizer suppression, test exclusion, leak-off wrapper on a
+  supported platform, or time-bounded waiver for first-party code without the
+  user's explicit approval.  Any approved exception remains an open,
+  release-blocking `SAN-nnn` item until the underlying defect is repaired and
+  requalified.
 - For ASan/LSan builds or ctests, use `tools/asan-run.sh` and consult
   `docs/ai-context/CREXX_ASAN_TESTING.md`. Do not hand-run broad sanitizer
   commands unless the runner is broken or the task is specifically to debug the

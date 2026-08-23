@@ -1,0 +1,26 @@
+options levelb
+import inline_packed_accessors_dep
+
+main: procedure = .int
+  values = .inline_packed_accessors_dep..packedbox(4)
+  call values.writeFloat(0, 1.25)
+  call values.writeInt(1, 42)
+  if values.readFloat(0) <> 1.25 then return fail("packed float accessor")
+  if values.readInt(1) <> 42 then return fail("packed integer accessor")
+
+  uninitialized = .inline_packed_accessors_dep..packedbox
+  caught = 0
+  do
+    ignored = uninitialized.readFloat(0)
+  on signal object_not_initialized
+    caught = 1
+  end
+  if caught <> 1 then return fail("uninitialized packed receiver signal")
+
+  say "PASS: exact packed accessor imports"
+  return 0
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1

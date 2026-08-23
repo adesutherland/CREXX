@@ -1,0 +1,262 @@
+/* Focused packed-float statistics and immutable result contract. */
+options levelb floats_binary
+
+import rxfnsb
+import rxfnsg
+import rxfloat
+import rxstats
+
+check_close: procedure = .int
+  arg actual = .float, expected = .float, tolerance = .float, label = .string
+  difference = actual - expected
+  if difference < 0.0 then difference = -difference
+  if difference <= tolerance then return 0
+  say "FAIL:" label "expected=" expected "actual=" actual
+  return 1
+
+check_empty_mean: procedure = .int
+  values = .packedfloat(0)
+  do
+    ignored = rxstats..mean(values)
+    say "FAIL: empty mean did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos("RXSTATS.MEAN", problem.message()) > 0 then return 0
+    say "FAIL: empty mean signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_singleton_stddev: procedure = .int
+  values = .packedfloat(1)
+  call values.set(0, 1.0)
+  do
+    ignored = rxstats..stddev(values)
+    say "FAIL: singleton stddev did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos("RXSTATS.STDDEV", problem.message()) > 0 then return 0
+    say "FAIL: singleton stddev signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_singleton_covariance: procedure = .int
+  x = .packedfloat(1)
+  y = .packedfloat(1)
+  call x.set(0, 1.0)
+  call y.set(0, 2.0)
+  do
+    ignored = rxstats..covariance(x, y)
+    say "FAIL: singleton covariance did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos("RXSTATS.COVARIANCE", problem.message()) > 0 then return 0
+    say "FAIL: singleton covariance signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_unequal_pairs: procedure = .int
+  x = .packedfloat(1)
+  y = .packedfloat(2)
+  call x.set(0, 1.0)
+  call y.set(0, 1.0)
+  call y.set(1, 2.0)
+  do
+    ignored = rxstats..covariance(x, y)
+    say "FAIL: unequal covariance did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos("RXSTATS.COVARIANCE", problem.message()) > 0 then return 0
+    say "FAIL: unequal covariance signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_zero_variance_correlation: procedure = .int
+  x = .packedfloat(2)
+  y = .packedfloat(2)
+  call x.set(0, 1.0)
+  call x.set(1, 1.0)
+  call y.set(0, 1.0)
+  call y.set(1, 2.0)
+  do
+    ignored = rxstats..correlation(x, y)
+    say "FAIL: zero-variance correlation did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos("RXSTATS.CORRELATION", problem.message()) > 0 then return 0
+    say "FAIL: zero-variance correlation signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_zero_variance_regression: procedure = .int
+  x = .packedfloat(2)
+  y = .packedfloat(2)
+  call x.set(0, 1.0)
+  call x.set(1, 1.0)
+  call y.set(0, 1.0)
+  call y.set(1, 2.0)
+  do
+    ignored = rxstats..regression(x, y)
+    say "FAIL: zero-variance regression did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos("RXSTATS.REGRESSION", problem.message()) > 0 then return 0
+    say "FAIL: zero-variance regression signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_nonfinite_mean: procedure = .int
+  arg value = .float, label = .string
+  values = .packedfloat(1)
+  call values.set(0, value)
+  do
+    ignored = rxstats..mean(values)
+    say "FAIL:" label "mean did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos("RXSTATS.MEAN", problem.message()) > 0 then return 0
+    say "FAIL:" label "mean signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_nonfinite_pair: procedure = .int
+  arg value = .float
+  x = .packedfloat(2)
+  y = .packedfloat(2)
+  call x.set(0, 1.0)
+  call x.set(1, 2.0)
+  call y.set(0, 2.0)
+  call y.set(1, value)
+  do
+    ignored = rxstats..covariance(x, y)
+    say "FAIL: non-finite covariance did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos("RXSTATS.COVARIANCE", problem.message()) > 0 then return 0
+    say "FAIL: non-finite covariance signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_numeric_overflow: procedure = .int
+  values = .packedfloat(2)
+  call values.set(0, "1.0e308" as .float)
+  call values.set(1, "-1.0e308" as .float)
+  do
+    ignored = rxstats..stddev(values)
+    say "FAIL: overflowing stddev did not signal"
+    return 1
+  on signal overflow_underflow as problem
+    if problem.name() = "OVERFLOW_UNDERFLOW" & pos("RXSTATS.STDDEV", problem.message()) > 0 then return 0
+    say "FAIL: overflowing stddev signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+check_uninitialized_owner: procedure = .int
+  values = .packedfloat
+  do
+    ignored = rxstats..mean(values)
+    say "FAIL: uninitialized packedfloat did not signal"
+    return 1
+  on signal object_not_initialized as problem
+    if problem.name() = "OBJECT_NOT_INITIALIZED" then return 0
+    say "FAIL: uninitialized packedfloat signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+main: procedure = .int
+  values = .packedfloat(8)
+  x = .packedfloat(4)
+  y = .packedfloat(4)
+  stable = .packedfloat(3)
+  large_x = .packedfloat(256)
+  large_y = .packedfloat(256)
+  extreme = .packedfloat(2)
+  failures = 0
+
+  call values.set(0, 2.0)
+  call values.set(1, 4.0)
+  call values.set(2, 4.0)
+  call values.set(3, 4.0)
+  call values.set(4, 5.0)
+  call values.set(5, 5.0)
+  call values.set(6, 7.0)
+  call values.set(7, 9.0)
+
+  call x.set(0, 1.0)
+  call x.set(1, 2.0)
+  call x.set(2, 3.0)
+  call x.set(3, 4.0)
+  call y.set(0, 3.0)
+  call y.set(1, 5.0)
+  call y.set(2, 7.0)
+  call y.set(3, 9.0)
+
+  call stable.set(0, 1000000000000.0)
+  call stable.set(1, 1000000000001.0)
+  call stable.set(2, 1000000000002.0)
+
+  do index = 0 to 255
+    call large_x.set(index, 1000000000000.0 + (index <mod> 17))
+    call large_y.set(index, 3.0 * large_x.get(index) + 7.0)
+  end
+
+  values_ref = values.binary()
+  values_before = snapshot values_ref
+  x_ref = x.binary()
+  x_before = snapshot x_ref
+  y_ref = y.binary()
+  y_before = snapshot y_ref
+
+  failures = failures + check_close(rxstats..mean(values), 5.0, 0.0, "mean")
+  failures = failures + check_close(rxstats..stddev(values), 2.138089935299395, 0.000000000001, "sample stddev")
+  failures = failures + check_close(rxstats..covariance(x, y), 3.333333333333333, 0.000000000000004, "sample covariance")
+  failures = failures + check_close(rxstats..correlation(x, y), 1.0, 0.000000000000002, "correlation")
+  failures = failures + check_close(rxstats..mean(stable), 1000000000001.0, 0.0, "stable large-offset mean")
+  failures = failures + check_close(rxstats..stddev(large_x), 4.92442890089805, 0.00000000000001, "large-offset sample stddev")
+  failures = failures + check_close(rxstats..covariance(large_x, large_y), 72.75, 0.0, "large-offset sample covariance")
+  failures = failures + check_close(rxstats..correlation(large_x, large_y), 1.0, 0.000000000000002, "large-offset correlation")
+
+  fit = rxstats..regression(x, y)
+  failures = failures + check_close(fit.slope(), 2.0, 0.0, "regression slope")
+  failures = failures + check_close(fit.intercept(), 1.0, 0.0, "regression intercept")
+  manual_fit = .linearfit(-2.5, 7.0)
+  failures = failures + check_close(manual_fit.slope(), -2.5, 0.0, "linearfit factory slope")
+  failures = failures + check_close(manual_fit.intercept(), 7.0, 0.0, "linearfit factory intercept")
+
+  values_after_ref = values.binary()
+  values_after = snapshot values_after_ref
+  x_after_ref = x.binary()
+  x_after = snapshot x_after_ref
+  y_after_ref = y.binary()
+  y_after = snapshot y_after_ref
+  if bincompare(values_before, values_after) <> 0 | bincompare(x_before, x_after) <> 0 | bincompare(y_before, y_after) <> 0 then do
+    say "FAIL: rxstats mutated a borrowed input payload"
+    failures = failures + 1
+  end
+  call extreme.set(0, "1.0e308" as .float)
+  call extreme.set(1, "-1.0e308" as .float)
+  failures = failures + check_close(rxstats..mean(extreme), 0.0, 0.0, "scaled extreme mean")
+  failures = failures + check_empty_mean()
+  failures = failures + check_singleton_stddev()
+  failures = failures + check_singleton_covariance()
+  failures = failures + check_unequal_pairs()
+  failures = failures + check_zero_variance_correlation()
+  failures = failures + check_zero_variance_regression()
+  failures = failures + check_nonfinite_mean(rxfloat..sqrt(-1.0), "NaN")
+  failures = failures + check_nonfinite_mean(rxfloat..exp(1000.0), "infinite")
+  failures = failures + check_nonfinite_pair(rxfloat..exp(1000.0))
+  failures = failures + check_numeric_overflow()
+  failures = failures + check_uninitialized_owner()
+
+  if failures > 0 then return 1
+  say "PASS: rxstats packed-float contract"
+  return 0

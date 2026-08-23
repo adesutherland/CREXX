@@ -166,6 +166,15 @@ f = .float(i)
 d = .decimal("42.50")
 ```
 
+An ordinary dotted literal remains binary `.float` when no surrounding type
+requires decimal. When a decimal assignment, argument, return, cast,
+constructor, or decimal expression establishes the expected type, the compiler
+parses the literal's original source spelling directly as `.decimal`; it does
+not round through binary64 first. For example, `d = 0.1` is exact when `d` is
+declared `.decimal`. An explicit `.float(...)` boundary and `options
+floats_binary` retain binary treatment. The `d` suffix is also an explicit
+decimal spelling, such as `0.1d`.
+
 The checked cast form can also be used for scalar conversions:
 
 ```rexx
@@ -229,6 +238,16 @@ a text operation and should not be used for binary payload assembly.
 prefix = "ff"x as .binary
 packet = prefix || "OK"      /* bytes ff 4f 4b */
 ```
+
+Runtime-owned `.binary` storage is aligned for the host's native `.int` and
+`.float` representations. Level B can use that guarantee through zero-based
+`<packed..int>(item)` and `<packed..float>(item)` reads and writes. These are
+explicit host-native views over bytes, not new value types and not portable
+encodings. See [Binary Memory](binary_memory.md#host-native-packed-numeric-items).
+Release 1 Level G provides explicit `.packedint` and `.packedfloat` owner
+classes in `rxfnsg`; those classes wrap this same representation and do not
+change ordinary arrays. Automatically packed ordinary `.int[]` and `.float[]`
+arrays remain a post-release Level G roadmap item.
 
 Level B string length, indexing, slicing, search, and reversal use Unicode
 codepoints. They do not use UTF-8 bytes and do not imply grapheme boundaries.

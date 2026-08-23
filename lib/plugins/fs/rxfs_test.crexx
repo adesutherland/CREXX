@@ -1,0 +1,54 @@
+/* Focused public rxfs lifecycle contract. */
+options levelb
+
+import rxfnsb
+import rxfs
+
+fail: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual = expected then return 0
+  say "FAIL:" label "expected=" expected "actual=" actual
+  return 1
+
+main: procedure = .int
+  arg test_args = .string[]
+  suffix = "single"
+  if test_args[0] > 0 then suffix = test_args[1]
+  directory = "rxfs-test-" || suffix
+  source = directory || "/source.txt"
+  target = directory || "/target.txt"
+  renamed = directory || "/renamed.txt"
+  entries = .string[]
+  failures = 0
+
+  ignored = rxfs..delete(source)
+  ignored = rxfs..delete(target)
+  ignored = rxfs..delete(renamed)
+  ignored = rxfs..rmdir(directory)
+
+  failures = failures + fail("mkdir", rxfs..mkdir(directory), 0)
+  failures = failures + fail("isdir", rxfs..isdir(directory), 1)
+  failures = failures + fail("charout source", charout(source, "alpha"), 0)
+  failures = failures + fail("close source", charout(source), 0)
+  failures = failures + fail("charout target", charout(target, "prefix"), 0)
+  failures = failures + fail("close target", charout(target), 0)
+  failures = failures + fail("append bytes", rxfs..append(source, target), 5)
+  failures = failures + fail("isfile", rxfs..isfile(target), 1)
+  failures = failures + fail("rename", rxfs..rename(target, renamed), 0)
+  failures = failures + fail("old name absent", rxfs..isfile(target), 0)
+  failures = failures + fail("new name present", rxfs..isfile(renamed), 1)
+  list_count = rxfs..listdir(directory, entries)
+  failures = failures + fail("listdir count", list_count, 2)
+  failures = failures + fail("listdir array", entries[0], 2)
+  failures = failures + fail("delete source", rxfs..delete(source), 0)
+  failures = failures + fail("delete renamed", rxfs..delete(renamed), 0)
+  failures = failures + fail("rmdir", rxfs..rmdir(directory), 0)
+  failures = failures + fail("directory absent", rxfs..isdir(directory), 0)
+  if length(rxfs..cwd()) = 0 | length(rxfs..loadpath()) = 0 then do
+    say "FAIL: cwd/loadpath must be non-empty"
+    failures = failures + 1
+  end
+
+  if failures > 0 then return 1
+  say "PASS: rxfs public contract"
+  return 0

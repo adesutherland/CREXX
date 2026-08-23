@@ -219,6 +219,42 @@ References:
 - `docs/books/crexx_programming_guide/global_variables.md`
 - `debugger/rxdb.crexx`
 
+### Module initializers are private lifecycle procedures
+
+Use a module initializer when module-global state must be constructed before
+`main`, an embedded public call, or a task-worker request can observe that
+module instance:
+
+```rexx
+options levelb
+namespace example expose value
+
+boot: initialiser expose value
+  value = 42
+
+read: procedure = .int expose value
+  return value
+```
+
+A module may declare zero or more initializers. They run once for each mutable
+module instance, in declaration order. Each initializer has an ordinary
+namespace-qualified name for metadata and diagnostics, but it is a private
+lifecycle entry point: source cannot call it, import it as a callable, or list
+it in the namespace `expose` clause. The `expose` after `initialiser` has the
+same module-variable binding purpose as procedure-level `expose`; it does not
+export the initializer.
+
+Initializers accept no `arg` declarations and have an implicit `.void` return.
+A bare `return` is valid; returning a value is a compile error. If an
+initializer calls an ordinary procedure in another unready module, the VM
+initializes that module first. There is no source `requires` list, and a cycle
+through cross-module initializer calls fails at runtime.
+
+Use this for module-owned singleton-like objects, tables, caches, and resource
+managers. The lifetime is one mutable module overlay, not one process-global
+instance. In particular, persistent task workers each initialize their own
+overlay once before accepting work.
+
 ### Named constants are compile-time values
 
 Use `constant NAME = expression` inside an explicit procedure, method, or
@@ -250,6 +286,38 @@ list each name explicitly in the declaration procedure's `procedure expose`
 list. Release 1 does not import constants across source, RXAS, or RXBIN module
 boundaries. Cross-module constants and wildcard expose forms such as `TOKEN_*`
 are Release 2 ergonomics/design candidates, not Release 1 syntax commitments.
+
+### Choose encoded fields or host-native packed items deliberately
+
+Use the established `<at..type>(byte_offset)` surface for portable binary
+formats. Those integer and float fields have explicit widths and canonical
+little-endian encoding.
+
+Use `<packed..int>(item_index)` or `<packed..float>(item_index)` only for
+host-local numeric storage where the exact VM representations are required:
+
+```rexx
+values = .binary
+call binresize values, 3 * 8
+
+<packed..float>(0) values = 100.0
+<packed..float>(1) values = 125.5
+say <packed..float>(1) values
+```
+
+Packed indexes are zero-based item numbers. `.int` means the exact host
+`rxinteger` representation and `.float` means the exact host VM `double`
+representation. The buffer has no stored type tag: the same bytes can be read
+through either packed view. The buffer length and `binresize` remain byte based,
+and a packed store never resizes it. Packed access is therefore unsuitable for
+files, protocols, persistent cross-platform data, or data exchanged between
+hosts with different native representations.
+
+Only `.int` and `.float` are valid packed suffixes in Release 1. Ordinary binary
+allocation provides native alignment, readable binary constants are materialized
+into aligned runtime storage, and packed constants remain read-only. Invalid or
+overflowing indexes and partial trailing items raise `OUT_OF_RANGE` before any
+write occurs.
 
 ### Explicit register views are system-programmer syntax
 

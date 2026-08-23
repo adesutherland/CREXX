@@ -1,0 +1,13 @@
+vm,kind,candidate,comparator,candidate_median_us,comparator_median_us,candidate_median_items_per_second,comparator_median_items_per_second,paired_median_speedup,paired_median_delta_percent,candidate_wins,rounds,candidate_min_us,candidate_max_us,comparator_min_us,comparator_max_us
+rxbvm,float-read,wrapper-float-read,direct-float-read,22432.500000,11460.000000,89156534,174520834,0.511502,-48.850,1,12,21589,25739,11029,26574
+rxbvm,float-write,wrapper-float-write,direct-float-write,20751.000000,36823.500000,96380908,54313596,1.751525,75.153,12,12,20132,29795,35621,38262
+rxbvm,int-read,wrapper-int-read,direct-int-read,15839.500000,11921.000000,126267396,167771462,0.738288,-26.171,0,12,14797,21180,11100,12854
+rxbvm,int-write,wrapper-int-write,direct-int-write,13190.500000,19121.500000,151624286,104594364,1.448474,44.847,12,12,12394,13802,18872,19629
+rxbvm,int-read,direct-int-read,encoded-int-read,11921.000000,21259.500000,167771462,94075809,1.802290,80.229,12,12,11100,12854,20887,21627
+rxbvm,int-write,direct-int-write,encoded-int-write,19121.500000,36524.500000,104594364,54757806,1.910127,91.013,12,12,18872,19629,34533,50299
+rxtvm,float-read,wrapper-float-read,direct-float-read,25623.500000,10334.500000,78053404,193526574,0.403169,-59.683,0,12,25515,25824,10252,10421
+rxtvm,float-write,wrapper-float-write,direct-float-write,24368.000000,38303.000000,82075132,52215420,1.571395,57.140,12,12,24257,25132,36670,40275
+rxtvm,int-read,wrapper-int-read,direct-int-read,12131.500000,10325.500000,164860082,193695220,0.847830,-15.217,0,12,12012,12609,10246,10510
+rxtvm,int-write,wrapper-int-write,direct-int-write,10925.000000,21437.500000,183066400,93295876,1.969982,96.998,12,12,10762,11093,20996,31532
+rxtvm,int-read,direct-int-read,encoded-int-read,10325.500000,23468.000000,193695220,85222560,2.278758,127.876,12,12,10246,10510,23136,23946
+rxtvm,int-write,direct-int-write,encoded-int-write,21437.500000,37179.000000,93295876,53793816,1.744121,74.412,12,12,20996,31532,36823,52322

@@ -54,7 +54,6 @@ main() .locals=9
    call1 r5,§inline_test_object_writable_arg.box.getname(),r2
    .traceevent "F" 4 "R" "S" "r" 5 15 15 0 "getname" ""
    scopy r8,r5
-   br l100bexprend
 l100bexprend:
    endlife r2
    say r8
@@ -70,7 +69,7 @@ l100bexprend:
    linkattr1 r8,r0,1
    .traceevent "V" 6 "R" "S" "r" 8 20 20 0 "name" ""
    scopy r7,r8
-   unlinkbr r8,l127bexprend
+   unlink r8
 l127bexprend:
    say r7
    .srcstep 21 21 17 "inline_test_object_writable_arg.crexx" 8 3 50 "  say \"Object writable-arg inline test finished.\""

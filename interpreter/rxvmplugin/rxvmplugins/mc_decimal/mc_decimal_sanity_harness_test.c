@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
     plugin->syncNumericContext(plugin);
 
     /* Make a string buffer to hold the result */
-    char* string = malloc(plugin->getRequiredStringSize(plugin));
+    char* string = malloc(plugin->getRequiredStringSize(plugin, NULL));
 
     value_init(&a);
     value_init(&b);

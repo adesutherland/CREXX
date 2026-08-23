@@ -123,6 +123,122 @@ static ASTNode *inline_call_receiver(ASTNode *call_node) {
     return call_node->child;
 }
 
+static ASTNode *inline_enclosing_callable(ASTNode *node) {
+    for (; node; node = node->parent) {
+        if (inline_node_is_callable_def(node)) return node;
+    }
+    return NULL;
+}
+
+static int inline_callable_has_unstructured_entry(ASTNode *node,
+                                                  ASTNode *callable) {
+    ASTNode *child;
+
+    if (!node) return 0;
+    if (node != callable && inline_node_is_callable_def(node)) return 0;
+    if (node->node_type == LABEL || node->node_type == LEVELC_SIGNAL) return 1;
+    for (child = node->child; child; child = child->sibling) {
+        if (inline_callable_has_unstructured_entry(child, callable)) return 1;
+    }
+    return 0;
+}
+
+static int inline_node_is_direct_method_receiver(ASTNode *node) {
+    return node && node->node_type == VAR_SYMBOL && !node->child &&
+           node->parent && node->parent->node_type == MEMBER_CALL &&
+           inline_call_receiver(node->parent) == node;
+}
+
+/* Find the sole binding write which constructs an object local. Method
+ * receiver links may be marked writable because their components can change,
+ * but a successful method cannot turn an initialized receiver into an
+ * uninitialized binding. Every other write/alias shape fails closed. */
+static ASTNode *inline_symbol_factory_assignment(Symbol *symbol) {
+    ASTNode *factory_assignment = NULL;
+    size_t i;
+
+    if (!symbol || symbol->symbol_type != VARIABLE_SYMBOL ||
+        symbol->type != TP_OBJECT || symbol->value_dims != 0 ||
+        symbol->is_arg || symbol->is_ref_arg || symbol->is_this ||
+        symbol->is_factory || symbol->exposed || symbol->is_global_var ||
+        symbol->has_reference_target) {
+        return NULL;
+    }
+
+    for (i = 0; i < sym_nond(symbol); i++) {
+        SymbolNode *link = sym_trnd(symbol, i);
+        ASTNode *node;
+        ASTNode *assignment;
+        ASTNode *rhs;
+
+        if (!link || !link->writeUsage || !(node = link->node)) continue;
+        if (inline_node_is_direct_method_receiver(node)) continue;
+        assignment = node->parent;
+        rhs = assignment && assignment->node_type == ASSIGN &&
+              assignment->child == node ? node->sibling : NULL;
+        if (node->node_type != VAR_TARGET || !rhs || rhs->node_type != FACTORY_CALL ||
+            factory_assignment) {
+            return NULL;
+        }
+        factory_assignment = assignment;
+    }
+
+    return factory_assignment;
+}
+
+static int inline_statement_is_after(ASTNode *earlier,
+                                     ASTNode *later_node) {
+    ASTNode *instructions;
+    ASTNode *later_statement;
+    ASTNode *statement;
+    int saw_earlier = 0;
+
+    if (!earlier || !(instructions = earlier->parent) ||
+        instructions->node_type != INSTRUCTIONS) {
+        return 0;
+    }
+    for (later_statement = later_node;
+         later_statement && later_statement->parent != instructions;
+         later_statement = later_statement->parent) {
+    }
+    if (!later_statement || later_statement == earlier) return 0;
+
+    for (statement = instructions->child; statement; statement = statement->sibling) {
+        if (statement == earlier) saw_earlier = 1;
+        if (statement == later_statement) return saw_earlier;
+    }
+    return 0;
+}
+
+/* A normal method call must preserve OBJECT_NOT_INITIALIZED. The one allowed
+ * elision is an exact scalar accessor whose direct receiver is either a
+ * factory expression or a non-aliased local with one dominating factory
+ * binding. Labels and dynamic SIGNAL entry make the structural dominance
+ * proof insufficient and therefore retain the runtime guard. */
+static int inline_exact_receiver_is_proven_initialized(ASTNode *call_node,
+                                                       ASTNode *proc_def) {
+    ASTNode *receiver;
+    ASTNode *callable;
+    ASTNode *factory_assignment;
+    Symbol *symbol;
+
+    if (!call_node || !proc_def ||
+        inline_exact_scalar_accessor_kind(proc_def) == INLINE_SCALAR_ACCESSOR_NONE ||
+        !(receiver = inline_call_receiver(call_node))) {
+        return 0;
+    }
+    if (receiver->node_type == FACTORY_CALL) return 1;
+    if (receiver->node_type != VAR_SYMBOL || receiver->child ||
+        !receiver->symbolNode || !(symbol = receiver->symbolNode->symbol) ||
+        !(callable = inline_enclosing_callable(call_node)) ||
+        inline_callable_has_unstructured_entry(callable, callable) ||
+        !(factory_assignment = inline_symbol_factory_assignment(symbol)) ||
+        inline_enclosing_callable(factory_assignment) != callable) {
+        return 0;
+    }
+    return inline_statement_is_after(factory_assignment, call_node);
+}
+
 static ASTNode *inline_call_first_user_actual(ASTNode *call_node) {
     if (!call_node) return NULL;
     if (call_node->node_type == MEMBER_CALL) {
@@ -337,6 +453,22 @@ static int inline_class_attribute_is_flag_view(Symbol *symbol) {
            strncasecmp(view->node_string, "flags.", 6) == 0;
 }
 
+static int inline_class_attribute_register_num(Symbol *symbol);
+
+static int inline_class_attribute_is_binary_register_zero_view(Symbol *symbol) {
+    ASTNode *view;
+
+    if (!symbol || symbol->type != TP_BINARY ||
+        inline_class_attribute_register_num(symbol) != 0) {
+        return 0;
+    }
+
+    view = inline_class_attribute_register_view(symbol);
+    return view && view->node_string &&
+           view->node_string_length == 6 &&
+           strncasecmp(view->node_string, "binary", 6) == 0;
+}
+
 static int inline_class_attribute_shape_is_portable(Symbol *symbol) {
     if (!inline_symbol_is_class_attribute(symbol)) return 1;
     if (symbol->is_this || symbol->is_factory) return 1;
@@ -349,6 +481,13 @@ static int inline_class_attribute_shape_is_portable(Symbol *symbol) {
         case TP_FLOAT:
         case TP_STRING:
             return 1;
+        case TP_BINARY:
+            /*
+             * I6 plus META_ATTR reconstructs this exact containing-value
+             * layout as `.binary with register.0.binary`. Wider binary and
+             * aggregate layouts retain the existing fail-closed boundary.
+             */
+            return inline_class_attribute_is_binary_register_zero_view(symbol);
         default:
             return 0;
     }
@@ -2207,6 +2346,7 @@ static int inline_append_method_receiver_initialized_assert(Context *context,
                                                             ASTNode *instr_list,
                                                             Scope *inline_scope,
                                                             ASTNode *proc_def,
+                                                            ASTNode *call_node,
                                                             InlineCloneState *clone_state) {
     Symbol *this_symbol;
     ASTNode *receiver_ref;
@@ -2214,6 +2354,7 @@ static int inline_append_method_receiver_initialized_assert(Context *context,
 
     if (!context || !instr_list || !inline_scope || !proc_def || !clone_state) return 0;
     if (!inline_callable_is_method(proc_def)) return 1;
+    if (inline_exact_receiver_is_proven_initialized(call_node, proc_def)) return 1;
 
     this_symbol = inline_find_instance_symbol(proc_def, clone_state);
     if (!this_symbol) return 0;
@@ -2803,6 +2944,7 @@ static int inline_bind_call_arguments_impl(Context *context,
                                                           instr_list,
                                                           inline_scope,
                                                           proc_def,
+                                                          call_node,
                                                           clone_state)) {
         INLINE_BIND_RETURN(0);
     }

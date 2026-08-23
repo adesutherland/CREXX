@@ -429,6 +429,12 @@ RXVM_HANDLER(METALOADMODULE_REG_REG, VM_ADVANCE(2);
                         module *loaded_module = context->modules[mod];
                         VM_PREPARE_EXECUTION_IMAGE(loaded_module);
                     }
+                    /* LOADMODULE is the source-level publication boundary:
+                     * do not report success until every newly loaded module
+                     * has completed its once-only initialization. */
+                    if (rxvm_initialize(context) != 0) {
+                        op1R->int_value = -1;
+                    }
                     RXVM_INSTRUMENTATION_MODULES_CHANGED(context);
                 }
             }
@@ -862,6 +868,33 @@ RXVM_HANDLER(METALOADDATA_REG_REG_REG, VM_ADVANCE(3);
                         case META_TASK_TARGET:
                             /* Compiler/linker relocation metadata is consumed
                              * before execution and has no source reflection. */
+                            break;
+                        case META_PROVIDER:
+                            set_null_string(op1R->attributes[j], ".meta_provider");
+                            set_num_attributes(op1R->attributes[j], 3);
+                            x = (rxinteger) ((meta_provider_constant *)
+                                    (pool + i))->symbol;
+                            set_const_string(op1R->attributes[j]->attributes[0],
+                                             (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_provider_constant *)
+                                    (pool + i))->provider;
+                            set_const_string(op1R->attributes[j]->attributes[1],
+                                             (string_constant *) (pool + x));
+                            op1R->attributes[j]->attributes[2]->int_value =
+                                    (rxinteger) ((meta_provider_constant *)
+                                            (pool + i))->flags;
+                            break;
+                        case META_INITIALIZER:
+                            set_null_string(op1R->attributes[j],
+                                            ".meta_initializer");
+                            set_num_attributes(op1R->attributes[j], 2);
+                            x = (rxinteger) ((meta_initializer_constant *)
+                                    (pool + i))->symbol;
+                            set_const_string(op1R->attributes[j]->attributes[0],
+                                             (string_constant *) (pool + x));
+                            op1R->attributes[j]->attributes[1]->int_value =
+                                    (rxinteger) ((meta_initializer_constant *)
+                                            (pool + i))->function;
                             break;
                         case STRING_CONST:
                         case FLOAT_CONST:
@@ -1566,7 +1599,8 @@ RXVM_HANDLER(DTOS_REG,
     VM_ADVANCE(1);
     DEBUG("TRACE - DTOS R%lu\n", REG_IDX(1));
     /* Determine how long the string needs to be */
-    size_t string_size = current_frame->decimal->getRequiredStringSize(current_frame->decimal);
+    size_t string_size = current_frame->decimal->getRequiredStringSize(
+            current_frame->decimal, op1R);
     /* Ensure the string buffer is big enough */
     extend_string_buffer(op1R, string_size);
     /* Convert */
@@ -2191,7 +2225,8 @@ RXVM_HANDLER(DPOW_REG_DECIMAL_REG,
 RXVM_HANDLER(DEXTR_REG_REG_REG,
     VM_ADVANCE(3);
     DEBUG("TRACE - DEXTR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-    prep_string_buffer(op1R, current_frame->decimal->getRequiredStringSize(current_frame->decimal));
+    prep_string_buffer(op1R, current_frame->decimal->getRequiredStringSize(
+            current_frame->decimal, op3R));
     current_frame->decimal->decimalExtract(current_frame->decimal, op1R->string_value, &(op2R->int_value), op3R);
     finish_ascii_string_write(op1R, strlen(op1R->string_value));
     DISPATCH;
@@ -2240,6 +2275,13 @@ RXVM_HANDLER(CALL_REG_FUNC, VM_ADVANCE(2);
                 } else {
                     /* This is a CREXX Procedure */
                     /* New stackframe - grabbing a procedure object from the caller frame */
+                    if (context->initialized_module_count != context->num_modules &&
+                        rxvm_ensure_callee_initialized(context, current_module,
+                                                        called_function) != 0) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE,
+                                       "Module initialization failed")
+                        DISPATCH;
+                    }
                     temp_frame = frame_f(called_function, 0, current_frame, next_pc, op1R);
                     if (!temp_frame) {
                         RXVM_INSTRUMENTATION_CALL(
@@ -2306,6 +2348,13 @@ RXVM_HANDLER(CALL_REG_FUNC, VM_ADVANCE(2);
             } else {                                                            \
                 size_t mapped_j__;                                              \
                 size_t mapped_i__;                                              \
+                if (context->initialized_module_count != context->num_modules && \
+                    rxvm_ensure_callee_initialized(context, current_module,    \
+                                                    mapped_called__) != 0) {     \
+                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE,                            \
+                                   "Module initialization failed");            \
+                    DISPATCH;                                                   \
+                }                                                               \
                 temp_frame = frame_f(mapped_called__, mapped_arg_count__,       \
                                      current_frame, next_pc, mapped_result__);   \
                 if (!temp_frame) {                                              \
@@ -2379,6 +2428,13 @@ RXVM_HANDLER(CALL_REG_FUNC_REG, VM_ADVANCE(3);
                     /* This is a CREXX Procedure */
                     /* New stackframe - grabbing a procedure object from the caller frame */
                     size_t caller_arg_base = REG_IDX(3) + 1;
+                    if (context->initialized_module_count != context->num_modules &&
+                        rxvm_ensure_callee_initialized(context, current_module,
+                                                        called_function) != 0) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE,
+                                       "Module initialization failed")
+                        DISPATCH;
+                    }
                     temp_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
                     if (!temp_frame) {
                         RXVM_INSTRUMENTATION_CALL(
@@ -2466,6 +2522,13 @@ RXVM_HANDLER(DCALL_REG_REG_REG, VM_ADVANCE(3);
                 } else {
                     /* This is a CREXX Procedure */
                     size_t caller_arg_base = REG_IDX(3) + 1;
+                    if (context->initialized_module_count != context->num_modules &&
+                        rxvm_ensure_callee_initialized(context, current_module,
+                                                        called_function) != 0) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE,
+                                       "Module initialization failed")
+                        DISPATCH;
+                    }
                     temp_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
                     if (!temp_frame) {
                         RXVM_INSTRUMENTATION_CALL(

@@ -57,7 +57,6 @@ l65iffalse:
    load r5,0
    .traceevent "L" 4 "R" "I" "r" 5 14 14 0 "" ""
    icopy r1,r5
-   br l54bexprend
 l54bexprend:
    .traceevent "A" 6 "R" "I" "r" 1 14 14 0 "result" ""
    .srcstep 15 15 17 "inline_test_multi_return_assign.crexx" 7 5 15 "    say result"

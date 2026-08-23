@@ -210,12 +210,10 @@ l1868dispatchdefault:
    load r5,9
    .traceevent "L" 4 "R" "I" "r" 5 90 90 0 "" ""
    icopy r6,r5
-   br l892bexprend
 l892bexprend:
    ieq r6,r3,r6
    .traceevent "O" 4 "R" "B" "r" 6 90 90 0 "" ""
    icopy r7,r6
-   br l603bexprend
 l603bexprend:
    brf l280iffalse,r7
    .srcstep 43 43 17 "select_dispatch_mixed.crexx" 39 39 49 "    when dynamic_key(counter, 9) then return 150"
@@ -276,12 +274,10 @@ l292iffalse:
    load r6,25
    .traceevent "L" 4 "R" "I" "r" 6 80 80 0 "" ""
    icopy r14,r6
-   br l1208bexprend
 l1208bexprend:
    ieq r14,r12,r14
    .traceevent "O" 4 "R" "B" "r" 14 80 80 0 "" ""
    icopy r15,r14
-   br l904bexprend
 l904bexprend:
    brf l295iffalse,r15
    .srcstep 54 54 17 "select_dispatch_mixed.crexx" 44 40 50 "    when dynamic_key(counter, 25) then return 250"
@@ -333,12 +329,10 @@ l304iffalse:
    load r14,40
    .traceevent "L" 4 "R" "I" "r" 14 72 72 0 "" ""
    icopy r21,r14
-   br l1539bexprend
 l1539bexprend:
    ieq r21,r19,r21
    .traceevent "O" 4 "R" "B" "r" 21 72 72 0 "" ""
    icopy r22,r21
-   br l1220bexprend
 l1220bexprend:
    brf l307iffalse,r22
    .srcstep 64 64 17 "select_dispatch_mixed.crexx" 48 40 50 "    when dynamic_key(counter, 40) then return 440"

@@ -604,7 +604,21 @@ static int rxvml_invoke_external_proc(
 
     previous_active_context = ctx->vm.active.rxvml_context;
     ctx->vm.active.rxvml_context = ctx;
-    rxvm_prepare(&ctx->vm);
+    {
+        int initialization_rc = ctx->vm.initializer_depth != 0u
+                ? rxvm_ensure_callee_initialized(
+                        &ctx->vm, ctx->vm.current_initializer_module, proc)
+                : rxvm_initialize(&ctx->vm);
+        if (initialization_rc != 0 &&
+            rxvm_ensure_callee_initialized(&ctx->vm, 0, proc) != 0) {
+            ctx->vm.active.rxvml_context = previous_active_context;
+            rxvml_value_free((rxvml_value*)call_ret);
+            rxvml_memory_free(ctx, call_args);
+            rxvml_restore_external_call_state(&ctx->vm, &saved_state);
+            ctx->last_error = "Module initialization failed";
+            return -1;
+        }
+    }
     dummy_argv[0] = (char*)(dummy_argv0 ? dummy_argv0 : "rxvml_call");
     run_status = run(&ctx->vm, 0, dummy_argv);
     ctx->vm.active.rxvml_context = previous_active_context;
@@ -1647,7 +1661,14 @@ rxvml_context* rxvml_create(const char* location, unsigned flags) {
     ctx = malloc(sizeof(rxvml_context));
     if (!ctx) return NULL;
     rxinimod(&ctx->vm);
-    if (location) ctx->vm.location = strdup(location);
+    if (location) {
+        ctx->vm.location = strdup(location);
+        if (!ctx->vm.location || rxvm_set_provider_path(&ctx->vm, location)) {
+            rxfremod(&ctx->vm);
+            free(ctx);
+            return NULL;
+        }
+    }
     ctx->vm.debug_mode = flags;
     ctx->last_error = NULL;
     ctx->registry = NULL;

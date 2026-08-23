@@ -102,6 +102,7 @@ Stage 2 discovery data taken from active `ADDPROC` registrations in native sourc
 | `RXPA-gui-tree-diagram` | `lib/plugins/gui` | `gui.tree_diagram` | `tree_diagram` | `b` | `.string` | `expose items=.string[],expose parents=.string[]` | `lib/plugins/gui/gui.c` |
 | `RXPA-gui-tree-pick` | `lib/plugins/gui` | `gui.tree_pick` | `tree_pick` | `b` | `.string` | `title=.string,message=.string,expose items=.string[],expose parents=.string[],multi_select=.int` | `lib/plugins/gui/gui.c` |
 | `RXPA-gui-update-graph` | `lib/plugins/gui` | `gui.update_graph` | `update_graph` | `b` | `.int` | `widget=.int,gnum=.int,ftype=.int,lwidth=.int,color=.string` | `lib/plugins/gui/gui.c` |
+| `RXPA-hash-sha256` | `lib/plugins/hash` | `rxhash.sha256` | `sha256` | `b` | `.binary` | `data = .binary` | `lib/plugins/hash/rx_hash.c` |
 | `RXPA-id-base58` | `lib/plugins/id` | `id._base58` | `base58` | `b` | `.string` | `` | `lib/plugins/id/id.c` |
 | `RXPA-id-nanoid` | `lib/plugins/id` | `id._nanoid` | `nanoid` | `b` | `.string` | `` | `lib/plugins/id/id.c` |
 | `RXPA-id-snowflake` | `lib/plugins/id` | `id._snowflake` | `snowflake` | `b` | `.string` | `` | `lib/plugins/id/id.c` |

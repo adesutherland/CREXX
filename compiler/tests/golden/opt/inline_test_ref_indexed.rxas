@@ -59,7 +59,6 @@ main() .locals=5
    setlinkattr1 r4,g1,3,r2
    .traceevent "V" 6 "R" "I" "r" 4 10 10 0 "values" ""
    igetunlink r1,r4
-   br l67bexprend
 l67bexprend:
    itos r1
    say r1

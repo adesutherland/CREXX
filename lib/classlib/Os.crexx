@@ -24,10 +24,12 @@
 
 options levelb comments_dash
 namespace system_os expose os
-import system
+import rxfs
+import rxplatform
 
 /**
- * Operating-system services backed by the system plugin.
+ * Operating-system services backed by the narrow rxfs and rxplatform
+ * providers.
  */
 os: class
 
@@ -45,7 +47,7 @@ os: class
      * @return .string System uptime in seconds.
      */
   uptime: method = .string
-    return sysuptime()
+    return rxplatform..uptime()
     
     /** 
      * Returns the current user id.
@@ -53,7 +55,7 @@ os: class
      * @return .string Current user id.
      */
   user: method = .string
-    return userid()  
+    return rxplatform..user()
 
     /** 
      * Returns the path from which the program is running.
@@ -61,7 +63,7 @@ os: class
      * @return .string Runtime load path.
      */
   loadpath: method = .string
-    return getLoadPath()
+    return rxfs..loadpath()
     
     /**
      * Returns the operating system name.
@@ -69,7 +71,7 @@ os: class
      * @return .string Operating system name.
      */
   osname: method = .string
-    return opsys()
+    return rxplatform..osname()
     
     /**
      * Appends one binary file to another.
@@ -80,7 +82,7 @@ os: class
      */
   appendBinaryFile: method = .int
     arg source = .string, target = .string
-    return append(source, target)
+    return rxfs..append(source, target)
     
     /**
      * Returns the host or computer name.
@@ -88,16 +90,7 @@ os: class
      * @return .string Host name.
      */
   getHost: method = .string
-    return host()
-    
-    /**
-     * Emits a beep.
-     *
-     * @return .int 0 on success.
-     */
-  beep: method = .int
-    say 'TODO: beep is not fully implemented'
-    return _beep()
+    return rxplatform..host()
     
     /**
      * Waits for a number of milliseconds.
@@ -107,17 +100,7 @@ os: class
     */
   wait: method = .int
     arg time = .int
-    return _wait(time)
-
-    /**
-     * Lists modules in an rxbin source.
-     *
-     * @param source rxbin file.
-     * @return .int Status code or module count, depending on native implementation.
-     */
-  rxbinModules: method = .int
-    arg source = .string
-    return lmodules(source)
+    return rxplatform..sleep(time)
 
     /**
      * Lists the files in a directory.
@@ -128,8 +111,7 @@ os: class
      */
   listDir: method = .int
     arg file = .string, entries = .string[]
-    say 'TODO: listdir needs to be tested'
-    return _listdir(file,entries)
+    return rxfs..listdir(file,entries)
 
     /**
      * Returns the contents of an environment variable.

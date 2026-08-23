@@ -288,7 +288,7 @@ instruction address. The destination is cleared; its integer payload and
 attribute count become the number of records found. Each attribute is a tagged
 metadata value. Implemented tags are `.meta_source_step`, `.meta_trace_event`,
 `.meta_func`, `.meta_reg`, `.meta_const`, `.meta_clear`, `.meta_interface`,
-`.meta_implements`, `.meta_member`, and `.meta_inline`, with their stored fields
+`.meta_implements`, `.meta_member`, `.meta_inline`, and `.meta_provider`, with their stored fields
 in binary-record order. Class and attribute records are currently returned as
 cleared, untagged entries. No match leaves an empty value with integer zero.
 

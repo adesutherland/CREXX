@@ -34,7 +34,6 @@ l8dostart:
    btoi r3
    .traceevent "O" 4 "R" "I" "r" 3 10 10 0 "" ""
    icopy r4,r3
-   br l49bexprend
 l49bexprend:
    brf l27iffalse,r4
    .srcstep 11 11 17 "inline_test_bool_expr_negative.crexx" 6 17 18 "    if isTwo(i) | 0 then say \"truthy\" i"

@@ -13,6 +13,7 @@ Stage 2 discovery data. CMake references are literal source facts, not delivery 
 | `PKG-RXPA-fpool` | `lib/plugins/fpool` | 0 | 0 | yes | no root reference |
 | `PKG-RXPA-getpi` | `lib/plugins/getpi` | 1 | 1 | yes | active `add_subdirectory` |
 | `PKG-RXPA-gui` | `lib/plugins/gui` | 1 | 2 | yes | active `add_subdirectory` |
+| `PKG-RXPA-hash` | `lib/plugins/hash` | 1 | 1 | yes | active `add_subdirectory` |
 | `PKG-RXPA-id` | `lib/plugins/id` | 7 | 1 | yes | active `add_subdirectory` |
 | `PKG-RXPA-keyaccess` | `lib/plugins/keyaccess` | 1 | 1 | yes | active `add_subdirectory` |
 | `PKG-RXPA-llist` | `lib/plugins/llist` | 1 | 1 | yes | active `add_subdirectory` |

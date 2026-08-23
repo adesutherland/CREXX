@@ -44,6 +44,12 @@
 #include <stdint.h>
 
 typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
+typedef enum {
+    RXVM_INIT_UNINITIALIZED,
+    RXVM_INIT_INITIALIZING,
+    RXVM_INIT_READY,
+    RXVM_INIT_FAILED
+} rxvm_initializer_state;
 
 typedef struct module module;
 typedef struct proc_runtime {
@@ -137,6 +143,7 @@ struct module {
     size_t duplicated_symbols; /* Number of duplicated symbols ignored in module */
     module_file *file;         /* File section the module was loaded from */
     rxvm_mod_state state;      /* Module lifecycle state */
+    rxvm_initializer_state initializer_state; /* Mutable-overlay initialization state. */
     proc_runtime *procedures;  /* Runtime procedure state */
     size_t procedure_count;    /* Number of runtime procedures */
     proc_runtime_lookup_entry *proc_runtime_lookup; /* Sorted constant pool offsets -> runtime procedures */
@@ -569,6 +576,8 @@ typedef struct rxvm_context {
     unsigned char owns_runtime;
     rxvm_program_generation *program_generation;
     char *location;
+    /* Trusted, semicolon-separated RXPA provider-manifest directories. */
+    char *provider_location;
     size_t num_modules;
     size_t module_buffer_size;
     module **modules;
@@ -598,6 +607,9 @@ typedef struct rxvm_context {
     char link_dirty;
     char interface_method_registry_dirty;
     char interface_factory_registry_dirty;
+    size_t initializer_depth;
+    module *current_initializer_module;
+    size_t initialized_module_count;
     /* Append worker-owned state so established hot-field offsets stay fixed. */
     rxvm_active_state active;
     rxvmplugin_instance_set plugin_instances;
@@ -651,6 +663,14 @@ void rxvm_free_graph_bindings(rxvm_context *context);
  *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
 int rxldmod(rxvm_context *context, char *new_module_file);
 
+/* Loads one declared provider and verifies its manifest identity before its
+ * initializer is allowed to register procedures. */
+int rxldmod_provider(rxvm_context *context, char *provider_file,
+                     const char *expected_provider_id);
+
+/* Resolves RXBIN META_PROVIDER requirements before ordinary procedure link. */
+int rxvm_resolve_provider_dependencies(rxvm_context *context);
+
 /* Loads a module from a memory buffer
  * returns 0  - Error
  *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
@@ -660,6 +680,13 @@ int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length);
  * returns -1  - Error
  *         >=0 - Last Module Number loaded (1 based) (more than one, or none, might have been loaded ...)  */
 int rxldmodp(rxvm_context *context);
+
+/* Runs pending source-declared initializers. The callee form is used by the
+ * interpreter while another initializer is already executing. */
+int rxvm_initialize(rxvm_context *context);
+int rxvm_ensure_callee_initialized(rxvm_context *context,
+                                   module *caller,
+                                   proc_runtime *callee);
 
 /* Function to call a native RXPA (CREXX Plugin Architecture) function */
 void rxvm_callfunc_direct(void* function, int args, value** argv,

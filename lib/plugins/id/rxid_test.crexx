@@ -1,0 +1,57 @@
+/* Focused public rxid format, variant, and uniqueness contract. */
+options levelb
+
+import rxfnsb
+import rxid
+
+checkUuid: procedure = .int
+  arg label = .string, value = .string, version = .string
+  if length(value) <> 36 then do
+    say "FAIL:" label "length" length(value) value
+    return 1
+  end
+  if substr(value, 9, 1) <> "-" | substr(value, 14, 1) <> "-" | substr(value, 19, 1) <> "-" | substr(value, 24, 1) <> "-" then do
+    say "FAIL:" label "hyphen layout" value
+    return 1
+  end
+  if substr(value, 15, 1) <> version then do
+    say "FAIL:" label "version" value
+    return 1
+  end
+  variant = translate(substr(value, 20, 1))
+  if pos(variant, "89AB") = 0 then do
+    say "FAIL:" label "variant" value
+    return 1
+  end
+  compact = changestr("-", translate(value), "")
+  if verify(compact, "0123456789ABCDEF") <> 0 then do
+    say "FAIL:" label "hex" value
+    return 1
+  end
+  return 0
+
+main: procedure = .int
+  failures = 0
+  first4 = rxid..uuid4()
+  first7 = rxid..uuid7()
+  failures = failures + checkUuid("uuid4", first4, "4")
+  failures = failures + checkUuid("uuid7", first7, "7")
+  if rxid..uuid4() = first4 then do
+    say "FAIL: duplicate uuid4"
+    failures = failures + 1
+  end
+  if rxid..uuid7() = first7 then do
+    say "FAIL: duplicate uuid7"
+    failures = failures + 1
+  end
+  ulid = rxid..ulid()
+  nanoid = rxid..nanoid()
+  snowflake = rxid..snowflake()
+  base58 = rxid..base58()
+  if length(ulid) <> 26 then do; say "FAIL: ulid length"; failures = failures + 1; end
+  if length(nanoid) <> 21 then do; say "FAIL: nanoid length"; failures = failures + 1; end
+  if length(snowflake) = 0 | verify(snowflake, "0123456789") <> 0 then do; say "FAIL: snowflake digits"; failures = failures + 1; end
+  if length(base58) = 0 | verify(base58, "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz") <> 0 then do; say "FAIL: base58 alphabet"; failures = failures + 1; end
+  if failures > 0 then return 1
+  say "PASS: rxid public contract"
+  return 0

@@ -277,7 +277,7 @@ static void update_string(ASTNode* node) {
                 decplugin->syncNumericContext(decplugin);
                 value* value = value_f();
                 decplugin->decimalFromString(decplugin, value, node->decimal_value);
-                char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                 decplugin->decimalToString(decplugin, value, result_string);
                 /* Update the node's string - this also takes ownership of the memory */
                 ast_sstr(node, result_string, strlen(result_string));
@@ -856,7 +856,7 @@ static char *constant_node_to_effective_string(ASTNode *node, size_t *length) {
                 plugin->num_context = &(node->scope->num_context);
                 plugin->syncNumericContext(plugin);
                 plugin->decimalFromString(plugin, value, node->decimal_value);
-                result_string = malloc(plugin->getRequiredStringSize(plugin));
+                result_string = malloc(plugin->getRequiredStringSize(plugin, NULL));
                 if (result_string) {
                     plugin->decimalToString(plugin, value, result_string);
                     if (length) *length = strlen(result_string);
@@ -1404,7 +1404,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalAdd(decplugin, result, val1, val2);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1443,7 +1443,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalSub(decplugin, result, val1, val2);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1481,7 +1481,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalMul(decplugin, result, val1, val2);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1519,7 +1519,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalPow(decplugin, result, val1, val2);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1557,7 +1557,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalDiv(decplugin, result, val1, val2);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1600,7 +1600,7 @@ static walker_result opt1_walker(walker_direction direction,
                             // Truncate the result to an integer
                             decplugin->decimalTruncate(decplugin, result, result);
                             // Convert to String
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             clear_value(val1);
@@ -1645,7 +1645,7 @@ static walker_result opt1_walker(walker_direction direction,
                             // Now calculate the modulo
                             decplugin->decimalMul(decplugin, result, val2, result);
                             decplugin->decimalSub(decplugin, result, val1, result);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1741,7 +1741,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalNeg(decplugin, val1, val1);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, val1, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1774,7 +1774,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->num_context = &(node->scope->num_context);
                             decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, val1, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);

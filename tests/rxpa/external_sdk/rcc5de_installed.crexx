@@ -1,0 +1,37 @@
+options levelg floats_binary
+
+import rxfnsb
+import rxfnsg
+import rxstats
+import rxvector
+import rxhash
+import rxid
+import rxfs
+import rxplatform
+
+main: procedure = .int
+  values = .packedfloat(3)
+  call values.set(0, 1.0)
+  call values.set(1, 2.0)
+  call values.set(2, 3.0)
+  if rxstats..mean(values) <> 2.0 then return 1
+  if bin2x(rxhash..sha256("616263"x as .binary)) <> "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD" then return 2
+  identifier = rxid..uuid4()
+  if length(identifier) <> 36 | substr(identifier, 15, 1) <> "4" then return 3
+  if length(rxfs..cwd()) = 0 then return 4
+  if length(rxplatform..osname()) = 0 then return 5
+  vectors = .packedfloat(4)
+  identities = .packedint(2)
+  query_vector = rxvector..decodef32le("0000803F00000000"x as .binary)
+  call vectors.set(0, 1.0)
+  call vectors.set(3, 1.0)
+  call identities.set(0, 41)
+  call identities.set(1, 42)
+  result_identities = .packedint(0)
+  result_scores = .packedfloat(0)
+  call rxvector..topkcosine(vectors, identities, 2, query_vector, 1, result_identities, result_scores)
+  if result_identities.size() <> 1 | result_identities.get(0) <> 41 then return 6
+  if result_scores.size() <> 1 | result_scores.get(0) <> 1.0 then return 7
+  if bin2x(rxvector..encodef32le(query_vector)) <> "0000803F00000000" then return 8
+  say "PASS: installed RCC-5 providers"
+  return 0

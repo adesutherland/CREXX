@@ -5,6 +5,39 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 set(CLASSLIBRPATH ${CMAKE_BINARY_DIR}/bin/classlib)
 
+# CREXXRAG-SHA256 retains the test-only A-versus-D capability decision gate.
+# It also provides the matched RXPA control used to confirm that the selected
+# production rx_hash provider has not materially changed that accepted path.
+include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
+add_dynamic_plugin_target(_crexxrag_sha256_gate
+        ${CMAKE_CURRENT_SOURCE_DIR}/crexxrag_sha256_gate_plugin.c)
+set_target_properties(_crexxrag_sha256_gate PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+target_include_directories(_crexxrag_sha256_gate PRIVATE
+        ${CMAKE_SOURCE_DIR}/binutils/include)
+target_link_libraries(_crexxrag_sha256_gate PRIVATE rxbin)
+
+add_executable(crexxrag_sha256_c_ceiling EXCLUDE_FROM_ALL
+        ${CMAKE_CURRENT_SOURCE_DIR}/crexxrag_sha256_c_ceiling.c)
+target_link_libraries(crexxrag_sha256_c_ceiling PRIVATE rxbin)
+
+add_custom_target(performance_crexxrag_sha256)
+add_dependencies(performance_crexxrag_sha256
+        _crexxrag_sha256_gate crexxrag_sha256_c_ceiling _hash)
+crexx_add_rexx_opt_matrix(
+        NAME crexxrag_sha256_a_vs_d
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/crexxrag_sha256_a_vs_d.crexx
+        TARGET_GROUP performance_crexxrag_sha256
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin _crexxrag_sha256_gate _hash
+        RUNTIME_ARGS rx_crexxrag_sha256_gate ${LIBRPATH} -a selftest
+        TEST_LABELS "performance;sha256;crexx-rag;qualification"
+        REQUIRED_OUTPUT_REGEX "PASS: CREXXRAG-SHA256 vectors"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:"
+)
+
 # These benchmarks are smoke-run under CTest so opt/noopt timing stays visible,
 # but they do not assert performance thresholds because those vary by machine.
 add_custom_target(performance_inline ALL)
@@ -248,10 +281,10 @@ foreach(_decimal_runner IN ITEMS rxvm rxbvm)
     endforeach()
 endforeach()
 
-# crexx_add_rexx_opt_matrix registers optimized images with the shared runtime
-# fixture, while these NR-15 target groups are deliberately not part of ALL.
-# Make the same serialized fixture own both groups so an isolated CTest run can
-# generate the four noopt images instead of depending on a warm build tree.
+# These NR-15 target groups are deliberately not part of ALL and contain a
+# mixed artifact set beyond their ordinary opt-matrix images.  Keep the same
+# serialized fixture owning the complete groups so an isolated CTest run does
+# not depend on a warm build tree.
 add_dependencies(linked_opt_runtime_artifacts
         performance_nr15_stem_semantics
         performance_nr15_stem_access
@@ -440,6 +473,200 @@ set_tests_properties(postperf04_scalar_access_codegen PROPERTIES
         LABELS "performance;scalar-access;postperf04;codegen"
         FIXTURES_REQUIRED linked_opt_runtime_artifacts
 )
+
+add_custom_target(performance_binary_packed_float ALL)
+crexx_add_rexx_opt_matrix(
+        NAME binary_packed_float_compare
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_packed_float_compare.crexx
+        TARGET_GROUP performance_binary_packed_float
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH} -a 1000 2 packed-read
+        TEST_LABELS "performance;binary;packed;binary01"
+)
+foreach(_crexx_mode IN ITEMS noopt opt)
+    set_tests_properties(binary_packed_float_compare_${_crexx_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: BINARY-01 packed float compare"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    )
+endforeach()
+_crexx_register_runtime_test(
+        NAME binary_packed_float_compare_rxbvm_opt
+        RUNNER rxbvm
+        PROGRAM binary_packed_float_compare_opt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH} -a 1000 2 packed-read
+        TEST_LABELS "performance;binary;packed;binary01"
+)
+set_tests_properties(binary_packed_float_compare_rxbvm_opt PROPERTIES
+        PASS_REGULAR_EXPRESSION "PASS: BINARY-01 packed float compare"
+        FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+)
+
+add_custom_target(performance_packed_numeric_class)
+crexx_add_rexx_opt_matrix(
+        NAME packed_numeric_class_compare
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/packed_numeric_class_compare.crexx
+        TARGET_GROUP performance_packed_numeric_class
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        RXC_FLAGS -x
+        DEPENDS library classlib rxfnsg compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH} ${CLASSLIBRPATH} ${CMAKE_BINARY_DIR}/bin/rxfnsg
+                     -a 1000 2 wrapper-int-read
+        TEST_LABELS "performance;binary;packed;binary01;levelg"
+)
+foreach(_crexx_mode IN ITEMS noopt opt)
+    set_tests_properties(packed_numeric_class_compare_${_crexx_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: BINARY-01 packed numeric class compare"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    )
+endforeach()
+_crexx_register_runtime_test(
+        NAME packed_numeric_class_compare_rxbvm_opt
+        RUNNER rxbvm
+        PROGRAM packed_numeric_class_compare_opt
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        RUNTIME_ARGS ${LIBRPATH} ${CLASSLIBRPATH} ${CMAKE_BINARY_DIR}/bin/rxfnsg
+                     -a 1000 2 wrapper-int-read
+        TEST_LABELS "performance;binary;packed;binary01;levelg"
+)
+set_tests_properties(packed_numeric_class_compare_rxbvm_opt PROPERTIES
+        PASS_REGULAR_EXPRESSION "PASS: BINARY-01 packed numeric class compare"
+        FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+)
+
+# RCC-5F keeps the former boxed surface as a test-only numerical/performance
+# oracle and compiles a one-call native control from the exact production
+# accumulation kernel. Neither provider is installed or part of Level G.
+add_library(rcc5f_stats_kernel STATIC EXCLUDE_FROM_ALL
+        ${CMAKE_SOURCE_DIR}/lib/plugins/stats/rxstats.c)
+set_target_properties(rcc5f_stats_kernel PROPERTIES
+        POSITION_INDEPENDENT_CODE ON)
+target_compile_definitions(rcc5f_stats_kernel PRIVATE RXSTATS_KERNEL_ONLY)
+target_include_directories(rcc5f_stats_kernel PRIVATE
+        ${CMAKE_SOURCE_DIR}/lib/plugins/stats)
+_crexx_configure_rxpa_plugin_target(rcc5f_stats_kernel)
+target_link_libraries(rcc5f_stats_kernel PRIVATE ${CREXX_MATH_LIBRARY})
+
+add_dynamic_plugin_target(_rcc5f_stats_boxed rcc5f_stats_boxed.c)
+set_target_properties(_rcc5f_stats_boxed PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+target_link_libraries(_rcc5f_stats_boxed PRIVATE ${CREXX_MATH_LIBRARY})
+
+add_dynamic_plugin_target(_rcc5f_stats_direct rcc5f_stats_direct.c)
+set_target_properties(_rcc5f_stats_direct PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+target_include_directories(_rcc5f_stats_direct PRIVATE
+        ${CMAKE_SOURCE_DIR}/lib/plugins/stats)
+target_link_libraries(_rcc5f_stats_direct PRIVATE
+        rcc5f_stats_kernel ${CREXX_MATH_LIBRARY})
+
+add_custom_target(performance_rcc5f_rxstats)
+add_dependencies(performance_rcc5f_rxstats
+        stats rxfnsg _rcc5f_stats_boxed _rcc5f_stats_direct)
+
+crexx_add_rexx_opt_matrix(
+        NAME rcc5f_rxstats_packed
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc5f_rxstats_packed.crexx
+        TARGET_GROUP performance_rcc5f_rxstats
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library rxfnsg stats compiler_exit_bin
+        RUNTIME_ARGS $<TARGET_FILE:stats> ${LIBRPATH}
+                     ${CMAKE_BINARY_DIR}/bin/rxfnsg
+        TEST_LABELS "performance;math;stats;packed;rcc5f"
+        REQUIRED_OUTPUT_REGEX "PASS: RCC-5F packed statistics workload"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+
+crexx_add_rexx_opt_matrix(
+        NAME rcc5f_rxstats_boxed
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc5f_rxstats_boxed.crexx
+        TARGET_GROUP performance_rcc5f_rxstats
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library _rcc5f_stats_boxed compiler_exit_bin
+        RUNTIME_ARGS $<TARGET_FILE:_rcc5f_stats_boxed> ${LIBRPATH}
+        TEST_LABELS "performance;math;stats;boxed;oracle;rcc5f"
+        REQUIRED_OUTPUT_REGEX "PASS: RCC-5F boxed statistics oracle workload"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+
+crexx_add_rexx_opt_matrix(
+        NAME rcc5f_rxstats_direct
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc5f_rxstats_direct.crexx
+        TARGET_GROUP performance_rcc5f_rxstats
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library rxfnsg _rcc5f_stats_direct compiler_exit_bin
+        RUNTIME_ARGS $<TARGET_FILE:_rcc5f_stats_direct> ${LIBRPATH}
+                     ${CMAKE_BINARY_DIR}/bin/rxfnsg
+        TEST_LABELS "performance;math;stats;packed;direct-control;rcc5f"
+        REQUIRED_OUTPUT_REGEX "PASS: RCC-5F direct statistics control"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+
+foreach(_rcc5f_variant IN ITEMS packed boxed direct)
+    if(_rcc5f_variant STREQUAL "packed")
+        set(_rcc5f_runtime_args $<TARGET_FILE:stats> ${LIBRPATH}
+                ${CMAKE_BINARY_DIR}/bin/rxfnsg)
+        set(_rcc5f_pass "PASS: RCC-5F packed statistics workload")
+    elseif(_rcc5f_variant STREQUAL "boxed")
+        set(_rcc5f_runtime_args $<TARGET_FILE:_rcc5f_stats_boxed>
+                ${LIBRPATH})
+        set(_rcc5f_pass "PASS: RCC-5F boxed statistics oracle workload")
+    else()
+        set(_rcc5f_runtime_args $<TARGET_FILE:_rcc5f_stats_direct>
+                ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/rxfnsg)
+        set(_rcc5f_pass "PASS: RCC-5F direct statistics control")
+    endif()
+    _crexx_register_runtime_test(
+            NAME rcc5f_rxstats_${_rcc5f_variant}_rxbvm_opt
+            RUNNER rxbvm
+            PROGRAM rcc5f_rxstats_${_rcc5f_variant}_opt
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            RUNTIME_ARGS ${_rcc5f_runtime_args}
+            TEST_LABELS "performance;math;stats;rcc5f;rxbvm"
+            REQUIRED_OUTPUT_REGEX ${_rcc5f_pass}
+            FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+endforeach()
+
+# RXVECTOR-01 compares the approved public packed provider with a pure Level B
+# oracle and a one-call direct control compiled from the exact production
+# kernel. The target is explicit so normal builds do not construct the large
+# representative measurement workload.
+add_library(rxvector01_kernel STATIC EXCLUDE_FROM_ALL
+        ${CMAKE_SOURCE_DIR}/lib/plugins/vector/rxvector.c)
+set_target_properties(rxvector01_kernel PROPERTIES
+        POSITION_INDEPENDENT_CODE ON)
+target_compile_definitions(rxvector01_kernel PRIVATE RXVECTOR_KERNEL_ONLY)
+target_include_directories(rxvector01_kernel PRIVATE
+        ${CMAKE_SOURCE_DIR}/lib/plugins/vector)
+_crexx_configure_rxpa_plugin_target(rxvector01_kernel)
+target_link_libraries(rxvector01_kernel PRIVATE ${CREXX_MATH_LIBRARY})
+
+add_dynamic_plugin_target(_rxvector01_direct rxvector01_direct.c)
+set_target_properties(_rxvector01_direct PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+target_include_directories(_rxvector01_direct PRIVATE
+        ${CMAKE_SOURCE_DIR}/lib/plugins/vector)
+target_link_libraries(_rxvector01_direct PRIVATE
+        rxvector01_kernel ${CREXX_MATH_LIBRARY})
+
+add_custom_target(performance_rxvector01)
+add_dependencies(performance_rxvector01
+        vector rxfnsg _rxvector01_direct)
+crexx_add_rexx_opt_matrix(
+        NAME rxvector01_compare
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxvector01_compare.crexx
+        TARGET_GROUP performance_rxvector01
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library rxfnsg vector _rxvector01_direct compiler_exit_bin
+        RUNTIME_ARGS $<TARGET_FILE:_rxvector01_direct> ${LIBRPATH}
+                     ${CMAKE_BINARY_DIR}/bin/rxfnsg -a public 1
+        TEST_LABELS "performance;vector;packed;rxvector01"
+        REQUIRED_OUTPUT_REGEX "PASS: RXVECTOR-01 exact comparison"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
 
 add_custom_target(performance_tinyexpr_dispatch ALL)
 crexx_add_rexx_opt_matrix(

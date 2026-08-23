@@ -68,13 +68,41 @@ context->binary.binary[context->binary.inst_size++].iconst = token->integer;
 Strings, binary literals, pooled float literals, procedure mappings, debug metadata, and exported symbols are packed into `const_pool`. This is a sequential buffer of dynamically sized records. Every record starts with a `chameleon_constant` header dictating its type and byte size.
 Types include: `STRING_CONST`, `BINARY_CONST`, `FLOAT_CONST`, `PROC_CONST`, `EXPOSE_REG_CONST`, `EXPOSE_PROC_CONST`, `META_FUNC`, `META_INLINE`, `META_REG`, etc.
 
+Native-callable provenance uses `META_PROVIDER`, paired by callable symbol with
+the canonical `META_FUNC` signature:
+
+```rxas
+.meta "namespace.callable"=".provider" "stable-provider-id"
+.meta "namespace.optional"=".provider.optional" "stable-provider-id"
+```
+
+`.provider.required` is accepted as an explicit alias of `.provider`. Provider
+IDs are platform-independent and restricted to ASCII letters/digits followed by
+letters, digits, `.`, `_`, or `-`. The assembler stores only symbol, provider
+ID and required/optional flags in this record; it does not duplicate the
+callable signature. RXBIN 007 writers set the native-provider feature bit.
+
+Module initialization uses a dedicated `META_INITIALIZER` record:
+
+```rxas
+.meta "example.boot"=".initializer" ".void" boot() ""
+```
+
+The five-field shape deliberately resembles callable metadata so generated
+RXAS and `rxdas` round trips retain the namespace-qualified diagnostic symbol
+and the local procedure reference. The assembler requires `.void`, an empty
+argument signature, and a local bytecode procedure. It stores the symbol and
+procedure as typed constant-pool references rather than treating the label as
+an exported callable. Multiple records are valid and their metadata-chain order
+is execution order. RXBIN 007 writers set the initializer feature bit.
+
 The serialized `expose_head` chain includes both `EXPOSE_REG_CONST` and
 `EXPOSE_PROC_CONST` records. Runtime linking and other module-local walkers now
 rely on that chain instead of scanning the whole constant pool.
 
-The interface/callable-contract work extends that same metadata path rather
-than introducing a second binary header mechanism. In addition to `META_CLASS`
-and `META_ATTR`, the assembler now serializes:
+The interface/callable-contract and initializer work extend that same metadata
+path rather than introducing a second binary header mechanism. In addition to
+`META_CLASS` and `META_ATTR`, the assembler now serializes:
 
 - `META_INTERFACE` for one interface header
 - `META_IMPLEMENTS` for one concrete-class-to-interface link
@@ -205,6 +233,10 @@ slot, not its string slot. Binary-memory VM instructions exposed at RXAS are:
 - `bseti64 rBin,rOffset,rValue`
 - `bsetf32 rBin,rOffset,rFloat`
 - `bsetf64 rBin,rOffset,rFloat`
+- `pgeti rOut,rBin,rIndex`
+- `pseti rBin,rIndex,rValue`
+- `pgetf rOut,rBin,rIndex`
+- `psetf rBin,rIndex,rFloat`
 - `bcheckrange rBin,rOffset,rLen`
 - `bgets rString,rBin,rOffset`
 - `bgets rString,0x...,rOffset`
@@ -237,6 +269,17 @@ out-of-range reads, while typed reads raise `OUT_OF_RANGE`. Typed writes raise
 the target storage type's range. `bgeti64`/`bseti64` are the Release 1 `.int`
 storage form. `bgetf32`/`bsetf32` store IEEE binary32 values and widen/narrow
 through the VM float register; `bgetf64`/`bsetf64` store IEEE binary64 values.
+
+`pgeti`/`pseti` and `pgetf`/`psetf` are the distinct Release 1 host-native
+packed-item surface. Their index is a zero-based item number rather than a byte
+offset. Integer items have the exact host `rxinteger` representation and float
+items have the exact host VM `double` representation. They deliberately do not
+provide endian or width conversion, and the same binary bytes may be viewed as
+either item type on different accesses. A negative index, index multiplication
+overflow, or an item that does not fit wholly inside the binary's logical byte
+length raises `OUT_OF_RANGE` before a write. RXAS accepts register operands for
+these operations; the compiler materializes a readable binary constant into an
+aligned runtime binary register before emitting `pgeti` or `pgetf`.
 
 `bresize` sets the logical byte length and zero-fills newly exposed bytes. The
 VM may keep a larger private physical capacity, grown in blocks and reused

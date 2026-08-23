@@ -1,0 +1,169 @@
+sample_id,stream,line_number,text
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-warmup-1,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=0 elapsed_us=374825 calls_per_second=42686.5870739678 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-warmup-1,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-warmup-1,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=0 elapsed_us=17242 calls_per_second=927966.593202645 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-warmup-1,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-warmup-1,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=0 elapsed_us=15311 calls_per_second=1045000.3265626 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-warmup-1,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-warmup-2,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=0 elapsed_us=15503 calls_per_second=1032058.31129459 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-warmup-2,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-warmup-2,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=0 elapsed_us=18439 calls_per_second=867726.015510602 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-warmup-2,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-warmup-2,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=0 elapsed_us=368528 calls_per_second=43415.968393175 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-warmup-2,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-1,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=0 elapsed_us=370125 calls_per_second=43228.6389733198 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-1,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-1,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=0 elapsed_us=16781 calls_per_second=953459.269411835 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-1,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-1,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=0 elapsed_us=15398 calls_per_second=1039095.98649175 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-1,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-2,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=0 elapsed_us=15505 calls_per_second=1031925.18542406 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-2,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-2,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=0 elapsed_us=17336 calls_per_second=922934.933087217 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-2,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-2,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=0 elapsed_us=373363 calls_per_second=42853.737515501 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-2,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-3,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=0 elapsed_us=15587 calls_per_second=1026496.43934048 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-3,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-3,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=0 elapsed_us=369509 calls_per_second=43300.7044483355 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-3,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-3,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=0 elapsed_us=17335 calls_per_second=922988.174214018 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-3,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-4,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=0 elapsed_us=17362 calls_per_second=921552.816495795 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-4,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-4,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=0 elapsed_us=369543 calls_per_second=43296.7205440233 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-4,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-4,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=0 elapsed_us=15781 calls_per_second=1013877.44756353 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-4,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-5,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=0 elapsed_us=16962 calls_per_second=943284.989977597 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-5,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-5,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=0 elapsed_us=15638 calls_per_second=1023148.74024811 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-5,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-5,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=0 elapsed_us=371075 calls_per_second=43117.9680657549 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-5,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-6,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=0 elapsed_us=368617 calls_per_second=43405.4859108506 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-6,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-6,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=0 elapsed_us=15968 calls_per_second=1002004.00801603 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-6,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-6,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=0 elapsed_us=16885 calls_per_second=947586.615339058 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-6,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-7,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=0 elapsed_us=366416 calls_per_second=43666.215449107 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-7,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-7,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=0 elapsed_us=16906 calls_per_second=946409.558736543 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-7,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-7,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=0 elapsed_us=15695 calls_per_second=1019432.94042689 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-7,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-8,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=0 elapsed_us=16088 calls_per_second=994530.084535057 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-8,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-8,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=0 elapsed_us=16888 calls_per_second=947418.285172904 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-8,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-8,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=0 elapsed_us=368994 calls_per_second=43361.1386635013 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-8,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-9,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=0 elapsed_us=15979 calls_per_second=1001314.22492021 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-9,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-9,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=0 elapsed_us=375024 calls_per_second=42663.9361747515 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-9,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-9,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=0 elapsed_us=17518 calls_per_second=913346.272405526 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-9,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-10,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=0 elapsed_us=17392 calls_per_second=919963.201471941 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-10,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-10,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=0 elapsed_us=374249 calls_per_second=42752.2852432471 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-10,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-10,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=0 elapsed_us=15638 calls_per_second=1023148.74024811 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-10,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-11,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=0 elapsed_us=17198 calls_per_second=930340.737295034 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-11,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-11,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=0 elapsed_us=15547 calls_per_second=1029137.45417122 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-11,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-11,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=0 elapsed_us=371166 calls_per_second=43107.3966904296 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-11,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-12,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=0 elapsed_us=380294 calls_per_second=42072.7121647988 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-boxed-recorded-12,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-12,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=0 elapsed_us=15594 calls_per_second=1026035.654739 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-direct-recorded-12,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-12,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=0 elapsed_us=16891 calls_per_second=947250.014800781 mean=7.96875 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=346572.715603584
+timing-RCC5F-rxstats-256x4000-rxtvm-packed-recorded-12,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-warmup-1,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=1000000000000 elapsed_us=370486 calls_per_second=43186.5171693397 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-warmup-1,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-warmup-1,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=1000000000000 elapsed_us=17036 calls_per_second=939187.602723644 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-warmup-1,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-warmup-1,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=1000000000000 elapsed_us=15587 calls_per_second=1026496.43934048 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-warmup-1,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-warmup-2,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=1000000000000 elapsed_us=15577 calls_per_second=1027155.42145471 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-warmup-2,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-warmup-2,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=1000000000000 elapsed_us=17333 calls_per_second=923094.674897594 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-warmup-2,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-warmup-2,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=1000000000000 elapsed_us=374088 calls_per_second=42770.6849725198 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-warmup-2,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-1,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=1000000000000 elapsed_us=377508 calls_per_second=42383.2077730803 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-1,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-1,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=1000000000000 elapsed_us=17000 calls_per_second=941176.470588235 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-1,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-1,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=1000000000000 elapsed_us=15988 calls_per_second=1000750.56292219 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-1,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-2,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=1000000000000 elapsed_us=16035 calls_per_second=997817.274711569 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-2,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-2,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=1000000000000 elapsed_us=17498 calls_per_second=914390.216024688 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-2,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-2,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=1000000000000 elapsed_us=370418 calls_per_second=43194.445194348 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-2,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-3,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=1000000000000 elapsed_us=15625 calls_per_second=1024000 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-3,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-3,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=1000000000000 elapsed_us=369150 calls_per_second=43342.8145740214 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-3,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-3,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=1000000000000 elapsed_us=17154 calls_per_second=932727.06074385 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-3,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-4,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=1000000000000 elapsed_us=16837 calls_per_second=950288.056066995 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-4,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-4,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=1000000000000 elapsed_us=382010 calls_per_second=41883.7203214576 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-4,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-4,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=1000000000000 elapsed_us=15902 calls_per_second=1006162.7468243 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-4,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-5,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=1000000000000 elapsed_us=17627 calls_per_second=907698.417200885 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-5,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-5,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=1000000000000 elapsed_us=15748 calls_per_second=1016002.03200406 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-5,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-5,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=1000000000000 elapsed_us=404414 calls_per_second=39563.4176858368 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-5,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-6,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=1000000000000 elapsed_us=398057 calls_per_second=40195.2484191962 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-6,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-6,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=1000000000000 elapsed_us=18437 calls_per_second=867820.144275099 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-6,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-6,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=1000000000000 elapsed_us=19378 calls_per_second=825678.604603158 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-6,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-7,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=1000000000000 elapsed_us=405265 calls_per_second=39480.3400244285 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-7,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-7,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=1000000000000 elapsed_us=17497 calls_per_second=914442.475853003 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-7,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-7,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=1000000000000 elapsed_us=16866 calls_per_second=948654.096999882 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-7,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-8,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=1000000000000 elapsed_us=15916 calls_per_second=1005277.70796683 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-8,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-8,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=1000000000000 elapsed_us=18429 calls_per_second=868196.86363883 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-8,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-8,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=1000000000000 elapsed_us=462481 calls_per_second=34596.0158363263 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-8,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-9,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=1000000000000 elapsed_us=16575 calls_per_second=965309.200603318 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-9,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-9,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=1000000000000 elapsed_us=390032 calls_per_second=41022.2750953768 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-9,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-9,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=1000000000000 elapsed_us=17749 calls_per_second=901459.237140121 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-9,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-10,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=1000000000000 elapsed_us=18149 calls_per_second=881591.272246405 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-10,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-10,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=1000000000000 elapsed_us=387916 calls_per_second=41246.0429577537 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-10,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-10,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=1000000000000 elapsed_us=15759 calls_per_second=1015292.848531 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-10,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-11,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=1000000000000 elapsed_us=17129 calls_per_second=934088.388113725 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-11,stdout,2,PASS: RCC-5F packed statistics workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-11,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=1000000000000 elapsed_us=15863 calls_per_second=1008636.4495997 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-11,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-11,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=1000000000000 elapsed_us=377261 calls_per_second=42410.9568707075 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-11,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-12,stdout,1,benchmark=rcc5f_rxstats variant=boxed observations=256 iterations=4000 offset=1000000000000 elapsed_us=380144 calls_per_second=42089.3135232964 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-boxed-offset-recorded-12,stdout,2,PASS: RCC-5F boxed statistics oracle workload
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-12,stdout,1,benchmark=rcc5f_rxstats variant=direct observations=256 iterations=4000 offset=1000000000000 elapsed_us=15775 calls_per_second=1014263.07448494 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-direct-offset-recorded-12,stdout,2,PASS: RCC-5F direct statistics control
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-12,stdout,1,benchmark=rcc5f_rxstats variant=packed observations=256 iterations=4000 offset=1000000000000 elapsed_us=17437 calls_per_second=917589.034811034 mean=1000000000007.97 stddev=4.92442890089805 covariance=72.75 correlation=1 checksum=4000000000347300
+timing-RCC5F-rxstats-offset-1e12-rxtvm-packed-offset-recorded-12,stdout,2,PASS: RCC-5F packed statistics workload

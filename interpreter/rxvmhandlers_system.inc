@@ -1411,6 +1411,13 @@ RXVM_HANDLER(RESERVED_299,
                                "fixed direct calls require a bytecode target"); \
                 DISPATCH;                                                       \
             }                                                                   \
+            if (context->initialized_module_count != context->num_modules &&  \
+                rxvm_ensure_callee_initialized(context, current_module,        \
+                                                explicit_called__) != 0) {      \
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE,                               \
+                               "Module initialization failed");               \
+                DISPATCH;                                                       \
+            }                                                                   \
             temp_frame = frame_f(explicit_called__, (ARITY_), current_frame,   \
                                  next_pc, explicit_result__);                   \
             if (!temp_frame) {                                                  \

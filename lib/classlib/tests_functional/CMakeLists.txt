@@ -54,9 +54,9 @@ set(CLASSLIB_RUNTIMES
   ${CMAKE_BINARY_DIR}/bin/classlib
 )
 set(CLASSLIB_NATIVE_RUNTIMES
-  rx_id
+  # keyaccess predates declarative provider packages and still needs its
+  # explicit dynamic-plugin argument. RCC-5 providers autoload from metadata.
   rx_keyaccess
-  rx_system
   ${LIBRPATH}
   ${CMAKE_BINARY_DIR}/bin/classlib_native
 )
@@ -116,7 +116,7 @@ foreach(_binfile ${NATIVE_REXXBINS})
             TARGET_GROUP ${_basename}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
             RXC_FLAGS ${_rxc_flags}
-            DEPENDS library classlib_native ${LIBRPATH_RXBIN} ${CLASSLIB_NATIVE_RXBIN} _id _keyaccess _system ${_rexx_dep} ${_prev_native_target}
+            DEPENDS library classlib_native ${LIBRPATH_RXBIN} ${CLASSLIB_NATIVE_RXBIN} id _keyaccess fs _platform ${_rexx_dep} ${_prev_native_target}
             RUNTIME_ARGS ${CLASSLIB_NATIVE_RUNTIMES}
             TEST_LABELS "classlib;native-adapter"
             ${_pass_test_name_argument}

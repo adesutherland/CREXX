@@ -2056,10 +2056,47 @@ static int inline_is_exact_register_scalar(ValueType type) {
     return type == TP_BOOLEAN || type == TP_INTEGER || type == TP_FLOAT;
 }
 
+static int inline_exact_packed_access_matches(ASTNode *access,
+                                              ValueType item_type,
+                                              Symbol *index_symbol,
+                                              Symbol **attribute_out) {
+    RxcpBinaryStorageInfo info;
+    ASTNode *type_node = NULL;
+    ASTNode *base = NULL;
+    ASTNode *index = NULL;
+    Symbol *attribute;
+
+    if (attribute_out) *attribute_out = NULL;
+    if (!access || access->node_type != OP_PACKED_AT ||
+        !rxcp_binary_memory_at_parts(access, &type_node, &base, &index) ||
+        !rxcp_packed_storage_info(type_node, &info) ||
+        info.value_type != item_type || !base || !index ||
+        base->node_type != VAR_SYMBOL || base->child ||
+        base->value_type != TP_BINARY || !base->symbolNode ||
+        index->node_type != VAR_SYMBOL || index->child ||
+        index->value_type != TP_INTEGER || !index->symbolNode ||
+        index->symbolNode->symbol != index_symbol) {
+        return 0;
+    }
+
+    attribute = base->symbolNode->symbol;
+    if (!attribute || attribute->type != TP_BINARY ||
+        attribute->value_dims != 0 ||
+        !inline_symbol_is_class_attribute(attribute)) {
+        return 0;
+    }
+
+    if (attribute_out) *attribute_out = attribute;
+    return 1;
+}
+
 /* POSTPERF-04 exact scalar accessors receive a traversal lane of their own.
- * Keep this recognition deliberately structural and type-generic: the getter
- * returns one receiver-owned register scalar, while the setter copies one
- * required by-value register scalar into the same-typed receiver attribute.
+ * Keep this recognition deliberately structural and type-generic. A direct
+ * getter returns one receiver-owned register scalar and a direct setter copies
+ * one required by-value register scalar into the same-typed receiver
+ * attribute. BINARY-01 extends the same lane to one packed scalar read/write
+ * through a receiver-owned binary attribute; it does not name or privilege a
+ * particular library class.
  * The ordinary inline transaction still owns receiver evaluation,
  * initialization, formal capture, copyback, signals and source/TRACE identity.
  */
@@ -2076,6 +2113,58 @@ InlineScalarAccessorKind inline_exact_scalar_accessor_kind(ASTNode *callable) {
     instrs = ast_chld(callable, INSTRUCTIONS, 0);
     if (!args || !instrs || !(first = instrs->child)) {
         return INLINE_SCALAR_ACCESSOR_NONE;
+    }
+
+    if (args->child && !args->child->sibling &&
+        callable->value_dims == 0 &&
+        (callable->value_type == TP_INTEGER || callable->value_type == TP_FLOAT)) {
+        ASTNode *index_arg = args->child;
+        ASTNode *index_target = inline_formal_target(index_arg);
+        ASTNode *result;
+
+        result = first->node_type == RETURN && !first->sibling ? first->child : NULL;
+        if (!index_arg->is_ref_arg && !index_arg->is_opt_arg && !index_arg->is_varg &&
+            index_target && index_target->value_type == TP_INTEGER &&
+            index_target->value_dims == 0 && index_target->symbolNode &&
+            result && !result->sibling &&
+            inline_exact_packed_access_matches(result,
+                                               callable->value_type,
+                                               index_target->symbolNode->symbol,
+                                               NULL)) {
+            return INLINE_SCALAR_ACCESSOR_GETTER;
+        }
+    }
+
+    if (callable->value_type == TP_VOID && callable->value_dims == 0 &&
+        args->child && args->child->sibling && !args->child->sibling->sibling) {
+        ASTNode *index_arg = args->child;
+        ASTNode *value_arg = index_arg->sibling;
+        ASTNode *index_target = inline_formal_target(index_arg);
+        ASTNode *value_target = inline_formal_target(value_arg);
+        ASTNode *assignment = first;
+        ASTNode *final_return = assignment ? assignment->sibling : NULL;
+        ASTNode *lhs = assignment ? assignment->child : NULL;
+        ASTNode *rhs = lhs ? lhs->sibling : NULL;
+
+        if (!index_arg->is_ref_arg && !index_arg->is_opt_arg && !index_arg->is_varg &&
+            !value_arg->is_ref_arg && !value_arg->is_opt_arg && !value_arg->is_varg &&
+            index_target && index_target->value_type == TP_INTEGER &&
+            index_target->value_dims == 0 && index_target->symbolNode &&
+            value_target && value_target->value_dims == 0 &&
+            (value_target->value_type == TP_INTEGER || value_target->value_type == TP_FLOAT) &&
+            value_target->symbolNode && assignment && assignment->node_type == ASSIGN &&
+            final_return && !final_return->sibling &&
+            final_return->node_type == RETURN && !final_return->child &&
+            lhs && rhs && !rhs->sibling &&
+            rhs->node_type == VAR_SYMBOL && !rhs->child && rhs->symbolNode &&
+            rhs->symbolNode->symbol == value_target->symbolNode->symbol &&
+            rhs->value_type == value_target->value_type &&
+            inline_exact_packed_access_matches(lhs,
+                                               value_target->value_type,
+                                               index_target->symbolNode->symbol,
+                                               NULL)) {
+            return INLINE_SCALAR_ACCESSOR_SETTER;
+        }
     }
 
     if (!args->child && callable->value_dims == 0 &&

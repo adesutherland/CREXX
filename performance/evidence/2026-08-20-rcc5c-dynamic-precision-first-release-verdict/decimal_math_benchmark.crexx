@@ -1,0 +1,58 @@
+/* RCC-5C first Release verdict: common-precision decimal mathematics. */
+options levelb
+
+import rxdecimal
+
+run_workload: procedure = .decimal
+  numeric digits inherited
+  arg iterations = .int
+  value = .decimal
+  total = .decimal
+  value = "0.125" as .decimal
+  total = 0
+  do iteration = 1 to iterations
+    total = total + rxdecimal..sqrt(value + 1)
+    total = total + rxdecimal..exp(value)
+    total = total + rxdecimal..ln(value + 1)
+    total = total + rxdecimal..sin(value)
+    total = total + rxdecimal..cos(value)
+    total = total + rxdecimal..pi()
+    total = total + rxdecimal..euler()
+    value = value + "0.000001" as .decimal
+    if value > "0.225" as .decimal then value = "0.125" as .decimal
+  end
+  return total
+
+run_digits_9: procedure = .decimal
+  numeric digits 9
+  arg iterations = .int
+  return run_workload(iterations)
+
+run_digits_18: procedure = .decimal
+  numeric digits 18
+  arg iterations = .int
+  return run_workload(iterations)
+
+main: procedure = .int
+  arg arguments = .string[]
+  if arguments[0] <> 2 then do
+    say "FAIL: expected precision and iteration count"
+    return 2
+  end
+
+  precision = arguments[1] as .int
+  iterations = arguments[2] as .int
+  checksum = .decimal
+  if precision = 9 then checksum = run_digits_9(iterations)
+  else if precision = 18 then checksum = run_digits_18(iterations)
+  else do
+    say "FAIL: unsupported benchmark precision" precision
+    return 2
+  end
+
+  if checksum <= 0 then do
+    say "FAIL: decimal mathematics checksum" checksum
+    return 1
+  end
+  say "PASS: RCC-5C decimal mathematics benchmark" precision iterations checksum
+  return 0

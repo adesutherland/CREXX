@@ -45,7 +45,7 @@
 
  options levelb comments_dash
  import rxfnsb
- import system
+ import rxfs
  
  /* procedure main is what is run when crexx starts execution */
  main: procedure = .int
@@ -89,7 +89,7 @@ platform = word(rexx_version,1)
 platformUpper = translate(platform)
 if  platformUpper = 'WINDOWS' then dirsep = '\'
  if rxpath='' then do
-   rxpath=getLoadPath()
+   rxpath=loadpath()
    lastSegment=lastpos(dirsep,rxpath)
    rxpath=substr(rxpath,1,lastSegment-1)
  end
@@ -118,8 +118,8 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
 	 /* look whether a .crexx file exists, else fail         */
 	 /* this complexity only because we allow default .crexx */
 	 select
-	   when testfile(filename'.crexx') = 0 then filename = filename'.crexx'
-           when testfile(filename'.CREXX') = 0 then filename = filename'.CREXX'
+	   when isfile(filename'.crexx') then filename = filename'.crexx'
+           when isfile(filename'.CREXX') then filename = filename'.CREXX'
 	 otherwise
 	   if pos('.',filename) = 0 then do
 	     say 'Error: compilation of extensionless files is not supported.'
@@ -315,10 +315,8 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
    libs = libs';'rxpath||'bin'dirsep'rxfnsc'
    libs = libs';'rxpath||'bin'dirsep'rexxscript'
    libs = libs';'rxpath||'bin'dirsep'rx_treemap'
-   libs = libs';'rxpath||'bin'dirsep'rx_system'
    libs = libs';'rxpath||'bin'dirsep'rx_llist'
    libs = libs';'rxpath||'bin'dirsep'rx_keyaccess'
-   libs = libs';'rxpath||'bin'dirsep'rx_id'
    
    declib = ''
    if \decimal then declib = '-p rxvm_db_decimal'
@@ -534,6 +532,7 @@ do i=1 to filenames[0]
 
   if native then do
     linkedOutput = binfile'_linked'
+    providerRequirements = linkedOutput'.rxproviders'
     outputStem = binfile
     nativeCompiler = readNativeConfigLine(rxpath, dirsep, 'crexx_native_compiler')
     if nativeCompiler = '' then nativeCompiler = 'gcc'
@@ -583,6 +582,8 @@ do i=1 to filenames[0]
       call appendArrayValue linkArgs, '-m'
       call appendArrayValue linkArgs, linkMap
     end
+    call appendArrayValue linkArgs, '-p'
+    call appendArrayValue linkArgs, providerRequirements
     call appendArrayValue linkArgs, '-o'
     call appendArrayValue linkArgs, linkedOutput
     loop f=1 to linkInputs[0]
@@ -597,6 +598,9 @@ do i=1 to filenames[0]
       say '[ 'res' ] rxlink   - Linked         ' esc||ANSI_BLUE||linkedOutput'.rxbin'||esc||ANSI_RESET
     end
     if RC\=0 then return RC
+
+    providerRc = appendNativeProviderArgs(staticLinkArgs, providerRequirements, rxpath, dirsep, nativeCompilerStyle, platformUpper)
+    if providerRc \= 0 then return providerRc
 
     packArgs = .string[]
     call appendArrayValue packArgs, rxpath || 'bin' || dirsep || 'rxcpack'
@@ -714,6 +718,7 @@ do i=1 to filenames[0]
         call appendArrayUnique nativeCleanupFiles, binfile'.rxbin'
       end
       call appendArrayUnique nativeCleanupFiles, linkedOutput'.rxbin'
+      call appendArrayUnique nativeCleanupFiles, providerRequirements
       call appendArrayUnique nativeCleanupFiles, outputStem'.c'
       delrc = deleteFiles(nativeCleanupFiles,verbose)
     end
@@ -818,8 +823,8 @@ say
 say 'Source files without OPTIONS use rxc file-type defaults: .rexx is Level C'
 say 'and .crexx/.crx are Level G.'
 say 'Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l.'
-say 'Native packaging uses rxlink before rxcpack; plugin/static libraries are linked natively'
-say 'with platform-appropriate linker flags.'
+say 'Native packaging uses rxlink before rxcpack; declared provider archives and explicit'
+say 'plugin/static libraries are linked with platform-appropriate retention flags.'
 say
 say 'all options can also be prefixed with --'
 return 'help done'
@@ -892,7 +897,7 @@ arg filenames = .string[], verbosity = .int
 loop i=1 to filenames[0]
   filename = filenames[i]
   if verbosity > 2 then say 'deleting' filename
-  rc = deletefile(filename)
+  rc = delete(filename)
 end
 return 0
 
@@ -1031,6 +1036,123 @@ staticModule = modulePath || '_static.lib'
 if fileExists(staticModule) then return staticModule
 return ''
 
+appendNativeProviderArgs: procedure = .int
+arg expose current = .string[], requirementsFile = .string, rxpath = .string, dirsep = .string, compilerStyle = .string, platformName = .string
+header = .string
+line = .string
+status = .string
+providerId = .string
+tab = .string
+firstTab = .int
+rest = .string
+secondTab = .int
+providerDir = .string
+staticSuffix = .string
+canonicalStaticPath = .string
+legacyStaticPath = .string
+staticPath = .string
+required = .int
+seenProviders = .string
+requiredProviders = .string
+
+providerDir = rxpath || 'bin' || dirsep || 'providers' || dirsep
+if compilerStyle = 'MSVC' then staticSuffix = '.lib'
+else staticSuffix = '.a'
+
+if \fileExists(requirementsFile) then do
+  say 'missing native provider requirements:' requirementsFile
+  return 2
+end
+header = linein(requirementsFile)
+if header \= 'CREXX-RXPA-REQUIREMENTS 1' then do
+  call lineout requirementsFile
+  say 'invalid native provider requirements:' requirementsFile
+  return 2
+end
+tab = '09'X
+requiredProviders = ';'
+do while lines(requirementsFile)
+  line = linein(requirementsFile)
+  if line = '' then iterate
+  firstTab = pos(tab, line)
+  if firstTab = 0 then do
+    call lineout requirementsFile
+    say 'invalid native provider requirement:' line
+    return 2
+  end
+  status = left(line, firstTab - 1)
+  rest = substr(line, firstTab + 1)
+  secondTab = pos(tab, rest)
+  if secondTab = 0 then do
+    call lineout requirementsFile
+    say 'invalid native provider requirement:' line
+    return 2
+  end
+  providerId = left(rest, secondTab - 1)
+  if status \= 'required' & status \= 'optional' then do
+    call lineout requirementsFile
+    say 'invalid native provider policy:' status
+    return 2
+  end
+  if status = 'required' & pos(';' || providerId || ';', requiredProviders) = 0 then
+    requiredProviders = requiredProviders || providerId || ';'
+end
+call lineout requirementsFile
+header = linein(requirementsFile)
+seenProviders = ';'
+do while lines(requirementsFile)
+  line = linein(requirementsFile)
+  if line = '' then iterate
+  firstTab = pos(tab, line)
+  if firstTab = 0 then do
+    call lineout requirementsFile
+    say 'invalid native provider requirement:' line
+    return 2
+  end
+  status = left(line, firstTab - 1)
+  rest = substr(line, firstTab + 1)
+  secondTab = pos(tab, rest)
+  if secondTab = 0 then do
+    call lineout requirementsFile
+    say 'invalid native provider requirement:' line
+    return 2
+  end
+  providerId = left(rest, secondTab - 1)
+  if status \= 'required' & status \= 'optional' then do
+    call lineout requirementsFile
+    say 'invalid native provider policy:' status
+    return 2
+  end
+  required = pos(';' || providerId || ';', requiredProviders) > 0
+  if pos(';' || providerId || ';', seenProviders) > 0 then iterate
+  seenProviders = seenProviders || providerId || ';'
+
+  canonicalStaticPath = providerDir || providerId || staticSuffix
+  legacyStaticPath = providerDir || providerId || '_static' || staticSuffix
+  staticPath = ''
+  if fileExists(canonicalStaticPath) then staticPath = canonicalStaticPath
+  else if fileExists(legacyStaticPath) then staticPath = legacyStaticPath
+  if staticPath = '' then do
+    if required then do
+      call lineout requirementsFile
+      say 'missing native provider archive:' canonicalStaticPath '(legacy:' legacyStaticPath')'
+      return 2
+    end
+    iterate
+  end
+  if compilerStyle = 'MSVC' then
+    call appendArrayValue current, '/WHOLEARCHIVE:' || staticPath
+  else if isMacPlatform(platformName) then
+    call appendArrayValue current, '-Wl,-force_load,' || staticPath
+  else do
+    call appendArrayValue current, '-Wl,--whole-archive'
+    call appendArrayValue current, staticPath
+    call appendArrayValue current, '-Wl,--no-whole-archive'
+  end
+end
+call lineout requirementsFile
+return 0
+
 appendMsvcLibrary: procedure
 arg expose current = .string[], rxpath = .string, dirsep = .string, libraryName = .string
 call appendArrayValue current, rxpath || 'bin' || dirsep || libraryName || '.lib'
@@ -1094,7 +1216,7 @@ return strip(line)
 
 fileExists: procedure = .int
 arg filePath = .string
-if testfile(filePath) = 0 then return 1
+if isfile(filePath) then return 1
 return 0
   
 /* ---------------------------------------------------------------------

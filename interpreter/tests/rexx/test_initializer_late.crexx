@@ -1,0 +1,9 @@
+options levelb
+
+namespace initlate expose value
+
+boot: initialiser expose state
+  state = state + 7
+
+value: procedure = .int expose state
+  return state

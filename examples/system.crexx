@@ -1,6 +1,7 @@
 options levelb
 import rxfnsb
-import system
+import rxfs
+import rxplatform
 namespace main  expose myexpose
 
   failures = .int
@@ -10,8 +11,8 @@ namespace main  expose myexpose
   path_out = .string[]
 
   failures = 0
-  say "Operation System:  "opsys()
-  say "Current Directory: "getdir()
+  say "Operation System:  "rxplatform..osname()
+  say "Current Directory: "rxfs..cwd()
  /* address command "ls -l --time-style=long-iso" output out error err */
  address command "ls -l --time-style=long-iso" output out error err
   say myexpose()

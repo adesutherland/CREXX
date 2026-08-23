@@ -44,14 +44,13 @@ if(ENABLE_ODBC)
 endif()
 
 if(BUILD_TESTING)
-    add_dynamic_plugin_target(_odbc_mock
+    add_dynamic_plugin_target(_odbc_mock PROVIDER_ID rx_odbc
             odbc.c tests/mock_odbc.c)
     target_compile_definitions(_odbc_mock PRIVATE CREXX_ODBC_MOCK=1)
     target_include_directories(_odbc_mock PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/tests)
     target_link_libraries(_odbc_mock PRIVATE Threads::Threads)
     set_target_properties(_odbc_mock PROPERTIES
-            OUTPUT_NAME "_odbc"
             LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/mock"
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/mock")
 
@@ -72,8 +71,9 @@ if(BUILD_TESTING)
     add_custom_target(odbc_mock_prepared_runtime ALL
             DEPENDS "${_odbc_mock_runtime_base}.rxbin")
     add_test(NAME odbc_mock_prepared_rxbvm
-            COMMAND $<TARGET_FILE:rxbvm> "${_odbc_mock_runtime_base}"
-                    "${CMAKE_CURRENT_BINARY_DIR}/mock/rx_odbc"
+            COMMAND $<TARGET_FILE:rxbvm>
+                    --provider-path "${CMAKE_CURRENT_BINARY_DIR}/mock"
+                    "${_odbc_mock_runtime_base}"
                     "${CMAKE_BINARY_DIR}/bin/library")
     set_tests_properties(odbc_mock_prepared_rxbvm PROPERTIES
             REQUIRED_FILES "${_odbc_mock_runtime_base}.rxbin"
@@ -81,8 +81,9 @@ if(BUILD_TESTING)
             LABELS "runtime;rxbvm;plugins;rxpa;odbc")
     if(TARGET rxtvm)
         add_test(NAME odbc_mock_prepared_rxtvm
-                COMMAND $<TARGET_FILE:rxtvm> "${_odbc_mock_runtime_base}"
-                        "${CMAKE_CURRENT_BINARY_DIR}/mock/rx_odbc"
+                COMMAND $<TARGET_FILE:rxtvm>
+                        --provider-path "${CMAKE_CURRENT_BINARY_DIR}/mock"
+                        "${_odbc_mock_runtime_base}"
                         "${CMAKE_BINARY_DIR}/bin/library")
         set_tests_properties(odbc_mock_prepared_rxtvm PROPERTIES
                 REQUIRED_FILES "${_odbc_mock_runtime_base}.rxbin"

@@ -135,6 +135,23 @@ int rxcp_binary_storage_info(ASTNode *type_node, RxcpBinaryStorageInfo *info) {
     return 0;
 }
 
+int rxcp_packed_storage_info(ASTNode *type_node, RxcpBinaryStorageInfo *info) {
+    if (info) {
+        info->name = 0;
+        info->value_type = TP_UNKNOWN;
+        info->width = 0;
+        info->is_fixed = 0;
+        info->rxas_get = 0;
+        info->rxas_set = 0;
+    }
+
+    if (rxcp_binary_storage_match(type_node, "int", info, TP_INTEGER, 8, 1,
+                                  "pgeti", "pseti")) return 1;
+    if (rxcp_binary_storage_match(type_node, "float", info, TP_FLOAT, 8, 1,
+                                  "pgetf", "psetf")) return 1;
+    return 0;
+}
+
 int rxcp_binary_storage_is_valid(ASTNode *type_node) {
     return rxcp_binary_storage_info(type_node, 0);
 }
@@ -163,7 +180,9 @@ int rxcp_binary_memory_at_parts(ASTNode *node, ASTNode **type_node, ASTNode **ba
     if (node->node_type == OP_BINARY_FOR) {
         at_node = ast_chdn(node, 0);
     }
-    if (!at_node || at_node->node_type != OP_BINARY_AT) return 0;
+    if (!at_node ||
+        (at_node->node_type != OP_BINARY_AT &&
+         at_node->node_type != OP_PACKED_AT)) return 0;
 
     if (type_node) *type_node = ast_chdn(at_node, 0);
     if (base) *base = ast_chdn(at_node, 1);
@@ -174,7 +193,8 @@ int rxcp_binary_memory_at_parts(ASTNode *node, ASTNode **type_node, ASTNode **ba
 int rxcp_binary_memory_is_access(ASTNode *node) {
     return node &&
            (node->node_type == OP_BINARY_AT ||
-            node->node_type == OP_BINARY_FOR);
+            node->node_type == OP_BINARY_FOR ||
+            node->node_type == OP_PACKED_AT);
 }
 
 int rxcp_binary_memory_is_lhs(ASTNode *node) {
@@ -824,6 +844,7 @@ const char* token_to_string(int token_id) {
         case TK_SIGNAL: return "TK_SIGNAL";
         case TK_ON: return "TK_ON";
         case TK_PROCEDURE: return "TK_PROCEDURE";
+        case TK_INITIALISER: return "TK_INITIALISER";
         case TK_EXPOSE: return "TK_EXPOSE";
         case TK_CALL: return "TK_CALL";
         case TK_OPTIONS: return "TK_OPTIONS";
@@ -1342,6 +1363,7 @@ const char* node_type_to_string(NodeType type) {
         case OP_BINARY_FOR: return "OP_BINARY_FOR";
         case OP_BINARY_LENGTH: return "OP_BINARY_LENGTH";
         case OP_BINARY_COMPARE: return "OP_BINARY_COMPARE";
+        case OP_PACKED_AT: return "OP_PACKED_AT";
         case OP_SIZEOF: return "OP_SIZEOF";
         case OP_TYPEOF: return "OP_TYPEOF";
         case OP_REFERENCE: return "OP_REFERENCE";

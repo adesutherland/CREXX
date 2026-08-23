@@ -55,7 +55,6 @@ main() .locals=5
    dcall r2,r2,r3
    .traceevent "F" 4 "R" "S" "r" 2 6 6 0 "describe" ""
    scopy r3,r2
-   br l137bexprend
 l137bexprend:
    endlife r4
    say r3

@@ -741,8 +741,8 @@ add_test(NAME rxpa_session_factory_failure_rollback
         COMMAND test_rxpa_concurrency session-failure)
 add_test(NAME rxpa_session_manifest_fail_closed
         COMMAND test_rxpa_concurrency session-malformed)
-add_test(NAME rxpa_rxmath_static_mixed_policy
-        COMMAND test_rxpa_concurrency rxmath-static)
+add_test(NAME rxpa_float_static_alias_binding
+        COMMAND test_rxpa_concurrency float-static)
 add_test(NAME rxpa_legacy_call_serialization
         COMMAND test_rxpa_concurrency legacy)
 add_test(NAME rxpa_process_reentrant_overlap
@@ -768,7 +768,7 @@ set_tests_properties(
         rxpa_static_session_lifecycle
         rxpa_session_factory_failure_rollback
         rxpa_session_manifest_fail_closed
-        rxpa_rxmath_static_mixed_policy
+        rxpa_float_static_alias_binding
         rxpa_legacy_call_serialization
         rxpa_process_reentrant_overlap
         rxpa_legacy_recursive_reentry
@@ -790,7 +790,7 @@ crexx_label_concurrency_tests(SP01
         rxpa_static_session_lifecycle
         rxpa_session_factory_failure_rollback
         rxpa_session_manifest_fail_closed
-        rxpa_rxmath_static_mixed_policy
+        rxpa_float_static_alias_binding
         rxpa_legacy_call_serialization
         rxpa_process_reentrant_overlap
         rxpa_legacy_recursive_reentry
@@ -1846,6 +1846,105 @@ add_dependencies(test_reentrancy test_reentrancy_bin)
 
 add_test(NAME reentrancy_check COMMAND test_reentrancy WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+# RCC-3: declarative module initializers. Compile the source surface, preserve
+# per-module metadata through rxlink, and retain an RXAS-only cycle fixture so
+# cycle rejection does not depend on source-level circular imports.
+add_custom_command(
+        OUTPUT test_initializer_dependency.rxbin
+               test_initializer_root.rxbin
+               test_initializer_late.rxbin
+               test_initializer_failure.rxbin
+               test_initializers_linked.rxbin
+               test_initializer_cycle_a.rxbin
+               test_initializer_cycle_b.rxbin
+        COMMAND $<TARGET_FILE:rxc> -o test_initializer_dependency
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_initializer_dependency.crexx
+        COMMAND $<TARGET_FILE:rxas> test_initializer_dependency
+        COMMAND $<TARGET_FILE:rxc> -o test_initializer_root
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_initializer_root.crexx
+        COMMAND $<TARGET_FILE:rxas> test_initializer_root
+        COMMAND $<TARGET_FILE:rxc> -o test_initializer_late
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_initializer_late.crexx
+        COMMAND $<TARGET_FILE:rxas> test_initializer_late
+        COMMAND $<TARGET_FILE:rxc> -o test_initializer_failure
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_initializer_failure.crexx
+        COMMAND $<TARGET_FILE:rxas> test_initializer_failure
+        COMMAND $<TARGET_FILE:rxlink> -o test_initializers_linked
+                test_initializer_root test_initializer_dependency
+        COMMAND $<TARGET_FILE:rxas> -o test_initializer_cycle_a
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_initializer_cycle_a
+        COMMAND $<TARGET_FILE:rxas> -o test_initializer_cycle_b
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_initializer_cycle_b
+        DEPENDS tests/rexx/test_initializer_dependency.crexx
+                tests/rexx/test_initializer_root.crexx
+                tests/rexx/test_initializer_late.crexx
+                tests/rexx/test_initializer_failure.crexx
+                tests/test_initializer_cycle_a.rxas
+                tests/test_initializer_cycle_b.rxas
+                rxc rxas rxlink compiler_exit_bin
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling RCC-3 module initializer fixtures ..."
+)
+add_custom_target(test_module_initializer_bins ALL
+        DEPENDS test_initializer_dependency.rxbin
+                test_initializer_root.rxbin
+                test_initializer_late.rxbin
+                test_initializer_failure.rxbin
+                test_initializers_linked.rxbin
+                test_initializer_cycle_a.rxbin
+                test_initializer_cycle_b.rxbin)
+
+function(crexx_configure_module_initializer_test TARGET_NAME)
+    target_include_directories(${TARGET_NAME} PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
+            ${CMAKE_SOURCE_DIR}/inc
+            ${CMAKE_SOURCE_DIR}/assembler
+            ${CMAKE_SOURCE_DIR}/binutils/include
+            ${CMAKE_SOURCE_DIR}/rxpa
+            ${CMAKE_SOURCE_DIR}/platform
+            ${CMAKE_SOURCE_DIR}/avl_tree
+            ${CMAKE_SOURCE_DIR}/utf8)
+    add_dependencies(${TARGET_NAME} test_module_initializer_bins)
+    add_test(
+            NAME ${TARGET_NAME}
+            COMMAND ${TARGET_NAME}
+                    ${CMAKE_CURRENT_BINARY_DIR}/test_initializer_root.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/test_initializer_dependency.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/test_initializers_linked.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/test_initializer_late.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/test_initializer_cycle_a.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/test_initializer_cycle_b.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/test_initializer_failure.rxbin
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${TARGET_NAME} PROPERTIES
+            LABELS "interpreter;rcc-3;initializers")
+endfunction()
+
+add_executable(module_initializers-rxvml tests/test_module_initializers.c)
+target_link_libraries(module_initializers-rxvml PRIVATE rxvml)
+crexx_configure_module_initializer_test(module_initializers-rxvml)
+
+add_executable(module_initializers-rxbvml tests/test_module_initializers.c)
+target_link_libraries(module_initializers-rxbvml PRIVATE rxbvml)
+target_compile_definitions(module_initializers-rxbvml PRIVATE NTHREADED=1)
+crexx_configure_module_initializer_test(module_initializers-rxbvml)
+
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_executable(module_initializers-rxtvml
+            tests/test_module_initializers.c
+            rxvml.c
+            $<TARGET_OBJECTS:rxtvm_core_objects>)
+    target_link_libraries(module_initializers-rxtvml
+            rxvmplugin mc_decimal_manual avl_tree rxpa rxvmref rxbin)
+    crexx_enable_vm_platform(module_initializers-rxtvml)
+    if(CREXX_VM_PROFILING)
+        target_compile_definitions(module_initializers-rxtvml PRIVATE
+                CREXX_VM_PROFILING=1)
+    endif()
+    crexx_configure_module_initializer_test(module_initializers-rxtvml)
+endif()
+
 # PERF3-13 E4a/E4b: retain independent loads as the correctness control, then
 # prove runtime-owned immutable generations with worker-owned overlays.
 add_custom_command(
@@ -2130,6 +2229,11 @@ if(BUILD_TESTING AND
                         PROPERTIES
                         LABELS "interpreter;perf3;performance-measurement;gate-e;e6;private;scale;${_crexx_e6_workload};${_crexx_e5_doorbell_platform_label}"
                         PROCESSORS ${_crexx_e6_workers}
+                        # These are timing-sensitive performance measurements.
+                        # Running multiple cells beside compiler-heavy tests makes
+                        # their timeout and recorded wall time meaningless,
+                        # especially under sanitizer instrumentation.
+                        RUN_SERIAL TRUE
                         TIMEOUT 120)
             endforeach()
         endforeach()

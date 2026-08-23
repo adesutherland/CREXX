@@ -1,0 +1,273 @@
+/* RCC-5C exact-integer contract and algorithm coverage. */
+options levelb
+
+import numerictestsupport
+import rxfnsb
+import rxint
+
+small_abs: procedure = .int
+  arg value = .int
+  if value < 0 then return 0 - value
+  return value
+
+brute_gcd: procedure = .int
+  arg first = .int, second = .int
+  first = small_abs(first)
+  second = small_abs(second)
+  if first = 0 then return second
+  if second = 0 then return first
+  upper = first
+  if second < upper then upper = second
+  do candidate = upper to 1 by -1
+    if first <mod> candidate = 0 & second <mod> candidate = 0 then return candidate
+  end
+  return 1
+
+brute_lcm: procedure = .int
+  arg first = .int, second = .int
+  first = small_abs(first)
+  second = small_abs(second)
+  if first = 0 | second = 0 then return 0
+  step = first
+  if second > step then step = second
+  limit = first * second
+  do candidate = step to limit by step
+    if candidate <mod> first = 0 & candidate <mod> second = 0 then return candidate
+  end
+  return limit
+
+linear_isqrt: procedure = .int
+  arg value = .int
+  root = 0
+  do while (root + 1) * (root + 1) <= value
+    root = root + 1
+  end
+  return root
+
+simple_powmod: procedure = .int
+  arg base = .int, exponent = .int, modulus = .int
+  base = base <mod> modulus
+  if base < 0 then base = base + modulus
+  result = 1 <mod> modulus
+  do exponent
+    result = (result * base) <mod> modulus
+  end
+  return result
+
+test_gcd_grid: procedure = .int
+  failures = 0
+  do first = -32 to 32
+    do second = -32 to 32
+      expected = brute_gcd(first, second)
+      actual = rxint..gcd(first, second)
+      label = "gcd grid " || first || "," || second
+      failures = failures + numerictestsupport..check_int_equal(actual, expected, label)
+    end
+  end
+  return failures
+
+test_gcd_boundaries: procedure = .int
+  failures = 0
+  minimum = -9223372036854775807 - 1
+  maximum = 9223372036854775807
+  failures = failures + numerictestsupport..check_int_equal(rxint..gcd(minimum, maximum), 1, "gcd integer limits")
+  failures = failures + numerictestsupport..check_int_equal(rxint..gcd(minimum, 2), 2, "gcd minimum and two")
+  failures = failures + numerictestsupport..check_int_equal(rxint..gcd(7540113804746346429, 4660046610375530309), 1, "gcd consecutive Fibonacci")
+  failures = failures + numerictestsupport..check_bool(rxint..gcd(9876543210, 1234567890) = rxint..gcd(1234567890, 9876543210), "gcd argument symmetry")
+  return failures
+
+test_lcm_grid: procedure = .int
+  failures = 0
+  do first = -16 to 16
+    do second = -16 to 16
+      expected = brute_lcm(first, second)
+      actual = rxint..lcm(first, second)
+      label = "lcm grid " || first || "," || second
+      failures = failures + numerictestsupport..check_int_equal(actual, expected, label)
+    end
+  end
+  return failures
+
+test_lcm_boundaries: procedure = .int
+  failures = 0
+  minimum = -9223372036854775807 - 1
+  failures = failures + numerictestsupport..check_int_equal(rxint..lcm(minimum, 0), 0, "lcm minimum with zero")
+  failures = failures + numerictestsupport..check_int_equal(rxint..lcm(4611686018427387902, 2), 4611686018427387902, "lcm divide before multiply")
+  failures = failures + numerictestsupport..check_int_equal(rxint..lcm(3037000499, 3037000500), 9223372033963249500, "lcm adjacent representable boundary")
+  return failures
+
+test_isqrt_range: procedure = .int
+  failures = 0
+  do value = 0 to 4096
+    expected = linear_isqrt(value)
+    actual = rxint..isqrt(value)
+    label = "isqrt range " || value
+    failures = failures + numerictestsupport..check_int_equal(actual, expected, label)
+  end
+  return failures
+
+test_isqrt_boundaries: procedure = .int
+  failures = 0
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(0), 0, "isqrt zero")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(1), 1, "isqrt one")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(3), 1, "isqrt below two squared")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(4), 2, "isqrt two squared")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(5), 2, "isqrt above two squared")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(2147395599), 46339, "isqrt below 46340 squared")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(2147395600), 46340, "isqrt 46340 squared")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(2147395601), 46340, "isqrt above 46340 squared")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(9223372030926249000), 3037000498, "isqrt below maximum root squared")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(9223372030926249001), 3037000499, "isqrt maximum root squared")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(9223372030926249002), 3037000499, "isqrt above maximum root squared")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(9223372036854775807), 3037000499, "isqrt integer maximum")
+  return failures
+
+test_powmod_grid: procedure = .int
+  failures = 0
+  do base = -10 to 10
+    do exponent = 0 to 8
+      do modulus = 1 to 19
+        expected = simple_powmod(base, exponent, modulus)
+        actual = rxint..powmod(base, exponent, modulus)
+        label = "powmod grid " || base || "," || exponent || "," || modulus
+        failures = failures + numerictestsupport..check_int_equal(actual, expected, label)
+      end
+    end
+  end
+  return failures
+
+test_powmod_boundaries: procedure = .int
+  failures = 0
+  minimum = -9223372036854775807 - 1
+  maximum = 9223372036854775807
+  failures = failures + numerictestsupport..check_int_equal(rxint..powmod(0, 0, 1), 0, "powmod zero exponent modulus one")
+  failures = failures + numerictestsupport..check_int_equal(rxint..powmod(minimum, 2, 9223372036854775783), 625, "powmod minimum base")
+  failures = failures + numerictestsupport..check_int_equal(rxint..powmod(maximum, maximum, 9223372036854775783), 86762353606963200, "powmod maximum exponent")
+  failures = failures + numerictestsupport..check_int_equal(rxint..powmod(minimum, 123456789, 2147483647), 2147483643, "powmod negative normalization")
+  failures = failures + numerictestsupport..check_int_equal(rxint..powmod(3037000500, 3037000500, 9223372036854775783), 5694025313266612891, "powmod repeated doubling boundary")
+  return failures
+
+test_factorial_contract: procedure = .int
+  failures = 0
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(0), 1, "factorial zero")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(1), 1, "factorial one")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(2), 2, "factorial two")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(3), 6, "factorial three")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(4), 24, "factorial four")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(5), 120, "factorial five")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(6), 720, "factorial six")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(7), 5040, "factorial seven")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(8), 40320, "factorial eight")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(9), 362880, "factorial nine")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(10), 3628800, "factorial ten")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(11), 39916800, "factorial eleven")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(12), 479001600, "factorial twelve")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(13), 6227020800, "factorial thirteen")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(14), 87178291200, "factorial fourteen")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(15), 1307674368000, "factorial fifteen")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(16), 20922789888000, "factorial sixteen")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(17), 355687428096000, "factorial seventeen")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(18), 6402373705728000, "factorial eighteen")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(19), 121645100408832000, "factorial nineteen")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(20), 2432902008176640000, "factorial twenty")
+  return failures
+
+test_invalid_argument_signals: procedure = .int
+  failures = 0
+  do
+    ignored = rxint..isqrt(-1)
+    say "FAIL: integer contract isqrt negative did not signal"
+    failures = failures + 1
+  on signal invalid_arguments as problem
+    failures = failures + numerictestsupport..check_bool(problem.name() = "INVALID_ARGUMENTS" & pos("RXINT.ISQRT", problem.message()) > 0, "isqrt negative signal identity")
+  end
+  do
+    ignored = rxint..powmod(2, -1, 5)
+    say "FAIL: integer contract powmod negative exponent did not signal"
+    failures = failures + 1
+  on signal invalid_arguments as problem
+    failures = failures + numerictestsupport..check_bool(problem.name() = "INVALID_ARGUMENTS" & pos("RXINT.POWMOD", problem.message()) > 0, "powmod negative exponent signal identity")
+  end
+  do
+    ignored = rxint..powmod(2, 3, 0)
+    say "FAIL: integer contract powmod zero modulus did not signal"
+    failures = failures + 1
+  on signal invalid_arguments as problem
+    failures = failures + numerictestsupport..check_bool(problem.name() = "INVALID_ARGUMENTS" & pos("RXINT.POWMOD", problem.message()) > 0, "powmod zero modulus signal identity")
+  end
+  do
+    ignored = rxint..powmod(2, 3, -1)
+    say "FAIL: integer contract powmod negative modulus did not signal"
+    failures = failures + 1
+  on signal invalid_arguments as problem
+    failures = failures + numerictestsupport..check_bool(problem.name() = "INVALID_ARGUMENTS" & pos("RXINT.POWMOD", problem.message()) > 0, "powmod negative modulus signal identity")
+  end
+  do
+    ignored = rxint..factorial(-1)
+    say "FAIL: integer contract factorial negative did not signal"
+    failures = failures + 1
+  on signal invalid_arguments as problem
+    failures = failures + numerictestsupport..check_bool(problem.name() = "INVALID_ARGUMENTS" & pos("RXINT.FACTORIAL", problem.message()) > 0, "factorial negative signal identity")
+  end
+  return failures
+
+test_overflow_signals: procedure = .int
+  failures = 0
+  minimum = -9223372036854775807 - 1
+  do
+    ignored = rxint..gcd(minimum, 0)
+    say "FAIL: integer contract gcd minimum did not signal"
+    failures = failures + 1
+  on signal overflow_underflow as problem
+    failures = failures + numerictestsupport..check_bool(problem.name() = "OVERFLOW_UNDERFLOW" & pos("RXINT.GCD", problem.message()) > 0, "gcd overflow signal identity")
+  end
+  do
+    ignored = rxint..lcm(minimum, 1)
+    say "FAIL: integer contract lcm minimum did not signal"
+    failures = failures + 1
+  on signal overflow_underflow as problem
+    failures = failures + numerictestsupport..check_bool(problem.name() = "OVERFLOW_UNDERFLOW" & pos("RXINT.LCM", problem.message()) > 0, "lcm minimum signal identity")
+  end
+  do
+    ignored = rxint..lcm(3037000500, 3037000501)
+    say "FAIL: integer contract lcm boundary did not signal"
+    failures = failures + 1
+  on signal overflow_underflow as problem
+    if problem.name() \= "OVERFLOW_UNDERFLOW" | pos("RXINT.LCM", problem.message()) = 0 then do
+      say "FAIL: integer contract lcm boundary signal identity got" problem.name() problem.message()
+      failures = failures + 1
+    end
+  end
+  do
+    ignored = rxint..factorial(21)
+    say "FAIL: integer contract factorial 21 did not signal"
+    failures = failures + 1
+  on signal overflow_underflow as problem
+    failures = failures + numerictestsupport..check_bool(problem.name() = "OVERFLOW_UNDERFLOW" & pos("RXINT.FACTORIAL", problem.message()) > 0, "factorial 21 signal identity")
+  end
+  do
+    ignored = rxint..factorial(9223372036854775807)
+    say "FAIL: integer contract factorial maximum did not signal"
+    failures = failures + 1
+  on signal overflow_underflow as problem
+    failures = failures + numerictestsupport..check_bool(problem.name() = "OVERFLOW_UNDERFLOW" & pos("RXINT.FACTORIAL", problem.message()) > 0, "factorial maximum signal identity")
+  end
+  return failures
+
+main: procedure = .int
+  failures = 0
+  failures = failures + test_gcd_grid()
+  failures = failures + test_gcd_boundaries()
+  failures = failures + test_lcm_grid()
+  failures = failures + test_lcm_boundaries()
+  failures = failures + test_isqrt_range()
+  failures = failures + test_isqrt_boundaries()
+  failures = failures + test_powmod_grid()
+  failures = failures + test_powmod_boundaries()
+  failures = failures + test_factorial_contract()
+  failures = failures + test_invalid_argument_signals()
+  failures = failures + test_overflow_signals()
+
+  if failures > 0 then return 1
+  say "PASS: RCC-5C exact integer contract"
+  return 0

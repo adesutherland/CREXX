@@ -24,7 +24,6 @@ main() .locals=5
    .srcstep 4 4 17 "inline_test_binary_arg_return.crexx" 16 3 14 "  return data"
    .traceevent "V" 6 "R" "X" "r" 3 6 6 0 "data" ""
    bcopy r4,r3
-   br l58bexprend
 l58bexprend:
    endlife r3
    .meta "inline_test_binary_arg_return.main.data"

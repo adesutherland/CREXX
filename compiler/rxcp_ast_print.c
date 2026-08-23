@@ -507,6 +507,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case OP_BINARY_FOR:
             case OP_BINARY_LENGTH:
             case OP_BINARY_COMPARE:
+            case OP_PACKED_AT:
             case OP_SIZEOF:
             case OP_MAKE_ARRAY:
             case NOVAL:

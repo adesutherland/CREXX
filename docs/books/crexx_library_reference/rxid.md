@@ -1,39 +1,31 @@
-# The .rxid identifier generator
+# Identifier generation with `rxid`
 
-## Identifier Types
+The optional Level G `rxid` native provider supplies six zero-argument string
+generators:
 
-UUID (Version 4)
-: Random-based Universally Unique Identifier as specified in RFC 4122.
-Uses a cryptographically secure pseudo-random number generator (CSPRNG) to produce 128-bit values with no meaningful embedded metadata.
+| Procedure | Result |
+|---|---|
+| `uuid4()` | 36-character random UUID with version 4 and RFC variant bits. |
+| `uuid7()` | 36-character time-ordered UUID with version 7 and RFC variant bits. |
+| `ulid()` | 26-character time-ordered Crockford Base32 ULID. |
+| `nanoid()` | 21-character URL-safe Nano ID. |
+| `snowflake()` | Decimal text representation of a time/node/sequence identifier. |
+| `base58()` | Bitcoin-alphabet Base58 text generated from random bytes. |
 
-Usage:
-Ideal when you need a strong, globally unique value without exposing generation time or location.
-Function: rxuuid.uuid
+```rexx
+options levelg
+import rxid
 
-UUIDt (Simple Random)
-: A simple, quick-to-generate version of UUIDv4 that uses the rand() function instead of a CSPRNG.
-This makes it faster but not cryptographically secure.
-Best suited for non-security-critical use cases such as temporary IDs or internal testing.
+request_id = rxid..uuid4()
+ordered_id = rxid..uuid7()
+```
 
-Usage:
-Use for lightweight operations where uniqueness is important but absolute security is not.
-Function: rxuuid.uuidt
+UUIDv4, UUIDv7, ULID, Nano ID, and Base58 randomness comes from the platform
+cryptographically secure random source. UUIDv7 and ULID generation serialize
+their monotonic same-millisecond state; Snowflake maintains its own synchronized
+sequence state. A platform random-source failure raises `FAILURE`.
 
-UUIDv7
-: A time-ordered UUID format defined in RFC 9562.
-Encodes the current Unix timestamp in milliseconds plus random bits for uniqueness.
-Maintains lexicographical ordering by creation time, making it highly efficient for database indexing and sorting.
-
-Usage:
-Perfect for scenarios where chronological ordering and high performance in queries are required, such as event logs or time-series data.
-Function: idlib.uuidv7
-
-ULID
-: The Universally Unique Lexicographically Sortable Identifier.
-Similar to UUIDv7, but uses a Crockford’s Base32 encoding, producing a 26-character string that is URL-safe and lexicographically sortable.
-Includes a 48-bit timestamp (millisecond precision) and 80 random bits.
-
-Usage:
-Great for human-friendly IDs in APIs, URLs, and logs, where sorting by generation time is required but readability matters.
-Function: idlib.ulid
-
+The pre-release private `id._*`, `rxuuid`, and `idlib` draft names have been
+retired. Import `rxid` and use the public names above. The provider is installed
+in dynamic and static forms and is found automatically from RXBIN dependency
+metadata; no Rexx wrapper or explicit VM plugin list is required.

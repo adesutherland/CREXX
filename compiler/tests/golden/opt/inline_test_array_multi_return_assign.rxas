@@ -42,7 +42,6 @@ main() .locals=8
    unlink r6
    .traceevent "O" 4 "R" "S" "r" 5 9 9 0 "" ""
    scopy r7,r5
-   br l183bexprend
 l183bexprend:
    endlife r4
    say r7
@@ -69,7 +68,6 @@ l183bexprend:
    unlink r4
    .traceevent "O" 4 "R" "S" "r" 5 14 14 0 "" ""
    scopy r3,r5
-   br l260bexprend
 l260bexprend:
    endlife r7
    say r3
@@ -96,7 +94,6 @@ l260bexprend:
    unlink r4
    .traceevent "O" 4 "R" "S" "r" 5 19 19 0 "" ""
    scopy r3,r5
-   br l337bexprend
 l337bexprend:
    endlife r7
    say r3

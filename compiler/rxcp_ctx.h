@@ -166,6 +166,7 @@ struct imported_func {
     char *type;
     char *args;
     char *implementation;
+    char *provider_id; /* Stable RXPA provider ID, or NULL for bytecode/legacy imports. */
     Context *context;
     char is_variable; /* 0=function, 1=global variable */
     char is_task_callable; /* Sealed Gate F callable contract. */
@@ -365,6 +366,7 @@ char *meta_narg(ASTNode *node);
 
 /* Static Linked Plugin Support */
 struct static_linked_function {
+    char *provider_id;
     char *name;
     char *option;
     char *type;

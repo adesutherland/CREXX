@@ -32,9 +32,45 @@ does not compete with the project ordering in `docs/ROADMAP.md`.
 | --- | --- | --- |
 | QA-A test readiness | complete | solution-point review complete, direct gaps closed, enduring CTest manifest and frozen platform runners ready |
 | QA-B independent Mac closeout | complete | correctness, sanitizer, stress, Release, install and portable-package proof pass; Adrian waived the unchanged quiet-AC replay on 2026-08-18 |
-| QA-C Linux qualification | ready, not run | clean frozen build, conformance matrix and install/package proof retained |
+| QA-C Linux qualification | delegated to GitHub final-head closeout | Build CREXX runs the Linux MinSizeRel build, CTest and package path; Sanitizer QA runs Linux ASan/LSan. Adrian selected these workflows as the closeout authority on 2026-08-23. |
 | QA-D Windows qualification | complete | exact clean commit passed MSVC, Clang and GCC conformance, full CTest, TLS, stress, install and ZIP-package proof |
 | QA-E publication decision | complete: published as initial | corrected commit `53b3de77a` passed the four-platform Build CREXX matrix, development-snapshot publication and CodeQL; later native-host evidence can still block or qualify it |
+
+## 2026-08-23 Linux sanitizer and final Debug record
+
+The supported Linux ASan/LSan build and complete 2,363-test gate pass with leak
+detection enabled on exact commit
+`e3de72939df0dacf22c0793371233ed439227437`; local evidence is retained at
+`cmake-build-debugasan/asan-logs/20260823-074630-full`. GitHub Sanitizer QA run
+[32623796998](https://github.com/adesutherland/CREXX/actions/runs/32623796998)
+passes both Linux x64 ASan/LSan and macOS arm64 ASan on that commit. Apple ASan
+does not provide supported leak detection on the maintained macOS host, so the
+Linux lane is the leak authority while macOS supplies Apple-platform address
+safety coverage.
+
+The next ordinary full Debug replay exposed a process-channel cancellation
+race rather than a sanitizer defect. The caller and dispatch threads could
+both write a `CANCEL` frame for one request; a late duplicate could terminate
+the child after it had published the cancelled result, allowing queued
+replacement work to be handed to a process that was already exiting. Commit
+`c87809d2b463c43fcf8da981c3c8cf75c926828a` makes the dispatch thread the sole
+per-request control-frame writer, suppresses invocation when cancellation wins
+before dispatch, and retires a worker after a delivered cancellation so a late
+in-flight frame cannot enter its next request.
+
+The final implementation passes the three process crash/cancel/replacement
+tests in ordinary Debug and leak-enabled Linux ASan/LSan, plus a 20-lane
+campaign totalling 10,000 executions of the formerly failing `rxtvm` fixture.
+The complete ordinary Debug build and 2,363/2,363 CTest gate pass at
+`cmake-build-debug/asan-logs/20260823-100548-full`; all four cREXX-RAG HTTP
+cells and both process-channel VM variants pass within that run.
+
+Final-head Release and platform coverage for this closeout is delegated to the
+GitHub Build CREXX workflow, which runs the MinSizeRel build, CTest and package
+path across Linux, macOS and Windows. Final-head sanitizer coverage is
+delegated to GitHub Sanitizer QA, with Linux x64 ASan/LSan and macOS arm64
+ASan. No reproducible product or sanitizer defect from this campaign remains
+open.
 
 On 2026-08-16 Adrian selected publication as **initial**, with GitHub Actions
 as the first portable validation and native Linux and Windows qualification to

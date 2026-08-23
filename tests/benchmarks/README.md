@@ -24,7 +24,7 @@ timed I/O in their kernels.
 | `awfy_havlak.crexx` | Are We Fast Yet? / Havlak at pinned commit `74306fec151070fd07157cefeacf19e7e0bcdc89` | large control-flow graph construction, loop recognition, union-find and loop-forest nesting through stable handles |
 | `awfy_json.crexx` | Are We Fast Yet? / Json at pinned commit `74306fec151070fd07157cefeacf19e7e0bcdc89` | complete 25,820-byte RAP parse and verification through the indexed `rxjson` document surface |
 | `awfy_queens.crexx` | Are We Fast Yet? / SOM | recursive search, object attributes and boolean arrays |
-| `awfy_nbody.crexx` | Are We Fast Yet? / Benchmarks Game | floating-point object access and disclosed native `rxmath` square root |
+| `awfy_nbody.crexx` | Are We Fast Yet? / Benchmarks Game | floating-point object access and disclosed native `rxfloat` provider through the `rxmath` compatibility namespace |
 | `json_parser.crexx` | deterministic RAP-shaped JSON fixture | parser/text processing through the current `rxjson` surface |
 | `json_parse.crexx` | v2 deterministic RAP-shaped JSON fixture | fresh indexed-document construction and validation |
 | `json_query.crexx` | v2 deterministic RAP-shaped JSON fixture | parse-once indexed member/count traversal |
@@ -97,9 +97,10 @@ product result.
 published collision totals for 2, 10, 100, 200, 250, 500 and 1,000 aircraft.
 It preserves value-semantics vector, aircraft, motion and collision records,
 the moving-point quadratic collision test, recursive voxel enumeration and
-ordered-map traversal. The port uses the existing `rxmath` `sin`, `cos` and
-`sqrt` functions and the maintained Level B `floattrunc` routine for the
-upstream voxel hash's truncation-toward-zero rule.
+ordered-map traversal. The port uses the `rxmath` compatibility names for
+`sin`, `cos` and `sqrt`; their declarations resolve automatically to the
+canonical native `rxfloat` provider. It also uses the maintained Level B
+`floattrunc` routine for the upstream voxel hash's truncation-toward-zero rule.
 
 Java object identity in the upstream red/black maps is lowered to stable
 integer node and occurrence handles in benchmark-private typed arrays. The
@@ -288,8 +289,9 @@ the current optimizer expansion is an observed result, not comparable noise.
 
 The qualified CD reserve lane is available explicitly as `--benchmark cd` and
 is likewise excluded from the historical default set. Every process-smoke
-sample runs all 200 frames at the bounded published size of 10 aircraft and
-loads the disclosed `rxmath` plugin before the standard library.
+sample runs all 200 frames at the bounded published size of 10 aircraft. The
+RXBIN metadata resolves the disclosed `rxmath` compatibility calls through
+`rxfloat`; the runner supplies no plugin argument.
 
 The qualified Havlak reserve lane is available explicitly as
 `--benchmark havlak` and remains outside the historical default set. Each

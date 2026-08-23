@@ -134,6 +134,8 @@ crexx_add_rxdas_roundtrip(
 crexx_add_rxdas_roundtrip(
         NAME rxdas_roundtrip_imported
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_disassembler_imported.rxas
+        EXPECT_DISASSEMBLY_TEXT_1 ".provider.optional"
+        EXPECT_DISASSEMBLY_TEXT_2 "rx_test_words"
 )
 
 crexx_add_rxdas_roundtrip(
