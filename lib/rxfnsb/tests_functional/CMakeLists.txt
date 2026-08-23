@@ -424,7 +424,9 @@ set_tests_properties(ts_trace_noopt ts_trace_opt
 set_tests_properties(ts_version_noopt ts_version_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: version")
 set_tests_properties(ts_rxqueue_noopt ts_rxqueue_opt
-        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxqueue shared state")
+        PROPERTIES
+        PASS_REGULAR_EXPRESSION "PASS: rxqueue shared state"
+        RESOURCE_LOCK rxqueue_export_file)
 set_tests_properties(ts_sourceinfo_noopt ts_sourceinfo_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: sourceinfo")
 set_tests_properties(ts_binary_noopt ts_binary_opt

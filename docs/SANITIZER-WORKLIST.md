@@ -14,6 +14,35 @@ release-complete claim until that gate passes.
 
 ## Qualification infrastructure repairs
 
+### SAN-QA-007 — RXQUEUE export variants share a temporary file
+
+Status: repaired; the exact macOS arm64 ASan failure is retained and focused
+normal-Debug plus Linux ASan/LSan proof is green, with complete exact-commit
+qualification pending.
+
+- Scope: CTest scheduling for `ts_rxqueue_noopt` and `ts_rxqueue_opt` only;
+  queue implementation, export/import behavior, test operations, and assertions
+  are unchanged.
+- Failure: macOS arm64 Sanitizer QA run
+  [32618328641](https://github.com/adesutherland/CREXX/actions/runs/32618328641)
+  started both variants together. They then reported missing imported or
+  replaced `REPORT` entries because each uses `ts_rxqueue_export.txt` in their
+  shared working directory.
+- Diagnosis: the two variants are individually process-local except for that
+  fixed export file. Their overlapping `EXPORT`, `IMPORT`, replacement, and
+  `erasefile` operations can consume or remove the other variant's data.
+- Repair: assign both tests the narrow `rxqueue_export_file` CTest resource
+  lock so the variants cannot overlap while unrelated tests remain parallel.
+- Focused proof: with eight CTest jobs requested, both variants pass ordinary
+  Debug at `cmake-build-debug/asan-logs/20260823-065551-ctest` and leak-enabled
+  Linux ASan/LSan at
+  `cmake-build-debugasan/asan-logs/20260823-074553-ctest`. CTest starts the
+  second variant only after the first finishes, proving the generated resource
+  lock is active rather than relying on incidental timing.
+- Acceptance: both variants must pass together while requesting parallel CTest
+  execution in ordinary Debug and Linux ASan/LSan, followed by complete Linux
+  and GitHub sanitizer gates on the committed repair.
+
 ### SAN-QA-006 — RXPA signature matrix exceeds short ASan timeout
 
 Status: repaired; focused normal-Debug and Linux ASan/LSan replays are green,
