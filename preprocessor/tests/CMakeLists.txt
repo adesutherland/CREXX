@@ -39,7 +39,10 @@ if (ENABLE_PARSER_MODE)
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxpp_sh_srcmap
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_sh_srcmap.cmake
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    set_tests_properties(rxpp_sh_srcmap PROPERTIES LABELS "preprocessor;syntax_highlighting;srcmap")
+    set_tests_properties(rxpp_sh_srcmap PROPERTIES
+            LABELS "preprocessor;syntax_highlighting;srcmap"
+            RESOURCE_LOCK syntax_highlighting_parser
+            RUN_SERIAL TRUE)
 
     add_test(NAME rxpp_sh_default_lookup
              COMMAND ${CMAKE_COMMAND}
@@ -52,7 +55,10 @@ if (ENABLE_PARSER_MODE)
                  -DRXPP_SH_USE_ENV=OFF
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_sh_srcmap.cmake
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    set_tests_properties(rxpp_sh_default_lookup PROPERTIES LABELS "preprocessor;syntax_highlighting;srcmap")
+    set_tests_properties(rxpp_sh_default_lookup PROPERTIES
+            LABELS "preprocessor;syntax_highlighting;srcmap"
+            RESOURCE_LOCK syntax_highlighting_parser
+            RUN_SERIAL TRUE)
 
     add_test(NAME rxpp_sh_tokens
              COMMAND ${CMAKE_COMMAND}
@@ -64,7 +70,10 @@ if (ENABLE_PARSER_MODE)
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxpp_sh_tokens
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_sh_tokens.cmake
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    set_tests_properties(rxpp_sh_tokens PROPERTIES LABELS "preprocessor;syntax_highlighting")
+    set_tests_properties(rxpp_sh_tokens PROPERTIES
+            LABELS "preprocessor;syntax_highlighting"
+            RESOURCE_LOCK syntax_highlighting_parser
+            RUN_SERIAL TRUE)
 endif()
 
 add_test(NAME rxpp_diagnostics

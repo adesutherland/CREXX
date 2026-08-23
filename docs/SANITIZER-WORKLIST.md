@@ -14,6 +14,60 @@ release-complete claim until that gate passes.
 
 ## Qualification infrastructure repairs
 
+### SAN-QA-005 — parser snapshot tests require full-suite isolation
+
+Status: repaired; focused normal-Debug and Linux ASan/LSan replays are green,
+with complete exact-commit qualification pending.
+
+- Scope: CTest scheduling for the three preprocessor syntax-highlighting tests;
+  parser, preprocessor, and compiler behavior is unchanged.
+- Failure: the full leak-enabled Linux ASan/LSan run at
+  `cmake-build-debugasan/asan-logs/20260823-011709-full` captured only the
+  asynchronous emergency parse tree for `rxpp_sh_srcmap` while CPU-heavy
+  compiler and E6 measurement tests were active. There was no sanitizer
+  diagnostic, crash, or nonzero `parser_tester` result.
+- Repair: apply the existing `syntax_highlighting_parser` resource lock and
+  `RUN_SERIAL` isolation used by compiler parser-snapshot tests to all three
+  preprocessor `parser_tester` contracts.
+- Focused proof: `rxpp_sh_srcmap` passes ordinary Debug in 1.86 seconds at
+  `cmake-build-debug/asan-logs/20260823-024503-ctest` and leak-enabled Linux
+  ASan/LSan in 4.57 seconds at
+  `cmake-build-debugasan/asan-logs/20260823-024513-ctest`. After the repair,
+  the complete three-test parser panel passes while requesting eight CTest
+  jobs in both ordinary Debug and leak-enabled Linux ASan/LSan as part of the
+  nine-test panels at `20260823-025705-ctest` and `20260823-025810-ctest`.
+- Acceptance: the parser-mode tests must pass in the complete supported Linux
+  sanitizer gate with their serial property present.
+
+### SAN-QA-004 — E6 measurements contend under parallel ASan
+
+Status: repaired; the exact six-cell Linux ASan/LSan replay is green, with
+complete exact-commit qualification pending.
+
+- Scope: CTest scheduling for E6 performance-measurement cells only; benchmark
+  workloads, VM behavior, iteration counts, and 120-second limits are
+  unchanged.
+- Failure: in the full leak-enabled Linux run at
+  `cmake-build-debugasan/asan-logs/20260823-011709-full`, three concurrent
+  one-worker E6 cells timed out at 120 seconds. A fourth completed in 103.57
+  seconds, showing severe shared-host distortion.
+- Diagnosis: the exact six one-worker spin/churn cells pass serially under
+  leak-enabled Linux ASan/LSan in 12.68 to 40.11 seconds each, with all six
+  completing in 172.31 seconds at
+  `cmake-build-debugasan/asan-logs/20260823-024140-ctest`.
+- Repair: mark every E6 performance-measurement cell `RUN_SERIAL`. These tests
+  are intended to measure scale; overlap with another benchmark or a
+  compiler-heavy test invalidates both their recorded wall time and their
+  timeout contract.
+- Focused proof: a combined six-cell E6 plus three-test parser panel passes
+  9/9 while requesting eight CTest jobs in ordinary Debug at
+  `cmake-build-debug/asan-logs/20260823-025705-ctest` and leak-enabled Linux
+  ASan/LSan at `cmake-build-debugasan/asan-logs/20260823-025810-ctest`. CTest's
+  generated metadata reports `RUN_SERIAL=true` for all 24 E6 cells; the ASan
+  panel completed in 180.41 seconds with no overlap and no timeout change.
+- Acceptance: the complete supported Linux sanitizer gate must pass without
+  increasing the individual test timeout.
+
 ### SAN-QA-003 — ASan fake stack defeats POSIX doorbell slot lookup
 
 Status: repaired; focused normal-Debug and Linux ASan/LSan qualification is

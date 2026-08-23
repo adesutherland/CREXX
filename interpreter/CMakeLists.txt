@@ -2229,6 +2229,11 @@ if(BUILD_TESTING AND
                         PROPERTIES
                         LABELS "interpreter;perf3;performance-measurement;gate-e;e6;private;scale;${_crexx_e6_workload};${_crexx_e5_doorbell_platform_label}"
                         PROCESSORS ${_crexx_e6_workers}
+                        # These are timing-sensitive performance measurements.
+                        # Running multiple cells beside compiler-heavy tests makes
+                        # their timeout and recorded wall time meaningless,
+                        # especially under sanitizer instrumentation.
+                        RUN_SERIAL TRUE
                         TIMEOUT 120)
             endforeach()
         endforeach()
