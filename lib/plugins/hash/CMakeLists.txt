@@ -41,11 +41,12 @@ if(BUILD_TESTING)
                 SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rx_hash_test.crexx
                 TARGET_GROUP rx_hash_test
                 RUNNER ${_rx_hash_runner}
+                PASS_TEST_NAME_ARGUMENT
                 IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
                 DEPENDS library _hash _hash_static
                 RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
                 TEST_LABELS "library;plugins;rxpa;hash;sha256;checksum"
-                REQUIRED_OUTPUT_REGEX "PASS: rxhash digest and checksum vectors"
+                REQUIRED_OUTPUT_REGEX "PASS: rxhash complete SHA-256 family and checksum vectors"
                 FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
     endforeach()
 endif()

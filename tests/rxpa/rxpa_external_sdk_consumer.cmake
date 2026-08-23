@@ -9,6 +9,8 @@ set(command_log "${WORK_ROOT}/commands-and-results.txt")
 set(manifest "${WORK_ROOT}/artifact-manifest.txt")
 
 file(MAKE_DIRECTORY "${consumer_source}")
+file(WRITE "${WORK_ROOT}/rx-hash-installed-fixture.bin" "abc")
+file(WRITE "${consumer_source}/rx-hash-installed-fixture.bin" "abc")
 foreach(consumer_file IN ITEMS
         CMakeLists.txt
         sdk_probe.c
@@ -182,7 +184,7 @@ foreach(vm IN ITEMS "${rxvm}" "${rxbvm}")
                         "${prefix}/bin/library"
                 WORKING_DIRECTORY "${WORK_ROOT}")
         if(NOT last_stdout STREQUAL
-           "EF7E301027F931DFBA06C7DED4EF305797F43CC115A664F9AF9B57D08C3172C2\n")
+           "PASS: installed rx_hash complete SHA-256 family\n")
             message(FATAL_ERROR
                     "Installed rx_hash output mismatch for ${vm} ${mode}:\n${last_stdout}")
         endif()
@@ -196,7 +198,7 @@ run_checked("run native-packaged installed rx_hash consumer"
         COMMAND "${consumer_source}/rx_hash_installed${EXE_SUFFIX}"
         WORKING_DIRECTORY "${consumer_source}")
 if(NOT last_stdout STREQUAL
-   "EF7E301027F931DFBA06C7DED4EF305797F43CC115A664F9AF9B57D08C3172C2\n")
+   "PASS: installed rx_hash complete SHA-256 family\n")
     message(FATAL_ERROR "Installed native rx_hash output mismatch:\n${last_stdout}")
 endif()
 
