@@ -157,6 +157,7 @@ typedef struct process_request {
     int64_t terminal_state;
     int64_t terminal_error;
     unsigned char cancel_kind; /* 1 explicit, 2 deadline, 3 shutdown */
+    unsigned char cancel_sent;
     unsigned char started;
     unsigned char terminal;
     unsigned char queued;
@@ -641,6 +642,9 @@ static PROCESS_THREAD_RETURN process_dispatch_run(void *opaque) {
         process_request *request;
         int test_crash_phase;
         int sent;
+        int cancel_before_invoke;
+        int signal_cancel;
+        int retire_worker;
         int transport_lost = 0;
         rxvm_process_frame result;
         memset(&result, 0, sizeof(result));
@@ -677,18 +681,27 @@ static PROCESS_THREAD_RETURN process_dispatch_run(void *opaque) {
             !process_worker_start_process(worker)) {
             transport_lost = 1;
         }
+        process_mutex_lock(&shared->mutex);
+        cancel_before_invoke = request->cancel_kind != 0u;
+        process_mutex_unlock(&shared->mutex);
+        if (!transport_lost && cancel_before_invoke) {
+            process_publish_terminal(worker, request, 0, 0);
+            continue;
+        }
         sent = !transport_lost && process_send_frame(
                 worker, RXVM_PROCESS_FRAME_INVOKE, request->request_id,
                 request->envelope, request->envelope_length);
         if (!sent) transport_lost = 1;
         if (sent) {
-            int cancelled;
             process_mutex_lock(&shared->mutex);
-            cancelled = request->cancel_kind != 0u;
+            signal_cancel = request->cancel_kind != 0u &&
+                            !request->cancel_sent;
+            if (signal_cancel) request->cancel_sent = 1u;
             process_mutex_unlock(&shared->mutex);
-            if (cancelled) {
-                (void)process_send_frame(worker, RXVM_PROCESS_FRAME_CANCEL,
-                                         request->request_id, 0, 0u);
+            if (signal_cancel && !process_send_frame(
+                    worker, RXVM_PROCESS_FRAME_CANCEL,
+                    request->request_id, 0, 0u)) {
+                transport_lost = 1;
             }
         }
         while (!transport_lost && !result.type) {
@@ -721,26 +734,42 @@ static PROCESS_THREAD_RETURN process_dispatch_run(void *opaque) {
                     transport_lost = 1;
                 }
             }
-            process_mutex_lock(&shared->mutex);
-            if (request->cancel_kind && request->cancel_requested_at &&
-                process_now() - request->cancel_requested_at >=
-                        PROCESS_CANCEL_GRACE_US) {
-                atomic_store_explicit(
-                        &worker->process_cancelled, 1u,
-                        memory_order_release);
-                rxvm_byte_endpoint_wake(worker->input);
-                rxvm_byte_endpoint_wake(worker->output);
+            if (!result.type) {
+                process_mutex_lock(&shared->mutex);
+                signal_cancel = request->cancel_kind != 0u &&
+                                !request->cancel_sent;
+                if (signal_cancel) request->cancel_sent = 1u;
+                process_mutex_unlock(&shared->mutex);
+                if (signal_cancel && !process_send_frame(
+                        worker, RXVM_PROCESS_FRAME_CANCEL,
+                        request->request_id, 0, 0u)) {
+                    transport_lost = 1;
+                }
+                process_mutex_lock(&shared->mutex);
+                if (request->cancel_kind && request->cancel_requested_at &&
+                    process_now() - request->cancel_requested_at >=
+                            PROCESS_CANCEL_GRACE_US) {
+                    atomic_store_explicit(
+                            &worker->process_cancelled, 1u,
+                            memory_order_release);
+                    rxvm_byte_endpoint_wake(worker->input);
+                    rxvm_byte_endpoint_wake(worker->output);
+                }
+                if (atomic_load_explicit(&worker->monitor_done,
+                                         memory_order_acquire)) {
+                    transport_lost = 1;
+                }
+                process_mutex_unlock(&shared->mutex);
             }
-            if (atomic_load_explicit(&worker->monitor_done,
-                                     memory_order_acquire) && !result.type) {
-                transport_lost = 1;
-            }
-            process_mutex_unlock(&shared->mutex);
         }
+        retire_worker = request->cancel_sent != 0u;
         process_publish_terminal(
                 worker, request, result.type ? &result : 0, transport_lost);
         rxvm_process_frame_free(&result);
-        if (transport_lost ||
+        /* A CANCEL can remain unread if execution becomes terminal while the
+         * frame is in flight.  Retire the worker after delivering one so a
+         * stale control frame can never be consumed as the next request. */
+        if (transport_lost || retire_worker ||
             atomic_load_explicit(&worker->process_cancelled,
                                  memory_order_acquire)) {
             process_worker_cleanup_process(worker, 1);
@@ -790,9 +819,7 @@ static void process_publish_queued_cancel(process_request *request,
 }
 
 static void process_request_cancel_locked(process_request *request,
-                                          unsigned char kind,
-                                          process_worker **signal_out) {
-    if (signal_out) *signal_out = 0;
+                                          unsigned char kind) {
     if (request->terminal || request->cancel_kind) return;
     if (request->queued) {
         process_publish_queued_cancel(request, kind);
@@ -801,59 +828,18 @@ static void process_request_cancel_locked(process_request *request,
     request->cancel_kind = kind;
     request->cancel_requested_at = process_now();
     if (!request->cancel_requested_at) request->cancel_requested_at = 1u;
-    if (signal_out) *signal_out = request->worker;
-}
-
-static void process_signal_cancel(process_worker *worker,
-                                  uint64_t request_id) {
-    if (worker) {
-        (void)process_send_frame(worker, RXVM_PROCESS_FRAME_CANCEL,
-                                 request_id, 0, 0u);
-    }
+    process_condition_broadcast(&request->owner->shared->changed);
 }
 
 static void process_expire_scope(process_channel *channel) {
     process_request *request;
-    process_worker **workers = 0;
-    uint64_t *request_ids = 0;
-    size_t count = 0u;
-    size_t capacity = 0u;
     if (!channel || !channel->is_scope || !channel->deadline ||
         process_remaining(channel->deadline) != 0) return;
     process_mutex_lock(&channel->shared->mutex);
     for (request = channel->requests; request; request = request->owner_next) {
-        process_worker *worker = 0;
-        process_request_cancel_locked(request, 2u, &worker);
-        if (worker) {
-            if (count == capacity) {
-                size_t next = capacity ? capacity * 2u : 4u;
-                process_worker **new_workers = (process_worker **)realloc(
-                        workers, next * sizeof(*workers));
-                uint64_t *new_ids = (uint64_t *)realloc(
-                        request_ids, next * sizeof(*request_ids));
-                if (!new_workers || !new_ids) {
-                    free(new_workers ? new_workers : workers);
-                    free(new_ids ? new_ids : request_ids);
-                    workers = 0;
-                    request_ids = 0;
-                    count = 0u;
-                    break;
-                }
-                workers = new_workers;
-                request_ids = new_ids;
-                capacity = next;
-            }
-            workers[count] = worker;
-            request_ids[count++] = request->request_id;
-        }
+        process_request_cancel_locked(request, 2u);
     }
     process_mutex_unlock(&channel->shared->mutex);
-    while (count) {
-        count--;
-        process_signal_cancel(workers[count], request_ids[count]);
-    }
-    free(workers);
-    free(request_ids);
 }
 
 static rxvm_channel_status process_open(
@@ -1244,7 +1230,6 @@ static rxvm_channel_status process_cancel(void *channel_state,
                                           size_t reason_length) {
     process_channel *channel = (process_channel *)channel_state;
     process_request *request = (process_request *)request_state;
-    process_worker *worker = 0;
     (void)reason;
     (void)reason_length;
     if (!channel || !request || request->owner != channel) {
@@ -1255,9 +1240,8 @@ static rxvm_channel_status process_cancel(void *channel_state,
         process_mutex_unlock(&channel->shared->mutex);
         return RXVM_CHANNEL_ALREADY_TERMINAL;
     }
-    process_request_cancel_locked(request, 1u, &worker);
+    process_request_cancel_locked(request, 1u);
     process_mutex_unlock(&channel->shared->mutex);
-    process_signal_cancel(worker, request->request_id);
     return RXVM_CHANNEL_OK;
 }
 
@@ -1266,20 +1250,16 @@ static void process_cancel_channel(process_channel *channel,
     process_request *request;
     if (!channel) return;
     for (;;) {
-        process_worker *worker = 0;
-        uint64_t request_id = 0u;
         process_mutex_lock(&channel->shared->mutex);
         for (request = channel->requests; request;
              request = request->owner_next) {
             if (!request->terminal && !request->cancel_kind) {
-                process_request_cancel_locked(request, kind, &worker);
-                request_id = request->request_id;
+                process_request_cancel_locked(request, kind);
                 break;
             }
         }
         process_mutex_unlock(&channel->shared->mutex);
         if (!request) break;
-        process_signal_cancel(worker, request_id);
     }
 }
 
