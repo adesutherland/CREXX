@@ -151,6 +151,36 @@ exposed the defect is green, with complete exact-commit qualification pending.
 
 ## Live items
 
+### SAN-005 — linked-list test exits with owned nodes
+
+Status: repaired using the plugin's documented teardown; focused Linux Debug
+and ASan/LSan qualification is green, with the complete supported Linux gate
+pending.
+
+- Surface: the optimized and unoptimized linked-runtime variants of
+  `lib/plugins/llist/llist_test.crexx`; plugin allocation and API semantics are
+  unchanged.
+- Failure: the exact-commit full Linux ASan/LSan run at
+  `cmake-build-debugasan/asan-logs/20260823-030158-full` reports 1,230 leaked
+  bytes in ten allocations for both `llist_test_noopt` and `llist_test_opt`.
+- Root cause: the test creates 20 nodes, removes ten, then exits while still
+  owning the other ten. The two five-object LSan groups correspond to the
+  remaining prepend and append chains.
+- Permanent reproducer: the two existing linked-list test variants pass
+  functionally in ordinary Debug at
+  `cmake-build-debug/asan-logs/20260823-042146-ctest` but reproduce the exact
+  leak in isolation at
+  `cmake-build-debugasan/asan-logs/20260823-043336-ctest`.
+- Repair: call the documented `llist.freellist(0)` operation after the active
+  queue/pull checks and before program exit. This preserves the intended ten
+  live-node intermediate behavior while satisfying the caller-owned teardown
+  contract.
+- Focused proof: both variants pass ordinary Debug at
+  `cmake-build-debug/asan-logs/20260823-043406-ctest` and leak-enabled Linux
+  ASan/LSan at `cmake-build-debugasan/asan-logs/20260823-043420-ctest`.
+- Acceptance: both linked-runtime variants and the complete supported Linux
+  ASan/LSan build plus CTest gate must pass with leak detection enabled.
+
 ### SAN-004 — statement-form parallel pending-result class ownership
 
 Status: repaired with a permanent minimal regression; focused Linux Debug and
