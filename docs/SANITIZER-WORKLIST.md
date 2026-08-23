@@ -14,6 +14,34 @@ release-complete claim until that gate passes.
 
 ## Qualification infrastructure repairs
 
+### SAN-QA-006 — RXPA signature matrix exceeds short ASan timeout
+
+Status: repaired; focused normal-Debug and Linux ASan/LSan replays are green,
+with complete exact-commit qualification pending.
+
+- Scope: the CTest timeout for `rxpa_signature_diagnostics` only; compiler,
+  RXPA, optimizer, diagnostic assertions, and runtime behavior are unchanged.
+- Failure: the full leak-enabled Linux ASan/LSan run at
+  `cmake-build-debugasan/asan-logs/20260823-043515-full` timed out the test at
+  120 seconds while three long performance tests were active. It emitted no
+  sanitizer diagnostic or partial assertion failure.
+- Diagnosis: this is a composite contract containing two valid compiles, two
+  assembles, four VM executions, and twelve expected-invalid compiler runs.
+  The exact test passes alone in ordinary Debug in 16.61 seconds at
+  `cmake-build-debug/asan-logs/20260823-052452-ctest` and leak-enabled Linux
+  ASan/LSan in 45.02 seconds at
+  `cmake-build-debugasan/asan-logs/20260823-052515-ctest`.
+- Repair: use the repository's established 300-second allowance for composite
+  compiler/runtime contracts. The 20 subprocesses and all output/diagnostic
+  assertions remain unchanged.
+- Focused proof: generated CTest metadata reports the repaired 300-second
+  property in both build trees. The repaired test passes ordinary Debug in
+  16.64 seconds at `cmake-build-debug/asan-logs/20260823-053553-ctest` and
+  leak-enabled Linux ASan/LSan in 45.44 seconds at
+  `cmake-build-debugasan/asan-logs/20260823-053616-ctest`.
+- Acceptance: the focused test must pass in normal Debug and leak-enabled
+  Linux ASan/LSan, followed by the complete supported Linux sanitizer gate.
+
 ### SAN-QA-005 — parser snapshot tests require full-suite isolation
 
 Status: repaired; focused normal-Debug and Linux ASan/LSan replays are green,
