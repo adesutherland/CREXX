@@ -14,6 +14,40 @@ release-complete claim until that gate passes.
 
 ## Qualification infrastructure repairs
 
+### SAN-QA-003 — ASan fake stack defeats POSIX doorbell slot lookup
+
+Status: repaired; focused normal-Debug and Linux ASan/LSan qualification is
+green, with the complete exact-commit gate pending.
+
+- Scope: the POSIX native-doorbell signal handler under address
+  instrumentation; ordinary production dispatch and executor semantics are
+  unchanged.
+- Failure: Linux Sanitizer QA run
+  [32601922923](https://github.com/adesutherland/CREXX/actions/runs/32601922923)
+  timed out the base and doorbell-stress persistent-worker panels for all three
+  VM libraries. A serialized local replay also remained in `loop_forever` past
+  300 seconds, so scheduling and timeout changes were rejected as the fix.
+- Root cause: the handler identifies its target through the address of a local
+  stack marker and compares it with registered pthread stack ranges. GCC ASan
+  instrumented that handler and could place the marker on its fake stack,
+  outside the real pthread range; `pthread_kill()` succeeded but the handler
+  silently found no slot and never published `CANCEL`.
+- Repair: exclude only the bounded async-signal handler from address
+  instrumentation, alongside its existing stack-protector exclusion. This
+  keeps the stack probe on the real target stack and also prevents sanitizer
+  runtime traversal from entering the async-signal-safe handler. The ordinary
+  120-second tests and their parallel scheduling remain unchanged.
+- Focused proof: all six base/doorbell-stress variants pass concurrently in
+  ordinary Debug at `cmake-build-debug/asan-logs/20260823-011534-ctest` and in
+  leak-enabled Linux ASan/LSan at
+  `cmake-build-debugasan/asan-logs/20260823-011247-ctest`; the latter completes
+  in 7.77 seconds total. Disassembly of the rebuilt ASan
+  `rxbvm_core_objects` and `rxtvm_core_objects` handlers contains no ASan
+  runtime reference.
+- Acceptance: all six cells must pass together through leak-enabled Linux
+  ASan/LSan with eight requested CTest jobs, followed by the complete supported
+  Linux sanitizer gate.
+
 ### SAN-QA-002 — composite control-flow test timeout under parallel ASan
 
 Status: repaired; focused normal-Debug and Linux ASan/LSan replays are green,

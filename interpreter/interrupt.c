@@ -169,8 +169,10 @@ typedef char crexx_thread_doorbell_active_must_be_lock_free[
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
+/* Keep the stack-range probe on the real pthread stack and keep sanitizer
+ * runtime calls out of this async-signal-safe path. */
 #define RXVM_THREAD_DOORBELL_E5_HANDLER_ATTRIBUTES \
-        __attribute__((no_stack_protector))
+        __attribute__((no_stack_protector, no_sanitize_address))
 #else
 #define RXVM_THREAD_DOORBELL_E5_HANDLER_ATTRIBUTES
 #endif
