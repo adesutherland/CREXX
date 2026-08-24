@@ -304,7 +304,8 @@ DateTime: class implements .Printable
   addSeconds: method = .int
     arg seconds = .int
 
-    return addMicroseconds(seconds * 1000000)
+    call addMicroseconds(seconds * 1000000)
+    return 0
 
 
   /**
@@ -318,8 +319,10 @@ DateTime: class implements .Printable
   addMinutes: method = .int
     arg minutes = .int
 
-    return addMicroseconds(minutes * 60000000)
+    call addMicroseconds(minutes * 60000000)
+    return 0
 
+    
 
   /**
    * Adds the specified number of hours to this DateTime.
@@ -332,7 +335,8 @@ DateTime: class implements .Printable
   addHours: method = .int
     arg hours = .int
 
-    return addMicroseconds(hours * 3600000000)
+    call addMicroseconds(hours * 3600000000)
+    return 0
 
 
   /**

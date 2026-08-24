@@ -311,3 +311,30 @@ say d.toString()
 
 d = iso.parse("2026-08-24T12:34:56.123456")
 say d.toString()
+
+say
+say "Offset formatting"
+
+iso = .ISO8601()
+
+o = iso.parseOffset("2026-08-24T22:00:00.123456+02:00")
+say iso.formatOffset(o)
+
+o = iso.parseOffset("2026-08-24T14:30:00-05:30")
+say iso.formatOffset(o)
+
+o = iso.parseOffset("2026-08-24T20:00:00Z")
+say iso.formatOffset(o)
+
+say
+say "UTC conversion"
+
+o = iso.parseOffset("2026-08-24T22:00:00+02:00")
+u = o.toUTC()
+
+say iso.formatOffset(u)
+
+o = iso.parseOffset("2026-08-24T14:30:00-05:30")
+u = o.toUTC()
+
+say iso.formatOffset(u)
