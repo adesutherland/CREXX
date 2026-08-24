@@ -1,0 +1,146 @@
+options levelb numeric_classic comments_dash
+namespace time expose ISO8601
+
+import rxfnsb
+import time
+
+/**
+ * Provides ISO 8601 parsing and formatting for DateTime values.
+ *
+ * This implementation supports calendar dates and local date-time
+ * representations without a UTC offset.
+ */
+ISO8601: class
+
+  *: factory
+    return
+
+
+  /**
+   * Formats a DateTime as YYYY-MM-DDThh:mm:ss.ffffff.
+   */
+  format: method = .string
+    arg value = .DateTime
+    return value.toString()
+
+
+  /**
+   * Formats only the calendar date.
+   */
+  formatDate: method = .string
+    arg value = .DateTime
+    return value.internationalDate()
+
+
+  /**
+   * Formats a DateTime without fractional seconds.
+   */
+  formatSeconds: method = .string
+    arg value = .DateTime
+
+    return value.internationalDate() "T" ,
+           right(value.hour(),   2, "0") ":" ,
+           right(value.minute(), 2, "0") ":" ,
+           right(value.second(), 2, "0")
+
+
+  /**
+   * Parses an ISO 8601 date or local date-time.
+   *
+   * Accepted forms:
+   *
+   *   YYYY-MM-DD
+   *   YYYY-MM-DDThh:mm:ss
+   *   YYYY-MM-DDThh:mm:ss.f ... .ffffff
+   */
+  parse: method = .DateTime
+    arg text = .string
+
+    len = length(text)
+
+    if len < 10 then
+      signal invalid_arguments "ISO 8601 date is too short"
+
+    if substr(text,5,1) <> "-" then
+      signal invalid_arguments "expected '-' after year"
+
+    if substr(text,8,1) <> "-" then
+      signal invalid_arguments "expected '-' after month"
+
+    date_part = left(text,10)
+    base = date("BASE", date_part, "INTERNATIONAL") as .int
+
+    if len = 10 then
+      return .DateTime(base,0)
+
+    if substr(text,11,1) <> "T" then
+      signal invalid_arguments "expected 'T'"
+
+    if len < 19 then
+      signal invalid_arguments "time is incomplete"
+
+    if substr(text,14,1) <> ":" then
+      signal invalid_arguments "expected ':' after hour"
+
+    if substr(text,17,1) <> ":" then
+      signal invalid_arguments "expected ':' after minute"
+
+    hour   = substr(text,12,2) as .int
+    minute = substr(text,15,2) as .int
+    second = substr(text,18,2) as .int
+
+    if hour > 23 then
+      signal invalid_arguments "hour is out of range"
+
+    if minute > 59 then
+      signal invalid_arguments "minute is out of range"
+
+    if second > 59 then
+      signal invalid_arguments "second is out of range"
+
+    micro = 0
+
+    if len > 19 then do
+      if substr(text,20,1) <> "." then
+        signal invalid_arguments "expected '.' before fractional seconds"
+
+      fraction = substr(text,21)
+
+      if length(fraction) = 0 then
+        signal invalid_arguments "missing fractional seconds"
+
+      if length(fraction) > 6 then
+        signal invalid_arguments "fractional seconds exceed microsecond precision"
+
+      do while length(fraction) < 6
+        fraction = fraction || "0"
+      end
+
+      micro = fraction as .int
+    end
+
+    day_us = hour * 3600000000
+    day_us = day_us + minute * 60000000
+    day_us = day_us + second * 1000000
+    day_us = day_us + micro
+
+    return .DateTime(base, day_us)
+    return .DateTime(base, day_us)
+
+
+  /**
+   * Returns 1 when the supplied string is a supported ISO 8601 value.
+   */
+  isValid: method = .int
+    arg text = .string
+
+    valid = 1
+
+    do
+      parsed = parse(text)
+    on signal invalid_arguments
+      valid = 0
+    end
+
+    return valid
+    
