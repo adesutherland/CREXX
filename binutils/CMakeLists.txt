@@ -23,6 +23,12 @@ target_include_directories(rxbin
 set_target_properties(rxbin PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if(BUILD_TESTING)
+    add_executable(test_rxsha256 tests/test_rxsha256.c)
+    target_link_libraries(test_rxsha256 PRIVATE rxbin)
+    add_test(NAME rxsha256_unit COMMAND test_rxsha256)
+    set_tests_properties(rxsha256_unit PROPERTIES
+            LABELS "unit;library;hash;sha256;file")
+
     add_executable(test_rxgraph tests/test_rxgraph.c)
     target_link_libraries(test_rxgraph PRIVATE rxbin)
     add_test(NAME rxgraph_unit COMMAND test_rxgraph)

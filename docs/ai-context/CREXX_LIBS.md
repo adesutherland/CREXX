@@ -777,26 +777,50 @@ requested artifact stem and embedded manifest identity to agree.
 ### Standard `rx_hash` provider
 
 `rx_hash` is a B+G standard/default provider, not compiler or VM core. It is
-built and installed in dynamic and static forms and publishes SHA-256 plus
-four named 32-bit hash/checksum procedures:
+built and installed in dynamic and static forms and publishes one-shot,
+incremental, hexadecimal, and bounded-memory file SHA-256 plus four named
+32-bit hash/checksum procedures:
 
 ```rexx
 import rxhash
 
 digest = rxhash..sha256(data)
+hex_digest = rxhash..sha256hex(data)
+state = rxhash..sha256init()
+state = rxhash..sha256update(state, data)
+stream_digest = rxhash..sha256final(state)
+file_digest = rxhash..sha256file(path)
 table_hash = rxhash..djb2(data)
 seeded_hash = rxhash..murmur3(data, seed)
 fnv_hash = rxhash..fnv1a(data)
 checksum = rxhash..crc32(data)
 ```
 
-The exact SHA-256 signature is
-`rxhash.sha256(data = .binary) = .binary`; the result is the 32 raw digest
-bytes, so use `bin2x()` when hexadecimal text is required. `djb2`, `fnv1a`,
-and `crc32` accept one `.binary`; `murmur3` also accepts an `.int` seed. Each
-returns the algorithm's unsigned 32-bit bit pattern represented in `.int`.
-Embedded zero bytes are data, and inputs are not mutated. No historical
-`rxmath` aliases are retained.
+The exact SHA-256 family is `sha256(data = .binary) = .binary`,
+`sha256hex(data = .binary) = .string`, `sha256init() = .binary`,
+`sha256update(state = .binary, data = .binary) = .binary`,
+`sha256final(state = .binary) = .binary`,
+`sha256finalhex(state = .binary) = .string`,
+`sha256file(path = .string) = .binary`, and
+`sha256filehex(path = .string) = .string`, all in namespace `rxhash`. Raw
+results are exactly 32 bytes and direct hex results are exactly 64 canonical
+lowercase characters. Embedded zero and invalid UTF-8 bytes are data.
+
+Incremental state is a 152-byte versioned, big-endian, pointer-free binary
+value containing a canonical header, byte count, chaining words, pending-byte
+prefix/zero padding, and an integrity digest. Updates and finalization decode a
+validated copy; updates return a new state and finalization is repeatable.
+Malformed states raise `INVALID_ARGUMENTS`. File calls use the same engine with
+fixed 32 KiB binary reads; open/read/close failures raise `NOTREADY`, while
+filesystem selection, cancellation, and application size ceilings remain
+caller policy. See the maintained
+[rxhash reference](../books/crexx_library_reference/rxhash.md) for the exact
+layout, signal categories, and examples.
+
+`djb2`, `fnv1a`, and `crc32` accept one `.binary`; `murmur3` also accepts an
+`.int` seed. Each returns the algorithm's unsigned 32-bit bit pattern
+represented in `.int`. Inputs are not mutated. No historical `rxmath` aliases
+are retained.
 
 `rxc` records provider ID `rx_hash` in RXBIN metadata for a retained call.
 `rxvm` and `rxbvm` then find the trusted `rx_hash.rxplugin` automatically,

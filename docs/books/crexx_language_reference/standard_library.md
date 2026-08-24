@@ -90,12 +90,17 @@ for the complete surface and examples.
 
 ## Binary SHA-256
 
-The standard/default native provider `rx_hash` exposes
-`rxhash.sha256(data = .binary) = .binary` to both Level B and Level G. Import
-`rxhash` directly; no Rexx wrapper is needed. The compiler records the native
-provider dependency, ordinary VMs discover the installed provider, and native
-packaging selects its static archive automatically. See
-[Binary hashing with `rxhash`](../crexx_library_reference/rxhash.md).
+The standard/default native provider `rx_hash` exposes one-shot,
+canonical-lowercase-hexadecimal, immutable incremental-state, and synchronous
+bounded-memory file SHA-256 procedures to both Level B and Level G. Binary
+digest results are 32 raw bytes; hexadecimal results are 64 lowercase
+characters. The versioned serialized state is pointer-free and transferable,
+and malformed states signal before hashing. Import `rxhash` directly; no Rexx
+wrapper is needed. The compiler records the native provider dependency,
+ordinary VMs discover the installed provider, and native packaging selects its
+static archive automatically. See [Binary hashing with
+`rxhash`](../crexx_library_reference/rxhash.md) for every exact signature,
+state layout, file/error contract, and examples.
 
 ## Mathematics
 

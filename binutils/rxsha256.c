@@ -5,15 +5,25 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include "rxsha256.h"
 
-typedef struct rx_sha256_state {
-    uint32_t h[8];
-    uint64_t bytes;
-    unsigned char block[64];
-    size_t used;
-} rx_sha256_state;
+#define RX_SHA256_STATE_PREFIX_SIZE 120u
+#define RX_SHA256_STATE_HEADER_SIZE 56u
+#define RX_SHA256_STATE_VERSION 1u
+#define RX_SHA256_MAX_BYTES (UINT64_MAX / UINT64_C(8))
+
+static const unsigned char rx_sha256_state_magic[8] = {
+    'R', 'X', 'S', 'H', 'A', '2', '5', '6'
+};
+
+static const uint32_t rx_sha256_initial_hash[8] = {
+    UINT32_C(0x6a09e667), UINT32_C(0xbb67ae85),
+    UINT32_C(0x3c6ef372), UINT32_C(0xa54ff53a),
+    UINT32_C(0x510e527f), UINT32_C(0x9b05688c),
+    UINT32_C(0x1f83d9ab), UINT32_C(0x5be0cd19)
+};
 
 static uint32_t rx_sha_rotr(uint32_t value, unsigned int count) {
     return (value >> count) | (value << (32u - count));
@@ -33,7 +43,23 @@ static void rx_sha_store32(unsigned char *target, uint32_t value) {
     target[3] = (unsigned char)value;
 }
 
-static void rx_sha256_transform(rx_sha256_state *state,
+static uint64_t rx_sha_load64(const unsigned char *source) {
+    uint64_t value = 0u;
+    size_t index;
+    for (index = 0u; index < 8u; ++index) {
+        value = (value << 8u) | source[index];
+    }
+    return value;
+}
+
+static void rx_sha_store64(unsigned char *target, uint64_t value) {
+    size_t index;
+    for (index = 0u; index < 8u; ++index) {
+        target[7u - index] = (unsigned char)(value >> (index * 8u));
+    }
+}
+
+static void rx_sha256_transform(rx_sha256_context *state,
                                 const unsigned char block[64]) {
     static const uint32_t constants[64] = {
         UINT32_C(0x428a2f98), UINT32_C(0x71374491), UINT32_C(0xb5c0fbcf), UINT32_C(0xe9b5dba5),
@@ -87,36 +113,50 @@ static void rx_sha256_transform(rx_sha256_state *state,
     state->h[4] += e; state->h[5] += f; state->h[6] += g; state->h[7] += h;
 }
 
-static void rx_sha256_update(rx_sha256_state *state,
-                             const unsigned char *data,
-                             size_t length) {
+void rx_sha256_init(rx_sha256_context *state) {
+    size_t index;
+    if (!state) return;
+    for (index = 0u; index < 8u; ++index) {
+        state->h[index] = rx_sha256_initial_hash[index];
+    }
+    state->bytes = 0u;
+    state->used = 0u;
+    memset(state->block, 0, sizeof(state->block));
+}
+
+int rx_sha256_update(rx_sha256_context *state,
+                     const void *input, size_t length) {
+    const unsigned char *data = (const unsigned char *)input;
+
+    if (!state || (!data && length != 0u) || state->used >= RX_SHA256_BLOCK_SIZE ||
+        state->bytes > RX_SHA256_MAX_BYTES ||
+        (uint64_t)length > RX_SHA256_MAX_BYTES - state->bytes) {
+        return 0;
+    }
     state->bytes += (uint64_t)length;
     while (length) {
-        size_t space = 64u - state->used;
+        size_t space = RX_SHA256_BLOCK_SIZE - state->used;
         size_t take = length < space ? length : space;
         memcpy(state->block + state->used, data, take);
         state->used += take;
         data += take;
         length -= take;
-        if (state->used == 64u) {
+        if (state->used == RX_SHA256_BLOCK_SIZE) {
             rx_sha256_transform(state, state->block);
             state->used = 0u;
         }
     }
+    return 1;
 }
 
-void rx_sha256(const void *data, size_t length, unsigned char digest[32]) {
-    rx_sha256_state state;
+void rx_sha256_final(const rx_sha256_context *context,
+                     unsigned char digest[RX_SHA256_DIGEST_SIZE]) {
+    rx_sha256_context state;
     uint64_t bits;
     size_t index;
 
-    state.h[0] = UINT32_C(0x6a09e667); state.h[1] = UINT32_C(0xbb67ae85);
-    state.h[2] = UINT32_C(0x3c6ef372); state.h[3] = UINT32_C(0xa54ff53a);
-    state.h[4] = UINT32_C(0x510e527f); state.h[5] = UINT32_C(0x9b05688c);
-    state.h[6] = UINT32_C(0x1f83d9ab); state.h[7] = UINT32_C(0x5be0cd19);
-    state.bytes = 0u;
-    state.used = 0u;
-    if (length) rx_sha256_update(&state, (const unsigned char *)data, length);
+    if (!context || !digest) return;
+    state = *context;
     bits = state.bytes * UINT64_C(8);
     state.block[state.used++] = 0x80u;
     if (state.used > 56u) {
@@ -132,4 +172,171 @@ void rx_sha256(const void *data, size_t length, unsigned char digest[32]) {
     for (index = 0u; index < 8u; index++) {
         rx_sha_store32(digest + index * 4u, state.h[index]);
     }
+}
+
+void rx_sha256(const void *data, size_t length,
+               unsigned char digest[RX_SHA256_DIGEST_SIZE]) {
+    rx_sha256_context state;
+
+    if (!digest) return;
+    rx_sha256_init(&state);
+    if (!rx_sha256_update(&state, data, length)) {
+        memset(digest, 0, RX_SHA256_DIGEST_SIZE);
+        return;
+    }
+    rx_sha256_final(&state, digest);
+}
+
+static int rx_sha256_context_is_consistent(const rx_sha256_context *context) {
+    size_t index;
+
+    if (!context || context->bytes > RX_SHA256_MAX_BYTES ||
+        context->used >= RX_SHA256_BLOCK_SIZE ||
+        context->used != (size_t)(context->bytes & UINT64_C(63))) {
+        return 0;
+    }
+    if (context->bytes < RX_SHA256_BLOCK_SIZE) {
+        for (index = 0u; index < 8u; ++index) {
+            if (context->h[index] != rx_sha256_initial_hash[index]) return 0;
+        }
+    }
+    return 1;
+}
+
+rx_sha256_state_status rx_sha256_export_state(
+        const rx_sha256_context *context,
+        unsigned char state[RX_SHA256_SERIALIZED_STATE_SIZE]) {
+    unsigned char integrity[RX_SHA256_DIGEST_SIZE];
+    size_t index;
+
+    if (!state) return RX_SHA256_STATE_INVALID_LENGTH;
+    if (!rx_sha256_context_is_consistent(context)) {
+        return RX_SHA256_STATE_INCONSISTENT;
+    }
+
+    memset(state, 0, RX_SHA256_SERIALIZED_STATE_SIZE);
+    memcpy(state, rx_sha256_state_magic, sizeof(rx_sha256_state_magic));
+    state[8] = RX_SHA256_STATE_VERSION;
+    state[9] = 0u;
+    state[10] = (unsigned char)(RX_SHA256_STATE_HEADER_SIZE >> 8u);
+    state[11] = (unsigned char)RX_SHA256_STATE_HEADER_SIZE;
+    rx_sha_store64(state + 12u, context->bytes);
+    for (index = 0u; index < 8u; ++index) {
+        rx_sha_store32(state + 20u + index * 4u, context->h[index]);
+    }
+    state[52] = (unsigned char)context->used;
+    if (context->used != 0u) {
+        memcpy(state + 56u, context->block, context->used);
+    }
+    rx_sha256(state, RX_SHA256_STATE_PREFIX_SIZE, integrity);
+    memcpy(state + RX_SHA256_STATE_PREFIX_SIZE, integrity, sizeof(integrity));
+    return RX_SHA256_STATE_OK;
+}
+
+rx_sha256_state_status rx_sha256_import_state(
+        rx_sha256_context *context, const void *input, size_t length) {
+    const unsigned char *state = (const unsigned char *)input;
+    rx_sha256_context decoded;
+    unsigned char integrity[RX_SHA256_DIGEST_SIZE];
+    size_t index;
+
+    if (!context || !state || length != RX_SHA256_SERIALIZED_STATE_SIZE) {
+        return RX_SHA256_STATE_INVALID_LENGTH;
+    }
+    if (memcmp(state, rx_sha256_state_magic, sizeof(rx_sha256_state_magic)) != 0) {
+        return RX_SHA256_STATE_INVALID_MAGIC;
+    }
+    if (state[8] != RX_SHA256_STATE_VERSION) {
+        return RX_SHA256_STATE_UNSUPPORTED_VERSION;
+    }
+    if (state[9] != 0u || state[10] != 0u ||
+        state[11] != RX_SHA256_STATE_HEADER_SIZE ||
+        state[53] != 0u || state[54] != 0u || state[55] != 0u) {
+        return RX_SHA256_STATE_INVALID_FORMAT;
+    }
+
+    decoded.bytes = rx_sha_load64(state + 12u);
+    for (index = 0u; index < 8u; ++index) {
+        decoded.h[index] = rx_sha_load32(state + 20u + index * 4u);
+    }
+    decoded.used = state[52];
+    memcpy(decoded.block, state + 56u, sizeof(decoded.block));
+    if (!rx_sha256_context_is_consistent(&decoded)) {
+        return RX_SHA256_STATE_INCONSISTENT;
+    }
+    for (index = decoded.used; index < RX_SHA256_BLOCK_SIZE; ++index) {
+        if (decoded.block[index] != 0u) return RX_SHA256_STATE_INCONSISTENT;
+    }
+
+    rx_sha256(state, RX_SHA256_STATE_PREFIX_SIZE, integrity);
+    if (memcmp(integrity, state + RX_SHA256_STATE_PREFIX_SIZE,
+               sizeof(integrity)) != 0) {
+        return RX_SHA256_STATE_INTEGRITY_FAILURE;
+    }
+    *context = decoded;
+    return RX_SHA256_STATE_OK;
+}
+
+rx_sha256_file_status rx_sha256_stream_digest(
+        rx_sha256_stream *stream,
+        unsigned char digest[RX_SHA256_DIGEST_SIZE]) {
+    unsigned char buffer[RX_SHA256_FILE_CHUNK_SIZE];
+    rx_sha256_context context;
+    rx_sha256_file_status status = RX_SHA256_FILE_OK;
+    size_t bytes;
+
+    if (!stream || !stream->read || !stream->error || !stream->close || !digest) {
+        return RX_SHA256_FILE_READ_FAILURE;
+    }
+    rx_sha256_init(&context);
+    for (;;) {
+        bytes = stream->read(stream->context, buffer, sizeof(buffer));
+        if (bytes > sizeof(buffer)) {
+            status = RX_SHA256_FILE_READ_FAILURE;
+            break;
+        }
+        if (bytes == 0u) {
+            if (stream->error(stream->context)) {
+                status = RX_SHA256_FILE_READ_FAILURE;
+            }
+            break;
+        }
+        if (!rx_sha256_update(&context, buffer, bytes)) {
+            status = RX_SHA256_FILE_LENGTH_OVERFLOW;
+            break;
+        }
+    }
+    if (stream->close(stream->context) != 0 && status == RX_SHA256_FILE_OK) {
+        status = RX_SHA256_FILE_CLOSE_FAILURE;
+    }
+    if (status == RX_SHA256_FILE_OK) rx_sha256_final(&context, digest);
+    return status;
+}
+
+static size_t rx_sha256_stdio_read(void *context,
+                                   unsigned char *buffer, size_t capacity) {
+    return fread(buffer, 1u, capacity, (FILE *)context);
+}
+
+static int rx_sha256_stdio_error(void *context) {
+    return ferror((FILE *)context) != 0;
+}
+
+static int rx_sha256_stdio_close(void *context) {
+    return fclose((FILE *)context);
+}
+
+rx_sha256_file_status rx_sha256_file(
+        const char *path, unsigned char digest[RX_SHA256_DIGEST_SIZE]) {
+    FILE *file;
+    rx_sha256_stream stream;
+
+    if (!path || !digest) return RX_SHA256_FILE_OPEN_FAILURE;
+    file = fopen(path, "rb");
+    if (!file) return RX_SHA256_FILE_OPEN_FAILURE;
+    stream.context = file;
+    stream.read = rx_sha256_stdio_read;
+    stream.error = rx_sha256_stdio_error;
+    stream.close = rx_sha256_stdio_close;
+    return rx_sha256_stream_digest(&stream, digest);
 }

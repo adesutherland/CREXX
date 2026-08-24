@@ -3,6 +3,12 @@ options levelb
 import rxfnsb
 import rxhash
 
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if condition then return 0
+  say "FAIL:" label
+  return 1
+
 makeGenerated: procedure = .binary
   arg bytes = .int
   data = .binary
@@ -14,12 +20,97 @@ makeGenerated: procedure = .binary
 
 checkVector: procedure = .int
   arg label = .string, data = .binary, expected = .string
-  actual = bin2x(rxhash..sha256(data))
-  if actual <> expected then do
-    say "FAIL: rxhash.sha256 vector " || label || " expected=" || expected || " actual=" || actual
+  raw = rxhash..sha256(data)
+  actual = rxhash..sha256hex(data)
+  failures = 0
+  failures = failures + check(binlength(raw) = 32, label || " raw digest length")
+  failures = failures + check(length(actual) = 64, label || " hex digest length")
+  failures = failures + check(actual = lower(actual), label || " canonical lowercase hex")
+  failures = failures + check(actual = lower(bin2x(raw)), label || " raw/hex equivalence")
+  failures = failures + check(actual = expected, label || " authoritative digest")
+  return failures
+
+incrementalFixed: procedure = .binary
+  arg data = .binary, chunk_size = .int
+  state = rxhash..sha256init()
+  total = binlength(data)
+  offset = 0
+  do while offset < total
+    take = chunk_size
+    if take > total - offset then take = total - offset
+    state = rxhash..sha256update(state, binsubstr(data, offset + 1, take))
+    offset = offset + take
+  end
+  return rxhash..sha256final(state)
+
+incrementalIrregular: procedure = .binary
+  arg data = .binary
+  state = rxhash..sha256init()
+  state = rxhash..sha256update(state, ''x as .binary)
+  total = binlength(data)
+  offset = 0
+  do while offset < total
+    take = ((offset * 17 + 3) <mod> 131) + 1
+    if take > total - offset then take = total - offset
+    state = rxhash..sha256update(state, binsubstr(data, offset + 1, take))
+    state = rxhash..sha256update(state, ''x as .binary)
+    offset = offset + take
+  end
+  return rxhash..sha256final(state)
+
+writeBinaryFile: procedure = .int
+  arg path = .string, data = .binary
+  mode = "wb"
+  file_id = 0
+  assembler fopen file_id,path,mode
+  if file_id = 0 then return 1
+  assembler fwriteb file_id,data
+  write_error = 0
+  close_status = 0
+  assembler ferror write_error,file_id
+  assembler fclose close_status,file_id
+  if write_error \= 0 | close_status \= 0 then return 1
+  return 0
+
+checkRejectedFinal: procedure = .int
+  arg label = .string, state = .binary, message_part = .string
+  do
+    ignored = rxhash..sha256final(state)
+    say "FAIL:" label "did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos(message_part, problem.message()) > 0 then return 0
+    say "FAIL:" label "signal identity" problem.name() problem.message()
     return 1
   end
-  return 0
+  return 1
+
+checkRejectedUpdate: procedure = .int
+  arg label = .string, state = .binary, message_part = .string
+  do
+    ignored = rxhash..sha256update(state, ''x as .binary)
+    say "FAIL:" label "did not signal"
+    return 1
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" & pos(message_part, problem.message()) > 0 then return 0
+    say "FAIL:" label "signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
+
+checkMissingFile: procedure = .int
+  arg path = .string, use_hex = .int
+  do
+    if use_hex then ignored_hex = rxhash..sha256filehex(path)
+    else ignored_raw = rxhash..sha256file(path)
+    say "FAIL: missing file did not signal"
+    return 1
+  on signal notready as problem
+    if problem.name() = "NOTREADY" & pos("file open failed", problem.message()) > 0 then return 0
+    say "FAIL: missing file signal identity" problem.name() problem.message()
+    return 1
+  end
+  return 1
 
 checkHash32: procedure = .int
   arg label = .string, actual = .int, expected = .int
@@ -28,25 +119,102 @@ checkHash32: procedure = .int
   return 1
 
 main: procedure = .int
+  arg command_args = .string[]
   failures = 0
-  failures = failures + checkVector("empty", x2bin(""), "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855")
-  failures = failures + checkVector("abc", x2bin("616263"), "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD")
-  failures = failures + checkVector("embedded-zero", x2bin("00010200FF"), "EF7E301027F931DFBA06C7DED4EF305797F43CC115A664F9AF9B57D08C3172C2")
-  failures = failures + checkVector("generated-55", makeGenerated(55), "8AA994584139D128848EEEBC4E815639BA5AB6E6E39574195A63AC4F14F7C43B")
-  failures = failures + checkVector("generated-56", makeGenerated(56), "AD574708F75C044C9B85DE64CB568EE7711FF4F36448C6242F053BA8F6CC2B63")
-  failures = failures + checkVector("generated-63", makeGenerated(63), "280ED3E8FF1DF845B2E7DFE6AC6CEE817BEF20E783CC65ABC41B818B4D2FE076")
-  failures = failures + checkVector("generated-64", makeGenerated(64), "C6AB9724ADE5B6A7A1EDFFFB12F3AA9181351355AF8FD08C919952AD211339DD")
-  failures = failures + checkVector("generated-65", makeGenerated(65), "788367C73C7DDF4C53F65E68CC0D943E6227AB55B0E78BA63ACE822B1C6301C0")
-  failures = failures + checkVector("generated-4096", makeGenerated(4096), "D41D438C379110C7F7B2C561B1F04F26C1B4549110791F8E022F48974280C13E")
+  suffix = "default"
+  if command_args.0 > 0 then suffix = command_args.1
+
+  empty = ''x as .binary
+  abc = "616263"x as .binary
+  binary = "00C328FF806100FE"x as .binary
+  generated = makeGenerated(4096)
+  boundary = makeGenerated(65)
+
+  failures = failures + checkVector("empty", empty, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+  failures = failures + checkVector("abc", abc, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+  failures = failures + checkVector("embedded NUL and invalid UTF-8", binary, "21a525288802c54dcd15095a8670accc60c9033be5b4f7b21aea3793d7388911")
+  failures = failures + checkVector("generated-55", makeGenerated(55), "8aa994584139d128848eeebc4e815639ba5ab6e6e39574195a63ac4f14f7c43b")
+  failures = failures + checkVector("generated-56", makeGenerated(56), "ad574708f75c044c9b85de64cb568ee7711ff4f36448c6242f053ba8f6cc2b63")
+  failures = failures + checkVector("generated-63", makeGenerated(63), "280ed3e8ff1df845b2e7dfe6ac6cee817bef20e783cc65abc41b818b4d2fe076")
+  failures = failures + checkVector("generated-64", makeGenerated(64), "c6ab9724ade5b6a7a1edfffb12f3aa9181351355af8fd08c919952ad211339dd")
+  failures = failures + checkVector("generated-65", boundary, "788367c73c7ddf4c53f65e68cc0d943e6227ab55b0e78ba63ace822b1c6301c0")
+
+  state = rxhash..sha256init()
+  state_before = state
+  empty_state = rxhash..sha256update(state, empty)
+  failures = failures + check(binlength(state) = 152, "serialized state length")
+  failures = failures + check(bin2x(binsubstr(state, 1, 8)) = "5258534841323536", "serialized state magic")
+  failures = failures + check(binbyte(state, 9) = 1, "serialized state version")
+  failures = failures + check(bincompare(state, state_before) = 0, "state initialization value copy")
+  failures = failures + check(bincompare(state, empty_state) = 0, "empty update canonical identity")
+
+  one_update_state = rxhash..sha256update(state, generated)
+  failures = failures + check(bincompare(state, state_before) = 0, "update does not mutate input state")
+  failures = failures + check(bincompare(one_update_state, state) \= 0, "update returns a new state")
+  failures = failures + check(bincompare(rxhash..sha256final(one_update_state), rxhash..sha256(generated)) = 0, "one complete update equivalence")
+  failures = failures + check(rxhash..sha256finalhex(one_update_state) = rxhash..sha256hex(generated), "final raw/hex equivalence")
+  failures = failures + check(bincompare(rxhash..sha256final(one_update_state), rxhash..sha256final(one_update_state)) = 0, "repeated finalization")
+  failures = failures + check(bincompare(incrementalFixed(binsubstr(generated, 1, 257), 1), rxhash..sha256(binsubstr(generated, 1, 257))) = 0, "byte-at-a-time equivalence")
+  failures = failures + check(bincompare(incrementalIrregular(generated), rxhash..sha256(generated)) = 0, "irregular and empty update equivalence")
+  failures = failures + check(bincompare(incrementalFixed(boundary, 63), rxhash..sha256(boundary)) = 0, "incremental 64-byte block crossing")
+
+  state_a = rxhash..sha256update(rxhash..sha256init(), "a" as .binary)
+  state_b = rxhash..sha256update(rxhash..sha256init(), "hello" as .binary)
+  copy_a = state_a
+  state_a = rxhash..sha256update(state_a, "bc" as .binary)
+  state_b = rxhash..sha256update(state_b, " world" as .binary)
+  copy_a = rxhash..sha256update(copy_a, "bc" as .binary)
+  failures = failures + check(rxhash..sha256finalhex(state_a) = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", "interleaved state A")
+  failures = failures + check(rxhash..sha256finalhex(state_b) = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9", "interleaved state B")
+  failures = failures + check(bincompare(rxhash..sha256final(state_a), rxhash..sha256final(copy_a)) = 0, "copied state independence")
+
+  truncated = binsubstr(state, 1, 151)
+  failures = failures + checkRejectedFinal("truncated state", truncated, "invalid length")
+  wrong_version = binsetbyte(state, 9, 2)
+  failures = failures + checkRejectedFinal("wrong-version state", wrong_version, "unsupported")
+  wrong_magic = binsetbyte(state, 1, 0)
+  failures = failures + checkRejectedUpdate("malformed state", wrong_magic, "invalid magic")
+  wrong_flags = binsetbyte(state, 10, 1)
+  failures = failures + checkRejectedFinal("invalid-format state", wrong_flags, "invalid format")
+  inconsistent = binsetbyte(state, 53, 1)
+  failures = failures + checkRejectedFinal("inconsistent state", inconsistent, "internally inconsistent")
+  corrupt = binsetbyte(state, 121, 0)
+  if binbyte(state, 121) = 0 then corrupt = binsetbyte(state, 121, 1)
+  failures = failures + checkRejectedFinal("corrupt state", corrupt, "integrity check failed")
+
+  large = .binary
+  call binresize large, 3145865
+  call binfill large, 97
+  failures = failures + checkVector("multi-megabyte", large, "ec20e65865de23ccd97d25891db3bf75a62a405194f8a9de9ba9cb870544d4d0")
+  failures = failures + check(bincompare(incrementalFixed(large, 65521), rxhash..sha256(large)) = 0, "multi-megabyte incremental equivalence")
+
+  empty_path = "rxhash-empty-" || suffix || ".bin"
+  binary_path = "rxhash-binary-" || suffix || ".bin"
+  boundary_path = "rxhash-boundary-" || suffix || ".bin"
+  large_path = "rxhash-large-" || suffix || ".bin"
+  failures = failures + check(writeBinaryFile(empty_path, empty) = 0, "write empty file fixture")
+  failures = failures + check(writeBinaryFile(binary_path, binary) = 0, "write binary file fixture")
+  failures = failures + check(writeBinaryFile(boundary_path, boundary) = 0, "write boundary file fixture")
+  failures = failures + check(writeBinaryFile(large_path, large) = 0, "write multi-megabyte file fixture")
+  failures = failures + check(rxhash..sha256filehex(empty_path) = rxhash..sha256hex(empty), "empty file hash")
+  failures = failures + check(rxhash..sha256filehex(binary_path) = rxhash..sha256hex(binary), "binary file hash")
+  failures = failures + check(rxhash..sha256filehex(boundary_path) = rxhash..sha256hex(boundary), "block-boundary file hash")
+  failures = failures + check(rxhash..sha256filehex(large_path) = rxhash..sha256hex(large), "multi-megabyte file hash")
+  failures = failures + check(bincompare(rxhash..sha256file(large_path), rxhash..sha256(large)) = 0, "one-shot incremental and file agreement")
+  failures = failures + check(length(rxhash..sha256filehex(large_path)) = 64, "file hex length")
+  failures = failures + checkMissingFile("rxhash-missing-" || suffix || ".bin", 0)
+  failures = failures + checkMissingFile("rxhash-missing-hex-" || suffix || ".bin", 1)
+
   failures = failures + checkHash32("djb2 hello", rxhash..djb2("hello" as .binary), 261238937)
   failures = failures + checkHash32("murmur3 hello", rxhash..murmur3("hello" as .binary, 0), 613153351)
   failures = failures + checkHash32("fnv1a hello", rxhash..fnv1a("hello" as .binary), 1335831723)
   failures = failures + checkHash32("crc32 hello", rxhash..crc32("hello" as .binary), 907060870)
-  embedded = x2bin("610062")
+  embedded = "610062"x as .binary
   failures = failures + checkHash32("djb2 embedded zero", rxhash..djb2(embedded), 193482728)
   failures = failures + checkHash32("murmur3 embedded zero", rxhash..murmur3(embedded, 0), 1871496870)
   failures = failures + checkHash32("fnv1a embedded zero", rxhash..fnv1a(embedded), 284404690)
   failures = failures + checkHash32("crc32 embedded zero", rxhash..crc32(embedded), 367556721)
+
   if failures > 0 then return 1
-  say "PASS: rxhash digest and checksum vectors"
+  say "PASS: rxhash complete SHA-256 family and checksum vectors"
   return 0
