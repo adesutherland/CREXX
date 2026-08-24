@@ -28,7 +28,7 @@ The Level B classes `.taskpool`, `.taskscope`, `.task`, `.tasktarget`,
 
 The callable forms are:
 
-```ebnf
+```EBNF
 task-procedure ::= symbol ":" "task" [ "=" type ] callable-body
 task-method    ::= symbol ":" "task" [ "=" type ] callable-body
 ```
@@ -200,7 +200,7 @@ The complete positive expression/block program is
 
 The grammar is:
 
-```ebnf
+```EBNF
 parallel-do ::= "do" "parallel" [ "using" expression ]
                 clauses
                 "end" [ symbol ]
@@ -293,7 +293,7 @@ end
 
 The grammar is:
 
-```ebnf
+```EBNF
 task-target ::= "task" callable-reference
               | "task" class-factory-expression
 ```

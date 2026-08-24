@@ -49,6 +49,9 @@ set(CLSS
   Qfind
   Scanlex
   Concurrency
+#  DateTime
+#  ISO8601
+#  OffsetDateTime
 )
 
 set(CLASSLIB_NATIVE_CLSS
@@ -123,6 +126,9 @@ set(CLASS_DEPS_ObjectObjectTreeMapIterator ObjectIterator)
 set(CLASS_DEPS_ObjectObjectTreeMap ObjectObjectTreeMapIterator ObjectComparator ObjectPrintable)
 set(CLASS_DEPS_TreeMap Map TreeMapIterator Comparator Printable)
 set(CLASS_DEPS_ArrayBag  ArrayBagIterator Bag Printable)
+set(CLASS_DEPS_OffsetDateTime DateTime Printable)
+set(CLASS_DEPS_DateTime ISO8601 Printable)
+
 
 
 if(WIN32)

@@ -1,0 +1,340 @@
+import time
+import rxfnsb
+
+dt = .DateTime()
+say dt.baseDate()
+say dt.yearDay()
+
+a = .DateTime()
+b = .DateTime(date("BASE") as .int)
+c = .DateTime(date("BASE") as .int, 86399999999)
+say c.hour()        /* 23 */
+say c.minute()      /* 59 */
+say c.second()      /* 59 */
+say c.microsecond() /* 999999 */
+
+base = date("BASE") as .int
+
+/* Last microsecond of a day. */
+d = .DateTime(base, 86399999999)
+
+say d.hour()         /* 23 */
+say d.minute()       /* 59 */
+say d.second()       /* 59 */
+say d.microsecond()  /* 999999 */
+
+call d.addMicroseconds(1)
+
+say d.baseDate() = base + 1       /* 1 */
+say d.dayMicroseconds() = 0       /* 1 */
+
+
+/* First microsecond of a day. */
+d = .DateTime(base, 0)
+
+call d.addMicroseconds(-1)
+
+say d.baseDate() = base - 1       /* 1 */
+say d.hour() = 23                 /* 1 */
+say d.minute() = 59               /* 1 */
+say d.second() = 59               /* 1 */
+say d.microsecond() = 999999      /* 1 */
+
+
+/* Cross midnight using seconds. */
+d = .DateTime(base, 86399000000)
+
+call d.addSeconds(1)
+
+say d.baseDate() = base + 1       /* 1 */
+say d.dayMicroseconds() = 0       /* 1 */
+
+
+/* More than one complete day. */
+d = .DateTime(base, 0)
+
+call d.addHours(49)
+
+say d.baseDate() = base + 2       /* 1 */
+say d.hour() = 1                  /* 1 */
+
+
+/* And backwards. */
+d = .DateTime(base, 0)
+
+call d.addHours(-49)
+
+say d.baseDate() = base - 3       /* 1 */
+say d.hour() = 23                 /* 1 */
+
+
+base = date("BASE", "2024-02-29", "INTERNATIONAL") as .int
+d = .DateTime(base, 0)
+
+call d.addYears(1)
+
+say d.standardDate()   /* expected 20250228 */
+
+d = .DateTime(base, 0)
+call d.addYears(4)
+
+say d.standardDate()   /* expected 20280229 */
+
+base = date("BASE", "2025-02-28", "INTERNATIONAL") as .int
+d = .DateTime(base, 0)
+
+call d.addYears(1)
+
+say d.standardDate()   /* expected 20260228 */
+
+say "ISO week tests"
+
+
+/*
+ * 2015-12-31 is Thursday in ISO week 53 of 2015.
+ */
+base = date("BASE", "2015-12-31", "INTERNATIONAL") as .int
+d = .DateTime(base, 0)
+
+say
+say "2015-12-31"
+say "  week number: " d.weekNumber()
+say "  week year:   " d.weekNumberYear()
+say "  week date:   " d.weekNumberDate()
+
+say d.weekNumber() = 53
+say d.weekNumberYear() = 2015
+
+
+/*
+ * 2016-01-01 still belongs to ISO week 53 of 2015.
+ */
+base = date("BASE", "2016-01-01", "INTERNATIONAL") as .int
+d = .DateTime(base, 0)
+
+say
+say "2016-01-01"
+say "  week number: " d.weekNumber()
+say "  week year:   " d.weekNumberYear()
+say "  week date:   " d.weekNumberDate()
+
+say d.weekNumber() = 53
+say d.weekNumberYear() = 2015
+
+
+/*
+ * Monday 2016-01-04 starts ISO week 1 of 2016.
+ */
+base = date("BASE", "2016-01-04", "INTERNATIONAL") as .int
+d = .DateTime(base, 0)
+
+say
+say "2016-01-04"
+say "  week number: " d.weekNumber()
+say "  week year:   " d.weekNumberYear()
+say "  week date:   " d.weekNumberDate()
+
+say d.weekNumber() = 1
+say d.weekNumberYear() = 2016
+
+
+/*
+ * 2020 also has ISO week 53.
+ */
+base = date("BASE", "2020-12-31", "INTERNATIONAL") as .int
+d = .DateTime(base, 0)
+
+say
+say "2020-12-31"
+say "  week number: " d.weekNumber()
+say "  week year:   " d.weekNumberYear()
+
+say d.weekNumber() = 53
+say d.weekNumberYear() = 2020
+
+
+/*
+ * 2021-01-01 belongs to week 53 of 2020.
+ */
+base = date("BASE", "2021-01-01", "INTERNATIONAL") as .int
+d = .DateTime(base, 0)
+
+say
+say "2021-01-01"
+say "  week number: " d.weekNumber()
+say "  week year:   " d.weekNumberYear()
+
+say d.weekNumber() = 53
+say d.weekNumberYear() = 2020
+
+
+/*
+ * Monday 2021-01-04 starts week 1 of 2021.
+ */
+base = date("BASE", "2021-01-04", "INTERNATIONAL") as .int
+d = .DateTime(base, 0)
+
+say
+say "2021-01-04"
+say "  week number: " d.weekNumber()
+say "  week year:   " d.weekNumberYear()
+
+say d.weekNumber() = 1
+say d.weekNumberYear() = 2021
+
+
+/*
+ * A date at the end of a year can also belong to the following ISO year.
+ *
+ * 2018-12-31 was a Monday and is ISO week 1 of 2019.
+ */
+base = date("BASE", "2018-12-31", "INTERNATIONAL") as .int
+d = .DateTime(base, 0)
+
+say
+say "2018-12-31"
+say "  week number: " d.weekNumber()
+say "  week year:   " d.weekNumberYear()
+
+say d.weekNumber() = 1
+say d.weekNumberYear() = 2019
+
+
+/*
+ * Ordinary mid-year case.
+ */
+base = date("BASE", "2026-08-24", "INTERNATIONAL") as .int
+d = .DateTime(base, 0)
+
+say
+say "2026-08-24"
+say "  week number: " d.weekNumber()
+say "  week year:   " d.weekNumberYear()
+
+say d.weekNumber() = 35
+say d.weekNumberYear() = 2026
+
+
+/*
+ * Number of ISO weeks in a year.
+ */
+base = date("BASE", "2015-06-01", "INTERNATIONAL") as .int
+d = .DateTime(base, 0)
+
+say
+say "weeks in 2015: " d.weeksInYear()
+say d.weeksInYear() = 53
+
+base = date("BASE", "2016-06-01", "INTERNATIONAL") as .int
+d = .DateTime(base, 0)
+
+say "weeks in 2016: " d.weeksInYear()
+say d.weeksInYear() = 52
+
+base = date("BASE", "2020-06-01", "INTERNATIONAL") as .int
+d = .DateTime(base, 0)
+
+say "weeks in 2020: " d.weeksInYear()
+say d.weeksInYear() = 53
+
+base = date("BASE", "2021-06-01", "INTERNATIONAL") as .int
+d = .DateTime(base, 0)
+
+say "weeks in 2021: " d.weeksInYear()
+say d.weeksInYear() = 52
+
+base = date("BASE", "2026-08-24", "INTERNATIONAL") as .int
+
+a = .DateTime(base, 75477123456)
+b = .DateTime(base, 75477123456)
+c = .DateTime(base, 75477123457)
+
+say a.toString()
+say a.equals(b)
+say a.equals(c)
+
+
+say "Test ISO8601"
+
+iso = .ISO8601()
+
+base = date("BASE", "2026-08-24", "INTERNATIONAL") as .int
+a = .DateTime(base, 75477123456)
+
+text = iso.format(a)
+say text
+
+b = iso.parse(text)
+
+say b.toString()
+say a.equals(b)
+
+iso = .ISO8601()
+
+a = iso.parse("2026-08-24")
+say a.toString()
+/* 2026-08-24T00:00:00.000000 */
+
+a = iso.parse("2026-08-24T12:34:56")
+say a.toString()
+/* 2026-08-24T12:34:56.000000 */
+
+a = iso.parse("2026-08-24T12:34:56.1")
+say a.toString()
+/* 2026-08-24T12:34:56.100000 */
+
+a = iso.parse("2026-08-24T12:34:56.123")
+say a.toString()
+/* 2026-08-24T12:34:56.123000 */
+
+a = iso.parse("2026-08-24T12:34:56.123456")
+say a.toString()
+/* 2026-08-24T12:34:56.123456 */
+
+iso = .ISO8601()
+
+say iso.isValid("2026-08-24")
+say iso.isValid("2026-08-24T12:34:56")
+say iso.isValid("2026-08-24T12:34:56.123")
+say iso.isValid("2026-08-24T25:00:00")
+say iso.isValid("2026/08/24")
+say
+
+d = iso.parse("2026-08-24")
+say d.toString()
+
+d = iso.parse("2026-08-24T12:34:56")
+say d.toString()
+
+d = iso.parse("2026-08-24T12:34:56.1")
+say d.toString()
+
+d = iso.parse("2026-08-24T12:34:56.123456")
+say d.toString()
+
+say
+say "Offset formatting"
+
+iso = .ISO8601()
+
+o = iso.parseOffset("2026-08-24T22:00:00.123456+02:00")
+say iso.formatOffset(o)
+
+o = iso.parseOffset("2026-08-24T14:30:00-05:30")
+say iso.formatOffset(o)
+
+o = iso.parseOffset("2026-08-24T20:00:00Z")
+say iso.formatOffset(o)
+
+say
+say "UTC conversion"
+
+o = iso.parseOffset("2026-08-24T22:00:00+02:00")
+u = o.toUTC()
+
+say iso.formatOffset(u)
+
+o = iso.parseOffset("2026-08-24T14:30:00-05:30")
+u = o.toUTC()
+
+say iso.formatOffset(u)

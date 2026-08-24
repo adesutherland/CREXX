@@ -1,0 +1,592 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb numeric_classic comments_dash
+namespace time expose DateTime
+import data
+
+import rxfnsb
+
+/**
+ * Class DateTime is part of the Time package and Represents a date and time
+ * with microsecond precision.
+ * A DateTime consists of a Rexx base date and the number of microseconds
+ * elapsed since midnight. Calendar conversion and validation are provided
+ * by the Rexx DATE() built-in function.
+ *
+ * The default constructor creates a DateTime containing the current local
+ * date and time.
+ */
+
+DateTime: class implements .Printable
+
+  base_date_        = .int
+  day_microseconds_ = .int
+
+
+  /**
+   * Creates a DateTime.
+   *
+   * With no arguments, the current local date and time are used.
+   *
+   * @param base_date the Rexx base date
+   * @param day_microseconds microseconds since midnight
+   */
+  *: factory
+    arg base_date = date("BASE") as .int, ,
+        day_microseconds = time("US") as .int
+
+    base_date_ = base_date
+    day_microseconds_ = day_microseconds
+    return
+    
+  /**
+   * Returns the Rexx base date.
+   *
+   * The base date is the number of complete days since 1 January 0001.
+   *
+   * @return .int the Rexx base date
+   */
+  baseDate: method = .int
+    return base_date_
+
+
+  /**
+   * Returns the number of microseconds elapsed since midnight.
+   *
+   * @return .int the number of microseconds since midnight
+   */
+  dayMicroseconds: method = .int
+    return day_microseconds_
+
+
+  /**
+   * Returns the number of complete seconds elapsed since midnight.
+   *
+   * @return .int the number of seconds since midnight
+   */
+  daySeconds: method = .int
+    return day_microseconds_ % 1000000
+
+
+  /**
+   * Returns the year.
+   *
+   * @return .int the year
+   */
+  year: method = .int
+    d = date("SORTED", base_date_, "BASE")
+    return left(d, 4) as .int
+
+
+  /**
+   * Returns the month of the year.
+   *
+   * @return .int the month, from 1 through 12
+   */
+  month: method = .int
+    d = date("SORTED", base_date_, "BASE")
+    return substr(d, 5, 2) as .int
+
+
+  /**
+   * Returns the day of the month.
+   *
+   * @return .int the day of the month, from 1 through 31
+   */
+  day: method = .int
+    d = date("SORTED", base_date_, "BASE")
+    return substr(d, 7, 2) as .int
+
+
+  /**
+   * Returns the hour of the day.
+   *
+   * @return .int the hour, from 0 through 23
+   */
+  hour: method = .int
+    seconds = day_microseconds_ % 1000000
+    return seconds % 3600
+
+
+  /**
+   * Returns the minute of the hour.
+   *
+   * @return .int the minute, from 0 through 59
+   */
+  minute: method = .int
+    seconds = day_microseconds_ % 1000000
+    return (seconds // 3600) % 60
+
+
+  /**
+   * Returns the second of the minute.
+   *
+   * @return .int the second, from 0 through 59
+   */
+  second: method = .int
+    seconds = day_microseconds_ % 1000000
+    return seconds // 60
+
+
+  /**
+   * Returns the microsecond part of the time.
+   *
+   * @return .int the microsecond, from 0 through 999999
+   */
+  microsecond: method = .int
+    return day_microseconds_ // 1000000
+
+
+  /**
+   * Returns the ordinal day of the year.
+   *
+   * January 1 is day 1.
+   *
+   * @return .int the day of the year, from 1 through 365 or 366
+   */
+  yearDay: method = .int
+    return date("DAYS", base_date_, "BASE") as .int
+
+
+  /**
+   * Returns the name of the day of the week.
+   *
+   * @return .string the weekday name
+   */
+  dayName: method = .string
+    return date("WEEKDAY", base_date_, "BASE")
+
+
+  /**
+   * Returns the name of the month.
+   *
+   * @return .string the month name
+   */
+  monthName: method = .string
+    return date("MONTH", base_date_, "BASE")
+
+
+  /**
+   * Returns the date in Rexx STANDARD format.
+   *
+   * @return .string the date in STANDARD format
+   */
+  standardDate: method = .string
+    return date("STANDARD", base_date_, "BASE")
+
+
+  /**
+   * Returns the date in international format.
+   *
+   * @return .string the date in INTERNATIONAL format
+   */
+  internationalDate: method = .string
+    return date("INTERNATIONAL", base_date_, "BASE")
+
+
+  /**
+   * Returns whether the current year is a leap year.
+   *
+   * @return .int 1 if the year is a leap year, otherwise 0
+   */
+  isLeapYear: method = .int
+    y = year()
+
+    return y // 400 = 0 | ,
+          (y // 4 = 0 & y // 100 <> 0)
+
+
+  /**
+   * Returns the number of days in the current year.
+   *
+   * @return .int 365 or 366
+   */
+  daysInYear: method = .int
+    if isLeapYear() then return 366
+    return 365
+
+  /**
+   * Returns the number of days in the current month.
+   *
+   * @return .int the number of days in the month
+   */
+
+  daysInMonth: method = .int
+    y = year()
+    m = month()
+
+    first_date = right(y, 4, "0")
+    first_date = first_date || "-"
+    first_date = first_date || right(m, 2, "0")
+    first_date = first_date || "-01"
+
+    first_base = date("BASE", first_date, "INTERNATIONAL") as .int
+
+    next_year = .int
+    next_month = .int
+
+    if m = 12 then do
+      next_year = y + 1
+      next_month = 1
+    end
+    else do
+      next_year = y
+      next_month = m + 1
+    end
+
+    next_date = right(next_year, 4, "0")
+    next_date = next_date || "-"
+    next_date = next_date || right(next_month, 2, "0")
+    next_date = next_date || "-01"
+
+    next_base = date("BASE", next_date, "INTERNATIONAL") as .int
+
+    return next_base - first_base
+ 
+  /**
+   * Adds the specified number of microseconds to this DateTime.
+   *
+   * The date is adjusted when the result crosses a midnight boundary.
+   * Negative values subtract microseconds.
+   *
+   * @param microseconds the number of microseconds to add
+   * @return .int 0 on success
+   */
+  addMicroseconds: method = .int
+    arg microseconds = .int
+
+    total = day_microseconds_ + microseconds
+
+    days = total % 86400000000
+    remainder = total // 86400000000
+
+    if remainder < 0 then do
+      days = days - 1
+      remainder = remainder + 86400000000
+    end
+
+    base_date_ = base_date_ + days
+    day_microseconds_ = remainder
+
+    return 0
+
+
+  /**
+   * Adds the specified number of seconds to this DateTime.
+   *
+   * Negative values subtract seconds.
+   *
+   * @param seconds the number of seconds to add
+   * @return .int 0 on success
+   */
+  addSeconds: method = .int
+    arg seconds = .int
+
+    call addMicroseconds(seconds * 1000000)
+    return 0
+
+
+  /**
+   * Adds the specified number of minutes to this DateTime.
+   *
+   * Negative values subtract minutes.
+   *
+   * @param minutes the number of minutes to add
+   * @return .int 0 on success
+   */
+  addMinutes: method = .int
+    arg minutes = .int
+
+    call addMicroseconds(minutes * 60000000)
+    return 0
+
+    
+
+  /**
+   * Adds the specified number of hours to this DateTime.
+   *
+   * Negative values subtract hours.
+   *
+   * @param hours the number of hours to add
+   * @return .int 0 on success
+   */
+  addHours: method = .int
+    arg hours = .int
+
+    call addMicroseconds(hours * 3600000000)
+    return 0
+
+
+  /**
+   * Adds the specified number of days to this DateTime.
+   *
+   * The time of day is unchanged. Negative values subtract days.
+   *
+   * @param days the number of days to add
+   * @return .int 0 on success
+   */
+  addDays: method = .int
+    arg days = .int
+
+    base_date_ = base_date_ + days
+    return 0
+
+
+  /**
+   * Adds the specified number of weeks to this DateTime.
+   *
+   * The time of day is unchanged. Negative values subtract weeks.
+   *
+   * @param weeks the number of weeks to add
+   * @return .int 0 on success
+   */
+  addWeeks: method = .int
+    arg weeks = .int
+
+    base_date_ = base_date_ + weeks * 7
+    return 0
+
+
+  /**
+   * Compares this DateTime with another DateTime.
+   *
+   * @param other the DateTime to compare with
+   * @return .int -1 if earlier, 0 if equal, or 1 if later
+   */
+  compareTo: method = .int
+    arg other = .DateTime
+
+    if base_date_ < other.baseDate() then return -1
+    if base_date_ > other.baseDate() then return 1
+
+    if day_microseconds_ < other.dayMicroseconds() then return -1
+    if day_microseconds_ > other.dayMicroseconds() then return 1
+
+    return 0
+
+
+  /**
+   * Tests whether this DateTime occurs before another DateTime.
+   *
+   * @param other the DateTime to compare with
+   * @return .int 1 if this DateTime is earlier, otherwise 0
+   */
+  isBefore: method = .int
+    arg other = .DateTime
+
+    return compareTo(other) < 0
+
+
+  /**
+   * Tests whether this DateTime occurs after another DateTime.
+   *
+   * @param other the DateTime to compare with
+   * @return .int 1 if this DateTime is later, otherwise 0
+   */
+  isAfter: method = .int
+    arg other = .DateTime
+
+    return compareTo(other) > 0
+
+  /**
+   * Adds the specified number of years to this DateTime.
+   *
+   * If the current date is February 29 and the resulting year is not a
+   * leap year, the date becomes February 28.
+   *
+   * @param years the number of years to add
+   * @return .int 0 on success
+   */
+  addYears: method = .int
+    arg years = .int
+
+    y = year()
+    m = month()
+    d = day()
+
+    new_year = y + years
+
+    if m = 2 & d = 29 then do
+      leap = new_year // 400 = 0 | ,
+             (new_year // 4 = 0 & new_year // 100 <> 0)
+
+      if \leap then d = 28
+    end
+
+    new_date = right(new_year, 4, "0")
+    new_date = new_date || "-"
+    new_date = new_date || right(m, 2, "0")
+    new_date = new_date || "-"
+    new_date = new_date || right(d, 2, "0")
+
+    base_date_ = date("BASE", new_date, "INTERNATIONAL") as .int
+
+    return 0    
+
+  /**
+   * Returns the ISO weekday number.
+   *
+   * Monday is 1 and Sunday is 7.
+   *
+   * @return .int the ISO weekday, from 1 through 7
+   */
+  weekDay: method = .int
+    return (base_date_ // 7) + 1
+
+
+  /**
+   * Returns the ISO week-numbering year.
+   *
+   * @return .int the ISO week-numbering year
+   */
+  weekNumberYear: method = .int
+    wd = weekDay()
+
+    /*
+     * Thursday determines the ISO week year.
+     */
+    thursday = base_date_ + 4 - wd
+
+    d = date("SORTED", thursday, "BASE")
+    return left(d, 4) as .int
+
+
+  /**
+   * Returns the ISO week number.
+   *
+   * @return .int the ISO week number, from 1 through 53
+   */
+  weekNumber: method = .int
+    wd = weekDay()
+
+    /*
+     * Find the Thursday belonging to this ISO week.
+     */
+    thursday = base_date_ + 4 - wd
+
+    d = date("SORTED", thursday, "BASE")
+    week_year = left(d, 4) as .int
+
+    jan4_text = right(week_year, 4, "0")
+    jan4_text = jan4_text || "-01-04"
+
+    jan4 = date("BASE", jan4_text, "INTERNATIONAL") as .int
+
+    jan4_weekday = (jan4 // 7) + 1
+    first_thursday = jan4 + 4 - jan4_weekday
+
+    return ((thursday - first_thursday) % 7) + 1
+
+
+  /**
+   * Returns the ISO week date.
+   *
+   * The result has the form YYYY-Www-d.
+   *
+   * @return .string the ISO week date
+   */
+  weekNumberDate: method = .string
+    wy = weekNumberYear()
+    wn = weekNumber()
+    wd = weekDay()
+
+    result = right(wy, 4, "0")
+    result = result || "-W"
+    result = result || right(wn, 2, "0")
+    result = result || "-"
+    result = result || wd
+
+    return result
+
+
+  /**
+   * Returns the number of ISO weeks in this ISO week year.
+   *
+   * @return .int 52 or 53
+   */
+  weeksInYear: method = .int
+    wy = weekNumberYear()
+
+    last_date = right(wy, 4, "0")
+    last_date = last_date || "-12-28"
+
+    last_base = date("BASE", last_date, "INTERNATIONAL") as .int
+
+    last_weekday = (last_base // 7) + 1
+    thursday = last_base + 4 - last_weekday
+
+    jan4_text = right(wy, 4, "0")
+    jan4_text = jan4_text || "-01-04"
+
+    jan4 = date("BASE", jan4_text, "INTERNATIONAL") as .int
+
+    jan4_weekday = (jan4 // 7) + 1
+    first_thursday = jan4 + 4 - jan4_weekday
+
+    return ((thursday - first_thursday) % 7) + 1
+    
+  /**
+   * Tests whether this DateTime is equal to another DateTime.
+   *
+   * Two DateTime values are equal when both their Rexx base dates and
+   * their times within the day are equal.
+   *
+   * @param other the DateTime to compare with
+   * @return .int 1 if the DateTime values are equal, otherwise 0
+   */
+  equals: method = .int
+    arg other = .DateTime
+
+    return base_date_ = other.baseDate() & ,
+           day_microseconds_ = other.dayMicroseconds()
+
+
+  /**
+   * Returns a string representation of this DateTime.
+   *
+   * The result has the form YYYY-MM-DDThh:mm:ss.ffffff.
+   *
+   * @return .string the string representation of this DateTime
+   */
+  toString: method = .string
+    total_seconds = day_microseconds_ % 1000000
+    us = day_microseconds_ // 1000000
+
+    h = total_seconds % 3600
+    remainder = total_seconds // 3600
+    m = remainder % 60
+    s = remainder // 60
+
+    result = internationalDate()
+    result = result || "T"
+    result = result || right(h, 2, "0")
+    result = result || ":"
+    result = result || right(m, 2, "0")
+    result = result || ":"
+    result = result || right(s, 2, "0")
+    result = result || "."
+    result = result || right(us, 6, "0")
+
+    return result
