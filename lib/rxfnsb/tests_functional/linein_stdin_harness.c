@@ -11,7 +11,8 @@
 #include <windows.h>
 
 static int run_child(const char *runner, const char *program,
-                     char *output, size_t output_size) {
+                     char *output, size_t output_size,
+                     unsigned long timeout_milliseconds) {
     SECURITY_ATTRIBUTES attributes;
     STARTUPINFOA startup;
     PROCESS_INFORMATION process;
@@ -76,7 +77,8 @@ static int run_child(const char *runner, const char *program,
         goto process_cleanup;
     }
 
-    wait_result = WaitForSingleObject(process.hProcess, 3000);
+    wait_result = WaitForSingleObject(
+            process.hProcess, (DWORD)timeout_milliseconds);
     if (wait_result == WAIT_TIMEOUT) {
         fprintf(stderr,
                 "linein stdin harness: child waited for input after newline\n");
@@ -132,7 +134,8 @@ static double monotonic_seconds(void) {
 }
 
 static int run_child(const char *runner, const char *program,
-                     char *output, size_t output_size) {
+                     char *output, size_t output_size,
+                     unsigned long timeout_milliseconds) {
     int stdin_pipe[2];
     int output_pipe[2];
     pid_t child;
@@ -184,7 +187,8 @@ static int run_child(const char *runner, const char *program,
         return 1;
     }
 
-    deadline = monotonic_seconds() + 3.0;
+    deadline = monotonic_seconds() +
+            (double)timeout_milliseconds / 1000.0;
     while (!child_done) {
         pid_t wait_result = waitpid(child, &status, WNOHANG);
         if (wait_result == child) {
@@ -227,14 +231,29 @@ static int run_child(const char *runner, const char *program,
 
 int main(int argc, char **argv) {
     char output[4096] = {0};
+    unsigned long timeout_milliseconds = 3000;
     int result;
 
-    if (argc != 3) {
-        fprintf(stderr, "usage: %s <rxvme> <program.rxbin>\n", argv[0]);
+    if (argc != 3 && argc != 4) {
+        fprintf(stderr,
+                "usage: %s <runner> <program> [timeout-milliseconds]\n",
+                argv[0]);
         return 2;
     }
+    if (argc == 4) {
+        char *end = NULL;
+        timeout_milliseconds = strtoul(argv[3], &end, 10);
+        if (end == argv[3] || *end != '\0' ||
+                timeout_milliseconds == 0 ||
+                timeout_milliseconds > 60000) {
+            fprintf(stderr,
+                    "linein stdin harness: timeout must be 1..60000 ms\n");
+            return 2;
+        }
+    }
 
-    result = run_child(argv[1], argv[2], output, sizeof(output));
+    result = run_child(argv[1], argv[2], output, sizeof(output),
+                       timeout_milliseconds);
     if (output[0] != '\0') fputs(output, stdout);
     if (result != 0) return result;
 
