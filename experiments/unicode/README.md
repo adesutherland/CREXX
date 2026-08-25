@@ -2,9 +2,9 @@
 
 Status: Phase 1 contract/input freeze and Phase 2 NFD reference proof complete;
 the Level L lexer syntax, Level B bootstrap frontend, authored TinyExpr proof,
-and authored ICU `gennorm2` lexer proof are complete. The reusable neutral IR,
-native automaton core, Unicode record parser/data compiler, and Level G library
-remain research work.
+authored ICU `gennorm2` lexer proof, and typed Level B Unicode-rule parser are
+complete. The reusable neutral IR, native automaton core, Unicode data
+compiler, and Level G library remain research work.
 
 This directory is the retained experimental work area for the `unicode`
 branch. It is deliberately outside the product libraries and is not installed
@@ -128,8 +128,12 @@ It parses canonical authored Level L for TinyExpr and the ICU `gennorm2`
 rule-file lexer, creates byte-identical token/AST dumps on both VMs, and lowers
 the validated tree to the retained re2c DFA adapter. The resulting cREXX
 TinyExpr scanner agrees with `rxfnsl`; the generated Unicode scanner accepts
-all 2,500 lines of the retained ICU input with exact rule-form counts.
+all 2,500 lines of the retained ICU input with exact rule-form counts. A
+separate deterministic Level B consumer parses that token stream into 2,485
+typed version, CCC, and mapping records with exact byte/token spans. Both VMs
+produce byte-identical retained dumps, and every semantic record is
+byte-identical to a new dump mode in the independent C++/re2c NFD oracle.
 
 The production compiler remains unchanged. A reusable neutral lexer IR, native
 Level B/Level L automaton construction, packed tree/table storage, Unicode
-record parsing/data compilation, and Level L self-hosting are later work.
+data compilation, and Level L self-hosting are later work.

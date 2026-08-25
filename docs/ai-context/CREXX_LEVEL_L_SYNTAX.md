@@ -380,10 +380,20 @@ The lexer recognizes input and emits tokens. It does not perform the NFD
 algorithm or hide a line grammar inside unrestricted actions.
 
 For example, a lexer for ICU `gennorm2` input can emit tokens for hexadecimal
-values, `..`, `:`, `=`, `>`, comments, and line endings. A later parser builds
-typed range and mapping records. The Unicode data compiler consumes those
-records, and the normalizer consumes the generated data. Keeping these layers
-separate makes each independently testable against the retained re2c oracle.
+values, `..`, `:`, `=`, `>`, comments, and line endings. The retained
+experiment now passes that stream to a hand-written deterministic Level B
+parser, which builds typed version, CCC range/single, and mapping records with
+exact byte and token spans. The Unicode data compiler will consume those
+records, and the normalizer will consume the generated data. Keeping these
+layers separate makes each independently testable against the retained re2c
+oracle.
+
+This consumer parser is executable evidence for future Level L parser-maker
+requirements, not an implementation or syntax definition for the parser
+maker. It exercises production alternatives selected by one-token lookahead,
+one-or-more terminal sequences, automatic source-span aggregation, typed AST
+lowering, and first-fault panic behavior. The complete 2,485-record semantic
+tree agrees byte-for-byte with the independent C++/re2c `gennorm2` parser.
 
 The intended later parser shape uses the same declaration convention:
 
@@ -620,8 +630,9 @@ self-hosting proof.
 
 The Unicode case means that the bootstrap parser ingests a Level L
 *specification describing* the Unicode rule-file lexer. The generated lexer
-then tokenizes the Unicode input. The Level L frontend does not normalize text
-or perform the Unicode algorithm.
+then tokenizes the Unicode input, and the retained hand-written Level B
+consumer parser constructs the typed Unicode-rule AST. Neither parser
+normalizes text or performs the Unicode algorithm.
 
 The Unicode lexer slice is accepted. The remaining self-hosting sequence is:
 

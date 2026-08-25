@@ -1,6 +1,6 @@
 # Level L Bootstrap And Unicode-Lexer Evidence — 2026-08-25
 
-Revision under test: local `unicode` branch work following `f0d190fb2`.
+Revision under test: local `unicode` branch work following `48bace22f`.
 
 Command, from the repository root:
 
@@ -16,6 +16,8 @@ parser policy: single cursor, no backtracking, first-fault panic
 TinyExpr cREXX: byte-identical generation
 TinyExpr differential oracle: PASS
 ICU gennorm2 nfc.txt lexer: PASS (2500 lines)
+Unicode rule parser: PASS (2485 typed records with byte/token spans)
+C++/re2c semantic oracle: byte-identical (2485 records)
 generated dispatch: .jtable and jumpi
 binary scan/stores: bgetu8, bsetu16, bsetu32
 rxtvm: PASS
@@ -37,8 +39,19 @@ records, 961 two-way mappings, 1,120 one-way mappings, one version declaration,
 2,500 line endings, and one EOF token. The UTF-8 comment fixture retained the
 newline's byte offset after a two-byte scalar.
 
+The generated Unicode tokens then passed through the hand-written Level B
+consumer parser on both VM families. It constructed 2,485 typed records: one
+version declaration, 403 CCC records covering 968 code points, 961 two-way
+mappings, and 1,120 one-way mappings containing 3,127 values. The retained
+record dump includes exact source lines, byte spans, and token spans and was
+byte-identical between VMs. The canonical semantic dump was byte-identical to
+the complete dump produced by the independent C++/re2c parser. Focused tests
+also exercised UTF-8/CRLF span accounting and first-fault panics for malformed
+CCC syntax, an unsupported version, invalid two-way arity, a non-scalar value,
+and a missing version.
+
 No production compiler, RXAS, linker, VM, library, or CMake source changed.
-The result proves the experimental authored Level L path and cREXX output
-adapter; it does not prove Unicode record parsing, normalization-table
-generation, NFD/NFC runtime behavior, malformed binary UTF-8 handling, a native
-Level L automaton core, packed layout superiority, or self-hosting.
+The result proves the experimental authored Level L path, cREXX output adapter,
+and typed Unicode rule parsing. It does not prove normalization-table
+generation, NFD/NFC runtime behavior, malformed binary UTF-8 handling, a
+native Level L automaton core, packed layout superiority, or self-hosting.

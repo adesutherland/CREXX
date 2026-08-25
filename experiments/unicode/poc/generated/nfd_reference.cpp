@@ -128,6 +128,23 @@ struct Input {
     }
 };
 
+enum class RuleRecordKind {
+    version,
+    ccc_single,
+    ccc_range,
+    mapping_two_way,
+    mapping_one_way
+};
+
+struct RuleRecord {
+    RuleRecordKind kind;
+    CodePoint first = 0;
+    CodePoint last = 0;
+    uint32_t number = 0;
+    std::string text;
+    Sequence values;
+};
+
 struct Rules {
     std::string version;
     std::vector<uint8_t> ccc = std::vector<uint8_t>(CODE_POINT_COUNT, 0);
@@ -138,6 +155,19 @@ struct Rules {
     size_t two_way_mappings = 0;
     size_t one_way_mappings = 0;
     size_t mapping_values = 0;
+    std::vector<RuleRecord> records;
+
+    void add_version(std::string value) {
+        if (!version.empty()) {
+            throw std::runtime_error("duplicate Unicode version declaration");
+        }
+        if (value != "17.0.0") {
+            throw std::runtime_error("expected Unicode version 17.0.0");
+        }
+        version = std::move(value);
+        records.push_back(RuleRecord{RuleRecordKind::version, 0, 0, 0,
+                                    version, {}});
+    }
 
     void add_ccc(CodePoint first, CodePoint last, uint32_t value) {
         if (!is_scalar(first) || !is_scalar(last) || last < first) {
@@ -158,6 +188,9 @@ struct Rules {
             ++ccc_code_points;
         }
         ++ccc_records;
+        const RuleRecordKind kind = first == last ? RuleRecordKind::ccc_single
+                                                  : RuleRecordKind::ccc_range;
+        records.push_back(RuleRecord{kind, first, last, value, "", {}});
     }
 
     void add_mapping(CodePoint source, Sequence mapping, bool two_way) {
@@ -174,6 +207,10 @@ struct Rules {
         } else {
             ++one_way_mappings;
         }
+        const RuleRecordKind kind = two_way ? RuleRecordKind::mapping_two_way
+                                            : RuleRecordKind::mapping_one_way;
+        records.push_back(RuleRecord{kind, source, source, 0, "",
+                                    std::move(mapping)});
     }
 };
 
@@ -992,10 +1029,12 @@ yy60:
 	a = yyt1;
 	b = yyt2;
 	{
-            if (!rules.version.empty()) in.fail("duplicate Unicode version declaration");
-            rules.version.assign(reinterpret_cast<const char*>(a),
-                                 reinterpret_cast<const char*>(b));
-            if (rules.version != "17.0.0") in.fail("expected Unicode version 17.0.0");
+            try {
+                rules.add_version(std::string(reinterpret_cast<const char*>(a),
+                                              reinterpret_cast<const char*>(b)));
+            } catch (const std::exception& error) {
+                in.fail(error.what());
+            }
             ++in.line;
             goto scan;
         }
@@ -1086,6 +1125,42 @@ std::string format_sequence(const Sequence& sequence) {
     for (size_t i = 0; i < sequence.size(); ++i) {
         if (i != 0) out << ' ';
         out << std::setw(sequence[i] <= 0xFFFF ? 4 : 6) << sequence[i];
+    }
+    return out.str();
+}
+
+std::string format_code_point(CodePoint code_point) {
+    std::ostringstream out;
+    out << std::uppercase << std::hex << std::setfill('0')
+        << std::setw(code_point <= 0xFFFF ? 4 : 6) << code_point;
+    return out.str();
+}
+
+std::string dump_rule_semantics(const Rules& rules) {
+    std::ostringstream out;
+    for (const RuleRecord& record : rules.records) {
+        switch (record.kind) {
+            case RuleRecordKind::version:
+                out << "version|" << record.text << '\n';
+                break;
+            case RuleRecordKind::ccc_single:
+                out << "ccc_single|" << format_code_point(record.first)
+                    << '|' << record.number << '\n';
+                break;
+            case RuleRecordKind::ccc_range:
+                out << "ccc_range|" << format_code_point(record.first) << '|'
+                    << format_code_point(record.last) << '|' << record.number
+                    << '\n';
+                break;
+            case RuleRecordKind::mapping_two_way:
+                out << "mapping_two_way|" << format_code_point(record.first)
+                    << '|' << format_sequence(record.values) << '\n';
+                break;
+            case RuleRecordKind::mapping_one_way:
+                out << "mapping_one_way|" << format_code_point(record.first)
+                    << '|' << format_sequence(record.values) << '\n';
+                break;
+        }
     }
     return out.str();
 }
@@ -1840,8 +1915,19 @@ done:
 } // namespace
 
 int main(int argc, char** argv) {
+    if (argc == 3 && std::string(argv[1]) == "--dump-rules") {
+        try {
+            const Rules rules = parse_gennorm2(argv[2]);
+            std::cout << dump_rule_semantics(rules);
+            return 0;
+        } catch (const std::exception& error) {
+            std::cerr << error.what() << '\n';
+            return 1;
+        }
+    }
     if (argc != 3) {
-        std::cerr << "usage: nfd_reference ICU_NFC_RULES NORMALIZATION_TEST\n";
+        std::cerr << "usage: nfd_reference ICU_NFC_RULES NORMALIZATION_TEST\n"
+                  << "       nfd_reference --dump-rules ICU_NFC_RULES\n";
         return 2;
     }
     try {

@@ -291,6 +291,11 @@ first provide a complete parse tree and then offer more specialised AST tools.
 A Unicode rule-file lexer likewise emits tokens; it does not hide the Unicode
 algorithm in a lexer action. A parser constructs typed rule records, a data
 compiler builds tables, and the Level G operation consumes those tables.
+The retained experiment now implements that consumer parser by hand in Level
+B: it produces typed version, combining-class, and mapping records with exact
+byte/token spans, and its complete values agree with the independent re2c
+reference. This proves the layering and supplies a real parser use case; it
+does not yet define the Level L parser-maker syntax.
 
 ## Token and AST foundation
 

@@ -23,6 +23,16 @@ The script:
 6. requires the deterministic summary to match
    `evidence/nfd-conformance.txt`.
 
+The same reference executable also has a deterministic semantic-record mode:
+
+```sh
+nfd_reference --dump-rules experiments/unicode/inputs/icu-78.3/nfc.txt
+```
+
+The Level L bootstrap proof compares its complete parsed Unicode-rule AST to
+this output. The dump contains canonical values and record kinds, while the
+Level B parser's separate record dump additionally retains byte/token spans.
+
 Optional environment variables:
 
 - `RE2C_BIN`: an existing re2c 4.5.1 executable;

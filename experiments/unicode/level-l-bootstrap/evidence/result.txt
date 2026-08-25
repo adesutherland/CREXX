@@ -3,6 +3,8 @@ parser policy: single cursor, no backtracking, first-fault panic
 TinyExpr cREXX: byte-identical generation
 TinyExpr differential oracle: PASS
 ICU gennorm2 nfc.txt lexer: PASS (2500 lines)
+Unicode rule parser: PASS (2485 typed records with byte/token spans)
+C++/re2c semantic oracle: byte-identical (2485 records)
 generated dispatch: .jtable and jumpi
 binary scan/stores: bgetu8, bsetu16, bsetu32
 rxtvm: PASS

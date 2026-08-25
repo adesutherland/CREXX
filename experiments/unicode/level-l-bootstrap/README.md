@@ -14,6 +14,13 @@ authored .levell
     -> retained re2c 4.5.1 cREXX syntax adapter
     -> generated Level B scanner
     -> rxc -> rxas -> rxlink -> rxtvm and rxbvm
+
+retained ICU nfc.txt
+    -> generated Level L scanner
+    -> hand-written deterministic Level B record parser
+    -> typed version/CCC/mapping AST with byte and token spans
+    -> deterministic semantic dump
+    -> byte comparison with the independent C++/re2c oracle
 ```
 
 The authored language is Level L. re2c is used only to construct and emit the
@@ -45,6 +52,20 @@ lexer for ICU's retained `gennorm2` normalization file notation, including
 version, hexadecimal, range, canonical-combining-class, mapping, comment, and
 line-boundary tokens.
 
+`unicode_gennorm2.crexx` consumes those generated tokens with a second
+single-cursor, one-token-lookahead parser. It constructs
+`unicodegennorm2record`, `unicodegennorm2ast`, and `unicodegennorm2result`
+objects for the version declaration, CCC singles/ranges, and one-/two-way
+mappings. Each record retains its source line, exact byte span, and inclusive
+token span. Validation rejects unsupported/duplicate versions, malformed
+productions, non-scalars, invalid or overlapping CCC records, duplicate
+mappings, and invalid mapping arity at the first fault.
+
+The record byte span starts at its first semantic token and ends immediately
+before the line terminator, so it includes any skipped spacing/comment tail.
+The token span is stored as a zero-based start plus count and includes the
+terminating newline token.
+
 ## Reproduce
 
 From the repository root:
@@ -59,7 +80,8 @@ variables are:
 - `CREXX_BUILD_DIR`: product build directory;
 - `CREXX_LEVEL_L_BOOTSTRAP_BUILD_DIR`: untracked experiment output directory;
 - `CREXX_BUILD_JOBS`: parallel build count, default `10`; and
-- `RE2C_BIN`: alternate re2c executable, which must report version `040501`.
+- `RE2C_BIN`: alternate re2c executable, which must report version `040501`;
+- `CXX`: C++ compiler used for the independent semantic oracle, default `c++`.
 
 The run regenerates the Token dump, AST dump, re2c adapter input, and final
 cREXX for both specifications. It requires byte identity with the committed
@@ -71,6 +93,12 @@ byte spans. The Unicode scanner accepts all 2,500 lines of the retained ICU
 78.3 `nfc.txt` and checks exact counts for the 163 ranges, 403 CCC records, 961
 two-way mappings, 1,120 one-way mappings, version declaration, line endings,
 and EOF. A non-ASCII comment fixture checks UTF-8 matching and byte offsets.
+The record parser then constructs 2,485 typed records containing 403 CCC
+records covering 968 code points, 961 two-way mappings, 1,120 one-way
+mappings, and 3,127 mapping values. Its complete semantic dump is
+byte-identical to the retained C++/re2c parser; its span-bearing record dump is
+byte-identical across both VM families. Focused fixtures prove CRLF/UTF-8 byte
+spans plus malformed-rule and unsupported-version first-fault panics.
 
 ## Deliberate boundaries
 
@@ -88,7 +116,7 @@ and EOF. A non-ASCII comment fixture checks UTF-8 matching and byte offsets.
   automaton builder remain later work.
 - Tokens use a portable 12-byte proof layout with `<at..u16>`/`<at..u32>`.
   Packed host-native records are not selected by this experiment.
-- This lexer recognizes the Unicode rule-file language; it does not yet parse
-  its records, compile normalization tables, normalize text, or implement NFC.
+- The Unicode rule parser builds a typed logical AST but does not yet compile
+  normalization tables, normalize text, or implement NFC.
 - Level L parser-maker syntax, self-lexing/self-hosting, recovery, token
   payloads, streaming, and physical packed AST storage remain later work.

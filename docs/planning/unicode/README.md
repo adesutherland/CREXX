@@ -2,9 +2,9 @@
 
 Status: Phase 1 and Phase 2 complete; the Level L lexer syntax, Level B
 bootstrap frontend, authored TinyExpr generator proof, and authored ICU
-`gennorm2` lexer proof are complete. The reusable neutral IR, native automaton
-core, Unicode record parser/data compiler, and Level G library remain research
-work.
+`gennorm2` lexer proof are complete. The typed Level B Unicode-rule parser is
+also complete. The reusable neutral IR, native automaton core, Unicode data
+compiler, and Level G library remain research work.
 
 Branch: `unicode`, based on `origin/develop` at `7b78375bd` on 2026-08-25.
 The branch is intentionally kept separate from `develop` until its contracts,
@@ -412,13 +412,22 @@ one-way mapping, version, line, and EOF counts. This Level L lexer-maker PoC is
 therefore complete; it required no production compiler, RXAS, linker, or VM
 change.
 
+The next consumer slice is also complete: the generated Unicode tokens feed a
+hand-written deterministic Level B parser which constructs 2,485 typed version,
+CCC, and mapping records. Records retain source lines plus exact byte and token
+spans. Both VM families produce byte-identical retained record/semantic dumps;
+all semantic record kinds and values are byte-identical to the independent
+C++/re2c parser. Focused negative tests cover malformed productions,
+unsupported versions, invalid scalar/CCC data, and mapping arity using the same
+first-fault panic policy.
+
 Remaining before a production generator decision: extract a reusable neutral
 lexer IR, decide whether re2c remains a backend/oracle or is replaced by native
-Level B/Level L automaton construction, parse the emitted Unicode tokens into
-typed rule records, compile normalization data, measure portable versus packed
-layouts, and later prove Level L self-lexing/self-hosting. The current `.string`
-scanner path also relies on the Level B valid-UTF-8 boundary; a future binary
-input path must implement the authored `malformed` rule explicitly.
+Level B/Level L automaton construction, compile the typed normalization data,
+measure portable versus packed layouts, and later prove Level L
+self-lexing/self-hosting. The current `.string` scanner path also relies on the
+Level B valid-UTF-8 boundary; a future binary input path must implement the
+authored `malformed` rule explicitly.
 
 ### 4. Binary-Surface Verdict
 

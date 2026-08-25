@@ -6,6 +6,7 @@ repo_dir=$(CDPATH= cd -- "$script_dir/../../.." && pwd)
 product_build_dir=${CREXX_BUILD_DIR:-"$repo_dir/cmake-build-unicode-debug"}
 work_dir=${CREXX_LEVEL_L_BOOTSTRAP_BUILD_DIR:-"$product_build_dir/level-l-bootstrap"}
 build_jobs=${CREXX_BUILD_JOBS:-10}
+cxx_bin=${CXX:-c++}
 
 mkdir -p "$work_dir/rxtvm" "$work_dir/rxbvm"
 
@@ -40,6 +41,7 @@ adapter_dir="$repo_dir/experiments/unicode/level-l-emitter"
 spec_dir="$script_dir/specs"
 generated_dir="$script_dir/generated"
 nfc_input="$repo_dir/experiments/unicode/inputs/icu-78.3/nfc.txt"
+poc_dir="$repo_dir/experiments/unicode/poc"
 
 if [ "$("$re2c_bin" --vernum)" != "040501" ]; then
     echo "expected vendored re2c 4.5.1 (040501)" >&2
@@ -122,6 +124,25 @@ for spec_name in tinyexpr gennorm2; do
     grep -F "bsetu32 " "$work_dir/$spec_name.rxas" > /dev/null
 done
 
+compile_source "$script_dir/unicode_gennorm2.crexx" \
+    "$work_dir/unicode_gennorm2" "$work_dir" \
+    "$work_dir/unicode-gennorm2-build.log"
+(cd "$work_dir" && "$rxlink_bin" -c "$script_dir/unicode_gennorm2.ctl")
+compile_source "$script_dir/unicode_gennorm2_generate.crexx" \
+    "$work_dir/unicode_gennorm2_generate" "$work_dir" \
+    "$work_dir/unicode-gennorm2-generate-build.log"
+compile_source "$script_dir/test_unicode_gennorm2.crexx" \
+    "$work_dir/test_unicode_gennorm2" "$work_dir" \
+    "$work_dir/test-unicode-gennorm2-build.log"
+
+reference_cpp="$work_dir/nfd_reference.cpp"
+reference_bin="$work_dir/nfd_reference"
+(cd "$poc_dir" && "$re2c_bin" --no-debug-info --no-generation-date --no-version \
+    -o "$reference_cpp" nfd_reference.re)
+cmp "$poc_dir/generated/nfd_reference.cpp" "$reference_cpp"
+"$cxx_bin" -std=c++17 -O2 -Wall -Wextra -Werror \
+    "$reference_cpp" -o "$reference_bin"
+
 compile_source "$script_dir/test_tinyexpr.crexx" \
     "$work_dir/test_tinyexpr" "$work_dir" \
     "$work_dir/test-tinyexpr-build.log"
@@ -158,19 +179,55 @@ run_gennorm2_test() {
         gennorm2_linked -a "$nfc_input") > "$output_file"
 }
 
+generate_unicode_records() {
+    vm_bin=$1
+    vm_name=$2
+    output_dir="$work_dir/$vm_name"
+    (cd "$work_dir" && "$vm_bin" unicode_gennorm2_generate \
+        "$product_build_dir/bin/library" \
+        "$product_build_dir/bin/rxfnsl" \
+        unicode_gennorm2_linked -a "$nfc_input" \
+        "$output_dir/gennorm2.records" \
+        "$output_dir/gennorm2.semantic") \
+        > "$output_dir/unicode-gennorm2-generate.txt"
+}
+
+run_unicode_parser_test() {
+    vm_bin=$1
+    output_file=$2
+    (cd "$work_dir" && "$vm_bin" test_unicode_gennorm2 \
+        "$product_build_dir/bin/library" \
+        "$product_build_dir/bin/rxfnsl" \
+        unicode_gennorm2_linked) > "$output_file"
+}
+
 run_frontend_test "$rxtvm_bin" "$work_dir/rxtvm-frontend.txt"
 run_frontend_test "$rxbvm_bin" "$work_dir/rxbvm-frontend.txt"
 run_tinyexpr_test "$rxtvm_bin" "$work_dir/rxtvm-tinyexpr.txt"
 run_tinyexpr_test "$rxbvm_bin" "$work_dir/rxbvm-tinyexpr.txt"
 run_gennorm2_test "$rxtvm_bin" "$work_dir/rxtvm-gennorm2.txt"
 run_gennorm2_test "$rxbvm_bin" "$work_dir/rxbvm-gennorm2.txt"
+generate_unicode_records "$rxtvm_bin" rxtvm
+generate_unicode_records "$rxbvm_bin" rxbvm
+run_unicode_parser_test "$rxtvm_bin" "$work_dir/rxtvm-unicode-parser.txt"
+run_unicode_parser_test "$rxbvm_bin" "$work_dir/rxbvm-unicode-parser.txt"
+
+"$reference_bin" --dump-rules "$nfc_input" > "$work_dir/reference-gennorm2.semantic"
 
 cmp "$work_dir/rxtvm-frontend.txt" "$work_dir/rxbvm-frontend.txt"
 cmp "$work_dir/rxtvm-tinyexpr.txt" "$work_dir/rxbvm-tinyexpr.txt"
 cmp "$work_dir/rxtvm-gennorm2.txt" "$work_dir/rxbvm-gennorm2.txt"
+cmp "$work_dir/rxtvm/gennorm2.records" "$work_dir/rxbvm/gennorm2.records"
+cmp "$work_dir/rxtvm/gennorm2.semantic" "$work_dir/rxbvm/gennorm2.semantic"
+cmp "$generated_dir/gennorm2.records" "$work_dir/rxtvm/gennorm2.records"
+cmp "$generated_dir/gennorm2.semantic" "$work_dir/rxtvm/gennorm2.semantic"
+cmp "$work_dir/reference-gennorm2.semantic" "$work_dir/rxtvm/gennorm2.semantic"
+cmp "$work_dir/rxtvm-unicode-parser.txt" "$work_dir/rxbvm-unicode-parser.txt"
 grep -Fx "PASS: Level L bootstrap frontend" "$work_dir/rxtvm-frontend.txt" > /dev/null
 grep -Fx "PASS: authored Level L TinyExpr matches rxfnsl" "$work_dir/rxtvm-tinyexpr.txt" > /dev/null
 grep -Fx "PASS: authored Level L lexer accepts ICU gennorm2 nfc.txt" "$work_dir/rxtvm-gennorm2.txt" > /dev/null
+grep -Fx "PASS: tokenized gennorm2 parsed into typed Unicode records" "$work_dir/rxtvm/unicode-gennorm2-generate.txt" > /dev/null
+grep -Fx "PASS: deterministic typed Unicode rule parser and panic contract" "$work_dir/rxtvm-unicode-parser.txt" > /dev/null
 
 summary_actual="$work_dir/result.txt"
 {
@@ -179,6 +236,8 @@ summary_actual="$work_dir/result.txt"
     echo "TinyExpr cREXX: byte-identical generation"
     echo "TinyExpr differential oracle: PASS"
     echo "ICU gennorm2 nfc.txt lexer: PASS (2500 lines)"
+    echo "Unicode rule parser: PASS (2485 typed records with byte/token spans)"
+    echo "C++/re2c semantic oracle: byte-identical (2485 records)"
     echo "generated dispatch: .jtable and jumpi"
     echo "binary scan/stores: bgetu8, bsetu16, bsetu32"
     echo "rxtvm: PASS"
