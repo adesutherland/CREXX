@@ -1,8 +1,10 @@
 # Level L Language Tooling And Level G Unicode Research Track
 
-Status: Phase 1 and Phase 2 complete; the Level L lexer syntax and bounded re2c
-output-adapter experiment are complete. The Level L front end and generator
-core remain research work.
+Status: Phase 1 and Phase 2 complete; the Level L lexer syntax, Level B
+bootstrap frontend, authored TinyExpr generator proof, and authored ICU
+`gennorm2` lexer proof are complete. The reusable neutral IR, native automaton
+core, Unicode record parser/data compiler, and Level G library remain research
+work.
 
 Branch: `unicode`, based on `origin/develop` at `7b78375bd` on 2026-08-25.
 The branch is intentionally kept separate from `develop` until its contracts,
@@ -370,7 +372,12 @@ Completed on 2026-08-25:
 - the bounded [re2c output-adapter experiment](../../../experiments/unicode/level-l-emitter/README.md)
   emits a byte-reproducible TinyExpr scanner as cREXX, takes it through `rxc`,
   `rxas`, and `rxlink`, and matches the hand-written `rxfnsl` scanner on both VM
-  families. It required no compiler, RXAS, linker, or VM change.
+  families. It required no compiler, RXAS, linker, or VM change; and
+- the [Level L bootstrap frontend](../../../experiments/unicode/level-l-bootstrap/README.md)
+  implements the documented lexer-maker surface in Level B, parses canonical
+  TinyExpr and ICU `gennorm2` specifications, emits deterministic cREXX through
+  the retained DFA adapter, and passes its frontend, differential TinyExpr, and
+  full 2,500-line Unicode lexer checks on both VM families.
 
 Accepted implementation direction on 2026-08-25:
 
@@ -384,33 +391,34 @@ Accepted implementation direction on 2026-08-25:
 - the bootstrap parser is deterministic and does not backtrack; on the first
   invalid or unsupported construct it panics with that token and its exact
   source byte span, without recovery or further-error collection;
-- semantic lowering is a separate later component; and
+- reusable neutral-model lowering remains a separate later component; and
 - committed canonical specifications and deterministic generated Level B
   source will support a clean-build fixed-point self-hosting test without an
   opaque binary seed.
 
-The next implementation slice is that hand-crafted Level B frontend. Its sole
-required positive input is the canonical Level L specification for the ICU
-`gennorm2`/Unicode rule-file lexer. The generated lexer will tokenize the rule
-file, while the later parser and data compiler remain separate. TinyExpr may
-remain an optional developer smoke test; a Level L specification for Level L's
-own lexer belongs to the later bootstrap and self-hosting proof.
+Implementation result on 2026-08-25: the hand-crafted Level B frontend parses
+the canonical ICU `gennorm2` lexer specification and the TinyExpr smoke proof,
+constructs Level B Token/AST objects, validates the first-subset contracts,
+produces deterministic token and structural AST dumps with exact byte spans,
+and panics at the first fault without backtracking or recovery. Both VMs
+produce byte-identical retained outputs.
 
-The first slice is accepted when the Level B frontend parses that canonical
-Unicode-lexer specification, produces deterministic token and structural AST
-dumps with exact byte spans, panics deterministically at the first fault in
-each one-fault negative fixture, and gives the same results on both VM
-families. It does not need recovery, multiple diagnostics from one input,
-automaton construction, a packed layout, or scanner-source emission.
+The accompanying proof emitter walks the validated tree and produces
+deterministic re2c adapter input. Vendored re2c constructs the DFA and emits
+cREXX through the previously retained syntax adapter. The generated TinyExpr
+scanner agrees with `rxfnsl`, and the generated Unicode scanner accepts the
+complete retained ICU `nfc.txt`, checking exact range, CCC, two-way mapping,
+one-way mapping, version, line, and EOF counts. This Level L lexer-maker PoC is
+therefore complete; it required no production compiler, RXAS, linker, or VM
+change.
 
-Remaining before this phase is complete: implement the Level L specification
-parser, diagnostics, neutral IR, automaton construction, and deterministic
-emission from authored Level L rather than re2c input.
-
-Gate 3 remains open: the adapter proves the generated target shape, but the
-Level L front end and generator core do not yet exist. Closure requires scanners
-generated from authored Level L to agree with the oracle and hand-written
-fixtures, with unsupported features failing explicitly.
+Remaining before a production generator decision: extract a reusable neutral
+lexer IR, decide whether re2c remains a backend/oracle or is replaced by native
+Level B/Level L automaton construction, parse the emitted Unicode tokens into
+typed rule records, compile normalization data, measure portable versus packed
+layouts, and later prove Level L self-lexing/self-hosting. The current `.string`
+scanner path also relies on the Level B valid-UTF-8 boundary; a future binary
+input path must implement the authored `malformed` rule explicitly.
 
 ### 4. Binary-Surface Verdict
 

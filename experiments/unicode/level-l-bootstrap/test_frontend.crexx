@@ -1,0 +1,76 @@
+/* Focused tests for the hand-written Level L bootstrap frontend. */
+options levelb
+
+import rxfnsb
+import levell_bootstrap
+
+arg argv = .string[]
+
+if argv[0] \= 2 then do
+  say "usage: test_frontend tinyexpr.levell gennorm2.levell"
+  return 2
+end
+
+failures = 0
+failures = failures + check_valid("TinyExpr", loadtext(argv[1], "0a"x), "level_l_tinyexpr")
+failures = failures + check_valid("gennorm2", loadtext(argv[2], "0a"x), "level_l_gennorm2")
+
+nl = "0a"x
+failures = failures + check_panic("missing options", "namespace bad" || nl, 0)
+failures = failures + check_panic("reversed range",,
+  "options levell" || nl ||,
+  "namespace bad" || nl ||,
+  "eof: token = 0" || nl ||,
+  "bad: diagnostic = ""bad""" || nl ||,
+  "scan: lexer input utf8" || nl ||,
+  "  wrong: charset = U+0042 to U+0041" || nl, 0)
+failures = failures + check_panic("slash syntax", "options levell" || nl || "/x/" || nl, 0)
+
+if failures \= 0 then do
+  say "Level L frontend failures:" failures
+  return 1
+end
+
+say "PASS: Level L bootstrap frontend"
+return 0
+
+check_valid: procedure = .int
+  arg label = .string, source = .string, expected_namespace = .string
+  result = levell_parse(source)
+  if result.status() \= 0 then do
+    say "FAIL:" label "panic at" result.error_start() "length" result.error_length() result.error()
+    say result.root().dump(0)
+    return 1
+  end
+  token_dump = levell_token_dump(result)
+  ast_dump = levell_ast_dump(result)
+  if pos("namespace", ast_dump) = 0 | pos(expected_namespace, ast_dump) = 0 then do
+    say "FAIL:" label "missing namespace in AST dump"
+    return 1
+  end
+  if result.token_count() < 10 | pos("lexer_decl", ast_dump) = 0 | pos("rule_decl", ast_dump) = 0 then do
+    say "FAIL:" label "incomplete token or AST output"
+    return 1
+  end
+  if pos("eof", token_dump) = 0 then do
+    say "FAIL:" label "missing EOF bootstrap token"
+    return 1
+  end
+  return 0
+
+check_panic: procedure = .int
+  arg label = .string, source = .string, expected_start = .int
+  result = levell_parse(source)
+  if result.status() = 0 then do
+    say "FAIL:" label "did not panic"
+    return 1
+  end
+  if result.error_start() < expected_start then do
+    say "FAIL:" label "invalid panic span" result.error_start()
+    return 1
+  end
+  if result.error() = "" then do
+    say "FAIL:" label "panic has no message"
+    return 1
+  end
+  return 0

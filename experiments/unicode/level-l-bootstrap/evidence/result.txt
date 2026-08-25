@@ -1,0 +1,9 @@
+Level B frontend: deterministic Token and AST dumps
+parser policy: single cursor, no backtracking, first-fault panic
+TinyExpr cREXX: byte-identical generation
+TinyExpr differential oracle: PASS
+ICU gennorm2 nfc.txt lexer: PASS (2500 lines)
+generated dispatch: .jtable and jumpi
+binary scan/stores: bgetu8, bsetu16, bsetu32
+rxtvm: PASS
+rxbvm: PASS

@@ -1,0 +1,1363 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Experimental Level L bootstrap frontend. This is deliberately simple
+ * Level B code: it scans once, parses without backtracking, constructs Token
+ * and AST objects, and panics on the first invalid or unsupported construct.
+ */
+
+options levelb
+
+namespace levell_bootstrap expose levelltoken levellastnode levellresult levell_parse levell_token_dump levell_ast_dump levell_emit_re2c
+import rxfnsb
+
+/** Parse one complete Level L lexer specification. */
+levell_parse: procedure = .levellresult
+  arg source = .string
+  parser = .levellparser(source)
+  return parser.parse()
+
+/** Return the deterministic bootstrap-token dump for a parse result. */
+levell_token_dump: procedure = .string
+  arg result = .levellresult
+  return result.token_dump()
+
+/** Return the deterministic structural AST dump for a parse result. */
+levell_ast_dump: procedure = .string
+  arg result = .levellresult
+  if result.status() \= 0 then return ""
+  return result.root().dump(0)
+
+levell_ci_equal: procedure = .int
+  arg left = .string, right = .string
+  return upper(left) == upper(right)
+
+levell_is_symbol_start: procedure = .int
+  arg byte = .int
+  if byte >= 65 & byte <= 90 then return 1
+  if byte >= 97 & byte <= 122 then return 1
+  if byte = 95 then return 1
+  return 0
+
+levell_is_symbol_part: procedure = .int
+  arg byte = .int
+  if levell_is_symbol_start(byte) then return 1
+  if byte >= 48 & byte <= 57 then return 1
+  if byte = 46 then return 1
+  return 0
+
+levell_is_hex: procedure = .int
+  arg byte = .int
+  if byte >= 48 & byte <= 57 then return 1
+  if byte >= 65 & byte <= 70 then return 1
+  if byte >= 97 & byte <= 102 then return 1
+  return 0
+
+levell_decimal: procedure = .int
+  arg text = .string
+  value = 0
+  do i = 1 to length(text)
+    byte = c2d(substr(text, i, 1))
+    value = value * 10 + byte - 48
+  end
+  return value
+
+levell_hexadecimal: procedure = .int
+  arg text = .string
+  value = 0
+  do i = 1 to length(text)
+    byte = c2d(upper(substr(text, i, 1)))
+    if byte <= 57 then digit = byte - 48
+    else digit = byte - 55
+    value = value * 16 + digit
+  end
+  return value
+
+levell_is_scalar: procedure = .int
+  arg value = .int
+  if value < 0 | value > 0x10FFFF then return 0
+  if value >= 0xD800 & value <= 0xDFFF then return 0
+  return 1
+
+levell_dump_escape: procedure = .string
+  arg text = .string
+  out = ""
+  do i = 1 to length(text)
+    ch = substr(text, i, 1)
+    code = c2d(ch)
+    select code
+      when 10 then out = out || "\n"
+      when 13 then out = out || "\r"
+      when 9 then out = out || "\t"
+      when 92 then out = out || "\\"
+      when 124 then out = out || "\|"
+      otherwise out = out || ch
+    end
+  end
+  return out
+
+levell_indent: procedure = .string
+  arg depth = .int
+  return copies("  ", depth)
+
+/** One lexical token in a Level L specification. */
+levelltoken: class
+  _kind = .string
+  _text = .string
+  _start = .int
+  _length = .int
+
+  *: factory
+    arg kind = .string, text = .string, start = .int, span_length = .int
+    _kind = kind
+    _text = text
+    _start = start
+    _length = span_length
+    return
+
+  kind: method = .string
+    return _kind
+
+  text: method = .string
+    return _text
+
+  start: method = .int
+    return _start
+
+  span_length: method = .int
+    return _length
+
+  end_offset: method = .int
+    return _start + _length
+
+/** One logical node in the automatically constructed Level L syntax tree. */
+levellastnode: class
+  _kind = .string
+  _name = .string
+  _value = .string
+  _start = .int
+  _length = .int
+  _number1 = .int
+  _number2 = .int
+  _token_index = .int
+  _children = .object[]
+  _child_count = .int
+
+  *: factory
+    arg kind = .string, name = "", value = "", start = 0, span_length = 0, number1 = -1, number2 = -1, token_index = -1
+    _kind = kind
+    _name = name
+    _value = value
+    _start = start
+    _length = span_length
+    _number1 = number1
+    _number2 = number2
+    _token_index = token_index
+    _child_count = 0
+    return
+
+  kind: method = .string
+    return _kind
+
+  name: method = .string
+    return _name
+
+  value: method = .string
+    return _value
+
+  start: method = .int
+    return _start
+
+  span_length: method = .int
+    return _length
+
+  end_offset: method = .int
+    return _start + _length
+
+  number1: method = .int
+    return _number1
+
+  number2: method = .int
+    return _number2
+
+  token_index: method = .int
+    return _token_index
+
+  set_number1: method = .void
+    arg value = .int
+    _number1 = value
+    return
+
+  set_number2: method = .void
+    arg value = .int
+    _number2 = value
+    return
+
+  set_span_end: method = .void
+    arg end_offset = .int
+    _length = end_offset - _start
+    return
+
+  add_child: method = .int
+    arg child = .levellastnode
+    _child_count = objectarrayappend(_children, child as .object)
+    return _child_count
+
+  child_count: method = .int
+    return _child_count
+
+  child_at: method = .levellastnode
+    arg index = .int
+    return _children[index + 1] as .levellastnode
+
+  replace_child: method = .void
+    arg index = .int, child = .levellastnode
+    _children[index + 1] = child as .object
+    return
+
+  dump: method = .string
+    arg depth = .int
+    nl = "0a"x
+    line = levell_indent(depth) || _kind || "|" || _start || "|" || _length || "|" ||,
+           levell_dump_escape(_name) || "|" || levell_dump_escape(_value) || "|" ||,
+           _number1 || "|" || _number2 || "|" || _token_index || nl
+    do i = 0 to _child_count - 1
+      child = _children[i + 1] as .levellastnode
+      line = line || child.dump(depth + 1)
+    end
+    return line
+
+/** Parse result, including the first panic and the complete token stream. */
+levellresult: class
+  _tokens = .object[]
+  _token_count = .int
+  _root = .levellastnode
+  _status = .int
+  _error = .string
+  _error_start = .int
+  _error_length = .int
+
+  *: factory
+    _token_count = 0
+    _status = 0
+    _error = ""
+    _error_start = 0
+    _error_length = 0
+    _root = .levellastnode("module")
+    return
+
+  add_token: method = .int
+    arg token = .levelltoken
+    _token_count = objectarrayappend(_tokens, token as .object)
+    return _token_count - 1
+
+  token_count: method = .int
+    return _token_count
+
+  token_at: method = .levelltoken
+    arg index = .int
+    return _tokens[index + 1] as .levelltoken
+
+  set_root: method = .void
+    arg root = .levellastnode
+    _root = root
+    return
+
+  root: method = .levellastnode
+    return _root
+
+  panic: method = .void
+    arg message = .string, start = .int, span_length = .int
+    if _status \= 0 then return
+    _status = 1
+    _error = message
+    _error_start = start
+    _error_length = span_length
+    return
+
+  status: method = .int
+    return _status
+
+  error: method = .string
+    return _error
+
+  error_start: method = .int
+    return _error_start
+
+  error_length: method = .int
+    return _error_length
+
+  token_dump: method = .string
+    nl = "0a"x
+    out = ""
+    do i = 0 to _token_count - 1
+      token = _tokens[i + 1] as .levelltoken
+      out = out || i || "|" || token.kind() || "|" || token.start() || "|" ||,
+            token.span_length() || "|" || levell_dump_escape(token.text()) || nl
+    end
+    return out
+
+/* Deterministic, single-cursor recursive-descent bootstrap parser. */
+levellparser: class
+  _source = .string
+  _bytes = .binary
+  _source_length = .int
+  _scan_cursor = .int
+  _cursor = .int
+  _result = .levellresult
+
+  *: factory
+    arg source = .string
+    _source = source
+    _bytes = source as .binary
+    _source_length = <blen>(_bytes)
+    _scan_cursor = 0
+    _cursor = 0
+    _result = .levellresult()
+    return
+
+  parse: method = .levellresult
+    call _scan
+    if _result.status() \= 0 then return _result
+
+    root = _parse_module()
+    call _result.set_root(root)
+    if _result.status() = 0 then do
+      root = _validate_module(root)
+      call _result.set_root(root)
+    end
+    return _result
+
+  _byte: method = .int
+    arg index = .int
+    if index < 0 | index >= _source_length then return -1
+    return <at..u8>(index) _bytes
+
+  _scan: method = .void
+    do while _scan_cursor < _source_length & _result.status() = 0
+      byte = _byte(_scan_cursor)
+
+      if byte = 9 | byte = 10 | byte = 13 | byte = 32 then do
+        _scan_cursor = _scan_cursor + 1
+        iterate
+      end
+
+      if byte = 47 then do
+        if _byte(_scan_cursor + 1) \= 42 then do
+          call _result.panic("unexpected '/' outside a Rexx comment or quoted literal", _scan_cursor, 1)
+          leave
+        end
+        start = _scan_cursor
+        _scan_cursor = _scan_cursor + 2
+        closed = 0
+        do while _scan_cursor < _source_length - 1
+          if _byte(_scan_cursor) = 42 & _byte(_scan_cursor + 1) = 47 then do
+            _scan_cursor = _scan_cursor + 2
+            closed = 1
+            leave
+          end
+          _scan_cursor = _scan_cursor + 1
+        end
+        if \closed then call _result.panic("unterminated Rexx comment", start, _source_length - start)
+        iterate
+      end
+
+      if byte >= 128 then do
+        call _result.panic("non-ASCII Level L source is not yet implemented; use U+ scalar literals", _scan_cursor, 1)
+        leave
+      end
+
+      if byte = 85 & _byte(_scan_cursor + 1) = 43 & levell_is_hex(_byte(_scan_cursor + 2)) then do
+        start = _scan_cursor
+        _scan_cursor = _scan_cursor + 2
+        do while levell_is_hex(_byte(_scan_cursor))
+          _scan_cursor = _scan_cursor + 1
+        end
+        text = substr(_source, start + 3, _scan_cursor - start - 2)
+        call _result.add_token(.levelltoken("codepoint", text, start, _scan_cursor - start))
+        iterate
+      end
+
+      if levell_is_symbol_start(byte) then do
+        start = _scan_cursor
+        _scan_cursor = _scan_cursor + 1
+        do while levell_is_symbol_part(_byte(_scan_cursor))
+          _scan_cursor = _scan_cursor + 1
+        end
+        text = substr(_source, start + 1, _scan_cursor - start)
+        if substr(text, length(text), 1) = "." | pos("..", text) > 0 then do
+          call _result.panic("invalid static compound symbol", start, _scan_cursor - start)
+          leave
+        end
+        call _result.add_token(.levelltoken("symbol", text, start, _scan_cursor - start))
+        iterate
+      end
+
+      if byte >= 48 & byte <= 57 then do
+        start = _scan_cursor
+        do while _byte(_scan_cursor) >= 48 & _byte(_scan_cursor) <= 57
+          _scan_cursor = _scan_cursor + 1
+        end
+        text = substr(_source, start + 1, _scan_cursor - start)
+        call _result.add_token(.levelltoken("integer", text, start, _scan_cursor - start))
+        iterate
+      end
+
+      if byte = 34 | byte = 39 then do
+        quote = byte
+        start = _scan_cursor
+        text = ""
+        _scan_cursor = _scan_cursor + 1
+        closed = 0
+        do while _scan_cursor < _source_length
+          byte = _byte(_scan_cursor)
+          if byte >= 128 then do
+            call _result.panic("non-ASCII quoted Level L text is not yet implemented; use U+ scalar literals", _scan_cursor, 1)
+            leave
+          end
+          if byte = quote then do
+            if _byte(_scan_cursor + 1) = quote then do
+              text = text || substr(_source, _scan_cursor + 1, 1)
+              _scan_cursor = _scan_cursor + 2
+              iterate
+            end
+            _scan_cursor = _scan_cursor + 1
+            closed = 1
+            leave
+          end
+          text = text || substr(_source, _scan_cursor + 1, 1)
+          _scan_cursor = _scan_cursor + 1
+        end
+        if _result.status() \= 0 then leave
+        if \closed then do
+          call _result.panic("unterminated quoted string", start, _source_length - start)
+          leave
+        end
+        call _result.add_token(.levelltoken("string", text, start, _scan_cursor - start))
+        iterate
+      end
+
+      punctuation = ":=|()?*+{},"
+      ch = substr(_source, _scan_cursor + 1, 1)
+      if pos(ch, punctuation) > 0 then do
+        call _result.add_token(.levelltoken(ch, ch, _scan_cursor, 1))
+        _scan_cursor = _scan_cursor + 1
+        iterate
+      end
+
+      call _result.panic("unsupported Level L source character", _scan_cursor, 1)
+    end
+
+    if _result.status() = 0 then call _result.add_token(.levelltoken("eof", "", _source_length, 0))
+    return
+
+  _token: method = .levelltoken
+    arg offset = 0
+    index = _cursor + offset
+    if index < 0 then index = 0
+    if index >= _result.token_count() then index = _result.token_count() - 1
+    return _result.token_at(index)
+
+  _kind: method = .string
+    return _token().kind()
+
+  _text: method = .string
+    return _token().text()
+
+  _advance: method = .void
+    if _cursor < _result.token_count() - 1 then _cursor = _cursor + 1
+    return
+
+  _accept_kind: method = .int
+    arg kind = .string
+    if _kind() \= kind then return 0
+    call _advance
+    return 1
+
+  _accept_symbol: method = .int
+    arg word = .string
+    if _kind() \= "symbol" then return 0
+    if \levell_ci_equal(_text(), word) then return 0
+    call _advance
+    return 1
+
+  _expect_kind: method = .levelltoken
+    arg kind = .string, message = .string
+    token = _token()
+    if token.kind() \= kind then do
+      call _result.panic(message, token.start(), token.span_length())
+      return token
+    end
+    call _advance
+    return token
+
+  _expect_symbol: method = .levelltoken
+    arg word = .string, message = .string
+    token = _token()
+    if token.kind() \= "symbol" | \levell_ci_equal(token.text(), word) then do
+      call _result.panic(message, token.start(), token.span_length())
+      return token
+    end
+    call _advance
+    return token
+
+  _at_declaration: method = .int
+    if _kind() \= "symbol" then return 0
+    return _token(1).kind() = ":"
+
+  _parse_module: method = .levellastnode
+    root = .levellastnode("module", "", "", 0, _source_length)
+
+    options_token = _expect_symbol("options", "Level L source must begin with 'options levell'")
+    if _result.status() \= 0 then return root
+    level_token = _expect_symbol("levell", "expected 'levell' after 'options'")
+    if _result.status() \= 0 then return root
+    options_node = .levellastnode("options", "levell", "", options_token.start(), level_token.end_offset() - options_token.start(), -1, -1, 0)
+    call root.add_child(options_node)
+
+    if _accept_symbol("namespace") then do
+      namespace_token = _expect_kind("symbol", "expected namespace symbol")
+      if _result.status() \= 0 then return root
+      namespace_node = .levellastnode("namespace", namespace_token.text(), "", namespace_token.start(), namespace_token.span_length(), -1, -1, _cursor - 1)
+      call root.add_child(namespace_node)
+    end
+
+    active_lexer = -1
+    do while _kind() \= "eof" & _result.status() = 0
+      if \_at_declaration() then do
+        token = _token()
+        call _result.panic("expected a Level L declaration", token.start(), token.span_length())
+        leave
+      end
+
+      declaration = _parse_declaration()
+      if _result.status() \= 0 then leave
+      kind = declaration.kind()
+      if kind = "charset_decl" | kind = "pattern_decl" | kind = "rule_decl" then do
+        if active_lexer < 0 then do
+          call _result.panic("lexer member appears outside a lexer declaration", declaration.start(), declaration.span_length())
+          leave
+        end
+        lexer_node = root.child_at(active_lexer)
+        call lexer_node.add_child(declaration)
+        call root.replace_child(active_lexer, lexer_node)
+      end
+      else do
+        active_lexer = -1
+        child_count = root.add_child(declaration)
+        if kind = "lexer_decl" then active_lexer = child_count - 1
+      end
+    end
+    return root
+
+  _parse_declaration: method = .levellastnode
+    name_index = _cursor
+    name_token = _expect_kind("symbol", "expected declaration name")
+    if _result.status() \= 0 then return .levellastnode("error")
+    ignored = _expect_kind(":", "expected ':' after declaration name")
+    if _result.status() \= 0 then return .levellastnode("error")
+    kind_token = _expect_kind("symbol", "expected declaration kind after ':'")
+    if _result.status() \= 0 then return .levellastnode("error")
+
+    name = name_token.text()
+    kind = upper(kind_token.text())
+
+    select kind
+      when "TOKEN" then do
+        token_id = -1
+        if _accept_kind("=") then do
+          id_token = _expect_kind("integer", "expected non-negative token ID")
+          if _result.status() \= 0 then return .levellastnode("error")
+          token_id = levell_decimal(id_token.text())
+        end
+        node = .levellastnode("token_decl", name, "", name_token.start(), 0, token_id, -1, name_index)
+      end
+      when "DIAGNOSTIC" then do
+        ignored = _expect_kind("=", "expected '=' in diagnostic declaration")
+        value_token = _expect_kind("string", "expected quoted diagnostic message")
+        if _result.status() \= 0 then return .levellastnode("error")
+        node = .levellastnode("diagnostic_decl", name, value_token.text(), name_token.start(), 0, -1, -1, name_index)
+      end
+      when "LEXER" then do
+        ignored = _expect_symbol("input", "expected 'input' in lexer declaration")
+        profile_token = _expect_kind("symbol", "expected lexer input profile")
+        if _result.status() \= 0 then return .levellastnode("error")
+        profile = upper(profile_token.text())
+        if profile \= "UTF8" & profile \= "BINARY" then do
+          call _result.panic("unsupported lexer input profile", profile_token.start(), profile_token.span_length())
+          return .levellastnode("error")
+        end
+        node = .levellastnode("lexer_decl", name, lower(profile_token.text()), name_token.start(), 0, -1, -1, name_index)
+      end
+      when "CHARSET" then do
+        ignored = _expect_kind("=", "expected '=' in charset declaration")
+        expression = _parse_charset_expression()
+        if _result.status() \= 0 then return .levellastnode("error")
+        node = .levellastnode("charset_decl", name, "", name_token.start(), 0, -1, -1, name_index)
+        call node.add_child(expression)
+      end
+      when "PATTERN" then do
+        ignored = _expect_kind("=", "expected '=' in pattern declaration")
+        expression = _parse_pattern_expression()
+        if _result.status() \= 0 then return .levellastnode("error")
+        node = .levellastnode("pattern_decl", name, "", name_token.start(), 0, -1, -1, name_index)
+        call node.add_child(expression)
+      end
+      when "RULE" then do
+        ignored = _expect_kind("=", "expected '=' in rule declaration")
+        subject = _parse_rule_subject()
+        ignored = _expect_symbol("then", "expected 'then' after rule subject")
+        action = _parse_action()
+        if _result.status() \= 0 then return .levellastnode("error")
+        node = .levellastnode("rule_decl", name, "", name_token.start(), 0, -1, -1, name_index)
+        call node.add_child(subject)
+        call node.add_child(action)
+      end
+      otherwise do
+        call _result.panic("unsupported Level L declaration kind '" || kind_token.text() || "'", kind_token.start(), kind_token.span_length())
+        return .levellastnode("error")
+      end
+    end
+
+    call node.set_span_end(_token(-1).end_offset())
+    return node
+
+  _parse_rule_subject: method = .levellastnode
+    if _kind() = "symbol" & _token(1).kind() = "symbol" & levell_ci_equal(_token(1).text(), "then") then do
+      name = upper(_text())
+      if name = "EOF" | name = "MALFORMED" | name = "OTHERWISE" then do
+        token = _token()
+        token_index = _cursor
+        call _advance
+        return .levellastnode("special", lower(token.text()), "", token.start(), token.span_length(), -1, -1, token_index)
+      end
+    end
+    return _parse_pattern_expression()
+
+  _parse_action: method = .levellastnode
+    token_index = _cursor
+    action_token = _expect_kind("symbol", "expected rule action")
+    if _result.status() \= 0 then return .levellastnode("error")
+    action = upper(action_token.text())
+    target = ""
+    if action = "EMIT" | action = "ERROR" then do
+      target_token = _expect_kind("symbol", "expected action target")
+      if _result.status() \= 0 then return .levellastnode("error")
+      target = target_token.text()
+    end
+    else if action \= "SKIP" then do
+      call _result.panic("unsupported rule action '" || action_token.text() || "'", action_token.start(), action_token.span_length())
+      return .levellastnode("error")
+    end
+    return .levellastnode("action", lower(action_token.text()), target, action_token.start(), _token(-1).end_offset() - action_token.start(), -1, -1, token_index)
+
+  _parse_charset_expression: method = .levellastnode
+    left = _parse_charset_union()
+    do while _result.status() = 0 & _accept_symbol("except")
+      right = _parse_charset_union()
+      combined = .levellastnode("except", "", "", left.start(), right.end_offset() - left.start())
+      call combined.add_child(left)
+      call combined.add_child(right)
+      left = combined
+    end
+    return left
+
+  _parse_charset_union: method = .levellastnode
+    left = _parse_charset_primary()
+    do while _result.status() = 0 & _accept_kind("|")
+      right = _parse_charset_primary()
+      combined = .levellastnode("charset_union", "", "", left.start(), right.end_offset() - left.start())
+      call combined.add_child(left)
+      call combined.add_child(right)
+      left = combined
+    end
+    return left
+
+  _parse_charset_primary: method = .levellastnode
+    token = _token()
+    token_index = _cursor
+
+    if _accept_kind("(") then do
+      expression = _parse_charset_expression()
+      close_token = _expect_kind(")", "expected ')' in charset expression")
+      if _result.status() = 0 then call expression.set_span_end(close_token.end_offset())
+      return expression
+    end
+
+    if token.kind() = "codepoint" then do
+      call _advance
+      value = levell_hexadecimal(token.text())
+      if \levell_is_scalar(value) then do
+        call _result.panic("invalid Unicode scalar literal", token.start(), token.span_length())
+        return .levellastnode("error")
+      end
+      first = .levellastnode("codepoint", token.text(), "", token.start(), token.span_length(), value, -1, token_index)
+      if _accept_symbol("to") then do
+        last_token = _expect_kind("codepoint", "expected Unicode scalar after 'to'")
+        if _result.status() \= 0 then return .levellastnode("error")
+        last_value = levell_hexadecimal(last_token.text())
+        if \levell_is_scalar(last_value) | last_value < value then do
+          call _result.panic("invalid or reversed Unicode scalar range", last_token.start(), last_token.span_length())
+          return .levellastnode("error")
+        end
+        range_node = .levellastnode("range", "", "", token.start(), last_token.end_offset() - token.start(), value, last_value, token_index)
+        call range_node.add_child(first)
+        call range_node.add_child(.levellastnode("codepoint", last_token.text(), "", last_token.start(), last_token.span_length(), last_value, -1, _cursor - 1))
+        return range_node
+      end
+      return first
+    end
+
+    if token.kind() = "string" then do
+      call _advance
+      if length(token.text()) \= 1 then do
+        call _result.panic("charset string must contain exactly one Unicode scalar", token.start(), token.span_length())
+        return .levellastnode("error")
+      end
+      return .levellastnode("literal", token.text(), "", token.start(), token.span_length(), -1, -1, token_index)
+    end
+
+    if token.kind() = "symbol" then do
+      call _advance
+      if levell_ci_equal(token.text(), "scalar") then return .levellastnode("scalar", "scalar", "", token.start(), token.span_length(), -1, -1, token_index)
+      return .levellastnode("reference", token.text(), "", token.start(), token.span_length(), -1, -1, token_index)
+    end
+
+    call _result.panic("expected charset expression", token.start(), token.span_length())
+    return .levellastnode("error")
+
+  _parse_pattern_expression: method = .levellastnode
+    left = _parse_concatenation()
+    do while _result.status() = 0 & _accept_kind("|")
+      right = _parse_concatenation()
+      combined = .levellastnode("alternation", "", "", left.start(), right.end_offset() - left.start())
+      call combined.add_child(left)
+      call combined.add_child(right)
+      left = combined
+    end
+    return left
+
+  _parse_concatenation: method = .levellastnode
+    if \_pattern_primary_starts() then do
+      token = _token()
+      call _result.panic("expected pattern expression", token.start(), token.span_length())
+      return .levellastnode("error")
+    end
+
+    first = _parse_repetition()
+    if _result.status() \= 0 then return first
+    concat = .levellastnode("concatenation", "", "", first.start(), first.span_length())
+    call concat.add_child(first)
+    do while _result.status() = 0 & _pattern_primary_starts()
+      child = _parse_repetition()
+      call concat.add_child(child)
+      call concat.set_span_end(child.end_offset())
+    end
+    if concat.child_count() = 1 then return first
+    return concat
+
+  _pattern_primary_starts: method = .int
+    if _kind() = "string" | _kind() = "codepoint" | _kind() = "(" then return 1
+    if _kind() \= "symbol" then return 0
+    if levell_ci_equal(_text(), "then") then return 0
+    if _at_declaration() then return 0
+    return 1
+
+  _parse_repetition: method = .levellastnode
+    primary = _parse_pattern_primary()
+    if _result.status() \= 0 then return primary
+
+    min_count = -1
+    max_count = -1
+    if _accept_kind("?") then do
+      min_count = 0
+      max_count = 1
+    end
+    else if _accept_kind("*") then do
+      min_count = 0
+      max_count = -1
+    end
+    else if _accept_kind("+") then do
+      min_count = 1
+      max_count = -1
+    end
+    else if _accept_kind("{") then do
+      min_token = _expect_kind("integer", "expected repetition lower bound")
+      if _result.status() \= 0 then return .levellastnode("error")
+      min_count = levell_decimal(min_token.text())
+      if _accept_kind("}") then max_count = min_count
+      else do
+        ignored = _expect_kind(",", "expected ',' or '}' in repetition")
+        if _result.status() \= 0 then return .levellastnode("error")
+        if _kind() = "integer" then do
+          max_token = _expect_kind("integer", "expected repetition upper bound")
+          max_count = levell_decimal(max_token.text())
+        end
+        else max_count = -1
+        ignored = _expect_kind("}", "expected '}' after repetition")
+        if _result.status() \= 0 then return .levellastnode("error")
+      end
+      if max_count >= 0 & max_count < min_count then do
+        token = _token(-1)
+        call _result.panic("repetition upper bound is smaller than lower bound", token.start(), token.span_length())
+        return .levellastnode("error")
+      end
+    end
+
+    if min_count < 0 then return primary
+    repeat = .levellastnode("repeat", "", "", primary.start(), _token(-1).end_offset() - primary.start(), min_count, max_count)
+    call repeat.add_child(primary)
+    return repeat
+
+  _parse_pattern_primary: method = .levellastnode
+    token = _token()
+    token_index = _cursor
+
+    if _accept_kind("(") then do
+      expression = _parse_pattern_expression()
+      close_token = _expect_kind(")", "expected ')' in pattern expression")
+      if _result.status() = 0 then call expression.set_span_end(close_token.end_offset())
+      return expression
+    end
+
+    if token.kind() = "string" then do
+      call _advance
+      return .levellastnode("literal", token.text(), "", token.start(), token.span_length(), -1, -1, token_index)
+    end
+
+    if token.kind() = "codepoint" then do
+      call _advance
+      value = levell_hexadecimal(token.text())
+      if \levell_is_scalar(value) then do
+        call _result.panic("invalid Unicode scalar literal", token.start(), token.span_length())
+        return .levellastnode("error")
+      end
+      return .levellastnode("codepoint", token.text(), "", token.start(), token.span_length(), value, -1, token_index)
+    end
+
+    if token.kind() = "symbol" then do
+      call _advance
+      return .levellastnode("reference", token.text(), "", token.start(), token.span_length(), -1, -1, token_index)
+    end
+
+    call _result.panic("expected pattern primary", token.start(), token.span_length())
+    return .levellastnode("error")
+
+  _validate_module: method = .levellastnode
+    arg root = .levellastnode
+
+    do i = 0 to root.child_count() - 1
+      left = root.child_at(i)
+      if left.kind() = "options" | left.kind() = "namespace" then iterate
+      do j = i + 1 to root.child_count() - 1
+        right = root.child_at(j)
+        if right.kind() = "options" | right.kind() = "namespace" then iterate
+        if levell_ci_equal(left.name(), right.name()) then do
+          call _result.panic("duplicate module declaration '" || right.name() || "'", right.start(), right.span_length())
+          return root
+        end
+      end
+    end
+
+    next_token_id = 1
+    diagnostic_id = 1
+    zero_tokens = 0
+    do i = 0 to root.child_count() - 1
+      node = root.child_at(i)
+      if node.kind() = "token_decl" then do
+        if node.number1() < 0 then do
+          do while _token_id_used(root, next_token_id)
+            next_token_id = next_token_id + 1
+          end
+          call node.set_number1(next_token_id)
+          next_token_id = next_token_id + 1
+        end
+        if node.number1() = 0 then zero_tokens = zero_tokens + 1
+        do j = 0 to i - 1
+          prior = root.child_at(j)
+          if prior.kind() = "token_decl" & prior.number1() = node.number1() then do
+            call _result.panic("duplicate token ID", node.start(), node.span_length())
+            return root
+          end
+        end
+      end
+      else if node.kind() = "diagnostic_decl" then do
+        call node.set_number1(diagnostic_id)
+        diagnostic_id = diagnostic_id + 1
+      end
+      if node.kind() = "token_decl" | node.kind() = "diagnostic_decl" then call root.replace_child(i, node)
+    end
+
+    if zero_tokens \= 1 then do
+      call _result.panic("exactly one token must have ID zero", root.start(), root.span_length())
+      return root
+    end
+
+    lexer_count = 0
+    do i = 0 to root.child_count() - 1
+      node = root.child_at(i)
+      if node.kind() = "lexer_decl" then do
+        lexer_count = lexer_count + 1
+        call _validate_lexer(root, node)
+        if _result.status() \= 0 then return root
+      end
+    end
+    if lexer_count = 0 then call _result.panic("specification contains no lexer declaration", root.start(), root.span_length())
+    return root
+
+  _token_id_used: method = .int
+    arg root = .levellastnode, token_id = .int
+    do i = 0 to root.child_count() - 1
+      node = root.child_at(i)
+      if node.kind() = "token_decl" & node.number1() = token_id then return 1
+    end
+    return 0
+
+  _validate_lexer: method = .void
+    arg root = .levellastnode, lexer = .levellastnode
+
+    do i = 0 to lexer.child_count() - 1
+      left = lexer.child_at(i)
+      do j = i + 1 to lexer.child_count() - 1
+        right = lexer.child_at(j)
+        if levell_ci_equal(left.name(), right.name()) then do
+          call _result.panic("duplicate lexer declaration '" || right.name() || "'", right.start(), right.span_length())
+          return
+        end
+      end
+    end
+
+    eof_count = 0
+    malformed_count = 0
+    otherwise_count = 0
+    do i = 0 to lexer.child_count() - 1
+      node = lexer.child_at(i)
+      if node.kind() = "charset_decl" then call _validate_expression(lexer, node.child_at(0), "charset")
+      else if node.kind() = "pattern_decl" then call _validate_expression(lexer, node.child_at(0), "pattern")
+      else if node.kind() = "rule_decl" then do
+        subject = node.child_at(0)
+        action = node.child_at(1)
+
+        if subject.kind() = "special" then do
+          select upper(subject.name())
+            when "EOF" then eof_count = eof_count + 1
+            when "MALFORMED" then malformed_count = malformed_count + 1
+            when "OTHERWISE" then otherwise_count = otherwise_count + 1
+          end
+        end
+        else do
+          call _validate_expression(lexer, subject, "pattern")
+          if _result.status() = 0 & _nullable(lexer, subject, 0) then call _result.panic("ordinary rule can accept an empty sequence", node.start(), node.span_length())
+        end
+        if _result.status() \= 0 then return
+
+        target_index = -1
+        if action.name() = "emit" then target_index = _find_module(root, action.value(), "token_decl")
+        else if action.name() = "error" then target_index = _find_module(root, action.value(), "diagnostic_decl")
+        if (action.name() = "emit" | action.name() = "error") & target_index < 0 then do
+          call _result.panic("unresolved or wrong-kind action target '" || action.value() || "'", action.start(), action.span_length())
+          return
+        end
+
+        if subject.kind() = "special" & subject.name() = "eof" then do
+          if action.name() \= "emit" then do
+            call _result.panic("eof rule must emit the token with ID zero", action.start(), action.span_length())
+            return
+          end
+          eof_token = root.child_at(target_index)
+          if eof_token.number1() \= 0 then do
+            call _result.panic("eof rule must emit the token with ID zero", action.start(), action.span_length())
+            return
+          end
+        end
+      end
+      if _result.status() \= 0 then return
+    end
+
+    if lexer.value() = "utf8" then do
+      if eof_count \= 1 then do
+        call _result.panic("UTF-8 lexer requires exactly one eof rule", lexer.start(), lexer.span_length())
+        return
+      end
+      if malformed_count \= 1 then do
+        call _result.panic("UTF-8 lexer requires exactly one malformed rule", lexer.start(), lexer.span_length())
+        return
+      end
+      if otherwise_count \= 1 then call _result.panic("UTF-8 lexer requires exactly one otherwise rule", lexer.start(), lexer.span_length())
+    end
+    return
+
+  _find_module: method = .int
+    arg root = .levellastnode, name = .string, required_kind = .string
+    do i = 0 to root.child_count() - 1
+      node = root.child_at(i)
+      if levell_ci_equal(node.name(), name) then do
+        if node.kind() = required_kind then return i
+        return -1
+      end
+    end
+    return -1
+
+  _find_member: method = .int
+    arg lexer = .levellastnode, name = .string
+    do i = 0 to lexer.child_count() - 1
+      node = lexer.child_at(i)
+      if levell_ci_equal(node.name(), name) then return i
+    end
+    return -1
+
+  _validate_expression: method = .void
+    arg lexer = .levellastnode, node = .levellastnode, context = .string
+    if node.kind() = "reference" then do
+      index = _find_member(lexer, node.name())
+      if index < 0 then do
+        call _result.panic("unresolved lexer reference '" || node.name() || "'", node.start(), node.span_length())
+        return
+      end
+      target = lexer.child_at(index)
+      if context = "charset" & target.kind() \= "charset_decl" then do
+        call _result.panic("charset expression references a non-charset declaration", node.start(), node.span_length())
+        return
+      end
+      if context = "pattern" & target.kind() \= "charset_decl" & target.kind() \= "pattern_decl" then do
+        call _result.panic("pattern expression references a non-pattern declaration", node.start(), node.span_length())
+        return
+      end
+    end
+    do i = 0 to node.child_count() - 1
+      call _validate_expression(lexer, node.child_at(i), context)
+      if _result.status() \= 0 then return
+    end
+    return
+
+  _nullable: method = .int
+    arg lexer = .levellastnode, node = .levellastnode, depth = .int
+    if depth > 64 then do
+      call _result.panic("cyclic or excessively deep pattern reference", node.start(), node.span_length())
+      return 0
+    end
+
+    select node.kind()
+      when "literal" then return length(node.name()) = 0
+      when "codepoint" then return 0
+      when "scalar" then return 0
+      when "range" then return 0
+      when "charset_union" then return 0
+      when "except" then return 0
+      when "reference" then do
+        index = _find_member(lexer, node.name())
+        if index < 0 then return 0
+        target = lexer.child_at(index)
+        if target.kind() = "charset_decl" then return 0
+        if target.kind() = "pattern_decl" then return _nullable(lexer, target.child_at(0), depth + 1)
+        return 0
+      end
+      when "repeat" then do
+        if node.number1() = 0 then return 1
+        return _nullable(lexer, node.child_at(0), depth + 1)
+      end
+      when "alternation" then do
+        do i = 0 to node.child_count() - 1
+          if _nullable(lexer, node.child_at(i), depth + 1) then return 1
+        end
+        return 0
+      end
+      when "concatenation" then do
+        do i = 0 to node.child_count() - 1
+          if \_nullable(lexer, node.child_at(i), depth + 1) then return 0
+        end
+        return 1
+      end
+      otherwise return 0
+    end
+    return 0
+
+levell_safe_name: procedure = .string
+  arg name = .string
+  out = ""
+  do i = 1 to length(name)
+    ch = substr(name, i, 1)
+    byte = c2d(ch)
+    if levell_is_symbol_start(byte) | (byte >= 48 & byte <= 57) then out = out || ch
+    else if byte = 46 then out = out || "_"
+    else out = out || "_"
+  end
+  return out
+
+levell_rexx_quote: procedure = .string
+  arg text = .string
+  quote = '"'
+  out = quote
+  do i = 1 to length(text)
+    ch = substr(text, i, 1)
+    if ch = quote then out = out || quote || quote
+    else out = out || ch
+  end
+  return out || quote
+
+levell_re2c_quote: procedure = .string
+  arg text = .string
+  quote = '"'
+  slash = "\"
+  out = quote
+  do i = 1 to length(text)
+    ch = substr(text, i, 1)
+    code = c2d(ch)
+    select code
+      when 34 then out = out || slash || quote
+      when 92 then out = out || slash || slash
+      when 10 then out = out || slash || "n"
+      when 13 then out = out || slash || "r"
+      when 9 then out = out || slash || "t"
+      otherwise out = out || ch
+    end
+  end
+  return out || quote
+
+levell_hex_width: procedure = .string
+  arg value = .int, width = .int
+  return right(d2x(value), width, "0")
+
+levell_re2c_codepoint: procedure = .string
+  arg value = .int
+  if value <= 0xFFFF then return '"\u' || levell_hex_width(value, 4) || '"'
+  return '"\U' || levell_hex_width(value, 8) || '"'
+
+levell_re2c_classpoint: procedure = .string
+  arg value = .int
+  if value <= 0xFFFF then return "\u" || levell_hex_width(value, 4)
+  return "\U" || levell_hex_width(value, 8)
+
+levell_render_expression: procedure = .string
+  arg node = .levellastnode
+  kind = node.kind()
+
+  select kind
+    when "literal" then return levell_re2c_quote(node.name())
+    when "codepoint" then return levell_re2c_codepoint(node.number1())
+    when "reference" then return levell_safe_name(node.name())
+    when "scalar" then return "[\u0000-\uD7FF\uE000-\U0010FFFF]"
+    when "range" then return "[" || levell_re2c_classpoint(node.number1()) || "-" || levell_re2c_classpoint(node.number2()) || "]"
+    when "charset_union" then return "(" || levell_render_expression(node.child_at(0)) || " | " || levell_render_expression(node.child_at(1)) || ")"
+    when "except" then return "(" || levell_render_expression(node.child_at(0)) || " \ " || levell_render_expression(node.child_at(1)) || ")"
+    when "alternation" then return "(" || levell_render_expression(node.child_at(0)) || " | " || levell_render_expression(node.child_at(1)) || ")"
+    when "concatenation" then do
+      out = "("
+      do i = 0 to node.child_count() - 1
+        if i > 0 then out = out || " "
+        out = out || levell_render_expression(node.child_at(i))
+      end
+      return out || ")"
+    end
+    when "repeat" then do
+      out = "(" || levell_render_expression(node.child_at(0)) || ")"
+      minimum = node.number1()
+      maximum = node.number2()
+      if minimum = 0 & maximum = 1 then return out || "?"
+      if minimum = 0 & maximum < 0 then return out || "*"
+      if minimum = 1 & maximum < 0 then return out || "+"
+      if minimum = maximum then return out || "{" || minimum || "}"
+      if maximum < 0 then return out || "{" || minimum || ",}"
+      return out || "{" || minimum || "," || maximum || "}"
+    end
+    otherwise return ""
+  end
+  return ""
+
+levell_root_namespace: procedure = .string
+  arg root = .levellastnode
+  do i = 0 to root.child_count() - 1
+    node = root.child_at(i)
+    if node.kind() = "namespace" then return node.name()
+  end
+  return ""
+
+levell_root_lexer: procedure = .levellastnode
+  arg root = .levellastnode
+  do i = 0 to root.child_count() - 1
+    node = root.child_at(i)
+    if node.kind() = "lexer_decl" then return node
+  end
+  return .levellastnode("error")
+
+levell_root_symbol: procedure = .int
+  arg root = .levellastnode, name = .string, kind = .string
+  do i = 0 to root.child_count() - 1
+    node = root.child_at(i)
+    if node.kind() = kind & levell_ci_equal(node.name(), name) then return i
+  end
+  return -1
+
+levell_token_id: procedure = .int
+  arg root = .levellastnode, name = .string
+  index = levell_root_symbol(root, name, "token_decl")
+  if index < 0 then return -1
+  return root.child_at(index).number1()
+
+levell_diagnostic_id: procedure = .int
+  arg root = .levellastnode, name = .string
+  index = levell_root_symbol(root, name, "diagnostic_decl")
+  if index < 0 then return -1
+  return root.child_at(index).number1()
+
+levell_diagnostic_message: procedure = .string
+  arg root = .levellastnode, name = .string
+  index = levell_root_symbol(root, name, "diagnostic_decl")
+  if index < 0 then return "unknown Level L diagnostic"
+  return root.child_at(index).value()
+
+levell_emit_rule_action: procedure = .string
+  arg root = .levellastnode, prefix = .string, subject = .levellastnode, action = .levellastnode
+  nl = "0a"x
+  out = ""
+
+  if action.name() = "emit" then do
+    token_id = levell_token_id(root, action.value())
+    if subject.kind() = "special" & subject.name() = "eof" then do
+      out = out || "      call " || prefix || "_emit tokens, count, " || token_id || ", source_len, 0" || nl
+      out = out || "      return tokens" || nl
+      return out
+    end
+    out = out || "      call " || prefix || "_emit tokens, count, " || token_id || ", start, pos - start" || nl
+    out = out || "      start = pos" || nl
+    out = out || "      state = 0" || nl
+    out = out || "      iterate" || nl
+    return out
+  end
+
+  if action.name() = "skip" then do
+    out = out || "      start = pos" || nl
+    out = out || "      state = 0" || nl
+    out = out || "      iterate" || nl
+    return out
+  end
+
+  diagnostic_id = levell_diagnostic_id(root, action.value())
+  message = levell_diagnostic_message(root, action.value())
+  out = out || "      _level_l_status = " || diagnostic_id || nl
+  out = out || "      _level_l_error_offset = start" || nl
+  out = out || "      _level_l_error_message = " || levell_rexx_quote(message) || nl
+  out = out || "      return tokens" || nl
+  return out
+
+/**
+ * Lower a valid Level L lexer AST to the retained re2c/cREXX adapter input.
+ * re2c performs only automaton construction and cREXX control-flow emission;
+ * the authored language, IDs, actions, API, and diagnostics come from this AST.
+ */
+levell_emit_re2c: procedure = .string
+  arg result = .levellresult
+  if result.status() \= 0 then return ""
+
+  root = result.root()
+  module_name = levell_root_namespace(root)
+  if module_name = "" then return ""
+  prefix = levell_safe_name(module_name)
+  lexer = levell_root_lexer(root)
+  nl = "0a"x
+
+  exported = prefix || "_lex " || prefix || "_status " || prefix || "_error_offset " ||,
+             prefix || "_error_message " || prefix || "_token_count " ||,
+             prefix || "_token_kind " || prefix || "_token_start " ||,
+             prefix || "_token_length " || prefix || "_token_name"
+
+  out = "/* Generated from authored Level L by the Level B bootstrap frontend. */" || nl
+  out = out || "/* The retained re2c adapter constructs the DFA; this file is cREXX output. */" || nl
+  out = out || "options levelb" || nl || nl
+  out = out || "namespace " || module_name || " expose " || exported || nl
+  out = out || "import rxfnsb" || nl || nl
+
+  out = out || prefix || "_lex: procedure = .binary expose _level_l_status _level_l_error_offset _level_l_error_message" || nl
+  out = out || "  arg source = .string" || nl || nl
+  out = out || "  _level_l_status = 0" || nl
+  out = out || "  _level_l_error_offset = 0" || nl
+  out = out || '  _level_l_error_message = ""' || nl
+  out = out || "  tokens = .binary" || nl
+  out = out || "  count = 0" || nl
+  out = out || "  pos = 0" || nl
+  out = out || "  start = 0" || nl
+  out = out || "  source_len = <blen>(source as .binary)" || nl
+  out = out || "  scan_bytes = source as .binary" || nl
+  out = out || "  call binresize scan_bytes, source_len + 1" || nl || nl
+  out = out || "/*!re2c" || nl
+  out = out || "    re2c:yyfill:enable = 0;" || nl
+  out = out || "    re2c:indent:top = 1;" || nl
+  out = out || '    re2c:YYCURSOR = "pos";' || nl
+  out = out || '    re2c:YYINPUT = "scan_bytes";' || nl
+  out = out || '    re2c:yych = "byte";' || nl
+  out = out || '    re2c:yystate = "state";' || nl
+  out = out || "    re2c:state:abort = 0;" || nl
+  out = out || "    re2c:nested-ifs = 1;" || nl
+  out = out || "    re2c:bit-vectors = 0;" || nl
+  if lexer.value() = "utf8" then do
+    out = out || "    re2c:encoding:utf8 = 1;" || nl
+    out = out || "    re2c:encoding-policy = fail;" || nl
+  end
+  out = out || nl
+
+  do i = 0 to lexer.child_count() - 1
+    node = lexer.child_at(i)
+    if node.kind() = "charset_decl" | node.kind() = "pattern_decl" then,
+      out = out || "    " || levell_safe_name(node.name()) || " = " || levell_render_expression(node.child_at(0)) || ";" || nl
+  end
+  out = out || nl
+
+  do i = 0 to lexer.child_count() - 1
+    rule = lexer.child_at(i)
+    if rule.kind() \= "rule_decl" then iterate
+    subject = rule.child_at(0)
+    action = rule.child_at(1)
+    if subject.kind() = "special" & subject.name() = "malformed" then iterate
+    rendered = .string
+    if subject.kind() = "special" then do
+      if subject.name() = "eof" then rendered = '"\u0000"'
+      else rendered = "*"
+    end
+    else rendered = levell_render_expression(subject)
+    out = out || "    " || rendered || " {" || nl
+    out = out || levell_emit_rule_action(root, prefix, subject, action)
+    out = out || "    }" || nl
+  end
+  out = out || "*/" || nl || nl
+
+  out = out || prefix || "_status: procedure = .int expose _level_l_status _level_l_error_offset _level_l_error_message" || nl
+  out = out || "  return _level_l_status" || nl || nl
+  out = out || prefix || "_error_offset: procedure = .int expose _level_l_status _level_l_error_offset _level_l_error_message" || nl
+  out = out || "  return _level_l_error_offset" || nl || nl
+  out = out || prefix || "_error_message: procedure = .string expose _level_l_status _level_l_error_offset _level_l_error_message" || nl
+  out = out || "  return _level_l_error_message" || nl || nl
+
+  out = out || prefix || "_token_count: procedure = .int" || nl
+  out = out || "  arg tokens = .binary" || nl
+  out = out || "  return <blen>(tokens) <idiv> 12" || nl || nl
+  out = out || prefix || "_token_kind: procedure = .int" || nl
+  out = out || "  arg tokens = .binary, index = .int" || nl
+  out = out || "  return <at..u16>(index * 12) tokens" || nl || nl
+  out = out || prefix || "_token_start: procedure = .int" || nl
+  out = out || "  arg tokens = .binary, index = .int" || nl
+  out = out || "  return <at..u32>(index * 12 + 2) tokens" || nl || nl
+  out = out || prefix || "_token_length: procedure = .int" || nl
+  out = out || "  arg tokens = .binary, index = .int" || nl
+  out = out || "  return <at..u32>(index * 12 + 6) tokens" || nl || nl
+  out = out || prefix || "_token_name: procedure = .string" || nl
+  out = out || "  arg kind = .int" || nl
+  out = out || "  select kind" || nl
+  do i = 0 to root.child_count() - 1
+    node = root.child_at(i)
+    if node.kind() = "token_decl" then,
+      out = out || "    when " || node.number1() || " then return " || levell_rexx_quote(node.name()) || nl
+  end
+  out = out || '    otherwise return "unknown"' || nl
+  out = out || "  end" || nl
+  out = out || '  return "unknown"' || nl || nl
+
+  out = out || prefix || "_emit: procedure = .int" || nl
+  out = out || "  arg expose tokens = .binary, expose count = .int, kind = .int, start = .int, span_length = .int" || nl
+  out = out || "  offset = count * 12" || nl
+  out = out || "  call binresize tokens, offset + 12" || nl
+  out = out || "  <at..u16>(offset) tokens = kind" || nl
+  out = out || "  <at..u32>(offset + 2) tokens = start" || nl
+  out = out || "  <at..u32>(offset + 6) tokens = span_length" || nl
+  out = out || "  count = count + 1" || nl
+  out = out || "  return count" || nl
+  return out

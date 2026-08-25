@@ -1,9 +1,10 @@
 # Unicode And Language-Tooling Experiment
 
 Status: Phase 1 contract/input freeze and Phase 2 NFD reference proof complete;
-the Level L lexer syntax is documented and the first re2c output-adapter
-experiment is complete. The Level L front end and generator core are not yet
-implemented.
+the Level L lexer syntax, Level B bootstrap frontend, authored TinyExpr proof,
+and authored ICU `gennorm2` lexer proof are complete. The reusable neutral IR,
+native automaton core, Unicode record parser/data compiler, and Level G library
+remain research work.
 
 This directory is the retained experimental work area for the `unicode`
 branch. It is deliberately outside the product libraries and is not installed
@@ -18,8 +19,9 @@ or enabled by the ordinary CREXX build.
 - Level B remains the valid-UTF-8/codepoint substrate. This experiment does not
   change identifier spelling/equality, keyword matching, source normalization,
   or the existing Level B and Level C string contracts.
-- The experimental Level L lexer syntax is documented for this branch, but is
-  not implemented by a Level L front end. No new compiler/RXAS/VM operation,
+- The experimental Level L lexer syntax is implemented by a separate Level B
+  bootstrap frontend on this branch. It is not syntax in production `rxc` and
+  is not installed by the ordinary build. No new compiler/RXAS/VM operation,
   physical binary layout, or public Level G API is approved by these proofs.
   Any such decision remains a later explicit design gate.
 
@@ -119,17 +121,15 @@ the hand-written `rxfnsl` scanner on both VM families. It is an output-adapter
 and differential-oracle result; its `.re` input is not the authored Level L
 language.
 
-The next implementation slice is a deliberately naive, hand-crafted Level B
-frontend for the approved Level L lexer syntax. Level L's foundational `Token`
-and AST classes are Level B-only bootstrap components. The frontend will create
-an automatic production/token syntax tree and stop there; a later semantic pass
-will lower that tree into the neutral lexer model. The parser is deterministic,
-does not backtrack, and panics with the token and exact byte span of the first
-invalid or unsupported construct; recovery and further-error collection are
-later work.
+The retained [Level L bootstrap experiment](level-l-bootstrap/README.md)
+implements the deliberately naive Level B frontend, `Token` and AST classes,
+deterministic first-fault parser, validation, and a bounded cREXX output path.
+It parses canonical authored Level L for TinyExpr and the ICU `gennorm2`
+rule-file lexer, creates byte-identical token/AST dumps on both VMs, and lowers
+the validated tree to the retained re2c DFA adapter. The resulting cREXX
+TinyExpr scanner agrees with `rxfnsl`; the generated Unicode scanner accepts
+all 2,500 lines of the retained ICU input with exact rule-form counts.
 
-The sole required positive input for this first slice is the canonical Level L
-description of the retained Unicode rule-file lexer. TinyExpr is an optional
-smoke test, and a Level L description of Level L's own lexer is deferred to the
-later bootstrap and self-hosting proof. Automaton construction, emission,
-optimization, and packed tree storage are also later work.
+The production compiler remains unchanged. A reusable neutral lexer IR, native
+Level B/Level L automaton construction, packed tree/table storage, Unicode
+record parsing/data compilation, and Level L self-hosting are later work.

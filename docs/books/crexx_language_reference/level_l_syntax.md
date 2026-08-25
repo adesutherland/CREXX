@@ -6,7 +6,8 @@ defines the first part of that language: a lexer maker.
 
 The syntax described here is the Level L design on that branch. It is expected
 to grow and to be tuned as it is exercised against real language and Unicode
-specifications. The declaration syntax is not yet implemented by the compiler.
+specifications. The declaration syntax is implemented by the experimental
+Level B bootstrap frontend on the `unicode` branch, not by production `rxc`.
 
 ## A first lexer
 
@@ -293,10 +294,10 @@ compiler builds tables, and the Level G operation consumes those tables.
 
 ## Token and AST foundation
 
-Level L will provide `Token` and AST class families implemented entirely in
-Level B. They are part of the bootstrap foundation, not Level G services. A
-Level L compiler may generate a Level G Unicode library, but compiling Level L
-must not first require that generated library.
+The retained bootstrap provides `Token` and AST class families implemented
+entirely in Level B. They are part of the bootstrap foundation, not Level G
+services. A Level L compiler may generate a Level G Unicode library, but
+compiling Level L must not first require that generated library.
 
 The first logical `Token` contract contains a token kind, zero-based source
 byte start, and source byte length. An AST node contains a stable node or
@@ -305,7 +306,7 @@ association for a terminal leaf. The exact class members, ownership model, and
 ordinary-object or packed representation will be settled by implementation;
 the logical result must remain the same.
 
-The initial bootstrap frontend is deliberately simple Level B code: a
+The retained initial bootstrap frontend is deliberately simple Level B code: a
 hand-written scanner and recursive-descent parser, ordinary objects and arrays,
 linear lookup where convenient, and no performance requirement beyond being
 usable on the retained Unicode specification. Parsing is deterministic: the
@@ -317,13 +318,19 @@ On the first invalid or unsupported construct, the bootstrap frontend
 parsing the input. Recovery and collection of multiple errors are later
 features.
 
-The only required proving use for the first implementation is to parse the
+The first implementation now parses the
 Level L specification for the Unicode rule-file lexer used by the retained
-normalization work and construct the agreed syntax tree. It only needs the
+normalization work and constructs the agreed syntax tree. It implements the
 approved Level L lexer constructs exercised by that specification; other
 constructs panic explicitly as not yet implemented. The TinyExpr example may
-serve as an optional smoke test. Parsing the specification for Level L's own
-lexer is a later bootstrap and self-hosting proof.
+serve as a small differential smoke test. A bounded proof emitter lowers both
+authored specifications through the retained re2c DFA adapter to deterministic
+cREXX. Parsing the specification for Level L's own lexer remains a later
+bootstrap and self-hosting proof.
+
+The retained implementation and its reproducible command are documented in
+`experiments/unicode/level-l-bootstrap/README.md`. It remains experimental and
+does not make Level L a released compiler input.
 
 The generated lexer and, later, generated parser must produce the same tokens,
 tree shape, source spans, and diagnostics as the bootstrap frontend. Once the

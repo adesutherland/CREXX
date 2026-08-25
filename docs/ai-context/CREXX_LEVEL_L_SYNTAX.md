@@ -1,7 +1,8 @@
 # Level L Syntax: AI and Implementer Context
 
-Status: Level L language design for the `unicode` research branch. The lexer
-maker is the first defined subset; implementation and release status are
+Status: Level L language design plus an experimental Level B bootstrap
+implementation on the `unicode` research branch. The lexer maker is the first
+defined and exercised subset; production compiler and release status remain
 separate.
 
 Use this document when generating, reviewing, parsing, or implementing Level L
@@ -565,9 +566,16 @@ that re2c 4.5.1 can emit a deterministic TinyExpr DFA using valid cREXX
 implementation evidence for the target shape, not an alternative Level L
 front-end grammar.
 
+The implemented authored path is retained at
+`experiments/unicode/level-l-bootstrap/`. Its Level B frontend constructs the
+Token/AST model defined here, validates the first lexer subset, and emits re2c
+adapter input from that validated tree. The existing syntax adapter then emits
+deterministic Level B. This keeps re2c behind the Level L surface: authors do
+not write re2c syntax or embedded cREXX actions.
+
 ## Bootstrap and First Implementation Slice
 
-The first implementation is a deliberately naive, hand-crafted Level B
+The retained first implementation is a deliberately naive, hand-crafted Level B
 frontend. It is not a second production compiler and is not performance work.
 Its responsibilities are limited to:
 
@@ -586,32 +594,36 @@ resynchronization, or accumulation of further diagnostics. If a proposed
 grammar shape would require speculative parsing, factor the grammar into a
 deterministic form or leave that shape unsupported in the bootstrap subset.
 
-The first implementation slice stops at that AST. A separately tested semantic
-pass will later consume the tree and create the neutral lexer model; automaton
-construction, layout, and target emission remain later components.
+The bootstrap frontend's parser responsibility stops at that AST. The retained
+PoC adds validation and a separately tested adapter pass that walks the tree,
+emits deterministic re2c input, and uses re2c only for DFA construction and
+cREXX control-flow emission. A reusable neutral lexer IR, native automaton
+construction, and a product layout remain later components.
 
 The bootstrap implementation may use ordinary objects and arrays, repeated
 linear scans, and other simple algorithms. It must fail explicitly on deferred
 syntax rather than guessing. Optimized token storage, generated parsing tables,
 and packed AST layouts are later replacements, not entry requirements.
 
-The sole required positive specification for the first implementation is the
+The required positive specification for the first implementation is the
 Level L lexer specification for the ICU `gennorm2`/Unicode rule-file input used
 by the retained normalization work. The initial supported subset therefore
 needs only the approved Level L constructs exercised by that specification;
 other constructs must panic explicitly as not yet implemented.
 
-The documented TinyExpr lexer may be retained as a small developer smoke test,
-but it is not an acceptance condition. A Level L specification for Level L's
-own lexer is a later bootstrap and self-hosting proof, after the Unicode slice
-has established the frontend.
+The documented TinyExpr lexer is retained as a small differential smoke test.
+Both authored specifications now parse to deterministic Token/AST dumps and
+emit deterministic cREXX on both VM families. The generated TinyExpr scanner
+matches `rxfnsl`; the generated Unicode scanner accepts the retained ICU input.
+A Level L specification for Level L's own lexer remains the later bootstrap and
+self-hosting proof.
 
 The Unicode case means that the bootstrap parser ingests a Level L
 *specification describing* the Unicode rule-file lexer. The generated lexer
 then tokenizes the Unicode input. The Level L frontend does not normalize text
 or perform the Unicode algorithm.
 
-After the Unicode slice is accepted, the self-hosting sequence is:
+The Unicode lexer slice is accepted. The remaining self-hosting sequence is:
 
 1. the hand-crafted Level B frontend parses the canonical Level L lexer
    specification;

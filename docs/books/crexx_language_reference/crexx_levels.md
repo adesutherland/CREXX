@@ -107,14 +107,15 @@ The `unicode` research branch now defines the authored direction in
 That design is experimental branch documentation, not a claim that the release
 compiler accepts the syntax.
 
-The same branch fixes a Level B-only bootstrap direction: Level L will provide
-foundational `Token` and AST classes without depending on Level G, and its first
-frontend will be a deliberately naive, deterministic, fail-fast hand-written
-Level B scanner/parser that only constructs the syntax tree needed by the
-Unicode lexer specification. It does not backtrack; an invalid or unsupported
-construct causes a panic at the first offending token. Generated lexer/parser
-implementations may replace it after they reproduce the same tokens, tree,
-source spans, and diagnostics deterministically.
+The same branch now retains a Level B-only bootstrap implementation. It
+provides foundational `Token` and AST classes without depending on Level G and
+a deliberately naive, deterministic, fail-fast hand-written scanner/parser for
+the lexer-maker subset. It does not backtrack; an invalid or unsupported
+construct causes a panic at the first offending token. The proof parses
+authored TinyExpr and Unicode-rule lexer specifications and emits deterministic
+cREXX through the retained re2c DFA adapter. Generated lexer/parser
+implementations may later replace the bootstrap after reproducing the same
+tokens, tree, source spans, and diagnostics deterministically.
 
 Levels E and N should be understood in that same tooling sense. They reserve
 clear names for Object Rexx and NetRexx editor support, but they are not cRexx

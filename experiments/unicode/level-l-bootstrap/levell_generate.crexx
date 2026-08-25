@@ -1,0 +1,38 @@
+/* Command-line wrapper for the Level L bootstrap frontend and re2c adapter. */
+options levelb
+
+import rxfnsb
+import levell_bootstrap
+
+arg argv = .string[]
+
+if argv[0] \= 4 then do
+  say "usage: levell_generate source.levell output.re tokens.dump ast.dump"
+  return 2
+end
+
+source = loadtext(argv[1], "0a"x)
+result = levell_parse(source)
+if result.status() \= 0 then do
+  say "Level L panic at byte" result.error_start() "length" result.error_length() || ":" result.error()
+  return 1
+end
+
+re2c_source = levell_emit_re2c(result)
+if re2c_source = "" then do
+  say "Level L panic: bootstrap emitter produced no source"
+  return 1
+end
+
+if erasefile(argv[2]) \= 0 then return 1
+if erasefile(argv[3]) \= 0 then return 1
+if erasefile(argv[4]) \= 0 then return 1
+if charout(argv[2], re2c_source) \= 0 then return 1
+if charout(argv[2]) \= 0 then return 1
+if charout(argv[3], levell_token_dump(result)) \= 0 then return 1
+if charout(argv[3]) \= 0 then return 1
+if charout(argv[4], levell_ast_dump(result)) \= 0 then return 1
+if charout(argv[4]) \= 0 then return 1
+
+say "PASS: parsed and lowered" argv[1]
+return 0
