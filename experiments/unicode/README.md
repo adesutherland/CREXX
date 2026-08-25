@@ -1,7 +1,7 @@
 # Unicode And Language-Tooling Experiment
 
-Status: Phase 1 contract/input freeze complete; Phase 2 NFD reference proof in
-progress.
+Status: Phase 1 contract/input freeze complete; Phase 2 NFD reference proof
+implemented and awaiting Gate 2 acceptance.
 
 This directory is the retained experimental work area for the `unicode`
 branch. It is deliberately outside the product libraries and is not installed
@@ -48,6 +48,14 @@ and conformance evidence.
   is versioned and their role at the Level G boundary is approved. Phase 1 and
   Phase 2 do not choose that format.
 
+Runtime layout is deliberately still open. `<at..type>` supplies the portable
+fixed-width baseline, while host-native `<packed..int>` is expected to be
+faster and may be the better execution form. After the PoC, the same logical
+tables must be measured as portable fixed-width data, target-generated packed
+data, and a portable-on-disk/packed-in-memory hybrid. The verdict must state
+whether source or binaries need to cross architectures unchanged and include
+generation/materialization cost as well as steady-state lookup speed.
+
 ## Phase 1 Rule-Capability Contract
 
 The first CREXX-native lexer/transducer design must be derived from working
@@ -92,4 +100,3 @@ checks all applicable NFD invariants in Unicode 17.0.0
 
 See [poc/RULE-CORRESPONDENCE.md](poc/RULE-CORRESPONDENCE.md) for the detailed
 translation ledger and `poc/README.md` for reproducible commands.
-

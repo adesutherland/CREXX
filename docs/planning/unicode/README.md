@@ -1,6 +1,7 @@
 # Level L Language Tooling And Level G Unicode Research Track
 
-Status: Phase 1 complete; Phase 2 NFD reference proof in progress.
+Status: Phase 1 complete; Phase 2 NFD reference proof implemented and awaiting
+Gate 2 acceptance.
 
 Branch: `unicode`, based on `origin/develop` at `7b78375bd` on 2026-08-25.
 The branch is intentionally kept separate from `develop` until its contracts,
@@ -75,15 +76,19 @@ compared.
 
 ### Binary Surface
 
-The portable table surface is the byte-addressed `<at..type>` family. Fixed
-integer and float fields have declared widths and canonical little-endian
-encoding. This is the right default for generated Unicode data that must be
-portable in source, RXBIN, packages, and across hosts.
+The portable interchange/storage surface is the byte-addressed `<at..type>`
+family. Fixed integer and float fields have declared widths and canonical
+little-endian encoding. This is the safe baseline for generated Unicode data
+that must remain byte-identical in source, RXBIN, packages, and across hosts.
 
-The newer `<packed..int>` and `<packed..float>` forms expose host-native VM
-representations. They are useful for host-local numeric kernels, but are the
-wrong storage contract for portable Unicode tables: they have host width/endian
-meaning and no stored item type.
+The newer `<packed..int>` and `<packed..float>` forms expose faster host-native
+VM representations. Their host width/endian meaning prevents a packed image
+from automatically serving as the committed cross-architecture format, but
+does not rule them out as the runtime layout. A portable source/model could
+generate or materialize host-native packed tables during build, install, or
+load. The post-PoC layout verdict must therefore measure portable `<at..type>`,
+host-native packed, and load/convert-once hybrid shapes rather than presuming
+portability is the only criterion.
 
 Current strengths include:
 
@@ -248,9 +253,11 @@ Unicode 17 UCD files --------> Unicode data compiler --> versioned portable tabl
 UTF-8 text ------------------------------------------------> Level G Unicode algorithms
 ```
 
-The likely table representation is one or more versioned `.binary` constants
-using explicit-width little-endian fields and shared mapping pools. Candidate
-data shapes include:
+The retained interchange representation may be one or more versioned
+`.binary` constants using explicit-width little-endian fields and shared
+mapping pools. The execution representation remains an empirical question and
+may instead be host-native packed data generated or materialized from the same
+logical source. Candidate logical data shapes include:
 
 - disjoint range tables for Boolean/enumerated properties;
 - codepoint-to-offset/length records for decomposition and case mappings;
@@ -261,8 +268,10 @@ data shapes include:
 
 The exact layout is deliberately not fixed here. Alternatives such as range
 search, two-stage page tables, tries, perfect hashes, or hybrid ASCII/BMP/full
-scalar tables should be generated from the same logical data and compared for
-size, lookup cost, compilation cost, and both-VM behavior.
+scalar tables should be generated from the same logical data. Each promising
+shape should then be compared in portable fixed-width, host-native packed, and
+where useful load/convert-once forms for size, lookup cost, materialization
+cost, compilation cost, architecture scope, and both-VM behavior.
 
 ## Recommended First Vertical Slice
 
@@ -316,7 +325,7 @@ Gate 1: passed on 2026-08-25. The approved defaults are recorded in
 licenses, provenance, and SHA-256 checksums are retained under
 `experiments/unicode/inputs/`. No language syntax changed.
 
-### 2. Unicode-Rule Transcription PoC In re2c — in progress
+### 2. Unicode-Rule Transcription PoC In re2c — implemented
 
 - Select the first manual-defined compare, case-fold, or NFD rule slice.
 - Duplicate the IBM-oriented rules in ordinary re2c and retain a correspondence
@@ -325,8 +334,16 @@ licenses, provenance, and SHA-256 checksums are retained under
 - Retain re2c input, generated reference code, build/run commands, and results.
 - Derive the actual Level L lexer/transducer requirements from the passing PoC.
 
-Gate 2: accepted executable interpretation of the selected manual rules, full
-applicable conformance, and an evidence-backed Level L capability list.
+Implementation result on 2026-08-25: the retained re2c source parses ICU 78.3's
+Unicode 17.0.0 `gennorm2` notation, implements recursive canonical and
+algorithmic Hangul decomposition plus stable canonical ordering, and passes
+100,170 NFD corpus relations and 1,094,978 unlisted-scalar identity checks. A
+rule correspondence ledger, demonstrated Level L capability list,
+byte-reproducible generated C++, negative parser checks, command, and evidence
+are retained under `experiments/unicode/poc/`.
+
+Gate 2: evidence complete; awaiting Adrian's acceptance of the executable
+interpretation before any Phase 3 language design begins.
 
 ### 3. Level L Lexer-Maker Language And Core
 
@@ -345,6 +362,11 @@ unsupported features fail explicitly.
 ### 4. Binary-Surface Verdict
 
 - Profile the real generated scanner and first Unicode tables.
+- Compare portable fixed-width `<at..type>`, host-native `<packed..int>` (and
+  float only where a real workload needs it), and load/convert-once layouts.
+- Separate committed/source portability from runtime representation: determine
+  whether tables must compile unchanged across architectures or may be
+  generated/materialized for the target host.
 - Inspect generated RXAS for table loads, bounds checks, copies, offset
   recomputation, dispatch, and buffer growth.
 - Test alternative portable layouts before changing the VM/compiler.
