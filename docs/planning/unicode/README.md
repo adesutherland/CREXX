@@ -3,8 +3,9 @@
 Status: Phase 1 and Phase 2 complete; the Level L lexer syntax, Level B
 bootstrap frontend, authored TinyExpr generator proof, and authored ICU
 `gennorm2` lexer proof are complete. The typed Level B Unicode-rule parser is
-also complete. The reusable neutral IR, native automaton core, Unicode data
-compiler, and Level G library remain research work.
+also complete, as is the bounded portable Level B NFD normalizer proof. The
+reusable neutral IR, native automaton core, general Unicode property/data
+compiler, packed-layout verdict, NFC, and Level G library remain research work.
 
 Branch: `unicode`, based on `origin/develop` at `7b78375bd` on 2026-08-25.
 The branch is intentionally kept separate from `develop` until its contracts,
@@ -421,13 +422,25 @@ C++/re2c parser. Focused negative tests cover malformed productions,
 unsupported versions, invalid scalar/CCC data, and mapping arity using the same
 first-fault panic policy.
 
+The following bounded consumer slice is complete as well. The typed AST is
+compiled into a versioned 1,186,472-byte portable Level B image containing a
+dense CCC table, paged mapping index, fixed records, and a shared value pool.
+The image is regenerated in memory rather than committed and has retained
+SHA-256
+`dd7e03a88172dd451bf4c353771c565d07ade91f64ec8cbab81b9e6b33362944`.
+An explicit Level B NFD normalizer validates the image, performs recursive and
+algorithmic Hangul decomposition plus stable canonical ordering, and passes
+100,170 Unicode 17.0.0 corpus relations and 1,094,978 unlisted-scalar identity
+checks on both VM families. The same reproduction reruns the independent
+C++/re2c oracle and matches its retained conformance summary.
+
 Remaining before a production generator decision: extract a reusable neutral
 lexer IR, decide whether re2c remains a backend/oracle or is replaced by native
-Level B/Level L automaton construction, compile the typed normalization data,
-measure portable versus packed layouts, and later prove Level L
-self-lexing/self-hosting. The current `.string` scanner path also relies on the
-Level B valid-UTF-8 boundary; a future binary input path must implement the
-authored `malformed` rule explicitly.
+Level B/Level L automaton construction, generalize the bounded NFD compiler into
+the property/data kernel, measure portable versus packed layouts, and later
+prove Level L self-lexing/self-hosting. The current `.string` scanner path also
+relies on the Level B valid-UTF-8 boundary; a future binary input path must
+implement the authored `malformed` rule explicitly.
 
 ### 4. Binary-Surface Verdict
 
@@ -461,15 +474,25 @@ architecture or syntax change is bundled implicitly into Unicode work.
 Gate 5: deterministic regeneration and complete property/table audit pass on
 both VM families.
 
-### 6. NFD First
+### 6. NFD First — experimental Level B proof complete
 
 - Implement recursive canonical decomposition, algorithmic Hangul
   decomposition, and stable canonical combining-class ordering.
 - Prove empty/ASCII/Latin/combining/non-BMP/Hangul behavior.
 - Run the complete applicable NFD invariants from `NormalizationTest.txt`.
 
-Gate 6: complete Unicode 17.0.0 NFD conformance, idempotence, both VMs, and no
-implicit changes to existing Level B operations.
+Implementation result on 2026-08-25: the bounded Level B implementation passes
+the complete Unicode 17.0.0 NFD corpus and unlisted-scalar identity requirement
+on both VM families. Focused fixtures cover empty/ASCII, direct and recursive
+decomposition, canonical ordering, non-BMP input, Hangul LV/LVT, CCC lookup,
+and cyclic mapping rejection. Existing Level B behavior is unchanged; the
+normalizer is explicit and remains under `experiments/`.
+
+This closes the experimental NFD PoC, not the production Level G deliverable.
+The table is a portable `<at..type>` correctness baseline, not an approved
+runtime format. General UCD/property compilation, packed versus portable
+measurement, bounded-memory/streaming policy, public API design, and product
+integration remain open.
 
 ### 7. NFC Composition
 

@@ -41,6 +41,7 @@ adapter_dir="$repo_dir/experiments/unicode/level-l-emitter"
 spec_dir="$script_dir/specs"
 generated_dir="$script_dir/generated"
 nfc_input="$repo_dir/experiments/unicode/inputs/icu-78.3/nfc.txt"
+normalization_input="$repo_dir/experiments/unicode/inputs/unicode-17.0.0/ucd/NormalizationTest.txt"
 poc_dir="$repo_dir/experiments/unicode/poc"
 
 if [ "$("$re2c_bin" --vernum)" != "040501" ]; then
@@ -134,6 +135,13 @@ compile_source "$script_dir/unicode_gennorm2_generate.crexx" \
 compile_source "$script_dir/test_unicode_gennorm2.crexx" \
     "$work_dir/test_unicode_gennorm2" "$work_dir" \
     "$work_dir/test-unicode-gennorm2-build.log"
+compile_source "$script_dir/unicode_nfd.crexx" \
+    "$work_dir/unicode_nfd" "$work_dir" \
+    "$work_dir/unicode-nfd-build.log"
+(cd "$work_dir" && "$rxlink_bin" -c "$script_dir/unicode_nfd.ctl")
+compile_source "$script_dir/test_unicode_nfd.crexx" \
+    "$work_dir/test_unicode_nfd" "$work_dir" \
+    "$work_dir/test-unicode-nfd-build.log"
 
 reference_cpp="$work_dir/nfd_reference.cpp"
 reference_bin="$work_dir/nfd_reference"
@@ -201,6 +209,17 @@ run_unicode_parser_test() {
         unicode_gennorm2_linked) > "$output_file"
 }
 
+run_unicode_nfd_test() {
+    vm_bin=$1
+    output_file=$2
+    (cd "$work_dir" && CREXX_HOME="$product_build_dir" \
+        "$vm_bin" test_unicode_nfd \
+        "$product_build_dir/bin/library" \
+        "$product_build_dir/bin/rxfnsl" \
+        unicode_nfd_linked -a "$nfc_input" "$normalization_input") \
+        > "$output_file"
+}
+
 run_frontend_test "$rxtvm_bin" "$work_dir/rxtvm-frontend.txt"
 run_frontend_test "$rxbvm_bin" "$work_dir/rxbvm-frontend.txt"
 run_tinyexpr_test "$rxtvm_bin" "$work_dir/rxtvm-tinyexpr.txt"
@@ -211,8 +230,11 @@ generate_unicode_records "$rxtvm_bin" rxtvm
 generate_unicode_records "$rxbvm_bin" rxbvm
 run_unicode_parser_test "$rxtvm_bin" "$work_dir/rxtvm-unicode-parser.txt"
 run_unicode_parser_test "$rxbvm_bin" "$work_dir/rxbvm-unicode-parser.txt"
+run_unicode_nfd_test "$rxtvm_bin" "$work_dir/rxtvm-unicode-nfd.txt"
+run_unicode_nfd_test "$rxbvm_bin" "$work_dir/rxbvm-unicode-nfd.txt"
 
 "$reference_bin" --dump-rules "$nfc_input" > "$work_dir/reference-gennorm2.semantic"
+"$reference_bin" "$nfc_input" "$normalization_input" > "$work_dir/reference-nfd.txt"
 
 cmp "$work_dir/rxtvm-frontend.txt" "$work_dir/rxbvm-frontend.txt"
 cmp "$work_dir/rxtvm-tinyexpr.txt" "$work_dir/rxbvm-tinyexpr.txt"
@@ -223,11 +245,16 @@ cmp "$generated_dir/gennorm2.records" "$work_dir/rxtvm/gennorm2.records"
 cmp "$generated_dir/gennorm2.semantic" "$work_dir/rxtvm/gennorm2.semantic"
 cmp "$work_dir/reference-gennorm2.semantic" "$work_dir/rxtvm/gennorm2.semantic"
 cmp "$work_dir/rxtvm-unicode-parser.txt" "$work_dir/rxbvm-unicode-parser.txt"
+cmp "$work_dir/rxtvm-unicode-nfd.txt" "$work_dir/rxbvm-unicode-nfd.txt"
+cmp "$script_dir/evidence/nfd-result.txt" "$work_dir/rxtvm-unicode-nfd.txt"
+cmp "$poc_dir/evidence/nfd-conformance.txt" "$work_dir/reference-nfd.txt"
 grep -Fx "PASS: Level L bootstrap frontend" "$work_dir/rxtvm-frontend.txt" > /dev/null
 grep -Fx "PASS: authored Level L TinyExpr matches rxfnsl" "$work_dir/rxtvm-tinyexpr.txt" > /dev/null
 grep -Fx "PASS: authored Level L lexer accepts ICU gennorm2 nfc.txt" "$work_dir/rxtvm-gennorm2.txt" > /dev/null
 grep -Fx "PASS: tokenized gennorm2 parsed into typed Unicode records" "$work_dir/rxtvm/unicode-gennorm2-generate.txt" > /dev/null
 grep -Fx "PASS: deterministic typed Unicode rule parser and panic contract" "$work_dir/rxtvm-unicode-parser.txt" > /dev/null
+grep -Fx "Focused NFD fixtures: PASS" "$work_dir/rxtvm-unicode-nfd.txt" > /dev/null
+grep -Fx "Result: PASS" "$work_dir/rxtvm-unicode-nfd.txt" > /dev/null
 
 summary_actual="$work_dir/result.txt"
 {
@@ -238,6 +265,10 @@ summary_actual="$work_dir/result.txt"
     echo "ICU gennorm2 nfc.txt lexer: PASS (2500 lines)"
     echo "Unicode rule parser: PASS (2485 typed records with byte/token spans)"
     echo "C++/re2c semantic oracle: byte-identical (2485 records)"
+    echo "portable Level B NFD table: PASS (1186472 bytes)"
+    echo "Unicode 17.0.0 NFD conformance: PASS (100170 corpus relations)"
+    echo "unlisted scalar NFD identity: PASS (1094978 scalars)"
+    echo "C++/re2c NFD oracle: retained conformance evidence reproduced"
     echo "generated dispatch: .jtable and jumpi"
     echo "binary scan/stores: bgetu8, bsetu16, bsetu32"
     echo "rxtvm: PASS"

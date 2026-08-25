@@ -2,9 +2,10 @@
 
 Status: Phase 1 contract/input freeze and Phase 2 NFD reference proof complete;
 the Level L lexer syntax, Level B bootstrap frontend, authored TinyExpr proof,
-authored ICU `gennorm2` lexer proof, and typed Level B Unicode-rule parser are
-complete. The reusable neutral IR, native automaton core, Unicode data
-compiler, and Level G library remain research work.
+authored ICU `gennorm2` lexer proof, typed Level B Unicode-rule parser, and
+portable Level B NFD normalizer proof are complete. The reusable neutral IR,
+native automaton core, general Unicode data/property compiler, packed-layout
+verdict, NFC, and Level G library remain research work.
 
 This directory is the retained experimental work area for the `unicode`
 branch. It is deliberately outside the product libraries and is not installed
@@ -52,6 +53,12 @@ and conformance evidence.
 - Generated portable Unicode binaries will be committed only after their format
   is versioned and their role at the Level G boundary is approved. Phase 1 and
   Phase 2 do not choose that format.
+
+The Level B NFD proof regenerates its versioned portable image in memory from
+the committed typed rules. The image itself is not committed; the retained
+evidence records its exact byte count, logical counts, and SHA-256 so
+determinism is checked without prematurely making the proof layout a product
+artifact.
 
 Runtime layout is deliberately still open. `<at..type>` supplies the portable
 fixed-width baseline, while host-native `<packed..int>` is expected to be
@@ -132,8 +139,13 @@ all 2,500 lines of the retained ICU input with exact rule-form counts. A
 separate deterministic Level B consumer parses that token stream into 2,485
 typed version, CCC, and mapping records with exact byte/token spans. Both VMs
 produce byte-identical retained dumps, and every semantic record is
-byte-identical to a new dump mode in the independent C++/re2c NFD oracle.
+byte-identical to a new dump mode in the independent C++/re2c NFD oracle. A
+bounded table compiler now lowers that AST to a deterministic portable binary
+image, and an explicit Level B normalizer passes all 100,170 NFD corpus
+relations plus 1,094,978 unlisted-scalar identity checks on both VM families.
+The independent C++/re2c result is regenerated in the same proof command.
 
 The production compiler remains unchanged. A reusable neutral lexer IR, native
 Level B/Level L automaton construction, packed tree/table storage, Unicode
-data compilation, and Level L self-hosting are later work.
+property-data compilation, NFC and other Unicode algorithms, the public Level G
+surface, and Level L self-hosting are later work.

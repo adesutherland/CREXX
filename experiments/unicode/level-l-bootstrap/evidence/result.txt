@@ -5,6 +5,10 @@ TinyExpr differential oracle: PASS
 ICU gennorm2 nfc.txt lexer: PASS (2500 lines)
 Unicode rule parser: PASS (2485 typed records with byte/token spans)
 C++/re2c semantic oracle: byte-identical (2485 records)
+portable Level B NFD table: PASS (1186472 bytes)
+Unicode 17.0.0 NFD conformance: PASS (100170 corpus relations)
+unlisted scalar NFD identity: PASS (1094978 scalars)
+C++/re2c NFD oracle: retained conformance evidence reproduced
 generated dispatch: .jtable and jumpi
 binary scan/stores: bgetu8, bsetu16, bsetu32
 rxtvm: PASS

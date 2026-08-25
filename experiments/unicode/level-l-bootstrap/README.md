@@ -1,4 +1,4 @@
-# Level L Bootstrap Frontend And cREXX Lexer Proof
+# Level L Bootstrap Frontend, cREXX Lexer, And Level B NFD Proof
 
 This retained experiment implements the first executable Level L lexer-maker
 slice entirely outside the production compiler.
@@ -21,6 +21,10 @@ retained ICU nfc.txt
     -> typed version/CCC/mapping AST with byte and token spans
     -> deterministic semantic dump
     -> byte comparison with the independent C++/re2c oracle
+    -> versioned portable Level B table image
+    -> recursive canonical and algorithmic Hangul decomposition
+    -> stable canonical combining-class ordering
+    -> complete Unicode 17.0.0 NFD conformance on both VMs
 ```
 
 The authored language is Level L. re2c is used only to construct and emit the
@@ -66,6 +70,21 @@ before the line terminator, so it includes any skipped spacing/comment tail.
 The token span is stored as a zero-based start plus count and includes the
 terminating newline token.
 
+`unicode_nfd.crexx` compiles the typed Unicode AST into a deterministic
+1,186,472-byte proof image. The image has a 64-byte versioned header, a dense
+canonical-combining-class byte table, a two-stage mapping-page index, fixed
+mapping records, and a shared code-point value pool. All persistent fields use
+portable little-endian `<at..u8>`, `<at..u16>`, and `<at..u32>` access. Its
+Unicode 17.0.0 image SHA-256 is
+`dd7e03a88172dd451bf4c353771c565d07ade91f64ec8cbab81b9e6b33362944`.
+
+The same module provides an explicit Level B NFD normalizer over a validated
+image. It implements recursive canonical decomposition, algorithmic Hangul
+decomposition, stable canonical ordering, direct CCC lookup, paged mapping
+lookup, and a cycle/depth panic. Table, Hangul, and binary-search arithmetic
+uses the mode-independent Level B `<idiv>` and `<mod>` operators, so the result
+does not depend on the source file's `OPTIONS NUMERIC_*` parser mode.
+
 ## Reproduce
 
 From the repository root:
@@ -85,8 +104,10 @@ variables are:
 
 The run regenerates the Token dump, AST dump, re2c adapter input, and final
 cREXX for both specifications. It requires byte identity with the committed
-files under `generated/`, compiles and links both generated scanners, and runs
-all focused checks on `rxtvm` and `rxbvm`.
+files under `generated/`, compiles and links both generated scanners and the
+NFD module, and runs all focused checks on `rxtvm` and `rxbvm`. It also
+regenerates and runs the independent C++/re2c NFD oracle and requires its
+summary to match the retained Phase 2 evidence.
 
 The TinyExpr scanner agrees with maintained `rxfnsl` token kinds, names, and
 byte spans. The Unicode scanner accepts all 2,500 lines of the retained ICU
@@ -99,6 +120,13 @@ mappings, and 3,127 mapping values. Its complete semantic dump is
 byte-identical to the retained C++/re2c parser; its span-bearing record dump is
 byte-identical across both VM families. Focused fixtures prove CRLF/UTF-8 byte
 spans plus malformed-rule and unsupported-version first-fault panics.
+
+The Level B normalizer passes all 100,170 applicable NFD relations from Unicode
+17.0.0 `NormalizationTest.txt` and all 1,094,978 required identity checks for
+scalars absent from Part 1. Focused cases cover empty and ASCII input, direct
+and recursive Latin decomposition, canonical reordering, Hangul LV/LVT,
+non-BMP identity, CCC lookup, and cyclic mapping rejection. Both VM families
+produce the byte-identical retained summary in `evidence/nfd-result.txt`.
 
 ## Deliberate boundaries
 
@@ -115,8 +143,12 @@ spans plus malformed-rule and unsupported-version first-fault panics.
   automaton backend. A separately reusable neutral IR and native Level B/Level L
   automaton builder remain later work.
 - Tokens use a portable 12-byte proof layout with `<at..u16>`/`<at..u32>`.
-  Packed host-native records are not selected by this experiment.
-- The Unicode rule parser builds a typed logical AST but does not yet compile
-  normalization tables, normalize text, or implement NFC.
+  The NFD table is also a portable proof layout. Neither layout is an approved
+  product format; host-native packed and load/convert-once representations
+  remain the next measured comparison.
+- The Unicode rule parser and NFD table compiler cover the retained `gennorm2`
+  canonical data only. They are not a general UCD/property compiler.
+- The normalizer implements NFD only. It does not implement NFC composition,
+  compatibility forms, case folding, streaming, or a public Level G API.
 - Level L parser-maker syntax, self-lexing/self-hosting, recovery, token
   payloads, streaming, and physical packed AST storage remain later work.
