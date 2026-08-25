@@ -30,6 +30,7 @@ Before changing compiler logic or making claims about syntax, AST shape, validat
 - `docs/ai-context/CREXX_ARCHITECTURE.md`
 - `docs/ai-context/CREXX_DEBUGGING.md`
 - `docs/ai-context/CREXX_LEVELB_AUTHORING.md`
+- `docs/ai-context/CREXX_LEVEL_L_SYNTAX.md`
 - `docs/books/crexx_language_reference/classes_and_interfaces.md`
 - `docs/books/crexx_language_reference/data_types.md`
 - `docs/books/crexx_language_reference/statements.md`
@@ -43,6 +44,11 @@ Before changing compiler logic or making claims about syntax, AST shape, validat
 Read only what is needed for the task, but do not rely on memory for cREXX syntax or compiler internals when the docs cover it.
 
 For tasks that write or edit Level B `.rexx`, start with `docs/ai-context/CREXX_LEVELB_AUTHORING.md` and copy patterns from the referenced repo examples instead of inventing syntax from generic training data.
+
+For tasks that write, review, or implement Level L language-engineering
+specifications, start with `docs/ai-context/CREXX_LEVEL_L_SYNTAX.md`. It defines
+the `unicode` branch syntax beginning with the lexer-maker subset; keep its
+branch design authority distinct from implementation and release status.
 
 For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the current protocol reference. The pre-release command-only native callback registration form has been retired; use the current environment object/function protocol and `rxvml_address_register_callback_environment(ctx, name, id, command_cb, function_cb, userdata)`. ADDRESS host-variable anchors (`:name` and `${name}`) are compiler auto-expose syntax only; their command meaning belongs to the selected environment handler.
 

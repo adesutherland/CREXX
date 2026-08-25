@@ -349,6 +349,12 @@ interpretation before any Phase 3 language design begins.
 
 - Design a CREXX-native rule syntax from the accepted capability list; do not
   assume compatibility with re2c or the IBM-oriented manual notation.
+- Maintain the human-facing
+  [Level L syntax](../../books/crexx_language_reference/level_l_syntax.md) and
+  the [AI and implementer context](../../ai-context/CREXX_LEVEL_L_SYNTAX.md) as
+  the Level L syntax references. They record the approved `symbol: kind`, Rexx
+  comment, `options levell`, and static compound-symbol direction and will be
+  refined by executable use cases.
 - Give the accepted lexer-spec subset a versioned grammar and diagnostics.
 - Separate regex/spec parsing, automaton construction, table layout, and source
   emission so each can be tested independently.
