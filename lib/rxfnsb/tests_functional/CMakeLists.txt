@@ -181,6 +181,23 @@ set_tests_properties(ts_linein_stdin_prompt PROPERTIES
         TIMEOUT 10
 )
 
+set(_linein_stdin_driver_workdir
+        "${CMAKE_CURRENT_BINARY_DIR}/ts_linein_stdin_crexx_driver")
+file(MAKE_DIRECTORY "${_linein_stdin_driver_workdir}")
+add_test(
+        NAME ts_linein_stdin_crexx_driver
+        COMMAND $<TARGET_FILE:linein_stdin_harness>
+                $<TARGET_FILE:crexx>
+                ${CMAKE_CURRENT_SOURCE_DIR}/ts_linein_stdin.crexx
+                15000
+        WORKING_DIRECTORY "${_linein_stdin_driver_workdir}"
+)
+set_tests_properties(ts_linein_stdin_crexx_driver PROPERTIES
+        LABELS "classlib;driver;interpreter;stdin"
+        PASS_REGULAR_EXPRESSION "PASS: linein stdin returns after one newline"
+        TIMEOUT 20
+)
+
 set(_loadmodule_provider "${CMAKE_CURRENT_BINARY_DIR}/ts_loadmodule_provider.rxbin")
 add_custom_command(
         OUTPUT ${_loadmodule_provider}
