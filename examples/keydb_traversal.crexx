@@ -1,63 +1,252 @@
 /*
- * KeyDB traversal and transaction example.
+ * KeyAccess traversal and transaction example.
  *
- * Run this sample with a new database path, or remove the database and its
- * .idx file before rerunning it.  The "w+" mode preserves an existing file.
+ * This example demonstrates the basic use of the .KeyDB cREXX interface
+ * to the KeyAccess direct-access storage facility.
+ *
+ * It demonstrates:
+ *
+ *   - opening a persistent KeyAccess store
+ *   - grouping updates in a transaction
+ *   - committing records
+ *   - removing a record
+ *   - counting active keys
+ *   - sequential traversal with firstKey() and nextKey()
+ *   - reading values while traversal is in progress
+ *   - rolling back an update
+ *   - replacing an existing value without creating a duplicate key
+ *
+ * Sequential traversal returns active keys only.  Deleted index records
+ * are skipped.  Calls to get() during traversal do not disturb the
+ * firstKey()/nextKey() traversal cursor.
+ *
+ * The rollback test demonstrates that an update made inside a transaction
+ * can be discarded, restoring the value that existed before begin().
+ *
+ * The final update demonstrates that replacing the value of an existing
+ * key does not create another logical key.
+ *
+ * Usage:
+ *
+ *   Run without an argument to use:
+ *
+ *       keydb_traversal.db
+ *
+ *   or supply a store path as the first argument.
+ *
+ * Note:
+ *
+ *   The store is opened using "w+".  This mode preserves an existing
+ *   store.  For repeatable example output, use a new store path or remove
+ *   the existing data file and its .idx file before running the example.
  */
+
 options levelb comments_dash
+
 import data_KeyDB
 
+
+/* ----------------------------------------------------------------- */
+/* Select the KeyAccess store                                        */
+/* ----------------------------------------------------------------- */
+
 arg sample_args = .string[]
-if sample_args.0 > 0 then database_file = sample_args.1
-else database_file = "keydb_traversal.db"
+
+if sample_args.0 > 0 then
+  database_file = sample_args.1
+else
+  database_file = "keydb_traversal.db"
+
+say "=== KeyAccess traversal and transaction example ==="
+say "Store:" database_file
+say
+
+/* ----------------------------------------------------------------- */
+/* Open the store                                                    */
+/* ----------------------------------------------------------------- */
 
 db = .KeyDB()
+
 rc = db.open(database_file, "w+")
+
 if rc < 0 then do
   say "Unable to open" database_file ":" rc
   return 1
 end
 
-/* Create three active records. */
-rc = db.begin()
-if rc <> 0 then return rc
-call db.put("alpha", "one")
-call db.put("beta", "two")
-call db.put("gamma", "three")
-rc = db.commit()
-if rc <> 0 then return rc
 
-/* Deleted index records are omitted by size() and sequential traversal. */
+/* ----------------------------------------------------------------- */
+/* Create three records in one transaction                           */
+/* ----------------------------------------------------------------- */
+
+rc = db.begin()
+
+if rc <> 0 then do
+  call db.close()
+  return rc
+end
+
+rc = db.put("alpha", "one")
+if rc <> 0 then do
+  call db.rollback()
+  call db.close()
+  return rc
+end
+
+rc = db.put("beta", "two")
+if rc <> 0 then do
+  call db.rollback()
+  call db.close()
+  return rc
+end
+
+rc = db.put("gamma", "three")
+if rc <> 0 then do
+  call db.rollback()
+  call db.close()
+  return rc
+end
+
+rc = db.commit()
+
+if rc <> 0 then do
+  call db.close()
+  return rc
+end
+
+
+/* ----------------------------------------------------------------- */
+/* Remove one record                                                 */
+/* ----------------------------------------------------------------- */
+
+/*
+ * removeCommit() performs the removal as a committed operation.
+ *
+ * The deleted index record remains part of the physical storage until
+ * maintenance/compaction, but it is no longer an active logical key.
+ */
+
 rc = db.removeCommit("beta")
-if rc <> 0 then return rc
+
+if rc <> 0 then do
+  call db.close()
+  return rc
+end
+
+
+/* ----------------------------------------------------------------- */
+/* Enumerate the active keys                                         */
+/* ----------------------------------------------------------------- */
+
+/*
+ * size() counts active logical keys only.
+ *
+ * firstKey()/nextKey() likewise skip deleted index records.
+ *
+ * Calling get() inside the traversal is intentional.  It demonstrates
+ * that ordinary keyed access does not disturb the sequential traversal
+ * cursor.
+ */
 
 say "Active keys:" db.size()
 say "Enumerating active keys (get() must not disturb nextKey()):"
 
 key = db.firstKey()
+
 do while key <> "NOT_FOUND"
+
   value = db.get(key)
   say "  " key "=" value
+
   key = db.nextKey()
+
 end
 
-/* Rollback restores the previous value and does not add a duplicate key. */
+
+/* ----------------------------------------------------------------- */
+/* Demonstrate transaction rollback                                  */
+/* ----------------------------------------------------------------- */
+
+/*
+ * Temporarily replace alpha inside a transaction and then roll the
+ * transaction back.
+ *
+ * After rollback, alpha must again contain its original value "one".
+ * The number of active logical keys must also remain unchanged.
+ */
+
 rc = db.begin()
-if rc <> 0 then return rc
-call db.put("alpha", "temporary value")
+
+if rc <> 0 then do
+  call db.close()
+  return rc
+end
+
+rc = db.put("alpha", "temporary value")
+
+if rc <> 0 then do
+  call db.rollback()
+  call db.close()
+  return rc
+end
+
 rc = db.rollback()
-if rc <> 0 then return rc
+
+if rc <> 0 then do
+  call db.close()
+  return rc
+end
+
+say
 say "After rollback, alpha =" db.get("alpha")
 say "After rollback, active keys =" db.size()
 
-/* A committed replacement remains one logical key. */
+
+/* ----------------------------------------------------------------- */
+/* Demonstrate committed replacement                                 */
+/* ----------------------------------------------------------------- */
+
+/*
+ * Replace alpha again, but commit this transaction.
+ *
+ * The new value must remain visible after commit.  Because this is an
+ * update of an existing key, the active-key count must not increase.
+ */
+
 rc = db.begin()
-if rc <> 0 then return rc
-call db.put("alpha", "updated value")
+
+if rc <> 0 then do
+  call db.close()
+  return rc
+end
+
+rc = db.put("alpha", "updated value")
+
+if rc <> 0 then do
+  call db.rollback()
+  call db.close()
+  return rc
+end
+
 rc = db.commit()
-if rc <> 0 then return rc
+
+if rc <> 0 then do
+  call db.close()
+  return rc
+end
+
+say
 say "After committed update, alpha =" db.get("alpha")
 say "After committed update, active keys =" db.size()
 
-call db.close()
+
+/* ----------------------------------------------------------------- */
+/* Close                                                             */
+/* ----------------------------------------------------------------- */
+
+rc = db.close()
+
+if rc <> 0 then
+  return rc
+
 return 0
