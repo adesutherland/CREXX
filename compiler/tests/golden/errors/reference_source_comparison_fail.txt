@@ -1,0 +1,2 @@
+Error in reference_source_comparison_fail.crexx @ 10:5 - #REFERENCE_COMPARISON_UNSUPPORTED, "c = d"
+1 error(s) in source file

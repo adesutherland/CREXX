@@ -2170,8 +2170,13 @@ walker_result type_safety_walker(walker_direction direction,
             case OP_COMPARE_LT:
             case OP_COMPARE_GTE:
             case OP_COMPARE_LTE:
-                set_node_target_type(context, child1, max_type(node));
-                set_node_target_type(context, child2, max_type(node));
+                if ((child1 && child1->value_type == TP_REFERENCE) ||
+                    (child2 && child2->value_type == TP_REFERENCE)) {
+                    mknd_err(node, "REFERENCE_COMPARISON_UNSUPPORTED");
+                } else {
+                    set_node_target_type(context, child1, max_type(node));
+                    set_node_target_type(context, child2, max_type(node));
+                }
                 break;
 
             case OP_COMPARE_S_EQ:
@@ -2180,8 +2185,13 @@ walker_result type_safety_walker(walker_direction direction,
             case OP_COMPARE_S_LT:
             case OP_COMPARE_S_GTE:
             case OP_COMPARE_S_LTE:
-                set_node_target_type(context, child1, TP_STRING);
-                set_node_target_type(context, child2, TP_STRING);
+                if ((child1 && child1->value_type == TP_REFERENCE) ||
+                    (child2 && child2->value_type == TP_REFERENCE)) {
+                    mknd_err(node, "REFERENCE_COMPARISON_UNSUPPORTED");
+                } else {
+                    set_node_target_type(context, child1, TP_STRING);
+                    set_node_target_type(context, child2, TP_STRING);
+                }
                 break;
 
             case TYPE_REFERENCE:

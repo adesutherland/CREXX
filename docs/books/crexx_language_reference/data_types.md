@@ -137,6 +137,12 @@ Reference values are not assignment-compatible with their target type. Passing a
 where `.T` is expected is also an error; spell `reference target`,
 `local = dereference ref`, or `snapshot ref` at the boundary.
 
+Reference values do not currently define equality or ordering. Applying a
+comparison operator to a reference is a compile-time error rather than an
+implicit comparison of target values or storage identity. Use `refvalid` to
+test validity, and explicitly `dereference` or `snapshot` when the target value
+itself is to be compared.
+
 Nested reference containers, reference casts, reference type tests, and
 implicit member/index access through a reference are not part of the current
 Level B source surface. These are reserved for possible Level G convenience
