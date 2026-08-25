@@ -1362,6 +1362,7 @@ walker_result register_walker(walker_direction direction,
             case OP_BIT_SHL:
             case OP_BIT_SHR:
             case OP_FLAG_HAS:
+            case OP_REFSAME:
 
             /* The order of the operands of these instructions are significant
              * however the instructions do not support both being a constant */

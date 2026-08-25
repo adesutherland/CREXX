@@ -1,0 +1,2 @@
+Error in reference_source_refsame_nonref_fail.crexx @ 7:6 - #REFSAME_REQUIRES_REFERENCES, "left <refsame> right"
+1 error(s) in source file

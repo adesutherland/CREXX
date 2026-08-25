@@ -1,0 +1,85 @@
+/*
+ * Logical keys for copyable handles to global resources.
+ *
+ * The handle is a value object, not the global resource itself. Its immutable
+ * fields name the resource across copies. ObjectEquatable supplies canonical
+ * object equivalence for Level G `<eq>`; ObjectKeyStrategy supplies collection
+ * policy and a hash derived from exactly the same logical fields.
+ */
+
+options levelg comments_dash
+import data
+import rxfnsb
+
+strategy = .GlobalHandleKeyStrategy()
+resources = .ObjectObjectHashMap(strategy)
+
+primary = .GlobalHandle("global", "payments", "ledger", "primary", "3")
+same_resource = .GlobalHandle("global", "payments", "ledger", "primary", "3")
+next_generation = .GlobalHandle("global", "payments", "ledger", "primary", "4")
+
+rc = resources.put(primary as .object, .GlobalResource("ready") as .object)
+resource = resources.get(same_resource as .object) as .GlobalResource
+canonical_match = primary <eq> same_resource
+generation_match = primary <eq> next_generation
+
+say "canonical equivalent:" canonical_match
+say "generation differs:" generation_match
+say "strategy lookup:" resource.state()
+
+exit 0
+
+GlobalHandle: class implements .ObjectEquatable
+scope_ = .string
+namespace_ = .string
+type_ = .string
+value_ = .string
+generation_ = .string
+
+  *: factory
+    arg resource_scope = .string, resource_namespace = .string, resource_type = .string, resource_value = .string, resource_generation = .string
+    scope_ = resource_scope
+    namespace_ = resource_namespace
+    type_ = resource_type
+    value_ = resource_value
+    generation_ = resource_generation
+    return
+
+  _frame: method = .string
+    arg value = .string
+    return length(value) || ":" || value
+
+  keyText: method = .string
+    return _frame(scope_) || _frame(namespace_) || _frame(type_) || ,
+           _frame(value_) || _frame(generation_)
+
+  equivalent: method = .boolean
+    arg other = .object
+    right = other as .GlobalHandle
+    return keyText() == right.keyText()
+
+GlobalHandleKeyStrategy: class implements .ObjectKeyStrategy
+
+  *: factory
+    return
+
+  hash: method = .int
+    arg key = .object
+    handle = key as .GlobalHandle
+    return fnv(handle.keyText())
+
+  equivalent: method = .boolean
+    arg left = .object, right = .object
+    left_handle = left as .GlobalHandle
+    return left_handle.equivalent(right)
+
+GlobalResource: class
+state_ = .string
+
+  *: factory
+    arg state = .string
+    state_ = state
+    return
+
+  state: method = .string
+    return state_

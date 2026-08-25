@@ -1,0 +1,5 @@
+options levelg
+namespace eq_nonobject_fail
+
+if 1 <eq> 1 then exit 1
+exit 0

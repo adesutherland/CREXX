@@ -14,6 +14,13 @@ main: procedure = .int
   local_value = 7
   local_ref = reference .int
   local_ref = reference local_value
+  local_ref_copy = reference .int
+  local_ref_copy = local_ref
+  if (local_ref <refsame> local_ref_copy) = 0 then return fail("copied reference identity")
+  copied_value = local_value
+  copied_value_ref = reference .int
+  copied_value_ref = reference copied_value
+  if local_ref <refsame> copied_value_ref then return fail("copied value storage identity")
   if snapshot local_ref <> 7 then return fail("local reference initial")
   local_snapshot = snapshot local_ref
   local_value = 8
@@ -53,7 +60,14 @@ main: procedure = .int
 
   dead_scalar_ref = reference .int
   dead_scalar_ref = makeDeadScalarRef()
+  dead_scalar_ref_copy = reference .int
+  dead_scalar_ref_copy = dead_scalar_ref
   if <refvalid>(dead_scalar_ref) then return fail("dead scalar reference invalid")
+  if (dead_scalar_ref <refsame> dead_scalar_ref_copy) = 0 then return fail("dead reference identity")
+
+  empty_ref = reference .int
+  other_empty_ref = reference .int
+  if empty_ref <refsame> other_empty_ref then return fail("empty references have no identity")
 
   dead_box_ref = reference .Box
   dead_box_ref = makeDeadBoxRef()

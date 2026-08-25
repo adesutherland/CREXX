@@ -8,11 +8,12 @@ options levelb comments_dash
 namespace data expose Comparator
 
 /**
- * Defines a total ordering for object keys.
+ * Legacy compatibility name for an object-key total ordering.
  *
  * compare(left, right) must return a negative integer when left precedes
  * right, zero when both objects represent the same map key, and a positive
- * integer when left follows right.
+ * integer when left follows right. New object collections and strategies use
+ * ObjectComparator or ObjectKeyStrategy instead.
  */
 Comparator: interface
   compare: method = .int
