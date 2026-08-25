@@ -1,0 +1,125 @@
+options levelb comments_dash
+import data
+
+failures = 0
+strategy = .CollisionKeyStrategy()
+map = .ObjectObjectHashMap(strategy, 1)
+
+do i = 1 to 20
+  key = .MapKey("k" || i, "original")
+  value = .MapValue("v" || i)
+  failures = failures + check_int("insert", map.put(key as .object, value as .object), 0)
+end
+
+failures = failures + check_int("resized collision size", map.size(), 20)
+failures = failures + check_value("get collision key", map.get(.MapKey("k10") as .object), "v10")
+failures = failures + check_int("contains collision key", map.containsKey(.MapKey("k17") as .object), 1)
+failures = failures + check_int("contains missing", map.containsKey(.MapKey("missing") as .object), 0)
+
+replacement_key = .MapKey("k10", "replacement")
+replacement_value = .MapValue("updated")
+failures = failures + check_int("replace", map.put(replacement_key as .object, replacement_value as .object), 0)
+failures = failures + check_int("replace size", map.size(), 20)
+failures = failures + check_value("replace value", map.get(.MapKey("k10") as .object), "updated")
+
+keys = .object[]
+keys = map.keyArray()
+tenth = keys[10] as .MapKey
+failures = failures + check_string("replace retains key", tenth.marker(), "original")
+
+failures = failures + check_int("remove", map.remove(.MapKey("k5") as .object), 0)
+failures = failures + check_int("remove missing", map.remove(.MapKey("missing") as .object), 4)
+failures = failures + check_int("remove size", map.size(), 19)
+failures = failures + check_int("reinsert", map.put(.MapKey("k5", "reinserted") as .object, .MapValue("v5b") as .object), 0)
+
+iterator = map.iterator()
+failures = failures + check_int("post-snapshot insert", map.put(.MapKey("k21") as .object, .MapValue("v21") as .object), 0)
+snapshot_count = 0
+snapshot_last = .string
+do while iterator.hasNext()
+  snapshot_key = iterator.next() as .MapKey
+  snapshot_count = snapshot_count + 1
+  snapshot_last = snapshot_key.name()
+end
+failures = failures + check_int("snapshot count", snapshot_count, 20)
+failures = failures + check_string("reinsert moves to tail", snapshot_last, "k5")
+
+keys = map.keyArray()
+last = keys[keys[0]] as .MapKey
+failures = failures + check_string("later insert at tail", last.name(), "k21")
+
+failures = failures + check_int("free", map.free(), 0)
+failures = failures + check_int("free size", map.size(), 0)
+failures = failures + check_int("reuse", map.put(.MapKey("again") as .object, .MapValue("ok") as .object), 0)
+failures = failures + check_value("reuse get", map.get(.MapKey("again") as .object), "ok")
+
+if failures <> 0 then do
+  say "ObjectObjectHashMap failures:" failures
+  exit 1
+end
+
+say "PASS: ObjectObjectHashMap"
+exit 0
+
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual <> expected then do
+    say label ": expected" expected "got" actual
+    return 1
+  end
+return 0
+
+check_string: procedure = .int
+  arg label = .string, actual = .string, expected = .string
+  if actual <> expected then do
+    say label ": expected [" || expected || "] got [" || actual || "]"
+    return 1
+  end
+return 0
+
+check_value: procedure = .int
+  arg label = .string, actual = .object, expected = .string
+  value = actual as .MapValue
+return check_string(label, value.name(), expected)
+
+MapKey: class
+name_ = .string
+marker_ = .string
+
+  *: factory
+    arg name = .string, marker = "lookup"
+    name_ = name
+    marker_ = marker
+    return
+
+  name: method = .string
+    return name_
+
+  marker: method = .string
+    return marker_
+
+MapValue: class
+name_ = .string
+
+  *: factory
+    arg name = .string
+    name_ = name
+    return
+
+  name: method = .string
+    return name_
+
+CollisionKeyStrategy: class implements .ObjectKeyStrategy
+
+  *: factory
+    return
+
+  hash: method = .int
+    arg key = .object
+    return -7
+
+  equivalent: method = .boolean
+    arg left = .object, right = .object
+    left_key = left as .MapKey
+    right_key = right as .MapKey
+    return left_key.name() == right_key.name()

@@ -90,6 +90,7 @@ void propagate_explicit_constants(Context *context);
 
 /* trans */
 walker_result rewrite_constructor_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result rewrite_equivalence_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result rewrite_exit_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result rewrite_implicit_cmd_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result syntax_sugar_walker(walker_direction direction, ASTNode* node, void *payload);

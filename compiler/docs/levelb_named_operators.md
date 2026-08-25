@@ -42,11 +42,14 @@ The first implementation is deliberately fixed and compiler-known:
 | `a <has> b` | `.boolean` | `(a <and> b) <> 0` |
 | `a <set> b` | `.int` | `a <or> b` |
 | `a <clear> b` | `.int` | `a <and> <not> b` |
+| `a <refsame> b` | `.boolean` | RXAS `refsame`; true only for two references retaining the same storage-identity cell |
 
-Operator names are case-insensitive. User-defined named operators and
-operator-method extension are intentionally deferred. When added, they should
-use this same token shape, but with fixed compiler precedence classes rather
-than arbitrary per-operator precedence.
+Operator names are case-insensitive. Level G additionally reserves `<eq>` as
+the canonical object-equivalence spelling and lowers it to the opted-in
+`.ObjectEquatable.equivalent()` contract. General user-defined named operators
+and operator-method extension remain deferred. If added, they should use this
+same token shape, but with fixed compiler precedence classes rather than
+arbitrary per-operator precedence.
 
 ## Precedence
 
@@ -60,6 +63,7 @@ Fixed named operators bind with the closest existing operator family:
 | After shift | `<and>` `<has>` `<clear>` |
 | After named AND | `<xor>` |
 | After named XOR, before concatenation/comparison | `<or>` `<set>` |
+| Comparison | `<refsame>` and Level G `<eq>` |
 
 All binary named operators are left-associative within their own family. Unknown
 `<id>` forms are parsed in the lowest named-operator family so the compiler can
@@ -82,6 +86,12 @@ which is parsed as:
 ```rexx
 mask = 1 <shl> (bit + 1)
 ```
+
+`<refsame>` is deliberately narrower than object equality. Both operands must
+be compatible reference types. It compares the retained storage-identity cell,
+does not dereference either operand, and remains true for two copied references
+after their common target expires. Cleared or empty references have no identity
+and compare false. Ordinary `=` and `==` remain invalid for references.
 
 Mixed bit/flag expressions follow the same family ordering:
 

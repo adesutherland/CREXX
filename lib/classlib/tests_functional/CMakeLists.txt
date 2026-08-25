@@ -21,6 +21,8 @@ set(REXXBINS
   testObjectCollections
   testStringObjectMaps
   testObjectObjectTreeMap
+  testObjectObjectHashMap
+  testObjectEquality
   testTreeMap
   testRexxComparator
   testQfind

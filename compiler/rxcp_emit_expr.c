@@ -1934,6 +1934,28 @@ void emit_expression(ASTNode *node, void *payload) {
             type_promotion(node);
             break;
 
+        case OP_REFSAME:
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+            if (child2->output) output_concat(node->output, child2->output);
+            temp1 = mprintf("   refsame %c%d,%c%d,%c%d\n",
+                            node->register_type,
+                            node->register_num,
+                            child1->register_type,
+                            child1->register_num,
+                            child2->register_type,
+                            child2->register_num);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            if (child2->cleanup) output_concat(node->output, child2->cleanup);
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            type_promotion(node);
+            append_semantic_operation_trace_event(node->output,
+                                                  RXBIN_TRACE_KIND_BINARY_OP,
+                                                  semantic_kind,
+                                                  node);
+            break;
+
         case OP_INITIALIZED:
             if (!node->output) node->output = output_f();
             if (child1->output) output_concat(node->output, child1->output);

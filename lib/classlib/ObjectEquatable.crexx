@@ -1,0 +1,26 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
+ */
+
+options levelb comments_dash
+namespace data expose ObjectEquatable
+
+/**
+ * Opt-in contract for canonical object equivalence.
+ *
+ * Implementations define the stable equivalence relation used by Level G
+ * `left <eq> right`: reflexive, symmetric, and transitive for supported object
+ * pairs. The operator lowers to `left.equivalent(right)`; ordinary `=` and
+ * `==` are not overloaded.
+ */
+ObjectEquatable: interface
+  /**
+   * Test canonical equivalence with another object.
+   *
+   * @param other Object to compare with this receiver.
+   * @return .boolean 1 when canonically equivalent, otherwise 0.
+   */
+  equivalent: method = .boolean
+    arg other = .object

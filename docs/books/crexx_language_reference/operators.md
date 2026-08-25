@@ -205,12 +205,19 @@ Level B reference operations use word-form expressions:
 | `reference target` | Create a weak reference to aliasable storage. |
 | `local = dereference ref` | Link a current-scope local variable to the current reference target until scope exit. |
 | `snapshot ref` | Make an explicit deep copy of the current reference target. |
-| `refvalid(ref)` | Return whether the weak reference currently has a valid target. |
+| `<refvalid>(ref)` | Return whether the weak reference currently has a valid target. |
+| `left <refsame> right` | Return whether two compatible references retain the same storage-identity cell, without dereferencing them. |
 
 The operand of `reference` must be storage such as a local, exposed argument or
 global, method `self`, an object/array attribute, or an array element. It must
 not be a temporary expression. `dereference` and `snapshot` raise
 `REFERENCE_INVALID` if the target has expired.
+
+`<refsame>` compares reference identity, not referenced values. Two copies of
+the same reference remain identical after their target expires; two cleared or
+empty references compare false because neither retains an identity. Use
+`<refvalid>` separately when live-target validity matters. Ordinary `=` and
+`==` do not accept reference operands.
 
 `dereference` must be used as the right side of an assignment to a local
 variable in the current procedure or block scope. It cannot assign through an
@@ -223,6 +230,29 @@ a scoped live link, `snapshot ref` for a deep copy, or pass a `reference .T`
 value to code that expects a reference. Convenience forms such as
 `itemsRef[i]`, `itemsRef[i] = value`, and `listRef.add(value)` are reserved for
 possible Level G live-access syntax.
+
+## Level G Object Equivalence
+
+Level G provides `left <eq> right` as opt-in sugar for canonical object
+equivalence. Both operands must be object values and the static class of the
+left operand must implement `data.ObjectEquatable`:
+
+```rexx
+ObjectEquatable: interface
+  equivalent: method = .boolean
+    arg other = .object
+```
+
+The compiler evaluates each operand once and lowers the expression to the
+equivalent of `left.equivalent(right as .object)`. The implementation defines
+the supported object pairs and should provide a reflexive, symmetric, and
+transitive relation. The operator name is case-insensitive and has comparison
+precedence.
+
+`<eq>` does not overload `=` or `==`, does not compare storage identity, and
+does not invoke an `ObjectKeyStrategy`. Use `<refsame>` only for explicit
+reference-cell identity and use a key strategy when a collection needs
+policy-specific equivalence and hashing.
 
 ## Operator Precedence
 
@@ -240,7 +270,7 @@ The order of priority of the operators (from highest to lowest). Note that the `
 | 8         | `<xor>`                        | Level B named integer XOR           |        |
 | 9         | `<or>` `<set>`                 | Level B named integer OR/flag-set   |        |
 | 10        | `||` (space, abuttal)          | Concatenation                       |        |
-| 11        | `=` `>` `<` `==`...            | All comparison operators            |        |
+| 11        | `=` `>` `<` `==`... `<refsame>` `<eq>` | All comparison operators (`<eq>` is Level G) |        |
 | 12        | `&`                            | Logical AND                         |        |
 | 13        | `|` `&&`                       | Logical OR and exclusive OR         |        |
 
