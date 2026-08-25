@@ -263,13 +263,16 @@ Stage 2 discovery data. A member is included only when its containing class or i
 | `MEM-data-keydb-keydb-begin` | `data_KeyDB` | `KeyDB` | class | `begin` | method | `= .int` | `lib/classlib/KeyDB.crexx:121` |
 | `MEM-data-keydb-keydb-close` | `data_KeyDB` | `KeyDB` | class | `close` | method | `= .int` | `lib/classlib/KeyDB.crexx:102` |
 | `MEM-data-keydb-keydb-commit` | `data_KeyDB` | `KeyDB` | class | `commit` | method | `= .int` | `lib/classlib/KeyDB.crexx:128` |
+| `MEM-data-keydb-keydb-clear` | `data_KeyDB` | `KeyDB` | class | `clear` | method | `= .int` | `lib/classlib/KeyDB.crexx:206` |
 | `MEM-data-keydb-keydb-compact` | `data_KeyDB` | `KeyDB` | class | `compact` | method | `= .int` | `lib/classlib/KeyDB.crexx:211` |
 | `MEM-data-keydb-keydb-containskey` | `data_KeyDB` | `KeyDB` | class | `containsKey` | method | `= .int` | `lib/classlib/KeyDB.crexx:222` |
 | `MEM-data-keydb-keydb-dispose` | `data_KeyDB` | `KeyDB` | class | `dispose` | method | `= .int` | `lib/classlib/KeyDB.crexx:276` |
+| `MEM-data-keydb-keydb-firstkey` | `data_KeyDB` | `KeyDB` | class | `firstKey` | method | `= .string` | `lib/classlib/KeyDB.crexx:187` |
 | `MEM-data-keydb-keydb-get` | `data_KeyDB` | `KeyDB` | class | `get` | method | `= .string` | `lib/classlib/KeyDB.crexx:159` |
 | `MEM-data-keydb-keydb-gethandle` | `data_KeyDB` | `KeyDB` | class | `getHandle` | method | `= .int` | `lib/classlib/KeyDB.crexx:268` |
 | `MEM-data-keydb-keydb-isopen` | `data_KeyDB` | `KeyDB` | class | `isOpen` | method | `= .int` | `lib/classlib/KeyDB.crexx:113` |
 | `MEM-data-keydb-keydb-open` | `data_KeyDB` | `KeyDB` | class | `open` | method | `= .int` | `lib/classlib/KeyDB.crexx:93` |
+| `MEM-data-keydb-keydb-nextkey` | `data_KeyDB` | `KeyDB` | class | `nextKey` | method | `= .string` | `lib/classlib/KeyDB.crexx:195` |
 | `MEM-data-keydb-keydb-put` | `data_KeyDB` | `KeyDB` | class | `put` | method | `= .int` | `lib/classlib/KeyDB.crexx:147` |
 | `MEM-data-keydb-keydb-putcommit` | `data_KeyDB` | `KeyDB` | class | `putCommit` | method | `= .int` | `lib/classlib/KeyDB.crexx:236` |
 | `MEM-data-keydb-keydb-remove` | `data_KeyDB` | `KeyDB` | class | `remove` | method | `= .int` | `lib/classlib/KeyDB.crexx:171` |

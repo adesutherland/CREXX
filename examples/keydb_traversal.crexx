@@ -1,0 +1,63 @@
+/*
+ * KeyDB traversal and transaction example.
+ *
+ * Run this sample with a new database path, or remove the database and its
+ * .idx file before rerunning it.  The "w+" mode preserves an existing file.
+ */
+options levelb comments_dash
+import data_KeyDB
+
+arg sample_args = .string[]
+if sample_args.0 > 0 then database_file = sample_args.1
+else database_file = "keydb_traversal.db"
+
+db = .KeyDB()
+rc = db.open(database_file, "w+")
+if rc < 0 then do
+  say "Unable to open" database_file ":" rc
+  return 1
+end
+
+/* Create three active records. */
+rc = db.begin()
+if rc <> 0 then return rc
+call db.put("alpha", "one")
+call db.put("beta", "two")
+call db.put("gamma", "three")
+rc = db.commit()
+if rc <> 0 then return rc
+
+/* Deleted index records are omitted by size() and sequential traversal. */
+rc = db.removeCommit("beta")
+if rc <> 0 then return rc
+
+say "Active keys:" db.size()
+say "Enumerating active keys (get() must not disturb nextKey()):"
+
+key = db.firstKey()
+do while key <> "NOT_FOUND"
+  value = db.get(key)
+  say "  " key "=" value
+  key = db.nextKey()
+end
+
+/* Rollback restores the previous value and does not add a duplicate key. */
+rc = db.begin()
+if rc <> 0 then return rc
+call db.put("alpha", "temporary value")
+rc = db.rollback()
+if rc <> 0 then return rc
+say "After rollback, alpha =" db.get("alpha")
+say "After rollback, active keys =" db.size()
+
+/* A committed replacement remains one logical key. */
+rc = db.begin()
+if rc <> 0 then return rc
+call db.put("alpha", "updated value")
+rc = db.commit()
+if rc <> 0 then return rc
+say "After committed update, alpha =" db.get("alpha")
+say "After committed update, active keys =" db.size()
+
+call db.close()
+return 0

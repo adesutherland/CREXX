@@ -143,6 +143,9 @@ struct FileHandle {
     int locked;         // File lock status
     int transaction;    // Transaction status
     long indexCursor;   // Explicit index traversal offset
+    long transactionDataSize;
+    long transactionIndexSize;
+    unsigned char* transactionIndexSnapshot;
     struct CacheEntry cache[CACHE_SIZE];
     int cacheCount;
     unsigned long cacheHits;
@@ -168,6 +171,8 @@ static const char* binary_file_mode(const char* mode);
 static char* create_index_path(const char* dataPath);
 static struct IndexRecord* find_key(FILE* indexFile, const char* searchKey);
 static void cache_init(struct FileHandle* handle);
+static void cache_clear(struct FileHandle* handle);
+static int restore_transaction(struct FileHandle* handle);
 static void cache_put(struct FileHandle* handle, const char* key, const char* value);
 static char* cache_get(struct FileHandle* handle, const char* key);
 static int write_record(struct FileHandle* handle, const struct IndexRecord* record, const char* value);
@@ -402,14 +407,34 @@ PROCEDURE(writekey) {
     }
 
     // Write data
-    fseek(handle->dataFile, 0, SEEK_END);
+    if (fseek(handle->dataFile, 0, SEEK_END) != 0) {
+        log_error("writekey", KA_ERROR_IO, "Failed to seek data file");
+        RETURNINTX(KA_ERROR_IO);
+    }
     dataOffset = ftell(handle->dataFile);
+    if (dataOffset < 0) {
+        log_error("writekey", KA_ERROR_IO, "Failed to determine data offset");
+        RETURNINTX(KA_ERROR_IO);
+    }
 
     record.offset = dataOffset;
     record.length = strlen(value);
     record.timestamp = time(NULL);
 
-    if (write_record(handle, &record, value) != KA_SUCCESS) {
+    if (existing) {
+        if (fwrite(value, 1, strlen(value), handle->dataFile) != strlen(value)) {
+            log_error("writekey", KA_ERROR_IO, "Failed to write value to data file");
+            RETURNINTX(KA_ERROR_IO);
+        }
+
+        /* Replace an existing index record instead of appending a duplicate. */
+        if (fseek(handle->indexFile, -(long)sizeof(struct IndexRecord), SEEK_CUR) != 0 ||
+            fwrite(&record, sizeof(record), 1, handle->indexFile) != 1) {
+            log_error("writekey", KA_ERROR_IO, "Failed to replace index record");
+            RETURNINTX(KA_ERROR_IO);
+        }
+    }
+    else if (write_record(handle, &record, value) != KA_SUCCESS) {
         RETURNINTX(KA_ERROR_IO);
     }
 
@@ -503,7 +528,10 @@ PROCEDURE(deletekey) {
     record->timestamp = time(NULL);
 
     // Write updated record
-    fseek(handle->indexFile, -sizeof(struct IndexRecord), SEEK_CUR);
+    if (fseek(handle->indexFile, -(long)sizeof(struct IndexRecord), SEEK_CUR) != 0) {
+        log_error("deletekey", KA_ERROR_IO, "Failed to seek index record");
+        RETURNINTX(KA_ERROR_IO);
+    }
     if (fwrite(record, sizeof(*record), 1, handle->indexFile) != 1) {
         log_error("deletekey", KA_ERROR_IO, "Failed to update index");
         RETURNINTX(KA_ERROR_IO);
@@ -644,6 +672,12 @@ PROCEDURE(compact_database) {
     struct IndexRecord record;
     char* value;
     long newOffset = 0;
+    int closeDataRc;
+    int closeIndexRc;
+    int tempDataCloseRc;
+    int tempIndexCloseRc;
+    int renameDataRc;
+    int renameIndexRc;
 
     if (!handle) {
         log_error("compact_database", KA_ERROR_PARAM, "Invalid handle");
@@ -662,6 +696,8 @@ PROCEDURE(compact_database) {
         log_error("compact_database", KA_ERROR_IO, "Failed to create temporary files");
         if (newData) fclose(newData);
         if (newIndex) fclose(newIndex);
+        remove(tempData);
+        remove(tempIndex);
         RETURNINTX(KA_ERROR_IO);
     }
 
@@ -699,11 +735,43 @@ PROCEDURE(compact_database) {
         free(value);
     }
 
+    if (ferror(handle->indexFile) || fflush(newData) != 0 || fflush(newIndex) != 0) {
+        log_error("compact_database", KA_ERROR_IO, "Failed while reading or flushing compacted files");
+        fclose(newData);
+        fclose(newIndex);
+        remove(tempData);
+        remove(tempIndex);
+        RETURNINTX(KA_ERROR_IO);
+    }
+
     // Replace original files
-    fclose(handle->dataFile);
-    fclose(handle->indexFile);
-    rename(tempData, handle->dataPath);
-    rename(tempIndex, handle->indexPath);
+    closeDataRc = fclose(handle->dataFile);
+    closeIndexRc = fclose(handle->indexFile);
+    handle->dataFile = NULL;
+    handle->indexFile = NULL;
+    if (closeDataRc != 0 || closeIndexRc != 0) {
+        log_error("compact_database", KA_ERROR_IO, "Failed to close database files before replacement");
+        fclose(newData);
+        fclose(newIndex);
+        remove(tempData);
+        remove(tempIndex);
+        RETURNINTX(KA_ERROR_IO);
+    }
+    tempDataCloseRc = fclose(newData);
+    tempIndexCloseRc = fclose(newIndex);
+    renameDataRc = -1;
+    renameIndexRc = -1;
+    if (tempDataCloseRc == 0 && tempIndexCloseRc == 0) {
+        renameDataRc = rename(tempData, handle->dataPath);
+        renameIndexRc = rename(tempIndex, handle->indexPath);
+    }
+    if (tempDataCloseRc != 0 || tempIndexCloseRc != 0 ||
+        renameDataRc != 0 || renameIndexRc != 0) {
+        log_error("compact_database", KA_ERROR_IO, "Failed to replace compacted database files");
+        remove(tempData);
+        remove(tempIndex);
+        RETURNINTX(KA_ERROR_IO);
+    }
 
     // Reopen files
     handle->dataFile = fopen(handle->dataPath, "rb+");
@@ -711,6 +779,10 @@ PROCEDURE(compact_database) {
 
     if (!handle->dataFile || !handle->indexFile) {
         log_error("compact_database", KA_ERROR_IO, "Failed to reopen files after compaction");
+        if (handle->dataFile) fclose(handle->dataFile);
+        if (handle->indexFile) fclose(handle->indexFile);
+        handle->dataFile = NULL;
+        handle->indexFile = NULL;
         RETURNINTX(KA_ERROR_IO);
     }
 
@@ -855,6 +927,19 @@ static void cache_init(struct FileHandle* handle) {
     handle->cacheMisses = 0;
 }
 
+static void cache_clear(struct FileHandle* handle) {
+    int i;
+
+    for (i = 0; i < CACHE_SIZE; i++) {
+        free(handle->cache[i].value);
+        handle->cache[i].value = NULL;
+        handle->cache[i].key[0] = '\0';
+        handle->cache[i].timestamp = 0;
+        handle->cache[i].hits = 0;
+    }
+    handle->cacheCount = 0;
+}
+
 
 static void cache_put(struct FileHandle *handle,
                       const char *key,
@@ -933,14 +1018,18 @@ static char *cache_get(struct FileHandle *handle, const char *key)
 PROCEDURE(closefile) {
     struct FileHandle* handle = (struct FileHandle*)GETINT(ARG0);
     int i;
+    int close_rc = KA_SUCCESS;
 
     if (!handle) {
         log_error("closefile", KA_ERROR_PARAM, "Invalid handle");
         RETURNINTX(KA_ERROR_PARAM);
     }
 
-    // If transaction is active, roll it back
+    // If transaction is active, roll it back before closing.
     if (handle->transaction) {
+        if (restore_transaction(handle) != KA_SUCCESS) {
+            close_rc = KA_ERROR_IO;
+        }
         handle->transaction = 0;
         unlock_file(handle);
     }
@@ -952,19 +1041,22 @@ PROCEDURE(closefile) {
         }
     }
 
+    free(handle->transactionIndexSnapshot);
+
     fclose(handle->dataFile);
     fclose(handle->indexFile);
     free(handle->dataPath);
     free(handle->indexPath);
     free(handle);
 
-    RETURNINTX(KA_SUCCESS);
+    RETURNINTX(close_rc);
     ENDPROC
 }
 
 // Transaction management
 PROCEDURE(begin_transaction) {
     struct FileHandle* handle = (struct FileHandle*)GETINT(ARG0);
+    long indexSize;
 
     if (!handle) {
         log_error("begin_transaction", KA_ERROR_PARAM, "Invalid handle");
@@ -979,6 +1071,47 @@ PROCEDURE(begin_transaction) {
     if (lock_file(handle) != KA_SUCCESS) {
         RETURNINTX(KA_ERROR_LOCK);
     }
+
+    if (fseek(handle->dataFile, 0, SEEK_END) != 0) {
+        log_error("begin_transaction", KA_ERROR_IO, "Failed to seek data file");
+        unlock_file(handle);
+        RETURNINTX(KA_ERROR_IO);
+    }
+    handle->transactionDataSize = ftell(handle->dataFile);
+
+    if (fseek(handle->indexFile, 0, SEEK_END) != 0) {
+        log_error("begin_transaction", KA_ERROR_IO, "Failed to seek index file");
+        unlock_file(handle);
+        RETURNINTX(KA_ERROR_IO);
+    }
+    indexSize = ftell(handle->indexFile);
+    if (indexSize < 0) {
+        log_error("begin_transaction", KA_ERROR_IO, "Failed to determine index size");
+        unlock_file(handle);
+        RETURNINTX(KA_ERROR_IO);
+    }
+
+    free(handle->transactionIndexSnapshot);
+    handle->transactionIndexSnapshot = NULL;
+    if (indexSize > 0) {
+        handle->transactionIndexSnapshot = (unsigned char*)malloc((size_t)indexSize);
+        if (!handle->transactionIndexSnapshot) {
+            log_error("begin_transaction", KA_ERROR_MEMORY, "Failed to snapshot index");
+            unlock_file(handle);
+            RETURNINTX(KA_ERROR_MEMORY);
+        }
+
+        rewind(handle->indexFile);
+        if (fread(handle->transactionIndexSnapshot, 1, (size_t)indexSize,
+                  handle->indexFile) != (size_t)indexSize) {
+            log_error("begin_transaction", KA_ERROR_IO, "Failed to snapshot index");
+            free(handle->transactionIndexSnapshot);
+            handle->transactionIndexSnapshot = NULL;
+            unlock_file(handle);
+            RETURNINTX(KA_ERROR_IO);
+        }
+    }
+    handle->transactionIndexSize = indexSize;
 
     handle->transaction = 1;
     handle->stats.transactions++;
@@ -999,9 +1132,15 @@ PROCEDURE(commit_transaction) {
         RETURNINTX(KA_ERROR_TXINACTIVE);
     }
 
-    fflush(handle->dataFile);
-    fflush(handle->indexFile);
+    if (fflush(handle->dataFile) != 0 || fflush(handle->indexFile) != 0) {
+        log_error("commit_transaction", KA_ERROR_IO, "Failed to flush database files");
+        RETURNINTX(KA_ERROR_IO);
+    }
 
+    free(handle->transactionIndexSnapshot);
+    handle->transactionIndexSnapshot = NULL;
+    handle->transactionDataSize = 0;
+    handle->transactionIndexSize = 0;
     handle->transaction = 0;
     unlock_file(handle);
     RETURNINTX(KA_SUCCESS);
@@ -1017,6 +1156,32 @@ static int truncate_file(FILE* file, long size) {
 #endif
 }
 
+static int restore_transaction(struct FileHandle* handle) {
+    if (truncate_file(handle->dataFile, handle->transactionDataSize) != 0) {
+        log_error("restore_transaction", KA_ERROR_IO, "Failed to truncate data file");
+        return KA_ERROR_IO;
+    }
+
+    if (fseek(handle->indexFile, 0, SEEK_SET) != 0 ||
+        (handle->transactionIndexSize > 0 &&
+         fwrite(handle->transactionIndexSnapshot, 1,
+                (size_t)handle->transactionIndexSize,
+                handle->indexFile) != (size_t)handle->transactionIndexSize) ||
+        truncate_file(handle->indexFile, handle->transactionIndexSize) != 0) {
+        log_error("restore_transaction", KA_ERROR_IO, "Failed to restore index file");
+        return KA_ERROR_IO;
+    }
+
+    fflush(handle->dataFile);
+    fflush(handle->indexFile);
+    cache_clear(handle);
+    free(handle->transactionIndexSnapshot);
+    handle->transactionIndexSnapshot = NULL;
+    handle->transactionDataSize = 0;
+    handle->transactionIndexSize = 0;
+    return KA_SUCCESS;
+}
+
 PROCEDURE(rollback_transaction) {
     struct FileHandle* handle = (struct FileHandle*)GETINT(ARG0);
 
@@ -1030,12 +1195,7 @@ PROCEDURE(rollback_transaction) {
         RETURNINTX(KA_ERROR_TXINACTIVE);
     }
 
-    // Revert to last commit point
-    fseek(handle->dataFile, 0, SEEK_END);
-    long dataSize = ftell(handle->dataFile);
-
-    if (truncate_file(handle->dataFile, dataSize) != 0) {
-        log_error("rollback_transaction", KA_ERROR_IO, "Failed to truncate file");
+    if (restore_transaction(handle) != KA_SUCCESS) {
         RETURNINTX(KA_ERROR_IO);
     }
 

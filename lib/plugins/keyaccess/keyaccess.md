@@ -76,6 +76,9 @@ class owns this handle and provides the corresponding operations as methods.
 
 Opens or creates a key-value database.
 
+When using the `.KeyDB` wrapper, calling `open()` on an already-open object
+closes the previous handle before opening the new database.
+
 **Parameters:**
 
 - `filename` (string): Path to the database file.
@@ -116,6 +119,9 @@ rc = closekey(handle)
 #### writekey
 
 Writes a key-value pair to the database.
+
+If the key already exists, its active index record is replaced; a second
+active record is not created.
 
 **Parameters:**
 
@@ -196,6 +202,9 @@ Integer count of active keys.
 ```rexx
 count = listkey(handle)
 ```
+
+The `.KeyDB` wrapper also provides `clear()`, which removes all active keys in
+one transaction and returns the transaction status code.
 
 ---
 
@@ -304,6 +313,10 @@ rc = txcommit(handle)
 #### txrollback
 
 Rolls back the current transaction.
+
+Rollback restores the data and index files to their state at
+`txbegin`, including index records modified by updates or deletes. Cached
+values are invalidated after a successful rollback.
 
 **Parameters:**
 
