@@ -123,6 +123,7 @@ PARSE_FAILURE = Source could not be parsed.
 PENDING_TASK_RESULT_MUTATION = A pending task result cannot be written, referenced, or allowed to escape before materialisation.
 PROC_VAR_MISMATCH = Imported symbol "{name}" is a procedure/variable mismatch between {defining_file} and {import_file}.
 READ_ONLY_REGISTER_FLAG_VIEW = Register flag view is read-only.
+REFERENCE_COMPARISON_UNSUPPORTED = Reference values have no comparison semantics; compare explicitly dereferenced or snapshot values instead.
 REFERENCE_TARGET_NOT_STORAGE = Reference target must be assignable storage.
 REFERENCE_TYPE_MISMATCH = Reference type does not match.
 REGISTER_FLAG_VIEW_REQUIRES_INT = Register flag view requires an integer register.

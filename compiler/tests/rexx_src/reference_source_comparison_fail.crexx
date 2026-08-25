@@ -1,0 +1,10 @@
+options levelb
+import rexx
+
+a=.Rexx("foo")
+b=a
+
+c = reference a
+d = reference b
+
+say c = d
