@@ -75,6 +75,15 @@ say "listkeying all keys:"
 count = _listkey(handle)
 say count "keys found"
 
+/* Native traversal remains valid when readkey seeks the shared index file. */
+say "Native traversal with readkey:"
+key = _firstkey(handle)
+say "first key:" key
+say "value:" _readkey(handle, key)
+say "next key after readkey:" _nextkey(handle)
+say "invalid firstkey handle:" _firstkey(0)
+say "invalid nextkey handle:" _nextkey(0)
+
 /* readkey and display values */
 say ""
 say "readkey values:"
@@ -93,6 +102,16 @@ say ""
 say "Keys after deletion:"
 count = _listkey(handle)
 say count "keys found"
+
+/* Deleted records must not be returned by native traversal. */
+key = _firstkey(handle)
+do while key <> "NOT_FOUND"
+    if key = "Berlin" then do
+        say "ERROR: deleted key returned by firstkey/nextkey"
+        exit 1
+    end
+    key = _nextkey(handle)
+end
 
 /* Show statistics */
 say ""
