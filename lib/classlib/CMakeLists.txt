@@ -49,9 +49,9 @@ set(CLSS
   Qfind
   Scanlex
   Concurrency
-#  DateTime
-#  ISO8601
-#  OffsetDateTime
+  DateTime
+  ISO8601
+  OffsetDateTime
 )
 
 set(CLASSLIB_NATIVE_CLSS
