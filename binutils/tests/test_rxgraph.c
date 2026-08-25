@@ -548,6 +548,100 @@ int main(void) {
     }
 
     builder = rx_graph_builder_create();
+    ok &= require(builder != 0, "create unresolved imported-callable builder");
+    if (builder) {
+        RxCallableId imported;
+        RxCallableId definition;
+        procedure.module_index = 47u;
+        procedure.procedure_offset = SIZE_MAX;
+        imported = rx_graph_builder_add_callable(
+            builder,
+            "time.offsetdatetime.factory",
+            ".time..offsetdatetime",
+            "?datetime=.unknown,?offset_minutes=.int",
+            procedure,
+            RX_GRAPH_CALLABLE_IMPORTED);
+        procedure.module_index = 48u;
+        procedure.procedure_offset = 0u;
+        definition = rx_graph_builder_add_callable(
+            builder,
+            "time.offsetdatetime.factory",
+            ".time..offsetdatetime",
+            "?datetime=.datetime,?offset_minutes=.int",
+            procedure,
+            0u);
+        graph = rx_graph_builder_finish(builder);
+        ok &= require(imported != RX_GRAPH_NONE && definition == imported && graph &&
+                      rx_graph_callable(graph, imported, &callable_view) &&
+                      callable_view.procedure.module_index == 48u &&
+                      callable_view.procedure.procedure_offset == 0u &&
+                      callable_view.flags == 0u &&
+                      strstr(callable_view.descriptor, "?datetime=.datetime") != 0 &&
+                      rx_graph_find_type(graph, ".datetime") != RX_GRAPH_NONE,
+                      "refine unresolved imported callable from selected definition");
+        rx_graph_release(&graph);
+    }
+
+    builder = rx_graph_builder_create();
+    ok &= require(builder != 0, "create definition-first unresolved import builder");
+    if (builder) {
+        RxCallableId definition;
+        RxCallableId imported;
+        procedure.module_index = 2u;
+        procedure.procedure_offset = 30u;
+        definition = rx_graph_builder_add_callable(builder,
+                                                   "graph_test.definition_first",
+                                                   ".string",
+                                                   "value=.int",
+                                                   procedure,
+                                                   0u);
+        procedure.module_index = 3u;
+        procedure.procedure_offset = SIZE_MAX;
+        imported = rx_graph_builder_add_callable(builder,
+                                                 "graph_test.definition_first",
+                                                 ".unknown",
+                                                 "value=.unknown",
+                                                 procedure,
+                                                 RX_GRAPH_CALLABLE_IMPORTED);
+        graph = rx_graph_builder_finish(builder);
+        ok &= require(definition != RX_GRAPH_NONE && imported == definition && graph &&
+                      rx_graph_callable(graph, definition, &callable_view) &&
+                      callable_view.procedure.module_index == 2u &&
+                      callable_view.procedure.procedure_offset == 30u &&
+                      strstr(callable_view.descriptor, "|.string|value=.int") != 0,
+                      "accept unresolved import after its selected definition");
+        rx_graph_release(&graph);
+    }
+
+    builder = rx_graph_builder_create();
+    ok &= require(builder != 0, "create incompatible imported-callable builder");
+    if (builder) {
+        RxCallableId imported;
+        RxCallableId definition;
+        procedure.module_index = 0u;
+        procedure.procedure_offset = SIZE_MAX;
+        imported = rx_graph_builder_add_callable(builder,
+                                                 "graph_test.incompatible_import",
+                                                 ".string",
+                                                 "value=.int",
+                                                 procedure,
+                                                 RX_GRAPH_CALLABLE_IMPORTED);
+        procedure.module_index = 1u;
+        procedure.procedure_offset = 20u;
+        definition = rx_graph_builder_add_callable(builder,
+                                                   "graph_test.incompatible_import",
+                                                   ".string",
+                                                   "value=.string",
+                                                   procedure,
+                                                   0u);
+        ok &= require(imported != RX_GRAPH_NONE && definition == RX_GRAPH_NONE,
+                      "reject known imported callable type conflict");
+        graph = rx_graph_builder_finish(builder);
+        ok &= require(graph == 0, "do not finalize an incompatible imported callable");
+        rx_graph_release(&graph);
+    }
+
+    builder = rx_graph_builder_create();
     ok &= require(builder != 0, "create member-contract builder");
     if (builder) {
         RxMemberId declaration;

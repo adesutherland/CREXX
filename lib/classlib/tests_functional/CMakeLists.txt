@@ -28,6 +28,7 @@ set(REXXBINS
   testJSON
 #  testBag
   testConcurrency
+  testDateTime
 )
 
 add_test(
