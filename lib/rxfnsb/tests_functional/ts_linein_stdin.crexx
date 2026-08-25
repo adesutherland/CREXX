@@ -1,0 +1,12 @@
+/* Regression for issue #670: linein(stdin) must not read past the newline. */
+options levelb
+import rxfnsb
+
+who = linein("")
+if who <> "Ada" then do
+  say "FAIL: linein stdin returned" who
+  return 1
+end
+
+say "PASS: linein stdin returns after one newline"
+return 0

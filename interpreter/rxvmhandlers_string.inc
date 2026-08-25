@@ -3068,6 +3068,7 @@ RXVM_HANDLER(FREADLINE_REG_REG, VM_ADVANCE(2);
         DEBUG("TRACE - FREADLINE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
     {
         int ch;
+        FILE *stream = (FILE*)op2R->int_value;
 
         op1R->string_length = 0;
         string_cache_reset(op1R);
@@ -3079,25 +3080,34 @@ RXVM_HANDLER(FREADLINE_REG_REG, VM_ADVANCE(2);
 
         else {
             /* Read until EOF or newline */
-            while ((ch = fgetc((FILE*)op2R->int_value)) != EOF) {
+            while ((ch = fgetc(stream)) != EOF) {
 
                 /* End of line detection (LF) */
                 if (ch == '\n') {
-                    ch = fgetc((FILE*)op2R->int_value);
-                    if (ch != EOF) ungetc(ch, (FILE*)op2R->int_value);
-                    else if (op1R->string_length == 0) clearerr((FILE*)op2R->int_value);
+                    /*
+                     * Do not probe beyond an interactive/still-open stdin
+                     * line. The probe blocks until a second byte arrives,
+                     * making linein(stdin) require an extra Return.
+                     */
+                    if (stream != stdin) {
+                        ch = fgetc(stream);
+                        if (ch != EOF) ungetc(ch, stream);
+                        else if (op1R->string_length == 0) clearerr(stream);
+                    }
                     break;
                 }
 
                 /* End of line detection (CR LF, or CR (old macs) */
                 if (ch == '\r') {
-                    ch = fgetc((FILE*)op2R->int_value);
-                    if (ch == '\n') {
-                        ch = fgetc((FILE*)op2R->int_value);
-                        if (ch != EOF) ungetc(ch, (FILE*)op2R->int_value);
-                        else if (op1R->string_length == 0) clearerr((FILE*)op2R->int_value);
+                    if (stream != stdin) {
+                        ch = fgetc(stream);
+                        if (ch == '\n') {
+                            ch = fgetc(stream);
+                            if (ch != EOF) ungetc(ch, stream);
+                            else if (op1R->string_length == 0) clearerr(stream);
+                        }
+                        else if (ch != EOF) ungetc(ch, stream);
                     }
-                    else if (ch != EOF) ungetc(ch, (FILE*)op2R->int_value);
                     break;
                 }
 

@@ -92,7 +92,8 @@ linein(fileName = "stdin") = .string
 
 If `fileName` is omitted or blank, input is read from `stdin`. Otherwise, the
 named file is opened for reading when necessary and its current stream
-position is used.
+position is used. Standard input returns as soon as its line terminator is
+read; `linein` does not wait for or consume a character from the next line.
 
 For example:
 
