@@ -39,7 +39,7 @@ import rxfnsb
  * date and time.
  */
 
-DateTime: class implements .Printable
+DateTime: class -- implements .Printable
 
   base_date_        = .int
   day_microseconds_ = .int

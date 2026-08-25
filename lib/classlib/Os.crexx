@@ -23,7 +23,7 @@
  */
 
 options levelb comments_dash
-namespace system_os expose os
+namespace system expose os
 import rxfs
 import rxplatform
 
