@@ -276,13 +276,51 @@ expression_parser: parser
   simple: production = term
 ```
 
-This is only the intended shape. Semantic construction, typed values, error
-recovery, ambiguity reporting, and AST allocation require their own exercised
-design.
+This is only the intended grammar shape. One parser behaviour is already fixed:
+a successful parse creates a syntax tree automatically. A named production
+creates a node, its recognized terminals and nonterminals become ordered
+children, and token leaves retain their source spans. Grammar authors do not
+need embedded actions merely to obtain that tree.
+
+Typed semantic trees, visitors, tree rewrites, error recovery, and ambiguity
+reporting remain later exercised designs. They can be layered over the
+automatically constructed syntax tree, in the manner of parser systems that
+first provide a complete parse tree and then offer more specialised AST tools.
 
 A Unicode rule-file lexer likewise emits tokens; it does not hide the Unicode
 algorithm in a lexer action. A parser constructs typed rule records, a data
 compiler builds tables, and the Level G operation consumes those tables.
+
+## Token and AST foundation
+
+Level L will provide `Token` and AST class families implemented entirely in
+Level B. They are part of the bootstrap foundation, not Level G services. A
+Level L compiler may generate a Level G Unicode library, but compiling Level L
+must not first require that generated library.
+
+The first logical `Token` contract contains a token kind, zero-based source
+byte start, and source byte length. An AST node contains a stable node or
+production kind, its source byte span, an ordered child sequence, and a token
+association for a terminal leaf. The exact class members, ownership model, and
+ordinary-object or packed representation will be settled by implementation;
+the logical result must remain the same.
+
+The initial bootstrap frontend is deliberately simple Level B code: a
+hand-written scanner and recursive-descent parser, ordinary objects and arrays,
+linear lookup where convenient, and no performance requirement beyond being
+usable on the retained specifications. It only needs to ingest the approved
+Level L lexer surface and construct the agreed syntax tree.
+
+That frontend has two first proving uses:
+
+1. parse the Level L specification that describes Level L's own lexer; and
+2. parse a Level L specification for the Unicode rule-file lexer used by the
+   retained normalization work.
+
+The generated lexer and, later, generated parser must produce the same tokens,
+tree shape, source spans, and diagnostics as the bootstrap frontend. Once the
+generated frontend can regenerate itself deterministically, the hand-written
+implementation remains as a small retained bootstrap and differential oracle.
 
 ## Current boundaries
 
@@ -297,8 +335,8 @@ evidence:
 - streaming and incremental input;
 - numeric priority overrides;
 - Unicode-property import syntax;
-- parser actions and recovery; and
-- physical token or table layout.
+- typed parser actions, semantic-tree helpers, and recovery; and
+- physical token, AST, or table layout.
 
 These are extension points rather than permanent exclusions. They should be
 added when a retained use case establishes what they must mean.

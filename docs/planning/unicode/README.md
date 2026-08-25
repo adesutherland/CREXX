@@ -372,6 +372,32 @@ Completed on 2026-08-25:
   `rxas`, and `rxlink`, and matches the hand-written `rxfnsl` scanner on both VM
   families. It required no compiler, RXAS, linker, or VM change.
 
+Accepted implementation direction on 2026-08-25:
+
+- Level L will provide foundational `Token` and AST class families implemented
+  only in Level B so the compiler can bootstrap without depending on Level G;
+- successful parsing automatically creates a production/token syntax tree;
+  typed semantic ASTs, visitors, rewrites, and recovery can be layered on later;
+- the first frontend is intentionally hand-crafted, naive Level B code whose
+  job is only to tokenize the approved Level L subset and construct that AST;
+  semantic lowering is a separate later component; and
+- committed canonical specifications and deterministic generated Level B
+  source will support a clean-build fixed-point self-hosting test without an
+  opaque binary seed.
+
+The next implementation slice is that hand-crafted Level B frontend. Its first
+retained positive inputs are the documented TinyExpr specification, a Level L
+specification for Level L's own lexer, and a Level L specification for the ICU
+`gennorm2`/Unicode rule-file lexer. The latter proves that the same frontend can
+support the Unicode work: the generated lexer tokenizes the rule file, while
+the later parser and data compiler remain separate.
+
+The first slice is accepted when the Level B frontend parses those three
+specifications, produces deterministic token and structural AST dumps with
+exact byte spans, reports the required negative diagnostics, and gives the same
+results on both VM families. It does not need to construct an automaton, choose
+a packed layout, or emit scanner source.
+
 Remaining before this phase is complete: implement the Level L specification
 parser, diagnostics, neutral IR, automaton construction, and deterministic
 emission from authored Level L rather than re2c input.
@@ -466,13 +492,17 @@ Gate 10: complete conformance for each claimed segmentation service.
 
 - Start only after the lexer/token representation and generated-table surface
   are stable.
-- First test whether Lemon's grammar analysis plus a Level L `-T` parser driver
-  template can emit the desired packed table/runtime shape.
-- If that boundary is too C-specific, specify a small grammar IR and implement a
-  Level L table generator independently.
-- Keep parser recovery, semantic actions, AST allocation, ambiguity/conflict
-  reporting, incremental parsing, and editor parser-mode needs as explicit
-  features rather than assuming one generated runtime solves them all.
+- Retain the hand-crafted Level B frontend as the bootstrap parser and
+  differential source-AST oracle.
+- Define a small Level L grammar IR and implement the table-construction
+  algorithms in Level B/Level L; Lemon may remain an additional differential
+  oracle but is not the required product backend.
+- Treat automatic production/token AST construction as foundational parser
+  behaviour.
+- Keep physical AST layout, typed semantic actions and trees, visitors/rewrites,
+  parser recovery, ambiguity/conflict reporting, incremental parsing, and
+  editor parser-mode needs as explicit later features rather than assuming one
+  generated runtime solves them all.
 
 Gate 11: approved parser model and a generated tiny grammar matching a retained
 reference parser.

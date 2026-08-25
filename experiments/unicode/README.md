@@ -118,3 +118,12 @@ existing optimized selector and fixed-width binary operations, and agrees with
 the hand-written `rxfnsl` scanner on both VM families. It is an output-adapter
 and differential-oracle result; its `.re` input is not the authored Level L
 language.
+
+The next implementation slice is a deliberately naive, hand-crafted Level B
+frontend for the approved Level L lexer syntax. Level L's foundational `Token`
+and AST classes are Level B-only bootstrap components. The frontend will create
+an automatic production/token syntax tree and stop there; a later semantic pass
+will lower that tree into the neutral lexer model. It must first handle
+TinyExpr, a Level L description of Level L's own lexer, and a Level L
+description of the retained Unicode rule-file lexer. Automaton construction,
+emission, optimization, and packed tree storage are later work.
