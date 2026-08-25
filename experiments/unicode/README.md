@@ -123,7 +123,13 @@ The next implementation slice is a deliberately naive, hand-crafted Level B
 frontend for the approved Level L lexer syntax. Level L's foundational `Token`
 and AST classes are Level B-only bootstrap components. The frontend will create
 an automatic production/token syntax tree and stop there; a later semantic pass
-will lower that tree into the neutral lexer model. It must first handle
-TinyExpr, a Level L description of Level L's own lexer, and a Level L
-description of the retained Unicode rule-file lexer. Automaton construction,
-emission, optimization, and packed tree storage are later work.
+will lower that tree into the neutral lexer model. The parser is deterministic,
+does not backtrack, and panics with the token and exact byte span of the first
+invalid or unsupported construct; recovery and further-error collection are
+later work.
+
+The sole required positive input for this first slice is the canonical Level L
+description of the retained Unicode rule-file lexer. TinyExpr is an optional
+smoke test, and a Level L description of Level L's own lexer is deferred to the
+later bootstrap and self-hosting proof. Automaton construction, emission,
+optimization, and packed tree storage are also later work.

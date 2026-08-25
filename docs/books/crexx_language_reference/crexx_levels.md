@@ -109,10 +109,12 @@ compiler accepts the syntax.
 
 The same branch fixes a Level B-only bootstrap direction: Level L will provide
 foundational `Token` and AST classes without depending on Level G, and its first
-frontend will be a deliberately naive hand-written Level B scanner/parser that
-only constructs the syntax tree. Generated lexer/parser implementations may
-replace it after they reproduce the same tokens, tree, source spans, and
-diagnostics deterministically.
+frontend will be a deliberately naive, deterministic, fail-fast hand-written
+Level B scanner/parser that only constructs the syntax tree needed by the
+Unicode lexer specification. It does not backtrack; an invalid or unsupported
+construct causes a panic at the first offending token. Generated lexer/parser
+implementations may replace it after they reproduce the same tokens, tree,
+source spans, and diagnostics deterministically.
 
 Levels E and N should be understood in that same tooling sense. They reserve
 clear names for Object Rexx and NetRexx editor support, but they are not cRexx

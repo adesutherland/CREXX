@@ -379,24 +379,29 @@ Accepted implementation direction on 2026-08-25:
 - successful parsing automatically creates a production/token syntax tree;
   typed semantic ASTs, visitors, rewrites, and recovery can be layered on later;
 - the first frontend is intentionally hand-crafted, naive Level B code whose
-  job is only to tokenize the approved Level L subset and construct that AST;
-  semantic lowering is a separate later component; and
+  job is only to tokenize the Unicode-driven Level L subset and construct that
+  AST;
+- the bootstrap parser is deterministic and does not backtrack; on the first
+  invalid or unsupported construct it panics with that token and its exact
+  source byte span, without recovery or further-error collection;
+- semantic lowering is a separate later component; and
 - committed canonical specifications and deterministic generated Level B
   source will support a clean-build fixed-point self-hosting test without an
   opaque binary seed.
 
-The next implementation slice is that hand-crafted Level B frontend. Its first
-retained positive inputs are the documented TinyExpr specification, a Level L
-specification for Level L's own lexer, and a Level L specification for the ICU
-`gennorm2`/Unicode rule-file lexer. The latter proves that the same frontend can
-support the Unicode work: the generated lexer tokenizes the rule file, while
-the later parser and data compiler remain separate.
+The next implementation slice is that hand-crafted Level B frontend. Its sole
+required positive input is the canonical Level L specification for the ICU
+`gennorm2`/Unicode rule-file lexer. The generated lexer will tokenize the rule
+file, while the later parser and data compiler remain separate. TinyExpr may
+remain an optional developer smoke test; a Level L specification for Level L's
+own lexer belongs to the later bootstrap and self-hosting proof.
 
-The first slice is accepted when the Level B frontend parses those three
-specifications, produces deterministic token and structural AST dumps with
-exact byte spans, reports the required negative diagnostics, and gives the same
-results on both VM families. It does not need to construct an automaton, choose
-a packed layout, or emit scanner source.
+The first slice is accepted when the Level B frontend parses that canonical
+Unicode-lexer specification, produces deterministic token and structural AST
+dumps with exact byte spans, panics deterministically at the first fault in
+each one-fault negative fixture, and gives the same results on both VM
+families. It does not need recovery, multiple diagnostics from one input,
+automaton construction, a packed layout, or scanner-source emission.
 
 Remaining before this phase is complete: implement the Level L specification
 parser, diagnostics, neutral IR, automaton construction, and deterministic

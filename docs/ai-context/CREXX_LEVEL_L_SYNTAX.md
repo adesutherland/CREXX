@@ -572,11 +572,19 @@ frontend. It is not a second production compiler and is not performance work.
 Its responsibilities are limited to:
 
 1. scan the approved Level L lexer-spec subset into Level B `Token` objects;
-2. parse it with straightforward recursive descent and limited backtracking
-   where useful;
+2. parse it with deterministic recursive descent, a single forward cursor, and
+   one-token lookahead where the grammar requires it;
 3. construct the logical syntactic AST described above;
-4. retain exact source byte spans and deterministic diagnostics; and
+4. retain exact source byte spans and a deterministic first-error diagnostic;
+   and
 5. produce a deterministic structural tree dump for differential tests.
+
+The bootstrap parser does not backtrack. At the first invalid or unsupported
+construct it **panics**: it reports the offending token and exact source byte
+span, then stops parsing that input. The first slice has no error recovery,
+resynchronization, or accumulation of further diagnostics. If a proposed
+grammar shape would require speculative parsing, factor the grammar into a
+deterministic form or leave that shape unsupported in the bootstrap subset.
 
 The first implementation slice stops at that AST. A separately tested semantic
 pass will later consume the tree and create the neutral lexer model; automaton
@@ -587,19 +595,23 @@ linear scans, and other simple algorithms. It must fail explicitly on deferred
 syntax rather than guessing. Optimized token storage, generated parsing tables,
 and packed AST layouts are later replacements, not entry requirements.
 
-The first positive proving specifications are:
+The sole required positive specification for the first implementation is the
+Level L lexer specification for the ICU `gennorm2`/Unicode rule-file input used
+by the retained normalization work. The initial supported subset therefore
+needs only the approved Level L constructs exercised by that specification;
+other constructs must panic explicitly as not yet implemented.
 
-- the documented TinyExpr lexer;
-- a Level L lexer specification for Level L source itself; and
-- a Level L lexer specification for the ICU `gennorm2`/Unicode rule-file input
-  used by the retained normalization work.
+The documented TinyExpr lexer may be retained as a small developer smoke test,
+but it is not an acceptance condition. A Level L specification for Level L's
+own lexer is a later bootstrap and self-hosting proof, after the Unicode slice
+has established the frontend.
 
 The Unicode case means that the bootstrap parser ingests a Level L
 *specification describing* the Unicode rule-file lexer. The generated lexer
 then tokenizes the Unicode input. The Level L frontend does not normalize text
 or perform the Unicode algorithm.
 
-The self-hosting sequence is:
+After the Unicode slice is accepted, the self-hosting sequence is:
 
 1. the hand-crafted Level B frontend parses the canonical Level L lexer
    specification;

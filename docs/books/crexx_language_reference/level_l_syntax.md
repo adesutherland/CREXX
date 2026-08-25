@@ -308,14 +308,22 @@ the logical result must remain the same.
 The initial bootstrap frontend is deliberately simple Level B code: a
 hand-written scanner and recursive-descent parser, ordinary objects and arrays,
 linear lookup where convenient, and no performance requirement beyond being
-usable on the retained specifications. It only needs to ingest the approved
-Level L lexer surface and construct the agreed syntax tree.
+usable on the retained Unicode specification. Parsing is deterministic: the
+parser advances a single cursor, uses one-token lookahead where needed, and
+never backtracks.
 
-That frontend has two first proving uses:
+On the first invalid or unsupported construct, the bootstrap frontend
+**panics**: it reports that token and its exact source byte span, then stops
+parsing the input. Recovery and collection of multiple errors are later
+features.
 
-1. parse the Level L specification that describes Level L's own lexer; and
-2. parse a Level L specification for the Unicode rule-file lexer used by the
-   retained normalization work.
+The only required proving use for the first implementation is to parse the
+Level L specification for the Unicode rule-file lexer used by the retained
+normalization work and construct the agreed syntax tree. It only needs the
+approved Level L lexer constructs exercised by that specification; other
+constructs panic explicitly as not yet implemented. The TinyExpr example may
+serve as an optional smoke test. Parsing the specification for Level L's own
+lexer is a later bootstrap and self-hosting proof.
 
 The generated lexer and, later, generated parser must produce the same tokens,
 tree shape, source spans, and diagnostics as the bootstrap frontend. Once the
