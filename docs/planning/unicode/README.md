@@ -1,7 +1,8 @@
 # Level L Language Tooling And Level G Unicode Research Track
 
-Status: Phase 1 complete; Phase 2 NFD reference proof implemented and awaiting
-Gate 2 acceptance.
+Status: Phase 1 and Phase 2 complete; the Level L lexer syntax and bounded re2c
+output-adapter experiment are complete. The Level L front end and generator
+core remain research work.
 
 Branch: `unicode`, based on `origin/develop` at `7b78375bd` on 2026-08-25.
 The branch is intentionally kept separate from `develop` until its contracts,
@@ -342,8 +343,8 @@ rule correspondence ledger, demonstrated Level L capability list,
 byte-reproducible generated C++, negative parser checks, command, and evidence
 are retained under `experiments/unicode/poc/`.
 
-Gate 2: evidence complete; awaiting Adrian's acceptance of the executable
-interpretation before any Phase 3 language design begins.
+Gate 2: accepted by Adrian on 2026-08-25; the executable interpretation remains
+the retained differential oracle for subsequent Level L and Unicode work.
 
 ### 3. Level L Lexer-Maker Language And Core
 
@@ -362,8 +363,23 @@ interpretation before any Phase 3 language design begins.
   semantics, not as the required product syntax.
 - Emit deterministic source and tables with no timestamps or unstable ordering.
 
-Gate 3: generated scanners agree with the oracle and hand-written fixtures;
-unsupported features fail explicitly.
+Completed on 2026-08-25:
+
+- the human-facing and AI/implementer Level L syntax references define the
+  approved first lexer-spec surface; and
+- the bounded [re2c output-adapter experiment](../../../experiments/unicode/level-l-emitter/README.md)
+  emits a byte-reproducible TinyExpr scanner as cREXX, takes it through `rxc`,
+  `rxas`, and `rxlink`, and matches the hand-written `rxfnsl` scanner on both VM
+  families. It required no compiler, RXAS, linker, or VM change.
+
+Remaining before this phase is complete: implement the Level L specification
+parser, diagnostics, neutral IR, automaton construction, and deterministic
+emission from authored Level L rather than re2c input.
+
+Gate 3 remains open: the adapter proves the generated target shape, but the
+Level L front end and generator core do not yet exist. Closure requires scanners
+generated from authored Level L to agree with the oracle and hand-written
+fixtures, with unsupported features failing explicitly.
 
 ### 4. Binary-Surface Verdict
 

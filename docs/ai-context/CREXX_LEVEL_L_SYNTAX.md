@@ -515,3 +515,9 @@ binary table layout, and target source emission consume that model. A re2c
 syntax-file emitter may be used as a bounded executable experiment, but re2c
 syntax, `YY*` names, embedded C actions, and backend mechanics are not part of
 this Level L contract.
+
+The retained experiment at `experiments/unicode/level-l-emitter/` demonstrates
+that re2c 4.5.1 can emit a deterministic TinyExpr DFA using valid cREXX
+`select`/`when` control flow and the existing fixed-width binary surface. It is
+implementation evidence for the target shape, not an alternative Level L
+front-end grammar.

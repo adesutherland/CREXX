@@ -1,7 +1,9 @@
 # Unicode And Language-Tooling Experiment
 
-Status: Phase 1 contract/input freeze complete; Phase 2 NFD reference proof
-implemented and awaiting Gate 2 acceptance.
+Status: Phase 1 contract/input freeze and Phase 2 NFD reference proof complete;
+the Level L lexer syntax is documented and the first re2c output-adapter
+experiment is complete. The Level L front end and generator core are not yet
+implemented.
 
 This directory is the retained experimental work area for the `unicode`
 branch. It is deliberately outside the product libraries and is not installed
@@ -16,9 +18,10 @@ or enabled by the ordinary CREXX build.
 - Level B remains the valid-UTF-8/codepoint substrate. This experiment does not
   change identifier spelling/equality, keyword matching, source normalization,
   or the existing Level B and Level C string contracts.
-- No Level L syntax, compiler/RXAS/VM operation, binary layout, or public Level
-  G API is approved by this proof. Any such decision remains a later explicit
-  design gate.
+- The experimental Level L lexer syntax is documented for this branch, but is
+  not implemented by a Level L front end. No new compiler/RXAS/VM operation,
+  physical binary layout, or public Level G API is approved by these proofs.
+  Any such decision remains a later explicit design gate.
 
 ## Frozen Inputs
 
@@ -100,3 +103,18 @@ checks all applicable NFD invariants in Unicode 17.0.0
 
 See [poc/RULE-CORRESPONDENCE.md](poc/RULE-CORRESPONDENCE.md) for the detailed
 translation ledger and `poc/README.md` for reproducible commands.
+
+## Level L Syntax And Output Adapter
+
+The authored lexer surface is defined for human readers in the
+[Level L syntax reference](../../docs/books/crexx_language_reference/level_l_syntax.md)
+and for AI agents and implementers in the
+[Level L implementation context](../../docs/ai-context/CREXX_LEVEL_L_SYNTAX.md).
+
+The bounded [re2c Level L emitter experiment](level-l-emitter/README.md) proves
+that vendored re2c 4.5.1 can emit a TinyExpr scanner as valid cREXX through a
+syntax-file overlay. The generated scanner compiles, assembles, links, uses the
+existing optimized selector and fixed-width binary operations, and agrees with
+the hand-written `rxfnsl` scanner on both VM families. It is an output-adapter
+and differential-oracle result; its `.re` input is not the authored Level L
+language.
