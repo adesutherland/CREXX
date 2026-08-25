@@ -392,6 +392,25 @@ remove()       O(1)
 
 Order is unspecified.
 
+### ObjectObjectHashMap
+
+`.ObjectObjectHashMap(strategy, expected)` is the concrete class-library map
+for object keys and object values when equality and hashing are domain policy.
+Its `.ObjectKeyStrategy` supplies both `hash(key)` and
+`equivalent(left, right)`; equivalent keys must always have the same hash.
+
+The implementation caches hashes, resolves collisions by calling the strategy,
+normalizes negative hashes, and resizes its separate-chaining table. Key and
+value snapshots, including `iterator()`, preserve insertion order. Replacing an
+equivalent key retains the originally stored key and its position; removing and
+reinserting a key appends it at the end.
+
+There is no default identity strategy. Raw object addresses, reference-cell
+identity, and cross-worker live references are not map-key contracts. Use
+`<refsame>` separately when code explicitly needs to compare two reference
+values, or define immutable logical handle fields for a genuinely global
+resource.
+
 ## LinkedHashMap
 
 Like `HashMap` but preserves insertion order.

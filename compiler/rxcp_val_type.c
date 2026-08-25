@@ -1340,6 +1340,8 @@ walker_result set_node_types_walker(walker_direction direction,
             case OP_ARG_EXISTS:
             case OP_ARG_IX_EXISTS:
             case OP_FLAG_HAS:
+            case OP_REFSAME:
+            case OP_EQ:
                 if (node->value_type == TP_UNKNOWN) {
                     /* context->changed_flags |= FLAG_VAL_TYPE; */ set_node_type(node, TP_BOOLEAN);
                 }
@@ -1579,7 +1581,11 @@ walker_result set_node_types_walker(walker_direction direction,
                                 context->changed_flags |= FLAG_VAL_TYPE; return result_normal;
                             }
 
-                            if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
+                            if (node->is_equivalence_operator) {
+                                /* The closed `<eq>` diagnostic is emitted by
+                                 * type_safety_walker instead of a generic
+                                 * missing-method diagnostic. */
+                            } else if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
                                 if (context->after_rewrite) {
                                     if (node->node_string && (strcmp(node->node_string, "get") == 0 || strcmp(node->node_string, "set") == 0)) {
                                         mknd_err(node, "INVALID_PUBLIC_ATTRIBUTE");
@@ -1601,7 +1607,8 @@ walker_result set_node_types_walker(walker_direction direction,
                                 }
                             }
                         }
-                    } else if (instance->value_type != TP_UNKNOWN) {
+                    } else if (instance->value_type != TP_UNKNOWN &&
+                               !node->is_equivalence_operator) {
                         mknd_err(node, "NOT_AN_OBJECT");
                     }
                 }
@@ -2131,6 +2138,28 @@ walker_result type_safety_walker(walker_direction direction,
         child2 = ast_chdn(node, 1);
 
         switch (node->node_type) {
+            case MEMBER_CALL:
+                if (node->is_equivalence_operator) {
+                    ASTNode *equivalence_right = child2;
+                    if (equivalence_right &&
+                        equivalence_right->node_type == OP_TYPE_CAST &&
+                        equivalence_right->is_compiler_added) {
+                        equivalence_right = ast_chdn(equivalence_right, 0);
+                    }
+                    if (context->level != LEVELG) {
+                        mknd_err_unique(node, "EQ_ONLY_LEVELG");
+                    } else if (!child1 || !equivalence_right ||
+                               child1->value_type != TP_OBJECT ||
+                               equivalence_right->value_type != TP_OBJECT ||
+                               !child1->value_class ||
+                               !symbol_name_assignable_to(context,
+                                                          child1->value_class,
+                                                          "data.ObjectEquatable")) {
+                        mknd_err_unique(node, "EQ_REQUIRES_OBJECT_EQUATABLE");
+                    }
+                }
+                break;
+
             case PROCEDURE:
                 if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->is_main) {
                     /* Validate main() return values */
@@ -2232,6 +2261,30 @@ walker_result type_safety_walker(walker_direction direction,
                 }
                 break;
 
+            case OP_REFSAME:
+                if (!child1 || !child2 ||
+                    child1->value_type != TP_REFERENCE ||
+                    child2->value_type != TP_REFERENCE) {
+                    mknd_err(node, "REFSAME_REQUIRES_REFERENCES");
+                } else if (!rxcp_same_reference_value_type(child1, child2)) {
+                    mknd_err(node, "REFERENCE_TYPE_MISMATCH");
+                }
+                break;
+
+            case OP_EQ:
+                if (context->level != LEVELG) {
+                    mknd_err_unique(node, "EQ_ONLY_LEVELG");
+                } else if (!child1 || !child2 ||
+                           child1->value_type != TP_OBJECT ||
+                           child2->value_type != TP_OBJECT ||
+                           !child1->value_class ||
+                           !symbol_name_assignable_to(context,
+                                                      child1->value_class,
+                                                      "data.ObjectEquatable")) {
+                    mknd_err_unique(node, "EQ_REQUIRES_OBJECT_EQUATABLE");
+                }
+                break;
+
             case OP_INITIALIZED:
                 if (!child1 || child1->node_type == NOVAL) {
                     mknd_err2(node, "ARGUMENT_REQUIRED", "position", "1", "name", "value");
@@ -2276,6 +2329,10 @@ walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case OP_TYPE_CAST:
+                if (node->is_compiler_added && node->parent &&
+                    node->parent->is_equivalence_operator) {
+                    break;
+                }
                 if (child2 && child2->target_type == TP_DECIMAL) {
                     rxcp_contextualize_exact_decimal_literals(context, child1);
                 }

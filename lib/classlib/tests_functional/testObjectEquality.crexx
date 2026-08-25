@@ -1,0 +1,46 @@
+options levelg comments_dash
+import data
+
+failures = 0
+
+left = .EquatableKey("same")
+same = .EquatableKey("same")
+different = .EquatableKey("different")
+
+if (left <eq> same) = 0 then failures = failures + 1
+if left.calls() <> 1 then failures = failures + 1
+if left <EQ> different then failures = failures + 1
+if left.calls() <> 2 then failures = failures + 1
+contract = .ObjectEquatable
+contract = left
+if (contract <eq> same) = 0 then failures = failures + 1
+
+if failures <> 0 then do
+  say "Object equality failures:" failures
+  exit 1
+end
+
+say "PASS: Object equality"
+exit 0
+
+EquatableKey: class implements .ObjectEquatable
+  value_ = .string
+  calls_ = .int
+
+  *: factory
+    arg value = .string
+    value_ = value
+    calls_ = 0
+    return
+
+  equivalent: method = .boolean
+    arg other = .object
+    other_key = other as .EquatableKey
+    calls_ = calls_ + 1
+    return value_ == other_key.value()
+
+  value: method = .string
+    return value_
+
+  calls: method = .int
+    return calls_

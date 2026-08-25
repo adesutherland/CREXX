@@ -266,7 +266,10 @@ error condition.
 `REFERENCE_INVALID` is the dedicated signal for a reference value whose target
 storage has been destroyed or invalidated. It defaults to halt, participates in
 normal signal handling, and can be probed without raising through the RXAS
-`refvalid` instruction. Raising operations include `deref`, `linkref`, and
+`refvalid` instruction. RXAS `refsame` is also non-raising: it compares the
+retained reference-identity cells without dereferencing, so copied references
+remain identical after target expiry while empty references compare false.
+Raising operations include `deref`, `linkref`, and
 `setref`; using a non-reference value with those operations is treated as an
 invalid reference. `endlife rLocal` is the RXAS storage-lifetime primitive used
 by compiler-generated scope cleanup. It invalidates references to `rLocal` and

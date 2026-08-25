@@ -137,17 +137,21 @@ Reference values are not assignment-compatible with their target type. Passing a
 where `.T` is expected is also an error; spell `reference target`,
 `local = dereference ref`, or `snapshot ref` at the boundary.
 
-Reference values do not currently define equality or ordering. Applying a
-comparison operator to a reference is a compile-time error rather than an
-implicit comparison of target values or storage identity. Use `refvalid` to
-test validity, and explicitly `dereference` or `snapshot` when the target value
-itself is to be compared.
+Reference values do not define value equality or ordering. Applying an ordinary
+comparison operator such as `=` or `==` to a reference is a compile-time error
+rather than an implicit comparison of target values or storage identity. The
+explicit `left <refsame> right` operator accepts compatible reference types and
+tests whether both retain the same storage-identity cell without dereferencing
+them. Copied references therefore remain `<refsame>` after their common target
+expires; cleared or empty references compare false. Use `<refvalid>(ref)` to
+test live-target validity, and explicitly `dereference` or `snapshot` when the
+target value itself is to be compared.
 
 Nested reference containers, reference casts, reference type tests, and
 implicit member/index access through a reference are not part of the current
 Level B source surface. These are reserved for possible Level G convenience
 features. Level B code should keep reference boundaries explicit with
-`reference`, `dereference`, `snapshot`, and `refvalid`.
+`reference`, `dereference`, `snapshot`, `<refvalid>`, and `<refsame>`.
 
 ## Numeric Values
 

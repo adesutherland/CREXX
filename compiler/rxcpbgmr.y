@@ -452,6 +452,8 @@ static ASTNode *named_binary_operator(Context *context, Token *token, ASTNode *l
     else if (named_operator_equals(token, "shl")) type = OP_BIT_SHL;
     else if (named_operator_equals(token, "shr")) type = OP_BIT_SHR;
     else if (named_operator_equals(token, "has")) type = OP_FLAG_HAS;
+    else if (named_operator_equals(token, "refsame")) type = OP_REFSAME;
+    else if (named_operator_equals(token, "eq")) type = OP_EQ;
 
     if (named_operator_equals(token, "clear")) {
         not_node = ast_f(context, OP_BIT_NOT, token);
@@ -473,7 +475,7 @@ static ASTNode *named_binary_operator(Context *context, Token *token, ASTNode *l
 }
 }
 
-%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL TK_STRING_CONTINUATION TK_INTRINSIC_LT TK_INTRINSIC_PREFIX_LT TK_INTRINSIC_NAME TK_INTRINSIC_GENERIC_OPEN TK_NAMED_OPERATOR TK_NAMED_MULT_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_OR_OPERATOR TK_TASK TK_PARALLEL TK_USING.
+%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL TK_STRING_CONTINUATION TK_INTRINSIC_LT TK_INTRINSIC_PREFIX_LT TK_INTRINSIC_NAME TK_INTRINSIC_GENERIC_OPEN TK_NAMED_OPERATOR TK_NAMED_MULT_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_OR_OPERATOR TK_NAMED_COMPARISON_OPERATOR TK_TASK TK_PARALLEL TK_USING.
 %wildcard ANYTHING.
 /* Gate F contextual words fall back to ordinary symbols outside the grammar
  * positions that name task declarations, task targets and parallel blocks. */
@@ -486,7 +488,7 @@ static ASTNode *named_binary_operator(Context *context, Token *token, ASTNode *l
 %left TK_EOC.
 %left TK_END.
 %left IMPLICIT_CONCAT.
-%left TK_NAMED_OPERATOR TK_NAMED_OR_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_SHIFT_OPERATOR.
+%left TK_NAMED_OPERATOR TK_NAMED_OR_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_COMPARISON_OPERATOR.
 %left TK_DOT TK_CLASS_TYPE.
 
 /* 0 Sets the stack to grow dynamically! */
@@ -2148,6 +2150,8 @@ command_comparison(A)        ::= command_comparison(B) TK_S_GTE(O) concatenation
                          { A = ast_f(context, OP_COMPARE_S_GTE, O); add_ast(A,B); add_ast(A,C); }
 command_comparison(A)        ::= command_comparison(B) TK_S_LTE(O) concatenation(C).
                          { A = ast_f(context, OP_COMPARE_S_LTE, O); add_ast(A,B); add_ast(A,C); }
+command_comparison(A)        ::= command_comparison(B) TK_NAMED_COMPARISON_OPERATOR(O) concatenation(C).
+                         { A = named_binary_operator(context, O, B, C); }
 command_comparison(A)        ::= command_comparison(B) TK_IS(O) type_def(T).
                          { A = ast_f(context, OP_TYPE_IS, O); add_ast(A,B); add_ast(A,T); }
 command_or_expression(P)     ::= command_comparison(E).
@@ -2367,6 +2371,8 @@ comparison(A)        ::= comparison(B) TK_S_GTE(O) concatenation(C).
                          { A = ast_f(context, OP_COMPARE_S_GTE, O); add_ast(A,B); add_ast(A,C); }
 comparison(A)        ::= comparison(B) TK_S_LTE(O) concatenation(C).
                          { A = ast_f(context, OP_COMPARE_S_LTE, O); add_ast(A,B); add_ast(A,C); }
+comparison(A)        ::= comparison(B) TK_NAMED_COMPARISON_OPERATOR(O) concatenation(C).
+                         { A = named_binary_operator(context, O, B, C); }
 comparison(A)        ::= comparison(B) TK_IS(O) type_def(T).
                          { A = ast_f(context, OP_TYPE_IS, O); add_ast(A,B); add_ast(A,T); }
 or_expression(P)     ::= comparison(E).
@@ -2409,6 +2415,7 @@ and_expression(E)  ::= TK_NAMED_SHIFT_OPERATOR(U) error. { E = ast_err(context, 
 and_expression(E)  ::= TK_NAMED_AND_OPERATOR(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_NAMED_XOR_OPERATOR(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_NAMED_OR_OPERATOR(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_NAMED_COMPARISON_OPERATOR(U) error. { E = ast_err(context, "BADEXPR", U); }
 
 expression(P)  ::= and_expression(E). { P = E; }
 expression(E)  ::= TK_COMMA(U) error. { E = ast_err(context, "BADEXPR", U); }

@@ -759,6 +759,48 @@ main() .locals=3
 
 `mkref`, `unref`, `deref`.
 
+## `refsame`
+
+Compare the retained storage identity of two reference values without
+dereferencing either operand.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0107` | `refsame rResult,rLeft,rRight` | Store integer `1` when both references retain the same identity cell, otherwise `0`. |
+
+### Operands And Semantics
+
+The destination is cleared before receiving the Boolean. References created by
+copying the same reference payload compare true, including after their common
+target storage has expired. References to distinct storage compare false even
+when the stored values are equal. A non-reference, cleared reference, or empty
+reference has no identity and compares false. Neither operand is dereferenced
+or modified; target validity is a separate `refvalid` question.
+
+### Signals
+
+This is a non-raising identity check and does not raise `REFERENCE_INVALID`.
+
+### Example
+
+<!-- rxas-example name="reference-refsame" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=4
+    load r1,"value"
+    mkref r0,r1
+    copy r2,r0
+    refsame r3,r0,r2
+    ret
+```
+
+### Related
+
+`mkref`, `refvalid`, `unref`, `endlife`.
+
 ## `setattrs`
 
 Set an object's exact logical attribute count.

@@ -85,6 +85,7 @@ struct ASTNode {
     char is_interface_default_method;
     char is_task_callable;
     char is_initializer;
+    char is_equivalence_operator;
     char is_internal_diagnostic;
     char is_source_diagnostic_recorded;
     char mark_internal_diagnostics;

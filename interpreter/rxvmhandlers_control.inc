@@ -3005,6 +3005,20 @@ RXVM_HANDLER(REFVALID_REG_REG, VM_ADVANCE(2);
 
 )
 
+RXVM_HANDLER(REFSAME_REG_REG_REG, VM_ADVANCE(3);
+            DEBUG("TRACE - REFSAME R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            {
+                rxvm_reference_cell *left = rxvm_reference_payload_cell(op2R);
+                rxvm_reference_cell *right = rxvm_reference_payload_cell(op3R);
+                int same = left && right && left == right;
+                value_zero(op1R);
+                op1R->int_value = same ? 1 : 0;
+            }
+            DISPATCH;
+
+
+)
+
 RXVM_HANDLER(UNREF_REG, VM_ADVANCE(1);
             DEBUG("TRACE - UNREF R%lu\n", REG_IDX(1));
             clear_value_contents(op1R);

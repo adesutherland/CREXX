@@ -150,6 +150,7 @@ int rexbscan(Context* s) {
     '<XOR>' { RET(TK_NAMED_XOR_OPERATOR); }
     '<OR>' | '<SET>' { RET(TK_NAMED_OR_OPERATOR); }
     '<NOT>' { RET(TK_NAMED_OPERATOR); }
+    '<REFSAME>' | '<EQ>' { RET(TK_NAMED_COMPARISON_OPERATOR); }
     "=" { RET(TK_EQUAL); }
     not ob "=" | "<" ob ">" | ">" ob "<" { RET(TK_NEQ); }
     ">" { RET(TK_GT); }

@@ -728,6 +728,7 @@ static walker_result emit_walker(walker_direction direction,
             case OP_BIT_SHL:
             case OP_BIT_SHR:
             case OP_FLAG_HAS:
+            case OP_REFSAME:
                 emit_expression(node, payload);
                 break;
 

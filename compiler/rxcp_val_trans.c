@@ -263,6 +263,42 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction,
 }
 
 /*
+ * Lowers Level G `<eq>` to the closed ObjectEquatable member-call contract
+ * before ordinary symbol and type resolution.
+ */
+walker_result rewrite_equivalence_walker(walker_direction direction,
+                                         ASTNode* node, void *payload) {
+    Context *context = (Context *) payload;
+
+    if (direction == out && node->node_type == OP_EQ) {
+        ASTNode *left = ast_chdn(node, 0);
+        ASTNode *right = ast_chdn(node, 1);
+
+        /* Preserve the operator contract on the lowered call so validation
+         * remains explicit even when object/import types settle on a later
+         * fixed-point iteration. */
+        if (left && right) {
+            ASTRewriteTemplate *call_tmpl = ast_rw_new(MEMBER_CALL, "equivalent");
+            ASTRewriteTemplate *cast_tmpl = ast_rw_new(OP_TYPE_CAST, "as");
+            ASTNode *rewritten;
+            ast_rw_add(call_tmpl, ast_rw_reuse(left));
+            ast_rw_add(cast_tmpl, ast_rw_reuse(right));
+            ast_rw_add(cast_tmpl, ast_rw_new(CLASS, ".object"));
+            ast_rw_add(call_tmpl, cast_tmpl);
+            rewritten = ast_execute_rewrite(context, node, call_tmpl);
+            if (rewritten) {
+                ASTNode *argument_cast = ast_chdn(rewritten, 1);
+                rewritten->is_equivalence_operator = 1;
+                if (argument_cast) argument_cast->is_compiler_added = 1;
+            }
+            context->changed_flags |= FLAG_VAL_TRANS;
+            return result_normal;
+        }
+    }
+    return result_normal;
+}
+
+/*
  * Lowers constructor-style declarations: x = .int(1)
  */
 walker_result rewrite_constructor_walker(walker_direction direction,

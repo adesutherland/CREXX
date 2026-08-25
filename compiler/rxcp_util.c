@@ -1370,6 +1370,8 @@ const char* node_type_to_string(NodeType type) {
         case OP_DEREFERENCE: return "OP_DEREFERENCE";
         case OP_SNAPSHOT: return "OP_SNAPSHOT";
         case OP_REFVALID: return "OP_REFVALID";
+        case OP_REFSAME: return "OP_REFSAME";
+        case OP_EQ: return "OP_EQ";
         case OP_INITIALIZED: return "OP_INITIALIZED";
         case OP_SCONCAT: return "OP_SCONCAT";
         case OPTIONS: return "OPTIONS";
