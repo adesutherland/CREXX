@@ -31,6 +31,13 @@ failures = failures + check_int("contains alpha", kdb.containsKey("alpha"), 1)
 failures = failures + check_int("size after insert", kdb.size(), 2)
 failures = failures + check_int("validate", kdb.validate(), 0)
 
+/* Enumeration keeps its own cursor when get() seeks the index file. */
+key = kdb.firstKey()
+failures = failures + check_string("first key", key, "alpha")
+failures = failures + check_string("get during enumeration", kdb.get(key), alpha_value)
+failures = failures + check_string("next key after get", kdb.nextKey(), "beta")
+failures = failures + check_string("end of enumeration", kdb.nextKey(), "NOT_FOUND")
+
 failures = failures + check_int("remove beta", kdb.removeCommit("beta"), 0)
 
 stats = kdb.stats()
@@ -51,6 +58,8 @@ else do
   failures = failures + check_string("get alpha after reopen", kdb.get("alpha"), alpha_value)
   failures = failures + check_int("contains beta after reopen", kdb.containsKey("beta"), 0)
   failures = failures + check_string("get beta after reopen", kdb.get("beta"), "NOT_FOUND")
+  failures = failures + check_string("first key after deletion", kdb.firstKey(), "alpha")
+  failures = failures + check_string("deleted key skipped", kdb.nextKey(), "NOT_FOUND")
   failures = failures + check_int("close after reopen", kdb.close(), 0)
 end
 

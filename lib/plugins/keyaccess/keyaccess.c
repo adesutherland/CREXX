@@ -22,6 +22,8 @@
  * - keyaccess.readkey(handle, key) -> value
  * - keyaccess.deletekey(handle, key) -> rc
  * - keyaccess.listkey(handle) -> count
+ * - keyaccess.firstkey(handle) -> first active key
+ * - keyaccess.nextkey(handle) -> next active key
  * - keyaccess.txbegin(handle) -> rc
  * - keyaccess.txcommit(handle) -> rc
  * - keyaccess.txrollback(handle) -> rc
@@ -140,6 +142,7 @@ struct FileHandle {
     char* indexPath;    // Path to index file
     int locked;         // File lock status
     int transaction;    // Transaction status
+    long indexCursor;   // Explicit index traversal offset
     struct CacheEntry cache[CACHE_SIZE];
     int cacheCount;
     unsigned long cacheHits;
@@ -176,11 +179,13 @@ static const char* binary_file_mode(const char* mode) {
     if (strcmp(mode, "w") == 0) {
         return "wb";
     }
-    if (strcmp(mode, "w+") == 0) {
-        return "w+b";
-    }
+    /*
+     * "w+" is handled specially by openfile()
+     * because CREXX semantics preserve an existing database.
+     */
     return mode;
 }
+
 
 // Error logging
 static void log_error(const char* operation, int error_code, const char* details) {
@@ -216,7 +221,26 @@ static void log_error(const char* operation, int error_code, const char* details
     }
 }
 
-// Update error handling in functions
+/**
+ * Remove a key from the handle-local cache.
+ */
+static void cache_remove(struct FileHandle *handle, const char *key)
+{
+    int i;
+
+    for (i = 0; i < CACHE_SIZE; i++) {
+        if (handle->cache[i].value != NULL &&
+            strcmp(handle->cache[i].key, key) == 0) {
+
+            free(handle->cache[i].value);
+            handle->cache[i].value = NULL;
+            handle->cache[i].key[0] = '\0';
+            handle->cache[i].timestamp = 0;
+            handle->cache[i].hits = 0;
+            }
+    }
+}
+
 PROCEDURE(openfile) {
     char* filename = GETSTRING(ARG0);
     char* mode = GETSTRING(ARG1);
@@ -228,7 +252,14 @@ PROCEDURE(openfile) {
         RETURNINTX(KA_ERROR_PARAM);
     }
 
-    /* Index records and data offsets are binary, so Windows text mode is unsafe. */
+    /*
+     * Index records and data offsets are binary, so Windows
+     * text mode is unsafe.
+     *
+     * Note:
+     * CREXX "w+" is handled specially below because standard
+     * C "w+b" truncates an existing file.
+     */
     file_mode = binary_file_mode(mode);
 
     handle = (struct FileHandle*)malloc(sizeof(struct FileHandle));
@@ -237,44 +268,91 @@ PROCEDURE(openfile) {
         RETURNINTX(KA_ERROR_MEMORY);
     }
 
-    // Initialize handle structure
+    /* Initialize handle structure. */
     memset(handle, 0, sizeof(struct FileHandle));
+
     handle->dataPath = strdup(filename);
     handle->indexPath = create_index_path(filename);
 
     if (!handle->dataPath || !handle->indexPath) {
-        log_error("openfile", KA_ERROR_MEMORY, "Failed to allocate path strings");
+        log_error("openfile",
+                  KA_ERROR_MEMORY,
+                  "Failed to allocate path strings");
+
         free(handle->dataPath);
         free(handle->indexPath);
         free(handle);
+
         RETURNINTX(KA_ERROR_MEMORY);
     }
 
-    // Open data file
-    handle->dataFile = fopen(handle->dataPath, file_mode);
+    /*
+     * Open data file.
+     *
+     * CREXX "w+" semantics:
+     *
+     * - open an existing file read/write
+     * - preserve existing contents
+     * - create the file if it does not yet exist
+     *
+     * Standard C "w+b" cannot be used directly for an existing
+     * file because it truncates the file.
+     */
+    if (strcmp(mode, "w+") == 0) {
+        handle->dataFile = fopen(handle->dataPath, "r+b");
+
+        if (!handle->dataFile) {
+            handle->dataFile = fopen(handle->dataPath, "w+b");
+        }
+    }
+    else {
+        handle->dataFile = fopen(handle->dataPath, file_mode);
+    }
+
     if (!handle->dataFile) {
-        log_error("openfile", KA_ERROR_IO, "Failed to open data file");
+        log_error("openfile",
+                  KA_ERROR_IO,
+                  "Failed to open data file");
+
         free(handle->dataPath);
         free(handle->indexPath);
         free(handle);
+
         RETURNINTX(KA_ERROR_IO);
     }
 
-    // Open or create index file
-    handle->indexFile = fopen(handle->indexPath, file_mode);
+    /*
+     * Open index file using the same preserve-or-create semantics.
+     */
+    if (strcmp(mode, "w+") == 0) {
+        handle->indexFile = fopen(handle->indexPath, "r+b");
+
+        if (!handle->indexFile) {
+            handle->indexFile = fopen(handle->indexPath, "w+b");
+        }
+    }
+    else {
+        handle->indexFile = fopen(handle->indexPath, file_mode);
+    }
+
     if (!handle->indexFile) {
-        log_error("openfile", KA_ERROR_IO, "Failed to open index file");
+        log_error("openfile",
+                  KA_ERROR_IO,
+                  "Failed to open index file");
+
         fclose(handle->dataFile);
+
         free(handle->dataPath);
         free(handle->indexPath);
         free(handle);
+
         RETURNINTX(KA_ERROR_IO);
     }
 
-    // Initialize cache
+    /* Initialize cache. */
     cache_init(handle);
 
-    // Initialize statistics
+    /* Initialize statistics. */
     handle->stats.startTime = time(NULL);
     handle->stats.reads = 0;
     handle->stats.writes = 0;
@@ -283,9 +361,10 @@ PROCEDURE(openfile) {
     handle->stats.totalBytesRead = 0;
     handle->stats.totalBytesWritten = 0;
 
-    // Return handle as integer
+    /* Return handle as integer. */
     RETURNINTX((intptr_t)handle);
-ENDPROC
+
+    ENDPROC
 }
 
 PROCEDURE(writekey) {
@@ -430,6 +509,7 @@ PROCEDURE(deletekey) {
         RETURNINTX(KA_ERROR_IO);
     }
 
+    cache_remove(handle, key);
     // Update statistics
     handle->stats.deletes++;
 
@@ -455,6 +535,78 @@ PROCEDURE(listkeys) {
     }
 
     RETURNINTX(count);
+    ENDPROC
+}
+
+/**
+ * Return the first non-deleted key and reset the handle-local traversal.
+ *
+ * The cursor is maintained separately from indexFile's FILE position because
+ * lookups and other database operations seek on the same stream.
+ */
+PROCEDURE(firstkey) {
+    struct FileHandle* handle = (struct FileHandle*)GETINT(ARG0);
+    struct IndexRecord record;
+
+    if (!handle) {
+        log_error("firstkey", KA_ERROR_PARAM, "Invalid handle");
+        RETURNSTRX("ERROR");
+    }
+
+    handle->indexCursor = 0;
+    while (1) {
+        if (fseek(handle->indexFile, handle->indexCursor, SEEK_SET) != 0) {
+            log_error("firstkey", KA_ERROR_IO, "Failed to seek index file");
+            RETURNSTRX("ERROR");
+        }
+
+        if (fread(&record, sizeof(record), 1, handle->indexFile) != 1) {
+            if (feof(handle->indexFile)) {
+                RETURNSTRX("NOT_FOUND");
+            }
+            log_error("firstkey", KA_ERROR_IO, "Failed to read index record");
+            RETURNSTRX("ERROR");
+        }
+
+        handle->indexCursor += (long)sizeof(record);
+        if (!record.deleted) {
+            RETURNSTRX(record.key);
+        }
+    }
+    ENDPROC
+}
+
+/**
+ * Return the next non-deleted key from the handle-local traversal.
+ */
+PROCEDURE(nextkey) {
+    struct FileHandle* handle = (struct FileHandle*)GETINT(ARG0);
+    struct IndexRecord record;
+
+    if (!handle) {
+        log_error("nextkey", KA_ERROR_PARAM, "Invalid handle");
+        RETURNSTRX("ERROR");
+    }
+
+    while (1) {
+        if (fseek(handle->indexFile, handle->indexCursor, SEEK_SET) != 0) {
+            log_error("nextkey", KA_ERROR_IO, "Failed to seek index file");
+            RETURNSTRX("ERROR");
+        }
+
+        if (fread(&record, sizeof(record), 1, handle->indexFile) != 1) {
+            if (feof(handle->indexFile)) {
+                RETURNSTRX("NOT_FOUND");
+            }
+            log_error("nextkey", KA_ERROR_IO, "Failed to read index record");
+            RETURNSTRX("ERROR");
+        }
+
+        handle->indexCursor += (long)sizeof(record);
+        if (!record.deleted) {
+            RETURNSTRX(record.key);
+        }
+    }
     ENDPROC
 }
 
@@ -561,6 +713,8 @@ PROCEDURE(compact_database) {
         log_error("compact_database", KA_ERROR_IO, "Failed to reopen files after compaction");
         RETURNINTX(KA_ERROR_IO);
     }
+
+    handle->indexCursor = 0;
 
     RETURNINTX(KA_SUCCESS);
     ENDPROC
@@ -701,48 +855,77 @@ static void cache_init(struct FileHandle* handle) {
     handle->cacheMisses = 0;
 }
 
-static void cache_put(struct FileHandle* handle, const char* key, const char* value) {
+
+static void cache_put(struct FileHandle *handle,
+                      const char *key,
+                      const char *value)
+{
     int oldest = 0;
     time_t oldestTime = time(NULL);
     int i;
 
-    // Find empty slot or oldest entry
+    /* Replace an existing entry first. */
+    for (i = 0; i < CACHE_SIZE; i++) {
+        if (handle->cache[i].value != NULL &&
+            strcmp(handle->cache[i].key, key) == 0) {
+
+            char *new_value = strdup(value);
+            if (!new_value) {
+                return;
+            }
+
+            free(handle->cache[i].value);
+            handle->cache[i].value = new_value;
+            handle->cache[i].timestamp = time(NULL);
+            handle->cache[i].hits = 1;
+            return;
+            }
+    }
+
+    /* Find an empty slot or the oldest entry. */
     for (i = 0; i < CACHE_SIZE; i++) {
         if (handle->cache[i].value == NULL) {
             oldest = i;
             break;
         }
+
         if (handle->cache[i].timestamp < oldestTime) {
             oldest = i;
             oldestTime = handle->cache[i].timestamp;
         }
     }
 
-    // Free old entry if exists
     if (handle->cache[oldest].value) {
         free(handle->cache[oldest].value);
     }
 
-    // Store new entry
     strncpy(handle->cache[oldest].key, key, MAX_KEY_LENGTH - 1);
+    handle->cache[oldest].key[MAX_KEY_LENGTH - 1] = '\0';
+
     handle->cache[oldest].value = strdup(value);
     handle->cache[oldest].timestamp = time(NULL);
     handle->cache[oldest].hits = 1;
 
-    if (handle->cacheCount < CACHE_SIZE) handle->cacheCount++;
+    if (handle->cacheCount < CACHE_SIZE) {
+        handle->cacheCount++;
+    }
 }
 
-static char* cache_get(struct FileHandle* handle, const char* key) {
+static char *cache_get(struct FileHandle *handle, const char *key)
+{
     int i;
 
-    for (i = 0; i < handle->cacheCount; i++) {
-        if (strcmp(handle->cache[i].key, key) == 0) {
+    for (i = 0; i < CACHE_SIZE; i++) {
+        if (handle->cache[i].value != NULL &&
+            strcmp(handle->cache[i].key, key) == 0) {
+
             handle->cache[i].hits++;
             handle->cache[i].timestamp = time(NULL);
             handle->cacheHits++;
             return handle->cache[i].value;
-        }
+            }
     }
+
     handle->cacheMisses++;
     return NULL;
 }
@@ -929,6 +1112,8 @@ LOADFUNCS
     ADDPROC(readkey,     "keyaccess._readkey",     "b", ".string", "handle=.int,key=.string");
     ADDPROC(deletekey,   "keyaccess._deletekey",   "b", ".int",    "handle=.int,key=.string");
     ADDPROC(listkeys,    "keyaccess._listkey",     "b", ".int",    "handle=.int");
+    ADDPROC(firstkey,    "keyaccess._firstkey",    "b", ".string", "handle=.int");
+    ADDPROC(nextkey,     "keyaccess._nextkey",     "b", ".string", "handle=.int");
     ADDPROC(begin_transaction, "keyaccess._txbegin",   "b", ".int",    "handle=.int");
     ADDPROC(commit_transaction, "keyaccess._txcommit", "b", ".int",    "handle=.int");
     ADDPROC(rollback_transaction, "keyaccess._txrollback", "b", ".int", "handle=.int");

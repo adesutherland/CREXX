@@ -180,6 +180,22 @@ KeyDB: class
     return _listkey(handle)
 
   /**
+   * Start sequential traversal and return the first active key.
+   * Returns "NOT_FOUND" when the database has no active keys.
+   * @return .string Key or "NOT_FOUND".
+   */
+  firstKey: method = .string
+    return _firstkey(handle)
+
+  /**
+   * Continue sequential traversal and return the next active key.
+   * Returns "NOT_FOUND" at end of traversal.
+   * @return .string Key or "NOT_FOUND".
+   */
+  nextKey: method = .string
+    return _nextkey(handle)
+
+  /**
    * Return formatted statistics text.
    * @return .string
    */
