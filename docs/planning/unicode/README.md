@@ -1,6 +1,6 @@
 # Level L Language Tooling And Level G Unicode Research Track
 
-Status: research charter and work plan; implementation has not started.
+Status: Phase 1 complete; Phase 2 NFD reference proof in progress.
 
 Branch: `unicode`, based on `origin/develop` at `7b78375bd` on 2026-08-25.
 The branch is intentionally kept separate from `develop` until its contracts,
@@ -300,7 +300,7 @@ manuals' source notation.
 
 Gate: local and remote heads resolve to the same retained commit.
 
-### 1. Contract And Input Freeze
+### 1. Contract And Input Freeze — complete
 
 - Approve the Level L/Level G boundary and explicit non-goals.
 - Pin Unicode 17.0.0 inputs, checksums, provenance, and licensing.
@@ -311,9 +311,12 @@ Gate: local and remote heads resolve to the same retained commit.
 - Defer start conditions, trailing context, captures/tags, streaming refill, and
   arbitrary code actions unless the first use case requires them.
 
-Gate 1: approved contracts and fixture manifest; no language syntax change.
+Gate 1: passed on 2026-08-25. The approved defaults are recorded in
+`experiments/unicode/README.md`; Unicode 17.0.0 and ICU 78.3 source fixtures,
+licenses, provenance, and SHA-256 checksums are retained under
+`experiments/unicode/inputs/`. No language syntax changed.
 
-### 2. Unicode-Rule Transcription PoC In re2c
+### 2. Unicode-Rule Transcription PoC In re2c — in progress
 
 - Select the first manual-defined compare, case-fold, or NFD rule slice.
 - Duplicate the IBM-oriented rules in ordinary re2c and retain a correspondence
@@ -456,18 +459,25 @@ Gate 12: explicit integration and publication approval.
 - benchmark corpus, build mode, host details, and retained baseline; and
 - a decision ledger for each proposed CREXX binary/language/compiler change.
 
-## Immediate Decisions Requested Before Phase 1 Implementation
+## Phase 1 Decisions Accepted
 
-1. Confirm that `unicode` is the intended durable remote branch name.
-2. Confirm the recommended re2c Unicode-rule transcription/conformance PoC.
-3. Confirm Unicode 17.0.0 as the first pinned data set.
-4. Decide whether downloaded UCD source files are retained in the repository or
-   fetched into a checksum-verified build cache while manifests and generated
-   product tables are retained.
-5. Decide whether generated Level L `.crexx` is committed, regenerated in the
-   build, or both (committed output plus a reproducibility check).
-6. Confirm that the eventual Level L rule syntax is CREXX-native and merely
-   re2c-inspired, with no compatibility promise to re2c or the IBM notation.
+On 2026-08-25 Adrian approved Phase 1 and Phase 2 using the recommended
+defaults:
 
-No implementation beyond branch establishment and this research plan should
-begin until these decisions are accepted.
+1. `unicode` is the durable remote research branch.
+2. The first executable proof uses ordinary vendored re2c and complete
+   applicable conformance data.
+3. Unicode 17.0.0 is the pinned first data set.
+4. Downloaded source fixtures are retained in the repository with provenance,
+   licensing, and SHA-256 verification.
+5. Accepted generated reference source is committed and must also pass a
+   reproducibility check; transient build products are not committed.
+6. The eventual Level L surface is CREXX-native and re2c-inspired, with no
+   syntax compatibility promise to re2c or ICU `gennorm2`.
+
+Research identified ICU `gennorm2` and its `nfc.txt` data-file notation as the
+specific IBM-origin rule surface for the first transcription. ICU 78.3's file
+is explicitly generated for Unicode 17.0.0 and represents combining classes,
+two-way canonical mappings, and one-way canonical mappings compactly. The Phase
+2 proof therefore targets the NFD half of those rules; NFC composition remains
+outside this gate.
