@@ -150,7 +150,36 @@ endif()
 
 add_executable(address_spawn_transfer_fixture address_spawn_transfer_fixture.c)
 
+add_executable(linein_stdin_harness linein_stdin_harness.c)
+
+set(_linein_stdin_program "${CMAKE_CURRENT_BINARY_DIR}/ts_linein_stdin.rxbin")
+add_custom_command(
+        OUTPUT ${_linein_stdin_program}
+        COMMAND $<TARGET_FILE:rxc> -x -i ${CMAKE_BINARY_DIR}/bin
+                -o ts_linein_stdin ${CMAKE_CURRENT_SOURCE_DIR}/ts_linein_stdin.crexx
+        COMMAND $<TARGET_FILE:rxas> -o ts_linein_stdin ts_linein_stdin
+        DEPENDS rxc rxas compiler_exit_bin library rxvme linein_stdin_harness
+                ${CMAKE_CURRENT_SOURCE_DIR}/ts_linein_stdin.crexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Building the linein(stdin) prompt regression"
+        VERBATIM
+)
+add_custom_target(ts_linein_stdin_artifact ALL DEPENDS ${_linein_stdin_program})
+
 add_custom_target(testbifs ALL)
+add_dependencies(testbifs ts_linein_stdin_artifact)
+
+add_test(
+        NAME ts_linein_stdin_prompt
+        COMMAND $<TARGET_FILE:linein_stdin_harness>
+                $<TARGET_FILE:rxvme> ${_linein_stdin_program}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+set_tests_properties(ts_linein_stdin_prompt PROPERTIES
+        LABELS "classlib;interpreter;stdin"
+        PASS_REGULAR_EXPRESSION "PASS: linein stdin returns after one newline"
+        TIMEOUT 10
+)
 
 set(_loadmodule_provider "${CMAKE_CURRENT_BINARY_DIR}/ts_loadmodule_provider.rxbin")
 add_custom_command(
