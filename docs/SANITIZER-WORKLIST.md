@@ -14,6 +14,13 @@ also passes both Linux x64 ASan/LSan and macOS arm64 ASan on that commit.
 SAN-001 through SAN-005 and SAN-QA-001 through SAN-QA-007 are therefore closed
 as sanitizer findings.
 
+Status at 2026-08-26: SAN-QA-008 is closed after the synchronized hotfix passed
+the original broad macOS arm64 trigger locally and GitHub Sanitizer QA run
+[32958593912](https://github.com/adesutherland/CREXX/actions/runs/32958593912)
+passed both Linux x64 ASan/LSan and macOS arm64 ASan on final published code
+revision `a744b4d2551d795cf9bbf09c46c5a3fd71e53d46`. The stronger diagnostic
+remains as regression evidence; no sanitizer or product failure reproduced.
+
 A later production process-channel repair in `c87809d2b` is not a sanitizer
 finding. Its exact three-test process panel passes ordinary Debug at
 `cmake-build-debug/asan-logs/20260823-100116-ctest` and leak-enabled Linux
@@ -33,6 +40,52 @@ ordinary Debug gate then passes 2,363/2,363 at
 - No reproducible sanitizer or product defect from this campaign remains open.
 
 ## Qualification infrastructure repairs
+
+### SAN-QA-008 — saturated child redirect loses typed timeout completion
+
+Status: closed; the exact macOS arm64 ASan failure and retained runner artifact
+are identified, the failure did not repeat in focused or contended local runs,
+and the local plus final-head broad platform gates pass.
+
+- Scope: the byte-channel child-process provider's deadline and saturated
+  output-redirect completion path, exercised by `rxvmchannel_byte_provider`.
+- Failure: macOS arm64 Sanitizer QA run
+  [32879812936](https://github.com/adesutherland/CREXX/actions/runs/32879812936)
+  failed only `rxvmchannel_byte_provider` at revision
+  `6fd40945d8665c5184b1044269697412310b538f`. The retained `ctest.log`
+  reports `FAIL: saturated redirect preserves typed timeout completion`.
+  There is no AddressSanitizer memory diagnostic in the retained log; this is
+  nevertheless a first-party failure in the maintained sanitizer lane and is
+  release-blocking until qualified.
+- Original trigger: `tools/asan-run.sh --phase full --build-jobs 4
+  --test-jobs 8 --build-leaks off --leaks off`, as recorded in the uploaded
+  `sanitizer-logs-macos` artifact for the run above.
+- Smallest permanent reproducer: the saturated bounded-output deadline case in
+  `interpreter/tests/test_rxvmchannel_byte.c`, run with
+  `tools/asan-run.sh --phase ctest --regex '^rxvmchannel_byte_provider$'
+  --leaks off --test-jobs 1` after building the focused target through the
+  runner. The case now reports both the returned completion state and error
+  code if it fails, so a future lane failure is diagnostic rather than another
+  one-bit assertion.
+- Local evidence: 200 serial ordinary Debug repetitions, 200 serial macOS
+  arm64 ASan repetitions and 400 macOS arm64 ASan repetitions across eight
+  concurrent runner-managed CTest processes all passed on the synchronized
+  hotfix source. The original broad macOS arm64 trigger then passed its build
+  and all 2,378/2,378 CTests on code commit `71aa1fd15` at
+  `cmake-build-debugasan/asan-logs/20260826-104630-full`; the formerly failing
+  `rxvmchannel_byte_provider` passed as test 1151 under eight-way load. No
+  memory-safety report or typed-state failure was reproduced.
+- Closure: GitHub Sanitizer QA run
+  [32958593912](https://github.com/adesutherland/CREXX/actions/runs/32958593912)
+  passed both macOS arm64 ASan and Linux x64 ASan/LSan on final published code
+  revision `a744b4d2551d795cf9bbf09c46c5a3fd71e53d46`, after the complete local
+  macOS arm64 ASan pass above. If the test recurs, its retained state and error
+  code distinguish deadline publication, child launch and redirect shutdown;
+  do not weaken the assertion or timeout.
+- Acceptance: retain a focused regression that fails for the original reason,
+  pass the same focused shape in ordinary Debug and maintained sanitizer
+  builds, rerun the original broad trigger cleanly, and pass both GitHub
+  sanitizer lanes on the final published revision.
 
 ### SAN-QA-007 — RXQUEUE export variants share a temporary file
 

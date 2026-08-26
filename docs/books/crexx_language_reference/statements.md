@@ -85,8 +85,12 @@ A fresh array needs no preliminary `arraydrop`. Reusing without a drop is the
 supported accumulation form, not an implicit reset operation.
 
 When `OUTPUT` or `ERROR` is omitted, that stream is written to the normal cRexx
-standard stream and flushed as the command emits it. Long-running later work
-does not delay already-emitted CREXX command output until task completion.
+standard stream and flushed as the command emits it. This includes the
+corresponding child stream from `ADDRESS CREXX "run ..."`: no hidden capture
+is inserted before the inherited stream. Long-running child or later work does
+not delay already-emitted CREXX command output until command or task
+completion. A stream with an explicit `OUTPUT` or `ERROR` destination retains
+the requested string/array capture semantics.
 
 ### Built-In Command Environments
 
