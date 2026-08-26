@@ -9,6 +9,17 @@ build_jobs=${CREXX_BUILD_JOBS:-10}
 cxx_bin=${CXX:-c++}
 
 mkdir -p "$work_dir/rxtvm" "$work_dir/rxbvm"
+# rxc resolves imports from the output directory.  Reusing a noopt directory
+# can therefore make an old copy of the module being rebuilt visible as an
+# import and, at present, abort the compiler.  Give every validation run a
+# clean, retained directory; CREXX_LEVEL_L_BOOTSTRAP_NOOPT_DIR remains useful
+# for a caller that already provides a clean staging location.
+if [ -n "${CREXX_LEVEL_L_BOOTSTRAP_NOOPT_DIR:-}" ]; then
+    noopt_dir=$CREXX_LEVEL_L_BOOTSTRAP_NOOPT_DIR
+    mkdir -p "$noopt_dir"
+else
+    noopt_dir=$(mktemp -d "$work_dir/noopt.XXXXXX")
+fi
 
 build_log="$work_dir/product-build.log"
 if [ ! -f "$product_build_dir/CMakeCache.txt" ]; then
@@ -43,6 +54,7 @@ generated_dir="$script_dir/generated"
 nfc_input="$repo_dir/experiments/unicode/inputs/icu-78.3/nfc.txt"
 normalization_input="$repo_dir/experiments/unicode/inputs/unicode-17.0.0/ucd/NormalizationTest.txt"
 unicode_data_input="$repo_dir/experiments/unicode/inputs/unicode-17.0.0/ucd/UnicodeData.txt"
+normalization_properties_input="$repo_dir/experiments/unicode/inputs/unicode-17.0.0/ucd/DerivedNormalizationProps.txt"
 poc_dir="$repo_dir/experiments/unicode/poc"
 
 if [ "$("$re2c_bin" --vernum)" != "040501" ]; then
@@ -64,6 +76,25 @@ compile_source() {
     fi
     if [ -s "$log_file" ]; then
         echo "Level L build emitted unexpected diagnostics; contents of $log_file:" >&2
+        cat "$log_file" >&2
+        exit 1
+    fi
+}
+
+compile_source_noopt() {
+    source_file=$1
+    output_base=$2
+    import_dir=$3
+    log_file=$4
+    if ! "$rxc_bin" -n -x -i "$product_build_dir/bin" -i "$import_dir" \
+            -o "$output_base" "$source_file" > "$log_file" 2>&1 || \
+       ! "$rxas_bin" -n -o "$output_base" "$output_base" >> "$log_file" 2>&1; then
+        echo "Noopt Level L build failed; contents of $log_file:" >&2
+        cat "$log_file" >&2
+        exit 1
+    fi
+    if [ -s "$log_file" ]; then
+        echo "Noopt Level L build emitted unexpected diagnostics; contents of $log_file:" >&2
         cat "$log_file" >&2
         exit 1
     fi
@@ -146,39 +177,91 @@ compile_source "$script_dir/test_unicode_nfd.crexx" \
 compile_source "$script_dir/unicode_data.crexx" \
     "$work_dir/unicode_data" "$work_dir" \
     "$work_dir/unicode-data-build.log"
+compile_source "$script_dir/unicode_normprops.crexx" \
+    "$work_dir/unicode_normprops" "$work_dir" \
+    "$work_dir/unicode-normprops-build.log"
 compile_source "$script_dir/unicode_d.crexx" \
     "$work_dir/unicode_d" "$work_dir" \
     "$work_dir/unicode-d-build.log"
+compile_source "$script_dir/unicode_nfd_lexer_generate.crexx" \
+    "$work_dir/unicode_nfd_lexer_generate" "$work_dir" \
+    "$work_dir/unicode-nfd-lexer-generate-build.log"
+(cd "$work_dir" && "$rxlink_bin" -c "$script_dir/unicode_nfd_lexer_generate.ctl")
+
+generate_nfd_lexer() {
+    vm_bin=$1
+    vm_name=$2
+    output_dir="$work_dir/$vm_name"
+    (cd "$work_dir" && "$vm_bin" unicode_nfd_lexer_generate \
+        "$product_build_dir/bin/library" \
+        "$product_build_dir/bin/rxfnsl" \
+        unicode_nfd_lexer_generate_linked \
+        -a "$unicode_data_input" "$normalization_properties_input" \
+        "$output_dir/level_l_unicode_nfd.re") \
+        > "$output_dir/unicode-nfd-lexer-generate.txt"
+}
+
+generate_nfd_lexer "$rxtvm_bin" rxtvm
+generate_nfd_lexer "$rxbvm_bin" rxbvm
+cmp "$work_dir/rxtvm/level_l_unicode_nfd.re" "$work_dir/rxbvm/level_l_unicode_nfd.re"
+cmp "$work_dir/rxtvm/unicode-nfd-lexer-generate.txt" "$work_dir/rxbvm/unicode-nfd-lexer-generate.txt"
+(cd "$adapter_dir" && "$re2c_bin" --lang python \
+    --syntax crexx_transducer.syntax --input-encoding utf8 \
+    --no-debug-info --no-generation-date --no-version \
+    -o "$work_dir/level_l_unicode_nfd.crexx" \
+    "$work_dir/rxtvm/level_l_unicode_nfd.re")
+perl -pi -e 's/[ \t]+$//' "$work_dir/level_l_unicode_nfd.crexx"
+compile_source "$work_dir/level_l_unicode_nfd.crexx" \
+    "$work_dir/level_l_unicode_nfd" "$work_dir" \
+    "$work_dir/level-l-unicode-nfd-build.log"
 (cd "$work_dir" && "$rxlink_bin" -c "$script_dir/unicode_d.ctl")
+
+grep -F ".jtable " "$work_dir/level_l_unicode_nfd.rxas" > /dev/null
+grep -F "jumpi " "$work_dir/level_l_unicode_nfd.rxas" > /dev/null
+grep -F "bgetu8 " "$work_dir/level_l_unicode_nfd.rxas" > /dev/null
 
 normalize_rxas_audit="$work_dir/unicode-d-normalize.rxas"
 normalize_binary_rxas_audit="$work_dir/unicode-d-normalize-binary.rxas"
+compose_pair_rxas_audit="$work_dir/unicode-normalization-compose-pair.rxas"
 awk '/^§unicode_d\.unicodednormalizer\.normalize\(\)/ { active = 1 }
      /^§unicode_d\.unicodednormalizer\.normalize_binary\(\)/ { if (active) exit }
      active { print }' "$work_dir/unicode_d.rxas" > "$normalize_rxas_audit"
 awk '/^§unicode_d\.unicodednormalizer\.normalize_binary\(\)/ { active = 1 }
      /^§unicode_d\.unicodednormalizer\.is_normalized\(\)/ { if (active) exit }
      active { print }' "$work_dir/unicode_d.rxas" > "$normalize_binary_rxas_audit"
-grep -E '^[[:space:]]*sblen ' "$normalize_rxas_audit" > /dev/null
-grep -E '^[[:space:]]*sgetu8 ' "$work_dir/unicode_d.rxas" > /dev/null
-grep -E '^[[:space:]]*sbmove ' "$work_dir/unicode_d.rxas" > /dev/null
-if grep -E '^[[:space:]]*(scopy|stobin) ' "$normalize_rxas_audit" > /dev/null; then
-    echo "optimized string normalizer copies or converts its complete input" >&2
-    exit 1
-fi
-normalize_bcopy_count=$(awk '$1 == "bcopy" { count++ } END { print count + 0 }' "$normalize_rxas_audit")
-normalize_bintos_count=$(awk '$1 == "bintos" { count++ } END { print count + 0 }' "$normalize_rxas_audit")
-if [ "$normalize_bcopy_count" -ne 1 ] || [ "$normalize_bintos_count" -ne 1 ]; then
-    echo "optimized string normalizer must retain exactly one result conversion copy" >&2
-    exit 1
-fi
+awk '/^§unicode_d\.unicodednormalizer\._compose_pair\(\)/ { active = 1 }
+     active && seen && /^§/ { exit }
+     active { print; seen = 1 }' "$work_dir/unicode_d.rxas" > "$compose_pair_rxas_audit"
 if grep -E '^[[:space:]]*(scopy|bcopy|stobin|bintos) ' "$normalize_binary_rxas_audit" > /dev/null; then
     echo "optimized binary normalizer unexpectedly copies or converts its input/result" >&2
+    exit 1
+fi
+grep -E '^[[:space:]]*bgetu32 ' "$compose_pair_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*bgetu16 ' "$compose_pair_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*imod ' "$compose_pair_rxas_audit" > /dev/null
+if grep -E '^[[:space:]]*(scopy|bcopy|stobin|bintos|bresize) ' "$compose_pair_rxas_audit" > /dev/null; then
+    echo "optimized canonical pair lookup copies, converts, or resizes data" >&2
     exit 1
 fi
 compile_source "$script_dir/test_unicode_d.crexx" \
     "$work_dir/test_unicode_d" "$work_dir" \
     "$work_dir/test-unicode-d-build.log"
+
+compile_source_noopt "$work_dir/gennorm2.crexx" \
+    "$noopt_dir/gennorm2" "$product_build_dir/bin" \
+    "$noopt_dir/gennorm2-build.log"
+for module in unicode_gennorm2 unicode_data unicode_normprops unicode_d; do
+    compile_source_noopt "$script_dir/$module.crexx" \
+        "$noopt_dir/$module" "$noopt_dir" \
+        "$noopt_dir/$module-build.log"
+done
+compile_source_noopt "$work_dir/level_l_unicode_nfd.crexx" \
+    "$noopt_dir/level_l_unicode_nfd" "$noopt_dir" \
+    "$noopt_dir/level-l-unicode-nfd-build.log"
+compile_source_noopt "$script_dir/test_unicode_d.crexx" \
+    "$noopt_dir/test_unicode_d" "$noopt_dir" \
+    "$noopt_dir/test_unicode_d-build.log"
+(cd "$noopt_dir" && "$rxlink_bin" -c "$script_dir/unicode_d.ctl")
 
 reference_cpp="$work_dir/nfd_reference.cpp"
 reference_bin="$work_dir/nfd_reference"
@@ -257,13 +340,14 @@ run_unicode_nfd_test() {
         > "$output_file"
 }
 
-run_unicode_d_test() {
+run_unicode_normalization_test() {
     vm_bin=$1
-    output_file=$2
-    (cd "$work_dir" && "$vm_bin" test_unicode_d \
+    execution_dir=$2
+    output_file=$3
+    (cd "$execution_dir" && "$vm_bin" test_unicode_d \
         "$product_build_dir/bin/library" \
         "$product_build_dir/bin/rxfnsl" \
-        unicode_d_linked -a "$unicode_data_input" "$normalization_input") \
+        unicode_d_linked -a "$unicode_data_input" "$normalization_properties_input" "$normalization_input") \
         > "$output_file"
 }
 
@@ -279,8 +363,10 @@ run_unicode_parser_test "$rxtvm_bin" "$work_dir/rxtvm-unicode-parser.txt"
 run_unicode_parser_test "$rxbvm_bin" "$work_dir/rxbvm-unicode-parser.txt"
 run_unicode_nfd_test "$rxtvm_bin" "$work_dir/rxtvm-unicode-nfd.txt"
 run_unicode_nfd_test "$rxbvm_bin" "$work_dir/rxbvm-unicode-nfd.txt"
-run_unicode_d_test "$rxtvm_bin" "$work_dir/rxtvm-unicode-d.txt"
-run_unicode_d_test "$rxbvm_bin" "$work_dir/rxbvm-unicode-d.txt"
+run_unicode_normalization_test "$rxtvm_bin" "$work_dir" "$work_dir/rxtvm-unicode-normalization.txt"
+run_unicode_normalization_test "$rxbvm_bin" "$work_dir" "$work_dir/rxbvm-unicode-normalization.txt"
+run_unicode_normalization_test "$rxtvm_bin" "$noopt_dir" "$work_dir/rxtvm-unicode-normalization-noopt.txt"
+run_unicode_normalization_test "$rxbvm_bin" "$noopt_dir" "$work_dir/rxbvm-unicode-normalization-noopt.txt"
 
 "$reference_bin" --dump-rules "$nfc_input" > "$work_dir/reference-gennorm2.semantic"
 "$reference_bin" "$nfc_input" "$normalization_input" > "$work_dir/reference-nfd.txt"
@@ -296,8 +382,10 @@ cmp "$work_dir/reference-gennorm2.semantic" "$work_dir/rxtvm/gennorm2.semantic"
 cmp "$work_dir/rxtvm-unicode-parser.txt" "$work_dir/rxbvm-unicode-parser.txt"
 cmp "$work_dir/rxtvm-unicode-nfd.txt" "$work_dir/rxbvm-unicode-nfd.txt"
 cmp "$script_dir/evidence/nfd-result.txt" "$work_dir/rxtvm-unicode-nfd.txt"
-cmp "$work_dir/rxtvm-unicode-d.txt" "$work_dir/rxbvm-unicode-d.txt"
-cmp "$script_dir/evidence/unicode-d-result.txt" "$work_dir/rxtvm-unicode-d.txt"
+cmp "$work_dir/rxtvm-unicode-normalization.txt" "$work_dir/rxbvm-unicode-normalization.txt"
+cmp "$work_dir/rxtvm-unicode-normalization.txt" "$work_dir/rxtvm-unicode-normalization-noopt.txt"
+cmp "$work_dir/rxtvm-unicode-normalization.txt" "$work_dir/rxbvm-unicode-normalization-noopt.txt"
+cmp "$script_dir/evidence/unicode-normalization-result.txt" "$work_dir/rxtvm-unicode-normalization.txt"
 cmp "$poc_dir/evidence/nfd-conformance.txt" "$work_dir/reference-nfd.txt"
 grep -Fx "PASS: Level L bootstrap frontend" "$work_dir/rxtvm-frontend.txt" > /dev/null
 grep -Fx "PASS: authored Level L TinyExpr matches rxfnsl" "$work_dir/rxtvm-tinyexpr.txt" > /dev/null
@@ -306,9 +394,10 @@ grep -Fx "PASS: tokenized gennorm2 parsed into typed Unicode records" "$work_dir
 grep -Fx "PASS: deterministic typed Unicode rule parser and panic contract" "$work_dir/rxtvm-unicode-parser.txt" > /dev/null
 grep -Fx "Focused NFD fixtures: PASS" "$work_dir/rxtvm-unicode-nfd.txt" > /dev/null
 grep -Fx "Result: PASS" "$work_dir/rxtvm-unicode-nfd.txt" > /dev/null
-grep -Fx "Focused prepared D fixtures: PASS" "$work_dir/rxtvm-unicode-d.txt" > /dev/null
-grep -Fx "Prepared D tables: PASS" "$work_dir/rxtvm-unicode-d.txt" > /dev/null
-grep -Fx "Result: PASS" "$work_dir/rxtvm-unicode-d.txt" > /dev/null
+grep -Fx "Focused prepared normalization fixtures: PASS" "$work_dir/rxtvm-unicode-normalization.txt" > /dev/null
+grep -Fx "Prepared normalization tables: PASS" "$work_dir/rxtvm-unicode-normalization.txt" > /dev/null
+grep -Fx "Generated prepared NFD scanner: PASS" "$work_dir/rxtvm-unicode-normalization.txt" > /dev/null
+grep -Fx "Result: PASS" "$work_dir/rxtvm-unicode-normalization.txt" > /dev/null
 
 summary_actual="$work_dir/result.txt"
 {
@@ -323,12 +412,16 @@ summary_actual="$work_dir/result.txt"
     echo "Unicode 17.0.0 NFD conformance: PASS (100170 corpus relations)"
     echo "unlisted scalar NFD identity: PASS (1094978 scalars)"
     echo "C++/re2c NFD oracle: retained conformance evidence reproduced"
-    echo "portable prepared NFD/NFKD image: PASS (1659772 bytes)"
-    echo "Unicode 17.0.0 NFD/NFKD conformance: PASS (200340 corpus relations)"
-    echo "unlisted scalar D-form identity: PASS (1094978 scalars per form)"
-    echo "UTF-8 byte path: strict decode with no whole-input string/binary copy"
+    echo "portable prepared four-form image: PASS (1722756 bytes)"
+    echo "Unicode 17.0.0 NFD/NFKD/NFC/NFKC conformance: PASS (400680 corpus relations)"
+    echo "generated prepared NFD lexer: PASS (2081 mapping rules, 964 mark rules, 429 starter ranges)"
+    echo "generated prepared NFD conformance: PASS (100170 corpus relations)"
+    echo "unlisted scalar four-form identity: PASS (1094978 scalars per form)"
+    echo "primary composition: PASS (961 pairs, 391 starters, 1120 exclusions)"
+    echo "optimized/noopt linked images: byte-identical conformance summaries"
+    echo "UTF-8 byte path: strict binary decode; string wrapper uses explicit conversion"
     echo "generated dispatch: .jtable and jumpi"
-    echo "binary scan/stores: bgetu8, bsetu16, bsetu32, sblen, sgetu8, sbmove"
+    echo "binary scan/stores: bgetu8, bsetu16, bsetu32"
     echo "rxtvm: PASS"
     echo "rxbvm: PASS"
 } > "$summary_actual"

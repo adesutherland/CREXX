@@ -9,11 +9,15 @@ portable Level B NFD table: PASS (1186472 bytes)
 Unicode 17.0.0 NFD conformance: PASS (100170 corpus relations)
 unlisted scalar NFD identity: PASS (1094978 scalars)
 C++/re2c NFD oracle: retained conformance evidence reproduced
-portable prepared NFD/NFKD image: PASS (1659772 bytes)
-Unicode 17.0.0 NFD/NFKD conformance: PASS (200340 corpus relations)
-unlisted scalar D-form identity: PASS (1094978 scalars per form)
-UTF-8 byte path: strict decode with no whole-input string/binary copy
+portable prepared four-form image: PASS (1722756 bytes)
+Unicode 17.0.0 NFD/NFKD/NFC/NFKC conformance: PASS (400680 corpus relations)
+generated prepared NFD lexer: PASS (2081 mapping rules, 964 mark rules, 429 starter ranges)
+generated prepared NFD conformance: PASS (100170 corpus relations)
+unlisted scalar four-form identity: PASS (1094978 scalars per form)
+primary composition: PASS (961 pairs, 391 starters, 1120 exclusions)
+optimized/noopt linked images: byte-identical conformance summaries
+UTF-8 byte path: strict binary decode; string wrapper uses explicit conversion
 generated dispatch: .jtable and jumpi
-binary scan/stores: bgetu8, bsetu16, bsetu32, sblen, sgetu8, sbmove
+binary scan/stores: bgetu8, bsetu16, bsetu32
 rxtvm: PASS
 rxbvm: PASS

@@ -2394,67 +2394,6 @@ RXVM_HANDLER(STOBIN_REG, VM_ADVANCE(1);
     DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  Raw UTF-8 string-byte access.  These operations deliberately stay in byte
- *  space: they do not decode codepoints and they do not materialize a binary
- *  copy of the source string.
- *  -----------------------------------------------------------------------------------
- */
-
-)
-
-RXVM_HANDLER(SBLEN_REG_REG, VM_ADVANCE(2);
-    DEBUG("TRACE - SBLEN R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-    REG_RETURN_INT((rxinteger)op2R->string_length)
-    DISPATCH;
-
-
-)
-
-RXVM_HANDLER(SGETU8_REG_REG_REG, VM_ADVANCE(3);
-    DEBUG("TRACE - SGETU8 R%d,R%d,R%d\n",
-          (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-    {
-        size_t offset;
-        if (!rxvm_memory_range(op2R->string_length,
-                               op3R->int_value, 1u, &offset)) {
-            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-        }
-        else {
-            REG_RETURN_INT((rxinteger)(unsigned char)op2R->string_value[offset])
-        }
-    }
-    DISPATCH;
-
-
-)
-
-RXVM_HANDLER(SBMOVE_REG_REG_REG_REG_REG, VM_ADVANCE(5);
-    DEBUG("TRACE - SBMOVE R%d,R%d,R%d,R%d,R%d\n",
-          (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3),
-          (int)REG_IDX(4), (int)REG_IDX(5));
-    {
-        value *length_value = REG_OP(5);
-        size_t target_offset;
-        size_t source_offset;
-        size_t length;
-        if (!rxvm_rxinteger_to_size(length_value->int_value, &length) ||
-            !rxvm_binary_range(op1R, op2R->int_value,
-                               length, &target_offset) ||
-            !rxvm_memory_range(op3R->string_length, op4R->int_value,
-                               length, &source_offset)) {
-            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-        }
-        else {
-            if (length) {
-                memmove(op1R->binary_value + target_offset,
-                        op3R->string_value + source_offset, length);
-            }
-            clear_vm_private_flags(op1R);
-        }
-    }
-    DISPATCH;
-
-/* ------------------------------------------------------------------------------------
  *  BINTOS_REG  op1.string = op1.binary bytes, validated as UTF-8
  *  -----------------------------------------------------------------------------------
  */

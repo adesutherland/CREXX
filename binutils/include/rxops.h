@@ -681,6 +681,3 @@ X(PGETI_REG_REG_REG, 655, FMT_R_R_R, FLOW_NEXT, 0, "Host-native rxinteger read o
 X(PSETI_REG_REG_REG, 656, FMT_R_R_R, FLOW_NEXT, 0, "Host-native rxinteger write op1[item op2]=op3")
 X(PGETF_REG_REG_REG, 657, FMT_R_R_R, FLOW_NEXT, 0, "Host-native rxfloat read op1=op2[item op3]")
 X(PSETF_REG_REG_REG, 658, FMT_R_R_R, FLOW_NEXT, 0, "Host-native rxfloat write op1[item op2]=op3")
-X(SBLEN_REG_REG, 659, FMT_R_R, FLOW_NEXT, 0, "Stored UTF-8 byte length op1=bytes(op2)")
-X(SGETU8_REG_REG_REG, 660, FMT_R_R_R, FLOW_NEXT, 0, "Read raw UTF-8 byte op1=op2[op3]")
-X(SBMOVE_REG_REG_REG_REG_REG, 661, "RRRRR", FLOW_NEXT, 0, "Copy op5 raw UTF-8 bytes from string op3 offset op4 to binary op1 offset op2")

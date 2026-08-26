@@ -259,9 +259,6 @@ slot, not its string slot. Binary-memory VM instructions exposed at RXAS are:
 - `bupdate rDst,rOffset,rSrc`
 - `stobin rReg`
 - `bintos rReg`
-- `sblen rOut,rString`
-- `sgetu8 rOut,rString,rByteOffset`
-- `sbmove rDst,rDstOffset,rString,rSourceByteOffset,rLength`
 
 Indexes, offsets, and lengths are bytes and zero-based. The typed `bget*` and
 `bset*` instructions use canonical little-endian storage order; they do not use
@@ -318,16 +315,6 @@ writes past the destination length. `stobin` copies the register's current
 string bytes into its binary slot. `bintos` validates the register's current
 binary bytes as UTF-8 and copies them into its string slot; invalid bytes raise
 `UNICODE_ERROR` in UTF builds.
-
-`sblen`, `sgetu8`, and `sbmove` are the read-only raw UTF-8 view of a string.
-`sblen` returns its stored byte length rather than its codepoint length;
-`sgetu8` reads one unsigned byte at a zero-based byte offset; and `sbmove`
-copies an explicitly bounded string byte span into an already-sized binary
-destination. The source string is never converted to or aliased as a binary.
-Invalid source or destination ranges raise `OUT_OF_RANGE` before changing the
-destination. These instructions are intended for validated bytewise text
-algorithms such as Unicode transducers; ordinary text algorithms should retain
-the codepoint-based string instructions.
 
 The explicit string form is
 `substring rDst,rSrc,rStart,rLen`, where positions and lengths count Unicode

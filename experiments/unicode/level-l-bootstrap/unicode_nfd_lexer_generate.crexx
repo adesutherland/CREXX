@@ -1,0 +1,245 @@
+/*
+ * Generate the internal re2c source for the prepared Unicode 17 NFD scanner.
+ *
+ * This is an algorithm-IR lowering step, not an extension to the authored
+ * Level L emit/skip/error surface.  re2c builds the UTF-8 DFA and the retained
+ * cREXX syntax adapter emits its Level B select/jump-table implementation.
+ */
+options levelb
+
+import rxfnsb
+import unicode_data
+import unicode_normprops
+import unicode_d
+
+arg argv = .string[]
+if argv[0] \= 3 then do
+  say "usage: unicode_nfd_lexer_generate UnicodeData.txt DerivedNormalizationProps.txt output.re"
+  return 2
+end
+
+ucd = unicode_data_parse(argv[1], "17.0.0")
+if ucd.status() \= 0 then do
+  say "FAIL: UnicodeData line" ucd.error_line() || ":" ucd.error()
+  return 1
+end
+properties = unicode_normprops_parse(argv[2], "17.0.0")
+if properties.status() \= 0 then do
+  say "FAIL: normalization properties line" properties.error_line() || ":" properties.error()
+  return 1
+end
+tables = unicode_norm_compile(ucd, properties)
+if tables.status() \= 0 then do
+  say "FAIL: prepared normalization table compiler:" tables.error()
+  return 1
+end
+if tables.nfd_mapping_count() \= 2081 |,
+   tables.nfd_identity_starters() \= 1097847 |,
+   tables.nfd_identity_marks() \= 964 then do
+  say "FAIL: prepared NFD scalar partition"
+  return 1
+end
+
+path = argv[3]
+if erasefile(path) \= 0 then return 1
+image = tables.image()
+ccc_offset = <at..u32>(16) image
+bits_offset = <at..u32>(32) image
+records_offset = <at..u32>(64) image
+record_count = <at..u32>(68) image
+if record_count \= 2081 then do
+  say "FAIL: prepared NFD image record count"
+  return 1
+end
+
+call emit_prelude path
+
+/* Emit the complete identity-starter alphabet as compact scalar ranges.
+   U+0000 is kept separate because the bootstrap scanner uses one appended
+   NUL sentinel and distinguishes it by byte position. */
+ignored = charout(path, "    identity_starter = [")
+range_open = 0
+range_first = 0
+range_last = 0
+identity_range_count = 0
+do codepoint = 1 to 0x10FFFF
+  identity = unicode_nfd_lexer_identity(image, ccc_offset, bits_offset, codepoint)
+  if identity then do
+    if range_open = 0 then do
+      range_open = 1
+      range_first = codepoint
+    end
+    range_last = codepoint
+  end
+  else if range_open then do
+    ignored = charout(path, unicode_nfd_lexer_class_range(range_first, range_last))
+    identity_range_count = identity_range_count + 1
+    range_open = 0
+  end
+end
+if range_open then do
+  ignored = charout(path, unicode_nfd_lexer_class_range(range_first, range_last))
+  identity_range_count = identity_range_count + 1
+end
+ignored = charout(path, "];" || "0a"x || "0a"x)
+
+/* Exact prepared mappings come first and bake the deterministic record index
+   into each DFA accepting action. */
+do mapping = 0 to record_count - 1
+  source = <at..u32>(records_offset + mapping * 12) image
+  call unicode_nfd_lexer_emit_line path, "    " || unicode_nfd_lexer_pattern(source) || " {"
+  call unicode_nfd_lexer_emit_line path, "      call _normalizer.lexer_mapping(scan_bytes, " || mapping || ")"
+  call unicode_nfd_lexer_emit_reset path
+  call unicode_nfd_lexer_emit_line path, "    }"
+end
+
+/* Each identity nonstarter carries its prepared CCC directly in the action.
+   Mapped nonstarters were emitted above and are excluded here. */
+mark_count = 0
+do codepoint = 1 to 0x10FFFF
+  if codepoint >= 0xD800 & codepoint <= 0xDFFF then iterate
+  ccc = <at..u8>(ccc_offset + codepoint) image
+  if ccc = 0 | unicode_nfd_lexer_mapped(image, bits_offset, codepoint) then iterate
+  call unicode_nfd_lexer_emit_line path, "    " || unicode_nfd_lexer_pattern(codepoint) || " {"
+  call unicode_nfd_lexer_emit_line path, "      call _normalizer.lexer_mark(scan_bytes, start, pos - start, " || ccc || ")"
+  call unicode_nfd_lexer_emit_reset path
+  call unicode_nfd_lexer_emit_line path, "    }"
+  mark_count = mark_count + 1
+end
+if mark_count \= 964 then do
+  ignored = charout(path)
+  say "FAIL: generated identity-mark rule count" mark_count
+  return 1
+end
+
+call unicode_nfd_lexer_emit_line path, "    [\uAC00-\uD7A3] {"
+call unicode_nfd_lexer_emit_line path, "      call _normalizer.lexer_hangul(scan_bytes, start)"
+call unicode_nfd_lexer_emit_reset path
+call unicode_nfd_lexer_emit_line path, "    }"
+
+call unicode_nfd_lexer_emit_line path, "    (identity_starter)+ {"
+call unicode_nfd_lexer_emit_line path, "      call _normalizer.lexer_raw(scan_bytes, start, pos - start)"
+call unicode_nfd_lexer_emit_reset path
+call unicode_nfd_lexer_emit_line path, "    }"
+
+call unicode_nfd_lexer_emit_line path, '    "\u0000" {'
+call unicode_nfd_lexer_emit_line path, "      if start = source_len then do"
+call unicode_nfd_lexer_emit_line path, "        call _normalizer.lexer_finish(scan_bytes)"
+call unicode_nfd_lexer_emit_line path, '        if _normalizer.status() \= 0 then return ""'
+call unicode_nfd_lexer_emit_line path, "        result_binary = _normalizer.lexer_result_binary()"
+call unicode_nfd_lexer_emit_line path, "        result = result_binary as .string"
+call unicode_nfd_lexer_emit_line path, "        return result"
+call unicode_nfd_lexer_emit_line path, "      end"
+call unicode_nfd_lexer_emit_line path, "      call _normalizer.lexer_raw(scan_bytes, start, pos - start)"
+call unicode_nfd_lexer_emit_reset path
+call unicode_nfd_lexer_emit_line path, "    }"
+
+call unicode_nfd_lexer_emit_line path, "    * {"
+call unicode_nfd_lexer_emit_line path, '      call _normalizer.lexer_fail("invalid UTF-8 input")'
+call unicode_nfd_lexer_emit_line path, '      return ""'
+call unicode_nfd_lexer_emit_line path, "    }"
+call unicode_nfd_lexer_emit_line path, "*/"
+call unicode_nfd_lexer_emit_line path, ""
+call unicode_nfd_lexer_emit_line path, '    return ""'
+call unicode_nfd_lexer_emit_line path, ""
+call unicode_nfd_lexer_emit_line path, "  status: method = .int"
+call unicode_nfd_lexer_emit_line path, "    return _normalizer.status()"
+call unicode_nfd_lexer_emit_line path, ""
+call unicode_nfd_lexer_emit_line path, "  error: method = .string"
+call unicode_nfd_lexer_emit_line path, "    return _normalizer.error()"
+call unicode_nfd_lexer_emit_line path, ""
+call unicode_nfd_lexer_emit_line path, "  bucket_flushes: method = .int"
+call unicode_nfd_lexer_emit_line path, "    return _normalizer.bucket_flushes()"
+
+if charout(path) \= 0 then return 1
+say "Prepared NFD generated mapping rules:" record_count
+say "Prepared NFD generated identity-mark rules:" mark_count
+say "Prepared NFD generated identity-starter ranges:" identity_range_count
+say "Result: PASS"
+return 0
+
+unicode_nfd_lexer_identity: procedure = .int
+  arg image = .binary, ccc_offset = .int, bits_offset = .int, codepoint = .int
+  if codepoint >= 0xD800 & codepoint <= 0xDFFF then return 0
+  if codepoint >= 0xAC00 & codepoint <= 0xD7A3 then return 0
+  if <at..u8>(ccc_offset + codepoint) image \= 0 then return 0
+  return unicode_nfd_lexer_mapped(image, bits_offset, codepoint) = 0
+
+unicode_nfd_lexer_mapped: procedure = .int
+  arg image = .binary, bits_offset = .int, codepoint = .int
+  byte = <at..u8>(bits_offset + (codepoint <idiv> 8)) image
+  mask = 1 <shl> (codepoint <mod> 8)
+  return (byte <and> mask) \= 0
+
+unicode_nfd_lexer_pattern: procedure = .string
+  arg codepoint = .int
+  if codepoint <= 0xFFFF then return '"\u' || right(d2x(codepoint), 4, "0") || '"'
+  return '"\U' || right(d2x(codepoint), 8, "0") || '"'
+
+unicode_nfd_lexer_classpoint: procedure = .string
+  arg codepoint = .int
+  if codepoint <= 0xFFFF then return "\u" || right(d2x(codepoint), 4, "0")
+  return "\U" || right(d2x(codepoint), 8, "0")
+
+unicode_nfd_lexer_class_range: procedure = .string
+  arg first = .int, last = .int
+  if first = last then return unicode_nfd_lexer_classpoint(first)
+  return unicode_nfd_lexer_classpoint(first) || "-" || unicode_nfd_lexer_classpoint(last)
+
+unicode_nfd_lexer_emit_reset: procedure = .void
+  arg path = .string
+  call unicode_nfd_lexer_emit_line path, "      start = pos"
+  call unicode_nfd_lexer_emit_line path, "      state = 0"
+  call unicode_nfd_lexer_emit_line path, "      iterate"
+  return
+
+unicode_nfd_lexer_emit_line: procedure = .void
+  arg path = .string, line = .string
+  ignored = charout(path, line || "0a"x)
+  return
+
+emit_prelude: procedure = .void
+  arg path = .string
+  call unicode_nfd_lexer_emit_line path, "/* Generated prepared Unicode 17 NFD scanner. */"
+  call unicode_nfd_lexer_emit_line path, "/* Algorithm IR -> re2c DFA -> Level B control flow. */"
+  call unicode_nfd_lexer_emit_line path, "options levelb"
+  call unicode_nfd_lexer_emit_line path, ""
+  call unicode_nfd_lexer_emit_line path, "namespace level_l_unicode_nfd expose levellunicodenfdnormalizer level_l_unicode_nfd_new"
+  call unicode_nfd_lexer_emit_line path, "import rxfnsb"
+  call unicode_nfd_lexer_emit_line path, "import unicode_d"
+  call unicode_nfd_lexer_emit_line path, ""
+  call unicode_nfd_lexer_emit_line path, "level_l_unicode_nfd_new: procedure = .levellunicodenfdnormalizer"
+  call unicode_nfd_lexer_emit_line path, "  arg tables = .unicode_d..unicodedtables"
+  call unicode_nfd_lexer_emit_line path, "  return .levellunicodenfdnormalizer(tables)"
+  call unicode_nfd_lexer_emit_line path, ""
+  call unicode_nfd_lexer_emit_line path, "levellunicodenfdnormalizer: class"
+  call unicode_nfd_lexer_emit_line path, "  _normalizer = .unicode_d..unicodednormalizer"
+  call unicode_nfd_lexer_emit_line path, ""
+  call unicode_nfd_lexer_emit_line path, "  *: factory"
+  call unicode_nfd_lexer_emit_line path, "    arg tables = .unicode_d..unicodedtables"
+  call unicode_nfd_lexer_emit_line path, '    _normalizer = unicode_d_new(tables, "NFD")'
+  call unicode_nfd_lexer_emit_line path, "    return"
+  call unicode_nfd_lexer_emit_line path, ""
+  call unicode_nfd_lexer_emit_line path, "  normalize: method = .string"
+  call unicode_nfd_lexer_emit_line path, "    arg source = .string"
+  call unicode_nfd_lexer_emit_line path, "    scan_bytes = source as .binary"
+  call unicode_nfd_lexer_emit_line path, "    source_len = <blen>(scan_bytes)"
+  call unicode_nfd_lexer_emit_line path, "    call binresize scan_bytes, source_len + 1"
+  call unicode_nfd_lexer_emit_line path, "    call _normalizer.lexer_begin(source_len)"
+  call unicode_nfd_lexer_emit_line path, '    if _normalizer.status() \= 0 then return ""'
+  call unicode_nfd_lexer_emit_line path, "    pos = 0"
+  call unicode_nfd_lexer_emit_line path, "    start = 0"
+  call unicode_nfd_lexer_emit_line path, "/*!re2c"
+  call unicode_nfd_lexer_emit_line path, "    re2c:yyfill:enable = 0;"
+  call unicode_nfd_lexer_emit_line path, "    re2c:indent:top = 2;"
+  call unicode_nfd_lexer_emit_line path, '    re2c:YYCURSOR = "pos";'
+  call unicode_nfd_lexer_emit_line path, '    re2c:YYINPUT = "scan_bytes";'
+  call unicode_nfd_lexer_emit_line path, '    re2c:yych = "byte";'
+  call unicode_nfd_lexer_emit_line path, '    re2c:yystate = "state";'
+  call unicode_nfd_lexer_emit_line path, "    re2c:state:abort = 0;"
+  call unicode_nfd_lexer_emit_line path, "    re2c:nested-ifs = 1;"
+  call unicode_nfd_lexer_emit_line path, "    re2c:bit-vectors = 0;"
+  call unicode_nfd_lexer_emit_line path, "    re2c:encoding:utf8 = 1;"
+  call unicode_nfd_lexer_emit_line path, "    re2c:encoding-policy = fail;"
+  call unicode_nfd_lexer_emit_line path, ""
+  return

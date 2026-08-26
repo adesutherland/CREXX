@@ -2,10 +2,10 @@
 
 Status: the Level L lexer syntax, Level B bootstrap frontend, authored
 TinyExpr/ICU lexer proofs, typed Unicode-rule parser, scalar NFD baseline, and
-prepared UTF-8 NFD/NFKD experimental engine are complete. The reusable neutral
-IR, native automaton core, general Unicode property/data compiler, final binary
-layout verdict, NFC/NFKC, case folding, segmentation, and Level G library
-remain research work.
+prepared UTF-8 four-form normalization engine are complete. The reusable
+neutral IR, native automaton core, general Unicode property/data compiler,
+final binary layout/performance verdict, C-form Quick_Check region fast path,
+case folding, segmentation, and Level G library remain research work.
 
 Branch: `unicode`, based on `origin/develop` at `7b78375bd` on 2026-08-25.
 The branch is intentionally kept separate from `develop` until its contracts,
@@ -103,16 +103,12 @@ Current strengths include:
 - zero-copy comparison of source/table spans; and
 - optimized packed dispatch support already used elsewhere in the compiler.
 
-The Unicode branch additionally prototypes three bounded RXAS operations:
-
-- `sblen` obtains the UTF-8 byte length of a valid `.string`;
-- `sgetu8` reads one byte from that string with strict bounds checking; and
-- `sbmove` moves a bounded string-byte span into an existing `.binary`.
-
-Together with exposed read-only source arguments, these permit direct UTF-8
-scanning without `stobin` or a whole-input `scopy`. They are branch-local
-research instructions with focused metadata, range, failure-atomicity, and
-both-VM tests; they are not yet an accepted production binary surface.
+The first prepared runtime briefly prototyped a raw string-byte RXAS surface.
+The rough Release screen rejected that hand-written runtime, and Adrian
+directed the instruction experiment to be rolled back completely. The
+generated NFD successor therefore uses the existing explicit `.string` to
+`.binary` conversion and ordinary binary operations. Avoiding that copy is
+not a prerequisite for proving the Level L/re2c-generated algorithm.
 
 Known limitations relevant to generated tooling include:
 
@@ -456,24 +452,30 @@ algorithmic Hangul decomposition plus stable canonical ordering, and passes
 checks on both VM families. The same reproduction reruns the independent
 C++/re2c oracle and matches its retained conformance summary.
 
-The subsequent prepared D slice is complete on the research branch. A
+The subsequent prepared normalization slice is complete on the research branch. A
 deterministic Level B parser consumes the pinned Unicode 17.0.0
 `UnicodeData.txt` and creates canonical and compatibility typed ASTs. The
 generator computes full recursive closure and canonical ordering once, rejects
-CCC 255, and emits one 1,659,772-byte portable image with SHA-256
-`224dc0355cdf2ea4bbe51640bde15c2687d6a719196b8332f3455a2ccda5500e`.
+CCC 255, parses the normative 1,120-scalar Full Composition Exclusion set, and
+emits one 1,722,756-byte portable image with SHA-256
+`431f6893c28e6e02f50237d6c48be7d4e7973412fc7e54ad9498a03283b966f9`.
 It contains 2,081/5,914 NFD/NFKD mappings, 3,450/9,193 prepared components,
-pre-encoded UTF-8, dense CCC/rank tables, mapping bitsets, and page indexes.
+pre-encoded UTF-8, dense CCC/rank tables, mapping bitsets, page indexes, and
+961 non-Hangul Primary Composite pairs under 391 starters.
 
-The shared normalizer scans UTF-8 bytes directly, reconstructing scalars only
-for non-ASCII classification and mapping lookup. It bulk-copies identity spans,
-uses arithmetic Hangul, buffers only the open nonstarter suffix, appends
-monotone CCC runs directly, and uses stable 55-rank buckets after an inversion.
-Optimized RXAS proves no whole-input string/binary copy. Both optimized and
-non-optimized linked images pass 200,340 NFD/NFKD corpus relations and
-1,094,978 unlisted-scalar identity checks per form on `rxtvm` and `rxbvm`.
-Strict binary ingress rejects malformed UTF-8. The `.string` result still makes
-one final binary-to-string ownership copy; the binary-result surface does not.
+The shared normalizer scans UTF-8 bytes directly, reconstructing scalars for
+classification and prepared lookup. D forms bulk-copy identity spans, use
+arithmetic Hangul, buffer only the open nonstarter suffix, append monotone CCC
+runs directly, and use stable 55-rank buckets after an inversion. C forms feed
+that ordered stream into one fused D117 composer with exact pair lookup and
+algorithmic Hangul composition; they do not materialize a decomposed
+intermediate string. Optimized RXAS proves no whole-input string/binary copy.
+Both optimized and compiler/assembler-noopt linked images pass 400,680
+NFD/NFKD/NFC/NFKC engine relations plus 100,170 independently generated-NFD
+relations, and 1,094,978 unlisted-scalar identity checks per form on `rxtvm`
+and `rxbvm`. Strict binary ingress rejects malformed UTF-8. The `.string`
+result still makes one final binary-to-string ownership copy; the binary-result
+surface does not.
 
 Remaining before a production generator decision: extract a reusable neutral
 lexer IR, decide whether re2c remains a backend/oracle or is replaced by native
@@ -502,14 +504,19 @@ implement the authored `malformed` rule explicitly.
 Gate 4: Adrian approves or rejects each compiler/RXAS/VM/language change. No
 architecture or syntax change is bundled implicitly into Unicode work.
 
-Current research result on 2026-08-26: Adrian approved `sblen`, `sgetu8`, and
-`sbmove` for the isolated Unicode branch so the prepared engine can inspect a
-valid string as UTF-8 bytes and move only selected spans. Focused instruction
-tests pass on both VM variants, and the optimized consumer has no whole-input
-copy. This is correctness and generated-shape evidence, not the later Release
-performance or production-integration verdict. Portable remains the default
-prepared-image position because the earlier packed NFD image was 7.65 times
-larger for a modest speed advantage.
+Current research result on 2026-08-26: the hand-written prepared normalizer was
+slower than the original scalar NFD implementation, so its experimental RXAS
+additions were rolled back. The prepared classifications were then lowered to
+a generated re2c UTF-8 lexer using only the existing binary surface. That
+generated route passes the full optimized/noopt, both-VM conformance gate, but
+the current Level B loop/`SELECT` lowering is 84.010x/101.059x slower than the
+original on 20,034 short calls and 8.974x/8.818x slower on one 101,506-byte
+buffer. Its 6,455-local method makes frame activation linear in DFA-generated
+register count; on the large-buffer lane it is still 1.086x/1.032x slower than
+the hand-prepared engine. The generated form is therefore retained as a
+correct backend proof, not selected as the hot path. Portable remains the
+default prepared-image position because the earlier packed NFD image was 7.65
+times larger for a modest speed advantage.
 
 ### 5. Unicode Data Compiler And Property Kernel
 
@@ -554,26 +561,29 @@ decomposition and whole-result canonical ordering, scans UTF-8 bytes directly,
 and shares the same engine with NFKD. Its complete conformance and generated
 partition audits are retained by the Level L bootstrap runner.
 
-### 7. NFC Composition
+### 7. NFC Composition — experimental proof complete
 
 - Add composition-pair lookup, starter/blocking state, composition exclusions,
   and algorithmic Hangul composition.
 - Exercise long combining sequences and bounded-memory behavior.
 - Run all NFC and cross-form invariants in `NormalizationTest.txt`.
 
-Gate 7: complete Unicode 17.0.0 NFC conformance and an accepted performance and
-memory verdict.
+NFC result on 2026-08-26: the fused composer passes the complete Unicode 17.0.0
+corpus, unlisted-scalar identity requirement, normative exclusions, D117
+blocking, newer cross-source context cases, and arithmetic Hangul composition
+on both VMs in optimized and noopt images. The accepted performance/memory
+verdict and Quick_Check stable-region fast path remain open.
 
-### 8. Compatibility Forms — NFKD experimental proof complete
+### 8. Compatibility Forms — NFKD and NFKC experimental proof complete
 
 - Add compatibility decomposition tags/mappings.
 - Reuse the proved ordering and composition phases for NFKD and NFKC.
 - Document the semantic loss inherent in compatibility normalization.
 
-NFKD result on 2026-08-26: complete Unicode 17.0.0 conformance passes through
-the shared prepared D engine. NFKC remains dependent on the unimplemented
-canonical composer, so the combined compatibility-form milestone is not
-closed.
+NFKD/NFKC result on 2026-08-26: complete Unicode 17.0.0 conformance passes
+through the shared prepared decomposition engine and exact canonical composer.
+This closes the correctness PoC for compatibility normalization; public API,
+performance, streaming, and production-format decisions remain open.
 
 ### 9. Full Case Folding And Explicit Comparison
 

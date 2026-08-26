@@ -282,33 +282,6 @@ main() .locals=40
     seq r0,r12,"🔥é"
     brf fail_sget_utf8,r0
 
-    load r22,"A🔥éZ"
-    sblen r23,r22
-    ieq r0,r23,8
-    brf fail_sblen_utf8,r0
-    load r24,1
-    sgetu8 r23,r22,r24
-    ieq r0,r23,240
-    brf fail_sgetu8_fire,r0
-    load r24,5
-    sgetu8 r23,r22,r24
-    ieq r0,r23,195
-    brf fail_sgetu8_eacute,r0
-
-    load r25,0x0000000000000000
-    load r26,1
-    load r24,1
-    load r27,6
-    sbmove r25,r26,r22,r24,r27
-    load r2,1
-    getbyte r4,r25,r2
-    ieq r0,r4,240
-    brf fail_sbmove_first,r0
-    load r2,6
-    getbyte r4,r25,r2
-    ieq r0,r4,169
-    brf fail_sbmove_last,r0
-
     load r13,0x000000000000
     load r13,2
     load r14,0xaabbccdd
@@ -504,30 +477,6 @@ catch_sget_boundary:
     br fail_sget_oob_signal
 
 catch_sget_oob:
-    sigbr catch_sgetu8_oob,"OUT_OF_RANGE"
-    load r22,99
-    load r23,"A"
-    load r24,1
-    sgetu8 r22,r23,r24
-    br fail_sgetu8_oob_signal
-
-catch_sgetu8_oob:
-    ieq r0,r22,99
-    brf fail_sgetu8_failure_atomic,r0
-    sigbr catch_sbmove_source_oob,"OUT_OF_RANGE"
-    load r25,0x11223344
-    load r26,1
-    load r27,"A"
-    load r28,1
-    load r29,1
-    sbmove r25,r26,r27,r28,r29
-    br fail_sbmove_source_oob_signal
-
-catch_sbmove_source_oob:
-    load r2,1
-    getbyte r4,r25,r2
-    ieq r0,r4,34
-    brf fail_sbmove_failure_atomic,r0
     say "PASS: Binary Memory Typed Ops"
     ret 0
 
@@ -696,21 +645,6 @@ fail_sget_const:
 fail_sget_utf8:
     say "FAIL: sget UTF-8 mismatch"
     ret 1
-fail_sblen_utf8:
-    say "FAIL: sblen UTF-8 byte length mismatch"
-    ret 1
-fail_sgetu8_fire:
-    say "FAIL: sgetu8 fire lead byte mismatch"
-    ret 1
-fail_sgetu8_eacute:
-    say "FAIL: sgetu8 e-acute lead byte mismatch"
-    ret 1
-fail_sbmove_first:
-    say "FAIL: sbmove first byte mismatch"
-    ret 1
-fail_sbmove_last:
-    say "FAIL: sbmove last byte mismatch"
-    ret 1
 fail_bmove_byte2:
     say "FAIL: bmove byte 2 mismatch"
     ret 1
@@ -800,16 +734,4 @@ fail_sget_boundary_signal:
     ret 1
 fail_sget_oob_signal:
     say "FAIL: sget out-of-range did not signal"
-    ret 1
-fail_sgetu8_oob_signal:
-    say "FAIL: sgetu8 out-of-range did not signal"
-    ret 1
-fail_sgetu8_failure_atomic:
-    say "FAIL: sgetu8 changed destination before signaling"
-    ret 1
-fail_sbmove_source_oob_signal:
-    say "FAIL: sbmove source out-of-range did not signal"
-    ret 1
-fail_sbmove_failure_atomic:
-    say "FAIL: sbmove changed destination before signaling"
     ret 1

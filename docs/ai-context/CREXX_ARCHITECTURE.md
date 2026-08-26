@@ -338,9 +338,6 @@ The completed UTF baseline is:
    bits are preserved from external writes.
 4. `.binary` has growable buffer helpers plus RXAS/VM literal load, length,
    byte get/set, append, concat, explicit-offset slice, and overlay instructions.
-   RXAS also exposes `sblen`, `sgetu8`, and `sbmove` so a bytewise Unicode
-   algorithm can inspect and copy the stored UTF-8 form without first copying
-   the complete string into a binary value.
 5. Explicit `.string`/`.binary` coexistence is first class in Level B:
    `as .binary` stores exact UTF-8 bytes through `stobin`, `as .string`
    validates bytes through `bintos`, and valid constant casts fold in both

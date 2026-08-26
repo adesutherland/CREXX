@@ -1,0 +1,56 @@
+UNICODE-NORM-02 generated prepared NFD rough screen
+Date: 2026-08-26
+Branch/parent: unicode at 507472cb86225c43fae26a6d78d242a1fd7758bd plus the recorded dirty scope
+Build: profiling-off Release, cmake-build-unicode-poc
+Host: Mac17,3, Darwin arm64, 10 logical CPUs, AC power
+Host envelope: no thermal or performance warning recorded; load 2.57/2.31/2.52 before and 2.67/2.46/2.56 after
+Protocol: one warmup, three serial samples, medians below
+Timed surface: preloaded .string input -> normalize -> materialized and observed .string result
+Correctness: every result checked against Unicode 17.0.0 before timing
+Scope: directional experimental screen, not a formal product performance verdict
+
+Generated route:
+  UnicodeData.txt + DerivedNormalizationProps.txt
+  -> prepared Unicode algorithm IR
+  -> 2,081 mapping rules, 964 identity-mark rules, 429 starter ranges
+  -> re2c UTF-8 DFA
+  -> Level B loop/select transducer
+
+Release medians:
+  rxtvm rows, original-nfd:   18,440 us
+  rxtvm rows, generated-nfd: 1,549,147 us (84.010x original)
+  rxtvm buffer, original-nfd:   20,472 us (4,958,284 input bytes/s)
+  rxtvm buffer, generated-nfd: 183,724 us (552,491 input bytes/s; 8.974x original)
+  rxbvm rows, original-nfd:   14,101 us
+  rxbvm rows, generated-nfd: 1,425,035 us (101.059x original)
+  rxbvm buffer, original-nfd:   19,058 us (5,326,162 input bytes/s)
+  rxbvm buffer, generated-nfd: 168,046 us (604,036 input bytes/s; 8.818x original)
+
+Workloads:
+  rows: 20,034 separate calls; checksum 55,422 output scalars
+  buffer: one call; 101,506 input UTF-8 bytes; 170,376 output UTF-8 bytes
+
+Untimed-context hand-prepared cells, run immediately after the retained panel
+through the same linked image and one-warmup/three-sample protocol:
+  rxtvm rows:   147,813 us
+  rxtvm buffer: 169,157 us (600,069 input bytes/s)
+  rxbvm rows:   147,518 us
+  rxbvm buffer: 162,895 us (623,137 input bytes/s)
+
+Interpretation boundary:
+  The generated and hand-prepared scanners are close on the one-call buffer:
+  generated is 1.086x/1.032x slower on rxtvm/rxbvm.  The lexer therefore did
+  not remove the dominant prepared-engine cost.  The generated row path is
+  10.480x/9.660x slower than hand-prepared because the generated normalize
+  method declares 6,455 locals.  Recycled VM frame activation relinks every
+  declared local, so 20,034 calls add an O(calls * generated-locals) cost.
+  The optimized method is 172,334 RXAS lines (8,446,068 bytes) and contains
+  73 JUMPI dispatches, so SELECT did lower to optimized dispatch; dispatch
+  absence is not the explanation.
+
+Conclusion:
+  This Level B loop/select lowering is a correct generator proof, not a viable
+  hot-path representation.  It does not disprove prepared Unicode
+  classification mathematically.  A successor must bound live/register state
+  independently of DFA size and must reduce the shared output/order engine's
+  per-scalar work before another performance claim.

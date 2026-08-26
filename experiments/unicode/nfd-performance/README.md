@@ -168,6 +168,76 @@ Raw output, RSS, pre/post host state, and the consolidated summary are retained
 under
 `cmake-build-unicode-release/nfd-performance-evidence/2026-08-25-ac-clear-large-buffer/`.
 
+## Prepared Algorithm Rough Comparator
+
+`run_prepared_compare.sh` is the intentionally lightweight successor screen.
+Its default comparison is the original scalar NFD algorithm against the
+prepared NFD classifications lowered through re2c to a generated UTF-8 DFA and
+Level B transducer. Both use the same optimized `.string -> .string` call and
+result-observation shape. The runner also retains the hand-prepared NFD and NFC
+variants as explicit context cells; NFC has no original implementation here,
+so it is not an old-versus-new speedup comparison.
+
+The original cell consumes ICU `gennorm2` through the lexer generated from the
+Level L `gennorm2.levell` specification. The generated cell consumes the
+pinned Unicode 17 `UnicodeData.txt` and `DerivedNormalizationProps.txt`, emits
+the prepared scalar partition as re2c rules, requires byte-identical rule
+generation on both VMs, lowers the re2c DFA through the retained cREXX
+transducer backend, and compiles that Level B source. All source parsing,
+preparation, generation, and compilation are outside the timed normalization
+interval and are retained by the harness.
+
+By default the rough runner uses one warmup and three serial samples on both
+Release VMs, first across 20,034 separate conformance rows and then across one
+joined UTF-8 buffer. It runs `original-nfd generated-nfd`;
+`CREXX_UNICODE_COMPARE_VARIANTS="original-nfd generated-nfd prepared-nfd prepared-nfc"`
+adds both contextual hand-prepared cells, and the buffer-repetition environment
+variable can request larger inputs. Every result is checked against Unicode 17
+before timing. Each invocation uses a fresh retained build directory so an old
+module cannot become a self-import. `CREXX_UNICODE_COMPARE_SKIP_PRODUCT_BUILD=1`
+skips CMake once the required branch-local compiler/runtime build is known
+current. This is a directional algorithm screen, not a clean-host,
+paired-interleaved, product-selection verdict.
+
+```sh
+experiments/unicode/nfd-performance/run_prepared_compare.sh
+```
+
+### Generated NFD rough result — 2026-08-26
+
+The complete correctness harness passes first: generated NFD produces 100,170
+Unicode 17 corpus relations and 1,094,978 unlisted-scalar identity results
+identically in optimized and noopt images on both VMs. No experimental RXAS
+instruction is present; the scanner uses the ordinary binary surface and
+optimized `SELECT`/`JUMPI` dispatch.
+
+The rough Release screen on AC then found the current generated lowering much
+slower than the original:
+
+| Workload | `rxtvm` original | `rxtvm` generated | `rxbvm` original | `rxbvm` generated |
+| --- | ---: | ---: | ---: | ---: |
+| 20,034 separate rows | 18.440 ms | 1,549.147 ms | 14.101 ms | 1,425.035 ms |
+| one 101,506-byte buffer | 20.472 ms | 183.724 ms | 19.058 ms | 168.046 ms |
+
+That is 84.010x/101.059x slower on rows and 8.974x/8.818x slower on the
+buffer. An immediate hand-prepared context cell took 147.813/147.518 ms for
+rows and 169.157/162.895 ms for the buffer on `rxtvm`/`rxbvm`. The generated
+lexer is therefore close to, but not faster than, the hand scanner for one
+large call; it does not remove the shared prepared engine's dominant cost.
+
+The row-only amplification has a separate, demonstrated cause. The generated
+method is 172,334 RXAS lines, declares 6,455 locals, and contains 73 optimized
+`JUMPI` dispatches. VM frame recycling avoids repeated allocation but relinks
+every declared local on every activation. Recreating that frame for 20,034
+short strings adds an `O(calls * generated locals)` cost of roughly 63–69 us
+per call relative to the one-buffer shape. This is a backend/code-shape
+failure, not evidence against the mathematical prepared partition. Another
+performance attempt must keep live/register state bounded independently of DFA
+size and reduce the shared output/order engine's per-scalar work.
+
+The exact host envelope, medians, controls, and interpretation boundary are
+retained in `evidence/2026-08-26-generated-nfd-rough.txt`.
+
 ## Acceptance Boundary
 
 Both CREXX layouts must pass the complete selected relation set. Both Apple

@@ -1,24 +1,33 @@
 /*
  * cREXX License (MIT)
  *
- * Experimental Unicode 17.0.0 prepared D-form tables and UTF-8 normalizer.
- * The image is portable and byte-addressed.  Recursive decomposition and
- * canonical ordering of each scalar mapping happen only while generating it.
+ * Experimental Unicode 17.0.0 prepared normalization tables and UTF-8
+ * normalizer.  The image is portable and byte-addressed.  Recursive
+ * decomposition and canonical ordering of each scalar mapping happen only
+ * while generating it; NFC and NFKC share one fused canonical composer.
  */
 
 options levelb
 
-namespace unicode_d expose unicodedtables unicodednormalizer unicode_d_compile unicode_d_new
+namespace unicode_d expose unicodedtables unicodednormalizer unicode_d_compile unicode_norm_compile unicode_d_new
 import rxfnsb
 import rxhash
 import unicode_gennorm2
 import unicode_data
+import unicode_normprops
 
 /** Compile canonical and compatibility UCD ASTs into one prepared image. */
 unicode_d_compile: procedure = .unicodedtables
-  arg ucd = .unicodeucdresult
+  arg ucd = .unicodeucdresult, properties = .unicodenormpropsresult
   tables = .unicodedtables()
-  call tables.compile(ucd)
+  call tables.compile(ucd, properties)
+  return tables
+
+/** Compile the complete four-form prepared normalization image. */
+unicode_norm_compile: procedure = .unicodedtables
+  arg ucd = .unicodeucdresult, properties = .unicodenormpropsresult
+  tables = .unicodedtables()
+  call tables.compile(ucd, properties)
   return tables
 
 /** Construct one NFD or NFKD normalizer over a prepared image. */
@@ -159,7 +168,7 @@ unicodedrawmappings: class
     _error = message
     return
 
-/** Versioned portable prepared NFD/NFKD image. */
+/** Versioned portable prepared four-form normalization image. */
 unicodedtables: class
   _image = .binary
   _status = .int
@@ -198,6 +207,13 @@ unicodedtables: class
   _nfd_identity_marks = .int
   _nfkd_identity_starters = .int
   _nfkd_identity_marks = .int
+  _composition_triples = .binary
+  _composition_count = .int
+  _composition_directory = .binary
+  _composition_directory_count = .int
+  _composition_pairs = .binary
+  _composition_max_pairs = .int
+  _full_exclusion_count = .int
 
   *: factory
     _status = 0
@@ -205,16 +221,24 @@ unicodedtables: class
     _rank_count = 0
     _temp_count = 0
     _temp_capacity = 32
+    _composition_count = 0
+    _composition_directory_count = 0
+    _composition_max_pairs = 0
+    _full_exclusion_count = 0
     call binresize _temp, _temp_capacity * 4
     call binresize _path, 64 * 4
     return
 
   compile: method = .void
-    arg ucd = .unicodeucdresult
+    arg ucd = .unicodeucdresult, properties = .unicodenormpropsresult
     _status = 0
     _error = ""
     if ucd.status() \= 0 then do
       call _fail ucd.error()
+      return
+    end
+    if properties.status() \= 0 then do
+      call _fail properties.error()
       return
     end
 
@@ -236,6 +260,7 @@ unicodedtables: class
 
     call _prepare_form _nfd_raw, 1
     if _status = 0 then call _prepare_form _nfkd_raw, 2
+    if _status = 0 then call _prepare_composition ucd.canonical_ast(), properties
     if _status = 0 then call _audit_partition 1
     if _status = 0 then call _audit_partition 2
     if _status = 0 then call _assemble_image
@@ -284,10 +309,19 @@ unicodedtables: class
   nfkd_identity_marks: method = .int
     return _nfkd_identity_marks
 
+  composition_pair_count: method = .int
+    return _composition_count
+
+  composition_starter_count: method = .int
+    return _composition_directory_count
+
+  full_exclusion_count: method = .int
+    return _full_exclusion_count
+
   manifest: method = .string
     if _status \= 0 then return "status|error|" || _error || "0a"x
     nl = "0a"x
-    return "format|crexx-unicode-d-prepared-portable-v1" || nl ||,
+    return "format|crexx-unicode-normalization-prepared-portable-v2" || nl ||,
            "unicode|17.0.0" || nl ||,
            "bytes|" || <blen>(_image) || nl ||,
            "positive_ccc|" || _rank_count || nl ||,
@@ -299,6 +333,10 @@ unicodedtables: class
            "nfkd_components|" || _nfkd_component_count || nl ||,
            "nfkd_utf8_bytes|" || _nfkd_utf8_bytes || nl ||,
            "nfkd_classes|" || _nfkd_closed || "/" || _nfkd_open || "/" || _nfkd_marks || "/" || _nfkd_complex || nl ||,
+           "composition_pairs|" || _composition_count || nl ||,
+           "composition_starters|" || _composition_directory_count || nl ||,
+           "composition_max_pairs|" || _composition_max_pairs || nl ||,
+           "full_composition_exclusions|" || _full_exclusion_count || nl ||,
            "sha256|" || sha256() || nl
 
   _fail: method = .void
@@ -351,7 +389,7 @@ unicodedtables: class
       call binresize _nfd_bits, 0x22000
       call binresize _nfd_pages, 0x1100 * 8
       call binresize _nfd_records, raw.map_count() * 12
-      call binresize _nfd_components, (raw.value_count() + raw.map_count()) * 8
+      call binresize _nfd_components, (raw.value_count() + raw.map_count()) * 12
       _nfd_component_count = 0
       _nfd_utf8_bytes = 0
       _nfd_closed = 0
@@ -363,7 +401,7 @@ unicodedtables: class
       call binresize _nfkd_bits, 0x22000
       call binresize _nfkd_pages, 0x1100 * 8
       call binresize _nfkd_records, raw.map_count() * 12
-      call binresize _nfkd_components, (raw.value_count() + raw.map_count()) * 8
+      call binresize _nfkd_components, (raw.value_count() + raw.map_count()) * 12
       _nfkd_component_count = 0
       _nfkd_utf8_bytes = 0
       _nfkd_closed = 0
@@ -417,14 +455,14 @@ unicodedtables: class
 
     if _status \= 0 then return
     if form = 1 then do
-      call binresize _nfd_components, _nfd_component_count * 8
+      call binresize _nfd_components, _nfd_component_count * 12
       if _nfd_component_count \= 3450 | _nfd_utf8_bytes \= 8041 |,
          _nfd_closed \= 1085 | _nfd_open \= 989 |,
          _nfd_marks \= 7 | _nfd_complex \= 0 then,
         call _fail "prepared NFD closure audit mismatch"
     end
     else do
-      call binresize _nfkd_components, _nfkd_component_count * 8
+      call binresize _nfkd_components, _nfkd_component_count * 12
       if _nfkd_component_count \= 9193 | _nfkd_utf8_bytes \= 18593 |,
          _nfkd_closed \= 4822 | _nfkd_open \= 1083 |,
          _nfkd_marks \= 9 | _nfkd_complex \= 0 then,
@@ -545,26 +583,27 @@ unicodedtables: class
 
   _write_component: method = .void
     arg expose components = .binary, index = .int, codepoint = .int
-    offset = index * 8
+    offset = index * 12
     ccc = <at..u8>(codepoint) _ccc
     length = _utf8_length(codepoint)
-    <at..u8>(offset) components = ccc
-    <at..u8>(offset + 1) components = length
-    if length = 1 then <at..u8>(offset + 2) components = codepoint
+    <at..u32>(offset) components = codepoint
+    <at..u8>(offset + 4) components = ccc
+    <at..u8>(offset + 5) components = length
+    if length = 1 then <at..u8>(offset + 6) components = codepoint
     else if length = 2 then do
-      <at..u8>(offset + 2) components = 0xC0 <or> (codepoint <shr> 6)
-      <at..u8>(offset + 3) components = 0x80 <or> (codepoint <and> 0x3F)
+      <at..u8>(offset + 6) components = 0xC0 <or> (codepoint <shr> 6)
+      <at..u8>(offset + 7) components = 0x80 <or> (codepoint <and> 0x3F)
     end
     else if length = 3 then do
-      <at..u8>(offset + 2) components = 0xE0 <or> (codepoint <shr> 12)
-      <at..u8>(offset + 3) components = 0x80 <or> ((codepoint <shr> 6) <and> 0x3F)
-      <at..u8>(offset + 4) components = 0x80 <or> (codepoint <and> 0x3F)
+      <at..u8>(offset + 6) components = 0xE0 <or> (codepoint <shr> 12)
+      <at..u8>(offset + 7) components = 0x80 <or> ((codepoint <shr> 6) <and> 0x3F)
+      <at..u8>(offset + 8) components = 0x80 <or> (codepoint <and> 0x3F)
     end
     else do
-      <at..u8>(offset + 2) components = 0xF0 <or> (codepoint <shr> 18)
-      <at..u8>(offset + 3) components = 0x80 <or> ((codepoint <shr> 12) <and> 0x3F)
-      <at..u8>(offset + 4) components = 0x80 <or> ((codepoint <shr> 6) <and> 0x3F)
-      <at..u8>(offset + 5) components = 0x80 <or> (codepoint <and> 0x3F)
+      <at..u8>(offset + 6) components = 0xF0 <or> (codepoint <shr> 18)
+      <at..u8>(offset + 7) components = 0x80 <or> ((codepoint <shr> 12) <and> 0x3F)
+      <at..u8>(offset + 8) components = 0x80 <or> ((codepoint <shr> 6) <and> 0x3F)
+      <at..u8>(offset + 9) components = 0x80 <or> (codepoint <and> 0x3F)
     end
     return
 
@@ -580,6 +619,104 @@ unicodedtables: class
     byte = <at..u8>(codepoint <idiv> 8) bits
     mask = 1 <shl> (codepoint <mod> 8)
     return (byte <and> mask) \= 0
+
+  /** Build the exact non-Hangul Primary Composite relation. */
+  _prepare_composition: method = .void
+    arg ast = .unicodegennorm2ast, properties = .unicodenormpropsresult
+    _full_exclusion_count = properties.full_exclusion_count()
+    call binresize _composition_triples, 2081 * 12
+    _composition_count = 0
+    do i = 0 to ast.record_count() - 1 while _status = 0
+      record = ast.record_at(i)
+      if record.kind() \= "mapping_one_way" | record.value_count() \= 2 then iterate
+      composite = record.first()
+      first = record.value_at(0)
+      second = record.value_at(1)
+      if properties.is_full_exclusion(composite) then iterate
+      if <at..u8>(first) _ccc \= 0 then iterate
+      offset = _composition_count * 12
+      <at..u32>(offset) _composition_triples = first
+      <at..u32>(offset + 4) _composition_triples = second
+      <at..u32>(offset + 8) _composition_triples = composite
+      _composition_count = _composition_count + 1
+    end
+    call binresize _composition_triples, _composition_count * 12
+    if _composition_count \= 961 | _full_exclusion_count \= 1120 then do
+      call _fail "Unicode 17 primary-composition audit mismatch"
+      return
+    end
+    call _sort_composition
+    if _status = 0 then call _index_composition
+    return
+
+  _sort_composition: method = .void
+    do i = 1 to _composition_count - 1
+      offset = i * 12
+      first = <at..u32>(offset) _composition_triples
+      second = <at..u32>(offset + 4) _composition_triples
+      composite = <at..u32>(offset + 8) _composition_triples
+      j = i
+      do while j > 0
+        previous_offset = (j - 1) * 12
+        previous_first = <at..u32>(previous_offset) _composition_triples
+        previous_second = <at..u32>(previous_offset + 4) _composition_triples
+        if previous_first < first |,
+           (previous_first = first & previous_second < second) then leave
+        target_offset = j * 12
+        <at..u32>(target_offset) _composition_triples = previous_first
+        <at..u32>(target_offset + 4) _composition_triples = previous_second
+        <at..u32>(target_offset + 8) _composition_triples = <at..u32>(previous_offset + 8) _composition_triples
+        j = j - 1
+      end
+      target_offset = j * 12
+      <at..u32>(target_offset) _composition_triples = first
+      <at..u32>(target_offset + 4) _composition_triples = second
+      <at..u32>(target_offset + 8) _composition_triples = composite
+    end
+    previous_first = -1
+    previous_second = -1
+    do i = 0 to _composition_count - 1 while _status = 0
+      offset = i * 12
+      first = <at..u32>(offset) _composition_triples
+      second = <at..u32>(offset + 4) _composition_triples
+      if first < previous_first | (first = previous_first & second <= previous_second) then,
+        call _fail "primary-composition pairs are not unique and ordered"
+      previous_first = first
+      previous_second = second
+    end
+    return
+
+  _index_composition: method = .void
+    call binresize _composition_directory, _composition_count * 12
+    call binresize _composition_pairs, _composition_count * 8
+    _composition_directory_count = 0
+    _composition_max_pairs = 0
+    pair = 0
+    do while pair < _composition_count & _status = 0
+      triple_offset = pair * 12
+      starter = <at..u32>(triple_offset) _composition_triples
+      first_pair = pair
+      do while pair < _composition_count &,
+               <at..u32>(pair * 12) _composition_triples = starter
+        triple_offset = pair * 12
+        pair_offset = pair * 8
+        <at..u32>(pair_offset) _composition_pairs = <at..u32>(triple_offset + 4) _composition_triples
+        <at..u32>(pair_offset + 4) _composition_pairs = <at..u32>(triple_offset + 8) _composition_triples
+        pair = pair + 1
+      end
+      pair_count = pair - first_pair
+      directory_offset = _composition_directory_count * 12
+      <at..u32>(directory_offset) _composition_directory = starter
+      <at..u32>(directory_offset + 4) _composition_directory = first_pair
+      <at..u16>(directory_offset + 8) _composition_directory = pair_count
+      <at..u16>(directory_offset + 10) _composition_directory = 0
+      if pair_count > _composition_max_pairs then _composition_max_pairs = pair_count
+      _composition_directory_count = _composition_directory_count + 1
+    end
+    call binresize _composition_directory, _composition_directory_count * 12
+    if _composition_directory_count \= 391 | _composition_max_pairs \= 19 then,
+      call _fail "Unicode 17 primary-composition index audit mismatch"
+    return
 
   _audit_partition: method = .void
     arg form = .int
@@ -607,7 +744,7 @@ unicodedtables: class
     return
 
   _assemble_image: method = .void
-    header_size = 160
+    header_size = 192
     ccc_offset = header_size
     rank_offset = ccc_offset + 0x110000
     nfd_bits_offset = rank_offset + 256
@@ -616,16 +753,18 @@ unicodedtables: class
     nfkd_pages_offset = nfd_pages_offset + 0x1100 * 8
     nfd_records_offset = nfkd_pages_offset + 0x1100 * 8
     nfd_components_offset = nfd_records_offset + _nfd_raw.map_count() * 12
-    nfkd_records_offset = nfd_components_offset + _nfd_component_count * 8
+    nfkd_records_offset = nfd_components_offset + _nfd_component_count * 12
     nfkd_components_offset = nfkd_records_offset + _nfkd_raw.map_count() * 12
-    total_size = nfkd_components_offset + _nfkd_component_count * 8
+    composition_directory_offset = nfkd_components_offset + _nfkd_component_count * 12
+    composition_pairs_offset = composition_directory_offset + _composition_directory_count * 12
+    total_size = composition_pairs_offset + _composition_count * 8
     call binresize _image, total_size
 
     <at..u8>(0) _image = 67
     <at..u8>(1) _image = 85
     <at..u8>(2) _image = 68
     <at..u8>(3) _image = 68
-    <at..u16>(4) _image = 1
+    <at..u16>(4) _image = 2
     <at..u16>(6) _image = header_size
     <at..u16>(8) _image = 17
     <at..u16>(10) _image = 0
@@ -667,6 +806,14 @@ unicodedtables: class
     <at..u32>(148) _image = _nfd_component_count
     <at..u32>(152) _image = _nfkd_component_count
     <at..u32>(156) _image = 0
+    <at..u32>(160) _image = composition_directory_offset
+    <at..u32>(164) _image = _composition_directory_count
+    <at..u32>(168) _image = composition_pairs_offset
+    <at..u32>(172) _image = _composition_count
+    <at..u32>(176) _image = _full_exclusion_count
+    <at..u32>(180) _image = 12
+    <at..u32>(184) _image = _composition_max_pairs
+    <at..u32>(188) _image = 0
 
     call bincopy _image, ccc_offset, _ccc, 0, <blen>(_ccc)
     call bincopy _image, rank_offset, _rank, 0, <blen>(_rank)
@@ -678,9 +825,11 @@ unicodedtables: class
     call bincopy _image, nfd_components_offset, _nfd_components, 0, <blen>(_nfd_components)
     call bincopy _image, nfkd_records_offset, _nfkd_records, 0, <blen>(_nfkd_records)
     call bincopy _image, nfkd_components_offset, _nfkd_components, 0, <blen>(_nfkd_components)
+    call bincopy _image, composition_directory_offset, _composition_directory, 0, <blen>(_composition_directory)
+    call bincopy _image, composition_pairs_offset, _composition_pairs, 0, <blen>(_composition_pairs)
     return
 
-/** Shared bytewise NFD/NFKD engine over one validated prepared image. */
+/** Shared bytewise four-form engine over one validated prepared image. */
 unicodednormalizer: class
   _image = .binary
   _ready = .int
@@ -696,6 +845,10 @@ unicodednormalizer: class
   _record_count = .int
   _components_offset = .int
   _component_count = .int
+  _composition_directory_offset = .int
+  _composition_directory_count = .int
+  _composition_pairs_offset = .int
+  _composition_pair_count = .int
   _decoded_codepoint = .int
   _decoded_length = .int
   _output = .binary
@@ -712,12 +865,20 @@ unicodednormalizer: class
   _scratch = .binary
   _counts = .binary
   _next = .binary
+  _compose = .int
+  _compose_has_starter = .int
+  _compose_starter = .int
+  _compose_last_ccc = .int
+  _compose_marks = .binary
+  _compose_mark_count = .int
+  _compose_mark_capacity = .int
 
   *: factory
     _ready = 0
     _status = 0
     _error = ""
     _form = 0
+    _compose = 0
     _output_length = 0
     _output_capacity = 64
     call binresize _output, _output_capacity
@@ -728,7 +889,13 @@ unicodednormalizer: class
     _pending_disordered = 0
     _pending_last_ccc = 0
     _bucket_flushes = 0
-    call binresize _pending, _pending_capacity * 8
+    call binresize _pending, _pending_capacity * 12
+    _compose_has_starter = 0
+    _compose_starter = 0
+    _compose_last_ccc = 0
+    _compose_mark_count = 0
+    _compose_mark_capacity = 64
+    call binresize _compose_marks, _compose_mark_capacity * 4
     return
 
   initialize: method = .void
@@ -743,10 +910,13 @@ unicodednormalizer: class
     form = upper(form)
     if form = "NFD" then _form = 1
     else if form = "NFKD" then _form = 2
+    else if form = "NFC" then _form = 3
+    else if form = "NFKC" then _form = 4
     else do
-      call _fail "prepared D form must be NFD or NFKD"
+      call _fail "prepared normalization form must be NFD, NFKD, NFC, or NFKC"
       return
     end
+    _compose = _form >= 3
     _image = tables.image()
     call _validate_image
     if _status = 0 then do
@@ -768,6 +938,8 @@ unicodednormalizer: class
   form: method = .string
     if _form = 1 then return "NFD"
     if _form = 2 then return "NFKD"
+    if _form = 3 then return "NFC"
+    if _form = 4 then return "NFKC"
     return ""
 
   /** Number of non-monotone mark runs handled by the stable rank buckets. */
@@ -779,16 +951,16 @@ unicodednormalizer: class
     if _ready = 0 | unicode_d_is_scalar(codepoint) = 0 then return -1
     return <at..u8>(_ccc_offset + codepoint) _image
 
-  /** Normalize validated text without first copying its complete UTF-8 bytes. */
+  /** Normalize validated text through the existing explicit binary surface. */
   normalize: method = .string
     arg expose source = .string
     if _ready = 0 then return ""
-    empty_binary = .binary
-    source_length = 0
-    assembler sblen source_length,source
+    source_binary = source as .binary
+    empty_string = ""
+    source_length = <blen>(source_binary)
     call _begin source_length
-    call _consume 1, source, empty_binary, source_length
-    call _finish 1, source, empty_binary
+    call _consume 2, empty_string, source_binary, source_length
+    call _finish 2, empty_string, source_binary
     if _status \= 0 then return ""
     result = _output as .string
     return result
@@ -806,25 +978,94 @@ unicodednormalizer: class
     if _status \= 0 then return empty
     return _output
 
-  /** Exact D-form Quick_Check over a string, with no normalized result copy. */
+  /** Exact normalization predicate; C forms currently normalize and compare. */
   is_normalized: method = .int
     arg expose source = .string
     if _ready = 0 then return 0
-    empty_binary = .binary
-    source_length = 0
-    assembler sblen source_length,source
+    if _compose then do
+      normalized = normalize(source)
+      if _status \= 0 then return 0
+      return normalized == source
+    end
+    source_binary = source as .binary
+    empty_string = ""
+    source_length = <blen>(source_binary)
     _status = 0
     _error = ""
-    return _quick_check(1, source, empty_binary, source_length)
+    return _quick_check(2, empty_string, source_binary, source_length)
 
-  /** Exact D-form Quick_Check over a binary UTF-8 buffer. */
+  /** Exact binary normalization predicate. */
   is_normalized_binary: method = .int
     arg expose source = .binary
     if _ready = 0 then return 0
+    if _compose then do
+      normalized = normalize_binary(source)
+      if _status \= 0 then return 0
+      return bincompare(normalized, source) = 0
+    end
     empty_string = ""
     _status = 0
     _error = ""
     return _quick_check(2, empty_string, source, <blen>(source))
+
+  /** Begin an NFD scan whose classifications are supplied by generated code. */
+  lexer_begin: method = .void
+    arg source_length = .int
+    if _ready = 0 | _form \= 1 then do
+      call _fail "generated scanner requires a ready NFD normalizer"
+      return
+    end
+    call _begin source_length
+    return
+
+  /** Accept a generated run of identity starters. */
+  lexer_raw: method = .void
+    arg expose source = .binary, source_offset = .int, source_length = .int
+    empty_string = ""
+    call _queue_raw source_offset, source_length, 2, empty_string, source
+    return
+
+  /** Accept one generated identity nonstarter with its prepared CCC. */
+  lexer_mark: method = .void
+    arg expose source = .binary, source_offset = .int, source_length = .int, ccc = .int
+    empty_string = ""
+    call _enqueue_source_mark 0, ccc, source_offset, source_length, 2, empty_string, source
+    return
+
+  /** Accept one generated prepared-mapping record. */
+  lexer_mapping: method = .void
+    arg expose source = .binary, mapping = .int
+    empty_string = ""
+    call _process_mapping mapping, 2, empty_string, source
+    return
+
+  /** Accept one generated Hangul syllable match. */
+  lexer_hangul: method = .void
+    arg expose source = .binary, source_offset = .int
+    first = <at..u8>(source_offset) source
+    second = <at..u8>(source_offset + 1) source
+    third = <at..u8>(source_offset + 2) source
+    codepoint = ((first <and> 0x0F) <shl> 12) <or>,
+                ((second <and> 0x3F) <shl> 6) <or>,
+                (third <and> 0x3F)
+    empty_string = ""
+    call _emit_hangul codepoint, 2, empty_string, source
+    return
+
+  /** Finish a generated NFD scan and expose its binary result. */
+  lexer_finish: method = .void
+    arg expose source = .binary
+    empty_string = ""
+    call _finish 2, empty_string, source
+    return
+
+  lexer_result_binary: method = .binary
+    return _output
+
+  lexer_fail: method = .void
+    arg message = .string
+    call _fail message
+    return
 
   _fail: method = .void
     arg message = .string
@@ -835,25 +1076,25 @@ unicodednormalizer: class
 
   _validate_image: method = .void
     image_length = <blen>(_image)
-    if image_length < 160 then do
-      call _fail "prepared D image is shorter than its header"
+    if image_length < 192 then do
+      call _fail "prepared normalization image is shorter than its header"
       return
     end
     if <at..u8>(0) _image \= 67 | <at..u8>(1) _image \= 85 |,
        <at..u8>(2) _image \= 68 | <at..u8>(3) _image \= 68 |,
-       <at..u16>(4) _image \= 1 | <at..u16>(6) _image \= 160 then do
-      call _fail "invalid prepared D image header"
+       <at..u16>(4) _image \= 2 | <at..u16>(6) _image \= 192 then do
+      call _fail "invalid prepared normalization image header"
       return
     end
     if <at..u16>(8) _image \= 17 | <at..u16>(10) _image \= 0 |,
        <at..u16>(12) _image \= 0 then do
-      call _fail "unsupported Unicode version in prepared D image"
+      call _fail "unsupported Unicode version in prepared normalization image"
       return
     end
     _ccc_offset = <at..u32>(16) _image
     _rank_offset = <at..u32>(24) _image
     _rank_count = <at..u32>(96) _image
-    if _form = 1 then do
+    if _form = 1 | _form = 3 then do
       _bits_offset = <at..u32>(32) _image
       _pages_offset = <at..u32>(48) _image
       _records_offset = <at..u32>(64) _image
@@ -869,19 +1110,29 @@ unicodednormalizer: class
       _components_offset = <at..u32>(88) _image
       _component_count = <at..u32>(92) _image
     end
-    if _ccc_offset \= 160 | <at..u32>(20) _image \= 0x110000 |,
+    _composition_directory_offset = <at..u32>(160) _image
+    _composition_directory_count = <at..u32>(164) _image
+    _composition_pairs_offset = <at..u32>(168) _image
+    _composition_pair_count = <at..u32>(172) _image
+    if _ccc_offset \= 192 | <at..u32>(20) _image \= 0x110000 |,
        _rank_offset \= _ccc_offset + 0x110000 | <at..u32>(28) _image \= 256 |,
        _rank_count \= 55 then do
-      call _fail "invalid CCC/rank sections in prepared D image"
+      call _fail "invalid CCC/rank sections in prepared normalization image"
       return
     end
-    if _form = 1 & (_record_count \= 2081 | _component_count \= 3450) then,
+    if (_form = 1 | _form = 3) & (_record_count \= 2081 | _component_count \= 3450) then,
       call _fail "invalid NFD counts in prepared D image"
-    else if _form = 2 & (_record_count \= 5914 | _component_count \= 9193) then,
+    else if (_form = 2 | _form = 4) & (_record_count \= 5914 | _component_count \= 9193) then,
       call _fail "invalid NFKD counts in prepared D image"
     if _status \= 0 then return
-    if _components_offset + _component_count * 8 > image_length then,
+    if _components_offset + _component_count * 12 > image_length then,
       call _fail "prepared D component section exceeds image length"
+    else if _composition_directory_count \= 391 | _composition_pair_count \= 961 |,
+            <at..u32>(176) _image \= 1120 | <at..u32>(180) _image \= 12 |,
+            <at..u32>(184) _image \= 19 |,
+            _composition_directory_offset + _composition_directory_count * 12 > image_length |,
+            _composition_pairs_offset + _composition_pair_count * 8 > image_length then,
+      call _fail "invalid primary-composition sections in prepared normalization image"
 
     previous = -1
     do mapping = 0 to _record_count - 1 while _status = 0
@@ -898,6 +1149,31 @@ unicodednormalizer: class
         call _fail "prepared D structural class is invalid"
       previous = source
     end
+    previous = -1
+    expected_first = 0
+    do directory = 0 to _composition_directory_count - 1 while _status = 0
+      offset = _composition_directory_offset + directory * 12
+      starter = <at..u32>(offset) _image
+      first = <at..u32>(offset + 4) _image
+      count = <at..u16>(offset + 8) _image
+      if unicode_d_is_scalar(starter) = 0 | starter <= previous | count = 0 |,
+         first \= expected_first | first + count > _composition_pair_count then,
+        call _fail "invalid primary-composition directory record"
+      previous_second = -1
+      do pair = first to first + count - 1 while _status = 0
+        pair_offset = _composition_pairs_offset + pair * 8
+        second = <at..u32>(pair_offset) _image
+        composite = <at..u32>(pair_offset + 4) _image
+        if unicode_d_is_scalar(second) = 0 |,
+           unicode_d_is_scalar(composite) = 0 | second <= previous_second then,
+          call _fail "invalid primary-composition pair record"
+        previous_second = second
+      end
+      previous = starter
+      expected_first = first + count
+    end
+    if _status = 0 & expected_first \= _composition_pair_count then,
+      call _fail "primary-composition directory does not cover every pair"
     return
 
   _begin: method = .void
@@ -916,6 +1192,10 @@ unicodednormalizer: class
     _pending_disordered = 0
     _pending_last_ccc = 0
     _bucket_flushes = 0
+    _compose_has_starter = 0
+    _compose_starter = 0
+    _compose_last_ccc = 0
+    _compose_mark_count = 0
     return
 
   _consume: method = .void
@@ -924,14 +1204,20 @@ unicodednormalizer: class
     do while position < source_length & _status = 0
       byte = _source_byte(source_kind, source_string, source_binary, position)
       if byte <= 0x7F then do
-        start = position
-        position = position + 1
-        do while position < source_length
-          byte = _source_byte(source_kind, source_string, source_binary, position)
-          if byte > 0x7F then leave
+        if _compose then do
+          call _process_scalar byte, position, 1, source_kind, source_string, source_binary
           position = position + 1
         end
-        call _queue_raw start, position - start, source_kind, source_string, source_binary
+        else do
+          start = position
+          position = position + 1
+          do while position < source_length
+            byte = _source_byte(source_kind, source_string, source_binary, position)
+            if byte > 0x7F then leave
+            position = position + 1
+          end
+          call _queue_raw start, position - start, source_kind, source_string, source_binary
+        end
       end
       else do
         call _decode source_kind, source_string, source_binary, position, source_length
@@ -945,10 +1231,7 @@ unicodednormalizer: class
 
   _source_byte: method = .int
     arg source_kind = .int, expose source_string = .string, expose source_binary = .binary, offset = .int
-    value = 0
-    if source_kind = 1 then assembler sgetu8 value,source_string,offset
-    else value = <at..u8>(offset) source_binary
-    return value
+    return <at..u8>(offset) source_binary
 
   _decode: method = .void
     arg source_kind = .int, expose source_string = .string, expose source_binary = .binary, position = .int, source_length = .int
@@ -1015,7 +1298,11 @@ unicodednormalizer: class
   _process_scalar: method = .void
     arg codepoint = .int, source_offset = .int, source_length = .int, source_kind = .int, expose source_string = .string, expose source_binary = .binary
     if codepoint >= 0xAC00 & codepoint < 0xAC00 + 11172 then do
-      call _emit_hangul codepoint, source_kind, source_string, source_binary
+      if _compose then do
+        call _flush_segment source_kind, source_string, source_binary
+        call _compose_scalar codepoint, 0
+      end
+      else call _emit_hangul codepoint, source_kind, source_string, source_binary
       return
     end
     if _mapped(codepoint) then do
@@ -1025,8 +1312,14 @@ unicodednormalizer: class
       return
     end
     ccc = <at..u8>(_ccc_offset + codepoint) _image
-    if ccc = 0 then call _queue_raw source_offset, source_length, source_kind, source_string, source_binary
-    else call _enqueue_source_mark ccc, source_offset, source_length, source_kind, source_string, source_binary
+    if ccc = 0 then do
+      if _compose then do
+        call _flush_segment source_kind, source_string, source_binary
+        call _compose_scalar codepoint, 0
+      end
+      else call _queue_raw source_offset, source_length, source_kind, source_string, source_binary
+    end
+    else call _enqueue_source_mark codepoint, ccc, source_offset, source_length, source_kind, source_string, source_binary
     return
 
   _mapped: method = .int
@@ -1057,11 +1350,13 @@ unicodednormalizer: class
     first = <at..u32>(offset + 4) _image
     count = <at..u16>(offset + 8) _image
     do i = 0 to count - 1 while _status = 0
-      component = _components_offset + (first + i) * 8
-      ccc = <at..u8>(component) _image
+      component = _components_offset + (first + i) * 12
+      codepoint = <at..u32>(component) _image
+      ccc = <at..u8>(component + 4) _image
       if ccc = 0 then do
         call _flush_segment source_kind, source_string, source_binary
-        call _append_component component
+        if _compose then call _compose_scalar codepoint, 0
+        else call _append_component component
       end
       else call _enqueue_component component
     end
@@ -1097,35 +1392,35 @@ unicodednormalizer: class
     return
 
   _enqueue_source_mark: method = .void
-    arg ccc = .int, source_offset = .int, source_length = .int, source_kind = .int, expose source_string = .string, expose source_binary = .binary
+    arg codepoint = .int, ccc = .int, source_offset = .int, source_length = .int, source_kind = .int, expose source_string = .string, expose source_binary = .binary
     call _ensure_pending
-    offset = _pending_count * 8
-    <at..u8>(offset) _pending = ccc
-    <at..u8>(offset + 1) _pending = source_length
-    payload_offset = offset + 2
-    if source_kind = 1 then do
-      assembler sbmove _pending,payload_offset,source_string,source_offset,source_length
-    end
-    else call bincopy _pending, payload_offset, source_binary, source_offset, source_length
+    offset = _pending_count * 12
+    <at..u32>(offset) _pending = codepoint
+    <at..u8>(offset + 4) _pending = ccc
+    <at..u8>(offset + 5) _pending = source_length
+    payload_offset = offset + 6
+    call bincopy _pending, payload_offset, source_binary, source_offset, source_length
     call _note_pending ccc
     return
 
   _enqueue_component: method = .void
     arg component = .int
     call _ensure_pending
-    offset = _pending_count * 8
-    ccc = <at..u8>(component) _image
-    length = <at..u8>(component + 1) _image
-    <at..u8>(offset) _pending = ccc
-    <at..u8>(offset + 1) _pending = length
-    call bincopy _pending, offset + 2, _image, component + 2, length
+    offset = _pending_count * 12
+    codepoint = <at..u32>(component) _image
+    ccc = <at..u8>(component + 4) _image
+    length = <at..u8>(component + 5) _image
+    <at..u32>(offset) _pending = codepoint
+    <at..u8>(offset + 4) _pending = ccc
+    <at..u8>(offset + 5) _pending = length
+    call bincopy _pending, offset + 6, _image, component + 6, length
     call _note_pending ccc
     return
 
   _ensure_pending: method = .void
     if _pending_count >= _pending_capacity then do
       _pending_capacity = _pending_capacity * 2
-      call binresize _pending, _pending_capacity * 8
+      call binresize _pending, _pending_capacity * 12
     end
     return
 
@@ -1147,9 +1442,7 @@ unicodednormalizer: class
     arg source_kind = .int, expose source_string = .string, expose source_binary = .binary
     if _raw_length = 0 | _status \= 0 then return
     call _ensure_output _raw_length
-    if source_kind = 1 then,
-      assembler sbmove _output,_output_length,source_string,_raw_start,_raw_length
-    else call bincopy _output, _output_length, source_binary, _raw_start, _raw_length
+    call bincopy _output, _output_length, source_binary, _raw_start, _raw_length
     _output_length = _output_length + _raw_length
     _raw_length = 0
     return
@@ -1158,19 +1451,29 @@ unicodednormalizer: class
     if _pending_count = 0 | _status \= 0 then return
     if _pending_disordered then call _sort_pending
     do i = 0 to _pending_count - 1 while _status = 0
-      offset = i * 8
-      span_length = .int
+      offset = i * 12
       if _pending_disordered then do
-        span_length = <at..u8>(offset + 1) _scratch
-        call _ensure_output span_length
-        call bincopy _output, _output_length, _scratch, offset + 2, span_length
+        codepoint = <at..u32>(offset) _scratch
+        ccc = <at..u8>(offset + 4) _scratch
+        span_length = <at..u8>(offset + 5) _scratch
+        if _compose then call _compose_scalar codepoint, ccc
+        else do
+          call _ensure_output span_length
+          call bincopy _output, _output_length, _scratch, offset + 6, span_length
+          _output_length = _output_length + span_length
+        end
       end
       else do
-        span_length = <at..u8>(offset + 1) _pending
-        call _ensure_output span_length
-        call bincopy _output, _output_length, _pending, offset + 2, span_length
+        codepoint = <at..u32>(offset) _pending
+        ccc = <at..u8>(offset + 4) _pending
+        span_length = <at..u8>(offset + 5) _pending
+        if _compose then call _compose_scalar codepoint, ccc
+        else do
+          call _ensure_output span_length
+          call bincopy _output, _output_length, _pending, offset + 6, span_length
+          _output_length = _output_length + span_length
+        end
       end
-      _output_length = _output_length + span_length
     end
     _pending_count = 0
     _pending_disordered = 0
@@ -1179,10 +1482,10 @@ unicodednormalizer: class
 
   _sort_pending: method = .void
     _bucket_flushes = _bucket_flushes + 1
-    call binresize _scratch, _pending_count * 8
+    call binresize _scratch, _pending_count * 12
     call binfill _counts, 0
     do i = 0 to _pending_count - 1
-      ccc = <at..u8>(i * 8) _pending
+      ccc = <at..u8>(i * 12 + 4) _pending
       rank = <at..u8>(_rank_offset + ccc) _image
       offset = rank * 4
       <at..u32>(offset) _counts = <at..u32>(offset) _counts + 1
@@ -1194,22 +1497,115 @@ unicodednormalizer: class
       total = total + <at..u32>(offset) _counts
     end
     do i = 0 to _pending_count - 1
-      source_offset = i * 8
-      ccc = <at..u8>(source_offset) _pending
+      source_offset = i * 12
+      ccc = <at..u8>(source_offset + 4) _pending
       rank = <at..u8>(_rank_offset + ccc) _image
       rank_offset = rank * 4
       target = <at..u32>(rank_offset) _next
-      call bincopy _scratch, target * 8, _pending, source_offset, 8
+      call bincopy _scratch, target * 12, _pending, source_offset, 12
       <at..u32>(rank_offset) _next = target + 1
     end
     return
 
   _append_component: method = .void
     arg component = .int
-    length = <at..u8>(component + 1) _image
+    length = <at..u8>(component + 5) _image
     call _ensure_output length
-    call bincopy _output, _output_length, _image, component + 2, length
+    call bincopy _output, _output_length, _image, component + 6, length
     _output_length = _output_length + length
+    return
+
+  /** Consume one canonically ordered scalar using the UAX #15 D117 state. */
+  _compose_scalar: method = .void
+    arg codepoint = .int, ccc = .int
+    if _compose_has_starter = 0 then do
+      if ccc = 0 then do
+        _compose_has_starter = 1
+        _compose_starter = codepoint
+        _compose_last_ccc = 0
+      end
+      else call _append_codepoint codepoint
+      return
+    end
+
+    composite = -1
+    if _compose_last_ccc < ccc | _compose_last_ccc = 0 then,
+      composite = _compose_pair(_compose_starter, codepoint)
+    if composite >= 0 then do
+      _compose_starter = composite
+      return
+    end
+
+    if ccc = 0 then do
+      call _flush_composer
+      _compose_has_starter = 1
+      _compose_starter = codepoint
+      _compose_last_ccc = 0
+      return
+    end
+    call _ensure_compose_marks
+    <at..u32>(_compose_mark_count * 4) _compose_marks = codepoint
+    _compose_mark_count = _compose_mark_count + 1
+    _compose_last_ccc = ccc
+    return
+
+  /** Hangul arithmetic followed by exact non-Hangul Primary Composite lookup. */
+  _compose_pair: method = .int
+    arg starter = .int, candidate = .int
+    if starter >= 0x1100 & starter <= 0x1112 &,
+       candidate >= 0x1161 & candidate <= 0x1175 then,
+      return 0xAC00 + (starter - 0x1100) * 588 + (candidate - 0x1161) * 28
+    if starter >= 0xAC00 & starter < 0xAC00 + 11172 &,
+       (starter - 0xAC00) <mod> 28 = 0 &,
+       candidate >= 0x11A8 & candidate <= 0x11C2 then,
+      return starter + candidate - 0x11A7
+
+    low = 0
+    high = _composition_directory_count - 1
+    directory = -1
+    do while low <= high
+      middle = (low + high) <idiv> 2
+      value = <at..u32>(_composition_directory_offset + middle * 12) _image
+      if value = starter then do
+        directory = middle
+        leave
+      end
+      if value < starter then low = middle + 1
+      else high = middle - 1
+    end
+    if directory < 0 then return -1
+
+    directory_offset = _composition_directory_offset + directory * 12
+    first = <at..u32>(directory_offset + 4) _image
+    count = <at..u16>(directory_offset + 8) _image
+    low = first
+    high = first + count - 1
+    do while low <= high
+      middle = (low + high) <idiv> 2
+      pair_offset = _composition_pairs_offset + middle * 8
+      value = <at..u32>(pair_offset) _image
+      if value = candidate then return <at..u32>(pair_offset + 4) _image
+      if value < candidate then low = middle + 1
+      else high = middle - 1
+    end
+    return -1
+
+  _ensure_compose_marks: method = .void
+    if _compose_mark_count < _compose_mark_capacity then return
+    _compose_mark_capacity = _compose_mark_capacity * 2
+    call binresize _compose_marks, _compose_mark_capacity * 4
+    return
+
+  _flush_composer: method = .void
+    if _compose_has_starter = 0 then return
+    call _append_codepoint _compose_starter
+    do i = 0 to _compose_mark_count - 1
+      call _append_codepoint <at..u32>(i * 4) _compose_marks
+    end
+    _compose_has_starter = 0
+    _compose_starter = 0
+    _compose_last_ccc = 0
+    _compose_mark_count = 0
     return
 
   _append_codepoint: method = .void
@@ -1253,6 +1649,7 @@ unicodednormalizer: class
     arg source_kind = .int, expose source_string = .string, expose source_binary = .binary
     if _status \= 0 then return
     call _flush_segment source_kind, source_string, source_binary
+    if _status = 0 & _compose then call _flush_composer
     if _status = 0 then call binresize _output, _output_length
     return
 

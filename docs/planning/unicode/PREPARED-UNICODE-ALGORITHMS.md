@@ -1,9 +1,10 @@
 # Prepared Unicode Algorithms: Mathematical Review And Design
 
 Status: mathematical design complete for the Unicode 17.0.0 research baseline;
-the experimental NFD/NFKD prepared path is implemented and conformant on the
-Unicode branch. No production integration, Release performance verdict, or
-Level G API decision is claimed by this document.
+the experimental NFD/NFKD prepared path and fused NFC/NFKC canonical composer
+are implemented and conformant on the Unicode branch. No production
+integration, Release performance verdict, C-form Quick_Check fast-path result,
+or Level G API decision is claimed by this document.
 
 Branch: `unicode`
 
@@ -438,12 +439,25 @@ copies. The engine retains only the open nonstarter suffix, uses the common
 monotone append path, and switches to a stable counting-bucket pass only after
 an inversion. A long adversarial fixture proves that fallback is exercised.
 
-Three branch-local RXAS operations support the string path: `sblen`, `sgetu8`,
-and `sbmove`. Read-only exposed source arguments avoid value-semantics input
-copies. Optimized RXAS contains no input `scopy`, `bcopy`, or `stobin`; the
-`.string` result still uses one final `bcopy` plus `bintos`. The binary-result
-surface avoids that conversion. A const-borrow language contract or
-binary-to-string ownership transfer remains a separate design decision.
+The first hand-written string path used an experimental raw string-byte RXAS
+surface. Its rough Release result was materially slower than the scalar NFD
+baseline, so that instruction experiment was rolled back. The retained oracle
+now uses the existing explicit string/binary conversions. The prepared NFD
+successor instead lowers these classifications to a generated re2c/Level L
+scanner; a future no-copy input view remains a separate decision that requires
+evidence from the generated algorithm.
+
+That generated successor now passes the same Unicode 17 NFD relations and
+unlisted-scalar identity audit in optimized and noopt images on both VMs. Its
+first rough Release screen rejects the current code shape for performance:
+the re2c loop/`SELECT` method contains 3,440 states, 73 optimized `JUMPI`
+dispatches, and 6,455 locals. Recycled VM activation still relinks every local,
+making 20,034 short calls 84.010x/101.059x slower than the scalar baseline.
+One 101,506-byte call is 8.974x/8.818x slower and is essentially tied with the
+hand-prepared scanner. This distinguishes a Level B backend/register-shape
+failure from the prepared partition's mathematical validity. A successor must
+bound live state independently of DFA size and reduce the shared ordered-output
+engine before another performance claim.
 
 Both optimized and non-optimized images pass identically on both VM families:
 20,034 `NormalizationTest.txt` rows, 200,340 NFD/NFKD relations, 1,094,978
@@ -628,6 +642,37 @@ larger—4,965 scalars versus 1,120—so its unconditional Quick_Check=Yes scala
 set is narrower; actual encounter frequency is workload-dependent. Its fast
 path is theoretically valid, and it should follow, not precede, a proved NFC
 composer.
+
+### Experimental C-Form Implementation Result
+
+The Unicode branch now implements the fused fallback in the same prepared
+engine as NFD/NFKD. `unicode_normprops.crexx` parses and audits all 1,120
+normative `Full_Composition_Exclusion` scalars. Generation selects exactly 961
+non-Hangul Primary Composite pairs, sorts them under 391 starters, and emits a
+portable starter directory plus second/composite pair arrays. The largest
+starter bucket has 19 pairs. Hangul L+V and LV+T composition remains
+algorithmic.
+
+The ordering stage emits scalars directly into composer state containing the
+active starter, last surviving intervening CCC, and mutable ordered tail. A
+successful composition replaces the held starter without updating the blocking
+CCC; a failed CCC-zero candidate flushes the held segment and becomes the next
+starter. Leading nonstarters are emitted without inventing a starter. This is
+the state transition proved above and does not allocate an intermediate NFD or
+NFKD result.
+
+The portable version-2 four-form image is 1,722,756 bytes with SHA-256
+`431f6893c28e6e02f50237d6c48be7d4e7973412fc7e54ad9498a03283b966f9`.
+Optimized and compiler/assembler-noopt images pass identically on `rxtvm` and
+`rxbvm`: 20,034 `NormalizationTest.txt` rows, 400,680 four-form relations, and
+1,094,978 unlisted-scalar identity checks per form. Focused cases retain the
+Unicode 16/17 cross-source counterexample, exclusions, D117 blocking, chained
+composition, Hangul, malformed UTF-8, and binary-result parity.
+
+This closes the fused-composer correctness PoC. It does not yet implement the
+allocation-avoiding C-form Quick_Check/stable-region path described above;
+`is_normalized` currently normalizes and compares for NFC/NFKC. That remaining
+work is a performance optimization, not part of the equivalence proof.
 
 ## Case Folding
 
