@@ -2106,13 +2106,17 @@ static rxvm_channel_status channel_local_open(
         return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
     }
     shared->executor = rxvm_executor_create_attached(
-            context->worker.runtime, generation, worker_count,
+            context->worker.runtime, generation, context->provider_location,
+            worker_count,
             admission_capacity, &executor_result);
     if (!shared->executor) {
         free(local);
         free(shared);
-        return executor_result == RXVM_EXECUTOR_OUT_OF_MEMORY
-            ? RXVM_CHANNEL_RESOURCE_EXHAUSTED
+        if (executor_result == RXVM_EXECUTOR_OUT_OF_MEMORY) {
+            return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
+        }
+        return executor_result == RXVM_EXECUTOR_PROVIDER_RESOLUTION_FAILED
+            ? RXVM_CHANNEL_PROVIDER_UNAVAILABLE
             : RXVM_CHANNEL_PROVIDER_FAILURE;
     }
     shared->admission_capacity = admission_capacity;

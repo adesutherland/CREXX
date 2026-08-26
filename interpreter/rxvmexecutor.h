@@ -50,7 +50,8 @@ typedef enum rxvm_executor_result {
     RXVM_EXECUTOR_QUEUE_FULL = 5,
     RXVM_EXECUTOR_STOPPING = 6,
     RXVM_EXECUTOR_ALREADY_TERMINAL = 7,
-    RXVM_EXECUTOR_DOORBELL_UNAVAILABLE = 8
+    RXVM_EXECUTOR_DOORBELL_UNAVAILABLE = 8,
+    RXVM_EXECUTOR_PROVIDER_RESOLUTION_FAILED = 9
 } rxvm_executor_result;
 
 typedef enum rxvm_executor_request_state {
@@ -99,10 +100,14 @@ rxvm_executor *rxvm_executor_create(
         rxvm_executor_result *result_out);
 
 /* Start workers in an existing runtime and attach them to its already sealed
- * immutable program generation. The executor never destroys RUNTIME. */
+ * immutable program generation. PROVIDER_LOCATION is copied before workers
+ * start; each worker resolves the generation's declared providers through that
+ * trusted, immutable search configuration and owns its own RXPA session. The
+ * executor never destroys RUNTIME. */
 rxvm_executor *rxvm_executor_create_attached(
         struct rxvm_runtime *runtime,
         const struct rxvm_program_generation *generation,
+        const char *provider_location,
         size_t worker_count,
         size_t queue_capacity,
         rxvm_executor_result *result_out);

@@ -176,6 +176,15 @@ struct imported_func {
     struct imported_func *duplicate;
 };
 
+/* Superseded parsed class contracts remain reachable by active recursive
+ * import/validation frames.  Keep the Context and its shared file-name storage
+ * together until the owning imported-class registry record is destroyed. */
+struct retained_imported_class_context {
+    Context *context;
+    char *file_name;
+    struct retained_imported_class_context *next;
+};
+
 /*  Importable Classes */
 struct imported_class {
     char *namespace;
@@ -187,6 +196,7 @@ struct imported_class {
     NodeType contract_type;
     char **implements_fqnames;
     size_t implements_count;
+    struct retained_imported_class_context *retained_contexts;
 };
 
 /*  Importable Files */

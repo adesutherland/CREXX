@@ -918,19 +918,48 @@ static int imported_contract_member_count(Context *ctx) {
 }
 
 static void free_imported_class_payload(struct imported_class *cls, int free_identity) {
+    struct retained_imported_class_context *retained;
+
     if (!cls) return;
     if (free_identity) {
         free(cls->name);
         free(cls->fqname);
         free(cls->namespace);
     }
-    free(cls->file_name);
     if (cls->implements_fqnames) {
         size_t k;
         for (k = 0; k < cls->implements_count; k++) free(cls->implements_fqnames[k]);
         free(cls->implements_fqnames);
     }
     if (cls->context) fre_cntx(cls->context);
+    free(cls->file_name);
+
+    retained = cls->retained_contexts;
+    while (retained) {
+        struct retained_imported_class_context *next = retained->next;
+        if (retained->context) fre_cntx(retained->context);
+        free(retained->file_name);
+        free(retained);
+        retained = next;
+    }
+}
+
+static void retain_imported_class_context(struct imported_class *cls) {
+    struct retained_imported_class_context *retained;
+
+    if (!cls || (!cls->context && !cls->file_name)) return;
+
+    retained = malloc(sizeof(struct retained_imported_class_context));
+    if (!retained) {
+        RX_PANIC_OOM("malloc retained imported class context",
+                     sizeof(struct retained_imported_class_context), cls->fqname);
+    }
+    retained->context = cls->context;
+    retained->file_name = cls->file_name;
+    retained->next = cls->retained_contexts;
+    cls->retained_contexts = retained;
+    cls->context = 0;
+    cls->file_name = 0;
 }
 
 static int imported_class_has_implements(const struct imported_class *cls, const char *interface_fqname) {
@@ -986,23 +1015,25 @@ static int add_class(Context *context, struct imported_class *cls) {
         if (existing_cls &&
             imported_contract_member_count(existing_cls->context) < imported_contract_member_count(cls->context)) {
             merge_imported_class_implements(cls, existing_cls);
-            free(existing_cls->file_name);
+            retain_imported_class_context(existing_cls);
             if (existing_cls->implements_fqnames) {
                 size_t k;
                 for (k = 0; k < existing_cls->implements_count; k++) free(existing_cls->implements_fqnames[k]);
                 free(existing_cls->implements_fqnames);
             }
-            if (existing_cls->context) fre_cntx(existing_cls->context);
 
             existing_cls->file_name = cls->file_name;
             existing_cls->context = cls->context;
+            existing_cls->contract_node = cls->contract_node;
             existing_cls->contract_type = cls->contract_type;
             existing_cls->implements_fqnames = cls->implements_fqnames;
             existing_cls->implements_count = cls->implements_count;
 
-            free(cls->name);
-            free(cls->fqname);
-            free(cls->namespace);
+            cls->file_name = 0;
+            cls->context = 0;
+            cls->implements_fqnames = 0;
+            cls->implements_count = 0;
+            free_imported_class_payload(cls, 1);
             free(cls);
             return 1;
         }
@@ -1063,6 +1094,7 @@ static struct imported_class *rximpcl_f(Context* context, char* file_name, char 
     cls->contract_type = contract_type;
     cls->implements_fqnames = implements_fqnames;
     cls->implements_count = implements_count;
+    cls->retained_contexts = 0;
 
     dot = strrchr(cls->fqname, '.');
     if (dot) {

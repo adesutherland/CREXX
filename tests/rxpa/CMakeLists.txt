@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 project(rxpatest C)
 add_subdirectory(multplugins)
+find_package(Threads REQUIRED)
 
 set(CMAKE_C_STANDARD 90)
 
@@ -80,6 +81,80 @@ add_dynamic_plugin_target(_rcc_provider rcc_provider.c)
 add_static_plugin_target(_rcc_provider rcc_provider.c)
 add_rxpa_provider_package(_rcc_provider
         OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/providers")
+
+# CRI-17: a session-aware provider used from attached local-task workers.
+# The controller and every worker must resolve the same declarative provider
+# identity while owning a distinct RXPA V2 session.
+add_dynamic_plugin_target(_cri17_attached
+        PROVIDER_ID rx_cri17provider
+        cri17_attached_provider.c)
+add_static_plugin_target(_cri17_attached
+        PROVIDER_ID rx_cri17provider
+        cri17_attached_provider.c)
+localize_test_plugin_output(_cri17_attached)
+add_rxpa_provider_package(_cri17_attached
+        OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/providers")
+
+add_custom_target(cri17_attached_provider_test ALL)
+crexx_add_rexx_opt_matrix(
+        NAME cri17_attached_provider
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cri17_attached_provider.crexx
+        TARGET_GROUP cri17_attached_provider_test
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
+        RXC_FLAGS -x
+        DEPENDS library classlib _cri17_attached _cri17_attached_static
+        RUNTIME_ARGS
+                ${CMAKE_BINARY_DIR}/bin/library
+                ${CMAKE_BINARY_DIR}/bin/classlib
+        TEST_LABELS "interpreter;concurrency;rxpa;provider;cri-17;regression"
+        REQUIRED_OUTPUT_REGEX
+                "PASS: CRI-17 attached workers resolve distinct RXPA V2 sessions")
+set_tests_properties(
+        cri17_attached_provider_noopt
+        cri17_attached_provider_opt
+        PROPERTIES
+        ENVIRONMENT "CREXX_PROVIDER_PATH=${CMAKE_CURRENT_BINARY_DIR}/providers"
+        TIMEOUT 60)
+
+function(crexx_configure_cri17_attached_control TARGET_NAME)
+    target_include_directories(${TARGET_NAME} PRIVATE
+            ${CMAKE_SOURCE_DIR}/interpreter
+            ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
+            ${CMAKE_SOURCE_DIR}/inc
+            ${CMAKE_SOURCE_DIR}/assembler
+            ${CMAKE_SOURCE_DIR}/binutils/include
+            ${CMAKE_SOURCE_DIR}/rxpa
+            ${CMAKE_SOURCE_DIR}/platform
+            ${CMAKE_SOURCE_DIR}/avl_tree
+            ${CMAKE_SOURCE_DIR}/utf8)
+    target_link_libraries(${TARGET_NAME} PRIVATE Threads::Threads)
+    add_dependencies(${TARGET_NAME}
+            cri17_attached_provider_noopt_artifact
+            _cri17_attached)
+    add_test(
+            NAME ${TARGET_NAME}
+            COMMAND ${TARGET_NAME}
+                    ${CMAKE_CURRENT_BINARY_DIR}/cri17_attached_provider_noopt.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/providers
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${TARGET_NAME} PROPERTIES
+            LABELS "interpreter;concurrency;rxpa;provider;cri-17;regression;negative"
+            TIMEOUT 60)
+endfunction()
+
+add_executable(cri17_attached_provider_control-rxvml
+        cri17_attached_provider_control.c)
+target_link_libraries(cri17_attached_provider_control-rxvml PRIVATE rxvml)
+crexx_configure_cri17_attached_control(
+        cri17_attached_provider_control-rxvml)
+
+add_executable(cri17_attached_provider_control-rxbvml
+        cri17_attached_provider_control.c)
+target_link_libraries(cri17_attached_provider_control-rxbvml PRIVATE rxbvml)
+target_compile_definitions(cri17_attached_provider_control-rxbvml PRIVATE
+        NTHREADED=1)
+crexx_configure_cri17_attached_control(
+        cri17_attached_provider_control-rxbvml)
 
 add_custom_target(rcc_provider_autoload_test ALL)
 crexx_add_rexx_opt_matrix(
