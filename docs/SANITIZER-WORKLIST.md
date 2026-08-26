@@ -14,6 +14,12 @@ also passes both Linux x64 ASan/LSan and macOS arm64 ASan on that commit.
 SAN-001 through SAN-005 and SAN-QA-001 through SAN-QA-007 are therefore closed
 as sanitizer findings.
 
+Status at 2026-08-26: SAN-QA-008 is open after the maintained macOS arm64
+AddressSanitizer lane exposed a typed timeout-completion failure in the byte
+channel provider at `6fd40945d8665c5184b1044269697412310b538f`. Until the
+focused reproducer and full platform gate close, the repository is not
+sanitizer-clean at the current `develop` head.
+
 A later production process-channel repair in `c87809d2b` is not a sanitizer
 finding. Its exact three-test process panel passes ordinary Debug at
 `cmake-build-debug/asan-logs/20260823-100116-ctest` and leak-enabled Linux
@@ -33,6 +39,46 @@ ordinary Debug gate then passes 2,363/2,363 at
 - No reproducible sanitizer or product defect from this campaign remains open.
 
 ## Qualification infrastructure repairs
+
+### SAN-QA-008 — saturated child redirect loses typed timeout completion
+
+Status: open; the exact macOS arm64 ASan failure and retained runner artifact
+are identified. The failure has not repeated in focused or contended local
+runs; final broad platform proof is still required before closure.
+
+- Scope: the byte-channel child-process provider's deadline and saturated
+  output-redirect completion path, exercised by `rxvmchannel_byte_provider`.
+- Failure: macOS arm64 Sanitizer QA run
+  [32879812936](https://github.com/adesutherland/CREXX/actions/runs/32879812936)
+  failed only `rxvmchannel_byte_provider` at revision
+  `6fd40945d8665c5184b1044269697412310b538f`. The retained `ctest.log`
+  reports `FAIL: saturated redirect preserves typed timeout completion`.
+  There is no AddressSanitizer memory diagnostic in the retained log; this is
+  nevertheless a first-party failure in the maintained sanitizer lane and is
+  release-blocking until qualified.
+- Original trigger: `tools/asan-run.sh --phase full --build-jobs 4
+  --test-jobs 8 --build-leaks off --leaks off`, as recorded in the uploaded
+  `sanitizer-logs-macos` artifact for the run above.
+- Smallest permanent reproducer: the saturated bounded-output deadline case in
+  `interpreter/tests/test_rxvmchannel_byte.c`, run with
+  `tools/asan-run.sh --phase ctest --regex '^rxvmchannel_byte_provider$'
+  --leaks off --test-jobs 1` after building the focused target through the
+  runner. The case now reports both the returned completion state and error
+  code if it fails, so a future lane failure is diagnostic rather than another
+  one-bit assertion.
+- Local evidence: 200 serial ordinary Debug repetitions, 200 serial macOS
+  arm64 ASan repetitions and 400 macOS arm64 ASan repetitions across eight
+  concurrent runner-managed CTest processes all passed on the synchronized
+  hotfix source. No memory-safety report or typed-state failure was reproduced.
+- Owner / next action: hotfix qualification; retain the stronger diagnostic,
+  rerun the original broad macOS arm64 ASan trigger and require both final-head
+  GitHub sanitizer lanes to pass. If it recurs, the newly reported state and
+  error code determine whether to repair deadline publication, child launch,
+  or redirect shutdown; do not weaken the assertion or timeout.
+- Acceptance: retain a focused regression that fails for the original reason,
+  pass the same focused shape in ordinary Debug and maintained sanitizer
+  builds, rerun the original broad trigger cleanly, and pass both GitHub
+  sanitizer lanes on the final published revision.
 
 ### SAN-QA-007 — RXQUEUE export variants share a temporary file
 

@@ -1314,9 +1314,12 @@ The built-in command environments split into four spawn modes:
   systems, not a shell. It owns worker-local persistent
   `cd`/`pushd`/`popd` and environment overrides,
   file/text/process/time/network commands, `batch`, and `run` for direct
-  executable dispatch. Without an output or error redirect, emitted text is
-  flushed to the normal VM stdout or stderr stream immediately rather than
-  being held until task completion. CREXX expands host-variable scalar anchors
+  executable dispatch. Without an output or error redirect, both built-in
+  command text and a nested `run` child's corresponding stream inherit the
+  normal VM stdout or stderr stream and are flushed immediately rather than
+  being held until child or task completion. An explicitly redirected stream
+  retains the requested string/array capture semantics. CREXX expands
+  host-variable scalar anchors
   to one command argument and stem anchors to zero or more command arguments
   after its own command parsing; `run :argv[]` therefore launches the child
   through an argv vector rather than by flattening the array to a command
