@@ -1,0 +1,245 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Experimental deterministic UnicodeData.txt parser.  It constructs the
+ * existing typed gennorm2 AST shape directly so the prepared D-form compiler
+ * can share one input contract for canonical and compatibility mappings.
+ */
+
+options levelb
+
+namespace unicode_data expose unicodeucdresult unicode_data_parse
+import rxfnsb
+import unicode_gennorm2
+
+unicode_data_is_scalar: procedure = .int
+  arg value = .int
+  if value < 0 | value > 0x10FFFF then return 0
+  if value >= 0xD800 & value <= 0xDFFF then return 0
+  return 1
+
+/** Parse a pinned UnicodeData.txt into canonical and compatibility ASTs. */
+unicode_data_parse: procedure = .unicodeucdresult
+  arg path = .string, version = .string
+  parser = .unicodeucdparser(path, version)
+  return parser.parse()
+
+/** Result of the first-fault UnicodeData parser. */
+unicodeucdresult: class
+  _canonical = .unicodegennorm2ast
+  _compatibility = .unicodegennorm2ast
+  _status = .int
+  _error = .string
+  _error_line = .int
+  _ccc_count = .int
+
+  *: factory
+    _canonical = .unicodegennorm2ast()
+    _compatibility = .unicodegennorm2ast()
+    _status = 0
+    _error = ""
+    _error_line = 0
+    _ccc_count = 0
+    return
+
+  canonical_ast: method = .unicodegennorm2ast
+    return _canonical
+
+  compatibility_ast: method = .unicodegennorm2ast
+    return _compatibility
+
+  status: method = .int
+    return _status
+
+  error: method = .string
+    return _error
+
+  error_line: method = .int
+    return _error_line
+
+  ccc_count: method = .int
+    return _ccc_count
+
+  set_asts: method = .void
+    arg canonical = .unicodegennorm2ast, compatibility = .unicodegennorm2ast
+    _canonical = canonical
+    _compatibility = compatibility
+    return
+
+  set_ccc_count: method = .void
+    arg count = .int
+    _ccc_count = count
+    return
+
+  fail: method = .void
+    arg message = .string, line_number = .int
+    if _status \= 0 then return
+    _status = 1
+    _error = message
+    _error_line = line_number
+    return
+
+/** Single-pass, no-recovery parser for the semicolon-delimited UCD file. */
+unicodeucdparser: class
+  _path = .string
+  _version = .string
+  _result = .unicodeucdresult
+  _canonical = .unicodegennorm2ast
+  _compatibility = .unicodegennorm2ast
+  _line = .int
+  _ccc_count = .int
+  _last_canonical = .int
+  _last_compatibility = .int
+
+  *: factory
+    arg path = .string, version = .string
+    _path = path
+    _version = version
+    _result = .unicodeucdresult()
+    _canonical = _result.canonical_ast()
+    _compatibility = _result.compatibility_ast()
+    _line = 0
+    _ccc_count = 0
+    _last_canonical = -1
+    _last_compatibility = -1
+    return
+
+  parse: method = .unicodeucdresult
+    if _version \= "17.0.0" then do
+      call _result.fail("UnicodeData parser requires Unicode version 17.0.0", 0)
+      return _result
+    end
+
+    values = .int[]
+    version_record = .unicodegennorm2record("version", 0, 0, 0, 0, 0, -1, -1, -1, _version, values, 0)
+    ignored = _canonical.add_record(version_record)
+    ignored = _compatibility.add_record(version_record)
+
+    lines = readlines(_path)
+    if lines[0] <= 0 then do
+      call _result.fail("UnicodeData input is empty or unreadable", 0)
+      return _result
+    end
+
+    do line_number = 1 to lines[0] while _result.status() = 0
+      _line = line_number
+      line = strip(lines[_line])
+      if line = "" then do
+        call _result.fail("UnicodeData contains an empty record", _line)
+        leave
+      end
+      fields = qsplit(line, ";")
+      if fields[0] \= 15 then do
+        call _result.fail("UnicodeData record does not contain 15 fields", _line)
+        leave
+      end
+
+      source = _hex(strip(fields[1]), "code point")
+      if _result.status() \= 0 then leave
+      ccc_text = strip(fields[4])
+      if ccc_text = "" then do
+        call _result.fail("UnicodeData canonical combining class is empty", _line)
+        leave
+      end
+      ccc = ccc_text as .int
+      if ccc < 0 | ccc > 254 then do
+        call _result.fail("UnicodeData canonical combining class must be 0..254", _line)
+        leave
+      end
+      if ccc > 0 then call _add_ccc source, ccc
+      if _result.status() \= 0 then leave
+
+      decomposition = strip(fields[6])
+      if decomposition \= "" then call _add_mapping source, decomposition
+    end
+
+    if _result.status() = 0 then do
+      if _canonical.one_way_mappings() \= 2081 |,
+         _compatibility.one_way_mappings() \= 5914 then,
+        call _result.fail("UnicodeData mapping counts do not match Unicode 17.0.0", _line)
+      else if _canonical.mapping_values() \= 3127 |,
+              _compatibility.mapping_values() \= 8740 then,
+        call _result.fail("UnicodeData mapping-value counts do not match Unicode 17.0.0", _line)
+      else if _ccc_count \= 968 then,
+        call _result.fail("UnicodeData CCC count does not match Unicode 17.0.0", _line)
+    end
+    call _result.set_asts(_canonical, _compatibility)
+    call _result.set_ccc_count(_ccc_count)
+    return _result
+
+  _add_ccc: method = .void
+    arg source = .int, ccc = .int
+    values = .int[]
+    record = .unicodegennorm2record("ccc_single", _line, 0, 0, 0, 0, source, source, ccc, "", values, 0)
+    ignored = _canonical.add_record(record)
+    ignored = _compatibility.add_record(record)
+    _ccc_count = _ccc_count + 1
+    return
+
+  _add_mapping: method = .void
+    arg source = .int, decomposition = .string
+    compatibility_only = 0
+    if left(decomposition, 1) = "<" then do
+      close = pos(">", decomposition)
+      if close <= 2 | close >= length(decomposition) then do
+        call _result.fail("invalid UnicodeData compatibility tag", _line)
+        return
+      end
+      decomposition = strip(substr(decomposition, close + 1))
+      compatibility_only = 1
+    end
+    if decomposition = "" then do
+      call _result.fail("empty UnicodeData decomposition mapping", _line)
+      return
+    end
+
+    values = .int[]
+    value_count = words(decomposition)
+    do i = 1 to value_count while _result.status() = 0
+      value = _hex(word(decomposition, i), "decomposition value")
+      if _result.status() = 0 & unicode_data_is_scalar(value) = 0 then,
+        call _result.fail("UnicodeData decomposition contains a non-scalar value", _line)
+      if _result.status() = 0 then values[i] = value
+    end
+    if _result.status() \= 0 then return
+
+    if source <= _last_compatibility then do
+      call _result.fail("UnicodeData compatibility mappings are not strictly ordered", _line)
+      return
+    end
+    record = .unicodegennorm2record("mapping_one_way", _line, 0, 0, 0, 0, source, source, -1, "", values, value_count)
+    ignored = _compatibility.add_record(record)
+    _last_compatibility = source
+
+    if compatibility_only = 0 then do
+      if source <= _last_canonical then do
+        call _result.fail("UnicodeData canonical mappings are not strictly ordered", _line)
+        return
+      end
+      ignored = _canonical.add_record(record)
+      _last_canonical = source
+    end
+    return
+
+  _hex: method = .int
+    arg text = .string, description = .string
+    if text = "" | length(text) > 6 then do
+      call _result.fail("invalid UnicodeData " || description, _line)
+      return -1
+    end
+    value = 0
+    do i = 1 to length(text)
+      byte = c2d(substr(text, i, 1))
+      if byte >= 48 & byte <= 57 then digit = byte - 48
+      else if byte >= 65 & byte <= 70 then digit = byte - 55
+      else do
+        call _result.fail("invalid hexadecimal UnicodeData " || description, _line)
+        return -1
+      end
+      value = value * 16 + digit
+    end
+    if value > 0x10FFFF then do
+      call _result.fail("UnicodeData " || description || " exceeds U+10FFFF", _line)
+      return -1
+    end
+    return value

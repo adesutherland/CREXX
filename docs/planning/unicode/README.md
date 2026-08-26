@@ -1,11 +1,11 @@
 # Level L Language Tooling And Level G Unicode Research Track
 
-Status: Phase 1 and Phase 2 complete; the Level L lexer syntax, Level B
-bootstrap frontend, authored TinyExpr generator proof, and authored ICU
-`gennorm2` lexer proof are complete. The typed Level B Unicode-rule parser is
-also complete, as is the bounded portable Level B NFD normalizer proof. The
-reusable neutral IR, native automaton core, general Unicode property/data
-compiler, packed-layout verdict, NFC, and Level G library remain research work.
+Status: the Level L lexer syntax, Level B bootstrap frontend, authored
+TinyExpr/ICU lexer proofs, typed Unicode-rule parser, scalar NFD baseline, and
+prepared UTF-8 NFD/NFKD experimental engine are complete. The reusable neutral
+IR, native automaton core, general Unicode property/data compiler, final binary
+layout verdict, NFC/NFKC, case folding, segmentation, and Level G library
+remain research work.
 
 Branch: `unicode`, based on `origin/develop` at `7b78375bd` on 2026-08-25.
 The branch is intentionally kept separate from `develop` until its contracts,
@@ -103,6 +103,17 @@ Current strengths include:
 - zero-copy comparison of source/table spans; and
 - optimized packed dispatch support already used elsewhere in the compiler.
 
+The Unicode branch additionally prototypes three bounded RXAS operations:
+
+- `sblen` obtains the UTF-8 byte length of a valid `.string`;
+- `sgetu8` reads one byte from that string with strict bounds checking; and
+- `sbmove` moves a bounded string-byte span into an existing `.binary`.
+
+Together with exposed read-only source arguments, these permit direct UTF-8
+scanning without `stobin` or a whole-input `scopy`. They are branch-local
+research instructions with focused metadata, range, failure-atomicity, and
+both-VM tests; they are not yet an accepted production binary surface.
+
 Known limitations relevant to generated tooling include:
 
 - writes do not resize a buffer, so capacity/logical length must be planned;
@@ -116,8 +127,9 @@ Known limitations relevant to generated tooling include:
 - repeated offset calculations and multiple small field reads can outweigh the
   benefit of a compact representation.
 
-These are investigation points. The first implementation must measure actual
-generated lexer and Unicode workloads before proposing changes.
+These remain investigation points. The prepared D implementation establishes
+one real workload and the minimum byte-access shape; Release measurement still
+precedes any production opcode or layout decision.
 
 ### Current Unicode Contract
 
@@ -195,6 +207,16 @@ must fail on an unexpected format/version instead of silently producing new
 tables.
 
 ## Unicode Algorithm Shape
+
+The
+[prepared Unicode algorithms mathematical review](PREPARED-UNICODE-ALGORITHMS.md)
+gives the proof and operation-count basis used by the prepared D implementation
+and the next composition work. It proves complete prepared paths for NFD/NFKD and ordinary case
+folding, a fused exact fallback plus bounded fast regions for NFC/NFKC, and
+finite-state feasibility for extended grapheme and default word boundaries.
+It also records why the historical NFC “inert character” shortcuts were unsafe
+and confirms that the current Level B NFD proof advances through UTF-8 linearly
+but is not a direct re2c-style byte transducer.
 
 ### Normalization
 
@@ -434,10 +456,30 @@ algorithmic Hangul decomposition plus stable canonical ordering, and passes
 checks on both VM families. The same reproduction reruns the independent
 C++/re2c oracle and matches its retained conformance summary.
 
+The subsequent prepared D slice is complete on the research branch. A
+deterministic Level B parser consumes the pinned Unicode 17.0.0
+`UnicodeData.txt` and creates canonical and compatibility typed ASTs. The
+generator computes full recursive closure and canonical ordering once, rejects
+CCC 255, and emits one 1,659,772-byte portable image with SHA-256
+`224dc0355cdf2ea4bbe51640bde15c2687d6a719196b8332f3455a2ccda5500e`.
+It contains 2,081/5,914 NFD/NFKD mappings, 3,450/9,193 prepared components,
+pre-encoded UTF-8, dense CCC/rank tables, mapping bitsets, and page indexes.
+
+The shared normalizer scans UTF-8 bytes directly, reconstructing scalars only
+for non-ASCII classification and mapping lookup. It bulk-copies identity spans,
+uses arithmetic Hangul, buffers only the open nonstarter suffix, appends
+monotone CCC runs directly, and uses stable 55-rank buckets after an inversion.
+Optimized RXAS proves no whole-input string/binary copy. Both optimized and
+non-optimized linked images pass 200,340 NFD/NFKD corpus relations and
+1,094,978 unlisted-scalar identity checks per form on `rxtvm` and `rxbvm`.
+Strict binary ingress rejects malformed UTF-8. The `.string` result still makes
+one final binary-to-string ownership copy; the binary-result surface does not.
+
 Remaining before a production generator decision: extract a reusable neutral
 lexer IR, decide whether re2c remains a backend/oracle or is replaced by native
-Level B/Level L automaton construction, generalize the bounded NFD compiler into
-the property/data kernel, measure portable versus packed layouts, and later
+Level B/Level L automaton construction, generalize the bounded UCD compiler into
+the property/data kernel, measure the prepared portable path against relevant
+packed/hybrid layouts, and later
 prove Level L self-lexing/self-hosting. The current `.string` scanner path also
 relies on the Level B valid-UTF-8 boundary; a future binary input path must
 implement the authored `malformed` rule explicitly.
@@ -460,6 +502,15 @@ implement the authored `malformed` rule explicitly.
 Gate 4: Adrian approves or rejects each compiler/RXAS/VM/language change. No
 architecture or syntax change is bundled implicitly into Unicode work.
 
+Current research result on 2026-08-26: Adrian approved `sblen`, `sgetu8`, and
+`sbmove` for the isolated Unicode branch so the prepared engine can inspect a
+valid string as UTF-8 bytes and move only selected spans. Focused instruction
+tests pass on both VM variants, and the optimized consumer has no whole-input
+copy. This is correctness and generated-shape evidence, not the later Release
+performance or production-integration verdict. Portable remains the default
+prepared-image position because the earlier packed NFD image was 7.65 times
+larger for a modest speed advantage.
+
 ### 5. Unicode Data Compiler And Property Kernel
 
 - Parse and validate the pinned UCD files.
@@ -474,7 +525,11 @@ architecture or syntax change is bundled implicitly into Unicode work.
 Gate 5: deterministic regeneration and complete property/table audit pass on
 both VM families.
 
-### 6. NFD First — experimental Level B proof complete
+Partial result: the deterministic `UnicodeData.txt` parser and the CCC plus
+canonical/compatibility decomposition kernel needed by D forms are complete.
+They are intentionally not yet claimed as a general UCD property compiler.
+
+### 6. NFD First — scalar and prepared experimental proofs complete
 
 - Implement recursive canonical decomposition, algorithmic Hangul
   decomposition, and stable canonical combining-class ordering.
@@ -494,6 +549,11 @@ runtime format. General UCD/property compilation, packed versus portable
 measurement, bounded-memory/streaming policy, public API design, and product
 integration remain open.
 
+The 2026-08-26 prepared successor additionally removes runtime recursive
+decomposition and whole-result canonical ordering, scans UTF-8 bytes directly,
+and shares the same engine with NFKD. Its complete conformance and generated
+partition audits are retained by the Level L bootstrap runner.
+
 ### 7. NFC Composition
 
 - Add composition-pair lookup, starter/blocking state, composition exclusions,
@@ -504,13 +564,16 @@ integration remain open.
 Gate 7: complete Unicode 17.0.0 NFC conformance and an accepted performance and
 memory verdict.
 
-### 8. Compatibility Forms
+### 8. Compatibility Forms — NFKD experimental proof complete
 
 - Add compatibility decomposition tags/mappings.
 - Reuse the proved ordering and composition phases for NFKD and NFKC.
 - Document the semantic loss inherent in compatibility normalization.
 
-Gate 8: complete Unicode 17.0.0 NFKD/NFKC conformance.
+NFKD result on 2026-08-26: complete Unicode 17.0.0 conformance passes through
+the shared prepared D engine. NFKC remains dependent on the unimplemented
+canonical composer, so the combined compatibility-form milestone is not
+closed.
 
 ### 9. Full Case Folding And Explicit Comparison
 

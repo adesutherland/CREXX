@@ -1,4 +1,4 @@
-# Level L Bootstrap Frontend, cREXX Lexer, And Level B NFD Proof
+# Level L Bootstrap Frontend, cREXX Lexer, And Prepared D-Form Proof
 
 This retained experiment implements the first executable Level L lexer-maker
 slice entirely outside the production compiler.
@@ -25,6 +25,14 @@ retained ICU nfc.txt
     -> recursive canonical and algorithmic Hangul decomposition
     -> stable canonical combining-class ordering
     -> complete Unicode 17.0.0 NFD conformance on both VMs
+
+retained UnicodeData.txt
+    -> deterministic hand-written Level B UCD parser
+    -> canonical and compatibility typed decomposition ASTs
+    -> generation-time recursive closure and canonical ordering
+    -> one portable prepared NFD/NFKD image
+    -> direct strict UTF-8 byte scan with prepared actions
+    -> complete Unicode 17.0.0 NFD and NFKD conformance on both VMs
 ```
 
 The authored language is Level L. re2c is used only to construct and emit the
@@ -85,6 +93,31 @@ lookup, and a cycle/depth panic. Table, Hangul, and binary-search arithmetic
 uses the mode-independent Level B `<idiv>` and `<mod>` operators, so the result
 does not depend on the source file's `OPTIONS NUMERIC_*` parser mode.
 
+`unicode_data.crexx` parses the retained Unicode 17.0.0 `UnicodeData.txt`
+directly into the existing typed normalization AST. It rejects malformed
+records, non-scalar mappings, duplicate/out-of-order records, and CCC 255 at
+the first fault. `unicode_d.crexx` closes every canonical and compatibility
+mapping recursively at generation time, applies canonical ordering to the
+complete expansion, classifies the resulting boundary shape, and emits one
+deterministic 1,659,772-byte portable image. The image SHA-256 is
+`224dc0355cdf2ea4bbe51640bde15c2687d6a719196b8332f3455a2ccda5500e`.
+
+The shared NFD/NFKD engine scans UTF-8 bytes directly. ASCII identity runs are
+coalesced, mapped expansions are stored pre-encoded, Hangul uses arithmetic,
+and only the open trailing nonstarter run is buffered. Monotone CCC runs append
+directly; an inversion switches to a stable counting-bucket pass over the 55
+positive CCC ranks. A `.binary` ingress validates shortest-form UTF-8 and
+rejects malformed, surrogate, truncated, and out-of-range encodings.
+
+The `.string` and `.binary` source arguments use Level B exposed-argument
+binding as a read-only borrow. Optimized RXAS therefore contains no whole-input
+`scopy`, `bcopy`, or `stobin`: `sblen` obtains UTF-8 byte length, `sgetu8` reads
+a string byte, and `sbmove` copies selected string spans into prepared output.
+The `.string` result currently incurs one final `bcopy` plus `bintos` ownership
+conversion. `normalize_binary` retains a binary result and avoids that
+string-result conversion. An ownership-transfer conversion is a separate
+future RXAS decision, not part of this proof.
+
 ## Reproduce
 
 From the repository root:
@@ -105,7 +138,8 @@ variables are:
 The run regenerates the Token dump, AST dump, re2c adapter input, and final
 cREXX for both specifications. It requires byte identity with the committed
 files under `generated/`, compiles and links both generated scanners and the
-NFD module, and runs all focused checks on `rxtvm` and `rxbvm`. It also
+scalar NFD and prepared NFD/NFKD modules, and runs all focused checks on
+`rxtvm` and `rxbvm`. It also
 regenerates and runs the independent C++/re2c NFD oracle and requires its
 summary to match the retained Phase 2 evidence.
 
@@ -128,6 +162,14 @@ and recursive Latin decomposition, canonical reordering, Hangul LV/LVT,
 non-BMP identity, CCC lookup, and cyclic mapping rejection. Both VM families
 produce the byte-identical retained summary in `evidence/nfd-result.txt`.
 
+The prepared engine independently passes all 200,340 NFD and NFKD relations
+from the same 20,034-row corpus and all 1,094,978 required unlisted-scalar
+identity checks for each form. Focused fixtures cover compatibility and
+recursive expansion, cross-source-character ordering, marks-only mappings,
+stable equal-CCC ordering, a long disordered bucket run, Hangul, non-BMP
+identity, exact D-form Quick_Check, binary parity, and malformed UTF-8. Both VM
+families reproduce `evidence/unicode-d-result.txt` byte for byte.
+
 ## Deliberate boundaries
 
 - This is an experimental Level B tool, not new syntax in production `rxc` and
@@ -143,12 +185,21 @@ produce the byte-identical retained summary in `evidence/nfd-result.txt`.
   automaton backend. A separately reusable neutral IR and native Level B/Level L
   automaton builder remain later work.
 - Tokens use a portable 12-byte proof layout with `<at..u16>`/`<at..u32>`.
-  The NFD table is also a portable proof layout. Neither layout is an approved
-  product format; host-native packed and load/convert-once representations
-  remain the next measured comparison.
+  Both normalization tables are also portable proof layouts. The prepared
+  image is much smaller than the earlier packed NFD experiment, so portable is
+  the default research direction. None is an approved product format;
+  host-native packed and load/convert-once representations remain measured
+  alternatives after the PoC.
 - The Unicode rule parser and NFD table compiler cover the retained `gennorm2`
   canonical data only. They are not a general UCD/property compiler.
-- The normalizer implements NFD only. It does not implement NFC composition,
-  compatibility forms, case folding, streaming, or a public Level G API.
+- The scalar baseline implements NFD. The prepared byte engine implements NFD
+  and NFKD, but not NFC/NFKC composition, chunked input, case folding,
+  segmentation, or a public Level G API.
+- Exposed source arguments are read-only by convention but Level B cannot yet
+  express a const borrow. A future public API must decide whether to retain
+  that convention, add a read-only borrowing surface, or accept an input copy.
+- D-form state retains only the open trailing nonstarter run, but the current
+  public methods accept one complete contiguous input. Arbitrary chunk splits
+  and incomplete UTF-8 prefix state remain a later streaming proof.
 - Level L parser-maker syntax, self-lexing/self-hosting, recovery, token
   payloads, streaming, and physical packed AST storage remain later work.

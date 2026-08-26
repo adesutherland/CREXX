@@ -1,0 +1,567 @@
+/* Correctness-gated Unicode NFD table-layout throughput experiment. */
+options levelb
+
+import rxfnsb
+import level_l_gennorm2
+import unicode_gennorm2
+import unicode_nfd
+import unicode_nfd_packed
+import unicode_nfd_apple
+
+arg argv = .string[]
+if argv[0] \= 6 & argv[0] \= 8 then do
+  say "usage: benchmark_unicode_nfd variant vm nfc.txt NormalizationTest.txt warmups samples [rows|buffer repetitions]"
+  return 2
+end
+
+variant = argv[1]
+vm_label = argv[2]
+nfc_path = argv[3]
+normalization_path = argv[4]
+warmups = argv[5] as .int
+sample_count = argv[6] as .int
+workload = "rows"
+buffer_repetitions = 0
+if argv[0] = 8 then do
+  workload = argv[7]
+  buffer_repetitions = argv[8] as .int
+end
+if variant \= "portable" & variant \= "packed" & variant \= "apple-rxpa" then,
+  return fail("variant must be portable, packed, or apple-rxpa")
+if warmups < 0 then return fail("warmups must be non-negative")
+if sample_count < 1 then return fail("samples must be positive")
+if workload \= "rows" & workload \= "buffer" then return fail("workload must be rows or buffer")
+if workload = "rows" & buffer_repetitions \= 0 then return fail("row workload repetitions must be zero")
+if workload = "buffer" & buffer_repetitions < 1 then return fail("buffer repetitions must be positive")
+
+rules_source = loadtext(nfc_path, "0a"x)
+tokens = level_l_gennorm2_lex(rules_source)
+if level_l_gennorm2_status() \= 0 then return fail("gennorm2 lexer: " || level_l_gennorm2_error_message())
+parse_result = unicode_gennorm2_parse(rules_source, tokens)
+if parse_result.status() \= 0 then return fail("gennorm2 parser: " || parse_result.error())
+
+sources = .string[]
+expected = .string[]
+lines = readlines(normalization_path)
+do line_number = 1 to lines[0]
+  line = strip(lines[line_number])
+  if line = "" | left(line, 1) = "#" | left(line, 1) = "@" then iterate
+  fields = qsplit(line, ";")
+  if fields[0] < 3 then return fail("invalid normalization row at line " || line_number)
+  source_hex = strip(fields[1])
+  expected_hex = strip(fields[3])
+  if source_hex = "" | expected_hex = "" then return fail("empty normalization field at line " || line_number)
+  row = sources[0] + 1
+  sources[row] = hex_sequence_to_string(source_hex)
+  expected[row] = hex_sequence_to_string(expected_hex)
+end
+if sources[0] \= 20034 | expected[0] \= 20034 then return fail("unexpected normalization row count")
+
+if workload = "buffer" then do
+  source_buffer = .string
+  expected_buffer = .string
+  call build_large_buffers reference sources, reference expected, buffer_repetitions, source_buffer, expected_buffer
+  if variant = "portable" then,
+    return benchmark_portable_buffer(parse_result.ast(), reference source_buffer, reference expected_buffer, vm_label, warmups, sample_count, buffer_repetitions)
+  if variant = "packed" then,
+    return benchmark_packed_buffer(parse_result.ast(), reference source_buffer, reference expected_buffer, vm_label, warmups, sample_count, buffer_repetitions)
+  return benchmark_apple_rxpa_buffer(reference sources, reference expected, reference source_buffer, reference expected_buffer, vm_label, warmups, sample_count, buffer_repetitions)
+end
+
+if variant = "portable" then,
+  return benchmark_portable(parse_result.ast(), reference sources, reference expected, vm_label, warmups, sample_count)
+if variant = "packed" then,
+  return benchmark_packed(parse_result.ast(), reference sources, reference expected, vm_label, warmups, sample_count)
+return benchmark_apple_rxpa(reference sources, reference expected, vm_label, warmups, sample_count)
+
+benchmark_portable: procedure = .int
+  arg ast = .unicodegennorm2ast, sources_ref = reference .string[], expected_ref = reference .string[], vm_label = .string, warmups = .int, sample_count = .int
+  sources = dereference sources_ref
+  expected = dereference expected_ref
+
+  started = time("us")
+  tables = unicode_nfd_compile(ast)
+  if tables.status() \= 0 then return fail("portable table compiler: " || tables.error())
+  normalizer = unicode_nfd_new(tables)
+  if normalizer.status() \= 0 then return fail("portable table validation: " || normalizer.error())
+  prepare_us = elapsed_us(started)
+
+  checksum = portable_correctness(reference normalizer, reference sources, reference expected)
+  if checksum < 0 then return 1
+  say "benchmark=unicode_nfd phase=prepare variant=portable vm=" || vm_label,
+      "rows=" || sources[0] "elapsed_us=" || prepare_us,
+      "table_bytes=" || tables.byte_length() "int_bytes=" || <sizeof..int>
+
+  do warmup = 1 to warmups
+    actual_checksum = portable_pass(reference normalizer, reference sources)
+    if actual_checksum \= checksum then return fail("portable warmup checksum")
+  end
+
+  samples = .int[]
+  do sample = 1 to sample_count
+    started = time("us")
+    actual_checksum = portable_pass(reference normalizer, reference sources)
+    elapsed = elapsed_us(started)
+    if actual_checksum \= checksum then return fail("portable sample checksum")
+    samples[sample] = elapsed
+    say "benchmark=unicode_nfd phase=normalize variant=portable vm=" || vm_label,
+        "sample=" || sample "rows=" || sources[0] "elapsed_us=" || elapsed,
+        "checksum=" || actual_checksum
+  end
+  median = median_us(reference samples)
+  say "benchmark=unicode_nfd phase=summary variant=portable vm=" || vm_label,
+      "warmups=" || warmups "samples=" || sample_count "rows=" || sources[0],
+      "median_us=" || median "checksum=" || checksum
+  say "PASS: Unicode NFD portable performance cell"
+  return 0
+
+benchmark_portable_buffer: procedure = .int
+  arg ast = .unicodegennorm2ast, source_ref = reference .string, expected_ref = reference .string, vm_label = .string, warmups = .int, sample_count = .int, repetitions = .int
+  source = dereference source_ref
+  expected = dereference expected_ref
+
+  started = time("us")
+  tables = unicode_nfd_compile(ast)
+  if tables.status() \= 0 then return fail("portable table compiler: " || tables.error())
+  normalizer = unicode_nfd_new(tables)
+  if normalizer.status() \= 0 then return fail("portable table validation: " || normalizer.error())
+  prepare_us = elapsed_us(started)
+
+  checksum = portable_buffer_correctness(reference normalizer, reference source, reference expected)
+  if checksum < 0 then return 1
+  input_bytes = binlength(source as .binary)
+  output_bytes = binlength(expected as .binary)
+  input_scalars = string_scalars(source)
+  output_scalars = string_scalars(expected)
+  say "benchmark=unicode_nfd phase=prepare variant=portable vm=" || vm_label,
+      "workload=buffer repetitions=" || repetitions,
+      "input_utf8_bytes=" || input_bytes "output_utf8_bytes=" || output_bytes,
+      "input_scalars=" || input_scalars "output_scalars=" || output_scalars,
+      "elapsed_us=" || prepare_us "table_bytes=" || tables.byte_length(),
+      "int_bytes=" || <sizeof..int>
+
+  do warmup = 1 to warmups
+    actual_checksum = portable_buffer_pass(reference normalizer, reference source)
+    if actual_checksum \= checksum then return fail("portable buffer warmup checksum")
+  end
+
+  samples = .int[]
+  do sample = 1 to sample_count
+    started = time("us")
+    actual_checksum = portable_buffer_pass(reference normalizer, reference source)
+    elapsed = elapsed_us(started)
+    if actual_checksum \= checksum then return fail("portable buffer sample checksum")
+    samples[sample] = elapsed
+    say "benchmark=unicode_nfd phase=normalize variant=portable vm=" || vm_label,
+        "workload=buffer repetitions=" || repetitions "sample=" || sample,
+        "input_utf8_bytes=" || input_bytes "elapsed_us=" || elapsed,
+        "checksum_utf8_bytes=" || actual_checksum
+  end
+  median = median_us(reference samples)
+  throughput = input_bytes * 1000000 <idiv> median
+  say "benchmark=unicode_nfd phase=summary variant=portable vm=" || vm_label,
+      "workload=buffer repetitions=" || repetitions,
+      "warmups=" || warmups "samples=" || sample_count,
+      "input_utf8_bytes=" || input_bytes "output_utf8_bytes=" || output_bytes,
+      "median_us=" || median "input_utf8_bytes_per_second=" || throughput,
+      "checksum_utf8_bytes=" || checksum
+  say "PASS: Unicode NFD portable large-buffer performance cell"
+  return 0
+
+benchmark_packed: procedure = .int
+  arg ast = .unicodegennorm2ast, sources_ref = reference .string[], expected_ref = reference .string[], vm_label = .string, warmups = .int, sample_count = .int
+  sources = dereference sources_ref
+  expected = dereference expected_ref
+
+  started = time("us")
+  tables = unicode_nfd_packed_compile(ast)
+  if tables.status() \= 0 then return fail("packed table compiler: " || tables.error())
+  normalizer = unicode_nfd_packed_new(tables)
+  if normalizer.status() \= 0 then return fail("packed table validation: " || normalizer.error())
+  prepare_us = elapsed_us(started)
+
+  checksum = packed_correctness(reference normalizer, reference sources, reference expected)
+  if checksum < 0 then return 1
+  say "benchmark=unicode_nfd phase=prepare variant=packed vm=" || vm_label,
+      "rows=" || sources[0] "elapsed_us=" || prepare_us,
+      "table_bytes=" || tables.byte_length() "int_bytes=" || tables.int_size()
+
+  do warmup = 1 to warmups
+    actual_checksum = packed_pass(reference normalizer, reference sources)
+    if actual_checksum \= checksum then return fail("packed warmup checksum")
+  end
+
+  samples = .int[]
+  do sample = 1 to sample_count
+    started = time("us")
+    actual_checksum = packed_pass(reference normalizer, reference sources)
+    elapsed = elapsed_us(started)
+    if actual_checksum \= checksum then return fail("packed sample checksum")
+    samples[sample] = elapsed
+    say "benchmark=unicode_nfd phase=normalize variant=packed vm=" || vm_label,
+        "sample=" || sample "rows=" || sources[0] "elapsed_us=" || elapsed,
+        "checksum=" || actual_checksum
+  end
+  median = median_us(reference samples)
+  say "benchmark=unicode_nfd phase=summary variant=packed vm=" || vm_label,
+      "warmups=" || warmups "samples=" || sample_count "rows=" || sources[0],
+      "median_us=" || median "checksum=" || checksum
+  say "PASS: Unicode NFD packed performance cell"
+  return 0
+
+benchmark_packed_buffer: procedure = .int
+  arg ast = .unicodegennorm2ast, source_ref = reference .string, expected_ref = reference .string, vm_label = .string, warmups = .int, sample_count = .int, repetitions = .int
+  source = dereference source_ref
+  expected = dereference expected_ref
+
+  started = time("us")
+  tables = unicode_nfd_packed_compile(ast)
+  if tables.status() \= 0 then return fail("packed table compiler: " || tables.error())
+  normalizer = unicode_nfd_packed_new(tables)
+  if normalizer.status() \= 0 then return fail("packed table validation: " || normalizer.error())
+  prepare_us = elapsed_us(started)
+
+  checksum = packed_buffer_correctness(reference normalizer, reference source, reference expected)
+  if checksum < 0 then return 1
+  input_bytes = binlength(source as .binary)
+  output_bytes = binlength(expected as .binary)
+  input_scalars = string_scalars(source)
+  output_scalars = string_scalars(expected)
+  say "benchmark=unicode_nfd phase=prepare variant=packed vm=" || vm_label,
+      "workload=buffer repetitions=" || repetitions,
+      "input_utf8_bytes=" || input_bytes "output_utf8_bytes=" || output_bytes,
+      "input_scalars=" || input_scalars "output_scalars=" || output_scalars,
+      "elapsed_us=" || prepare_us "table_bytes=" || tables.byte_length(),
+      "int_bytes=" || tables.int_size()
+
+  do warmup = 1 to warmups
+    actual_checksum = packed_buffer_pass(reference normalizer, reference source)
+    if actual_checksum \= checksum then return fail("packed buffer warmup checksum")
+  end
+
+  samples = .int[]
+  do sample = 1 to sample_count
+    started = time("us")
+    actual_checksum = packed_buffer_pass(reference normalizer, reference source)
+    elapsed = elapsed_us(started)
+    if actual_checksum \= checksum then return fail("packed buffer sample checksum")
+    samples[sample] = elapsed
+    say "benchmark=unicode_nfd phase=normalize variant=packed vm=" || vm_label,
+        "workload=buffer repetitions=" || repetitions "sample=" || sample,
+        "input_utf8_bytes=" || input_bytes "elapsed_us=" || elapsed,
+        "checksum_utf8_bytes=" || actual_checksum
+  end
+  median = median_us(reference samples)
+  throughput = input_bytes * 1000000 <idiv> median
+  say "benchmark=unicode_nfd phase=summary variant=packed vm=" || vm_label,
+      "workload=buffer repetitions=" || repetitions,
+      "warmups=" || warmups "samples=" || sample_count,
+      "input_utf8_bytes=" || input_bytes "output_utf8_bytes=" || output_bytes,
+      "median_us=" || median "input_utf8_bytes_per_second=" || throughput,
+      "checksum_utf8_bytes=" || checksum
+  say "PASS: Unicode NFD packed large-buffer performance cell"
+  return 0
+
+benchmark_apple_rxpa: procedure = .int
+  arg sources_ref = reference .string[], expected_ref = reference .string[], vm_label = .string, warmups = .int, sample_count = .int
+  sources = dereference sources_ref
+  expected = dereference expected_ref
+
+  mismatch_count = 0
+  checksum = apple_rxpa_correctness(reference sources, reference expected, mismatch_count)
+  if checksum < 0 then return 1
+  say "benchmark=unicode_nfd phase=prepare variant=apple-rxpa vm=" || vm_label,
+      "rows=" || sources[0] "elapsed_us=0 table_bytes=system int_bytes=" || <sizeof..int>
+  say "benchmark=unicode_nfd phase=correctness variant=apple-rxpa vm=" || vm_label,
+      "rows=" || sources[0] "unicode17_mismatches=" || mismatch_count
+
+  do warmup = 1 to warmups
+    actual_checksum = apple_rxpa_pass(reference sources)
+    if actual_checksum \= checksum then return fail("Apple RXPA warmup checksum")
+  end
+
+  samples = .int[]
+  do sample = 1 to sample_count
+    started = time("us")
+    actual_checksum = apple_rxpa_pass(reference sources)
+    elapsed = elapsed_us(started)
+    if actual_checksum \= checksum then return fail("Apple RXPA sample checksum")
+    samples[sample] = elapsed
+    say "benchmark=unicode_nfd phase=normalize variant=apple-rxpa vm=" || vm_label,
+        "sample=" || sample "rows=" || sources[0] "elapsed_us=" || elapsed,
+        "checksum=" || actual_checksum
+  end
+  median = median_us(reference samples)
+  say "benchmark=unicode_nfd phase=summary variant=apple-rxpa vm=" || vm_label,
+      "warmups=" || warmups "samples=" || sample_count "rows=" || sources[0],
+      "median_us=" || median "checksum=" || checksum
+  say "PASS: Apple CoreFoundation through RXPA UTF-8 string performance cell",
+      "(Unicode 17 mismatches=" || mismatch_count || ")"
+  return 0
+
+benchmark_apple_rxpa_buffer: procedure = .int
+  arg sources_ref = reference .string[], expected_rows_ref = reference .string[], source_ref = reference .string, expected_ref = reference .string, vm_label = .string, warmups = .int, sample_count = .int, repetitions = .int
+  source = dereference source_ref
+  expected = dereference expected_ref
+
+  mismatch_count = 0
+  row_checksum = apple_rxpa_correctness(sources_ref, expected_rows_ref, mismatch_count)
+  if row_checksum < 0 then return 1
+  reference_result = unicode_nfd_apple..normalize_utf8(source)
+  repeat_result = unicode_nfd_apple..normalize_utf8(source)
+  if repeat_result \== reference_result then return fail("Apple RXPA large-buffer result is not repeatable")
+  unicode17_match = reference_result == expected
+  checksum = binlength(reference_result as .binary)
+  input_bytes = binlength(source as .binary)
+  expected_bytes = binlength(expected as .binary)
+  output_scalars = string_scalars(reference_result)
+  say "benchmark=unicode_nfd phase=prepare variant=apple-rxpa vm=" || vm_label,
+      "workload=buffer repetitions=" || repetitions,
+      "input_utf8_bytes=" || input_bytes "output_utf8_bytes=" || checksum,
+      "output_scalars=" || output_scalars "elapsed_us=0 table_bytes=system",
+      "int_bytes=" || <sizeof..int>
+  say "benchmark=unicode_nfd phase=correctness variant=apple-rxpa vm=" || vm_label,
+      "workload=buffer repetitions=" || repetitions,
+      "unicode17_row_mismatches=" || mismatch_count,
+      "unicode17_buffer_match=" || unicode17_match,
+      "expected_utf8_bytes=" || expected_bytes "actual_utf8_bytes=" || checksum
+
+  do warmup = 1 to warmups
+    if apple_rxpa_buffer_pass(reference source) \= checksum then,
+      return fail("Apple RXPA buffer warmup checksum")
+  end
+
+  samples = .int[]
+  do sample = 1 to sample_count
+    started = time("us")
+    actual_checksum = apple_rxpa_buffer_pass(reference source)
+    elapsed = elapsed_us(started)
+    if actual_checksum \= checksum then return fail("Apple RXPA buffer sample checksum")
+    samples[sample] = elapsed
+    say "benchmark=unicode_nfd phase=normalize variant=apple-rxpa vm=" || vm_label,
+        "workload=buffer repetitions=" || repetitions "sample=" || sample,
+        "input_utf8_bytes=" || input_bytes "elapsed_us=" || elapsed,
+        "checksum_utf8_bytes=" || actual_checksum
+  end
+  median = median_us(reference samples)
+  throughput = input_bytes * 1000000 <idiv> median
+  say "benchmark=unicode_nfd phase=summary variant=apple-rxpa vm=" || vm_label,
+      "workload=buffer repetitions=" || repetitions,
+      "warmups=" || warmups "samples=" || sample_count,
+      "input_utf8_bytes=" || input_bytes "output_utf8_bytes=" || checksum,
+      "median_us=" || median "input_utf8_bytes_per_second=" || throughput,
+      "checksum_utf8_bytes=" || checksum,
+      "unicode17_row_mismatches=" || mismatch_count
+  say "PASS: Apple CoreFoundation through RXPA UTF-8 large-buffer performance cell",
+      "(Unicode 17 row mismatches=" || mismatch_count || ")"
+  return 0
+
+portable_correctness: procedure = .int
+  arg normalizer_ref = reference .unicode_nfd..unicodenfdnormalizer, sources_ref = reference .string[], expected_ref = reference .string[]
+  normalizer = dereference normalizer_ref
+  sources = dereference sources_ref
+  expected = dereference expected_ref
+  checksum = 0
+  do i = 1 to sources[0]
+    actual = normalizer.normalize(sources[i])
+    if normalizer.status() \= 0 then do
+      say "FAIL: portable correctness row" i || ":" normalizer.error()
+      return -1
+    end
+    if actual \== expected[i] then do
+      say "FAIL: portable correctness row" i
+      return -1
+    end
+    output_length = 0
+    assembler strlen output_length,actual
+    checksum = checksum + output_length
+  end
+  return checksum
+
+packed_correctness: procedure = .int
+  arg normalizer_ref = reference .unicode_nfd_packed..unicodenfdpackednormalizer, sources_ref = reference .string[], expected_ref = reference .string[]
+  normalizer = dereference normalizer_ref
+  sources = dereference sources_ref
+  expected = dereference expected_ref
+  checksum = 0
+  do i = 1 to sources[0]
+    actual = normalizer.normalize(sources[i])
+    if normalizer.status() \= 0 then do
+      say "FAIL: packed correctness row" i || ":" normalizer.error()
+      return -1
+    end
+    if actual \== expected[i] then do
+      say "FAIL: packed correctness row" i
+      return -1
+    end
+    output_length = 0
+    assembler strlen output_length,actual
+    checksum = checksum + output_length
+  end
+  return checksum
+
+apple_rxpa_correctness: procedure = .int
+  arg sources_ref = reference .string[], expected_ref = reference .string[], expose mismatch_count = .int
+  sources = dereference sources_ref
+  expected = dereference expected_ref
+  mismatch_count = 0
+  checksum = 0
+  do i = 1 to sources[0]
+    actual = unicode_nfd_apple..normalize_utf8(sources[i])
+    if actual \== expected[i] then do
+      mismatch_count = mismatch_count + 1
+      if mismatch_count = 1 then say "Apple RXPA first Unicode 17 mismatch row:" i
+    end
+    output_length = 0
+    assembler strlen output_length,actual
+    checksum = checksum + output_length
+  end
+  return checksum
+
+portable_pass: procedure = .int
+  arg normalizer_ref = reference .unicode_nfd..unicodenfdnormalizer, sources_ref = reference .string[]
+  normalizer = dereference normalizer_ref
+  sources = dereference sources_ref
+  checksum = 0
+  do i = 1 to sources[0]
+    actual = normalizer.normalize(sources[i])
+    if normalizer.status() \= 0 then return -1
+    output_length = 0
+    assembler strlen output_length,actual
+    checksum = checksum + output_length
+  end
+  return checksum
+
+packed_pass: procedure = .int
+  arg normalizer_ref = reference .unicode_nfd_packed..unicodenfdpackednormalizer, sources_ref = reference .string[]
+  normalizer = dereference normalizer_ref
+  sources = dereference sources_ref
+  checksum = 0
+  do i = 1 to sources[0]
+    actual = normalizer.normalize(sources[i])
+    if normalizer.status() \= 0 then return -1
+    output_length = 0
+    assembler strlen output_length,actual
+    checksum = checksum + output_length
+  end
+  return checksum
+
+apple_rxpa_pass: procedure = .int
+  arg sources_ref = reference .string[]
+  sources = dereference sources_ref
+  checksum = 0
+  do i = 1 to sources[0]
+    actual = unicode_nfd_apple..normalize_utf8(sources[i])
+    output_length = 0
+    assembler strlen output_length,actual
+    checksum = checksum + output_length
+  end
+  return checksum
+
+portable_buffer_correctness: procedure = .int
+  arg normalizer_ref = reference .unicode_nfd..unicodenfdnormalizer, source_ref = reference .string, expected_ref = reference .string
+  normalizer = dereference normalizer_ref
+  source = dereference source_ref
+  expected = dereference expected_ref
+  actual = normalizer.normalize(source)
+  if normalizer.status() \= 0 then do
+    say "FAIL: portable large-buffer correctness:" normalizer.error()
+    return -1
+  end
+  if actual \== expected then do
+    say "FAIL: portable large-buffer result"
+    return -1
+  end
+  return binlength(actual as .binary)
+
+packed_buffer_correctness: procedure = .int
+  arg normalizer_ref = reference .unicode_nfd_packed..unicodenfdpackednormalizer, source_ref = reference .string, expected_ref = reference .string
+  normalizer = dereference normalizer_ref
+  source = dereference source_ref
+  expected = dereference expected_ref
+  actual = normalizer.normalize(source)
+  if normalizer.status() \= 0 then do
+    say "FAIL: packed large-buffer correctness:" normalizer.error()
+    return -1
+  end
+  if actual \== expected then do
+    say "FAIL: packed large-buffer result"
+    return -1
+  end
+  return binlength(actual as .binary)
+
+portable_buffer_pass: procedure = .int
+  arg normalizer_ref = reference .unicode_nfd..unicodenfdnormalizer, source_ref = reference .string
+  normalizer = dereference normalizer_ref
+  source = dereference source_ref
+  actual = normalizer.normalize(source)
+  if normalizer.status() \= 0 then return -1
+  return binlength(actual as .binary)
+
+packed_buffer_pass: procedure = .int
+  arg normalizer_ref = reference .unicode_nfd_packed..unicodenfdpackednormalizer, source_ref = reference .string
+  normalizer = dereference normalizer_ref
+  source = dereference source_ref
+  actual = normalizer.normalize(source)
+  if normalizer.status() \= 0 then return -1
+  return binlength(actual as .binary)
+
+apple_rxpa_buffer_pass: procedure = .int
+  arg source_ref = reference .string
+  source = dereference source_ref
+  actual = unicode_nfd_apple..normalize_utf8(source)
+  return binlength(actual as .binary)
+
+median_us: procedure = .int
+  arg values_ref = reference .int[]
+  values = snapshot values_ref
+  do i = 2 to values[0]
+    current = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > current
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = current
+  end
+  middle = values[0] <idiv> 2
+  if values[0] <mod> 2 = 1 then return values[middle + 1]
+  return (values[middle] + values[middle + 1]) <idiv> 2
+
+elapsed_us: procedure = .int
+  arg started = .int
+  elapsed = time("us") - started
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+build_large_buffers: procedure = .void
+  arg sources_ref = reference .string[], expected_ref = reference .string[], repetitions = .int, expose source_buffer = .string, expose expected_buffer = .string
+  sources = dereference sources_ref
+  expected = dereference expected_ref
+  /* U+0020 has CCC=0 and no decomposition, so it closes every corpus row's
+     canonical combining sequence before the next row or repeated block. */
+  source_block = arrayjoin(sources, " ") || " "
+  expected_block = arrayjoin(expected, " ") || " "
+  source_buffer = copies(source_block, repetitions)
+  expected_buffer = copies(expected_block, repetitions)
+  return
+
+string_scalars: procedure = .int
+  arg value = .string
+  length = 0
+  assembler strlen length,value
+  return length
+
+hex_sequence_to_string: procedure = .string
+  arg sequence = .string
+  result = ""
+  do i = 1 to words(sequence)
+    codepoint = x2d(word(sequence, i))
+    assembler appendchar result,codepoint
+  end
+  return result
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

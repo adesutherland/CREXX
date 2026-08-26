@@ -42,6 +42,7 @@ spec_dir="$script_dir/specs"
 generated_dir="$script_dir/generated"
 nfc_input="$repo_dir/experiments/unicode/inputs/icu-78.3/nfc.txt"
 normalization_input="$repo_dir/experiments/unicode/inputs/unicode-17.0.0/ucd/NormalizationTest.txt"
+unicode_data_input="$repo_dir/experiments/unicode/inputs/unicode-17.0.0/ucd/UnicodeData.txt"
 poc_dir="$repo_dir/experiments/unicode/poc"
 
 if [ "$("$re2c_bin" --vernum)" != "040501" ]; then
@@ -142,6 +143,42 @@ compile_source "$script_dir/unicode_nfd.crexx" \
 compile_source "$script_dir/test_unicode_nfd.crexx" \
     "$work_dir/test_unicode_nfd" "$work_dir" \
     "$work_dir/test-unicode-nfd-build.log"
+compile_source "$script_dir/unicode_data.crexx" \
+    "$work_dir/unicode_data" "$work_dir" \
+    "$work_dir/unicode-data-build.log"
+compile_source "$script_dir/unicode_d.crexx" \
+    "$work_dir/unicode_d" "$work_dir" \
+    "$work_dir/unicode-d-build.log"
+(cd "$work_dir" && "$rxlink_bin" -c "$script_dir/unicode_d.ctl")
+
+normalize_rxas_audit="$work_dir/unicode-d-normalize.rxas"
+normalize_binary_rxas_audit="$work_dir/unicode-d-normalize-binary.rxas"
+awk '/^§unicode_d\.unicodednormalizer\.normalize\(\)/ { active = 1 }
+     /^§unicode_d\.unicodednormalizer\.normalize_binary\(\)/ { if (active) exit }
+     active { print }' "$work_dir/unicode_d.rxas" > "$normalize_rxas_audit"
+awk '/^§unicode_d\.unicodednormalizer\.normalize_binary\(\)/ { active = 1 }
+     /^§unicode_d\.unicodednormalizer\.is_normalized\(\)/ { if (active) exit }
+     active { print }' "$work_dir/unicode_d.rxas" > "$normalize_binary_rxas_audit"
+grep -E '^[[:space:]]*sblen ' "$normalize_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*sgetu8 ' "$work_dir/unicode_d.rxas" > /dev/null
+grep -E '^[[:space:]]*sbmove ' "$work_dir/unicode_d.rxas" > /dev/null
+if grep -E '^[[:space:]]*(scopy|stobin) ' "$normalize_rxas_audit" > /dev/null; then
+    echo "optimized string normalizer copies or converts its complete input" >&2
+    exit 1
+fi
+normalize_bcopy_count=$(awk '$1 == "bcopy" { count++ } END { print count + 0 }' "$normalize_rxas_audit")
+normalize_bintos_count=$(awk '$1 == "bintos" { count++ } END { print count + 0 }' "$normalize_rxas_audit")
+if [ "$normalize_bcopy_count" -ne 1 ] || [ "$normalize_bintos_count" -ne 1 ]; then
+    echo "optimized string normalizer must retain exactly one result conversion copy" >&2
+    exit 1
+fi
+if grep -E '^[[:space:]]*(scopy|bcopy|stobin|bintos) ' "$normalize_binary_rxas_audit" > /dev/null; then
+    echo "optimized binary normalizer unexpectedly copies or converts its input/result" >&2
+    exit 1
+fi
+compile_source "$script_dir/test_unicode_d.crexx" \
+    "$work_dir/test_unicode_d" "$work_dir" \
+    "$work_dir/test-unicode-d-build.log"
 
 reference_cpp="$work_dir/nfd_reference.cpp"
 reference_bin="$work_dir/nfd_reference"
@@ -220,6 +257,16 @@ run_unicode_nfd_test() {
         > "$output_file"
 }
 
+run_unicode_d_test() {
+    vm_bin=$1
+    output_file=$2
+    (cd "$work_dir" && "$vm_bin" test_unicode_d \
+        "$product_build_dir/bin/library" \
+        "$product_build_dir/bin/rxfnsl" \
+        unicode_d_linked -a "$unicode_data_input" "$normalization_input") \
+        > "$output_file"
+}
+
 run_frontend_test "$rxtvm_bin" "$work_dir/rxtvm-frontend.txt"
 run_frontend_test "$rxbvm_bin" "$work_dir/rxbvm-frontend.txt"
 run_tinyexpr_test "$rxtvm_bin" "$work_dir/rxtvm-tinyexpr.txt"
@@ -232,6 +279,8 @@ run_unicode_parser_test "$rxtvm_bin" "$work_dir/rxtvm-unicode-parser.txt"
 run_unicode_parser_test "$rxbvm_bin" "$work_dir/rxbvm-unicode-parser.txt"
 run_unicode_nfd_test "$rxtvm_bin" "$work_dir/rxtvm-unicode-nfd.txt"
 run_unicode_nfd_test "$rxbvm_bin" "$work_dir/rxbvm-unicode-nfd.txt"
+run_unicode_d_test "$rxtvm_bin" "$work_dir/rxtvm-unicode-d.txt"
+run_unicode_d_test "$rxbvm_bin" "$work_dir/rxbvm-unicode-d.txt"
 
 "$reference_bin" --dump-rules "$nfc_input" > "$work_dir/reference-gennorm2.semantic"
 "$reference_bin" "$nfc_input" "$normalization_input" > "$work_dir/reference-nfd.txt"
@@ -247,6 +296,8 @@ cmp "$work_dir/reference-gennorm2.semantic" "$work_dir/rxtvm/gennorm2.semantic"
 cmp "$work_dir/rxtvm-unicode-parser.txt" "$work_dir/rxbvm-unicode-parser.txt"
 cmp "$work_dir/rxtvm-unicode-nfd.txt" "$work_dir/rxbvm-unicode-nfd.txt"
 cmp "$script_dir/evidence/nfd-result.txt" "$work_dir/rxtvm-unicode-nfd.txt"
+cmp "$work_dir/rxtvm-unicode-d.txt" "$work_dir/rxbvm-unicode-d.txt"
+cmp "$script_dir/evidence/unicode-d-result.txt" "$work_dir/rxtvm-unicode-d.txt"
 cmp "$poc_dir/evidence/nfd-conformance.txt" "$work_dir/reference-nfd.txt"
 grep -Fx "PASS: Level L bootstrap frontend" "$work_dir/rxtvm-frontend.txt" > /dev/null
 grep -Fx "PASS: authored Level L TinyExpr matches rxfnsl" "$work_dir/rxtvm-tinyexpr.txt" > /dev/null
@@ -255,6 +306,9 @@ grep -Fx "PASS: tokenized gennorm2 parsed into typed Unicode records" "$work_dir
 grep -Fx "PASS: deterministic typed Unicode rule parser and panic contract" "$work_dir/rxtvm-unicode-parser.txt" > /dev/null
 grep -Fx "Focused NFD fixtures: PASS" "$work_dir/rxtvm-unicode-nfd.txt" > /dev/null
 grep -Fx "Result: PASS" "$work_dir/rxtvm-unicode-nfd.txt" > /dev/null
+grep -Fx "Focused prepared D fixtures: PASS" "$work_dir/rxtvm-unicode-d.txt" > /dev/null
+grep -Fx "Prepared D tables: PASS" "$work_dir/rxtvm-unicode-d.txt" > /dev/null
+grep -Fx "Result: PASS" "$work_dir/rxtvm-unicode-d.txt" > /dev/null
 
 summary_actual="$work_dir/result.txt"
 {
@@ -269,8 +323,12 @@ summary_actual="$work_dir/result.txt"
     echo "Unicode 17.0.0 NFD conformance: PASS (100170 corpus relations)"
     echo "unlisted scalar NFD identity: PASS (1094978 scalars)"
     echo "C++/re2c NFD oracle: retained conformance evidence reproduced"
+    echo "portable prepared NFD/NFKD image: PASS (1659772 bytes)"
+    echo "Unicode 17.0.0 NFD/NFKD conformance: PASS (200340 corpus relations)"
+    echo "unlisted scalar D-form identity: PASS (1094978 scalars per form)"
+    echo "UTF-8 byte path: strict decode with no whole-input string/binary copy"
     echo "generated dispatch: .jtable and jumpi"
-    echo "binary scan/stores: bgetu8, bsetu16, bsetu32"
+    echo "binary scan/stores: bgetu8, bsetu16, bsetu32, sblen, sgetu8, sbmove"
     echo "rxtvm: PASS"
     echo "rxbvm: PASS"
 } > "$summary_actual"

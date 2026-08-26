@@ -1,0 +1,342 @@
+/* Unicode 17 prepared NFD/NFKD generator and bytewise normalizer proof. */
+options levelb
+
+import rxfnsb
+import unicode_data
+import unicode_d
+
+arg argv = .string[]
+if argv[0] \= 2 then do
+  say "usage: test_unicode_d UnicodeData.txt NormalizationTest.txt"
+  return 2
+end
+
+ucd = unicode_data_parse(argv[1], "17.0.0")
+if ucd.status() \= 0 then do
+  say "FAIL: UnicodeData line" ucd.error_line() || ":" ucd.error()
+  say "Observed UnicodeData counts:" ucd.ccc_count() || "/" ||,
+      ucd.canonical_ast().one_way_mappings() || "/" ||,
+      ucd.compatibility_ast().one_way_mappings() || "/" ||,
+      ucd.canonical_ast().mapping_values() || "/" ||,
+      ucd.compatibility_ast().mapping_values()
+  return 1
+end
+if ucd.ccc_count() \= 968 |,
+   ucd.canonical_ast().one_way_mappings() \= 2081 |,
+   ucd.compatibility_ast().one_way_mappings() \= 5914 then do
+  say "FAIL: UnicodeData typed AST audit"
+  say "Observed UnicodeData counts:" ucd.ccc_count() || "/" ||,
+      ucd.canonical_ast().one_way_mappings() || "/" ||,
+      ucd.compatibility_ast().one_way_mappings() || "/" ||,
+      ucd.canonical_ast().mapping_values() || "/" ||,
+      ucd.compatibility_ast().mapping_values()
+  return 1
+end
+
+tables = unicode_d_compile(ucd)
+if tables.status() \= 0 then do
+  say "FAIL: prepared D table compiler:" tables.error()
+  return 1
+end
+if tables.rank_count() \= 55 |,
+   tables.nfd_mapping_count() \= 2081 | tables.nfkd_mapping_count() \= 5914 |,
+   tables.nfd_component_count() \= 3450 | tables.nfkd_component_count() \= 9193 then do
+  say "FAIL: prepared D table count audit"
+  return 1
+end
+if tables.nfd_identity_starters() \= 1097847 | tables.nfd_identity_marks() \= 964 |,
+   tables.nfkd_identity_starters() \= 1094014 | tables.nfkd_identity_marks() \= 964 then do
+  say "FAIL: prepared D scalar partition audit"
+  return 1
+end
+
+nfd = unicode_d_new(tables, "NFD")
+nfkd = unicode_d_new(tables, "NFKD")
+if nfd.ready() = 0 | nfkd.ready() = 0 then do
+  say "FAIL: prepared D normalizer validation:" nfd.error() nfkd.error()
+  return 1
+end
+if nfd.form() \= "NFD" | nfkd.form() \= "NFKD" then do
+  say "FAIL: prepared D normalizer form selection"
+  return 1
+end
+
+failures = 0
+failures = failures + expect_form(reference nfd, "NFD empty", "", "")
+failures = failures + expect_form(reference nfd, "NFD ASCII identity", "0041 006C 0070 0068 0061", "0041 006C 0070 0068 0061")
+failures = failures + expect_form(reference nfd, "NFD Latin decomposition", "00C0", "0041 0300")
+failures = failures + expect_form(reference nfd, "NFD recursive decomposition", "01FA", "0041 030A 0301")
+failures = failures + expect_form(reference nfd, "NFD canonical ordering", "0061 0315 0300", "0061 0300 0315")
+failures = failures + expect_form(reference nfd, "NFD cross-source cluster", "1E0B 0323", "0064 0323 0307")
+failures = failures + expect_form(reference nfd, "NFD marks-only mapping", "0F73", "0F71 0F72")
+failures = failures + expect_form(reference nfd, "NFD Hangul LV", "AC00", "1100 1161")
+failures = failures + expect_form(reference nfd, "NFD Hangul LVT", "AC01", "1100 1161 11A8")
+failures = failures + expect_form(reference nfd, "NFD non-BMP identity", "01F600", "01F600")
+failures = failures + expect_form(reference nfd, "NFD preserves compatibility scalar", "00A0", "00A0")
+failures = failures + expect_form(reference nfkd, "NFKD compatibility scalar", "00A0", "0020")
+failures = failures + expect_form(reference nfkd, "NFKD recursive compatibility", "FB03", "0066 0066 0069")
+failures = failures + expect_form(reference nfkd, "NFKD also applies canonical decomposition", "01FA", "0041 030A 0301")
+
+long_source = hex_sequence_to_string("0061")
+long_expected = hex_sequence_to_string("0061")
+high_mark = hex_sequence_to_string("0315")
+equal_mark_a = hex_sequence_to_string("0300")
+equal_mark_b = hex_sequence_to_string("0301")
+do i = 1 to 128
+  long_source = long_source || high_mark || equal_mark_a || equal_mark_b
+  long_expected = long_expected || equal_mark_a || equal_mark_b
+end
+do i = 1 to 128
+  long_expected = long_expected || high_mark
+end
+long_actual = nfd.normalize(long_source)
+if nfd.status() \= 0 | long_actual \== long_expected then do
+  say "FAIL: long stable bucket ordering:" nfd.error()
+  failures = failures + 1
+end
+else if nfd.bucket_flushes() \= 1 then do
+  say "FAIL: long disordered run did not use exactly one stable bucket flush"
+  failures = failures + 1
+end
+
+binary_source_string = hex_sequence_to_string("1E0B 0323 0041")
+binary_source = binary_source_string as .binary
+binary_actual = nfd.normalize_binary(binary_source)
+if nfd.status() \= 0 | (binary_actual as .string) \== hex_sequence_to_string("0064 0323 0307 0041") then do
+  say "FAIL: binary UTF-8 normalization parity:" nfd.error()
+  failures = failures + 1
+end
+
+quick_nfd_yes = hex_sequence_to_string("0041 0300")
+quick_nfd_mapping = hex_sequence_to_string("00C0")
+quick_nfd_order = hex_sequence_to_string("0061 0315 0300")
+quick_nfkd_mapping = hex_sequence_to_string("00A0")
+if nfd.is_normalized(quick_nfd_yes) \= 1 |,
+   nfd.is_normalized(quick_nfd_mapping) \= 0 |,
+   nfd.is_normalized(quick_nfd_order) \= 0 |,
+   nfkd.is_normalized(quick_nfkd_mapping) \= 0 then do
+  say "FAIL: exact D-form quick check"
+  failures = failures + 1
+end
+if nfd.combining_class(0x0300) \= 230 | nfd.combining_class(0x0041) \= 0 then do
+  say "FAIL: canonical combining-class lookup"
+  failures = failures + 1
+end
+
+failures = failures + expect_invalid_utf8(reference nfd, "overlong leading byte", "C0 80")
+failures = failures + expect_invalid_utf8(reference nfd, "UTF-8 surrogate", "ED A0 80")
+failures = failures + expect_invalid_utf8(reference nfd, "truncated UTF-8", "F0 9F")
+failures = failures + expect_invalid_utf8(reference nfd, "UTF-8 above Unicode maximum", "F4 90 80 80")
+if failures \= 0 then return 1
+
+part1_seen = .binary
+call binresize part1_seen, 0x110000
+part_rows = .int[]
+do i = 1 to 6
+  part_rows[i] = 0
+end
+rows = 0
+invariant_checks = 0
+part = -1
+failure = ""
+
+lines = readlines(argv[2])
+do line_number = 1 to lines[0] while failure = ""
+  line = strip(lines[line_number])
+  if line = "" | left(line, 1) = "#" then iterate
+
+  if left(line, 5) = "@Part" then do
+    if length(line) < 6 then do
+      failure = "invalid part marker at line " || line_number
+      leave
+    end
+    next_part = c2d(substr(line, 6, 1)) - 48
+    if next_part < 0 | next_part > 5 | next_part \= part + 1 then do
+      failure = "unexpected part marker at line " || line_number
+      leave
+    end
+    part = next_part
+    iterate
+  end
+
+  if part < 0 | part > 5 then do
+    failure = "test row precedes a valid part marker at line " || line_number
+    leave
+  end
+
+  fields = qsplit(line, ";")
+  if fields[0] < 5 then do
+    failure = "invalid normalization row at line " || line_number
+    leave
+  end
+  field1 = strip(fields[1])
+  field2 = strip(fields[2])
+  field3 = strip(fields[3])
+  field4 = strip(fields[4])
+  field5 = strip(fields[5])
+  if field1 = "" | field2 = "" | field3 = "" | field4 = "" | field5 = "" then do
+    failure = "invalid normalization row at line " || line_number
+    leave
+  end
+
+  c1 = hex_sequence_to_string(field1)
+  c2 = hex_sequence_to_string(field2)
+  c3 = hex_sequence_to_string(field3)
+  c4 = hex_sequence_to_string(field4)
+  c5 = hex_sequence_to_string(field5)
+
+  failure = check_relation(reference nfd, "toNFD(c1) == c3", line_number, c1, c3)
+  if failure = "" then failure = check_relation(reference nfd, "toNFD(c2) == c3", line_number, c2, c3)
+  if failure = "" then failure = check_relation(reference nfd, "toNFD(c3) == c3", line_number, c3, c3)
+  if failure = "" then failure = check_relation(reference nfd, "toNFD(c4) == c5", line_number, c4, c5)
+  if failure = "" then failure = check_relation(reference nfd, "toNFD(c5) == c5", line_number, c5, c5)
+  if failure = "" then failure = check_relation(reference nfkd, "toNFKD(c1) == c5", line_number, c1, c5)
+  if failure = "" then failure = check_relation(reference nfkd, "toNFKD(c2) == c5", line_number, c2, c5)
+  if failure = "" then failure = check_relation(reference nfkd, "toNFKD(c3) == c5", line_number, c3, c5)
+  if failure = "" then failure = check_relation(reference nfkd, "toNFKD(c4) == c5", line_number, c4, c5)
+  if failure = "" then failure = check_relation(reference nfkd, "toNFKD(c5) == c5", line_number, c5, c5)
+  if failure \= "" then leave
+
+  if part = 1 then do
+    if words(field1) \= 1 then do
+      failure = "Part 1 source is not one code point at line " || line_number
+      leave
+    end
+    part1_source = x2d(field1)
+    <at..u8>(part1_source) part1_seen = 1
+  end
+  part_rows[part + 1] = part_rows[part + 1] + 1
+  rows = rows + 1
+  invariant_checks = invariant_checks + 10
+end
+
+if failure = "" & part \= 5 then failure = "normalization test ended before Part 5"
+if failure = "" then do
+  expected_parts = .int[]
+  expected_parts[1] = 45
+  expected_parts[2] = 17086
+  expected_parts[3] = 1936
+  expected_parts[4] = 194
+  expected_parts[5] = 735
+  expected_parts[6] = 38
+  do i = 1 to 6 while failure = ""
+    if part_rows[i] \= expected_parts[i] then,
+      failure = "unexpected row count for Part " || (i - 1)
+  end
+end
+if failure \= "" then do
+  say "FAIL:" failure
+  return 1
+end
+
+/* UAX #15 requires every scalar not listed in Part 1 to be an identity. */
+unlisted_identity_checks = 0
+batch_count = 0
+batch = ""
+starter = 65
+do codepoint = 0 to 0x10FFFF while failure = ""
+  if codepoint >= 0xD800 & codepoint <= 0xDFFF then iterate
+  if <at..u8>(codepoint) part1_seen \= 0 then iterate
+  assembler appendchar batch,starter
+  assembler appendchar batch,codepoint
+  batch_count = batch_count + 1
+  unlisted_identity_checks = unlisted_identity_checks + 1
+  if batch_count = 4096 then do
+    failure = check_identity_batch(reference nfd, "NFD", batch, codepoint)
+    if failure = "" then failure = check_identity_batch(reference nfkd, "NFKD", batch, codepoint)
+    batch = ""
+    batch_count = 0
+  end
+end
+if failure = "" & batch_count > 0 then do
+  failure = check_identity_batch(reference nfd, "NFD", batch, 0x10FFFF)
+  if failure = "" then failure = check_identity_batch(reference nfkd, "NFKD", batch, 0x10FFFF)
+end
+if failure = "" & unlisted_identity_checks \= 1094978 then,
+  failure = "unexpected unlisted scalar identity count"
+if failure \= "" then do
+  say "FAIL:" failure
+  return 1
+end
+
+say tables.manifest()
+say "NormalizationTest rows by Part 0..5:" part_rows[1] || "/" || part_rows[2] || "/" || part_rows[3] || "/" || part_rows[4] || "/" || part_rows[5] || "/" || part_rows[6]
+say "NFD/NFKD corpus invariant checks:" invariant_checks
+say "Unlisted scalar identity checks per form:" unlisted_identity_checks
+say "Focused prepared D fixtures: PASS"
+say "Prepared D tables: PASS"
+say "Result: PASS"
+return 0
+
+expect_form: procedure = .int
+  arg normalizer_ref = reference .unicode_d..unicodednormalizer, label = .string, source_hex = .string, expected_hex = .string
+  normalizer = dereference normalizer_ref
+  source = hex_sequence_to_string(source_hex)
+  expected = hex_sequence_to_string(expected_hex)
+  actual = normalizer.normalize(source)
+  if normalizer.status() \= 0 then do
+    say "FAIL:" label || ":" normalizer.error()
+    return 1
+  end
+  if actual == expected then return 0
+  say "FAIL:" label "expected" string_to_hex_sequence(expected) "got" string_to_hex_sequence(actual)
+  return 1
+
+expect_invalid_utf8: procedure = .int
+  arg normalizer_ref = reference .unicode_d..unicodednormalizer, label = .string, sequence = .string
+  normalizer = dereference normalizer_ref
+  bytes = .binary
+  call binresize bytes, words(sequence)
+  do i = 1 to words(sequence)
+    <at..u8>(i - 1) bytes = x2d(word(sequence, i))
+  end
+  ignored = normalizer.normalize_binary(bytes)
+  if normalizer.status() \= 0 then return 0
+  say "FAIL:" label "was accepted"
+  return 1
+
+check_relation: procedure = .string
+  arg normalizer_ref = reference .unicode_d..unicodednormalizer, relation = .string, line_number = .int, source = .string, expected = .string
+  normalizer = dereference normalizer_ref
+  actual = normalizer.normalize(source)
+  if normalizer.status() \= 0 then,
+    return relation || " error at line " || line_number || ": " || normalizer.error()
+  if actual \== expected then return relation_failure(relation, line_number, actual, expected)
+  return ""
+
+check_identity_batch: procedure = .string
+  arg normalizer_ref = reference .unicode_d..unicodednormalizer, form = .string, batch = .string, codepoint = .int
+  normalizer = dereference normalizer_ref
+  actual = normalizer.normalize(batch)
+  if normalizer.status() \= 0 then return form || " unlisted identity error: " || normalizer.error()
+  if actual \== batch then return form || " unlisted scalar batch changed near U+" || right(d2x(codepoint), 6, "0")
+  return ""
+
+hex_sequence_to_string: procedure = .string
+  arg sequence = .string
+  result = ""
+  do i = 1 to words(sequence)
+    codepoint = x2d(word(sequence, i))
+    assembler appendchar result,codepoint
+  end
+  return result
+
+string_to_hex_sequence: procedure = .string
+  arg value = .string
+  result = ""
+  value_length = 0
+  assembler strlen value_length,value
+  do i = 0 to value_length - 1
+    codepoint = 0
+    assembler strchar codepoint,value,i
+    if result \= "" then result = result || " "
+    width = 4
+    if codepoint > 0xFFFF then width = 6
+    result = result || right(d2x(codepoint), width, "0")
+  end
+  return result
+
+relation_failure: procedure = .string
+  arg relation = .string, line_number = .int, actual = .string, expected = .string
+  return relation || " failed at line " || line_number || ": expected [" ||,
+         string_to_hex_sequence(expected) || "] got [" || string_to_hex_sequence(actual) || "]"

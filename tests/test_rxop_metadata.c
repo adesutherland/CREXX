@@ -1152,8 +1152,8 @@ int main(void) {
           &op_table[OP_RESERVED_466]);
     effects = rxop_effects(OP_CHANOPEN_REG_REG_REG_REG_REG);
     signal = rxop_signal_contract(OP_CHANOPEN_REG_REG_REG_REG_REG);
-    check(OP_MAX_INSTRUCTIONS == 659 && rxop_effect_count() == 659 &&
-              rxop_signal_contract_count() == 659 &&
+    check(OP_MAX_INSTRUCTIONS == 662 && rxop_effect_count() == 662 &&
+              rxop_signal_contract_count() == 662 &&
               effects.state == RXOP_EFFECT_CLASSIFIED &&
               rxop_effect_reads_operand(&effects, 2) &&
               rxop_effect_reads_operand(&effects, 4) &&
@@ -1179,6 +1179,59 @@ int main(void) {
                    RXOP_COMPONENT_NATIVE_PAYLOAD),
           "Gate F channel metadata contract regression",
           &op_table[OP_CHANOPEN_REG_REG_REG_REG_REG]);
+    effects = rxop_effects(OP_SBLEN_REG_REG);
+    signal = rxop_signal_contract(OP_SBLEN_REG_REG);
+    check(effects.state == RXOP_EFFECT_CLASSIFIED &&
+              rxop_effect_reads_operand(&effects, 1) &&
+              !rxop_effect_reads_operand(&effects, 0) &&
+              rxop_effect_writes_operand(&effects, 0) &&
+              rxop_component_reads(OP_SBLEN_REG_REG, 1) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_component_writes(OP_SBLEN_REG_REG, 0) ==
+                  RXOP_COMPONENT_INTEGER &&
+              signal.state == RXOP_SIGNAL_STATE_NONE,
+          "raw string byte length metadata regression",
+          &op_table[OP_SBLEN_REG_REG]);
+    effects = rxop_effects(OP_SGETU8_REG_REG_REG);
+    signal = rxop_signal_contract(OP_SGETU8_REG_REG_REG);
+    check(effects.state == RXOP_EFFECT_CLASSIFIED &&
+              rxop_effect_reads_operand(&effects, 1) &&
+              rxop_effect_reads_operand(&effects, 2) &&
+              rxop_effect_writes_operand(&effects, 0) &&
+              rxop_component_reads(OP_SGETU8_REG_REG_REG, 1) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_component_reads(OP_SGETU8_REG_REG_REG, 2) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_writes(OP_SGETU8_REG_REG_REG, 0) ==
+                  RXOP_COMPONENT_INTEGER &&
+              signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.static_names &&
+              strcmp(signal.static_names, "OUT_OF_RANGE") == 0,
+          "raw string byte read metadata regression",
+          &op_table[OP_SGETU8_REG_REG_REG]);
+    effects = rxop_effects(OP_SBMOVE_REG_REG_REG_REG_REG);
+    signal = rxop_signal_contract(OP_SBMOVE_REG_REG_REG_REG_REG);
+    check(effects.state == RXOP_EFFECT_CLASSIFIED &&
+              rxop_effect_reads_operand(&effects, 0) &&
+              rxop_effect_reads_operand(&effects, 4) &&
+              rxop_effect_writes_operand(&effects, 0) &&
+              !rxop_effect_writes_operand(&effects, 1) &&
+              effects.kills == RXOP_OP_NONE &&
+              rxop_component_reads(OP_SBMOVE_REG_REG_REG_REG_REG, 0) ==
+                  RXOP_COMPONENT_BINARY &&
+              rxop_component_reads(OP_SBMOVE_REG_REG_REG_REG_REG, 2) ==
+                  RXOP_COMPONENT_STRING &&
+              rxop_component_reads(OP_SBMOVE_REG_REG_REG_REG_REG, 4) ==
+                  RXOP_COMPONENT_INTEGER &&
+              rxop_component_writes(OP_SBMOVE_REG_REG_REG_REG_REG, 0) ==
+                  RXOP_COMPONENT_BINARY &&
+              signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.static_names &&
+              strcmp(signal.static_names, "OUT_OF_RANGE") == 0,
+          "raw string byte move metadata regression",
+          &op_table[OP_SBMOVE_REG_REG_REG_REG_REG]);
     effects = rxop_effects(OP_PGETI_REG_REG_REG);
     signal = rxop_signal_contract(OP_PGETI_REG_REG_REG);
     check(effects.state == RXOP_EFFECT_CLASSIFIED &&
