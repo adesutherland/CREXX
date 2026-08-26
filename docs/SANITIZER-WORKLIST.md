@@ -14,12 +14,12 @@ also passes both Linux x64 ASan/LSan and macOS arm64 ASan on that commit.
 SAN-001 through SAN-005 and SAN-QA-001 through SAN-QA-007 are therefore closed
 as sanitizer findings.
 
-Status at 2026-08-26: SAN-QA-008 is open after the maintained macOS arm64
-AddressSanitizer lane exposed a typed timeout-completion failure in the byte
-channel provider at `6fd40945d8665c5184b1044269697412310b538f`. Until the
-final-head GitHub sanitizer lanes pass, the repository is not sanitizer-clean
-at the current `develop` head. The candidate's local macOS arm64 ASan gate is
-now clean.
+Status at 2026-08-26: SAN-QA-008 is closed after the synchronized hotfix passed
+the original broad macOS arm64 trigger locally and GitHub Sanitizer QA run
+[32958593912](https://github.com/adesutherland/CREXX/actions/runs/32958593912)
+passed both Linux x64 ASan/LSan and macOS arm64 ASan on final published code
+revision `a744b4d2551d795cf9bbf09c46c5a3fd71e53d46`. The stronger diagnostic
+remains as regression evidence; no sanitizer or product failure reproduced.
 
 A later production process-channel repair in `c87809d2b` is not a sanitizer
 finding. Its exact three-test process panel passes ordinary Debug at
@@ -43,9 +43,9 @@ ordinary Debug gate then passes 2,363/2,363 at
 
 ### SAN-QA-008 — saturated child redirect loses typed timeout completion
 
-Status: open; the exact macOS arm64 ASan failure and retained runner artifact
-are identified. The failure has not repeated in focused or contended local
-runs; final broad platform proof is still required before closure.
+Status: closed; the exact macOS arm64 ASan failure and retained runner artifact
+are identified, the failure did not repeat in focused or contended local runs,
+and the local plus final-head broad platform gates pass.
 
 - Scope: the byte-channel child-process provider's deadline and saturated
   output-redirect completion path, exercised by `rxvmchannel_byte_provider`.
@@ -75,11 +75,13 @@ runs; final broad platform proof is still required before closure.
   `cmake-build-debugasan/asan-logs/20260826-104630-full`; the formerly failing
   `rxvmchannel_byte_provider` passed as test 1151 under eight-way load. No
   memory-safety report or typed-state failure was reproduced.
-- Owner / next action: hotfix qualification; retain the stronger diagnostic,
-  rerun the original broad macOS arm64 ASan trigger and require both final-head
-  GitHub sanitizer lanes to pass. If it recurs, the newly reported state and
-  error code determine whether to repair deadline publication, child launch,
-  or redirect shutdown; do not weaken the assertion or timeout.
+- Closure: GitHub Sanitizer QA run
+  [32958593912](https://github.com/adesutherland/CREXX/actions/runs/32958593912)
+  passed both macOS arm64 ASan and Linux x64 ASan/LSan on final published code
+  revision `a744b4d2551d795cf9bbf09c46c5a3fd71e53d46`, after the complete local
+  macOS arm64 ASan pass above. If the test recurs, its retained state and error
+  code distinguish deadline publication, child launch and redirect shutdown;
+  do not weaken the assertion or timeout.
 - Acceptance: retain a focused regression that fails for the original reason,
   pass the same focused shape in ordinary Debug and maintained sanitizer
   builds, rerun the original broad trigger cleanly, and pass both GitHub
