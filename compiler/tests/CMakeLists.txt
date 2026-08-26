@@ -1044,6 +1044,42 @@ add_crexx_compiler_fail_test(reference_source_refsame_type rexx_src/reference_so
 add_crexx_compiler_fail_test(eq_levelb rexx_src/eq_levelb_fail.crexx eq_levelb_fail.txt)
 add_crexx_compiler_fail_test(eq_missing_interface rexx_src/eq_missing_interface_fail.crexx eq_missing_interface_fail.txt)
 add_crexx_compiler_fail_test(eq_nonobject rexx_src/eq_nonobject_fail.crexx eq_nonobject_fail.txt)
+
+set(_reference_driver_workdir
+        "${CMAKE_CURRENT_BINARY_DIR}/reference_driver_failure_ws")
+set(_reference_driver_script
+        "${CMAKE_CURRENT_BINARY_DIR}/reference_driver_failure.cmake")
+file(GENERATE OUTPUT "${_reference_driver_script}" CONTENT
+"file(REMOVE_RECURSE \"${_reference_driver_workdir}\")
+file(MAKE_DIRECTORY \"${_reference_driver_workdir}\")
+file(COPY
+  \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/reference_source_comparison_fail.crexx\"
+  DESTINATION \"${_reference_driver_workdir}\")
+execute_process(
+  COMMAND \"$<TARGET_FILE:crexx>\"
+          reference_source_comparison_fail.crexx -noexec -nocolor
+  WORKING_DIRECTORY \"${_reference_driver_workdir}\"
+  RESULT_VARIABLE result
+  OUTPUT_VARIABLE output
+  ERROR_VARIABLE error
+  TIMEOUT 20)
+set(combined \"\${output}\${error}\")
+if(NOT \"\${result}\" STREQUAL \"2\")
+  message(FATAL_ERROR
+          \"crexx driver did not return the compiler failure (\${result}):\\n\${combined}\")
+endif()
+string(FIND \"\${combined}\" \"#REFERENCE_COMPARISON_UNSUPPORTED\" diagnostic)
+if(diagnostic EQUAL -1)
+  message(FATAL_ERROR
+          \"crexx driver hid the compiler diagnostic:\\n\${combined}\")
+endif()
+")
+add_test(NAME crexx_driver_reference_failure_propagation
+         COMMAND ${CMAKE_COMMAND} -P "${_reference_driver_script}")
+set_tests_properties(crexx_driver_reference_failure_propagation PROPERTIES
+        LABELS "compiler;driver;negative;references"
+        TIMEOUT 30)
+
 add_crexx_compiler_fail_test(binary_memory_invalid_storage rexx_src/binary_memory_invalid_storage.crexx binary_memory_invalid_storage.txt)
 add_crexx_compiler_fail_test(binary_memory_fixed_for rexx_src/binary_memory_fixed_for.crexx binary_memory_fixed_for.txt)
 add_crexx_compiler_fail_test(binary_memory_missing_offset rexx_src/binary_memory_missing_offset.crexx binary_memory_missing_offset.txt)

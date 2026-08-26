@@ -2,6 +2,7 @@
 options levelb
 import rxfnsb
 
+say "READY: linein stdin prompt"
 who = linein("")
 if who <> "Ada" then do
   say "FAIL: linein stdin returned" who
