@@ -31,6 +31,26 @@ failures = failures + check_int("contains alpha", kdb.containsKey("alpha"), 1)
 failures = failures + check_int("size after insert", kdb.size(), 2)
 failures = failures + check_int("validate", kdb.validate(), 0)
 
+/* Enumeration keeps its own cursor when get() seeks the index file. */
+key = kdb.firstKey()
+failures = failures + check_string("first key", key, "alpha")
+failures = failures + check_string("get during enumeration", kdb.get(key), alpha_value)
+failures = failures + check_string("next key after get", kdb.nextKey(), "beta")
+failures = failures + check_string("end of enumeration", kdb.nextKey(), "NOT_FOUND")
+
+/* Updates replace the existing record and rollback restores both files. */
+failures = failures + check_int("begin update rollback", kdb.begin(), 0)
+failures = failures + check_int("update alpha", kdb.put("alpha", "rolled back"), 0)
+failures = failures + check_int("rollback update", kdb.rollback(), 0)
+failures = failures + check_string("value after rollback", kdb.get("alpha"), alpha_value)
+failures = failures + check_int("size after rollback", kdb.size(), 2)
+
+failures = failures + check_int("update commit begin", kdb.begin(), 0)
+failures = failures + check_int("update alpha committed", kdb.put("alpha", "updated"), 0)
+failures = failures + check_int("update commit", kdb.commit(), 0)
+failures = failures + check_string("updated value", kdb.get("alpha"), "updated")
+failures = failures + check_int("size after update", kdb.size(), 2)
+
 failures = failures + check_int("remove beta", kdb.removeCommit("beta"), 0)
 
 stats = kdb.stats()
@@ -38,6 +58,11 @@ if length(stats) = 0 then do
   say "stats returned an empty string"
   failures = failures + 1
 end
+
+/* Closing with an active transaction must roll it back. */
+failures = failures + check_int("begin close rollback", kdb.begin(), 0)
+failures = failures + check_int("put close rollback", kdb.put("transient", "not committed"), 0)
+failures = failures + check_int("close rolls back", kdb.close(), 0)
 
 rc = kdb.close()
 failures = failures + check_int("close", rc, 0)
@@ -48,9 +73,19 @@ if handle < 0 then do
   failures = failures + 1
 end
 else do
-  failures = failures + check_string("get alpha after reopen", kdb.get("alpha"), alpha_value)
+  failures = failures + check_string("get alpha after reopen", kdb.get("alpha"), "updated")
   failures = failures + check_int("contains beta after reopen", kdb.containsKey("beta"), 0)
   failures = failures + check_string("get beta after reopen", kdb.get("beta"), "NOT_FOUND")
+  failures = failures + check_string("uncommitted key absent", kdb.get("transient"), "NOT_FOUND")
+  failures = failures + check_string("first key after deletion", kdb.firstKey(), "alpha")
+  failures = failures + check_string("deleted key skipped", kdb.nextKey(), "NOT_FOUND")
+  failures = failures + check_int("reopen already-open handle", kdb.open(database_file, "r") < 0, 0)
+  failures = failures + check_string("value after repeated open", kdb.get("alpha"), "updated")
+  failures = failures + check_int("close before clear", kdb.close(), 0)
+  failures = failures + check_int("open for clear", kdb.open(database_file, "w+") < 0, 0)
+  failures = failures + check_int("clear", kdb.clear(), 0)
+  failures = failures + check_int("size after clear", kdb.size(), 0)
+  failures = failures + check_string("first key after clear", kdb.firstKey(), "NOT_FOUND")
   failures = failures + check_int("close after reopen", kdb.close(), 0)
 end
 

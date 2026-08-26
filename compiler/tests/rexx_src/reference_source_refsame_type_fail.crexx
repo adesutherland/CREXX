@@ -1,0 +1,10 @@
+options levelb
+namespace reference_source_refsame_type_fail
+
+main: procedure = .int
+  number = 1
+  text = "1"
+  number_ref = reference number
+  text_ref = reference text
+  if number_ref <refsame> text_ref then return 1
+  return 0

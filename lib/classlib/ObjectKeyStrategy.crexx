@@ -1,0 +1,36 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
+ */
+
+options levelb comments_dash
+namespace data expose ObjectKeyStrategy
+
+/**
+ * Defines logical equivalence and hashing for object keys.
+ *
+ * Strategies must return the same hash for any two keys for which
+ * equivalent(left, right) returns true. Hashes may be negative. Implementations
+ * should be deterministic while a collection uses them and should derive the
+ * hash from the same immutable logical fields used by equivalent().
+ */
+ObjectKeyStrategy: interface
+  /**
+   * Return a stable hash for a logical key.
+   *
+   * @param key Object key to hash.
+   * @return .int Hash value; the full signed integer range is permitted.
+   */
+  hash: method = .int
+    arg key = .object
+
+  /**
+   * Test whether two objects denote the same logical key.
+   *
+   * @param left First object key.
+   * @param right Second object key.
+   * @return .boolean 1 when the keys are logically equivalent, otherwise 0.
+   */
+  equivalent: method = .boolean
+    arg left = .object, right = .object

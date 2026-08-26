@@ -285,7 +285,7 @@ X(GETNUMSTD_REG, 259, FMT_R, FLOW_NEXT, 0, "Get Numeric Standard=op1 (1=common,2
 X(NUMSCI_INT_INT_INT, 260, FMT_I_I_I, FLOW_NEXT, 0, "Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci")
 X(NUMENG_INT_INT_INT, 261, FMT_I_I_I, FLOW_NEXT, 0, "Setup Engineering Numeric digits=op1, case=op2, std=op3, fuzz=0, form=eng")
 X(FFORMAT_REG_REG_REG, 262, FMT_R_R_R, FLOW_NEXT, 0, "DEPRECATED use fextr. Set string value from float value using a format string")
-X(RESERVED_263, 263, FMT_EMPTY, FLOW_NEXT, 0, "Reserved")
+X(REFSAME_REG_REG_REG, 263, FMT_R_R_R, FLOW_NEXT, FLG_OPT_BARRIER, "Set op1 to 1 if reference values op2 and op3 retain the same identity cell, else 0")
 X(SWAPN_REG_REG_REG_REG, 264, "RRRR", FLOW_NEXT, 0, "Swap two register pairs in operand order")
 X(SWAPN_REG_REG_REG_REG_REG_REG, 265, "RRRRRR", FLOW_NEXT, 0, "Swap three register pairs in operand order")
 X(SWAPN_REG_REG_REG_REG_REG_REG_REG_REG, 266, "RRRRRRRR", FLOW_NEXT, 0, "Swap four register pairs in operand order")

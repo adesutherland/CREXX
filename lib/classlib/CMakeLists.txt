@@ -9,6 +9,8 @@ set(CLSS
   Iterable
   ObjectPrintable
   Printable
+  ObjectEquatable
+  ObjectKeyStrategy
   ObjectIterator
   Iterator
   StringArrayList
@@ -18,8 +20,10 @@ set(CLSS
   ObjectArrayListIterator
   ArrayListIterator
   ObjectObjectTreeMapIterator
+  ObjectObjectHashMapIterator
   TreeMapIterator
   ObjectObjectTreeMap
+  ObjectObjectHashMap
   Map
   Bag
   ArrayBag
@@ -49,9 +53,9 @@ set(CLSS
   Qfind
   Scanlex
   Concurrency
-#  DateTime
-#  ISO8601
-#  OffsetDateTime
+  DateTime
+  ISO8601
+  OffsetDateTime
 )
 
 set(CLASSLIB_NATIVE_CLSS
@@ -98,7 +102,7 @@ add_custom_command(
 
 set(CLASSLIB_SELECTORS ${CLSS})
 set(CLASS_DEPS_StringIterable StringIterator)
-set(CLASS_DEPS_RexxComparator ObjectComparator)
+set(CLASS_DEPS_RexxComparator ObjectComparator Comparator)
 set(CLASS_DEPS_ObjectIterable ObjectIterator)
 set(CLASS_DEPS_Rexx ObjectPrintable)
 set(CLASS_DEPS_StringArrayList StringIterable)
@@ -124,6 +128,8 @@ set(CLASS_DEPS_StringTreeSet StringIterable StringIterator StringTreeSetIterator
 set(CLASS_DEPS_StringTreeSetIterator StringIterator)
 set(CLASS_DEPS_ObjectObjectTreeMapIterator ObjectIterator)
 set(CLASS_DEPS_ObjectObjectTreeMap ObjectObjectTreeMapIterator ObjectComparator ObjectPrintable)
+set(CLASS_DEPS_ObjectObjectHashMapIterator ObjectIterator)
+set(CLASS_DEPS_ObjectObjectHashMap ObjectObjectHashMapIterator ObjectKeyStrategy Map)
 set(CLASS_DEPS_TreeMap Map TreeMapIterator Comparator Printable)
 set(CLASS_DEPS_ArrayBag  ArrayBagIterator Bag Printable)
 set(CLASS_DEPS_OffsetDateTime DateTime Printable)

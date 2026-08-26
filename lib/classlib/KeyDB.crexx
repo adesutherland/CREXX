@@ -92,6 +92,11 @@ KeyDB: class
    */
   open: method = .int
     arg filename = .string, mode = .string
+    /* Opening an already-open object closes the previous handle first. */
+    if handle <> 0 then do
+      rc = close()
+      if rc <> 0 then return rc
+    end
     handle = _openkey(filename, mode)
     return handle
 
@@ -178,6 +183,44 @@ KeyDB: class
    */
   size: method = .int
     return _listkey(handle)
+
+  /**
+   * Start sequential traversal and return the first active key.
+   * Returns "NOT_FOUND" when the database has no active keys.
+   * @return .string Key or "NOT_FOUND".
+   */
+  firstKey: method = .string
+    return _firstkey(handle)
+
+  /**
+   * Continue sequential traversal and return the next active key.
+   * Returns "NOT_FOUND" at end of traversal.
+   * @return .string Key or "NOT_FOUND".
+   */
+  nextKey: method = .string
+    return _nextkey(handle)
+
+  /**
+   * Remove all active keys in one transaction.
+   * @return .int Status code.
+   */
+  clear: method = .int
+    rc = begin()
+    if rc <> 0 then return rc
+    key = firstKey()
+    do while key <> "NOT_FOUND"
+      if key = "ERROR" then do
+        call rollback()
+        return -3
+      end
+      rc = remove(key)
+      if rc <> 0 then do
+        call rollback()
+        return rc
+      end
+      key = nextKey()
+    end
+    return commit()
 
   /**
    * Return formatted statistics text.

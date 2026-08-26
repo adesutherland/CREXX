@@ -1,0 +1,8 @@
+options levelb
+namespace reference_source_refsame_nonref_fail
+
+main: procedure = .int
+  left = 1
+  right = 2
+  if left <refsame> right then return 1
+  return 0

@@ -78,16 +78,16 @@ Map: interface
     arg key = .object
     
     /**
-    * Returns the keys in comparator order.
+    * Returns the keys in the concrete map's defined iteration order.
     *
-    * @return .object[] Ordered array of keys.
+    * @return .object[] Array of keys in map-defined order.
     */
   keyArray: method = .object[]
     
     /**
-    * Returns the object values 
+    * Returns the object values in the same order as keyArray().
     *
-    * @return .object[] Array of object values in key order.
+    * @return .object[] Array of object values in map-defined key order.
     */
   valueArray: method = .object[]
     

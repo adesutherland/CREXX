@@ -2004,6 +2004,11 @@ void validate_ast(Context *context) {
         context->current_scope = 0;
         ast_wlkr(context->ast, rewrite_constructor_walker, (void *) context);
 
+        /* Lower the closed Level G object-equivalence operator before symbol
+         * resolution. The lowered call retains an explicit validation marker. */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, rewrite_equivalence_walker, (void *) context);
+
         /* Re-write EXIT Instructions
          * Progress: rewrite_exit_walker is idempotent. Mutates EXIT to CALL.
          * Debug validation remains deferred until after build_symbols because

@@ -391,6 +391,14 @@ valid selector identities. Tooling that needs a portable external type identity
 must resolve them against the owning namespace and reject ambiguous matches;
 `crexx-contract` performs that step in its private RXBIN adapter.
 
+An imported callable may contain `.unknown` return or parameter types when its
+source module was compiled before the defining module was available. During a
+link, those fields are unresolved placeholders: a selected definition may
+refine them to concrete types. Arity, reference/optional/variadic flags, and
+every known imported type must still match. The linked callable adopts the
+definition's complete descriptor and procedure reference. This refinement does
+not reconcile two definitions or two contradictory known import contracts.
+
 These headers and the `rxbin` archive are not an installed external SDK. The
 supported external metadata surface is the deterministic
 `crexx.operation-contract/1` artifact produced by `crexx-contract`; RXBIN graph

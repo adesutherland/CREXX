@@ -516,6 +516,69 @@ static int rx_graph_descriptors_match(const char *left_descriptor,
     return matches;
 }
 
+static int rx_graph_import_descriptor_matches_definition(
+        const char *imported_descriptor,
+        const char *definition_descriptor) {
+    rx_callable_signature imported;
+    rx_callable_signature definition;
+    size_t i;
+    int matches;
+
+    if (rx_graph_descriptors_match(imported_descriptor, definition_descriptor)) return 1;
+    if (!rx_sig_parse_descriptor(imported_descriptor, &imported)) return 0;
+    if (!rx_sig_parse_descriptor(definition_descriptor, &definition)) {
+        rx_sig_free(&imported);
+        return 0;
+    }
+
+    matches = imported.name && definition.name &&
+              strcmp(imported.name, definition.name) == 0 &&
+              imported.return_type && definition.return_type &&
+              (strcmp(imported.return_type, definition.return_type) == 0 ||
+               strcmp(imported.return_type, ".unknown") == 0) &&
+              imported.arg_count == definition.arg_count;
+    for (i = 0u; matches && i < imported.arg_count; i++) {
+        const rx_callable_arg *expected;
+        const rx_callable_arg *actual;
+
+        expected = &imported.args[i];
+        actual = &definition.args[i];
+        matches = expected->is_ref == actual->is_ref &&
+                  expected->is_optional == actual->is_optional &&
+                  expected->is_vararg == actual->is_vararg &&
+                  expected->type && actual->type &&
+                  (strcmp(expected->type, actual->type) == 0 ||
+                   strcmp(expected->type, ".unknown") == 0);
+    }
+
+    rx_sig_free(&imported);
+    rx_sig_free(&definition);
+    return matches;
+}
+
+static int rx_graph_builder_add_callable_types(RxGraphBuilder *builder,
+                                               const char *symbol,
+                                               const char *return_type,
+                                               const char *args) {
+    rx_callable_signature signature;
+    size_t i;
+    int ok;
+
+    if (!rx_sig_init_from_parts(&signature, symbol, return_type, args)) return 0;
+    ok = rx_graph_builder_add_type(builder,
+                                   signature.return_type,
+                                   RX_GRAPH_TYPE_OPAQUE,
+                                   0u) != RX_GRAPH_NONE;
+    for (i = 0u; ok && i < signature.arg_count; i++) {
+        ok = rx_graph_builder_add_type(builder,
+                                       signature.args[i].type,
+                                       RX_GRAPH_TYPE_OPAQUE,
+                                       0u) != RX_GRAPH_NONE;
+    }
+    rx_sig_free(&signature);
+    return ok;
+}
+
 RxMemberId rx_graph_builder_find_member(const RxGraphBuilder *builder,
                                         const char *descriptor) {
     uint32_t i;
@@ -643,19 +706,22 @@ RxCallableId rx_graph_builder_add_callable(RxGraphBuilder *builder,
                                            RxGraphProcRef procedure,
                                            uint32_t flags) {
     RxGraph *graph;
-    rx_callable_signature signature;
     RxCallableId existing;
     RxGraphCallableRecord *record;
     char *descriptor;
     uint32_t symbol_offset;
     uint32_t descriptor_offset;
-    size_t i;
 
     if (!builder || builder->failed || !symbol) return RX_GRAPH_NONE;
     graph = builder->graph;
     descriptor = rx_sig_build_descriptor(symbol, return_type, args);
     if (!descriptor) {
         builder->failed = 1;
+        return RX_GRAPH_NONE;
+    }
+    if (!rx_graph_builder_add_callable_types(builder, symbol, return_type, args)) {
+        builder->failed = 1;
+        free(descriptor);
         return RX_GRAPH_NONE;
     }
     existing = rx_graph_builder_find_callable(builder, symbol);
@@ -666,6 +732,7 @@ RxCallableId rx_graph_builder_add_callable(RxGraphBuilder *builder,
         uint32_t incoming_semantic_flags;
         int current_imported;
         int incoming_imported;
+        int descriptors_match;
 
         current = &graph->callables[existing];
         current_descriptor = rx_graph_string(graph, current->descriptor_offset);
@@ -673,8 +740,18 @@ RxCallableId rx_graph_builder_add_callable(RxGraphBuilder *builder,
         incoming_semantic_flags = flags & ~RX_GRAPH_CALLABLE_IMPORTED;
         current_imported = (current->flags & RX_GRAPH_CALLABLE_IMPORTED) != 0u;
         incoming_imported = (flags & RX_GRAPH_CALLABLE_IMPORTED) != 0u;
+        if (current_imported && !incoming_imported) {
+            descriptors_match = rx_graph_import_descriptor_matches_definition(
+                current_descriptor, descriptor);
+        } else if (!current_imported && incoming_imported) {
+            descriptors_match = rx_graph_import_descriptor_matches_definition(
+                descriptor, current_descriptor);
+        } else {
+            descriptors_match = rx_graph_descriptors_match(current_descriptor,
+                                                           descriptor);
+        }
         if (!current_descriptor ||
-            !rx_graph_descriptors_match(current_descriptor, descriptor) ||
+            !descriptors_match ||
             current_semantic_flags != incoming_semantic_flags ||
             (!current_imported && !incoming_imported &&
              (current->module_index != procedure.module_index ||
@@ -698,36 +775,10 @@ RxCallableId rx_graph_builder_add_callable(RxGraphBuilder *builder,
         free(descriptor);
         return existing;
     }
-    if (!rx_sig_init_from_parts(&signature, symbol, return_type, args)) {
-        free(descriptor);
-        builder->failed = 1;
-        return RX_GRAPH_NONE;
-    }
-    if (rx_graph_builder_add_type(builder,
-                                  signature.return_type,
-                                  RX_GRAPH_TYPE_OPAQUE,
-                                  0u) == RX_GRAPH_NONE) {
-        rx_sig_free(&signature);
-        free(descriptor);
-        builder->failed = 1;
-        return RX_GRAPH_NONE;
-    }
-    for (i = 0u; i < signature.arg_count; i++) {
-        if (rx_graph_builder_add_type(builder,
-                                      signature.args[i].type,
-                                      RX_GRAPH_TYPE_OPAQUE,
-                                      0u) == RX_GRAPH_NONE) {
-            rx_sig_free(&signature);
-            free(descriptor);
-            builder->failed = 1;
-            return RX_GRAPH_NONE;
-        }
-    }
     if (!rx_graph_grow((void **)&graph->callables,
                        &graph->callable_capacity,
                        graph->callable_count + 1u,
                        sizeof(*graph->callables))) {
-        rx_sig_free(&signature);
         free(descriptor);
         builder->failed = 1;
         return RX_GRAPH_NONE;
@@ -735,7 +786,6 @@ RxCallableId rx_graph_builder_add_callable(RxGraphBuilder *builder,
     symbol_offset = rx_graph_add_string(graph, symbol);
     descriptor_offset = rx_graph_add_string(graph, descriptor);
     if (symbol_offset == RX_GRAPH_NONE || descriptor_offset == RX_GRAPH_NONE) {
-        rx_sig_free(&signature);
         free(descriptor);
         builder->failed = 1;
         return RX_GRAPH_NONE;
@@ -749,7 +799,6 @@ RxCallableId rx_graph_builder_add_callable(RxGraphBuilder *builder,
     record->flags = flags;
     record->procedure_offset = procedure.procedure_offset;
     record->hash = rx_graph_hash(symbol);
-    rx_sig_free(&signature);
     free(descriptor);
     return graph->callable_count++;
 }

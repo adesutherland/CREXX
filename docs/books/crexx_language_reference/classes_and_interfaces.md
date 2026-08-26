@@ -542,6 +542,31 @@ These operations are mirrored by:
 - `compiler/tests/rexx_src/type_ops_showcase.crexx`
 - `compiler/tests/rexx_src/type_ops_fail.crexx`
 
+## Object Equivalence and Key Strategies
+
+The class library separates canonical object equivalence from collection key
+policy:
+
+- `.ObjectEquatable` is an opt-in object contract. In Level G,
+  `left <eq> right` lowers to `left.equivalent(right as .object)`.
+- `.ObjectKeyStrategy` owns both `hash(key)` and
+  `equivalent(left, right)` for a particular map or set policy.
+- `.ObjectComparator` remains the canonical total-order contract for ordered
+  object collections. The older `.Comparator` name remains for compatibility.
+
+An `ObjectKeyStrategy` must return equal hashes whenever it reports two keys as
+equivalent. It may choose case-sensitive, case-insensitive, namespace-scoped,
+or domain-specific rules; there is deliberately no universal default object
+hash and no raw-address hash.
+
+For a copyable handle to a global resource, keep immutable logical fields such
+as scope, namespace, resource type, value, and generation in the handle. Hash a
+length-framed representation of exactly those fields and compare the same
+fields in `equivalent()`. This identifies the resource across handle copies; it
+does not turn the handle into a live cross-worker reference. See
+`examples/classes/global_object_keys.crexx` for a complete strategy and map
+example.
+
 ## Notes and Current Boundaries
 
 - Interface default methods are final in Level B.

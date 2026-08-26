@@ -1,0 +1,2 @@
+Error in eq_missing_interface_fail.crexx @ 6:4 - #EQ_REQUIRES_OBJECT_EQUATABLE, "left <eq> right"
+1 error(s) in source file

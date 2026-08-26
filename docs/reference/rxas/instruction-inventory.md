@@ -2,8 +2,8 @@
 
 This inventory is for coverage validation. Every mnemonic from `rxas -i` should appear exactly once with its current primary skeleton section.
 
-- Unique mnemonics: 378
-- Opcode/form rows: 584
+- Unique mnemonics: 379
+- Opcode/form rows: 585
 
 ## Section Counts
 
@@ -16,7 +16,7 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md) | 46 |
 | [Strings And Characters](instructions/06-strings-and-characters.md) | 31 |
 | [Binary Memory](instructions/07-binary-memory.md) | 41 |
-| [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md) | 36 |
+| [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md) | 37 |
 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md) | 48 |
 | [Signals, Breakpoints, And Runtime](instructions/10-signals-breakpoints-and-runtime.md) | 19 |
 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md) | 23 |
@@ -287,6 +287,7 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `poschar` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#poschar) |
 | `readline` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#readline) |
 | `refvalid` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#refvalid) |
+| `refsame` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#refsame) |
 | `req` | 3 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#req) |
 | `ret` | 5 | [Program Control And Calls](instructions/01-program-control.md#ret) |
 | `rgt` | 3 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#rgt) |

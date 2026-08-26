@@ -114,8 +114,10 @@ Stage 2 discovery data taken from active `ADDPROC` registrations in native sourc
 | `RXPA-keyaccess-closekey` | `lib/plugins/keyaccess` | `keyaccess._closekey` | `closefile` | `b` | `.int` | `handle=.int` | `lib/plugins/keyaccess/keyaccess.c` |
 | `RXPA-keyaccess-compact` | `lib/plugins/keyaccess` | `keyaccess._compact` | `compact_database` | `b` | `.int` | `handle=.int` | `lib/plugins/keyaccess/keyaccess.c` |
 | `RXPA-keyaccess-deletekey` | `lib/plugins/keyaccess` | `keyaccess._deletekey` | `deletekey` | `b` | `.int` | `handle=.int,key=.string` | `lib/plugins/keyaccess/keyaccess.c` |
+| `RXPA-keyaccess-firstkey` | `lib/plugins/keyaccess` | `keyaccess._firstkey` | `firstkey` | `b` | `.string` | `handle=.int` | `lib/plugins/keyaccess/keyaccess.c` |
 | `RXPA-keyaccess-listkey` | `lib/plugins/keyaccess` | `keyaccess._listkey` | `listkeys` | `b` | `.int` | `handle=.int` | `lib/plugins/keyaccess/keyaccess.c` |
 | `RXPA-keyaccess-openkey` | `lib/plugins/keyaccess` | `keyaccess._openkey` | `openfile` | `b` | `.int` | `filename=.string,mode=.string` | `lib/plugins/keyaccess/keyaccess.c` |
+| `RXPA-keyaccess-nextkey` | `lib/plugins/keyaccess` | `keyaccess._nextkey` | `nextkey` | `b` | `.string` | `handle=.int` | `lib/plugins/keyaccess/keyaccess.c` |
 | `RXPA-keyaccess-readkey` | `lib/plugins/keyaccess` | `keyaccess._readkey` | `readkey` | `b` | `.string` | `handle=.int,key=.string` | `lib/plugins/keyaccess/keyaccess.c` |
 | `RXPA-keyaccess-stats` | `lib/plugins/keyaccess` | `keyaccess._stats` | `get_statistics` | `b` | `.string` | `handle=.int` | `lib/plugins/keyaccess/keyaccess.c` |
 | `RXPA-keyaccess-txbegin` | `lib/plugins/keyaccess` | `keyaccess._txbegin` | `begin_transaction` | `b` | `.int` | `handle=.int` | `lib/plugins/keyaccess/keyaccess.c` |

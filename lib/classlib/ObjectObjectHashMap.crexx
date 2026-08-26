@@ -1,0 +1,267 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
+ */
+
+options levelb comments_dash
+namespace data expose ObjectObjectHashMap
+
+/**
+ * Strategy-backed hash map from object keys to object values.
+ *
+ * Hashes are cached on insertion and collisions are resolved through the
+ * supplied ObjectKeyStrategy. Separate chaining provides average constant-time
+ * lookup, insertion, and removal when the strategy distributes hashes well.
+ * A separate slot-order list preserves insertion order across resize, removal,
+ * and slot reuse. Iterators are snapshots.
+ */
+ObjectObjectHashMap: class implements .Map
+strategy_ = .ObjectKeyStrategy
+capacity_ = .int
+count_ = .int
+slot_count_ = .int
+free_count_ = .int
+order_head_ = .int
+order_tail_ = .int
+buckets_ = .int[]
+keys_ = .object[]
+values_ = .object[]
+hashes_ = .int[]
+bucket_next_ = .int[]
+order_next_ = .int[]
+order_prev_ = .int[]
+free_ = .int[]
+
+  /**
+   * Create an empty map using the supplied logical key strategy.
+   *
+   * @param strategy Strategy defining key hashing and equivalence.
+   * @param expected Expected initial cardinality hint.
+   * @return .ObjectObjectHashMap
+   */
+  *: factory
+    arg strategy = .ObjectKeyStrategy, expected = 16
+    strategy_ = strategy
+    capacity_ = 8
+    if expected < 1 then expected = 1
+    do while capacity_ < expected * 2
+      capacity_ = capacity_ * 2
+    end
+    buckets_[capacity_] = 0
+    count_ = 0
+    slot_count_ = 0
+    free_count_ = 0
+    order_head_ = 0
+    order_tail_ = 0
+    return
+
+  _bucket: method = .int
+    arg hash_value = .int
+    bucket = hash_value <mod> capacity_
+    if bucket < 0 then bucket = bucket + capacity_
+    return bucket + 1
+
+  _resize: method = .int
+    arg new_capacity = .int
+    assembler SETATTRS buckets_,0
+    capacity_ = new_capacity
+    buckets_[capacity_] = 0
+    slot = order_head_
+    do while slot <> 0
+      bucket = _bucket(hashes_[slot])
+      bucket_next_[slot] = buckets_[bucket]
+      buckets_[bucket] = slot
+      slot = order_next_[slot]
+    end
+    return 0
+
+  /**
+   * Associate a value with a logical key.
+   *
+   * An equivalent existing key retains its original key object and insertion
+   * position while its value is replaced.
+   *
+   * @param key Object key to store.
+   * @param value Object value to associate with the key.
+   * @return .int 0 on insertion or replacement.
+   */
+  put: method = .int
+    arg key = .object, value = .object
+    hash_value = strategy_.hash(key)
+    bucket = _bucket(hash_value)
+    slot = buckets_[bucket]
+    do while slot <> 0
+      if hashes_[slot] = hash_value then do
+        if strategy_.equivalent(key, keys_[slot]) then do
+          values_[slot] = value
+          return 0
+        end
+      end
+      slot = bucket_next_[slot]
+    end
+
+    if count_ * 4 >= capacity_ * 3 then do
+      rc = _resize(capacity_ * 2)
+      bucket = _bucket(hash_value)
+    end
+
+    if free_count_ > 0 then do
+      slot = free_[free_count_]
+      free_[free_count_] = 0
+      free_count_ = free_count_ - 1
+    end
+    else do
+      slot_count_ = slot_count_ + 1
+      slot = slot_count_
+    end
+
+    keys_[slot] = key
+    values_[slot] = value
+    hashes_[slot] = hash_value
+    bucket_next_[slot] = buckets_[bucket]
+    buckets_[bucket] = slot
+
+    order_prev_[slot] = order_tail_
+    order_next_[slot] = 0
+    if order_tail_ = 0 then order_head_ = slot
+    else order_next_[order_tail_] = slot
+    order_tail_ = slot
+    count_ = count_ + 1
+    return 0
+
+  /**
+   * Return the value associated with a logical key.
+   *
+   * @param key Object key to find.
+   * @return .object Mapped value, or an uninitialized object when absent.
+   */
+  get: method = .object
+    arg key = .object
+    hash_value = strategy_.hash(key)
+    slot = buckets_[_bucket(hash_value)]
+    do while slot <> 0
+      if hashes_[slot] = hash_value then do
+        if strategy_.equivalent(key, keys_[slot]) then return values_[slot]
+      end
+      slot = bucket_next_[slot]
+    end
+    none = .object
+    return none
+
+  /**
+   * Test whether a logical key is present.
+   *
+   * @param key Object key to find.
+   * @return .int 1 when present, otherwise 0.
+   */
+  containsKey: method = .int
+    arg key = .object
+    hash_value = strategy_.hash(key)
+    slot = buckets_[_bucket(hash_value)]
+    do while slot <> 0
+      if hashes_[slot] = hash_value then do
+        if strategy_.equivalent(key, keys_[slot]) then return 1
+      end
+      slot = bucket_next_[slot]
+    end
+    return 0
+
+  /**
+   * Remove a logical key.
+   *
+   * @param key Object key to remove.
+   * @return .int 0 when removed, 4 when absent.
+   */
+  remove: method = .int
+    arg key = .object
+    hash_value = strategy_.hash(key)
+    bucket = _bucket(hash_value)
+    previous = 0
+    slot = buckets_[bucket]
+    do while slot <> 0
+      if hashes_[slot] = hash_value then do
+        if strategy_.equivalent(key, keys_[slot]) then leave
+      end
+      previous = slot
+      slot = bucket_next_[slot]
+    end
+    if slot = 0 then return 4
+
+    if previous = 0 then buckets_[bucket] = bucket_next_[slot]
+    else bucket_next_[previous] = bucket_next_[slot]
+
+    previous_order = order_prev_[slot]
+    next_order = order_next_[slot]
+    if previous_order = 0 then order_head_ = next_order
+    else order_next_[previous_order] = next_order
+    if next_order = 0 then order_tail_ = previous_order
+    else order_prev_[next_order] = previous_order
+
+    empty_key = .object
+    empty_value = .object
+    keys_[slot] = empty_key
+    values_[slot] = empty_value
+    hashes_[slot] = 0
+    bucket_next_[slot] = 0
+    order_next_[slot] = 0
+    order_prev_[slot] = 0
+    free_count_ = free_count_ + 1
+    free_[free_count_] = slot
+    count_ = count_ - 1
+    return 0
+
+  /** @return .int Number of mappings. */
+  size: method = .int
+    return count_
+
+  /** @return .object[] Keys in insertion order. */
+  keyArray: method = .object[]
+    result = .object[]
+    out = 0
+    slot = order_head_
+    do while slot <> 0
+      out = out + 1
+      result[out] = keys_[slot]
+      slot = order_next_[slot]
+    end
+    return result
+
+  /** @return .object[] Values in insertion-key order. */
+  valueArray: method = .object[]
+    result = .object[]
+    out = 0
+    slot = order_head_
+    do while slot <> 0
+      out = out + 1
+      result[out] = values_[slot]
+      slot = order_next_[slot]
+    end
+    return result
+
+  /** @return .ObjectObjectHashMapIterator Snapshot iterator in insertion order. */
+  iterator: method = .ObjectObjectHashMapIterator
+    return .ObjectObjectHashMapIterator(keyArray(), valueArray())
+
+  /**
+   * Clear the map while retaining its strategy for reuse.
+   *
+   * @return .int 0 on success.
+   */
+  free: method = .int
+    assembler SETATTRS buckets_,0
+    assembler SETATTRS keys_,0
+    assembler SETATTRS values_,0
+    assembler SETATTRS hashes_,0
+    assembler SETATTRS bucket_next_,0
+    assembler SETATTRS order_next_,0
+    assembler SETATTRS order_prev_,0
+    assembler SETATTRS free_,0
+    capacity_ = 8
+    buckets_[capacity_] = 0
+    count_ = 0
+    slot_count_ = 0
+    free_count_ = 0
+    order_head_ = 0
+    order_tail_ = 0
+    return 0

@@ -3,7 +3,8 @@ import data
 import rexx
 
 failures = 0
-a = .TreeMap(.RexxComparator())
+a = .ObjectObjectTreeMap(.RexxComparator())
+legacy = .TreeMap(.RexxComparator())
 
 key = .rexx
 val = .rexx
@@ -15,6 +16,8 @@ loop i=9 to 1 by -1
 end
 if val.toString() <> 'bar1' then failures=failures+1
 if a.size() <> 9 then failures=failures+1
+rc = legacy.put(.rexx('legacy') as .object, .rexx('compatible') as .object)
+if legacy.size() <> 1 then failures=failures+1
 
 i = a.iterator()
 loop while i.hasNext()

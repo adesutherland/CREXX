@@ -21,6 +21,8 @@ set(REXXBINS
   testObjectCollections
   testStringObjectMaps
   testObjectObjectTreeMap
+  testObjectObjectHashMap
+  testObjectEquality
   testTreeMap
   testRexxComparator
   testQfind
@@ -28,6 +30,7 @@ set(REXXBINS
   testJSON
 #  testBag
   testConcurrency
+  testDateTime
 )
 
 add_test(

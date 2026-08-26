@@ -1913,7 +1913,6 @@ static int crexxcmd_run_path(void *userdata,
                              int *command_rc,
                              char **error_text) {
     SHELLDATA *parent_data = (SHELLDATA *)userdata;
-    value input_redirect;
     value output_redirect;
     value error_redirect;
     value output_value;
@@ -1932,18 +1931,15 @@ static int crexxcmd_run_path(void *userdata,
     if (error_text) *error_text = NULL;
     if (command_rc) *command_rc = 0;
 
-    value_init(&input_redirect);
     value_init(&output_redirect);
     value_init(&error_redirect);
     value_init(&output_value);
     value_init(&error_value);
 
-    if (parent_data && parent_data->pInput) {
-        pIn = parent_data->pInput;
-    } else {
-        nullredr(&input_redirect);
-        pIn = rxspawn_redirect_from_value(&input_redirect);
-    }
+    /* A missing redirect means the normal process stream. Preserve NULL so
+     * nested PATH execution inherits stdin instead of replacing it with the
+     * platform null device. */
+    pIn = parent_data ? parent_data->pInput : NULL;
     redr2str(&output_redirect, &output_value);
     redr2str(&error_redirect, &error_value);
     pOut = rxspawn_redirect_from_value(&output_redirect);
@@ -1964,7 +1960,6 @@ static int crexxcmd_run_path(void *userdata,
     if (err_text) *err_text = copy_value_string(&error_value);
     if (error_text && spawn_error) *error_text = copy_string_external(spawn_error);
 
-    clear_value(&input_redirect);
     clear_value(&output_redirect);
     clear_value(&error_redirect);
     clear_value(&output_value);
@@ -1986,7 +1981,6 @@ static int crexxcmd_run_argv(void *userdata,
                              int *command_rc,
                              char **error_text) {
     SHELLDATA *parent_data = (SHELLDATA *)userdata;
-    value input_redirect;
     value output_redirect;
     value error_redirect;
     value output_value;
@@ -2005,18 +1999,15 @@ static int crexxcmd_run_argv(void *userdata,
     if (error_text) *error_text = NULL;
     if (command_rc) *command_rc = 0;
 
-    value_init(&input_redirect);
     value_init(&output_redirect);
     value_init(&error_redirect);
     value_init(&output_value);
     value_init(&error_value);
 
-    if (parent_data && parent_data->pInput) {
-        pIn = parent_data->pInput;
-    } else {
-        nullredr(&input_redirect);
-        pIn = rxspawn_redirect_from_value(&input_redirect);
-    }
+    /* A missing redirect means the normal process stream. Preserve NULL so
+     * argv-preserving CREXX run inherits stdin instead of replacing it with
+     * the platform null device. */
+    pIn = parent_data ? parent_data->pInput : NULL;
     redr2str(&output_redirect, &output_value);
     redr2str(&error_redirect, &error_value);
     pOut = rxspawn_redirect_from_value(&output_redirect);
@@ -2039,7 +2030,6 @@ static int crexxcmd_run_argv(void *userdata,
     if (err_text) *err_text = copy_value_string(&error_value);
     if (error_text && spawn_error) *error_text = copy_string_external(spawn_error);
 
-    clear_value(&input_redirect);
     clear_value(&output_redirect);
     clear_value(&error_redirect);
     clear_value(&output_value);

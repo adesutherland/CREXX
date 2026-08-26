@@ -9,6 +9,16 @@ main() .locals=32
 
     load r1, "alpha"
     mkref r2, r1
+    copy r28, r2
+    refsame r29, r2, r28
+    ieq r0, r29, 1
+    brf fail_copied_refsame, r0
+
+    load r30, "alpha"
+    mkref r31, r30
+    refsame r29, r2, r31
+    ieq r0, r29, 0
+    brf fail_distinct_refsame, r0
 
     refvalid r3, r2
     ieq r0, r3, 1
@@ -37,6 +47,9 @@ main() .locals=32
     brf fail_linkref_write, r0
 
     endlife r1
+    refsame r29, r2, r28
+    ieq r0, r29, 1
+    brf fail_dead_refsame, r0
     refvalid r3, r2
     ieq r0, r3, 0
     brf fail_endlife, r0
@@ -44,6 +57,9 @@ main() .locals=32
     brf fail_endlife_contents, r0
 
     unref r2
+    refsame r29, r2, r28
+    ieq r0, r29, 0
+    brf fail_empty_refsame, r0
     refvalid r3, r2
     ieq r0, r3, 0
     brf fail_unref, r0
@@ -175,6 +191,18 @@ invalid_nonref_caught:
 
 fail_initial_refvalid:
     say "FAIL: initial refvalid"
+    ret 1
+fail_copied_refsame:
+    say "FAIL: copied reference identity"
+    ret 1
+fail_distinct_refsame:
+    say "FAIL: distinct reference identity"
+    ret 1
+fail_dead_refsame:
+    say "FAIL: dead reference identity"
+    ret 1
+fail_empty_refsame:
+    say "FAIL: empty reference identity"
     ret 1
 fail_initial_deref:
     say "FAIL: initial deref"

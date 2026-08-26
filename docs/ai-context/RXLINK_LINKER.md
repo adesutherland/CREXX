@@ -70,6 +70,12 @@ rewrites graph-bearing instruction references, and rebuilds every adjacency,
 name, declaration, dispatch, callable, factory, and provider index. It never
 concatenates module-local indexes.
 
+Callable imports compiled without their provider may carry `.unknown` in a
+return or parameter type. When the selected defining module is linked, RXLINK
+refines only those unresolved imported fields from the definition. Known types,
+arity, and parameter flags remain strict contracts, and duplicate definitions
+remain errors.
+
 The common `rxbin` graph library owns structural merge, remap, validation, and
 fast rule-neutral traversal. Future language-policy adapters may decide
 inheritance, assignability, override/default conflicts, and provider selection
