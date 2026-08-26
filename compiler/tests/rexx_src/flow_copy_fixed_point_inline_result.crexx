@@ -34,7 +34,7 @@ FlowCopyWorker: class
     do i = 1 to 16
       values[i] = 1
     end
-    do i = 1 to 8
+    do i = .int(1) to 8
       values[i] = 1
     end
     return recursiveAnswer(0)

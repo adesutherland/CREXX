@@ -1,0 +1,23 @@
+options levelg
+
+resultbox: class
+  _value = .int
+
+  *: factory
+    arg value = .int
+    _value = value
+    return
+
+  value: method = .int
+    return _value
+
+choose: procedure = .int
+  arg selected = .int
+  if selected = 1 then do
+    result = .resultbox(7)
+  end
+  else result = .resultbox(9)
+  return result.value()
+
+main: procedure = .int
+  return 0

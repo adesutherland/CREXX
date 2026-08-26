@@ -3739,6 +3739,18 @@ add_test(NAME test_disjoint_detailed_warn
          COMMAND ${CMAKE_COMMAND} -P "${WARN_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+add_test(NAME cri18_scope_warning
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/cri18_scope_warning_ws
+                 -DCRI18_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/cri18_disjoint_scope_warning.crexx
+                 -DASSIGN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/disjoint_assignment_warning.crexx
+                 -DEXPLICIT_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/disjoint_explicit_intent.crexx
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/cri18_scope_warning.cmake)
+set_tests_properties(cri18_scope_warning PROPERTIES
+        LABELS "compiler;diagnostics;scope;cri-18")
+
 
 # Parsing Tests
 add_crexx_parsing_test(expr_abut_01 parsing_src/expr_abut_01.crexx)
