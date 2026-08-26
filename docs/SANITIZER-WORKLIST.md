@@ -17,8 +17,9 @@ as sanitizer findings.
 Status at 2026-08-26: SAN-QA-008 is open after the maintained macOS arm64
 AddressSanitizer lane exposed a typed timeout-completion failure in the byte
 channel provider at `6fd40945d8665c5184b1044269697412310b538f`. Until the
-focused reproducer and full platform gate close, the repository is not
-sanitizer-clean at the current `develop` head.
+final-head GitHub sanitizer lanes pass, the repository is not sanitizer-clean
+at the current `develop` head. The candidate's local macOS arm64 ASan gate is
+now clean.
 
 A later production process-channel repair in `c87809d2b` is not a sanitizer
 finding. Its exact three-test process panel passes ordinary Debug at
@@ -69,7 +70,11 @@ runs; final broad platform proof is still required before closure.
 - Local evidence: 200 serial ordinary Debug repetitions, 200 serial macOS
   arm64 ASan repetitions and 400 macOS arm64 ASan repetitions across eight
   concurrent runner-managed CTest processes all passed on the synchronized
-  hotfix source. No memory-safety report or typed-state failure was reproduced.
+  hotfix source. The original broad macOS arm64 trigger then passed its build
+  and all 2,378/2,378 CTests on code commit `71aa1fd15` at
+  `cmake-build-debugasan/asan-logs/20260826-104630-full`; the formerly failing
+  `rxvmchannel_byte_provider` passed as test 1151 under eight-way load. No
+  memory-safety report or typed-state failure was reproduced.
 - Owner / next action: hotfix qualification; retain the stronger diagnostic,
   rerun the original broad macOS arm64 ASan trigger and require both final-head
   GitHub sanitizer lanes to pass. If it recurs, the newly reported state and
