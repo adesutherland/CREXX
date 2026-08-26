@@ -971,7 +971,9 @@ int main(void) {
         size_t argument_count = 2u;
 #endif
         int64_t ticket = 0;
+        int error_valid = 0;
         int valid = 0;
+        int64_t error_code;
         int64_t state;
         bytes saturated_request = child_start_request(
                 executable, 0, arguments, argument_count, 0, 0,
@@ -986,6 +988,15 @@ int main(void) {
                       RXVM_CHANNEL_OK,
               "deadline wakes saturated redirect and reaps child");
         state = completion_integer_field(&completion, "state", &valid);
+        error_code = completion_integer_field(
+                &completion, "errorCode", &error_valid);
+        if (!valid || state != 4) {
+            fprintf(stderr,
+                    "saturated timeout completion: valid=%d state=%lld "
+                    "errorValid=%d errorCode=%lld\n",
+                    valid, (long long)state,
+                    error_valid, (long long)error_code);
+        }
         CHECK(valid && state == 4,
               "saturated redirect preserves typed timeout completion");
         rxvm_channel_binary_free(&completion);

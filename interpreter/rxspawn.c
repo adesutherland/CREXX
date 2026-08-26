@@ -1924,6 +1924,8 @@ static int crexxcmd_run_path(void *userdata,
     char *spawn_error;
     RXSPAWN_SNAPSHOT_OVERRIDE nested_snapshot;
     const RXSPAWN_SNAPSHOT_OVERRIDE *previous_snapshot;
+    int capture_output;
+    int capture_error;
     int termination_reason = 0;
 
     if (out_text) *out_text = NULL;
@@ -1936,14 +1938,18 @@ static int crexxcmd_run_path(void *userdata,
     value_init(&output_value);
     value_init(&error_value);
 
-    /* A missing redirect means the normal process stream. Preserve NULL so
-     * nested PATH execution inherits stdin instead of replacing it with the
-     * platform null device. */
+    /* A missing redirect means the normal process stream. Preserve NULL for
+     * each absent stream so nested PATH execution inherits stdin and emits
+     * stdout/stderr immediately instead of adding a hidden capture layer. */
     pIn = parent_data ? parent_data->pInput : NULL;
-    redr2str(&output_redirect, &output_value);
-    redr2str(&error_redirect, &error_value);
-    pOut = rxspawn_redirect_from_value(&output_redirect);
-    pErr = rxspawn_redirect_from_value(&error_redirect);
+    capture_output = parent_data && parent_data->pOutput;
+    capture_error = parent_data && parent_data->pError;
+    if (capture_output) redr2str(&output_redirect, &output_value);
+    if (capture_error) redr2str(&error_redirect, &error_value);
+    pOut = capture_output
+            ? rxspawn_redirect_from_value(&output_redirect) : NULL;
+    pErr = capture_error
+            ? rxspawn_redirect_from_value(&error_redirect) : NULL;
     spawn_error = NULL;
     previous_snapshot = crexxcmd_enter_parent_snapshot(
             parent_data, &nested_snapshot, &termination_reason);
@@ -1956,8 +1962,8 @@ static int crexxcmd_run_path(void *userdata,
     crexxcmd_leave_parent_snapshot(
             parent_data, previous_snapshot, termination_reason);
 
-    if (out_text) *out_text = copy_value_string(&output_value);
-    if (err_text) *err_text = copy_value_string(&error_value);
+    if (out_text && capture_output) *out_text = copy_value_string(&output_value);
+    if (err_text && capture_error) *err_text = copy_value_string(&error_value);
     if (error_text && spawn_error) *error_text = copy_string_external(spawn_error);
 
     clear_value(&output_redirect);
@@ -1992,6 +1998,8 @@ static int crexxcmd_run_argv(void *userdata,
     char *spawn_error;
     RXSPAWN_SNAPSHOT_OVERRIDE nested_snapshot;
     const RXSPAWN_SNAPSHOT_OVERRIDE *previous_snapshot;
+    int capture_output;
+    int capture_error;
     int termination_reason = 0;
 
     if (out_text) *out_text = NULL;
@@ -2004,14 +2012,18 @@ static int crexxcmd_run_argv(void *userdata,
     value_init(&output_value);
     value_init(&error_value);
 
-    /* A missing redirect means the normal process stream. Preserve NULL so
-     * argv-preserving CREXX run inherits stdin instead of replacing it with
-     * the platform null device. */
+    /* A missing redirect means the normal process stream. Preserve NULL for
+     * each absent stream so argv-preserving CREXX run inherits stdin and
+     * emits stdout/stderr immediately instead of adding a hidden capture. */
     pIn = parent_data ? parent_data->pInput : NULL;
-    redr2str(&output_redirect, &output_value);
-    redr2str(&error_redirect, &error_value);
-    pOut = rxspawn_redirect_from_value(&output_redirect);
-    pErr = rxspawn_redirect_from_value(&error_redirect);
+    capture_output = parent_data && parent_data->pOutput;
+    capture_error = parent_data && parent_data->pError;
+    if (capture_output) redr2str(&output_redirect, &output_value);
+    if (capture_error) redr2str(&error_redirect, &error_value);
+    pOut = capture_output
+            ? rxspawn_redirect_from_value(&output_redirect) : NULL;
+    pErr = capture_error
+            ? rxspawn_redirect_from_value(&error_redirect) : NULL;
     spawn_error = NULL;
     previous_snapshot = crexxcmd_enter_parent_snapshot(
             parent_data, &nested_snapshot, &termination_reason);
@@ -2026,8 +2038,8 @@ static int crexxcmd_run_argv(void *userdata,
     crexxcmd_leave_parent_snapshot(
             parent_data, previous_snapshot, termination_reason);
 
-    if (out_text) *out_text = copy_value_string(&output_value);
-    if (err_text) *err_text = copy_value_string(&error_value);
+    if (out_text && capture_output) *out_text = copy_value_string(&output_value);
+    if (err_text && capture_error) *err_text = copy_value_string(&error_value);
     if (error_text && spawn_error) *error_text = copy_string_external(spawn_error);
 
     clear_value(&output_redirect);
