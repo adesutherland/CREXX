@@ -25,6 +25,7 @@
 options levelb comments_dash
 namespace data_KeyDB expose KeyDB
 import keyaccess
+import rxfnsb
 
 /**
  * Class KeyDB
@@ -200,6 +201,74 @@ KeyDB: class
   nextKey: method = .string
     return _nextkey(handle)
 
+ /**
+  * Return all active keys matching a key part.
+  *
+  * Search modes:
+  *
+  *   ONLY  The key must begin with keyPart.
+  *         This is the original prefix-search behaviour.
+  *
+  *   ANY   keyPart may occur anywhere in the key.
+  *
+  * The result follows index traversal order and is not sorted.
+  * An empty keyPart matches every active key.
+  *
+  * The scan uses the same explicit native traversal cursor as
+  * firstKey()/nextKey(); get() remains safe to use after this
+  * method returns.
+  *
+  * @param keyPart Key text to search for.
+  * @param searchMode "ONLY" for prefix matching, "ANY" for substring matching.
+  * @return .string[] Matching active keys, or an empty array if none match.
+  */
+ findkeys: method = .string[]
+   arg keyPart = .string, searchMode = .string
+
+   result = .string[]
+   key = .string
+   mode = .string
+
+   mode = upper(strip(searchMode))
+
+   /*
+    * Preserve the original prefix behaviour if no mode was supplied.
+    */
+   if mode = "" then mode = "ONLY"
+
+   /*
+    * Unknown search modes return an empty result.
+    */
+   if mode <> "ONLY" & mode <> "ANY" then return result
+
+   key = firstKey()
+
+   do while key <> "NOT_FOUND"
+      if key = "ERROR" then
+       return result
+      /*
+      * An empty search string matches every active key.
+      */
+     if length(keyPart) = 0 then do
+       call arrayappend result, key
+     end
+      /*
+      * ONLY means that keyPart must occur at the start of the key.
+      */
+     else if mode = "ONLY" then do
+        if left(key, length(keyPart)) = keyPart then
+         call arrayappend result, key
+      end
+      /*
+      * ANY means that keyPart may occur anywhere in the key.
+      */
+     else if mode = "ANY" then do
+        if pos(keyPart, key) > 0 then
+         call arrayappend result, key
+      end
+      key = nextKey()
+    end
+    return result
   /**
    * Remove all active keys in one transaction.
    * @return .int Status code.
@@ -221,6 +290,14 @@ KeyDB: class
       key = nextKey()
     end
     return commit()
+
+  /**
+   * Destructively empty the database by truncating its data and index files.
+   * This does not scan keys and cannot be rolled back.
+   * @return .int Status code.
+   */
+  reset: method = .int
+    return _reset(handle)
 
   /**
    * Return formatted statistics text.
