@@ -4,9 +4,11 @@ Status: approved roadmap in progress. RCC-1 through RCC-5F are published
 complete, and the separate BINARY-01 prerequisite is accepted. RCC-5 has green
 consolidated Release/Debug/install/package/documentation and Apple-ASan
 qualification. Supported Linux ASan/LSan for SAN-001 and SAN-002 now passes as
-part of the 2,363-test RCC-8 sanitizer gate. RCC-6 and RCC-7 remain
-unimplemented; RCC-8 release closeout uses the GitHub Build CREXX and
-Sanitizer QA workflows for final-head platform coverage.
+part of the 2,363-test RCC-8 sanitizer gate. RCC-8 release closeout uses the
+GitHub Build CREXX and Sanitizer QA workflows for final-head platform coverage.
+The former RCC-6 and RCC-7 instruction-to-call candidates were transferred on
+2026-08-23 to the broader project roadmap and post-Release-1 candidate backlog;
+they are not outstanding gates in this capability-composition worklist.
 
 Date: 2026-08-23.
 
@@ -85,10 +87,14 @@ SHA-256 function.
 | RCC-D6 | Start opcode-to-call work with the 14 file operations. Treat existing RXAS `rxhash` and host utilities as measured follow-ons, not automatic removals. | File operations are cold host I/O with raw-pointer handles. FNV-1a hashing is library-shaped but can be hot; clock/environment/random utilities need stable contracts first. |
 | RCC-D7 | Do not add a generic `HOSTCALL` instruction. | The normal typed procedure call, linker, and RXPA machinery already provide the required dispatch. A second generic call route would duplicate binding and weaken signatures. |
 
-The instruction-family dispositions under [RXAS instruction-to-call
-review](#rxas-instruction-to-call-review) are accepted as the roadmap list.
-That accepts the order and evidence gates, not removal of an instruction or
-reuse of an opcode number.
+The instruction-family dispositions under [transferred RXAS
+instruction-to-call review](#transferred-rxas-instruction-to-call-review) are
+retained as design evidence. Their active planning homes are now the broader
+[project roadmap](../../ROADMAP.md#runtime-backend-and-performance-roadmap) and
+post-Release-1 candidates 42 and 43 in the
+[Release 1 plan](../../release-1-plan.md#initial-experimental-or-post-release-candidates).
+That transfer accepts the order and evidence gates, not removal of an
+instruction or reuse of an opcode number.
 
 ### When would hashing become core?
 
@@ -419,7 +425,12 @@ Across 12 balanced call/argument pairs, `rxbvm` is -0.353% paired mean and
 `rxtvm` is +0.179%; both confidence intervals include zero and remain inside
 the 3% guard.
 
-## RXAS instruction-to-call review
+## Transferred RXAS instruction-to-call review
+
+This review is retained so that the ownership, compatibility and measurement
+findings are not lost. It is no longer an execution worklist for this roadmap;
+the former RCC-6 file-I/O migration and RCC-7 family review are post-Release-1
+project-roadmap and backlog candidates.
 
 The current table has 655 numeric entries, including 68 reserved slots. There
 is therefore no immediate numeric-ID emergency. Retiring an instruction from a
@@ -469,8 +480,6 @@ metadata cases, and smaller cold handler/tooling surfaces.
 | RCC-5E: remaining historical-bundle split — **implemented; proportional QA complete** | Move hash/checksum, identifier, filesystem and platform capabilities to narrow providers; retire developer, UI and legacy draft surfaces rather than preserving aliases. Update catalogue, packaging and driver dependencies from actual use. | `rx_hash`, `rxid`, `rxfs`, and `rxplatform` carry the retained contracts; the broad `system` and mixed `rxmath` providers are absent and the driver depends only on narrow providers. |
 | RCC-5F: packed statistics qualification — **complete and published** | Replace the boxed `rxstats` arguments with accepted BINARY-01 aligned packed host-native `rxfloat` storage and record the `rxvector` dependency. | Bulk semantics match the RCC-5D oracle with exact finite/error contracts; the packed path is clear favorable over boxed access on both VMs and remains close to the direct native scan control. Consolidated Release/Debug/install/package/documentation, Apple-ASan, and supported Linux ASan/LSan QA is green. RXVECTOR-01 subsequently implemented the recorded consumer boundary as a separate capability. |
 | RXVECTOR-01: exact packed vector capability — **sanitizer qualified** | Publish a process-reentrant Level G `rxvector` provider using the BINARY-01 owners, with explicit portable `f32le` conversion and deterministic exact cosine/top-k. | The accepted profiling-off Release verdict reaches the direct-kernel ceiling and a 14.68x-15.62x paired speedup over the Level B oracle. Dynamic/static installed selection, public documentation, downstream bounded-page integration, proportional normal-Debug QA, and supported Linux sanitizer qualification are complete; final-head cross-platform coverage is supplied by GitHub. |
-| RCC-6: file-instruction replacement | Add `rx_io`, dual-lower/migrate the 14 `F*` forms, prove handle ownership and behavior, measure code/startup/call effects, and select the compatibility retirement point. | The call path is equivalent and acceptable; old opcodes are retained or tombstoned according to the approved format policy. |
-| RCC-7: measured instruction review | Evaluate existing RXAS `rxhash`, host utilities, then sockets/reflection only in the recorded order and as separate decisions. | Each family has a keep/convert disposition backed by use, performance, ownership, size, and compatibility evidence. |
 | RCC-8: release qualification — **final-head GitHub closeout** | Cross-platform build/package, both VMs, native/embedded/late-load, security-path, failure, concurrency, documentation closeout, and the supported Linux ASan/LSan gate for SAN-001/002. | The supported Linux sanitizer gate passes 2,363/2,363 and every release-blocking SAN item is closed. Build CREXX and Sanitizer QA supply final-head Linux, macOS and Windows coverage. |
 
 RCC-5A through RCC-5F are authorized, implemented, and published complete.
@@ -483,6 +492,11 @@ RCC-8 release QA. That supported Linux gate now passes 2,363/2,363 on
 only as test-oracle material. Later production architecture or language/format
 decisions remain subject to the repository's normal approval and, where
 performance-sensitive, first-Release-verdict gates.
+
+The former RCC-6 and RCC-7 labels are intentionally absent from the ordered
+roadmap. Their preserved review evidence remains above, while scheduling,
+ownership and issue creation now belong to the project roadmap and the two
+post-Release-1 candidate backlog entries.
 
 RCC-5 uses one consolidated full-QA and documentation closeout after its final
 approved subphase. Intermediate subphases run focused correctness and any
