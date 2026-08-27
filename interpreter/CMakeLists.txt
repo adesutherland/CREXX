@@ -124,6 +124,7 @@ endif()
 
 function(crexx_add_rxvm_core_objects target_name)
     add_library(${target_name} OBJECT ${RXVM_CORE_OBJECT_SOURCES})
+    crexx_apply_vm_compile_resource_pool(${target_name})
     target_compile_definitions(${target_name} PRIVATE
             CREXX_VM_HANDLER_PANEL=${CREXX_VM_HANDLER_PANEL_VALUE})
     if(CREXX_VM_PROFILING)

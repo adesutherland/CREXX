@@ -126,6 +126,31 @@ everything in the `build.ninja` specification file. These are a lot of
 parts, and the good news is, when they are built once, only the changed
 source will be built, which will be fast.
 
+Ninja builds also use named resource pools for work whose memory pressure is
+not represented by the global `--parallel` value. Configure with
+`-DCREXX_BUILD_RESOURCE_PROFILE=developer-fast` on a capable development
+machine, `portable` on slower or unknown hosts, or `memory-constrained` when
+RAM is tight. `auto` is the default: it selects `developer-fast` on Apple ARM64
+and `portable` elsewhere. These profiles currently limit concurrent VM-core C
+compiles and native links while leaving independent graph work free to use the
+global job count. The limits can be overridden explicitly with
+`CREXX_VM_COMPILE_POOL_DEPTH` and `CREXX_NATIVE_LINK_POOL_DEPTH`; both must be
+positive integers.
+
+For example, Adrian's macOS development profile still permits 30 runnable
+graph actions while limiting the high-memory VM compile family separately:
+
+```sh
+cmake -S . -B cmake-build-debug -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DCREXX_BUILD_RESOURCE_PROFILE=developer-fast
+cmake --build cmake-build-debug --parallel 30
+```
+
+On an unknown or smaller host, select `portable` and use five global jobs.
+Non-Ninja generators retain their own scheduling because CMake job pools are a
+Ninja facility.
+
 After the product build, prepare the generated test artifacts with the
 `qa-prep` target. The generated test suite is then run with the `ctest'
 command. CTest executes tests only; it does not start another build.

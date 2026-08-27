@@ -157,6 +157,8 @@ endif()
 # Print the CMake gererator
 message(STATUS "CMake Generator: ${CMAKE_GENERATOR}")
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxBuildResources.cmake)
+
 # Debugging output - make cmake print all the commands it executes
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 

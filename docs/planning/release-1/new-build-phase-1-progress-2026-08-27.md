@@ -3,11 +3,12 @@
 ## Status
 
 Phase 1 is in progress on `temp/newbuild`. The current checkpoint completes
-nine bounded ownership/preparation waves and incorporates `origin/develop`
+ten bounded ownership/preparation waves and incorporates `origin/develop`
 through `657b833d9f70e3f0e69536e6d76e4dd6a9e953aa`. The Phase 1 gate is not yet
-complete: resource pools are not defined, and the provisional wave graph still
-needs review. Top-level CTest no longer contains a build fixture or invokes a
-nested build, and the configured graph has no cleanup finding.
+complete: the provisional wave graph and optional-product/test classifications
+still need review. Top-level CTest no longer contains a build fixture or
+invokes a nested build, the configured graph has no cleanup finding, and named
+Ninja pools now bound the measured high-pressure native work.
 
 No performance measurement was run. Host timings below are diagnostic only;
 other work was active on the machine.
@@ -386,6 +387,58 @@ Concurrency and functional evidence:
 
 No performance measurement executed.
 
+## Wave 10: evidence-sized native resource pools
+
+The global job count remains a throughput control over the complete DAG; it is
+no longer the only control over high-memory native actions. A new
+`CREXX_BUILD_RESOURCE_PROFILE` configuration supplies two independent Ninja
+pools:
+
+| Profile | VM-core compile depth | native link depth |
+| --- | ---: | ---: |
+| `developer-fast` | 4 | 6 |
+| `portable` | 2 | 2 |
+| `memory-constrained` | 1 | 1 |
+
+`auto` selects `developer-fast` on Apple ARM64 and `portable` elsewhere. Both
+depths have positive-integer cache overrides. Non-Ninja generators retain their
+own scheduler because CMake job pools are a Ninja facility.
+
+The initial values are deliberately conservative consequences of Phase 0
+shape evidence, not benchmark-derived optimums. The largest observed
+optimized Linux VM compile reached about 1.36 GiB RSS in a 5 GiB Minikube pod,
+which supports two concurrent VM-core compiles while leaving headroom. The
+macOS Release observation was about 682 MiB for one process, supporting four
+on the current development host. All native link edges use a separate pool so
+link pressure does not consume the VM-compile allowance.
+
+Only the four ordinary/instrumented switch/direct-threaded VM core object
+targets use the compile pool: 76 configured compile edges in the current Debug
+tree. Ordinary compiler, assembler, library, and independent Rexx generation
+remain eligible for the global `--parallel 30` developer setting. No separate
+`rxc`/`rxas` throttle was introduced because Phase 0 did not identify them as
+the memory-pressure source; doing so would reduce the independent parallelism
+created by the preceding waves without evidence.
+
+Evidence:
+
+- `auto`, `portable`, and `memory-constrained` configurations generated the
+  expected `4/6`, `2/2`, and `1/1` pool depths, then the active tree was
+  restored to `auto`;
+- the Ninja graph assigns all 76 VM-core compile edges to
+  `crexx_vm_compile`, assigns 187 native link edges to `crexx_native_link`, and
+  leaves an unrelated assembler compile outside the VM pool;
+- a retained partial-tree build supplied 52 missing VM-core objects under
+  global parallel 30; every captured action belonged to the VM pool and the
+  Ninja log showed a maximum overlap of exactly four;
+- repeating the completed target performed no product action (only CMake's
+  always-run glob verification); and
+- `ninja -t missingdeps all` processed 5,925 nodes without finding a missing
+  generated-file dependency.
+
+No speedup or performance claim is made; other activity remained present on
+the host, and the purpose of this evidence is scheduling enforcement.
+
 ## Current graph movement
 
 The current Debug export covers 1,512 targets, 1,355 custom commands and 2,367
@@ -423,9 +476,8 @@ test timing.
 
 ## Next waves
 
-1. Introduce measured resource pools for heavyweight optimized compiler,
-   assembler and VM work.
-2. Complete test labels/selections and review the 813 provisional wave
+1. Complete optional-product and test labels/selections, then review the 813
+   provisional wave
    inversions before the broad Phase 1 checkpoint.
 
 Windows publication/rename behaviour and Linux exact-tree proof remain hosted

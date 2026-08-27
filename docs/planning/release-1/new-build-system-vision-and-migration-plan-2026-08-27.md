@@ -655,6 +655,16 @@ retains native linker UUID/debug/signature entropy and is recorded separately
 from build-order determinism. The next work is resource pools and provisional
 wave/test classification review.
 
+**2026-08-27 checkpoint I:** named Ninja pools now separate high-memory VM-core
+compilation from native linking and from the global runnable-action limit.
+`developer-fast`, `portable`, and `memory-constrained` resolve to VM/link
+depths `4/6`, `2/2`, and `1/1`; `auto` selects the first on Apple ARM64 and the
+portable profile elsewhere. A 52-object live proof under global parallel 30
+never exceeded four concurrent VM-pool actions. `rxc`/`rxas` generation remains
+unthrottled because the retained evidence identifies optimized VM C compilation,
+not Rexx generation, as the memory-pressure source. The next work is optional
+product, test-tier, and provisional wave review.
+
 ### Phase 2: make imports and metadata deterministic
 
 1. Add dependency/resolution reports to rxc, rxas and rxlink.
