@@ -1,8 +1,8 @@
 # New Build System Vision and Migration Plan
 
-- **Status:** Vision retained; Phase 0 complete; Phase 1 checkpoint E implemented
+- **Status:** Vision retained; Phase 0 complete; Phase 1 checkpoint F implemented
 - **Baseline:** `origin/develop` at `dc44d92909e706adc575932ba9ae72f2d6f05b7d`
-- **Develop incorporated:** through `ac9dcc14270f4b6094f6ca815063c186a55d34e2`
+- **Develop incorporated:** through `657b833d9f70e3f0e69536e6d76e4dd6a9e953aa`
 - **Planning branch:** `temp/newbuild`
 - **Date:** 2026-08-27
 
@@ -622,6 +622,16 @@ passed without initiating a build. The coherent source route intentionally
 replaces the previous mixed source/RXBIN metadata route; permanent route-parity
 qualification remains Phase 2 work. The next bounded ownership work is the
 main and native-backed classlib families.
+
+**2026-08-27 checkpoint F:** the 53 Rexx-only classlib members now use private
+work directories, curated compiler imports, an explicit deterministic split
+between internal source and RXBIN providers, private link assembly, and
+single-owner publication. Main classlib cleanup hazards fell from 107 to zero.
+Jobs 1, 5, and 30 produced identical member and public hashes; 42 runtime
+consumers and five metadata/documentation inspections passed without invoking
+Ninja. Two member artifacts remain byte-different from the former mixed-route
+baseline, so source/RXBIN route parity remains a Phase 2 qualification item.
+The next bounded ownership work is the three native-backed classlib adapters.
 
 ### Phase 2: make imports and metadata deterministic
 

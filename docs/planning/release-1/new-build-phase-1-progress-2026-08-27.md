@@ -3,12 +3,12 @@
 ## Status
 
 Phase 1 is in progress on `temp/newbuild`. The current checkpoint completes
-six bounded ownership/preparation waves and incorporates `origin/develop`
-through `ac9dcc14270f4b6094f6ca815063c186a55d34e2`. The Phase 1 gate is not yet
-complete: shared cleanup remains in classlib, two preprocessor actions still
-rewrite their own outputs, resource pools are not defined, and the provisional
-wave graph still needs review. Top-level CTest no longer contains a build
-fixture or invokes a nested build.
+seven bounded ownership/preparation waves and incorporates `origin/develop`
+through `657b833d9f70e3f0e69536e6d76e4dd6a9e953aa`. The Phase 1 gate is not yet
+complete: shared cleanup remains in the native-backed classlib adapters, two
+preprocessor actions still rewrite their own outputs, resource pools are not
+defined, and the provisional wave graph still needs review. Top-level CTest no
+longer contains a build fixture or invokes a nested build.
 
 No performance measurement was run. Host timings below are diagnostic only;
 other work was active on the machine.
@@ -230,27 +230,86 @@ Concurrency and functional evidence:
 Those consumer checks exercise `rxc`, `rxas`, `rxlink`, and `rxvm`. No
 performance measurement executed.
 
+## Wave 7: main classlib deterministic hybrid production
+
+The 53 Rexx-only classlib members no longer share a compiler work directory,
+delete one another's outputs, or delete the public `bin/classlib.rxbin` image.
+Each member now has:
+
+1. a dependency-keyed private source root containing only its declared source
+   providers;
+2. private generated RXBIN roots for only its declared binary providers;
+3. a curated external root containing only `library.rxbin` and the mandatory
+   `rxcexits.rxbin` compiler module;
+4. `rxc --no-exe-import` and `rxas` execution in its private work directory;
+5. private link assembly under `lib/classlib/linked/main/`; and
+6. one temporary-file-and-rename publication action for the public image.
+
+Classlib cannot yet use the coherent all-source route selected for `rxfnsc`.
+That prototype exposed route-sensitive interface signatures in `ArrayList` and
+`ObjectArrayList`. The old shared directory also mixed source and member RXBIN
+providers, including source-side class cycles. The deterministic replacement
+therefore records two separate contracts: `CLASS_DEPS_*` selects generated
+RXBIN providers, while `CLASS_SOURCE_DEPS_*` selects source providers. No
+incidental completed member is visible.
+
+Isolation exposed dependencies that the shared directory had masked, including
+the `ArrayBagIterator`/`ArrayBag` source cycle, `Iterable` on the `Iterator`
+RXBIN, `DateTime` on `Printable`, `RexxComparator` on the `Rexx` source,
+`TreeMap` on `ObjectPrintable`, and `StringTreeMap` on `ObjectPrintable`.
+It also established that `rxcexits.rxbin` is a mandatory compiler input even
+without `-x` when executable-directory imports are disabled.
+
+The deterministic route reproduces 51 of 53 baseline member RXAS/RXBIN pairs.
+`ArrayBagIterator` and `ISO8601` retain route-sensitive metadata/inlining
+differences, so the post-merge shared-directory public SHA-256
+`bce926dd011c6b756447bac7a89ca07ae834d6a4731e7b253cf4e201d858e3d2`
+is not byte-identical to the deterministic image
+`6df1e2fe4a96fbdf74fc4a9a31ea718efaee7084ccc8955be37ba60dd4620c6f`.
+The focused inline-preservation and runtime checks pass; permanent route-parity
+qualification remains Phase 2 work.
+
+Concurrency and functional evidence:
+
+- 56 family actions rebuilt from retained empty owned-output positions at jobs
+  1, 5, and 30 in approximately 19.43, 5.49, and 4.15 seconds respectively;
+  these are diagnostic timings only because other activity was present;
+- all 53 member RXAS and 53 member RXBIN hashes, plus the public image hash,
+  were identical across jobs 1, 5, and 30;
+- `ninja -t missingdeps classlib` processed 688 nodes without finding a missing
+  generated-file dependency;
+- preparation of the 21 main test programs ran separately from CTest and took
+  approximately 63.18 seconds under concurrent host load;
+- all 42 prepared no-opt/opt runtime consumers passed at parallel 30 in 2.99
+  seconds without changing the Ninja log; and
+- five inline, RexxDoc, API-doc, method-coverage, and bridge inspections passed
+  in 1.24 seconds, also without changing the Ninja log.
+
+These checks exercise `rxc`, `rxas`, `rxlink`, `rxdas`, and `rxvm`. No
+performance measurement executed.
+
 ## Current graph movement
 
-The current Debug export covers 1,509 targets, 1,350 custom commands and 2,367
+The current Debug export covers 1,510 targets, 1,351 custom commands and 2,367
 tests.
 
 | Finding | Phase 0 | This checkpoint |
 | --- | ---: | ---: |
 | multiple candidate output owners | 2 | 0 |
-| cleanup touches another action's output | 251 | 114 |
+| cleanup touches another action's output | 251 | 7 |
 | tests that invoke a build | 31 | 0 |
 | fixture setup tests | 31 | 0 |
 | tests with fixture requirements | 937 | 0 |
 | provisional wave inversions | 813 | 813 |
 | performance-measurement tests | 24 | 24 |
 
-The remaining cross-action cleanup findings are all 114 classlib findings.
-Two additional preprocessor findings rewrite their own declared output, for
-116 cleanup findings in total. The `rxfnsc` family has moved from 131 cleanup
-findings to zero. The manifest projection is schema-valid and has no
-ownership/dependency graph error, while the 813 provisional wave inversions
-remain review inputs rather than accepted dependencies.
+The remaining seven cross-action cleanup findings are all in the three
+native-backed classlib adapters. Two additional preprocessor findings rewrite
+their own declared output, for nine cleanup findings in total. The main
+classlib family has moved from 107 cleanup findings to zero. The manifest
+projection is schema-valid and has no ownership/dependency graph error, while
+the 813 provisional wave inversions remain review inputs rather than accepted
+dependencies.
 
 ## Original QA/build-cycle evidence
 
@@ -268,8 +327,8 @@ test timing.
 
 ## Next waves
 
-1. Convert the main classlib and native-backed classlib families to private
-   outputs and single-owner publication as separate bounded waves.
+1. Convert the three native-backed classlib adapters to private outputs and
+   single-owner publication.
 2. Remove the two preprocessor self-rewrite cleanup patterns.
 3. Introduce measured resource pools for heavyweight optimized compiler,
    assembler and VM work.

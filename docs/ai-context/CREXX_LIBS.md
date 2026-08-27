@@ -463,6 +463,24 @@ then removed because none improved on the production `StringTreeMap` overall.
 String-key lookup uses strict equality so empty string keys and blank string
 keys remain distinct.
 
+The core `classlib.rxbin` CMake build gives each of its 53 members a private
+work directory under `lib/classlib/members/`. External `library.rxbin` and
+`rxcexits.rxbin` inputs are copied into a curated import root, and every `rxc`
+invocation uses `--no-exe-import`. Internal providers have an explicit route:
+`CLASS_DEPS_*` entries are private generated RXBIN inputs, while
+`CLASS_SOURCE_DEPS_*` entries are copied into the member's dependency-keyed
+source root. The split is required because some current class cycles and
+interface signatures remain source/RXBIN-route-sensitive. A member sees only
+its declared providers; an unrelated member that happens to finish first and
+an older public `classlib.rxbin` are never candidates.
+
+After all member actions complete, `rxlink` writes the core image under
+`lib/classlib/linked/main/`. One publication action then replaces
+`bin/classlib.rxbin` through a temporary-file-and-rename step. Member actions
+do not delete or rewrite the public image or another member's output. Keep the
+source and RXBIN dependency tables separate until permanent route-parity tests
+prove that a single route is semantically interchangeable.
+
 `Id`, `KeyDB`, and `Os` are intentionally kept out of the core
 `classlib.rxbin` image so products such as RexxScript can use the class
 library without pulling in unrelated native plugins. They are built and tested
