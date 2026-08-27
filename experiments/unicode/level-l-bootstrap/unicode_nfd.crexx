@@ -356,6 +356,7 @@ unicodenfdnormalizer: class
 
   normalize: method = .string
     arg source = .string
+    codepoint = .int
     if _ready = 0 then return ""
     _status = 0
     _error = ""
@@ -394,6 +395,7 @@ unicodenfdnormalizer: class
     return
 
   _validate_image: method = .void
+    source = .int
     image_length = <blen>(_image)
     if image_length < 64 then do
       call _fail "NFD table image is shorter than its header"
@@ -474,6 +476,7 @@ unicodenfdnormalizer: class
 
   _decompose: method = .void
     arg codepoint = .int, depth = .int
+    i = .int
     if _status \= 0 then return
     if unicode_nfd_is_scalar(codepoint) = 0 then do
       call _fail "normalization input is not a scalar value"

@@ -321,6 +321,7 @@ unicodenfdpackednormalizer: class
 
   normalize: method = .string
     arg source = .string
+    codepoint = .int
     if _ready = 0 then return ""
     _status = 0
     _error = ""
@@ -359,6 +360,7 @@ unicodenfdpackednormalizer: class
     return
 
   _validate: method = .void
+    source = .int
     int_size = <sizeof..int>
     if <blen>(_ccc) \= 0x110000 * int_size then do
       call _fail "invalid packed CCC table size"
@@ -427,6 +429,7 @@ unicodenfdpackednormalizer: class
 
   _decompose: method = .void
     arg codepoint = .int, depth = .int
+    i = .int
     if _status \= 0 then return
     if unicode_nfd_packed_is_scalar(codepoint) = 0 then do
       call _fail "normalization input is not a scalar value"

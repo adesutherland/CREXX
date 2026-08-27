@@ -8,6 +8,7 @@ import unicode_d
 import level_l_unicode_nfd
 
 arg argv = .string[]
+i = .int
 if argv[0] \= 3 then do
   say "usage: test_unicode_d UnicodeData.txt DerivedNormalizationProps.txt NormalizationTest.txt"
   return 2
@@ -78,10 +79,6 @@ if nfd.ready() = 0 | nfkd.ready() = 0 | nfc.ready() = 0 | nfkc.ready() = 0 then 
   say "FAIL: prepared normalizer validation:" nfd.error() nfkd.error() nfc.error() nfkc.error()
   return 1
 end
-if generated_nfd.status() \= 0 then do
-  say "FAIL: generated prepared NFD scanner validation:" generated_nfd.error()
-  return 1
-end
 if nfd.form() \= "NFD" | nfkd.form() \= "NFKD" |,
    nfc.form() \= "NFC" | nfkc.form() \= "NFKC" then do
   say "FAIL: prepared normalizer form selection:" nfd.form() nfkd.form() nfc.form() nfkc.form()
@@ -150,8 +147,8 @@ else if nfd.bucket_flushes() \= 1 then do
   failures = failures + 1
 end
 generated_long_actual = generated_nfd.normalize(long_source)
-if generated_nfd.status() \= 0 | generated_long_actual \== long_expected then do
-  say "FAIL: generated long stable bucket ordering:" generated_nfd.error()
+if generated_long_actual \== long_expected then do
+  say "FAIL: generated long stable bucket ordering"
   failures = failures + 1
 end
 else if generated_nfd.bucket_flushes() \= 1 then do
@@ -361,7 +358,7 @@ say "NormalizationTest rows by Part 0..5:" part_rows[1] || "/" || part_rows[2] |
 say "NFD/NFKD/NFC/NFKC corpus invariant checks:" invariant_checks
 say "Unlisted scalar identity checks per form:" unlisted_identity_checks
 say "Focused prepared normalization fixtures: PASS"
-say "Generated prepared NFD scanner: PASS"
+say "Generated prepared NFD wrapper: PASS"
 say "Prepared normalization tables: PASS"
 say "Result: PASS"
 return 0
@@ -386,10 +383,6 @@ expect_generated: procedure = .int
   source = hex_sequence_to_string(source_hex)
   expected = hex_sequence_to_string(expected_hex)
   actual = normalizer.normalize(source)
-  if normalizer.status() \= 0 then do
-    say "FAIL:" label || ":" normalizer.error()
-    return 1
-  end
   if actual == expected then return 0
   say "FAIL:" label "expected" string_to_hex_sequence(expected) "got" string_to_hex_sequence(actual)
   return 1
@@ -420,8 +413,6 @@ check_generated_relation: procedure = .string
   arg normalizer_ref = reference .level_l_unicode_nfd..levellunicodenfdnormalizer, relation = .string, line_number = .int, source = .string, expected = .string
   normalizer = dereference normalizer_ref
   actual = normalizer.normalize(source)
-  if normalizer.status() \= 0 then,
-    return relation || " error at line " || line_number || ": " || normalizer.error()
   if actual \== expected then return relation_failure(relation, line_number, actual, expected)
   return ""
 
@@ -437,7 +428,6 @@ check_generated_identity_batch: procedure = .string
   arg normalizer_ref = reference .level_l_unicode_nfd..levellunicodenfdnormalizer, batch = .string, codepoint = .int
   normalizer = dereference normalizer_ref
   actual = normalizer.normalize(batch)
-  if normalizer.status() \= 0 then return "generated NFD unlisted identity error: " || normalizer.error()
   if actual \== batch then return "generated NFD unlisted scalar batch changed near U+" || right(d2x(codepoint), 6, "0")
   return ""
 

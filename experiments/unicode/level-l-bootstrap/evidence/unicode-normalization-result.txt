@@ -1,6 +1,6 @@
-format|crexx-unicode-normalization-prepared-portable-v2
+format|crexx-unicode-normalization-prepared-portable-v3
 unicode|17.0.0
-bytes|1722756
+bytes|6179204
 positive_ccc|55
 nfd_mappings|2081
 nfd_components|3450
@@ -14,12 +14,12 @@ composition_pairs|961
 composition_starters|391
 composition_max_pairs|19
 full_composition_exclusions|1120
-sha256|431f6893c28e6e02f50237d6c48be7d4e7973412fc7e54ad9498a03283b966f9
+sha256|4712c3ae75a8a0217cfb650bb0d97a40d7e2921e1f7981f5c40420684ec38b09
 
 NormalizationTest rows by Part 0..5: 45/17086/1936/194/735/38
 NFD/NFKD/NFC/NFKC corpus invariant checks: 500850
 Unlisted scalar identity checks per form: 1094978
 Focused prepared normalization fixtures: PASS
-Generated prepared NFD scanner: PASS
+Generated prepared NFD wrapper: PASS
 Prepared normalization tables: PASS
 Result: PASS

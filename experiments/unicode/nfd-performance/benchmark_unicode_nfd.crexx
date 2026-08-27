@@ -76,6 +76,7 @@ return benchmark_apple_rxpa(reference sources, reference expected, vm_label, war
 
 benchmark_portable: procedure = .int
   arg ast = .unicodegennorm2ast, sources_ref = reference .string[], expected_ref = reference .string[], vm_label = .string, warmups = .int, sample_count = .int
+  actual_checksum = .int
   sources = dereference sources_ref
   expected = dereference expected_ref
 
@@ -117,6 +118,7 @@ benchmark_portable: procedure = .int
 
 benchmark_portable_buffer: procedure = .int
   arg ast = .unicodegennorm2ast, source_ref = reference .string, expected_ref = reference .string, vm_label = .string, warmups = .int, sample_count = .int, repetitions = .int
+  actual_checksum = .int
   source = dereference source_ref
   expected = dereference expected_ref
 
@@ -170,6 +172,7 @@ benchmark_portable_buffer: procedure = .int
 
 benchmark_packed: procedure = .int
   arg ast = .unicodegennorm2ast, sources_ref = reference .string[], expected_ref = reference .string[], vm_label = .string, warmups = .int, sample_count = .int
+  actual_checksum = .int
   sources = dereference sources_ref
   expected = dereference expected_ref
 
@@ -211,6 +214,7 @@ benchmark_packed: procedure = .int
 
 benchmark_packed_buffer: procedure = .int
   arg ast = .unicodegennorm2ast, source_ref = reference .string, expected_ref = reference .string, vm_label = .string, warmups = .int, sample_count = .int, repetitions = .int
+  actual_checksum = .int
   source = dereference source_ref
   expected = dereference expected_ref
 
@@ -264,6 +268,7 @@ benchmark_packed_buffer: procedure = .int
 
 benchmark_apple_rxpa: procedure = .int
   arg sources_ref = reference .string[], expected_ref = reference .string[], vm_label = .string, warmups = .int, sample_count = .int
+  actual_checksum = .int
   sources = dereference sources_ref
   expected = dereference expected_ref
 

@@ -89,7 +89,6 @@ if variant = "generated-nfd" then do
   tables = unicode_norm_compile(ucd, properties)
   if tables.status() \= 0 then return fail("generated table compiler: " || tables.error())
   normalizer = level_l_unicode_nfd_new(tables)
-  if normalizer.status() \= 0 then return fail("generated table validation: " || normalizer.error())
   prepare_us = elapsed_us(started)
   if workload = "rows" then,
     return benchmark_generated_rows(reference normalizer, reference sources, reference expected, vm_label, warmups, sample_count, prepare_us, tables.byte_length())
@@ -107,6 +106,7 @@ return benchmark_prepared_buffer(ucd, properties, reference source_buffer, refer
 
 benchmark_original_rows: procedure = .int
   arg ast = .unicodegennorm2ast, sources_ref = reference .string[], expected_ref = reference .string[], vm_label = .string, warmups = .int, sample_count = .int
+  actual_checksum = .int
   sources = dereference sources_ref
   expected = dereference expected_ref
   started = time("us")
@@ -145,6 +145,7 @@ benchmark_original_rows: procedure = .int
 
 benchmark_prepared_rows: procedure = .int
   arg ucd = .unicode_data..unicodeucdresult, properties = .unicode_normprops..unicodenormpropsresult, sources_ref = reference .string[], expected_ref = reference .string[], variant = .string, form = .string, vm_label = .string, warmups = .int, sample_count = .int
+  actual_checksum = .int
   sources = dereference sources_ref
   expected = dereference expected_ref
   started = time("us")
@@ -183,6 +184,7 @@ benchmark_prepared_rows: procedure = .int
 
 benchmark_generated_rows: procedure = .int
   arg normalizer_ref = reference .level_l_unicode_nfd..levellunicodenfdnormalizer, sources_ref = reference .string[], expected_ref = reference .string[], vm_label = .string, warmups = .int, sample_count = .int, prepare_us = .int, table_bytes = .int
+  actual_checksum = .int
   normalizer = dereference normalizer_ref
   sources = dereference sources_ref
   expected = dereference expected_ref
@@ -216,6 +218,7 @@ benchmark_generated_rows: procedure = .int
 
 benchmark_original_buffer: procedure = .int
   arg ast = .unicodegennorm2ast, source_ref = reference .string, expected_ref = reference .string, vm_label = .string, warmups = .int, sample_count = .int, repetitions = .int
+  actual_checksum = .int
   source = dereference source_ref
   expected = dereference expected_ref
   started = time("us")
@@ -259,6 +262,7 @@ benchmark_original_buffer: procedure = .int
 
 benchmark_prepared_buffer: procedure = .int
   arg ucd = .unicode_data..unicodeucdresult, properties = .unicode_normprops..unicodenormpropsresult, source_ref = reference .string, expected_ref = reference .string, variant = .string, form = .string, vm_label = .string, warmups = .int, sample_count = .int, repetitions = .int
+  actual_checksum = .int
   source = dereference source_ref
   expected = dereference expected_ref
   started = time("us")
@@ -302,6 +306,7 @@ benchmark_prepared_buffer: procedure = .int
 
 benchmark_generated_buffer: procedure = .int
   arg normalizer_ref = reference .level_l_unicode_nfd..levellunicodenfdnormalizer, source_ref = reference .string, expected_ref = reference .string, vm_label = .string, warmups = .int, sample_count = .int, repetitions = .int, prepare_us = .int, table_bytes = .int
+  actual_checksum = .int
   normalizer = dereference normalizer_ref
   source = dereference source_ref
   expected = dereference expected_ref
@@ -374,7 +379,6 @@ generated_rows_correctness: procedure = .int
   checksum = 0
   do i = 1 to sources[0]
     actual = normalizer.normalize(sources[i])
-    if normalizer.status() \= 0 then return fail_row("generated-nfd", i, normalizer.error())
     if actual \== expected[i] then return fail_row("generated-nfd", i, "result mismatch")
     checksum = checksum + string_scalars(actual)
   end
@@ -387,7 +391,6 @@ original_rows_pass: procedure = .int
   checksum = 0
   do i = 1 to sources[0]
     actual = normalizer.normalize(sources[i])
-    if normalizer.status() \= 0 then return -1
     checksum = checksum + string_scalars(actual)
   end
   return checksum
@@ -399,7 +402,6 @@ prepared_rows_pass: procedure = .int
   checksum = 0
   do i = 1 to sources[0]
     actual = normalizer.normalize(sources[i])
-    if normalizer.status() \= 0 then return -1
     checksum = checksum + string_scalars(actual)
   end
   return checksum
@@ -411,7 +413,6 @@ generated_rows_pass: procedure = .int
   checksum = 0
   do i = 1 to sources[0]
     actual = normalizer.normalize(sources[i])
-    if normalizer.status() \= 0 then return -1
     checksum = checksum + string_scalars(actual)
   end
   return checksum
@@ -454,10 +455,6 @@ generated_buffer_correctness: procedure = .int
   source = dereference source_ref
   expected = dereference expected_ref
   actual = normalizer.normalize(source)
-  if normalizer.status() \= 0 then do
-    say "FAIL: generated-nfd buffer:" normalizer.error()
-    return -1
-  end
   if actual \== expected then do
     say "FAIL: generated-nfd buffer result mismatch"
     return -1
@@ -469,7 +466,6 @@ original_buffer_pass: procedure = .int
   normalizer = dereference normalizer_ref
   source = dereference source_ref
   actual = normalizer.normalize(source)
-  if normalizer.status() \= 0 then return -1
   return binlength(actual as .binary)
 
 prepared_buffer_pass: procedure = .int
@@ -477,7 +473,6 @@ prepared_buffer_pass: procedure = .int
   normalizer = dereference normalizer_ref
   source = dereference source_ref
   actual = normalizer.normalize(source)
-  if normalizer.status() \= 0 then return -1
   return binlength(actual as .binary)
 
 generated_buffer_pass: procedure = .int
@@ -485,7 +480,6 @@ generated_buffer_pass: procedure = .int
   normalizer = dereference normalizer_ref
   source = dereference source_ref
   actual = normalizer.normalize(source)
-  if normalizer.status() \= 0 then return -1
   return binlength(actual as .binary)
 
 median_us: procedure = .int

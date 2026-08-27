@@ -34,23 +34,24 @@ retained DerivedNormalizationProps.txt
     -> generation-time recursive closure and canonical ordering
     -> exact Primary Composite directory plus algorithmic Hangul
     -> one portable prepared NFD/NFKD/NFC/NFKC image
-    -> direct strict UTF-8 byte scan with prepared actions
+    -> dense portable NFD virtual-alphabet table
+    -> native .string codepoint scan for prepared NFD
+    -> strict UTF-8 .binary ingress for the general engine
     -> fused ordered-stream canonical composition for C forms
     -> complete Unicode 17.0.0 four-form conformance on both VMs
 
 prepared NFD scalar partition
-    -> 2,081 exact mapping actions
-    -> 964 identity-mark actions with baked CCC
-    -> 429 coalesced identity-starter ranges plus Hangul arithmetic
-    -> internal re2c rule source
-    -> grouped-transition cREXX transducer backend
-    -> generated Level B UTF-8 DFA
+    -> one at-u32 prepared symbol per Unicode scalar
+    -> exact mapping, identity-mark, Hangul, and invalid-scalar kinds
+    -> generated thin Level B wrapper
+    -> shared bounded-register exact-kind SELECT executor
     -> complete Unicode 17.0.0 NFD conformance on both VMs
 ```
 
-The authored language is Level L. re2c is used only to construct and emit the
-DFA in this proof; its syntax and embedded-action surface are not exposed to a
-Level L author.
+The authored language is Level L. The retained re2c adapter still processes the
+generated wrapper in this proof, but the selected prepared NFD route does not
+ask re2c to construct a UTF-8 byte DFA. re2c syntax and embedded actions are not
+exposed to a Level L author.
 
 ## Implemented surface
 
@@ -114,46 +115,50 @@ the first fault. `unicode_normprops.crexx` independently parses the normative
 `unicode_d.crexx` closes every canonical and compatibility mapping recursively
 at generation time, applies canonical ordering to the complete expansion,
 classifies the resulting boundary shape, and emits one deterministic
-1,722,756-byte portable image. The image SHA-256 is
-`431f6893c28e6e02f50237d6c48be7d4e7973412fc7e54ad9498a03283b966f9`.
+6,179,204-byte portable image. The image SHA-256 is
+`4712c3ae75a8a0217cfb650bb0d97a40d7e2921e1f7981f5c40420684ec38b09`.
 
-The version-2 image retains each prepared scalar beside its CCC and pre-encoded
-UTF-8. It adds 961 exact non-Hangul Primary Composite pairs under 391 starters;
-the largest starter has 19 candidate pairs. Full composition exclusions are
-applied while generating the relation, and Hangul L+V and LV+T composition is
-arithmetic rather than table-driven.
+The version-3 image retains each prepared scalar beside its CCC and pre-encoded
+UTF-8 and adds a 4,456,448-byte portable `<at..u32>` NFD virtual-alphabet
+section. Identity starters classify as their scalar value. Synthetic high-bit
+kinds identify nonstarters, the four prepared mapping boundary classes,
+algorithmic Hangul, and invalid scalars. The image also contains 961 exact
+non-Hangul Primary Composite pairs under 391 starters; the largest starter has
+19 candidate pairs. Full composition exclusions are applied while generating
+the relation, and Hangul L+V and LV+T composition is arithmetic rather than
+table-driven.
 
-The shared four-form engine scans UTF-8 bytes directly. D forms coalesce ASCII
-identity runs, use pre-encoded mapped expansions, and retain only the open
-trailing nonstarter run. Monotone CCC runs append directly; an inversion
-switches to a stable counting-bucket pass over the 55 positive CCC ranks. C
-forms feed the same ordered stream into a fused UAX #15 composer retaining the
-active starter, D117 blocking CCC, and still-mutable ordered tail. They inspect
-every scalar because CCC-zero input and individually normalized scalars can
-still compose across source boundaries. A `.binary` ingress validates
-shortest-form UTF-8 and rejects malformed, surrogate, truncated, and
-out-of-range encodings.
+The prepared NFD `.string` route iterates CREXX codepoints with `STRCHAR`, reads
+one virtual-alphabet symbol with `BGETU32`, and dispatches its exact synthetic
+kind through the compiler's `.jtable`/`JUMPI` lowering. Identity output uses
+`APPENDCHAR`; prepared decomposition records retain the mathematically derived
+closed/open boundary so only the still-open nonstarter run is queued and
+ordered. No UTF-8 binary conversion or whole-input copy occurs on this route.
+
+The shared general engine remains available to all four forms and to explicit
+`.binary` input. It scans UTF-8 bytes directly, uses pre-encoded mapped
+expansions, and retains only the open trailing nonstarter run. Monotone CCC runs
+append directly; an inversion switches to a stable counting-bucket pass over
+the 55 positive CCC ranks. C forms feed the same ordered stream into a fused
+UAX #15 composer retaining the active starter, D117 blocking CCC, and
+still-mutable ordered tail. The binary ingress validates shortest-form UTF-8
+and rejects malformed, surrogate, truncated, and out-of-range encodings.
 
 The retained hand-written oracle accepts `.binary` directly and implements its
-`.string` wrapper through the existing explicit string/binary conversions.
-The experimental raw string-byte RXAS surface was rolled back after the
-hand-written engine's rough Release screen was materially slower than the
-scalar baseline. The prepared NFD successor uses generated re2c/Level L
-control flow over ordinary binary operations; a no-copy view is not assumed.
+`.string` wrapper through the existing explicit string/binary conversions. The
+experimental raw string-byte RXAS surface was rolled back. The selected NFD
+successor instead uses the ordinary `STRCHAR` and `APPENDCHAR` string surface,
+so it needs neither a raw byte view nor a whole-string binary copy.
 
-`unicode_nfd_lexer_generate.crexx` is the prepared-algorithm lowering pass.
-It does not add arbitrary actions to the authored Level L syntax. Instead it
-turns the validated Unicode scalar partition into internal lexer rules whose
-accepting actions carry a prepared mapping index or CCC. Vendored re2c builds
-the UTF-8 DFA, and `crexx_transducer.syntax` emits grouped transitions as
-ordinary multi-condition cREXX `select` clauses. The compiler then lowers the
-generated control flow to jump tables using only the existing binary surface.
-The resulting scanner is a correctness proof, not a selected hot-path shape:
-its 3,440-state method declares 6,455 locals. VM frame activation relinks those
-locals per call, and the retained rough Release screen shows a severe
-short-string penalty plus no large-buffer improvement over the hand-prepared
-engine. The next backend experiment must keep live/register state bounded
-independently of DFA size.
+`unicode_nfd_lexer_generate.crexx` is the retained prepared-algorithm lowering
+pass. It does not add arbitrary actions to the authored Level L syntax. The
+validated Unicode scalar partition is compiled into the image's virtual
+alphabet, while this pass emits a deterministic thin wrapper around the shared
+Level B executor. The executor's exact consecutive kinds compile to a jump
+table and its optimized `normalize()` currently declares 32 locals, independent
+of the number of Unicode mappings. The earlier 3,440-state UTF-8 DFA remains a
+useful rejected experiment: it proved correctness but amplified frame and
+per-scalar costs and is not the selected prepared route.
 
 ## Reproduce
 
@@ -234,11 +239,13 @@ families reproduce `evidence/unicode-normalization-result.txt` byte for byte.
   alternatives after the PoC.
 - The Unicode rule parser and NFD table compiler cover the retained `gennorm2`
   canonical data only. They are not a general UCD/property compiler.
-- The scalar baseline implements NFD. The prepared byte engine implements all
-  four normalization forms, but not chunked input, case folding, segmentation,
-  or a public Level G API. C-form `is_normalized` currently normalizes and
-  compares; the proved Quick_Check/stable-region allocation fast path remains
-  a performance follow-on rather than a correctness dependency.
+- The scalar baseline implements NFD. The shared general engine implements all
+  four normalization forms over strict UTF-8, while the prepared-symbol
+  codepoint fast path currently accelerates NFD `.string` input only. Neither
+  implements chunked input, case folding, segmentation, or a public Level G
+  API. C-form `is_normalized` currently normalizes and compares; the proved
+  Quick_Check/stable-region allocation fast path remains a performance
+  follow-on rather than a correctness dependency.
 - Exposed source arguments are read-only by convention but Level B cannot yet
   express a const borrow. A future public API must decide whether to retain
   that convention, add a read-only borrowing surface, or accept an input copy.

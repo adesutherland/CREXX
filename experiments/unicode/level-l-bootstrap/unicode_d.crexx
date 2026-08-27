@@ -185,6 +185,7 @@ unicodedtables: class
   _path = .binary
   _nfd_bits = .binary
   _nfkd_bits = .binary
+  _nfd_prepared = .binary
   _nfd_pages = .binary
   _nfkd_pages = .binary
   _nfd_records = .binary
@@ -263,6 +264,7 @@ unicodedtables: class
     if _status = 0 then call _prepare_composition ucd.canonical_ast(), properties
     if _status = 0 then call _audit_partition 1
     if _status = 0 then call _audit_partition 2
+    if _status = 0 then call _prepare_nfd_symbols
     if _status = 0 then call _assemble_image
     return
 
@@ -321,7 +323,7 @@ unicodedtables: class
   manifest: method = .string
     if _status \= 0 then return "status|error|" || _error || "0a"x
     nl = "0a"x
-    return "format|crexx-unicode-normalization-prepared-portable-v2" || nl ||,
+    return "format|crexx-unicode-normalization-prepared-portable-v3" || nl ||,
            "unicode|17.0.0" || nl ||,
            "bytes|" || <blen>(_image) || nl ||,
            "positive_ccc|" || _rank_count || nl ||,
@@ -348,6 +350,7 @@ unicodedtables: class
 
   _compile_ccc: method = .void
     arg ast = .unicodegennorm2ast
+    ccc = .int
     call binresize _ccc, 0x110000
     call binresize _ccc_seen, 255
     call binresize _rank, 256
@@ -385,6 +388,9 @@ unicodedtables: class
 
   _prepare_form: method = .void
     arg raw = .unicodedrawmappings, form = .int
+    component_start = .int
+    i = .int
+    codepoint = .int
     if form = 1 then do
       call binresize _nfd_bits, 0x22000
       call binresize _nfd_pages, 0x1100 * 8
@@ -418,8 +424,13 @@ unicodedtables: class
       call _order_temp
       if _status \= 0 then leave
       structural_class = _classify_temp()
+      closed_count = _closed_prefix_count()
       if structural_class < 1 | structural_class > 4 then do
         call _fail "prepared D mapping has an invalid structural class"
+        leave
+      end
+      if _temp_count > 255 | closed_count > 255 then do
+        call _fail "prepared D mapping exceeds its compact boundary fields"
         leave
       end
 
@@ -431,7 +442,7 @@ unicodedtables: class
           _nfd_utf8_bytes = _nfd_utf8_bytes + _utf8_length(codepoint)
           _nfd_component_count = _nfd_component_count + 1
         end
-        call _write_prepared_record _nfd_records, _nfd_pages, _nfd_bits, mapping, source, component_start, _temp_count, structural_class
+        call _write_prepared_record _nfd_records, _nfd_pages, _nfd_bits, mapping, source, component_start, _temp_count, structural_class, closed_count
         if structural_class = 1 then _nfd_closed = _nfd_closed + 1
         else if structural_class = 2 then _nfd_open = _nfd_open + 1
         else if structural_class = 3 then _nfd_marks = _nfd_marks + 1
@@ -445,7 +456,7 @@ unicodedtables: class
           _nfkd_utf8_bytes = _nfkd_utf8_bytes + _utf8_length(codepoint)
           _nfkd_component_count = _nfkd_component_count + 1
         end
-        call _write_prepared_record _nfkd_records, _nfkd_pages, _nfkd_bits, mapping, source, component_start, _temp_count, structural_class
+        call _write_prepared_record _nfkd_records, _nfkd_pages, _nfkd_bits, mapping, source, component_start, _temp_count, structural_class, closed_count
         if structural_class = 1 then _nfkd_closed = _nfkd_closed + 1
         else if structural_class = 2 then _nfkd_open = _nfkd_open + 1
         else if structural_class = 3 then _nfkd_marks = _nfkd_marks + 1
@@ -472,6 +483,7 @@ unicodedtables: class
 
   _expand: method = .void
     arg raw = .unicodedrawmappings, codepoint = .int, depth = .int
+    i = .int
     if _status \= 0 then return
     if unicode_d_is_scalar(codepoint) = 0 then do
       call _fail "prepared D closure contains a non-scalar value"
@@ -521,6 +533,8 @@ unicodedtables: class
     return
 
   _order_temp: method = .void
+    previous_ccc = .int
+    i = .int
     do i = 1 to _temp_count - 1
       current = <at..u32>(i * 4) _temp
       current_ccc = <at..u8>(current) _ccc
@@ -562,14 +576,23 @@ unicodedtables: class
     if last_starter = _temp_count - 1 then return 1
     return 2
 
+  /** Components through the final starter are closed against later input. */
+  _closed_prefix_count: method = .int
+    closed_count = 0
+    do i = 0 to _temp_count - 1
+      codepoint = <at..u32>(i * 4) _temp
+      if <at..u8>(codepoint) _ccc = 0 then closed_count = i + 1
+    end
+    return closed_count
+
   _write_prepared_record: method = .void
-    arg expose records = .binary, expose pages = .binary, expose bits = .binary, mapping = .int, source = .int, component_start = .int, component_count = .int, structural_class = .int
+    arg expose records = .binary, expose pages = .binary, expose bits = .binary, mapping = .int, source = .int, component_start = .int, component_count = .int, structural_class = .int, closed_count = .int
     offset = mapping * 12
     <at..u32>(offset) records = source
     <at..u32>(offset + 4) records = component_start
     <at..u16>(offset + 8) records = component_count
     <at..u8>(offset + 10) records = structural_class
-    <at..u8>(offset + 11) records = 0
+    <at..u8>(offset + 11) records = closed_count
 
     page_offset = (source <idiv> 256) * 8
     page_count = <at..u16>(page_offset + 4) pages
@@ -650,6 +673,12 @@ unicodedtables: class
     return
 
   _sort_composition: method = .void
+    previous_first = .int
+    previous_second = .int
+    i = .int
+    offset = .int
+    first = .int
+    second = .int
     do i = 1 to _composition_count - 1
       offset = i * 12
       first = <at..u32>(offset) _composition_triples
@@ -743,11 +772,44 @@ unicodedtables: class
     end
     return
 
+  /**
+   * Prepare the NFD virtual alphabet. Identity scalars classify as themselves;
+   * synthetic values use the high 11 bits as an exact SELECT kind and the low
+   * 21 bits as a scalar, CCC, or mapping-record payload. Algorithmic Hangul is
+   * a prepared kind so the common identity arm has no range predicate.
+   */
+  _prepare_nfd_symbols: method = .void
+    prepared = .int
+    call binresize _nfd_prepared, 0x110000 * 4
+    do codepoint = 0 to 0x10FFFF
+      if codepoint >= 0xD800 & codepoint <= 0xDFFF then,
+        prepared = 7 <shl> 21
+      else do
+        ccc = <at..u8>(codepoint) _ccc
+        if codepoint >= 0xAC00 & codepoint < 0xAC00 + 11172 then,
+          prepared = (6 <shl> 21) <or> codepoint
+        else if ccc = 0 then prepared = codepoint
+        else prepared = (1 <shl> 21) <or> ccc
+      end
+      <at..u32>(codepoint * 4) _nfd_prepared = prepared
+    end
+
+    do mapping = 0 to _nfd_raw.map_count() - 1
+      offset = mapping * 12
+      source = <at..u32>(offset) _nfd_records
+      structural_class = <at..u8>(offset + 10) _nfd_records
+      prepared_kind = structural_class + 1
+      prepared = (prepared_kind <shl> 21) <or> mapping
+      <at..u32>(source * 4) _nfd_prepared = prepared
+    end
+    return
+
   _assemble_image: method = .void
     header_size = 192
     ccc_offset = header_size
     rank_offset = ccc_offset + 0x110000
-    nfd_bits_offset = rank_offset + 256
+    nfd_prepared_offset = rank_offset + 256
+    nfd_bits_offset = nfd_prepared_offset + 0x110000 * 4
     nfkd_bits_offset = nfd_bits_offset + 0x22000
     nfd_pages_offset = nfkd_bits_offset + 0x22000
     nfkd_pages_offset = nfd_pages_offset + 0x1100 * 8
@@ -764,7 +826,7 @@ unicodedtables: class
     <at..u8>(1) _image = 85
     <at..u8>(2) _image = 68
     <at..u8>(3) _image = 68
-    <at..u16>(4) _image = 2
+    <at..u16>(4) _image = 3
     <at..u16>(6) _image = header_size
     <at..u16>(8) _image = 17
     <at..u16>(10) _image = 0
@@ -805,7 +867,7 @@ unicodedtables: class
     <at..u32>(144) _image = _nfkd_raw.value_count()
     <at..u32>(148) _image = _nfd_component_count
     <at..u32>(152) _image = _nfkd_component_count
-    <at..u32>(156) _image = 0
+    <at..u32>(156) _image = nfd_prepared_offset
     <at..u32>(160) _image = composition_directory_offset
     <at..u32>(164) _image = _composition_directory_count
     <at..u32>(168) _image = composition_pairs_offset
@@ -813,10 +875,11 @@ unicodedtables: class
     <at..u32>(176) _image = _full_exclusion_count
     <at..u32>(180) _image = 12
     <at..u32>(184) _image = _composition_max_pairs
-    <at..u32>(188) _image = 0
+    <at..u32>(188) _image = 0x110000
 
     call bincopy _image, ccc_offset, _ccc, 0, <blen>(_ccc)
     call bincopy _image, rank_offset, _rank, 0, <blen>(_rank)
+    call bincopy _image, nfd_prepared_offset, _nfd_prepared, 0, <blen>(_nfd_prepared)
     call bincopy _image, nfd_bits_offset, _nfd_bits, 0, <blen>(_nfd_bits)
     call bincopy _image, nfkd_bits_offset, _nfkd_bits, 0, <blen>(_nfkd_bits)
     call bincopy _image, nfd_pages_offset, _nfd_pages, 0, <blen>(_nfd_pages)
@@ -839,6 +902,8 @@ unicodednormalizer: class
   _ccc_offset = .int
   _rank_offset = .int
   _rank_count = .int
+  _prepared_offset = .int
+  _prepared_count = .int
   _bits_offset = .int
   _pages_offset = .int
   _records_offset = .int
@@ -954,7 +1019,60 @@ unicodednormalizer: class
   /** Normalize validated text through the existing explicit binary surface. */
   normalize: method = .string
     arg expose source = .string
+    source_length = .int
+    result = .string
     if _ready = 0 then return ""
+    if _form = 1 then do
+      _status = 0
+      _error = ""
+      _pending_count = 0
+      _pending_disordered = 0
+      _pending_last_ccc = 0
+      _bucket_flushes = 0
+      result = ""
+      source_length = 0
+      assembler strlen source_length,source
+      do source_index = 0 to source_length - 1
+        codepoint = 0
+        assembler strchar codepoint,source,source_index
+        prepared = <at..u32>(_prepared_offset + codepoint * 4) _image
+        prepared_kind = prepared <shr> 21
+        prepared_payload = prepared <and> 0x1FFFFF
+
+        /* Exact equality cases stay consecutive so RXC can retain dispatch. */
+        select prepared_kind
+          when 0 then do
+            if _pending_count > 0 then call _flush_pending_string result
+            assembler appendchar result,prepared
+          end
+          when 1 then call _enqueue_scalar_mark codepoint, prepared_payload
+          when 2 then call _process_prepared_mapping_string prepared_payload, prepared_kind, result
+          when 3 then call _process_prepared_mapping_string prepared_payload, prepared_kind, result
+          when 4 then call _process_prepared_mapping_string prepared_payload, prepared_kind, result
+          when 5 then call _process_prepared_mapping_string prepared_payload, prepared_kind, result
+          when 6 then do
+            if _pending_count > 0 then call _flush_pending_string result
+            s_index = prepared_payload - 0xAC00
+            l_index = s_index <idiv> 588
+            remainder = s_index <mod> 588
+            v_index = remainder <idiv> 28
+            t_index = s_index <mod> 28
+            jamo = 0x1100 + l_index
+            assembler appendchar result,jamo
+            jamo = 0x1161 + v_index
+            assembler appendchar result,jamo
+            if t_index \= 0 then do
+              jamo = 0x11A7 + t_index
+              assembler appendchar result,jamo
+            end
+          end
+          when 7 then assembler signal "UNICODE_ERROR","invalid scalar in prepared NFD input"
+          otherwise assembler signal "UNICODE_ERROR","invalid prepared NFD symbol kind"
+        end
+      end
+      if _pending_count > 0 then call _flush_pending_string result
+      return result
+    end
     source_binary = source as .binary
     empty_string = ""
     source_length = <blen>(source_binary)
@@ -1012,8 +1130,7 @@ unicodednormalizer: class
   lexer_begin: method = .void
     arg source_length = .int
     if _ready = 0 | _form \= 1 then do
-      call _fail "generated scanner requires a ready NFD normalizer"
-      return
+      assembler signal "INVALID_ARGUMENTS","generated scanner requires a ready NFD normalizer"
     end
     call _begin source_length
     return
@@ -1052,20 +1169,13 @@ unicodednormalizer: class
     call _emit_hangul codepoint, 2, empty_string, source
     return
 
-  /** Finish a generated NFD scan and expose its binary result. */
-  lexer_finish: method = .void
+  /** Finish a generated NFD scan and return its binary result. */
+  lexer_finish: method = .binary
     arg expose source = .binary
     empty_string = ""
     call _finish 2, empty_string, source
-    return
-
-  lexer_result_binary: method = .binary
+    if _status \= 0 then assembler signal "UNICODE_ERROR",_error
     return _output
-
-  lexer_fail: method = .void
-    arg message = .string
-    call _fail message
-    return
 
   _fail: method = .void
     arg message = .string
@@ -1075,6 +1185,9 @@ unicodednormalizer: class
     return
 
   _validate_image: method = .void
+    offset = .int
+    first = .int
+    count = .int
     image_length = <blen>(_image)
     if image_length < 192 then do
       call _fail "prepared normalization image is shorter than its header"
@@ -1082,7 +1195,7 @@ unicodednormalizer: class
     end
     if <at..u8>(0) _image \= 67 | <at..u8>(1) _image \= 85 |,
        <at..u8>(2) _image \= 68 | <at..u8>(3) _image \= 68 |,
-       <at..u16>(4) _image \= 2 | <at..u16>(6) _image \= 192 then do
+       <at..u16>(4) _image \= 3 | <at..u16>(6) _image \= 192 then do
       call _fail "invalid prepared normalization image header"
       return
     end
@@ -1094,6 +1207,8 @@ unicodednormalizer: class
     _ccc_offset = <at..u32>(16) _image
     _rank_offset = <at..u32>(24) _image
     _rank_count = <at..u32>(96) _image
+    _prepared_offset = <at..u32>(156) _image
+    _prepared_count = <at..u32>(188) _image
     if _form = 1 | _form = 3 then do
       _bits_offset = <at..u32>(32) _image
       _pages_offset = <at..u32>(48) _image
@@ -1116,8 +1231,13 @@ unicodednormalizer: class
     _composition_pair_count = <at..u32>(172) _image
     if _ccc_offset \= 192 | <at..u32>(20) _image \= 0x110000 |,
        _rank_offset \= _ccc_offset + 0x110000 | <at..u32>(28) _image \= 256 |,
-       _rank_count \= 55 then do
+       _rank_count \= 55 | _prepared_count \= 0x110000 |,
+       _prepared_offset \= _rank_offset + 256 then do
       call _fail "invalid CCC/rank sections in prepared normalization image"
+      return
+    end
+    if _prepared_offset + _prepared_count * 4 > image_length then do
+      call _fail "prepared-symbol section exceeds normalization image"
       return
     end
     if (_form = 1 | _form = 3) & (_record_count \= 2081 | _component_count \= 3450) then,
@@ -1141,12 +1261,24 @@ unicodednormalizer: class
       first = <at..u32>(offset + 4) _image
       count = <at..u16>(offset + 8) _image
       structural_class = <at..u8>(offset + 10) _image
+      closed_count = <at..u8>(offset + 11) _image
       if unicode_d_is_scalar(source) = 0 | source <= previous then,
         call _fail "prepared D records are not strictly ordered"
       else if count = 0 | first + count > _component_count then,
         call _fail "prepared D component span is invalid"
       else if structural_class < 1 | structural_class > 4 then,
         call _fail "prepared D structural class is invalid"
+      else if (structural_class = 1 & closed_count \= count) |,
+              (structural_class = 2 & (closed_count = 0 | closed_count >= count)) |,
+              (structural_class = 3 & closed_count \= 0) |,
+              closed_count > count then,
+        call _fail "prepared D closed-prefix boundary is invalid"
+      if _status = 0 & (_form = 1 | _form = 3) then do
+        prepared = <at..u32>(_prepared_offset + source * 4) _image
+        if (prepared <shr> 21) \= structural_class + 1 |,
+           (prepared <and> 0x1FFFFF) \= mapping then,
+          call _fail "prepared NFD symbol does not match its mapping record"
+      end
       previous = source
     end
     previous = -1
@@ -1235,6 +1367,8 @@ unicodednormalizer: class
 
   _decode: method = .void
     arg source_kind = .int, expose source_string = .string, expose source_binary = .binary, position = .int, source_length = .int
+    second = .int
+    third = .int
     first = _source_byte(source_kind, source_string, source_binary, position)
     if first >= 0xC2 & first <= 0xDF then do
       if position + 2 > source_length then do
@@ -1344,6 +1478,111 @@ unicodednormalizer: class
     end
     return -1
 
+  /** Queue one identity nonstarter for the scalar prepared executor. */
+  _enqueue_scalar_mark: method = .void
+    arg codepoint = .int, ccc = .int
+    if _pending_count >= _pending_capacity then do
+      _pending_capacity = _pending_capacity * 2
+      call binresize _pending, _pending_capacity * 12
+    end
+    offset = _pending_count * 12
+    <at..u32>(offset) _pending = codepoint
+    <at..u8>(offset + 4) _pending = ccc
+    if _pending_count > 0 & ccc < _pending_last_ccc then,
+      _pending_disordered = 1
+    _pending_last_ccc = ccc
+    _pending_count = _pending_count + 1
+    return
+
+  /** Queue one already prepared mapping component without byte materialization. */
+  _enqueue_prepared_mark: method = .void
+    arg component = .int
+    if _pending_count >= _pending_capacity then do
+      _pending_capacity = _pending_capacity * 2
+      call binresize _pending, _pending_capacity * 12
+    end
+    target = _pending_count * 12
+    codepoint = <at..u32>(component) _image
+    ccc = <at..u8>(component + 4) _image
+    <at..u32>(target) _pending = codepoint
+    <at..u8>(target + 4) _pending = ccc
+    if _pending_count > 0 & ccc < _pending_last_ccc then,
+      _pending_disordered = 1
+    _pending_last_ccc = ccc
+    _pending_count = _pending_count + 1
+    return
+
+  /** Append and clear the one open canonical-order segment. */
+  _flush_pending_string: method = .void
+    arg expose result = .string
+    if _pending_count = 0 then return
+    disordered = _pending_disordered
+    if disordered then call _sort_pending
+    do i = 0 to _pending_count - 1
+      offset = i * 12
+      if disordered then codepoint = <at..u32>(offset) _scratch
+      else codepoint = <at..u32>(offset) _pending
+      assembler appendchar result,codepoint
+    end
+    _pending_count = 0
+    _pending_disordered = 0
+    _pending_last_ccc = 0
+    return
+
+  /** Execute one prepared mapping class over its closed/open boundaries. */
+  _process_prepared_mapping_string: method = .void
+    arg mapping = .int, prepared_kind = .int, expose result = .string
+    i = .int
+    component = .int
+    codepoint = .int
+    offset = _records_offset + mapping * 12
+    first = <at..u32>(offset + 4) _image
+    count = <at..u16>(offset + 8) _image
+    closed_count = <at..u8>(offset + 11) _image
+
+    select prepared_kind
+      when 2 then do
+        if _pending_count > 0 then call _flush_pending_string result
+        do i = 0 to count - 1
+          component = _components_offset + (first + i) * 12
+          codepoint = <at..u32>(component) _image
+          assembler appendchar result,codepoint
+        end
+      end
+      when 3 then do
+        if _pending_count > 0 then call _flush_pending_string result
+        do i = 0 to closed_count - 1
+          component = _components_offset + (first + i) * 12
+          codepoint = <at..u32>(component) _image
+          assembler appendchar result,codepoint
+        end
+        do i = closed_count to count - 1
+          component = _components_offset + (first + i) * 12
+          call _enqueue_prepared_mark component
+        end
+      end
+      when 4 then do
+        do i = 0 to count - 1
+          component = _components_offset + (first + i) * 12
+          call _enqueue_prepared_mark component
+        end
+      end
+      when 5 then do
+        do i = 0 to count - 1
+          component = _components_offset + (first + i) * 12
+          codepoint = <at..u32>(component) _image
+          ccc = <at..u8>(component + 4) _image
+          if ccc = 0 then do
+            if _pending_count > 0 then call _flush_pending_string result
+            assembler appendchar result,codepoint
+          end
+          else call _enqueue_prepared_mark component
+        end
+      end
+      otherwise assembler signal "UNICODE_ERROR","invalid prepared NFD mapping class"
+    end
+    return
+
   _process_mapping: method = .void
     arg mapping = .int, source_kind = .int, expose source_string = .string, expose source_binary = .binary
     offset = _records_offset + mapping * 12
@@ -1448,6 +1687,9 @@ unicodednormalizer: class
     return
 
   _flush_pending: method = .void
+    codepoint = .int
+    ccc = .int
+    span_length = .int
     if _pending_count = 0 | _status \= 0 then return
     if _pending_disordered then call _sort_pending
     do i = 0 to _pending_count - 1 while _status = 0
@@ -1481,6 +1723,10 @@ unicodednormalizer: class
     return
 
   _sort_pending: method = .void
+    rank = .int
+    offset = .int
+    i = .int
+    ccc = .int
     _bucket_flushes = _bucket_flushes + 1
     call binresize _scratch, _pending_count * 12
     call binfill _counts, 0
@@ -1552,6 +1798,8 @@ unicodednormalizer: class
   /** Hangul arithmetic followed by exact non-Hangul Primary Composite lookup. */
   _compose_pair: method = .int
     arg starter = .int, candidate = .int
+    middle = .int
+    value = .int
     if starter >= 0x1100 & starter <= 0x1112 &,
        candidate >= 0x1161 & candidate <= 0x1175 then,
       return 0xAC00 + (starter - 0x1100) * 588 + (candidate - 0x1161) * 28

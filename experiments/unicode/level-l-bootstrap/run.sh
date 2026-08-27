@@ -216,10 +216,6 @@ compile_source "$work_dir/level_l_unicode_nfd.crexx" \
     "$work_dir/level-l-unicode-nfd-build.log"
 (cd "$work_dir" && "$rxlink_bin" -c "$script_dir/unicode_d.ctl")
 
-grep -F ".jtable " "$work_dir/level_l_unicode_nfd.rxas" > /dev/null
-grep -F "jumpi " "$work_dir/level_l_unicode_nfd.rxas" > /dev/null
-grep -F "bgetu8 " "$work_dir/level_l_unicode_nfd.rxas" > /dev/null
-
 normalize_rxas_audit="$work_dir/unicode-d-normalize.rxas"
 normalize_binary_rxas_audit="$work_dir/unicode-d-normalize-binary.rxas"
 compose_pair_rxas_audit="$work_dir/unicode-normalization-compose-pair.rxas"
@@ -232,6 +228,16 @@ awk '/^§unicode_d\.unicodednormalizer\.normalize_binary\(\)/ { active = 1 }
 awk '/^§unicode_d\.unicodednormalizer\._compose_pair\(\)/ { active = 1 }
      active && seen && /^§/ { exit }
      active { print; seen = 1 }' "$work_dir/unicode_d.rxas" > "$compose_pair_rxas_audit"
+normalize_locals=$(sed -n '1s/.*\.locals=\([0-9][0-9]*\).*/\1/p' "$normalize_rxas_audit")
+if [ -z "$normalize_locals" ] || [ "$normalize_locals" -gt 64 ]; then
+    echo "optimized prepared NFD normalizer has an unexpected local count: $normalize_locals" >&2
+    exit 1
+fi
+grep -E '^[[:space:]]*strchar ' "$normalize_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*bgetu32 ' "$normalize_rxas_audit" > /dev/null
+grep -F ".jtable " "$normalize_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*jumpi ' "$normalize_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*appendchar ' "$normalize_rxas_audit" > /dev/null
 if grep -E '^[[:space:]]*(scopy|bcopy|stobin|bintos) ' "$normalize_binary_rxas_audit" > /dev/null; then
     echo "optimized binary normalizer unexpectedly copies or converts its input/result" >&2
     exit 1
@@ -396,7 +402,7 @@ grep -Fx "Focused NFD fixtures: PASS" "$work_dir/rxtvm-unicode-nfd.txt" > /dev/n
 grep -Fx "Result: PASS" "$work_dir/rxtvm-unicode-nfd.txt" > /dev/null
 grep -Fx "Focused prepared normalization fixtures: PASS" "$work_dir/rxtvm-unicode-normalization.txt" > /dev/null
 grep -Fx "Prepared normalization tables: PASS" "$work_dir/rxtvm-unicode-normalization.txt" > /dev/null
-grep -Fx "Generated prepared NFD scanner: PASS" "$work_dir/rxtvm-unicode-normalization.txt" > /dev/null
+grep -Fx "Generated prepared NFD wrapper: PASS" "$work_dir/rxtvm-unicode-normalization.txt" > /dev/null
 grep -Fx "Result: PASS" "$work_dir/rxtvm-unicode-normalization.txt" > /dev/null
 
 summary_actual="$work_dir/result.txt"
@@ -412,15 +418,16 @@ summary_actual="$work_dir/result.txt"
     echo "Unicode 17.0.0 NFD conformance: PASS (100170 corpus relations)"
     echo "unlisted scalar NFD identity: PASS (1094978 scalars)"
     echo "C++/re2c NFD oracle: retained conformance evidence reproduced"
-    echo "portable prepared four-form image: PASS (1722756 bytes)"
+    echo "portable prepared four-form image: PASS (format 3; 4456448-byte NFD prepared-symbol section)"
     echo "Unicode 17.0.0 NFD/NFKD/NFC/NFKC conformance: PASS (400680 corpus relations)"
-    echo "generated prepared NFD lexer: PASS (2081 mapping rules, 964 mark rules, 429 starter ranges)"
+    echo "generated prepared NFD wrapper: PASS (2081 mapping symbols, 964 identity-mark symbols)"
     echo "generated prepared NFD conformance: PASS (100170 corpus relations)"
     echo "unlisted scalar four-form identity: PASS (1094978 scalars per form)"
     echo "primary composition: PASS (961 pairs, 391 starters, 1120 exclusions)"
     echo "optimized/noopt linked images: byte-identical conformance summaries"
-    echo "UTF-8 byte path: strict binary decode; string wrapper uses explicit conversion"
-    echo "generated dispatch: .jtable and jumpi"
+    echo "NFD string path: strchar codepoint scan; no string/binary conversion on prepared fast path"
+    echo "binary path: strict UTF-8 decode"
+    echo "prepared dispatch: dense at-u32 symbol lookup, .jtable and jumpi"
     echo "binary scan/stores: bgetu8, bsetu16, bsetu32"
     echo "rxtvm: PASS"
     echo "rxbvm: PASS"

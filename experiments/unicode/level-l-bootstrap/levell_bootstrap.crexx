@@ -334,6 +334,14 @@ levellparser: class
     return <at..u8>(index) _bytes
 
   _scan: method = .void
+    byte = .int
+    start = .int
+    closed = .int
+    quote = .int
+    text = .string
+    punctuation = .string
+    ch = .string
+
     do while _scan_cursor < _source_length & _result.status() = 0
       byte = _byte(_scan_cursor)
 
@@ -845,6 +853,12 @@ levellparser: class
 
   _validate_module: method = .levellastnode
     arg root = .levellastnode
+    i = .int
+    j = .int
+    left = .levellastnode
+    right = .levellastnode
+    node = .levellastnode
+    prior = .levellastnode
 
     do i = 0 to root.child_count() - 1
       left = root.child_at(i)
@@ -915,6 +929,8 @@ levellparser: class
 
   _validate_lexer: method = .void
     arg root = .levellastnode, lexer = .levellastnode
+    i = .int
+    node = .levellastnode
 
     do i = 0 to lexer.child_count() - 1
       left = lexer.child_at(i)
@@ -1032,6 +1048,7 @@ levellparser: class
 
   _nullable: method = .int
     arg lexer = .levellastnode, node = .levellastnode, depth = .int
+    i = .int
     if depth > 64 then do
       call _result.panic("cyclic or excessively deep pattern reference", node.start(), node.span_length())
       return 0
@@ -1247,6 +1264,8 @@ levell_emit_rule_action: procedure = .string
  */
 levell_emit_re2c: procedure = .string
   arg result = .levellresult
+  i = .int
+  node = .levellastnode
   if result.status() \= 0 then return ""
 
   root = result.root()
