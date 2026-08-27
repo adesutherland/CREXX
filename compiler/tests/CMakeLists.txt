@@ -3471,13 +3471,15 @@ string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "if(NOT res EQUAL 0)\n  message(F
 string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"inline_test_computed_receiver_copyback\" \"\${work}/inline_test_computed_receiver_copyback.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on computed receiver inline test: \${out}\")\nendif()\n")
 string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "file(READ \"\${work}/inline_test_computed_receiver_copyback.rxas\" main_rxas)\n")
-string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "if(main_rxas MATCHES [=[call [^\\n]*inline_test_computed_receiver_copyback\\.box\\.setandreport\\(\\)]=])\n  message(FATAL_ERROR \"Optimized computed receiver test still calls setAndReport():\\n\${main_rxas}\")\nendif()\n")
+string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "if(main_rxas MATCHES [=[call[0-9]* [^\\n]*inline_test_computed_receiver_copyback\\.box\\.setandreport\\(\\)]=])\n  message(FATAL_ERROR \"Optimized computed receiver test still calls setAndReport():\\n\${main_rxas}\")\nendif()\n")
+string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "if(main_rxas MATCHES [=[call[0-9]* [^\\n]*inline_test_computed_receiver_copyback\\.box\\.setname\\(\\)]=])\n  message(FATAL_ERROR \"Optimized postfix CALL test still calls setName():\\n\${main_rxas}\")\nendif()\n")
 file(GENERATE OUTPUT "${INLINE_COMPUTED_RECEIVER_SCRIPT}" CONTENT "${INLINE_COMPUTED_RECEIVER_CONTENT}")
 
 add_test(NAME inline_test_computed_receiver_copyback_opt_rewrites
          COMMAND ${CMAKE_COMMAND} -P "${INLINE_COMPUTED_RECEIVER_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_tests_properties(inline_test_computed_receiver_copyback_opt_rewrites PROPERTIES LABELS "linked_opt")
+set_tests_properties(inline_test_computed_receiver_copyback_opt_rewrites PROPERTIES
+        LABELS "compiler;parser;levelb;call-postfix;inlining;linked_opt")
 
 add_test(NAME inline_loop_bound_early_return_cleanup_opt_rewrites
          COMMAND ${CMAKE_COMMAND}
@@ -3646,6 +3648,15 @@ set_tests_properties(san006_import_context_lifetime PROPERTIES
         LABELS "sanitizer;san-006;compiler;imports;regression"
         TIMEOUT 60)
 add_crexx_run_test(inline_test_computed_receiver_copyback rexx_src/inline_test_computed_receiver_copyback.crexx)
+add_crexx_run_test(call_postfix_surface rexx_src/call_postfix_surface.crexx)
+set_tests_properties(inline_test_computed_receiver_copyback_run_noopt PROPERTIES
+        LABELS "compiler;parser;levelb;call-postfix;inlining")
+set_tests_properties(inline_test_computed_receiver_copyback_run_opt PROPERTIES
+        LABELS "compiler;parser;levelb;call-postfix;inlining;linked_opt")
+set_tests_properties(call_postfix_surface_run_noopt PROPERTIES
+        LABELS "compiler;parser;levelb;call-postfix")
+set_tests_properties(call_postfix_surface_run_opt PROPERTIES
+        LABELS "compiler;parser;levelb;call-postfix;linked_opt")
 add_crexx_run_test(inline_test_loop_bound_early_return_cleanup rexx_src/inline_test_loop_bound_early_return_cleanup.crexx)
 add_crexx_run_test(structured_exit_crossed_loop_cleanup rexx_src/structured_exit_crossed_loop_cleanup.crexx)
 add_crexx_run_test(signal_crossed_loop_cleanup rexx_src/signal_crossed_loop_cleanup.crexx)

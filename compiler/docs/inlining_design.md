@@ -80,6 +80,9 @@ More precisely:
 - The call may be a local plain-procedure `FUNCTION`, a local class `MEMBER_CALL`, or a local class `FACTORY_CALL`.
 - For assignment inlining, the call must be the entire RHS of the enclosing `ASSIGN`.
 - For standalone call inlining, the enclosing statement must be `CALL func(...)`.
+  Level B `CALL` accepts computed postfix member receivers; the statement
+  rewrite applies the same evaluate-once locator and receiver-copyback proof as
+  a whole-RHS method assignment.
 - For expression inlining, the call is rewritten to a `BLOCK_EXPR` when the parent bucket is supported. Supported buckets now include direct single-value consumers such as `SAY`, `RETURN`, `IF`, `WHILE`, `UNTIL`, and loop bounds, plus eager operators, comparisons, concatenation, type casts/tests/`typeof`, short-circuit boolean operands, and function/factory/method argument positions. Dedicated statement rewrites still own standalone `CALL` statements and whole-RHS `ASSIGN` sites.
 - The callee body must be available either as a local AST body or as a
   compatible imported `META_INLINE` template. Imported templates re-enter the
