@@ -585,6 +585,14 @@ wave inversions require review. See
 **Gate:** clean builds pass at 1, 5 and 30 jobs; parallel execution produces no
 shared-path collision and no test initiates a build.
 
+**2026-08-27 checkpoint A:** the jump-table base and RexxScript ownership waves
+are complete. Multiple-candidate output owners fell from two to zero and
+cross-action cleanup findings fell from 251 to 245. Focused jobs 1, 5 and 30
+proof is green, but 31 nested build tests, classlib/rxfnsc shared cleanup,
+resource pools and wave review remain. Work proceeds family by family; broad
+QA is reserved for a meaningful checkpoint. See
+`docs/planning/release-1/new-build-phase-1-progress-2026-08-27.md`.
+
 ### Phase 2: make imports and metadata deterministic
 
 1. Add dependency/resolution reports to rxc, rxas and rxlink.
@@ -688,12 +696,12 @@ following should be approved separately before implementation:
 
 ## 18. Immediate next step
 
-Review the Phase 0 gate report and approve a bounded Phase 1 implementation
-slice. The recommended first slice gives the jump-table corruption bases one
-owner, then converts one shared library cleanup/consolidation family to private
-member outputs and single-owner publication. Re-export the graph and prove that
-the selected findings disappear before widening the change. Production build
-behaviour should not change until that Phase 1 slice is explicitly approved.
+Continue Phase 1 as bounded ownership and QA-preparation waves. The next slice
+moves `linked_opt_runtime_artifacts_build` out of CTest and into explicit
+`qa-prep`, using the retained 168-second hidden-build observation as its
+baseline. Then convert rxfnsc and classlib shared cleanup/consolidation one
+family at a time. Re-export after every slice, reuse valid focused evidence,
+and reserve the broad Debug sweep for the Phase 1 checkpoint.
 
 ## References
 
