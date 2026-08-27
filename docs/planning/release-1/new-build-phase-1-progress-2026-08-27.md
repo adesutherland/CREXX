@@ -3,11 +3,11 @@
 ## Status
 
 Phase 1 is in progress on `temp/newbuild`. The current checkpoint completes
-four bounded ownership/preparation waves and incorporates `origin/develop`
+five bounded ownership/preparation waves and incorporates `origin/develop`
 through `ac9dcc14270f4b6094f6ca815063c186a55d34e2`. The Phase 1 gate is not yet
-complete: shared cleanup remains in classlib and rxfnsc, two example tests
-still start nested builds, resource pools are not defined, and the provisional
-wave graph still needs review.
+complete: shared cleanup remains in classlib and rxfnsc, resource pools are not
+defined, and the provisional wave graph still needs review. Top-level CTest no
+longer contains a build fixture or invokes a nested build.
 
 No performance measurement was run. Host timings below are diagnostic only;
 other work was active on the machine.
@@ -153,18 +153,42 @@ After preparation:
   classification; and
 - no performance measurement executed.
 
+## Wave 5: example QA preparation
+
+The array-formatting and pprint example artifacts now belong to
+`qa-prep-examples`, which is part of `qa-prep`. Their two build fixture tests
+and the matching consumer fixture requirements have been removed. Existing
+artifact owners, the dependency from pprint to array formatting, and the two
+example runtime commands are unchanged.
+
+The first jobs-30 preparation after checkpoint C ran 274 actions in about
+62.55 seconds. The retained tree had again crossed a commit identity, so this
+is regeneration evidence rather than an example-only timing. An immediate
+repeat was a true no-op in 0.08 seconds.
+
+After preparation:
+
+- both example consumers passed at parallel 30 in 0.12 seconds;
+- the line count and SHA-256 of `.ninja_log` were unchanged across that CTest
+  run;
+- `ninja -t missingdeps qa-prep-examples` processed 531 nodes and found no
+  missing generated-file dependency;
+- the re-export is schema-valid, graph-clean, has no fallback classification,
+  and reports no test that invokes a build; and
+- no performance measurement executed.
+
 ## Current graph movement
 
-The current Debug export covers 1,507 targets, 1,349 custom commands and 2,369
+The current Debug export covers 1,508 targets, 1,349 custom commands and 2,367
 tests.
 
 | Finding | Phase 0 | This checkpoint |
 | --- | ---: | ---: |
 | multiple candidate output owners | 2 | 0 |
 | cleanup touches another action's output | 251 | 245 |
-| tests that invoke a build | 31 | 2 |
-| fixture setup tests | 31 | 2 |
-| tests with fixture requirements | 937 | 2 |
+| tests that invoke a build | 31 | 0 |
+| fixture setup tests | 31 | 0 |
+| tests with fixture requirements | 937 | 0 |
 | provisional wave inversions | 813 | 813 |
 | performance-measurement tests | 24 | 24 |
 
@@ -191,16 +215,13 @@ test timing.
 
 ## Next waves
 
-1. Convert the two remaining example fixtures into a dedicated
-   `qa-prep-examples` target, completing removal of top-level nested CTest
-   builds.
-2. Convert rxfnsc and classlib member/consolidation families to private outputs
+1. Convert rxfnsc and classlib member/consolidation families to private outputs
    and single-owner publication, one family at a time.
-3. Replace predecessor serialization with direct semantic dependencies after
+2. Replace predecessor serialization with direct semantic dependencies after
    each family has deterministic import roots.
-4. Introduce measured resource pools for heavyweight optimized compiler,
+3. Introduce measured resource pools for heavyweight optimized compiler,
    assembler and VM work.
-5. Complete test labels/selections and review the 813 provisional wave
+4. Complete test labels/selections and review the 813 provisional wave
    inversions before the broad Phase 1 checkpoint.
 
 Windows publication/rename behaviour and Linux exact-tree proof remain hosted

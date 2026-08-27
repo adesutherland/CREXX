@@ -53,14 +53,6 @@ add_dependencies(example_pprint_exit_artifacts example_array_formatting_artifact
 
 if(BUILD_TESTING)
     add_test(
-            NAME example_pprint_exit_artifacts_build
-            COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}"
-                    --target example_pprint_exit_artifacts)
-    set_tests_properties(example_pprint_exit_artifacts_build PROPERTIES
-            FIXTURES_SETUP example_pprint_exit_artifacts
-            RUN_SERIAL TRUE)
-
-    add_test(
             NAME example_pprint_exit
             COMMAND ${CMAKE_COMMAND}
                     -DRXVM=${CREXX_RXVM_EXECUTABLE}
@@ -69,8 +61,6 @@ if(BUILD_TESTING)
                     -DMODULE2=${CMAKE_BINARY_DIR}/bin/library.rxbin
                     -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/pprint_example.out
                     -P ${CMAKE_SOURCE_DIR}/examples/RunExample.cmake)
-    set_tests_properties(example_pprint_exit PROPERTIES
-            FIXTURES_REQUIRED example_pprint_exit_artifacts)
 endif()
 
 install(FILES "${_pprint_bundle}"

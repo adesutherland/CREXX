@@ -45,14 +45,6 @@ add_custom_target(example_array_formatting_artifacts ALL
 
 if(BUILD_TESTING)
     add_test(
-            NAME example_array_formatting_artifacts_build
-            COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}"
-                    --target example_array_formatting_artifacts)
-    set_tests_properties(example_array_formatting_artifacts_build PROPERTIES
-            FIXTURES_SETUP example_array_formatting_artifacts
-            RUN_SERIAL TRUE)
-
-    add_test(
             NAME example_array_formatting
             COMMAND ${CMAKE_COMMAND}
                     -DRXVM=${CREXX_RXVM_EXECUTABLE}
@@ -61,8 +53,6 @@ if(BUILD_TESTING)
                     -DMODULE2=${CMAKE_BINARY_DIR}/bin/library.rxbin
                     -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/array_formatting_example.out
                     -P ${CMAKE_SOURCE_DIR}/examples/RunExample.cmake)
-    set_tests_properties(example_array_formatting PROPERTIES
-            FIXTURES_REQUIRED example_array_formatting_artifacts)
 endif()
 
 install(FILES "${CREXX_ARRAY_FORMATTING_MODULE}"

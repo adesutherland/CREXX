@@ -1,6 +1,6 @@
 # New Build System Vision and Migration Plan
 
-- **Status:** Vision retained; Phase 0 complete; Phase 1 checkpoint C implemented
+- **Status:** Vision retained; Phase 0 complete; Phase 1 checkpoint D implemented
 - **Baseline:** `origin/develop` at `dc44d92909e706adc575932ba9ae72f2d6f05b7d`
 - **Planning branch:** `temp/newbuild`
 - **Date:** 2026-08-27
@@ -605,6 +605,12 @@ parallel 30 without changing the Ninja log. Nested build tests, fixture setup
 tests and fixture requirements are now the same two example fixtures. The next
 slice removes those last top-level build-as-test cases.
 
+**2026-08-27 checkpoint D:** the last two example fixtures have moved into
+`qa-prep-examples`. The example consumers passed directly without changing the
+Ninja log. The current catalogue reports zero nested build tests, zero fixture
+setup tests and zero fixture requirements. Phase 1 continues with shared-output
+ownership in rxfnsc and classlib.
+
 ### Phase 2: make imports and metadata deterministic
 
 1. Add dependency/resolution reports to rxc, rxas and rxlink.
@@ -709,10 +715,9 @@ following should be approved separately before implementation:
 ## 18. Immediate next step
 
 Continue Phase 1 as bounded ownership and QA-preparation waves. The next slice
-moves the two remaining example artifact fixtures into `qa-prep-examples`.
-Then convert rxfnsc and classlib shared cleanup/consolidation one family at a
-time. Re-export after every slice, reuse valid focused evidence, and reserve
-the broad Debug sweep for the Phase 1 checkpoint.
+converts rxfnsc and classlib shared cleanup/consolidation one family at a time.
+Re-export after every slice, reuse valid focused evidence, and reserve the
+broad Debug sweep for the Phase 1 checkpoint.
 
 ## References
 

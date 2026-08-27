@@ -485,6 +485,7 @@ if(TARGET linked_opt_runtime_artifacts)
     add_dependencies(qa-prep-linked-opt-runtime linked_opt_runtime_artifacts)
     add_dependencies(qa-prep qa-prep-linked-opt-runtime)
     add_dependencies(qa-prep qa-prep-compiler-exits)
+    add_dependencies(qa-prep qa-prep-examples)
 
     if(TARGET linked_opt_sweep)
         add_dependencies(linked_opt_sweep qa-prep-linked-opt-runtime)
