@@ -73,40 +73,52 @@ set(RXFNSC_MODULES
 )
 
 set(RXFNSC_BINS)
-set(RXFNSC_SOURCES)
+set(RXFNSC_MEMBER_ROOT "${CMAKE_CURRENT_BINARY_DIR}/members")
 foreach(MOD IN LISTS RXFNSC_MODULES)
-  list(APPEND RXFNSC_BINS "${CMAKE_CURRENT_BINARY_DIR}/${MOD}.rxbin")
-  list(APPEND RXFNSC_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${MOD}.crexx")
+  list(APPEND RXFNSC_BINS
+    "${RXFNSC_MEMBER_ROOT}/${MOD}/${MOD}.rxbin")
 endforeach()
 
 set(RXFNSC_MEMBER_BUILD_DEPS
   rxc
   rxas
-  library
-  classlib
-  compiler_exit_bin
+  rxfnsc_imports
 )
 
-set(_rxfnsc_member_clean_stamp "${CMAKE_CURRENT_BINARY_DIR}/rxfnsc_member_clean.stamp")
-set(_rxfnsc_member_clean_paths "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" ${RXFNSC_BINS})
-if(WIN32)
-  set(_rxfnsc_member_clean_command
-    COMMAND ${CMAKE_COMMAND}
-      "-DREMOVE_PATHS=${_rxfnsc_member_clean_paths}"
-      -DREMOVE_RETRIES=120
-      -DREMOVE_DELAY=0.25
-      -P "${CMAKE_SOURCE_DIR}/cmake/CrexxRemoveWithRetry.cmake")
-else()
-  set(_rxfnsc_member_clean_command
-    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" ${RXFNSC_BINS})
-endif()
+set(RXFNSC_IMPORT_ROOT "${CMAKE_CURRENT_BINARY_DIR}/imports")
+set(RXFNSC_IMPORT_LIBRARY "${RXFNSC_IMPORT_ROOT}/library.rxbin")
+set(RXFNSC_IMPORT_CLASSLIB "${RXFNSC_IMPORT_ROOT}/classlib.rxbin")
+set(RXFNSC_IMPORT_EXITS "${RXFNSC_IMPORT_ROOT}/rxcexits.rxbin")
 add_custom_command(
-  OUTPUT "${_rxfnsc_member_clean_stamp}"
-  ${_rxfnsc_member_clean_command}
-  COMMAND ${CMAKE_COMMAND} -E touch "${_rxfnsc_member_clean_stamp}"
-  DEPENDS ${RXFNSC_SOURCES} ${RXFNSC_MEMBER_BUILD_DEPS}
-  COMMENT "Clearing stale rxfnsc runtime member images ..."
+  OUTPUT
+    "${RXFNSC_IMPORT_LIBRARY}"
+    "${RXFNSC_IMPORT_CLASSLIB}"
+    "${RXFNSC_IMPORT_EXITS}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${RXFNSC_IMPORT_ROOT}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+    "${RXFNSC_IMPORT_LIBRARY}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+    "${RXFNSC_IMPORT_CLASSLIB}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+    "${RXFNSC_IMPORT_EXITS}"
+  DEPENDS
+    library
+    classlib
+    compiler_exit_bin
+    "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+  COMMENT "Staging immutable rxfnsc compiler imports ..."
   VERBATIM
+)
+add_custom_target(rxfnsc_imports
+  DEPENDS
+    "${RXFNSC_IMPORT_LIBRARY}"
+    "${RXFNSC_IMPORT_CLASSLIB}"
+    "${RXFNSC_IMPORT_EXITS}"
 )
 
 set(RXFNSC_SELECTORS ${RXFNSC_MODULES})
@@ -118,6 +130,7 @@ set(RXFNSC_DEPS_RexxClassicConfig RexxValue)
 set(RXFNSC_DEPS_RexxClassicDatatype RexxValue RexxClassicConfig)
 set(RXFNSC_DEPS_RexxClassicEncoding RexxValue RexxClassicConfig)
 set(RXFNSC_DEPS_RexxClassicCharacterOps RexxValue RexxClassicConfig RexxClassicCharacterScan)
+set(RXFNSC_DEPS_RexxClassicBitFunctions RexxClassicEncoding)
 foreach(MOD IN LISTS RXFNSC_DIRECT_BIF_MODULES)
   set(RXFNSC_DEPS_${MOD} RexxClassicBifs)
 endforeach()
@@ -153,45 +166,80 @@ endforeach()
 foreach(MOD RexxClassicBifSpace RexxClassicBifStrip)
   set(RXFNSC_DEPS_${MOD} RexxClassicBifs RexxClassicCharacterScan)
 endforeach()
-
-if(WIN32)
-  set(_rxfnsc_remove_consolidated_command
-    COMMAND ${CMAKE_COMMAND}
-      "-DREMOVE_PATHS=${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
-      -DREMOVE_RETRIES=120
-      -DREMOVE_DELAY=0.25
-      -P "${CMAKE_SOURCE_DIR}/cmake/CrexxRemoveWithRetry.cmake")
-else()
-  set(_rxfnsc_remove_consolidated_command
-    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
-endif()
+list(APPEND RXFNSC_DEPS_RexxClassicBifSpace RexxClassicCharacterOps)
 
 foreach(_binfile IN LISTS RXFNSC_BINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
-  set(_rxfnsc_deps)
-  foreach(_dep IN LISTS RXFNSC_DEPS_${_basename})
-    list(APPEND _rxfnsc_deps "${CMAKE_CURRENT_BINARY_DIR}/${_dep}.rxbin")
+  get_filename_component(_member_dir "${_binfile}" DIRECTORY)
+  set(_rxfnsc_source_deps)
+  set(_rxfnsc_staged_sources)
+  set(_rxfnsc_stage_source_commands)
+  set(_rxfnsc_dep_closure ${RXFNSC_DEPS_${_basename}})
+  set(_rxfnsc_dep_index 0)
+  list(LENGTH _rxfnsc_dep_closure _rxfnsc_dep_count)
+  while(_rxfnsc_dep_index LESS _rxfnsc_dep_count)
+    list(GET _rxfnsc_dep_closure ${_rxfnsc_dep_index} _rxfnsc_dep)
+    foreach(_rxfnsc_transitive_dep IN LISTS RXFNSC_DEPS_${_rxfnsc_dep})
+      if(NOT _rxfnsc_transitive_dep IN_LIST _rxfnsc_dep_closure)
+        list(APPEND _rxfnsc_dep_closure "${_rxfnsc_transitive_dep}")
+      endif()
+    endforeach()
+    math(EXPR _rxfnsc_dep_index "${_rxfnsc_dep_index} + 1")
+    list(LENGTH _rxfnsc_dep_closure _rxfnsc_dep_count)
+  endwhile()
+  string(JOIN ";" _rxfnsc_dep_signature_input ${_rxfnsc_dep_closure})
+  string(SHA256 _rxfnsc_dep_signature
+    "${_basename};${_rxfnsc_dep_signature_input}")
+  string(SUBSTRING "${_rxfnsc_dep_signature}" 0 12 _rxfnsc_dep_signature_short)
+  set(_member_source_root
+    "${_member_dir}/sources-${_rxfnsc_dep_signature_short}")
+  set(_member_source "${_member_source_root}/${_basename}.crexx")
+  foreach(_dep IN LISTS _rxfnsc_dep_closure)
+    set(_rxfnsc_dep_source "${CMAKE_CURRENT_SOURCE_DIR}/${_dep}.crexx")
+    set(_rxfnsc_staged_source "${_member_source_root}/${_dep}.crexx")
+    list(APPEND _rxfnsc_source_deps "${_rxfnsc_dep_source}")
+    list(APPEND _rxfnsc_staged_sources "${_rxfnsc_staged_source}")
+    list(APPEND _rxfnsc_stage_source_commands
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${_rxfnsc_dep_source}"
+        "${_rxfnsc_staged_source}")
   endforeach()
   add_custom_command(
     OUTPUT "${_binfile}"
-    ${_rxfnsc_remove_consolidated_command}
+    BYPRODUCTS
+      "${_member_source}"
+      "${_member_dir}/${_basename}.rxas"
+      ${_rxfnsc_staged_sources}
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_member_source_root}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+      "${_member_source}"
+    ${_rxfnsc_stage_source_commands}
     COMMAND $<TARGET_FILE:rxc>
-    -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
+    --no-exe-import
+    -i "${RXFNSC_IMPORT_ROOT}"
     -o "${_basename}"
-    "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+    "${_member_source}"
     COMMAND $<TARGET_FILE:rxas> "${_basename}"
     DEPENDS
       "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
-      "${_rxfnsc_member_clean_stamp}"
-      ${_rxfnsc_deps}
+      rxfnsc_imports
+      "${RXFNSC_IMPORT_LIBRARY}"
+      "${RXFNSC_IMPORT_CLASSLIB}"
+      "${RXFNSC_IMPORT_EXITS}"
+      ${_rxfnsc_source_deps}
       ${RXFNSC_MEMBER_BUILD_DEPS}
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    WORKING_DIRECTORY "${_member_dir}"
     COMMENT "cREXX compile and assemble rxfnsc runtime ${_basename} ..."
     VERBATIM
   )
 endforeach()
 
 set(_rxfnsc_control_file ${CMAKE_CURRENT_BINARY_DIR}/rxfnsc_link_$<CONFIG>.ctl)
+set(_rxfnsc_link_root "${CMAKE_CURRENT_BINARY_DIR}/linked")
+set(_rxfnsc_link_image "${_rxfnsc_link_root}/rxfnsc.rxbin")
+set(_rxfnsc_publish_image "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
+set(_rxfnsc_publish_temp "${CMAKE_CURRENT_BINARY_DIR}/publish/rxfnsc.rxbin.tmp")
 string(CONCAT _rxfnsc_control_text
   "* Auto-generated control file for the consolidated rxfnsc runtime library\n")
 foreach(_rxfnsc_bin IN LISTS RXFNSC_BINS)
@@ -203,12 +251,13 @@ endforeach()
 string(APPEND _rxfnsc_control_text
   "PRESERVE INLINE\n"
   "$<$<NOT:$<CONFIG:Debug>>:STRIP SOURCE\n>"
-  "OUTPUT ${CMAKE_BINARY_DIR}/bin/rxfnsc\n")
+  "OUTPUT ${_rxfnsc_link_root}/rxfnsc\n")
 
 file(GENERATE OUTPUT ${_rxfnsc_control_file} CONTENT "${_rxfnsc_control_text}")
 
 add_custom_command(
-  OUTPUT "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+  OUTPUT "${_rxfnsc_link_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${_rxfnsc_link_root}"
   COMMAND $<TARGET_FILE:rxlink> -c ${_rxfnsc_control_file}
   DEPENDS rxlink ${RXFNSC_BINS} ${_rxfnsc_control_file}
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
@@ -216,8 +265,22 @@ add_custom_command(
   VERBATIM
 )
 
+add_custom_command(
+  OUTPUT "${_rxfnsc_publish_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/publish"
+  COMMAND ${CMAKE_COMMAND} -E copy
+    "${_rxfnsc_link_image}"
+    "${_rxfnsc_publish_temp}"
+  COMMAND ${CMAKE_COMMAND} -E rename
+    "${_rxfnsc_publish_temp}"
+    "${_rxfnsc_publish_image}"
+  DEPENDS "${_rxfnsc_link_image}"
+  COMMENT "Publishing consolidated rxfnsc runtime library image ..."
+  VERBATIM
+)
+
 add_custom_target(rxfnsc ALL
-  DEPENDS "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+  DEPENDS "${_rxfnsc_publish_image}"
 )
 
 add_dependencies(rxfnsc library classlib)

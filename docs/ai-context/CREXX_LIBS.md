@@ -41,6 +41,28 @@ old-value/optional-assignment contract over `RexxValue` and
 `rexxclassicbif_call`; compiler lowering to those entries is deferred to the
 later bulk lowering change.
 
+The CMake build treats each `rxfnsc` member as an isolated source compilation.
+Its own source and only its declared transitive `rxfnsc` source dependencies
+are copied into a member-private, dependency-keyed source root under
+`lib/rxfnsc/members/`. External `library.rxbin`, `classlib.rxbin`, and
+`rxcexits.rxbin` imports are copied into the separate curated
+`lib/rxfnsc/imports/` root, and `rxc` runs with `--no-exe-import`. This gives
+each namespace one intended source or RXBIN provider while the library is
+being built; neither stale member files nor an older public `rxfnsc.rxbin` are
+eligible through the compiler executable directory. All members may build in
+parallel from the declared source dependency graph. `rxlink` writes the
+consolidated image under `lib/rxfnsc/linked/`, after which one publication
+action replaces `bin/rxfnsc.rxbin` through a temporary-file-and-rename step.
+Member actions never delete or rewrite another member's output or the public
+image.
+
+The coherent source route is deliberate. The previous shared work directory
+could resolve some internal dependencies from source and others from generated
+RXBIN metadata depending on what was already present. Source/RXAS/RXBIN route
+parity is a separate compiler and metadata qualification obligation; do not
+restore mixed candidate visibility merely to reproduce an old linked-image
+hash.
+
 `lib/rxfnsb/rexx/binary.crexx` provides the Level B binary helper surface. It
 contains the older Classic-style, 1-based, copy-returning helpers such as
 `binlength`, `binbyte`, `binsubstr`, `binoverlay`, `bininsert`, `bindelstr`,

@@ -3,11 +3,12 @@
 ## Status
 
 Phase 1 is in progress on `temp/newbuild`. The current checkpoint completes
-five bounded ownership/preparation waves and incorporates `origin/develop`
+six bounded ownership/preparation waves and incorporates `origin/develop`
 through `ac9dcc14270f4b6094f6ca815063c186a55d34e2`. The Phase 1 gate is not yet
-complete: shared cleanup remains in classlib and rxfnsc, resource pools are not
-defined, and the provisional wave graph still needs review. Top-level CTest no
-longer contains a build fixture or invokes a nested build.
+complete: shared cleanup remains in classlib, two preprocessor actions still
+rewrite their own outputs, resource pools are not defined, and the provisional
+wave graph still needs review. Top-level CTest no longer contains a build
+fixture or invokes a nested build.
 
 No performance measurement was run. Host timings below are diagnostic only;
 other work was active on the machine.
@@ -177,27 +178,79 @@ After preparation:
   and reports no test that invokes a build; and
 - no performance measurement executed.
 
+## Wave 6: rxfnsc isolated source production and publication
+
+The 65 `rxfnsc` members no longer share one compiler work directory, delete
+one another's outputs, or delete the public `bin/rxfnsc.rxbin` image. The new
+family graph:
+
+1. stages only `library.rxbin`, `classlib.rxbin`, and `rxcexits.rxbin` in a
+   curated external-binary import root;
+2. copies each member and its declared transitive internal source dependencies
+   into a member-private, dependency-keyed source root;
+3. runs `rxc --no-exe-import` and `rxas` in that member's private directory;
+4. permits all members to run concurrently from direct semantic dependencies;
+5. links the member RXBINs into private `lib/rxfnsc/linked/rxfnsc.rxbin`; and
+6. publishes the complete image through one temporary-file-and-rename action.
+
+Keying the source root from the member and dependency closure means a changed
+dependency list selects a new root; a stale copied `.crexx` file cannot remain
+eligible after an edge is removed. The first isolated build also exposed two
+dependencies that the old shared source directory had masked:
+`RexxClassicBitFunctions` requires `RexxClassicEncoding`, and
+`RexxClassicBifSpace` requires `RexxClassicCharacterOps`.
+
+This wave deliberately resolves internal `rxfnsc` dependencies through one
+coherent source route. The previous shared directory produced a mixed route:
+some members recorded source provenance while others imported generated RXBIN
+metadata. A private-RXBIN prototype confirmed that route choice can change
+metadata provenance and the linked image even when runtime behaviour remains
+correct. Consequently, the old mixed-route public SHA-256
+`60b60bd804d72ea996b7b79c9c4035f53cb039d18baabc38ca9c3611db43254b`
+is not a byte-parity requirement. The new coherent-source image is
+`cf62e13f185a8b393ec9451fba50ea7fadf60d031f81beff19be15317c5a2b51`.
+Permanent source/RXAS/RXBIN route-parity qualification remains Phase 2 work.
+
+Concurrency and functional evidence:
+
+- family-owned rebuilds ran 68 actions at jobs 1, 5, and 30 in approximately
+  64.42, 25.65, and 21.08 seconds respectively; these are diagnostic timings
+  only because other activity was present on the host;
+- all 65 member RXAS and 65 member RXBIN hashes, plus the public image hash,
+  were identical across jobs 1, 5, and 30;
+- a final dependency-key hardening rebuild retained all 131 hashes exactly and
+  an immediate repeat was a no-op;
+- `ninja -t missingdeps rxfnsc` processed 1,338 nodes without finding a missing
+  generated-file dependency;
+- all 112 focused `rxfnsc` runtime tests passed at parallel 30 in 7.17 seconds,
+  without changing the Ninja log; and
+- the five direct RexxScript runtime, compatibility, and CLI consumers then
+  passed at parallel 30 in 0.47 seconds, also without changing the Ninja log.
+
+Those consumer checks exercise `rxc`, `rxas`, `rxlink`, and `rxvm`. No
+performance measurement executed.
+
 ## Current graph movement
 
-The current Debug export covers 1,508 targets, 1,349 custom commands and 2,367
+The current Debug export covers 1,509 targets, 1,350 custom commands and 2,367
 tests.
 
 | Finding | Phase 0 | This checkpoint |
 | --- | ---: | ---: |
 | multiple candidate output owners | 2 | 0 |
-| cleanup touches another action's output | 251 | 245 |
+| cleanup touches another action's output | 251 | 114 |
 | tests that invoke a build | 31 | 0 |
 | fixture setup tests | 31 | 0 |
 | tests with fixture requirements | 937 | 0 |
 | provisional wave inversions | 813 | 813 |
 | performance-measurement tests | 24 | 24 |
 
-The six removed cleanup findings were all RexxScript findings. The remaining
-247 cleanup findings are 131 in rxfnsc, 114 in classlib and two in the
-preprocessor; two of those rewrite their own declared output. The manifest
-projection is schema-valid and has no ownership/dependency graph error, while
-the 813 provisional wave inversions remain review inputs rather than accepted
-dependencies.
+The remaining cross-action cleanup findings are all 114 classlib findings.
+Two additional preprocessor findings rewrite their own declared output, for
+116 cleanup findings in total. The `rxfnsc` family has moved from 131 cleanup
+findings to zero. The manifest projection is schema-valid and has no
+ownership/dependency graph error, while the 813 provisional wave inversions
+remain review inputs rather than accepted dependencies.
 
 ## Original QA/build-cycle evidence
 
@@ -215,10 +268,9 @@ test timing.
 
 ## Next waves
 
-1. Convert rxfnsc and classlib member/consolidation families to private outputs
-   and single-owner publication, one family at a time.
-2. Replace predecessor serialization with direct semantic dependencies after
-   each family has deterministic import roots.
+1. Convert the main classlib and native-backed classlib families to private
+   outputs and single-owner publication as separate bounded waves.
+2. Remove the two preprocessor self-rewrite cleanup patterns.
 3. Introduce measured resource pools for heavyweight optimized compiler,
    assembler and VM work.
 4. Complete test labels/selections and review the 813 provisional wave

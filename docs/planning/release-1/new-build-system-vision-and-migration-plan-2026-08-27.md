@@ -1,7 +1,8 @@
 # New Build System Vision and Migration Plan
 
-- **Status:** Vision retained; Phase 0 complete; Phase 1 checkpoint D implemented
+- **Status:** Vision retained; Phase 0 complete; Phase 1 checkpoint E implemented
 - **Baseline:** `origin/develop` at `dc44d92909e706adc575932ba9ae72f2d6f05b7d`
+- **Develop incorporated:** through `ac9dcc14270f4b6094f6ca815063c186a55d34e2`
 - **Planning branch:** `temp/newbuild`
 - **Date:** 2026-08-27
 
@@ -610,6 +611,17 @@ slice removes those last top-level build-as-test cases.
 Ninja log. The current catalogue reports zero nested build tests, zero fixture
 setup tests and zero fixture requirements. Phase 1 continues with shared-output
 ownership in rxfnsc and classlib.
+
+**2026-08-27 checkpoint E:** all 65 `rxfnsc` members now compile from private,
+dependency-keyed source roots with a curated external RXBIN import root and
+`--no-exe-import`. Direct semantic source dependencies replace shared-directory
+discovery; private link and single-owner temporary-file-and-rename publication
+replace 131 cleanup hazards. Jobs 1, 5, and 30 produced identical member and
+public hashes, and 112 focused runtime tests plus five RexxScript consumers
+passed without initiating a build. The coherent source route intentionally
+replaces the previous mixed source/RXBIN metadata route; permanent route-parity
+qualification remains Phase 2 work. The next bounded ownership work is the
+main and native-backed classlib families.
 
 ### Phase 2: make imports and metadata deterministic
 
