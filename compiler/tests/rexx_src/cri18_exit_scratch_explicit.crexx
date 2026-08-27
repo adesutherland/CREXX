@@ -1,0 +1,41 @@
+options levelb
+import rxfnsb
+
+main: procedure
+  items = .string[]
+  output_lines = .string[]
+  error_lines = .string[]
+  signal_name = .string
+  signal_payload = .string
+
+  items[1] = "beta"
+  items[2] = "alpha"
+  signal_name = "OTHER"
+  signal_payload = "generated scratch regression"
+
+  trace normal
+  trace rexx
+
+  query crexx
+  query os
+
+  address crexx "echo FIRST" output output_lines error error_lines expose items[]
+  address crexx "echo SECOND" output output_lines error error_lines expose items[]
+
+  signal on other call handle_other
+  signal .signal(signal_name, signal_payload)
+  signal .signal(signal_name, signal_payload)
+  signal off other
+
+  sort items 1 "ASC" 0
+  sort items 1 "ASC" 0
+  sortx items,1,"ASC",0
+  sortx items,1,"ASC",0
+
+  execio 0 diskw "cri18-exit-scratch.tmp" (stem items finis
+  execio 0 diskw "cri18-exit-scratch.tmp" (stem items finis
+  return
+
+handle_other: procedure = .signalaction
+  arg condition = .signal
+  return .signalaction.skip()

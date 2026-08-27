@@ -1,5 +1,5 @@
 options levelb
-namespace inline_cross_file_dep expose inc classify scoped nested sumTo countUntil buildArray renderArray identityBox refBump optAdd safeLength typeBump vargTotal vargPick residualFunctionDependency residualCallDependency residualCallTarget residualText refVargDynamicBlocked residualCallBlocked memberCallBlocked aliasBlocked box
+namespace inline_cross_file_dep expose inc classify scoped nested sumTo countUntil buildArray renderArray identityBox refBump optAdd safeLength typeBump vargTotal vargPick residualFunctionDependency residualCallDependency residualCallTarget residualText refVargDynamicBlocked residualCallBlocked memberCallDependency aliasBlocked box
 
 inc: procedure = .int
   arg value = .int
@@ -115,9 +115,9 @@ residualCallBlocked: procedure = .int
   arg value = .int
   return inc(value) + 1
 
-memberCallBlocked: procedure = .string
+memberCallDependency: procedure = .string
   arg value = .inline_cross_file_dep..box
-  return "box:" || value.getName()
+  return "box:" || value.runtimeName()
 
 box: class
   name = .string
@@ -129,6 +129,13 @@ box: class
 
   getName: method = .string
     return name
+
+  /* Keep one exact concrete method as a residual imported dependency. */
+  runtimeName: method = .string
+    result = .string
+    result = name
+    assembler unlink result
+    return result
 
   setName: method = .void
     arg next = .string

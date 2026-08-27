@@ -1,0 +1,3 @@
+vm,pairs,q1_reduction_percent,median_reduction_percent,q3_reduction_percent,mean_reduction_percent,mean_ci95_low_percent,mean_ci95_high_percent,favorable
+rxtvm,12,65.239525,65.415714,65.679220,65.419535,65.216490,65.622581,12
+rxbvm,12,64.245835,64.471269,64.632659,64.406798,64.229504,64.584093,12

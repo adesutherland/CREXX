@@ -163,7 +163,12 @@ static void node_cleanup_replace_text(ASTNode *node, char *text) {
         f_output(node->cleanup);
         node->cleanup = 0;
     }
+    if (node->branch_cleanup) {
+        f_output(node->branch_cleanup);
+        node->branch_cleanup = 0;
+    }
     node->cleanup = output_fs(text);
+    node->branch_cleanup = output_fs(text);
 }
 
 static void node_cleanup_prepend_text(ASTNode *node, char *text) {
@@ -172,6 +177,11 @@ static void node_cleanup_prepend_text(ASTNode *node, char *text) {
         output_prepend_text(text, node->cleanup);
     } else {
         node->cleanup = output_fs(text);
+    }
+    if (node->branch_cleanup) {
+        output_prepend_text(text, node->branch_cleanup);
+    } else {
+        node->branch_cleanup = output_fs(text);
     }
 }
 
@@ -1442,6 +1452,26 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* Finally, append it to the output */
                 output_append_text(node->output, temp1);
+
+                /* The receiver-storage inliner emits explicit live links and
+                 * a matching normal-path unlink.  Retain the same cleanup as
+                 * a detached non-local branch action so a surrounding SIGNAL
+                 * handler cannot bypass it. */
+                if (node->source_provenance == AST_SOURCE_SYNTHETIC &&
+                    node->child && node->child->register_type == 'r' &&
+                    node->child->register_num >= 0 && node->node_string &&
+                    ((node->node_string_length == 7 &&
+                      strncasecmp(node->node_string, "linkref", 7) == 0) ||
+                     (node->node_string_length == 9 &&
+                      strncasecmp(node->node_string, "linkattr1", 9) == 0))) {
+                    char *unlink_line;
+
+                    if (node->branch_cleanup) f_output(node->branch_cleanup);
+                    unlink_line = mprintf("   unlink r%d\n",
+                                          node->child->register_num);
+                    node->branch_cleanup = output_fs(unlink_line);
+                    free(unlink_line);
+                }
 
                 for (operand = node->child; operand; operand = operand->sibling) {
                     if (operand->cleanup) output_concat(node->output, operand->cleanup);

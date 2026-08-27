@@ -64,12 +64,14 @@ typedef struct {
     Symbol *varg_array_symbol;
     Symbol *method_receiver_source_symbol;
     Symbol *method_receiver_local_symbol;
+    Symbol *method_receiver_live_reference_symbol;
     RxcpRemapCapturedLocator method_receiver_copyback_locator;
     size_t cleanup_coalesced_bindings;
     size_t method_receiver_detached_guard_expected;
     size_t method_receiver_detached_guard_materialized;
     int method_receiver_needs_copyback;
-    int method_receiver_uses_locator_copyback;
+    int method_receiver_uses_live_attribute_link;
+    int method_receiver_uses_live_locator_link;
     int method_receiver_detach_guards;
 } InlineCloneState;
 
@@ -84,6 +86,7 @@ typedef struct {
     int has_unsupported_reference;
     int has_class_attribute_write;
     int has_unportable_class_attribute_shape;
+    int has_extended_class_attribute_shape;
     size_t max_required_varg_index;
     int ref_varg_mode;
 } InlinableCheck;

@@ -147,6 +147,7 @@ struct Symbol {
     char flow_skip_default_initiation; /* NR-26: every first read is preceded by a safe source write */
     char inline_skip_default_initiation; /* PERF2-04/F03: candidate-local owned result is safely defined before return */
     struct Symbol *inline_value_alias; /* PERF2-03: read-only inline formal shares caller storage */
+    char inline_borrowed_receiver; /* Inlined method receiver is a live link, not owned object storage */
     InlineCallableSummary *inline_summary; /* PERF2-03: versioned immutable callable facts */
     char is_inlinable;  /* Set if this procedure is inlinable */
     ASTNode *ast_template; /* AST template for inlining */

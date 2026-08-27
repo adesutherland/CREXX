@@ -1336,6 +1336,20 @@ int rxcp_remap_capture_locator_once(Context *context,
 
         temp_symbol = rxcp_remap_create_temp_symbol(context, scope, child, prefix, child_index);
         if (!temp_symbol) return 0;
+        /* Locator operands are evaluated in the locator's contextual target
+         * type before the storage slot is selected.  Preserve that converted
+         * value in the evaluate-once temporary: using the operand's source
+         * type can turn an emitted FTOI into an invalid FCOPY and later feed a
+         * float-typed register to an integer array index. */
+        if (child->target_type != TP_UNKNOWN &&
+            !rxcp_remap_replace_symbol_value_shape(temp_symbol,
+                                                   child->target_type,
+                                                   child->target_dims,
+                                                   child->target_dim_base,
+                                                   child->target_dim_elements,
+                                                   child->target_class)) {
+            return 0;
+        }
 
         capture_assign = rxcp_remap_build_capture_assignment(context,
                                                              scope,
@@ -1344,7 +1358,7 @@ int rxcp_remap_capture_locator_once(Context *context,
                                                              materializer,
                                                              user_data);
         if (!capture_assign) return 0;
-        capture_assign->target_type = child->value_type;
+        ast_svtp(capture_assign, temp_symbol);
         add_ast(instr_list, capture_assign);
 
         locator_out->captured_symbols[child_index] = temp_symbol;

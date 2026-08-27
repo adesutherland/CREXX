@@ -37,9 +37,9 @@ renameBox() .locals=5
    .srcstep 6 6 17 "inline_test_object_expr_arg.crexx" 10 3 21 "  return box.getName()"
    .traceevent "V" 6 "R" "O" "a" 1 6 6 0 "box" ""
    settp a1,256
-   call1 r1,§inline_test_object_expr_arg.box.getname(),a1
-   .traceevent "F" 4 "R" "S" "r" 1 6 6 0 "getname" ""
-   ret r1
+   call1 r2,§inline_test_object_expr_arg.box.getname(),a1
+   .traceevent "F" 4 "R" "S" "r" 2 6 6 0 "getname" ""
+   ret r2
    .meta "inline_test_object_expr_arg.renamebox.box"
 
 makeBox() .locals=3

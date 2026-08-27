@@ -346,6 +346,7 @@ isCurrentTraceModeIdentity: procedure = .int
 
 addTraceActivation: procedure = .void
     arg result = .exitresult
+    call result.add_replacement_line("__rxtrace_mode=.string")
     call result.add_replacement_line("__rxtrace_mode=_trace_current_mode()")
     call result.add_replacement_line("call __rxtrace_reset_display_state()")
     call result.add_replacement_line("if __rxtrace_mode = ""OFF"" then assembler bpoff")
