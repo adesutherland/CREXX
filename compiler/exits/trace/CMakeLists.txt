@@ -322,3 +322,5 @@ crexx_add_trace_compile_fail_test(
         test_trace_bad_abbreviation.crexx
         "TRACE option is not known\\., \"ras\""
 )
+
+crexx_finalize_directory_qa_tiers()

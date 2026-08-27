@@ -297,6 +297,7 @@ endif()
 if(CREXX_DEFAULT_VM_USES_SWITCH)
     target_compile_definitions(testvm PRIVATE NTHREADED=1)
 endif()
+
 # Set the performance properties
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
@@ -545,3 +546,5 @@ if(CREXX_VM_PROFILING)
                 LABELS "interpreter;profiling;call-census;rxpa")
     endforeach()
 endif()
+
+crexx_finalize_directory_qa_tiers()

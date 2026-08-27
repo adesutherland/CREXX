@@ -156,6 +156,10 @@ def classify_surface(source: str, name: str, target_type: str = "") -> dict[str,
         "rxpp": ("C", 6, "none"),
         "rxdb": ("C", 6, "none"),
         "crexx": ("Product", 7, "none"),
+        "rexxscript_cli": ("Product", 7, "none"),
+        "packed_library": ("Product", 7, "none"),
+        "rxvme": ("Product", 7, "none"),
+        "rxbvme": ("Product", 7, "none"),
         "concurrency-qa": ("Optional", 7, "comprehensive"),
     }
     if target in explicit_names:
@@ -163,8 +167,54 @@ def classify_surface(source: str, name: str, target_type: str = "") -> dict[str,
         return {"product_layer": layer, "wave": wave, "qa_tier": qa_tier, "basis": "target-name"}
     if target == "qa-prep" or target.startswith("qa-prep-"):
         return {"product_layer": "Product", "wave": 7, "qa_tier": "none", "basis": "qa-prep-target"}
+    qa_runner_tiers = {
+        "qa-essential": "essential",
+        "qa-smoke": "smoke",
+        "qa-comprehensive": "comprehensive",
+        "qa-qualification": "qualification",
+        "qa-stress": "stress",
+        "qa-measurement": "measurement",
+    }
+    if target in qa_runner_tiers:
+        return {
+            "product_layer": "Optional",
+            "wave": 7,
+            "qa_tier": qa_runner_tiers[target],
+            "basis": "qa-runner-target",
+        }
+    if (
+        target in {"linked_opt_runtime_artifacts", "concurrency_test_artifacts"}
+        or target == "concurrency_doc_examples"
+        or target.startswith(
+            (
+                "test_",
+                "performance_",
+                "run_rxas",
+                "runrxas",
+                "module_initializers-",
+                "persistent_worker_executor-",
+                "program_generation_control-",
+            )
+        )
+        or target.endswith(("_artifact", "_artifacts"))
+        or (target_type == "UTILITY" and ("test" in target or "check" in target))
+    ):
+        return {
+            "product_layer": "Optional",
+            "wave": 7,
+            "qa_tier": "comprehensive",
+            "basis": "qa-artifact-target",
+        }
 
     path_rules = (
+        ("/tests/", "Optional", 7),
+        ("/tests_functional/", "Optional", 7),
+        ("/tests_performance/", "Optional", 7),
+        ("/parsingtests/", "Optional", 7),
+        ("/examples/", "Optional", 7),
+        ("/demos/", "Optional", 7),
+        ("/performance/", "Optional", 7),
+        ("/experiments/", "Optional", 7),
         ("/compiler/exits/", "X", 4),
         ("/lib/rxfnsb/", "B0", 3),
         ("/lib/classlib_native/", "B1", 5),
@@ -177,11 +227,6 @@ def classify_surface(source: str, name: str, target_type: str = "") -> dict[str,
         ("/debugger/", "C", 6),
         ("/lib/rxfnsg/", "G", 6),
         ("/lib/rxfnsl/", "L", 6),
-        ("/tests/", "Optional", 7),
-        ("/examples/", "Optional", 7),
-        ("/demos/", "Optional", 7),
-        ("/performance/", "Optional", 7),
-        ("/experiments/", "Optional", 7),
         ("/bin/", "Product", 7),
         ("/assembler/", "C1", 2),
         ("/compiler/", "C1", 2),
@@ -206,10 +251,6 @@ def classify_surface(source: str, name: str, target_type: str = "") -> dict[str,
     dashboard_targets = {"experimental", "nightly", "continuous", "test", "package", "package_source"}
     if target in dashboard_targets or target.startswith(("nightly", "experimental", "continuous")):
         return {"product_layer": "Optional", "wave": 7, "qa_tier": "comprehensive", "basis": "cmake-dashboard"}
-    if target_type == "UTILITY" and (
-        "test" in target or "check" in target or target.endswith(("_artifact", "_artifacts"))
-    ):
-        return {"product_layer": "Optional", "wave": 7, "qa_tier": "comprehensive", "basis": "utility-name"}
     if "<source_parent>" in path or "_deps" in path:
         return {"product_layer": "C0", "wave": 1, "qa_tier": "none", "basis": "external-foundation"}
     return {"product_layer": "Product", "wave": 7, "qa_tier": "none", "basis": "fallback-review"}
@@ -224,9 +265,9 @@ def classify_test(labels: Iterable[str], name: str) -> str:
         return "stress"
     if "smoke" in values:
         return "smoke"
-    if values.intersection({"install", "package", "external-consumer", "reproducibility"}):
+    if values.intersection({"qualification", "install", "package", "external-consumer", "reproducibility"}):
         return "qualification"
-    if values.intersection({"unit", "contract"}):
+    if values.intersection({"essential", "unit", "contract"}):
         return "essential"
     return "comprehensive"
 
@@ -304,6 +345,12 @@ def load_file_api(source_root: Path, build_root: Path, normalizer: PathNormalize
         target_type = target_data.get("type", "UNKNOWN")
         location = backtrace_location(target_data.get("backtraceGraph", {}), target_data.get("backtrace"), normalizer)
         classification_source = directory["source"]
+        definition_source = str(location.get("file", "")).lower().replace("\\", "/")
+        if any(
+            marker in f"/{definition_source.strip('/')}/"
+            for marker in ("/tests/", "/tests_functional/", "/tests_performance/", "/parsingtests/")
+        ):
+            classification_source = str(location["file"])
         classification = classify_surface(classification_source, reference["name"], target_type)
         artifacts: list[str] = []
         actual_artifacts: list[Path] = []
@@ -742,7 +789,11 @@ def build_findings(file_api: dict[str, Any], trace: dict[str, Any], tests: list[
                 }
             )
     for action in trace["custom_targets"]:
-        if action["commands"] and not action["byproducts"]:
+        if (
+            action["commands"]
+            and not action["byproducts"]
+            and action["classification"]["basis"] != "qa-runner-target"
+        ):
             findings.append(
                 {
                     "severity": "review",

@@ -14,12 +14,9 @@ target_link_libraries(stats_static PRIVATE ${CREXX_MATH_LIBRARY})
 
 add_rxpa_provider_package(stats)
 
-add_dependencies(rxc stats)
-add_dependencies(rxvm stats)
-add_dependencies(rxbvm stats)
-if(TARGET rxtvm)
-    add_dependencies(rxtvm stats)
-endif()
+# The provider remains part of the default product build.  Keep it independent
+# of targeted core-C compiler/VM builds so the bootstrap stage does not acquire
+# a later Level B native-provider prerequisite.
 
 if(BUILD_TESTING)
     add_custom_target(rxstats_test ALL)
@@ -53,3 +50,5 @@ if(BUILD_TESTING)
                 FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
     endforeach()
 endif()
+
+crexx_finalize_directory_qa_tiers()

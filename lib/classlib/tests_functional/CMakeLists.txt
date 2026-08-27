@@ -242,3 +242,5 @@ foreach(_runner IN LISTS _concurrency_doc_runners)
     "testChannelRequestWait_${_runner}_noopt"
     "testChannelRequestWait_${_runner}_opt")
 endforeach()
+
+crexx_finalize_directory_qa_tiers()

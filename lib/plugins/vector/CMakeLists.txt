@@ -14,12 +14,9 @@ target_link_libraries(vector_static PRIVATE ${CREXX_MATH_LIBRARY})
 
 add_rxpa_provider_package(vector)
 
-add_dependencies(rxc vector)
-add_dependencies(rxvm vector)
-add_dependencies(rxbvm vector)
-if(TARGET rxtvm)
-    add_dependencies(rxtvm vector)
-endif()
+# The provider remains part of the default product build.  Keep it independent
+# of targeted core-C compiler/VM builds so the bootstrap stage does not acquire
+# a later Level B native-provider prerequisite.
 
 if(BUILD_TESTING)
     add_custom_target(rxvector_test ALL)

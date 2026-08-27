@@ -258,3 +258,5 @@ crexx_label_smoke_tests(
         nr10_lifecycle_tool_selftest_opt
         nr10_artifact_inventory_selftest_opt
         perf3_fusion_inventory_selftest_opt)
+
+crexx_finalize_directory_qa_tiers()

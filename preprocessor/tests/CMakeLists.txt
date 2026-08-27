@@ -104,3 +104,5 @@ crexx_label_smoke_tests(
         rxpp_sh_tokens
         rxpp_diagnostics
 )
+
+crexx_finalize_directory_qa_tiers()

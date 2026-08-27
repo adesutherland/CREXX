@@ -365,3 +365,5 @@ foreach(_binfile ${REXXTESTBINS})
    )
    set(_prev_dependency ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
+
+crexx_finalize_directory_qa_tiers()

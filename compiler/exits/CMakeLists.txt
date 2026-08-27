@@ -10,6 +10,8 @@ if(BUILD_TESTING)
 endif()
 
 function(crexx_add_compiler_exit_runtime_test TARGET_NAME SOURCE_FILE)
+    crexx_schedule_directory_qa_tier_finalization()
+
     set(options)
     set(oneValueArgs PASS_REGULAR_EXPRESSION)
     set(multiValueArgs RUN_PREFIX RUN_SUFFIX EXTRA_DEPENDS)
@@ -128,3 +130,5 @@ add_custom_command(
 )
 add_custom_target(compiler_exit_bin ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin)
 add_dependencies(compiler_exit_bin token_bin exit_dump_bin exit_query_bin exit_sort_bin exit_sortx_bin exit_address_bin exit_parse_bin exit_signal_bin exit_trace_bin exit_rexxscript_bin exit_execio_bin exit_add_bin exit_fsay_bin exit_msay_bin exit_substr_bin exit_dummy_bin exit_rxqueue_bin)
+
+crexx_finalize_directory_qa_tiers()

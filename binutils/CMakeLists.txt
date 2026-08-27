@@ -37,3 +37,5 @@ if(BUILD_TESTING)
     add_executable(rxgraph_bench EXCLUDE_FROM_ALL tools/rxgraph_bench.c)
     target_link_libraries(rxgraph_bench PRIVATE rxbin)
 endif()
+
+crexx_finalize_directory_qa_tiers()

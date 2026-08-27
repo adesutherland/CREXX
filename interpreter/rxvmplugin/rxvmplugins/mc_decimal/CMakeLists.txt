@@ -133,3 +133,5 @@ set_tests_properties(mc_decimal_manual_test1 PROPERTIES PASS_REGULAR_EXPRESSION
 # Decimal Test 2
 add_test(NAME mc_decimal_full_tests COMMAND mc_decimal_full_tests)
 set_tests_properties(mc_decimal_full_tests PROPERTIES WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+crexx_finalize_directory_qa_tiers()

@@ -58,3 +58,5 @@ set_tests_properties(${_native_signal_tests} PROPERTIES
 )
 
 crexx_label_smoke_tests(QUIT INT)
+
+crexx_finalize_directory_qa_tiers()

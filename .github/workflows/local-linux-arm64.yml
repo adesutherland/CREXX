@@ -32,7 +32,9 @@ jobs:
       - name: Configure + Build Release (MinSizeRel)
         shell: bash
         run: |
-          cmake -S . -B "${{ runner.temp }}/release" -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel
+          cmake -S . -B "${{ runner.temp }}/release" -G Ninja \
+            -DCMAKE_BUILD_TYPE=MinSizeRel \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON
           cmake --build "${{ runner.temp }}/release"
 
       - name: Prepare QA artifacts
@@ -43,7 +45,7 @@ jobs:
       - name: CTest Release
         shell: bash
         run: |
-          ctest --test-dir "${{ runner.temp }}/release" --output-on-failure --no-tests=error --label-exclude "^performance-measurement$" --parallel 1
+          ctest --test-dir "${{ runner.temp }}/release" --output-on-failure --no-tests=error --label-exclude "^(stress|performance-measurement)$" --parallel 1
 
       - name: Collect executables
         shell: bash

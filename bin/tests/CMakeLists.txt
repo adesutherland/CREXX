@@ -502,3 +502,5 @@ function(crexx_isolate_bin_test_environment)
 endfunction()
 
 crexx_isolate_bin_test_environment()
+
+crexx_finalize_directory_qa_tiers()

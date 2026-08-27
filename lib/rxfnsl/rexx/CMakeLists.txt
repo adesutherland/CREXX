@@ -79,3 +79,5 @@ add_test(
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 set_tests_properties(rxfnsl_tinyexpr_binary_surface_smoke PROPERTIES LABELS "library;level-l")
+
+crexx_finalize_directory_qa_tiers()

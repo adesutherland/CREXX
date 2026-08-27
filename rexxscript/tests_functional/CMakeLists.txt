@@ -76,3 +76,5 @@ crexx_label_smoke_tests(
         testRexxScriptCompat_noopt
         rexxscript_cli_smoke
 )
+
+crexx_finalize_directory_qa_tiers()

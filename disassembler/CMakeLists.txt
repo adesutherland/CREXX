@@ -196,3 +196,5 @@ crexx_label_smoke_tests(
         rxdas_graph_error
         rxdas_dump_support
 )
+
+crexx_finalize_directory_qa_tiers()

@@ -2440,3 +2440,5 @@ crexx_label_smoke_tests(
         reentrancy_check
         db_decimal_archive_link
 )
+
+crexx_finalize_directory_qa_tiers()

@@ -55,6 +55,49 @@ class CatalogueUnitTests(unittest.TestCase):
         prep = catalogue.classify_surface("<SOURCE>/CMakeLists.txt", "qa-prep-linked-opt-runtime", "UTILITY")
         self.assertEqual((prep["product_layer"], prep["wave"], prep["qa_tier"]), ("Product", 7, "none"))
         self.assertEqual(prep["basis"], "qa-prep-target")
+        qa_runner = catalogue.classify_surface("<SOURCE>/CMakeLists.txt", "qa-measurement", "UTILITY")
+        self.assertEqual(
+            (qa_runner["product_layer"], qa_runner["wave"], qa_runner["qa_tier"]),
+            ("Optional", 7, "measurement"),
+        )
+        self.assertEqual(qa_runner["basis"], "qa-runner-target")
+        aggregate = catalogue.classify_surface(
+            "<SOURCE>/lib/rxfnsb/tests_functional/CMakeLists.txt",
+            "linked_opt_runtime_artifacts",
+            "UTILITY",
+        )
+        self.assertEqual((aggregate["product_layer"], aggregate["wave"]), ("Optional", 7))
+        artifact = catalogue.classify_surface(
+            "<SOURCE>/lib/rxfnsb/tests_functional/CMakeLists.txt",
+            "ts_abs_noopt_artifact",
+            "UTILITY",
+        )
+        self.assertEqual((artifact["product_layer"], artifact["wave"]), ("Optional", 7))
+        test_executable = catalogue.classify_surface(
+            "<SOURCE>/interpreter/CMakeLists.txt",
+            "test_rxpa_concurrency",
+            "EXECUTABLE",
+        )
+        self.assertEqual((test_executable["product_layer"], test_executable["wave"]), ("Optional", 7))
+        functional_group = catalogue.classify_surface(
+            "<SOURCE>/lib/rxfnsb/tests_functional/CMakeLists.txt",
+            "ts_abs",
+            "UTILITY",
+        )
+        self.assertEqual((functional_group["product_layer"], functional_group["wave"]), ("Optional", 7))
+        fixture_executable = catalogue.classify_surface(
+            "<SOURCE>/interpreter/CMakeLists.txt",
+            "persistent_worker_executor-rxvml",
+            "EXECUTABLE",
+        )
+        self.assertEqual((fixture_executable["product_layer"], fixture_executable["wave"]), ("Optional", 7))
+        embedded_vm = catalogue.classify_surface(
+            "<SOURCE>/interpreter/CMakeLists.txt", "rxvme", "EXECUTABLE"
+        )
+        self.assertEqual((embedded_vm["product_layer"], embedded_vm["wave"]), ("Product", 7))
+
+    def test_qa_classification_recognizes_explicit_qualification(self) -> None:
+        self.assertEqual(catalogue.classify_test(["qualification", "performance"], "candidate"), "qualification")
 
     def test_import_policy_accepts_direct_and_cmake_env_invocations(self) -> None:
         with tempfile.TemporaryDirectory() as root:

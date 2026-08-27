@@ -19,14 +19,9 @@ target_link_libraries(_hash_static PRIVATE rxbin)
 
 add_rxpa_provider_package(_hash)
 
-# A targeted compiler/VM build must still publish the declarations and the
-# trusted dynamic artifact used by declarative provider discovery.
-add_dependencies(rxc _hash)
-add_dependencies(rxvm _hash)
-add_dependencies(rxbvm _hash)
-if(TARGET rxtvm)
-    add_dependencies(rxtvm _hash)
-endif()
+# The provider remains part of the default product build.  Keep it independent
+# of targeted core-C compiler/VM builds so the bootstrap stage does not acquire
+# a later Level B native-provider prerequisite.
 
 if(BUILD_TESTING)
     add_custom_target(rx_hash_test ALL)

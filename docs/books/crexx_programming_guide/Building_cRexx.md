@@ -91,7 +91,9 @@ that you installed ninja, otherwise substitute `make' for the two
 <!-- instances of `ninja'): -->
 
 ```bash <!--buildcommand.sh-->
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../CREXX && ninja && ctest
+cmake -S ../CREXX -B crexx-build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build crexx-build --parallel 5
+cmake --build crexx-build --target qa-comprehensive
 ```
 
 This will do a lot of things. In fact, if all goes well, you will have a
@@ -152,21 +154,76 @@ Non-Ninja generators retain their own scheduling because CMake job pools are a
 Ninja facility.
 
 After the product build, prepare the generated test artifacts with the
-`qa-prep` target. The generated test suite is then run with the `ctest'
+`qa-prep` target. The generated test suite is then run with the `ctest`
 command. CTest executes tests only; it does not start another build.
 This knows what to do, as the tests were defined in the Cmake recipes, and will show you successes and failures. If what
 you checked out if git is not a released version, there is a 
 change that some test cases fail, but generally these should indicate
 success.
 
-## Useful System Test Subsets
+The default product build is deliberately offline. Parser mode uses a local
+sibling `DSL-Syntax-Highlighter` checkout when it exists; otherwise parser
+mode defaults off. To permit CMake to fetch the pinned parser dependency,
+configure with `-DCREXX_ALLOW_NETWORK_DOWNLOADS=ON`. An explicit
+`-DENABLE_PARSER_MODE=ON` without either a local checkout or that network
+permission is a configuration error. The native SQLite ADDRESS demo is also
+off by default and requires both `-DCREXX_BUILD_SQLITE_ADDRESS_DEMO=ON` and
+`-DCREXX_ALLOW_NETWORK_DOWNLOADS=ON`.
 
-For routine system validation, run the full build and full test suite:
+Standalone examples and demonstrations are not members of the default product
+build. Request the documented auxiliary groups explicitly:
 
 ```sh
-cmake --build cmake-build-debug
-cmake --build cmake-build-debug --target qa-prep --parallel 10
-ctest --test-dir cmake-build-debug --label-exclude '^performance-measurement$' --output-on-failure --parallel 10
+cmake --build crexx-build --target crexx-examples --parallel 5
+cmake --build crexx-build --target crexx-demos --parallel 5
+```
+
+Correctness QA still prepares the example, demonstration and benchmark-shaped
+artifacts that its tests consume through `qa-prep`; some source examples are
+therefore also visible as QA fixture inputs. This preparation does not execute
+performance measurements. Contributions and experiments are not currently
+configured as product targets. New ones should remain explicit opt-ins rather
+than joining the default product implicitly.
+
+## QA tiers and useful system test subsets
+
+Every configured test has exactly one execution tier while retaining its
+topical labels. The named targets make the intended barriers visible:
+
+| Target | Purpose |
+| --- | --- |
+| `qa-essential` | Smallest correctness blockers |
+| `qa-smoke` | Essential plus quick representative coverage |
+| `qa-comprehensive` | Normal correctness sweep, excluding stress and measurement |
+| `qa-qualification` | Install, packaging, reproducibility and external-consumer proof |
+| `qa-stress` | Explicit high-load and race-oriented workloads |
+| `qa-measurement` | Performance measurement only, serially on a quiescent host |
+
+All correctness targets depend on `qa-prep`, so their artifacts are complete
+before CTest starts. The measurement target instead uses a narrow
+`qa-prep-measurement` dependency and always selects one CTest worker. Do not
+combine performance measurement with a busy correctness or stress worker
+pool; timings from an active host are only indicative.
+
+The named correctness targets use 30 CTest workers by default on Apple ARM64
+and five elsewhere. Override that independently of build parallelism with
+`-DCREXX_QA_CTEST_JOBS=<positive-number>`.
+
+For routine system validation, run the product build and normal correctness
+suite:
+
+```sh
+cmake --build cmake-build-debug --parallel 5
+cmake --build cmake-build-debug --target qa-comprehensive --parallel 5
+```
+
+For a direct CTest invocation, prepare first and use the same normal exclusion:
+
+```sh
+cmake --build cmake-build-debug --target qa-prep --parallel 5
+ctest --test-dir cmake-build-debug \
+  --label-exclude '^(stress|performance-measurement)$' \
+  --output-on-failure --parallel 5
 ```
 
 For standard-library and BIF work, useful focused checks are:

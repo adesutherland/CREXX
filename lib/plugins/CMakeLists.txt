@@ -191,3 +191,5 @@ if(TARGET _odbc_mock)
     set_tests_properties(rxpa_odbc_old_host_default_session PROPERTIES
             LABELS "interpreter;plugins;rxpa;odbc;compatibility")
 endif()
+
+crexx_finalize_directory_qa_tiers()

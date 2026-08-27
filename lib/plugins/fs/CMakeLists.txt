@@ -10,12 +10,9 @@ add_dynamic_plugin_target(fs rxfs.c)
 add_static_plugin_target(fs rxfs.c)
 add_rxpa_provider_package(fs)
 
-add_dependencies(rxc fs)
-add_dependencies(rxvm fs)
-add_dependencies(rxbvm fs)
-if(TARGET rxtvm)
-    add_dependencies(rxtvm fs)
-endif()
+# The provider remains part of the default product build.  Keep it independent
+# of targeted core-C compiler/VM builds so the bootstrap stage does not acquire
+# a later Level B native-provider prerequisite.
 
 if(BUILD_TESTING)
     add_custom_target(rxfs_test ALL)

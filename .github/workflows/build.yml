@@ -144,6 +144,7 @@ jobs:
             -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" \
             -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" \
             -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON \
             ${{ matrix.cmake_args }}
 
       - name: Configure
@@ -189,7 +190,7 @@ jobs:
           ctest --test-dir "${{ runner.temp }}/build" \
             --output-on-failure \
             --no-tests=error \
-            --label-exclude "^performance-measurement$" \
+            --label-exclude "^(stress|performance-measurement)$" \
             --parallel 1
 
       - name: CTest
@@ -199,7 +200,7 @@ jobs:
           ctest --test-dir "${{ runner.temp }}/build" \
             --output-on-failure \
             --no-tests=error \
-            --label-exclude "^performance-measurement$" \
+            --label-exclude "^(stress|performance-measurement)$" \
             --parallel 2
 
       - name: Stage release payload

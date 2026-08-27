@@ -431,3 +431,5 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
     "ts_http_codec_${_http_runner}_noopt"
     "ts_http_codec_${_http_runner}_opt")
 endforeach()
+
+crexx_finalize_directory_qa_tiers()

@@ -5312,6 +5312,10 @@ target_compile_definitions(native_kv_address_demo PRIVATE
 add_dependencies(native_kv_address_demo native_kv_address_demo_bin library)
 
 if(CREXX_BUILD_SQLITE_ADDRESS_DEMO)
+    if(NOT CREXX_ALLOW_NETWORK_DOWNLOADS)
+        message(FATAL_ERROR
+                "CREXX_BUILD_SQLITE_ADDRESS_DEMO=ON requires CREXX_ALLOW_NETWORK_DOWNLOADS=ON")
+    endif()
     include(FetchContent)
     message(STATUS "Fetching SQLite amalgamation ${CREXX_SQLITE_AMALGAMATION_VERSION} for native ADDRESS demo")
     FetchContent_Declare(
@@ -5940,3 +5944,5 @@ function(crexx_force_raw_diagnostics_for_directory_tests)
 endfunction()
 
 crexx_force_raw_diagnostics_for_directory_tests()
+
+crexx_finalize_directory_qa_tiers()

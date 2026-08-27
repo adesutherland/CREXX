@@ -148,3 +148,5 @@ if(BUILD_TESTING)
         endif()
     endif()
 endif()
+
+crexx_finalize_directory_qa_tiers()

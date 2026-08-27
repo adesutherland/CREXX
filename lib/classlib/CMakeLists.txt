@@ -519,3 +519,5 @@ crexx_label_concurrency_tests(SP05 gate_f_levelb_bridge_inspection)
 crexx_label_concurrency_tests(SP09 gate_f_levelb_bridge_inspection)
 
 add_subdirectory(tests_functional)
+
+crexx_finalize_directory_qa_tiers()

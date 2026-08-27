@@ -298,3 +298,5 @@ crexx_label_smoke_tests(
         rxlink_signature_mismatch_error
         rxlink_rxdas_inline_preserve_smoke
 )
+
+crexx_finalize_directory_qa_tiers()

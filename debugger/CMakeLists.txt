@@ -41,3 +41,5 @@ if(BUILD_TESTING)
     set_tests_properties(rxdb_usage_smoke
             PROPERTIES PASS_REGULAR_EXPRESSION "Usage: rxdb \\[text\\|plain\\|llm\\]")
 endif()
+
+crexx_finalize_directory_qa_tiers()

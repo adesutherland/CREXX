@@ -39,3 +39,5 @@ enable_testing()
 
 add_test(NAME db_decimal_tests COMMAND db_decimal_tests)
 set_tests_properties(db_decimal_tests PROPERTIES WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+crexx_finalize_directory_qa_tiers()

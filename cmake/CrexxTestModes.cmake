@@ -9,6 +9,8 @@ function(_crexx_register_linked_opt_artifact TARGET_NAME)
 endfunction()
 
 function(_crexx_register_runtime_test)
+    crexx_schedule_directory_qa_tier_finalization()
+
     set(options PASS_TEST_NAME_ARGUMENT LINKED)
     set(oneValueArgs NAME RUNNER PROGRAM WORKING_DIRECTORY
             EXPECTED_EXIT_CODE EXPECTED_FAILURE_DESCRIPTION)

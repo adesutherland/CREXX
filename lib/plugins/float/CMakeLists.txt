@@ -44,14 +44,9 @@ add_custom_command(TARGET float_static POST_BUILD
 add_custom_target(_rxmath DEPENDS float)
 add_custom_target(_rxmath_static DEPENDS float_static)
 
-# Targeted compiler/VM builds must publish declarations and the trusted
-# provider artifact used by automatic dependency discovery.
-add_dependencies(rxc float)
-add_dependencies(rxvm float)
-add_dependencies(rxbvm float)
-if(TARGET rxtvm)
-    add_dependencies(rxtvm float)
-endif()
+# The provider remains part of the default product build.  Keep it independent
+# of targeted core-C compiler/VM builds so the bootstrap stage does not acquire
+# a later Level B native-provider prerequisite.
 
 if(BUILD_TESTING)
     add_custom_target(rxfloat_test ALL)
@@ -106,3 +101,5 @@ if(BUILD_TESTING)
                 FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
     endforeach()
 endif()
+
+crexx_finalize_directory_qa_tiers()

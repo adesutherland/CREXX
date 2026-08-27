@@ -67,3 +67,5 @@ crexx_label_smoke_tests(
         rxas_reject_non_source_mnemonics
         rxas_constant_aliases
 )
+
+crexx_finalize_directory_qa_tiers()

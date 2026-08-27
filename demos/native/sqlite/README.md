@@ -11,10 +11,13 @@ name in its driver registry and dispatches to the SQLite driver. Future drivers
 can follow the same pattern with their own environment names, for example
 `ADDRESS POSTGRES` or `ADDRESS ODBC`.
 
-The CMake build downloads the pinned SQLite amalgamation from sqlite.org when
-`CREXX_BUILD_SQLITE_ADDRESS_DEMO=ON`:
+The CMake build downloads the pinned SQLite amalgamation from sqlite.org only
+when both the demo and network access are explicitly enabled:
 
 ```sh
+cmake -S . -B cmake-build-debug \
+  -DCREXX_BUILD_SQLITE_ADDRESS_DEMO=ON \
+  -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON
 cmake --build cmake-build-debug --target native_sqlite_address_demo
 cmake-build-debug/compiler/tests/native_sqlite_address_demo
 ```

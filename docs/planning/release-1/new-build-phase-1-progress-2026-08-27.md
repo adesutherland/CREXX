@@ -3,12 +3,13 @@
 ## Status
 
 Phase 1 is in progress on `temp/newbuild`. The current checkpoint completes
-ten bounded ownership/preparation waves and incorporates `origin/develop`
-through `657b833d9f70e3f0e69536e6d76e4dd6a9e953aa`. The Phase 1 gate is not yet
-complete: the provisional wave graph and optional-product/test classifications
-still need review. Top-level CTest no longer contains a build fixture or
-invokes a nested build, the configured graph has no cleanup finding, and named
-Ninja pools now bound the measured high-pressure native work.
+twelve bounded ownership, preparation and classification waves and
+incorporates `origin/develop` through
+`657b833d9f70e3f0e69536e6d76e4dd6a9e953aa`. The Phase 1 implementation is
+ready for its broad macOS correctness and exact-tree Linux gates. Top-level
+CTest contains no build fixture and invokes no nested build, the configured
+graph has no ownership, cleanup or wave finding, and named Ninja pools bound
+the evidenced high-pressure native work.
 
 No performance measurement was run. Host timings below are diagnostic only;
 other work was active on the machine.
@@ -439,9 +440,70 @@ Evidence:
 No speedup or performance claim is made; other activity remained present on
 the host, and the purpose of this evidence is scheduling enforcement.
 
+## Wave 11: reviewed product-layer and execution-wave model
+
+The provisional classification has been replaced by an explicit product model
+for core C targets, Level B bootstrap and substrate, certified exits, Level C,
+Level G, Level L, assembled products and optional QA surfaces. In particular:
+
+- embedded VMs and the packed library are product-assembly outputs in Wave 7,
+  rather than core C bootstrap tools;
+- generated test programs, runtime images and benchmark-shaped correctness
+  fixtures are optional QA artifacts in Wave 7;
+- main Level B bootstrap ownership is separate from class/native substrate;
+  and
+- the five bundled native providers `hash`, `float`, `fs`, `stats` and
+  `vector` no longer force themselves into targeted `rxc` or bare-VM builds.
+
+Removing those manual provider dependencies is a real graph cleanup. The
+providers remain members of the default assembled product, but a request for a
+core C tool no longer pulls a later Level B substrate backwards through the
+stage model. Exporter classification tests now cover the aggregate,
+generated-artifact, test-executable, embedded-VM and QA-runner cases.
+
+The reviewed manifest reduced provisional wave inversions from 813 to zero.
+It remains an observation/export of CMake rather than a second executable build
+system.
+
+## Wave 12: explicit optional surfaces and QA tiers
+
+Standalone example and demonstration outputs are no longer implicit
+default-build members. Their explicit umbrella targets are `crexx-examples`
+and `crexx-demos`; source examples that double as correctness fixtures remain
+visible to QA preparation. Thirteen benchmark-only artifact groups likewise
+lost their `ALL` membership while remaining available to explicit `qa-prep`
+and focused consumers. Native adapters and other correctness fixtures may
+still compile in the ordinary build; no measurement workload runs there.
+
+Network access is now an explicit configuration capability. With no local
+DSL-Syntax-Highlighter checkout, a fresh default configuration disables parser
+mode and performs no fetch. Forcing parser mode without a local checkout and
+without `CREXX_ALLOW_NETWORK_DOWNLOADS=ON` fails during configuration. The
+native SQLite ADDRESS demo defaults off and requires the same network opt-in.
+Maintained hosted workflows opt in to the pinned parser download explicitly.
+
+All 2,366 configured tests have exactly one execution tier while preserving
+their existing topical labels:
+
+| Tier | Tests | Named target |
+| --- | ---: | --- |
+| essential | 12 | `qa-essential` |
+| smoke | 138 | `qa-smoke` (also runs essential, 150 total) |
+| comprehensive | 2,100 | included in `qa-comprehensive` |
+| qualification | 85 | `qa-qualification` |
+| stress | 7 | `qa-stress` |
+| performance measurement | 24 | `qa-measurement` |
+
+`qa-comprehensive` selects the 2,335 non-stress, non-measurement correctness
+tests after `qa-prep`. `qa-measurement` uses a deliberately narrow preparation
+target, is intrinsically serial, and is documented for a quiescent host. The
+ordinary hosted/local correctness workflows exclude both stress and
+measurement. Sanitizer scope has deliberately not been redesigned as part of
+this wave.
+
 ## Current graph movement
 
-The current Debug export covers 1,512 targets, 1,355 custom commands and 2,367
+The current Debug export covers 1,518 targets, 1,354 custom commands and 2,366
 tests.
 
 | Finding | Phase 0 | This checkpoint |
@@ -451,14 +513,13 @@ tests.
 | tests that invoke a build | 31 | 0 |
 | fixture setup tests | 31 | 0 |
 | tests with fixture requirements | 937 | 0 |
-| provisional wave inversions | 813 | 813 |
+| provisional wave inversions | 813 | 0 |
 | performance-measurement tests | 24 | 24 |
 
-There is now no cleanup finding. The only non-wave review findings are three
-command-bearing custom targets without declared byproducts and 963 tests with
-no label. The manifest projection is schema-valid and has no
-ownership/dependency graph error, while the 813 provisional wave inversions
-remain review inputs rather than accepted dependencies.
+There is no ownership, cleanup, nested-build, unlabeled-test or wave finding.
+The only review findings are three command-bearing run/check targets without
+declared byproducts; they do not claim generated file ownership. The manifest
+projection is schema-valid and graph-clean.
 
 ## Original QA/build-cycle evidence
 
@@ -476,9 +537,12 @@ test timing.
 
 ## Next waves
 
-1. Complete optional-product and test labels/selections, then review the 813
-   provisional wave
-   inversions before the broad Phase 1 checkpoint.
+1. Run the broad macOS Debug correctness gate from a fully prepared tree,
+   proving CTest does not alter the Ninja build log.
+2. Run stress separately from correctness and keep all performance measurement
+   out of the busy worker pool.
+3. Prove the exact committed tree with the portable five-job profile in Linux
+   ARM64 Minikube.
 
 Windows publication/rename behaviour and Linux exact-tree proof remain hosted
 or Minikube checkpoint gates; this macOS checkpoint does not claim either.

@@ -47,7 +47,7 @@ add_custom_command(
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "Building program with standalone pprint exit example")
 
-add_custom_target(example_pprint_exit_artifacts ALL
+add_custom_target(example_pprint_exit_artifacts
         DEPENDS "${_pprint_bundle}" "${_pprint_program}")
 add_dependencies(example_pprint_exit_artifacts example_array_formatting_artifacts)
 
@@ -65,3 +65,5 @@ endif()
 
 install(FILES "${_pprint_bundle}"
         DESTINATION examples/exits/pprint)
+
+crexx_finalize_directory_qa_tiers()

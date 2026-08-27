@@ -181,7 +181,12 @@ endif()
 
 option(ENABLE_ODBC "Enable ODBC support" OFF)
 option(ENABLE_GTK  "Enable GTK support"  OFF)
-option(CREXX_BUILD_SQLITE_ADDRESS_DEMO "Build the native SQLite ADDRESS demo; downloads the pinned SQLite amalgamation" ON)
+option(CREXX_ALLOW_NETWORK_DOWNLOADS
+       "Allow explicitly enabled build features to download pinned dependencies"
+       OFF)
+option(CREXX_BUILD_SQLITE_ADDRESS_DEMO
+       "Build the native SQLite ADDRESS demo; requires CREXX_ALLOW_NETWORK_DOWNLOADS=ON"
+       OFF)
 # These are source-controlled dependency pins, not user build options. Remove
 # stale cache entries left by earlier builds where they were CACHE variables.
 unset(CREXX_SQLITE_AMALGAMATION_YEAR CACHE)
@@ -190,16 +195,20 @@ unset(CREXX_SQLITE_AMALGAMATION_SHA3_256 CACHE)
 set(CREXX_SQLITE_AMALGAMATION_YEAR "2026")
 set(CREXX_SQLITE_AMALGAMATION_VERSION "3530200")
 set(CREXX_SQLITE_AMALGAMATION_SHA3_256 "81142986038e18f96c4a54e1a72562ae17e502a916f2a7701eff43388cbf1a40")
-if(MSVC)
-    set(CREXX_PARSER_MODE_DEFAULT OFF)
-else()
-    set(CREXX_PARSER_MODE_DEFAULT ON)
-endif()
-option(ENABLE_PARSER_MODE "Enable Parser Mode (requires DSL-Syntax-Highlighter)"
-        ${CREXX_PARSER_MODE_DEFAULT})
 set(DSLSH_LOCAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../DSL-Syntax-Highlighter"
         CACHE PATH "Path to a local DSL-Syntax-Highlighter checkout")
 option(DSLSH_PREFER_LOCAL "Prefer a local/sibling DSL-Syntax-Highlighter checkout when present" ON)
+if(MSVC)
+    set(CREXX_PARSER_MODE_DEFAULT OFF)
+elseif(DSLSH_PREFER_LOCAL AND EXISTS "${DSLSH_LOCAL_DIR}/codebuffer/CMakeLists.txt")
+    set(CREXX_PARSER_MODE_DEFAULT ON)
+elseif(CREXX_ALLOW_NETWORK_DOWNLOADS)
+    set(CREXX_PARSER_MODE_DEFAULT ON)
+else()
+    set(CREXX_PARSER_MODE_DEFAULT OFF)
+endif()
+option(ENABLE_PARSER_MODE "Enable Parser Mode (requires DSL-Syntax-Highlighter)"
+        ${CREXX_PARSER_MODE_DEFAULT})
 set(DSLSH_GIT_REPOSITORY "https://github.com/adesutherland/DSL-Syntax-Highlighter.git"
         CACHE STRING "DSL-Syntax-Highlighter Git repository")
 set(DSLSH_GIT_TAG "develop"
@@ -211,6 +220,10 @@ if (ENABLE_PARSER_MODE)
         set(DSLSH_SOURCE_DIR "${DSLSH_LOCAL_DIR}")
         add_subdirectory("${DSLSH_SOURCE_DIR}/codebuffer" "${CMAKE_CURRENT_BINARY_DIR}/dslsyntax-codebuffer" EXCLUDE_FROM_ALL)
     else()
+        if(NOT CREXX_ALLOW_NETWORK_DOWNLOADS)
+            message(FATAL_ERROR
+                    "ENABLE_PARSER_MODE=ON requires a local DSL-Syntax-Highlighter checkout or CREXX_ALLOW_NETWORK_DOWNLOADS=ON")
+        endif()
         include(FetchContent)
         message(STATUS "Fetching DSL-Syntax-Highlighter ${DSLSH_GIT_TAG} from ${DSLSH_GIT_REPOSITORY}")
         FetchContent_Declare(
@@ -240,6 +253,7 @@ if (ENABLE_PARSER_MODE)
 endif()
 
 include(CTest)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxQaTiers.cmake)
 
 # CREXX only uses re2c itself for scanner generation; do not build the
 # language alias binaries by default.
@@ -486,12 +500,106 @@ if(TARGET linked_opt_runtime_artifacts)
     add_custom_target(qa-prep-linked-opt-runtime)
     add_dependencies(qa-prep-linked-opt-runtime linked_opt_runtime_artifacts)
     add_dependencies(qa-prep qa-prep-linked-opt-runtime)
-    add_dependencies(qa-prep qa-prep-compiler-exits)
-    add_dependencies(qa-prep qa-prep-examples)
+    if(TARGET qa-prep-compiler-exits)
+        add_dependencies(qa-prep qa-prep-compiler-exits)
+    endif()
+    if(TARGET qa-prep-examples)
+        add_dependencies(qa-prep qa-prep-examples)
+    endif()
 
     if(TARGET linked_opt_sweep)
         add_dependencies(linked_opt_sweep qa-prep-linked-opt-runtime)
     endif()
+endif()
+
+if(BUILD_TESTING)
+    if(APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
+        set(_crexx_qa_default_jobs 30)
+    else()
+        set(_crexx_qa_default_jobs 5)
+    endif()
+    set(CREXX_QA_CTEST_JOBS "${_crexx_qa_default_jobs}" CACHE STRING
+            "Parallel CTest jobs used by the named correctness QA targets")
+    if(NOT CREXX_QA_CTEST_JOBS MATCHES "^[1-9][0-9]*$")
+        message(FATAL_ERROR "CREXX_QA_CTEST_JOBS must be a positive integer")
+    endif()
+
+    set(_crexx_qa_ctest_configuration)
+    if(CMAKE_CONFIGURATION_TYPES)
+        set(_crexx_qa_ctest_configuration -C "$<CONFIG>")
+    endif()
+
+    add_custom_target(qa-prep-measurement)
+    foreach(_crexx_measurement_target IN ITEMS
+            test_persistent_worker_executor_bin
+            persistent_worker_executor-rxvml
+            persistent_worker_executor-rxbvml
+            persistent_worker_executor-rxtvml)
+        if(TARGET "${_crexx_measurement_target}")
+            add_dependencies(qa-prep-measurement "${_crexx_measurement_target}")
+        endif()
+    endforeach()
+
+    add_custom_target(qa-essential
+            COMMAND ${CMAKE_CTEST_COMMAND}
+                    --test-dir "${CMAKE_BINARY_DIR}"
+                    ${_crexx_qa_ctest_configuration}
+                    --parallel "${CREXX_QA_CTEST_JOBS}"
+                    --output-on-failure
+                    --label-regex "^essential$"
+            DEPENDS qa-prep
+            USES_TERMINAL
+            COMMENT "Running essential QA")
+    add_custom_target(qa-smoke
+            COMMAND ${CMAKE_CTEST_COMMAND}
+                    --test-dir "${CMAKE_BINARY_DIR}"
+                    ${_crexx_qa_ctest_configuration}
+                    --parallel "${CREXX_QA_CTEST_JOBS}"
+                    --output-on-failure
+                    --label-regex "^(essential|smoke)$"
+            DEPENDS qa-prep
+            USES_TERMINAL
+            COMMENT "Running essential and smoke QA")
+    add_custom_target(qa-comprehensive
+            COMMAND ${CMAKE_CTEST_COMMAND}
+                    --test-dir "${CMAKE_BINARY_DIR}"
+                    ${_crexx_qa_ctest_configuration}
+                    --parallel "${CREXX_QA_CTEST_JOBS}"
+                    --output-on-failure
+                    --label-exclude "^(stress|performance-measurement)$"
+            DEPENDS qa-prep
+            USES_TERMINAL
+            COMMENT "Running comprehensive correctness QA without stress or measurement")
+    add_custom_target(qa-qualification
+            COMMAND ${CMAKE_CTEST_COMMAND}
+                    --test-dir "${CMAKE_BINARY_DIR}"
+                    ${_crexx_qa_ctest_configuration}
+                    --parallel "${CREXX_QA_CTEST_JOBS}"
+                    --output-on-failure
+                    --label-regex "^qualification$"
+            DEPENDS qa-prep
+            USES_TERMINAL
+            COMMENT "Running qualification QA")
+    add_custom_target(qa-stress
+            COMMAND ${CMAKE_CTEST_COMMAND}
+                    --test-dir "${CMAKE_BINARY_DIR}"
+                    ${_crexx_qa_ctest_configuration}
+                    --parallel "${CREXX_QA_CTEST_JOBS}"
+                    --output-on-failure
+                    --label-regex "^stress$"
+            DEPENDS qa-prep
+            USES_TERMINAL
+            COMMENT "Running explicit stress QA")
+    add_custom_target(qa-measurement
+            COMMAND ${CMAKE_CTEST_COMMAND}
+                    --test-dir "${CMAKE_BINARY_DIR}"
+                    ${_crexx_qa_ctest_configuration}
+                    --parallel 1
+                    --output-on-failure
+                    --label-regex "^performance-measurement$"
+            DEPENDS qa-prep-measurement
+            USES_TERMINAL
+            COMMENT "Running measurement tests serially; requires a quiescent host")
 endif()
 
 set(SOURCE_SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)

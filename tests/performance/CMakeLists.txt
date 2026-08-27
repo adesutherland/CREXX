@@ -40,7 +40,7 @@ crexx_add_rexx_opt_matrix(
 
 # These benchmarks are smoke-run under CTest so opt/noopt timing stays visible,
 # but they do not assert performance thresholds because those vary by machine.
-add_custom_target(performance_inline ALL)
+add_custom_target(performance_inline)
 
 crexx_add_rexx_opt_matrix(
         NAME inlining_simple
@@ -50,7 +50,7 @@ crexx_add_rexx_opt_matrix(
         TEST_LABELS "performance;inlining"
 )
 
-add_custom_target(performance_reference_iterator ALL)
+add_custom_target(performance_reference_iterator)
 foreach(_crexx_runner IN ITEMS rxvm)
     crexx_add_rexx_opt_matrix(
             NAME reference_iterator_compare_${_crexx_runner}
@@ -286,7 +286,7 @@ add_dependencies(linked_opt_runtime_artifacts
         performance_nr15_stem_access
         performance_nr16_17_stable_state)
 
-add_custom_target(performance_classlib_iterator ALL)
+add_custom_target(performance_classlib_iterator)
 foreach(_crexx_runner IN ITEMS rxvm)
     crexx_add_rexx_opt_matrix(
             NAME stringarraylist_iterator_compare_${_crexx_runner}
@@ -306,7 +306,7 @@ foreach(_crexx_runner IN ITEMS rxvm)
     endforeach()
 endforeach()
 
-add_custom_target(performance_classlib_treemap ALL)
+add_custom_target(performance_classlib_treemap)
 crexx_add_rexx_opt_matrix(
         NAME stringtreemap_insert_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/stringtreemap_insert_compare.crexx
@@ -323,7 +323,7 @@ foreach(_crexx_mode IN ITEMS noopt opt)
     )
 endforeach()
 
-add_custom_target(performance_binary_fastpath ALL)
+add_custom_target(performance_binary_fastpath)
 crexx_add_rexx_opt_matrix(
         NAME binary_fastpath_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_fastpath_compare.crexx
@@ -340,7 +340,7 @@ foreach(_crexx_mode IN ITEMS noopt opt)
     )
 endforeach()
 
-add_custom_target(performance_binary_byvalue ALL)
+add_custom_target(performance_binary_byvalue)
 foreach(_crexx_runner IN ITEMS rxvm)
     crexx_add_rexx_opt_matrix(
             NAME binary_byvalue_compare_${_crexx_runner}
@@ -360,7 +360,7 @@ foreach(_crexx_runner IN ITEMS rxvm)
     endforeach()
 endforeach()
 
-add_custom_target(performance_rxjson_parser ALL)
+add_custom_target(performance_rxjson_parser)
 crexx_add_rexx_opt_matrix(
         NAME rxjson_parser_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxjson_parser_compare.crexx
@@ -377,7 +377,7 @@ foreach(_crexx_mode IN ITEMS noopt opt)
     )
 endforeach()
 
-add_custom_target(performance_rxjson_numeric ALL)
+add_custom_target(performance_rxjson_numeric)
 crexx_add_rexx_opt_matrix(
         NAME rxjson_numeric_materialization_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxjson_numeric_materialization_compare.crexx
@@ -417,7 +417,7 @@ set_tests_properties(
         FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
 )
 
-add_custom_target(performance_postperf04_scalar_access ALL)
+add_custom_target(performance_postperf04_scalar_access)
 crexx_add_rexx_opt_matrix(
         NAME postperf04_scalar_access_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/postperf04_scalar_access_compare.crexx
@@ -469,7 +469,7 @@ set_tests_properties(postperf04_scalar_access_codegen PROPERTIES
         LABELS "performance;scalar-access;postperf04;codegen"
 )
 
-add_custom_target(performance_binary_packed_float ALL)
+add_custom_target(performance_binary_packed_float)
 crexx_add_rexx_opt_matrix(
         NAME binary_packed_float_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_packed_float_compare.crexx
@@ -663,7 +663,7 @@ crexx_add_rexx_opt_matrix(
         REQUIRED_OUTPUT_REGEX "PASS: RXVECTOR-01 exact comparison"
         FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
 
-add_custom_target(performance_tinyexpr_dispatch ALL)
+add_custom_target(performance_tinyexpr_dispatch)
 crexx_add_rexx_opt_matrix(
         NAME tinyexpr_dispatch_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/tinyexpr_dispatch_compare.crexx
@@ -681,7 +681,7 @@ foreach(_crexx_mode IN ITEMS noopt opt)
     )
 endforeach()
 
-add_custom_target(performance_jump_dispatch ALL)
+add_custom_target(performance_jump_dispatch)
 crexx_add_rexx_opt_matrix(
         NAME jump_dispatch_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/jump_dispatch_compare.crexx
@@ -698,7 +698,7 @@ foreach(_crexx_mode IN ITEMS noopt opt)
     )
 endforeach()
 
-add_custom_target(performance_runtime_lookup ALL)
+add_custom_target(performance_runtime_lookup)
 crexx_add_rexx_opt_matrix(
         NAME runtime_interface_lookup_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/runtime_interface_lookup_compare.crexx
@@ -777,3 +777,5 @@ foreach(_crexx_runner IN ITEMS rxvm)
         )
     endforeach()
 endforeach()
+
+crexx_finalize_directory_qa_tiers()

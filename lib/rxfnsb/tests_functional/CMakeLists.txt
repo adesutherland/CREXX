@@ -485,3 +485,5 @@ set_tests_properties(ts_parse_noopt ts_parse_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: legacy parse helpers")
 set_tests_properties(ts_getenv_noopt ts_getenv_opt
         PROPERTIES ENVIRONMENT "CREXX_GETENV_SELECTOR_TEST_VALUE=alpha beta")
+
+crexx_finalize_directory_qa_tiers()

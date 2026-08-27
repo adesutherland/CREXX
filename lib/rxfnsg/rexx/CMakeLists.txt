@@ -122,3 +122,5 @@ add_test(
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 set_tests_properties(rxfnsg_rxdas_inline_preserve_smoke PROPERTIES LABELS "inline;library")
+
+crexx_finalize_directory_qa_tiers()

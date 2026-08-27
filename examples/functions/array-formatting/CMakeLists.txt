@@ -40,7 +40,7 @@ add_custom_command(
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "Building optimized array-formatting example program")
 
-add_custom_target(example_array_formatting_artifacts ALL
+add_custom_target(example_array_formatting_artifacts
         DEPENDS "${CREXX_ARRAY_FORMATTING_MODULE}" "${_array_formatting_program}")
 
 if(BUILD_TESTING)
@@ -57,3 +57,5 @@ endif()
 
 install(FILES "${CREXX_ARRAY_FORMATTING_MODULE}"
         DESTINATION examples/functions/array-formatting)
+
+crexx_finalize_directory_qa_tiers()
