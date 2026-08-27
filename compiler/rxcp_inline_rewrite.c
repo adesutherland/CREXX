@@ -1611,13 +1611,6 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
         return 0;
     }
     method_needs_receiver_copyback = inline_method_writes_class_attribute(proc_def);
-    if (inline_callable_is_method(proc_def) &&
-        inline_symbol_uses_imported_template(proc_sym) &&
-        !inline_is_direct_symbol_actual(inline_call_receiver(call_node))) {
-        inline_debug_fail_closed(context, call_node, proc_sym,
-                                 "imported method assignment inline requires a direct receiver");
-        return 0;
-    }
     if (method_needs_receiver_copyback &&
         inline_callable_is_method(proc_def) &&
         !inline_is_supported_receiver_copyback_target(inline_call_receiver(call_node))) {
@@ -1702,13 +1695,6 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
     }
 
     method_needs_receiver_copyback = inline_method_writes_class_attribute(proc_def);
-    if (inline_callable_is_method(proc_def) &&
-        inline_symbol_uses_imported_template(proc_sym) &&
-        !inline_is_direct_symbol_actual(inline_call_receiver(call_node))) {
-        inline_debug_fail_closed(context, call_node, proc_sym,
-                                 "imported method call inline requires a direct receiver");
-        return 0;
-    }
     if (method_needs_receiver_copyback &&
         inline_callable_is_method(proc_def) &&
         !inline_is_supported_receiver_copyback_target(inline_call_receiver(call_node))) {
@@ -1811,13 +1797,6 @@ int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym
         !inline_is_direct_receiver_copyback_target(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
                                  "mutating method expression inline requires a direct receiver copyback target");
-        return 0;
-    }
-    if (inline_callable_is_method(proc_sym->ast_template) &&
-        inline_symbol_uses_imported_template(proc_sym) &&
-        !inline_is_direct_symbol_actual(inline_call_receiver(call_node))) {
-        inline_debug_fail_closed(context, call_node, proc_sym,
-                                 "imported method expression inline requires a direct receiver");
         return 0;
     }
     if (!return_shape.final_is_return || return_shape.return_count == 0) {

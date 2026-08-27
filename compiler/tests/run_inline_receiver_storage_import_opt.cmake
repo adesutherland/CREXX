@@ -17,7 +17,7 @@ foreach(import_mode IN ITEMS source binary)
     endif()
     file(READ "${cell}/inline_receiver_storage_dep.rxas" dep_rxas)
 
-    foreach(callable IN ITEMS currenttext classat setclass nameat setname tokentextat byteat setbyte)
+    foreach(callable IN ITEMS currenttext classat setclass setclassandreport nameat setname tokentextat byteat setbyte)
         if(NOT dep_rxas MATCHES
            "\\.meta \"inline_receiver_storage_dep\\.store\\.${callable}\"=\"\\.inline\" \"I7;")
             message(FATAL_ERROR
@@ -51,7 +51,7 @@ foreach(import_mode IN ITEMS source binary)
             message(FATAL_ERROR "rxdas failed on receiver-storage dependency: ${out}${err}")
         endif()
         file(READ "${cell}/inline_receiver_storage_dep.roundtrip.rxas" roundtrip)
-        foreach(callable IN ITEMS currenttext classat setclass nameat setname tokentextat byteat setbyte)
+        foreach(callable IN ITEMS currenttext classat setclass setclassandreport nameat setname tokentextat byteat setbyte)
             if(NOT roundtrip MATCHES
                "\\.meta \"inline_receiver_storage_dep\\.store\\.${callable}\"=\"\\.inline\" \"I7;")
                 message(FATAL_ERROR "RXDAS roundtrip lost I7 metadata for ${callable}")
@@ -80,7 +80,7 @@ foreach(import_mode IN ITEMS source binary)
         endif()
         file(READ "${cell}/inline_receiver_storage_main_${opt_mode}.rxas" main_rxas)
 
-        foreach(callable IN ITEMS currenttext classat setclass nameat setname tokentextat byteat setbyte)
+        foreach(callable IN ITEMS currenttext classat setclass setclassandreport nameat setname tokentextat byteat setbyte)
             if(opt_mode STREQUAL "opt" AND main_rxas MATCHES
                "call[0-9]* [^\n]*inline_receiver_storage_dep\\.store\\.${callable}\\(\\)")
                 message(FATAL_ERROR

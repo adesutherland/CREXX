@@ -141,7 +141,6 @@ The discriminator therefore keeps these sites out of the `BLOCK_EXPR` path:
 - receiver-position `MEMBER_CALL` expressions that require a general
   `BLOCK_EXPR` value/copyback proof
 - mutating method expression sites that do not have a direct receiver copyback target
-- imported method expression sites whose receiver is not direct
 
 The current local proof is concrete rather than global: composed inline tests cover arithmetic, unary operators, comparisons, concatenation, type operators, nested call arguments, aggregate/object expression arguments, short-circuit side effects, and class-method sibling liveness. New composed buckets should get the same no-opt/opt runtime comparison before being opened.
 
@@ -388,8 +387,11 @@ Implemented behaviour:
 Remaining guardrail:
 
 - Mutating methods still stay uninlined when copyback would need a
-  receiver-producing expression, class attribute receiver, imported-method
-  non-direct receiver, or a general expression-position `BLOCK_EXPR` proof.
+  receiver-producing expression, class attribute receiver, or a general
+  expression-position `BLOCK_EXPR` proof. Imported methods use the same
+  receiver gate as local methods: read-only receiver expressions are evaluated
+  once, while statement-owned mutating calls accept only direct receivers or
+  variable-like locators with the established capture/copyback proof.
 
 ### Milestone 3: imported procedures and methods
 
@@ -630,9 +632,11 @@ them into the procedure.
 The first reader/writer subset is intentionally narrow:
 
 - exposed, optimized procedures
-- source-imported scalar getter-style methods whose body can be reconstructed
-  from source contract metadata and whose receiver is a direct symbol at the
-  call site
+- source- or binary-imported methods whose body and receiver-storage contract
+  can be reconstructed and revalidated. Imported call sites then use the same
+  receiver rules as local methods: read-only receiver expressions are
+  evaluated once, and statement-owned mutating calls require a direct receiver
+  or a captured variable-like locator
 - local methods and factories, including simple scalar getters and setters
 - RXAS/RXDAS transport and binary consumption of eligible class method
   metadata for the proved scalar, packed-accessor and I7 receiver-storage slices
@@ -837,9 +841,9 @@ The implementation now covers:
 - preserved default-init requirements for duplicated inline locals and inline-created aggregate temporaries
 - explicit cycle blocking so self recursion and mutual recursion do not expand indefinitely
 - receiver copyback for direct-receiver mutating method calls in statement, simple assignment, and supported single-consumer expression rewrites
-- captured-locator receiver copyback for local mutating method calls in simple
-  whole-RHS assignment rewrites, including computed index children that are
-  evaluated once before argument binding
+- captured-locator receiver copyback for local or imported mutating method
+  calls in simple whole-RHS assignment rewrites, including computed index
+  children that are evaluated once before argument binding
 - factory object initialization for inlined class factories
 - conservative emission-time pruning of private local plain procedures once no surviving local call node still targets them
 - source, RXAS, and binary imported plain procedures when the imported module
@@ -875,8 +879,7 @@ The implementation still excludes:
   lowering proves both register liveness and exact OUT_OF_RANGE semantics for
   every vararg tail length
 - mutating methods whose receiver copyback needs an unsupported target shape,
-  such as a class-attribute receiver, imported non-direct receiver, or
-  receiver-producing expression
+  such as a class-attribute receiver or receiver-producing expression
 - receiver-position and expression-position inlining that needs general
   parent-expression liveness, materialisation, and copyback proof beyond the
   statement-owned whole-RHS assignment slice
@@ -1086,9 +1089,9 @@ Reason classes:
 | `W7` | Writer/export codec | Decimal/numeric-control AST nodes such as `DEC_STANDARD`, `DEC_FUZZ`, `DEC_FORM`, `DEC_DIGITS`, `DEC_CASE` are not transported | codec/transport | Low current signal. | Likely low-risk codec work, but only useful for the few numeric-control helpers. | Candidate for a small later slice if numeric BIF coverage matters. Add focused transport tests first. |
 | `W8` | Writer/export codec | Unsupported scope/symbol/node families outside the current whitelist | codec/transport | Low signal beyond the named gates. | Keep whitelist-based. Expanding the codec is cheap only when the downstream imported template can still be validated and emitted. | Add one node family at a time with source/RXAS/RXDAS/binary tests. |
 | `C1` | Caller/call-site | Composed-expression `BLOCK_EXPR` inlining | mixed: complete for proven parent shapes, semantic dependency for the remaining expression parents | Raw diagnostics still show dedicated-statement contexts and a smaller set of direct-consumer gaps. | Opened for the local proven slice: arithmetic, unary operators, comparisons, concatenation, type operators, short-circuit operands, and call-like argument positions. Raw residual counts must be reviewed by parent shape because fixed-point revisits inflate them and some contexts are intentionally handled by separate rewrites. Receiver-position expressions remain separate. | Keep covered through the composed-expression runtime tests; add one no-opt/opt runtime test for each new composed bucket. |
-| `C2` | Caller/call-site | Receiver-position inlining remains closed for general copyback cases | semantic dependency | Covered by existing negative tests; BIF impact appears through `MEMBER_CALL` export rejects | Non-mutating receiver chains and simple whole-RHS assignment copyback through captured variable-like locators are covered locally. Receiver-producing mutating chains still need a parent-expression liveness and materialised receiver/copyback proof. | Leave general receiver-producing copyback closed until receiver reference/move/materialisation semantics are agreed. Do not keep revisiting as a generic inliner gap. |
-| `C3` | Caller/call-site | Mutating method inline requires a supported receiver copyback target | semantic dependency | Still visible in Level G and some Level B raw diagnostics. | Direct non-attribute receivers are supported; simple whole-RHS assignment can also capture indexed/stem-style locator children once and assign the mutated object back through that locator. Other non-direct receivers remain correctly conservative. | Open one receiver shape at a time with explicit capture/materialise/copyback tests. |
-| `C4` | Import/call-site | Source/binary imported scalar and exact packed-accessor methods plus the I7 receiver-storage slice are supported; imported factories and wider member layouts remain closed | mixed: complete for the proved scalar, packed-accessor and I7 shapes, semantic dependency for the rest | Cross-file tests prove source import, RXAS/RXDAS round-trip, binary-only import, optimized/no-opt controls and both concrete VMs. Negative controls retain whole-array replacement and escaping binary calls. | The I7 path resolves direct indexed arrays, exact concrete-object forwarding and bounded child binary operations through the reconstructed class contract, and repeats exact residual-member ownership proof after import. It does not claim general binary return/escape, reference aggregates, dynamic dispatch or factory payload semantics. | Keep the remaining member/factory cases tied to their explicit W2/C2/C3 dependency notes. |
+| `C2` | Caller/call-site | Receiver-position inlining remains closed for general copyback cases | semantic dependency | Covered by existing negative tests; BIF impact appears through `MEMBER_CALL` export rejects | Non-mutating receiver chains and simple whole-RHS assignment copyback through captured variable-like locators are covered for both local and imported methods. Receiver-producing mutating chains still need a parent-expression liveness and materialised receiver/copyback proof. | Leave general receiver-producing copyback closed until receiver reference/move/materialisation semantics are agreed. Do not keep revisiting as a generic inliner gap. |
+| `C3` | Caller/call-site | Mutating method inline requires a supported receiver copyback target | semantic dependency | Still visible in Level G and some Level B raw diagnostics. | Direct non-attribute receivers are supported; simple whole-RHS assignment or statement calls can also capture indexed/stem-style locator children once and assign the mutated object back through that locator. Imported and local templates use the same call-site proof. Other non-direct receivers remain correctly conservative. | Open one receiver shape at a time with explicit capture/materialise/copyback tests. |
+| `C4` | Import/call-site | Source/binary imported scalar and exact packed-accessor methods plus the I7 receiver-storage slice are supported with local/imported receiver parity; imported factories and wider member layouts remain closed | mixed: complete for the proved scalar, packed-accessor and I7 shapes, semantic dependency for the rest | Cross-file tests prove source import, RXAS/RXDAS round-trip, binary-only import, optimized/no-opt controls, read-only factory-produced and indexed receivers, evaluate-once indexed receiver copyback and both concrete VMs. Negative controls retain whole-array replacement and escaping binary calls. | The I7 path resolves direct indexed arrays, exact concrete-object forwarding and bounded child binary operations through the reconstructed class contract, and repeats exact residual-member ownership proof after import. The call site then applies the same receiver gate as a local body. It does not claim general binary return/escape, reference aggregates, dynamic dispatch or factory payload semantics. | Keep the remaining member/factory cases tied to their explicit W2/C2/C3 dependency notes. |
 | `C5` | Caller/call-site | Dynamic vararg indexing is closed for both by-value and `.ref` / `expose` varargs | semantic dependency | Still appears as unsupported vararg access and argument-binding diagnostics in Level B. | Semantically important. Reference varargs need locator arrays or per-index alias capture. By-value dynamic access currently lowers through generated expression blocks and captured arrays; the April 2026 regex regression showed that float comparison parents can alias a generated result register and change `max(1, len)` into an unsafe advance. | Leave closed until dynamic vararg access is lowered without BLOCK_EXPR register-alias risk, or until the expression/register allocator has a proof that parent result registers cannot clobber child values. |
 | `C6` | Safety | Recursive inline cycles are blocked | safety | Still present in raw diagnostics where library helpers call through cycles. | Must remain closed as a safety gate. | Keep. Only consider bounded/manual inline hints much later. |
 | `C7` | Validity/safety | Value-producing callees need valid return shape; arity must match; vararg required indexes must be provided | safety | Covered by existing positive/negative inline tests and current argument-binding diagnostics. | These are language/semantic validity checks, not optimisation opportunities. | Keep. Improve diagnostics only if needed. |

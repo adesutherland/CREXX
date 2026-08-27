@@ -47,6 +47,11 @@ store: class
     classes_[index] = value
     return
 
+  setClassAndReport: method = .int
+    arg index = .int, value = .int
+    classes_[index] = value
+    return classes_[index]
+
   nameAt: method = .string
     arg index = .int
     return names_[index]
