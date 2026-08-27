@@ -11,9 +11,9 @@
 .meta "inline_test_block_expr_live_sibling.holder.right"="b" ".string" .attr 4
 .globals=0
 
-main() .locals=8
+main() .locals=6
    .meta "inline_test_block_expr_live_sibling.main"="b" ".int" main() ""
-   .srcstep 15 15 17 "inline_test_block_expr_live_sibling.crexx" 3 1 23 "main: procedure = .int"
+   .srcstep 17 17 17 "inline_test_block_expr_live_sibling.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
    .srcstep 1 1 17 "inline_test_block_expr_live_sibling.crexx" 4 3 27 "  holder = .Holder(\"seed\")"
    .meta "inline_test_block_expr_live_sibling.main.holder"="b" ".holder" r0
@@ -23,16 +23,16 @@ main() .locals=8
    call1 r0,§inline_test_block_expr_live_sibling.holder.§factory(),r2
    .traceevent "F" 4 "R" "O" "r" 0 1 1 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 0 1 1 0 "holder" ""
-   .srcstep 13 13 17 "inline_test_block_expr_live_sibling.crexx" 5 3 21 "  say holder.summary()"
-   .srcstep 12 12 17 "inline_test_block_expr_live_sibling.crexx" 5 7 13 "  say holder.summary()"
+   .srcstep 15 15 17 "inline_test_block_expr_live_sibling.crexx" 5 3 21 "  say holder.summary()"
+   .srcstep 14 14 17 "inline_test_block_expr_live_sibling.crexx" 5 7 13 "  say holder.summary()"
    .srcstep 2 2 33 "inline_test_block_expr_live_sibling.crexx" 5 7 13 "  say holder.summary()"
    .traceevent "V" 6 "R" "O" "r" 0 2 2 0 "holder" ""
    .traceevent "A" 6 "R" "O" "r" 0 2 2 0 "§this" ""
    .srcstep 3 3 6 "inline_test_block_expr_live_sibling.crexx" 22 3 28 "  summary: method = .string"
-   .traceevent "V" 6 "R" "O" "r" 0 13 13 0 "§this" ""
+   .traceevent "V" 6 "R" "O" "r" 0 15 15 0 "§this" ""
    assertinitialized r0
-   .srcstep 11 11 17 "inline_test_block_expr_live_sibling.crexx" 23 5 73 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
-   .srcstep 10 10 17 "inline_test_block_expr_live_sibling.crexx" 23 12 16 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
+   .srcstep 13 13 17 "inline_test_block_expr_live_sibling.crexx" 23 5 73 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
+   .srcstep 12 12 17 "inline_test_block_expr_live_sibling.crexx" 23 12 16 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
    .srcstep 4 4 33 "inline_test_block_expr_live_sibling.crexx" 23 32 34 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
    linkattr1 r2,r0,3
    .traceevent "V" 6 "R" "S" "r" 2 4 4 0 "name" ""
@@ -47,178 +47,184 @@ main() .locals=8
    concat r3,r1,"|"
    .traceevent "O" 4 "R" "S" "r" 3 4 4 0 "" ""
    .traceevent "A" 6 "R" "S" "r" 3 4 4 0 "__inline_lhs_158_157" ""
-   .srcstep 9 9 33 "inline_test_block_expr_live_sibling.crexx" 23 39 41 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
-   .traceevent "V" 6 "R" "S" "r" 3 13 13 0 "__inline_lhs_158_157" ""
-   .srcstep 8 8 17 "inline_test_block_expr_live_sibling.crexx" 23 42 47 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
-   .srcstep 5 5 33 "inline_test_block_expr_live_sibling.crexx" 23 42 47 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
+   .srcstep 11 11 33 "inline_test_block_expr_live_sibling.crexx" 23 39 41 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
+   .traceevent "V" 6 "R" "S" "r" 3 15 15 0 "__inline_lhs_158_157" ""
+   .srcstep 10 10 17 "inline_test_block_expr_live_sibling.crexx" 23 42 47 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
+   .srcstep 5 5 6 "inline_test_block_expr_live_sibling.crexx" 23 42 47 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
+   .traceevent "V" 6 "R" "O" "r" 0 15 15 0 "§this" ""
    linkattr1 r4,r0,1
-   .traceevent "V" 6 "R" "O" "r" 4 5 5 0 "child" ""
-   copy r5,r4
-   .traceevent "A" 6 "R" "O" "r" 5 5 5 0 "§this" ""
-   unlink r4
    .srcstep 6 6 6 "inline_test_block_expr_live_sibling.crexx" 33 3 28 "  getName: method = .string"
-   .traceevent "V" 6 "R" "O" "r" 5 13 13 0 "§this" ""
-   assertinitialized r5
-   .srcstep 7 7 17 "inline_test_block_expr_live_sibling.crexx" 34 5 16 "    return name"
-   linkattr1 r4,r5,1
-   .traceevent "V" 6 "R" "S" "r" 4 13 13 0 "name" ""
-   scopy r2,r4
+   .traceevent "V" 6 "R" "O" "r" 4 15 15 0 "§this" ""
+   assertinitialized r4
+   .srcstep 7 7 33 "inline_test_block_expr_live_sibling.crexx" 34 12 16 "    return name"
+   linkattr1 r2,r4,1
+   .traceevent "V" 6 "R" "S" "r" 2 7 7 0 "name" ""
+   scopy r5,r2
+   .traceevent "A" 6 "R" "S" "r" 5 7 7 0 "__inline_leave_332_331" ""
+   unlink r2
+   .srcstep 8 8 6 "inline_test_block_expr_live_sibling.crexx" 34 5 16 "    return name"
    unlink r4
-l316bexprend:
-   concat r2,r3,r2
-   .traceevent "O" 4 "R" "S" "r" 2 13 13 0 "" ""
-   scopy r1,r2
+   .srcstep 9 9 17 "inline_test_block_expr_live_sibling.crexx" 34 5 16 "    return name"
+   .traceevent "V" 6 "R" "S" "r" 5 15 15 0 "__inline_leave_332_331" ""
+   br l323bexprend
+l323bexprend:
+   concat r5,r3,r5
+   .traceevent "O" 4 "R" "S" "r" 5 15 15 0 "" ""
+   scopy r4,r5
 l247bexprend:
-   concat r1,r1,"|"
-   .traceevent "O" 4 "R" "S" "r" 1 13 13 0 "" ""
-   linkattr1 r6,r0,4
-   .traceevent "V" 6 "R" "S" "r" 6 13 13 0 "right" ""
-   concat r1,r1,r6
-   unlink r6
-   .traceevent "O" 4 "R" "S" "r" 1 13 13 0 "" ""
-   scopy r7,r1
+   concat r4,r4,"|"
+   .traceevent "O" 4 "R" "S" "r" 4 15 15 0 "" ""
+   linkattr1 r2,r0,4
+   .traceevent "V" 6 "R" "S" "r" 2 15 15 0 "right" ""
+   concat r4,r4,r2
+   unlink r2
+   .traceevent "O" 4 "R" "S" "r" 4 15 15 0 "" ""
+   scopy r1,r4
 l147bexprend:
-   say r7
-   .srcstep 14 14 17 "inline_test_block_expr_live_sibling.crexx" 6 3 11 "  return 0"
+   say r1
+   .srcstep 16 16 17 "inline_test_block_expr_live_sibling.crexx" 6 3 11 "  return 0"
    ret 0
    .meta "inline_test_block_expr_live_sibling.main.holder"
 
 §inline_test_block_expr_live_sibling.holder.§factory() .locals=6
    .meta "inline_test_block_expr_live_sibling.holder.§factory"="b" ".inline_test_block_expr_live_sibling..holder" §inline_test_block_expr_live_sibling.holder.§factory() "label=.string"
-   .srcstep 27 27 17 "inline_test_block_expr_live_sibling.crexx" 14 3 13 "  *: factory"
+   .srcstep 29 29 17 "inline_test_block_expr_live_sibling.crexx" 14 3 13 "  *: factory"
    setattrs r1,5
    setobjtype r1,"inline_test_block_expr_live_sibling.holder"
    numsci 18,1,1
-   .srcstep 16 16 17 "inline_test_block_expr_live_sibling.crexx" 15 9 24 "    arg label = .string"
+   .srcstep 18 18 17 "inline_test_block_expr_live_sibling.crexx" 15 9 24 "    arg label = .string"
    .meta "inline_test_block_expr_live_sibling.holder.§factory.label"="b" ".string" a1
    .meta "inline_test_block_expr_live_sibling.holder.§factory.§factory"="b" ".holder" r1
-   .srcstep 17 17 17 "inline_test_block_expr_live_sibling.crexx" 16 5 17 "    name = label"
-   .traceevent "V" 6 "R" "S" "a" 1 17 17 0 "label" ""
+   .srcstep 19 19 17 "inline_test_block_expr_live_sibling.crexx" 16 5 17 "    name = label"
+   .traceevent "V" 6 "R" "S" "a" 1 19 19 0 "label" ""
    linkattr1 r2,r1,3
    scopy r2,a1
    unlink r2
-   .srcstep 18 18 17 "inline_test_block_expr_live_sibling.crexx" 17 5 28 "    left = label || \":left\""
-   .traceevent "V" 6 "R" "S" "a" 1 18 18 0 "label" ""
+   .srcstep 20 20 17 "inline_test_block_expr_live_sibling.crexx" 17 5 28 "    left = label || \":left\""
+   .traceevent "V" 6 "R" "S" "a" 1 20 20 0 "label" ""
    concat r3,a1,":left"
-   .traceevent "O" 4 "R" "S" "r" 3 18 18 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 3 20 20 0 "" ""
    linkattr1 r2,r1,2
    scopy r2,r3
    unlink r2
-   .srcstep 19 19 17 "inline_test_block_expr_live_sibling.crexx" 18 5 30 "    right = label || \":right\""
-   .traceevent "V" 6 "R" "S" "a" 1 19 19 0 "label" ""
+   .srcstep 21 21 17 "inline_test_block_expr_live_sibling.crexx" 18 5 30 "    right = label || \":right\""
+   .traceevent "V" 6 "R" "S" "a" 1 21 21 0 "label" ""
    concat r2,a1,":right"
-   .traceevent "O" 4 "R" "S" "r" 2 19 19 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 2 21 21 0 "" ""
    linkattr1 r3,r1,4
    scopy r3,r2
    unlink r3
-   .srcstep 25 25 17 "inline_test_block_expr_live_sibling.crexx" 19 5 38 "    child = .Child(label || \":child\")"
-   .srcstep 20 20 6 "inline_test_block_expr_live_sibling.crexx" 28 3 13 "  *: factory"
+   .srcstep 27 27 17 "inline_test_block_expr_live_sibling.crexx" 19 5 38 "    child = .Child(label || \":child\")"
+   .srcstep 22 22 6 "inline_test_block_expr_live_sibling.crexx" 28 3 13 "  *: factory"
    setattrs r5,2
-   .srcstep 21 21 6 "inline_test_block_expr_live_sibling.crexx" 28 3 13 "  *: factory"
+   .srcstep 23 23 6 "inline_test_block_expr_live_sibling.crexx" 28 3 13 "  *: factory"
    setobjtype r5,"inline_test_block_expr_live_sibling.child"
-   .srcstep 22 22 33 "inline_test_block_expr_live_sibling.crexx" 29 9 14 "    arg label = .string"
-   .traceevent "V" 6 "R" "S" "a" 1 22 22 0 "label" ""
+   .srcstep 24 24 33 "inline_test_block_expr_live_sibling.crexx" 29 9 14 "    arg label = .string"
+   .traceevent "V" 6 "R" "S" "a" 1 24 24 0 "label" ""
    concat r4,a1,":child"
-   .traceevent "O" 4 "R" "S" "r" 4 22 22 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 4 22 22 0 "label" ""
-   .srcstep 23 23 17 "inline_test_block_expr_live_sibling.crexx" 30 5 17 "    name = label"
-   .traceevent "V" 6 "R" "S" "r" 4 23 23 0 "label" ""
+   .traceevent "O" 4 "R" "S" "r" 4 24 24 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 24 24 0 "label" ""
+   .srcstep 25 25 17 "inline_test_block_expr_live_sibling.crexx" 30 5 17 "    name = label"
+   .traceevent "V" 6 "R" "S" "r" 4 25 25 0 "label" ""
    linkattr1 r3,r5,1
    scopy r3,r4
    unlink r3
-   .srcstep 24 24 33 "inline_test_block_expr_live_sibling.crexx" 31 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 5 24 24 0 "§factory" ""
+   .srcstep 26 26 33 "inline_test_block_expr_live_sibling.crexx" 31 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 5 26 26 0 "§factory" ""
    linkattr1 r3,r1,1
    copy r3,r5
    unlink r3
-   .srcstep 26 26 17 "inline_test_block_expr_live_sibling.crexx" 20 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 1 26 26 0 "§factory" ""
+   .srcstep 28 28 17 "inline_test_block_expr_live_sibling.crexx" 20 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 28 28 0 "§factory" ""
    ret r1
    .meta "inline_test_block_expr_live_sibling.holder.§factory.label"
    .meta "inline_test_block_expr_live_sibling.holder.§factory.§factory"
 
-§inline_test_block_expr_live_sibling.holder.summary() .locals=7
+§inline_test_block_expr_live_sibling.holder.summary() .locals=6
    .meta "inline_test_block_expr_live_sibling.holder.summary"="b" ".string" §inline_test_block_expr_live_sibling.holder.summary() ""
-   .srcstep 36 36 17 "inline_test_block_expr_live_sibling.crexx" 22 3 28 "  summary: method = .string"
+   .srcstep 40 40 17 "inline_test_block_expr_live_sibling.crexx" 22 3 28 "  summary: method = .string"
    assertinitialized a1
    numsci 18,1,1
-   .srcstep 35 35 17 "inline_test_block_expr_live_sibling.crexx" 23 5 73 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
+   .srcstep 39 39 17 "inline_test_block_expr_live_sibling.crexx" 23 5 73 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
    .meta "inline_test_block_expr_live_sibling.holder.summary.§this"="b" ".holder" a1
-   .srcstep 34 34 17 "inline_test_block_expr_live_sibling.crexx" 23 12 16 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
-   .srcstep 28 28 33 "inline_test_block_expr_live_sibling.crexx" 23 32 34 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
+   .srcstep 38 38 17 "inline_test_block_expr_live_sibling.crexx" 23 12 16 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
+   .srcstep 30 30 33 "inline_test_block_expr_live_sibling.crexx" 23 32 34 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
    linkattr1 r2,a1,3
-   .traceevent "V" 6 "R" "S" "r" 2 28 28 0 "name" ""
+   .traceevent "V" 6 "R" "S" "r" 2 30 30 0 "name" ""
    concat r3,r2,"|"
    unlink r2
-   .traceevent "O" 4 "R" "S" "r" 3 28 28 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 3 30 30 0 "" ""
    linkattr1 r4,a1,2
-   .traceevent "V" 6 "R" "S" "r" 4 28 28 0 "left" ""
+   .traceevent "V" 6 "R" "S" "r" 4 30 30 0 "left" ""
    concat r3,r3,r4
    unlink r4
-   .traceevent "O" 4 "R" "S" "r" 3 28 28 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 3 30 30 0 "" ""
    concat r1,r3,"|"
-   .traceevent "O" 4 "R" "S" "r" 1 28 28 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 1 28 28 0 "__inline_lhs_64_69" ""
-   .srcstep 33 33 33 "inline_test_block_expr_live_sibling.crexx" 23 39 41 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
-   .traceevent "V" 6 "R" "S" "r" 1 35 35 0 "__inline_lhs_64_69" ""
-   .srcstep 32 32 17 "inline_test_block_expr_live_sibling.crexx" 23 42 47 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
-   .srcstep 29 29 33 "inline_test_block_expr_live_sibling.crexx" 23 42 47 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
+   .traceevent "O" 4 "R" "S" "r" 1 30 30 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 1 30 30 0 "__inline_lhs_64_69" ""
+   .srcstep 37 37 33 "inline_test_block_expr_live_sibling.crexx" 23 39 41 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
+   .traceevent "V" 6 "R" "S" "r" 1 39 39 0 "__inline_lhs_64_69" ""
+   .srcstep 36 36 17 "inline_test_block_expr_live_sibling.crexx" 23 42 47 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
+   .srcstep 31 31 6 "inline_test_block_expr_live_sibling.crexx" 23 42 47 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
+   .traceevent "V" 6 "R" "O" "a" 1 39 39 0 "§this" ""
    linkattr1 r4,a1,1
-   .traceevent "V" 6 "R" "O" "r" 4 29 29 0 "child" ""
-   copy r5,r4
-   .traceevent "A" 6 "R" "O" "r" 5 29 29 0 "§this" ""
+   .srcstep 32 32 6 "inline_test_block_expr_live_sibling.crexx" 33 3 28 "  getName: method = .string"
+   .traceevent "V" 6 "R" "O" "r" 4 39 39 0 "§this" ""
+   assertinitialized r4
+   .srcstep 33 33 33 "inline_test_block_expr_live_sibling.crexx" 34 12 16 "    return name"
+   linkattr1 r3,r4,1
+   .traceevent "V" 6 "R" "S" "r" 3 33 33 0 "name" ""
+   scopy r5,r3
+   .traceevent "A" 6 "R" "S" "r" 5 33 33 0 "__inline_leave_272_271" ""
+   unlink r3
+   .srcstep 34 34 6 "inline_test_block_expr_live_sibling.crexx" 34 5 16 "    return name"
    unlink r4
-   .srcstep 30 30 6 "inline_test_block_expr_live_sibling.crexx" 33 3 28 "  getName: method = .string"
-   .traceevent "V" 6 "R" "O" "r" 5 35 35 0 "§this" ""
-   assertinitialized r5
-   .srcstep 31 31 17 "inline_test_block_expr_live_sibling.crexx" 34 5 16 "    return name"
-   linkattr1 r4,r5,1
-   .traceevent "V" 6 "R" "S" "r" 4 35 35 0 "name" ""
-   scopy r3,r4
-   unlink r4
+   .srcstep 35 35 17 "inline_test_block_expr_live_sibling.crexx" 34 5 16 "    return name"
+   .traceevent "V" 6 "R" "S" "r" 5 39 39 0 "__inline_leave_272_271" ""
+   br l263bexprend
 l263bexprend:
-   concat r3,r1,r3
-   .traceevent "O" 4 "R" "S" "r" 3 35 35 0 "" ""
-   scopy r2,r3
+   concat r5,r1,r5
+   .traceevent "O" 4 "R" "S" "r" 5 39 39 0 "" ""
+   scopy r4,r5
 l187bexprend:
-   concat r2,r2,"|"
-   .traceevent "O" 4 "R" "S" "r" 2 35 35 0 "" ""
-   linkattr1 r6,a1,4
-   .traceevent "V" 6 "R" "S" "r" 6 35 35 0 "right" ""
-   concat r2,r2,r6
-   unlink r6
-   .traceevent "O" 4 "R" "S" "r" 2 35 35 0 "" ""
-   ret r2
+   concat r4,r4,"|"
+   .traceevent "O" 4 "R" "S" "r" 4 39 39 0 "" ""
+   linkattr1 r3,a1,4
+   .traceevent "V" 6 "R" "S" "r" 3 39 39 0 "right" ""
+   concat r4,r4,r3
+   unlink r3
+   .traceevent "O" 4 "R" "S" "r" 4 39 39 0 "" ""
+   ret r4
    .meta "inline_test_block_expr_live_sibling.holder.summary.§this"
 
 §inline_test_block_expr_live_sibling.child.§factory() .locals=3
    .meta "inline_test_block_expr_live_sibling.child.§factory"="b" ".inline_test_block_expr_live_sibling..child" §inline_test_block_expr_live_sibling.child.§factory() "label=.string"
-   .srcstep 40 40 17 "inline_test_block_expr_live_sibling.crexx" 28 3 13 "  *: factory"
+   .srcstep 44 44 17 "inline_test_block_expr_live_sibling.crexx" 28 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_block_expr_live_sibling.child"
    numsci 18,1,1
-   .srcstep 37 37 17 "inline_test_block_expr_live_sibling.crexx" 29 9 24 "    arg label = .string"
+   .srcstep 41 41 17 "inline_test_block_expr_live_sibling.crexx" 29 9 24 "    arg label = .string"
    .meta "inline_test_block_expr_live_sibling.child.§factory.label"="b" ".string" a1
    .meta "inline_test_block_expr_live_sibling.child.§factory.§factory"="b" ".child" r1
-   .srcstep 38 38 17 "inline_test_block_expr_live_sibling.crexx" 30 5 17 "    name = label"
-   .traceevent "V" 6 "R" "S" "a" 1 38 38 0 "label" ""
+   .srcstep 42 42 17 "inline_test_block_expr_live_sibling.crexx" 30 5 17 "    name = label"
+   .traceevent "V" 6 "R" "S" "a" 1 42 42 0 "label" ""
    linkattr1 r2,r1,1
    scopy r2,a1
    unlink r2
-   .srcstep 39 39 17 "inline_test_block_expr_live_sibling.crexx" 31 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 1 39 39 0 "§factory" ""
+   .srcstep 43 43 17 "inline_test_block_expr_live_sibling.crexx" 31 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 43 43 0 "§factory" ""
    ret r1
    .meta "inline_test_block_expr_live_sibling.child.§factory.label"
    .meta "inline_test_block_expr_live_sibling.child.§factory.§factory"
 
 §inline_test_block_expr_live_sibling.child.getname() .locals=2
    .meta "inline_test_block_expr_live_sibling.child.getname"="b" ".string" §inline_test_block_expr_live_sibling.child.getname() ""
-   .srcstep 42 42 17 "inline_test_block_expr_live_sibling.crexx" 33 3 28 "  getName: method = .string"
+   .srcstep 46 46 17 "inline_test_block_expr_live_sibling.crexx" 33 3 28 "  getName: method = .string"
    assertinitialized a1
    numsci 18,1,1
-   .srcstep 41 41 17 "inline_test_block_expr_live_sibling.crexx" 34 5 16 "    return name"
+   .srcstep 45 45 17 "inline_test_block_expr_live_sibling.crexx" 34 5 16 "    return name"
    .meta "inline_test_block_expr_live_sibling.child.getname.§this"="b" ".child" a1
    linkattr1 r1,a1,1
-   .traceevent "V" 6 "R" "S" "r" 1 41 41 0 "name" ""
+   .traceevent "V" 6 "R" "S" "r" 1 45 45 0 "name" ""
    ret r1
    .meta "inline_test_block_expr_live_sibling.child.getname.§this"

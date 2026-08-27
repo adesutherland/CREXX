@@ -28,14 +28,84 @@ ASan/LSan at `cmake-build-debugasan/asan-logs/20260823-100525-ctest`; the full
 ordinary Debug gate then passes 2,363/2,363 at
 `cmake-build-debug/asan-logs/20260823-100548-full`.
 
-Status later on 2026-08-26: SAN-006 is a final-head closure candidate. The
-bounded repair and all required local macOS gates pass. It remains open and
-release-blocking while GitHub runs, and becomes closed only if GitHub Sanitizer
-QA and Build CREXX both pass for the exact commit containing this record. A
-failure in either workflow leaves SAN-006 open; do not claim the current hotfix
-or Release 1 line is sanitizer-clean before the condition is satisfied.
+Status at 2026-08-27: SAN-006 and SAN-007 are final-head closure candidates.
+Their bounded repairs and required local macOS gates pass. They remain open and
+release-blocking while GitHub runs, and become closed only if GitHub Sanitizer
+QA and Build CREXX both pass for the exact published code revision. A failure
+in either workflow leaves the affected item open; do not claim the current
+hotfix or Release 1 line is sanitizer-clean before that condition is satisfied.
 
 ## Open findings
+
+### SAN-007 — imported inline-payload AST freed during recursive function replacement
+
+Status: closure candidate and release-blocking pending exact-SHA hosted proof.
+The ownership repair and permanent regression pass normal Debug and the full
+maintained Apple-ASan gate. No suppression, exclusion or waiver is authorized;
+closure still requires GitHub Sanitizer QA's supported Linux ASan/LSan and
+macOS ASan lanes on the exact published code revision.
+
+- Scope: compiler imported-function replacement and inline-payload attachment
+  during recursive source-import validation.
+- Failure: `symbol_has_initializer_definition()` reads a freed imported inline
+  metadata AST node at `rxcp_val_sym.c:123`. `add_func()` frees the former
+  imported function context through `freimpfc()` while the active validation
+  tree still retains an initializer node allocated by
+  `inline_meta_import_node()` and attached by
+  `rxcp_inline_attach_imported_symbol()`.
+- Original trigger: `tools/asan-run.sh --phase full --test-jobs 8
+  --build-leaks off --leaks off --no-live-tail --tail-lines 50` on macOS arm64.
+  The instrumented build fails while generating
+  `lib/rxfnsg/rexx/httpcore.rxbin` from `httpcore.crexx`.
+- Focused reproducer: `tools/asan-run.sh --phase build --build-leaks off
+  --build-target lib/rxfnsg/rexx/httpcore.rxbin --build-jobs 1`. The
+  corresponding normal-Debug file target is the required non-sanitized
+  control. The focused runner reproduces the same allocation, free and invalid
+  read stacks deterministically at
+  `cmake-build-debugasan/asan-logs/20260827-155705-build/build.log`.
+- Affected revision: the repair is committed at
+  `759411507bea289dfe448926357ed84a5f8c91e1` and included in published code
+  revision `c0ac864d59428a807102a7b266933967f3b2e294`.
+- Retained log:
+  `cmake-build-debugasan/asan-logs/20260827-154123-full/build.log`.
+- Permanent regression: `san007_imported_inline_payload_lifetime` compiles the
+  maintained `httpcore.crexx` import chain in an isolated work directory. Its
+  pre-repair Apple-ASan failure is retained at
+  `cmake-build-debugasan/asan-logs/20260827-160157-ctest/ctest.log`.
+- Repair: context teardown now disconnects every AST-to-symbol connector while
+  both sides are live, and symbol teardown clears any surviving AST
+  back-pointer before freeing its connector. This repairs both destruction
+  orders without retaining a dead imported context or guarding the later
+  initializer query. The deterministic `httpcore` target passed through
+  `tools/asan-run.sh` at
+  `cmake-build-debugasan/asan-logs/20260827-160329-build/build.log`; SAN-006 and
+  SAN-007 then passed together at
+  `cmake-build-debugasan/asan-logs/20260827-161107-ctest/ctest.log`.
+- Broad Apple-ASan evidence: `tools/asan-run.sh --phase full --test-jobs 8
+  --build-leaks off --leaks off --no-live-tail --tail-lines 50` passed the
+  complete instrumented build and 2,398 of 2,398 CTests in 1,028.38 seconds.
+  Logs are retained under
+  `cmake-build-debugasan/asan-logs/20260827-161118-full/`. Apple leak detection
+  is unsupported and was disabled as required; this is address-safety evidence,
+  not Linux LSan closure.
+- Normal-product evidence: the full Debug suite passed 2,397/2,397 before the
+  teardown-only repair; SAN-006 and the new SAN-007 regression then passed 2/2
+  in normal Debug after the repair. The earlier ordinary profiling-off Release,
+  focused Release, both-VM, install and package gates remain applicable because
+  the repair changes compiler teardown ownership, not emitted RXAS, RXBIN,
+  parser or package surfaces. The complete post-repair Apple-ASan build and
+  2,398/2,398 CTest run supplies broad final-tree execution. No local gate was
+  repeated after the source-identical develop merge.
+- Owner/next action: hotfix QA. Require exact-SHA hosted Build CREXX and
+  Sanitizer QA for published code revision
+  `c0ac864d59428a807102a7b266933967f3b2e294` before closing this item.
+- Closure checks: the permanent focused regression must pass in normal Debug
+  and Apple ASan; the focused `httpcore` target must pass through the runner;
+  cumulative normal-product evidence and the full local Apple-ASan build/CTest
+  must cover the final code tree; and the exact published code SHA must pass
+  GitHub Sanitizer QA's Linux x64 ASan/LSan and macOS arm64 ASan lanes plus
+  Build CREXX. Apple leak detection remains unsupported and supplies no Linux
+  LSan closure authority.
 
 ### SAN-006 — superseded imported class context freed during recursive validation
 
@@ -115,7 +185,8 @@ marks SAN-006 closed without weakening any sanitizer closure requirement.
 - GitHub Build CREXX supplies the final-head MinSizeRel build, CTest and package
   coverage across Linux, macOS and Windows. GitHub Sanitizer QA supplies the
   final-head Linux x64 ASan/LSan and macOS arm64 ASan gates.
-- SAN-006 is the only currently registered open sanitizer finding.
+- SAN-006 and SAN-007 are the currently registered closure candidates pending
+  exact-SHA hosted proof.
 
 ## Qualification infrastructure repairs
 

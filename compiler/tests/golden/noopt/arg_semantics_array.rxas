@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=5
+main() .locals=4
    .meta "arg_semantics_array.main"="b" ".int" main() ""
    .srcstep 11 11 17 "arg_semantics_array.crexx" 4 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -76,10 +76,10 @@ main() .locals=5
    .traceevent "O" 4 "R" "S" "r" 2 9 9 0 "" ""
    concat r2,r2,":"
    .traceevent "O" 4 "R" "S" "r" 2 9 9 0 "" ""
-   minlinkattr1 r4,r0,2
-   .traceevent "V" 6 "R" "S" "r" 4 9 9 0 "arr" ""
-   concat r2,r2,r4
-   unlink r4
+   minlinkattr1 r1,r0,2
+   .traceevent "V" 6 "R" "S" "r" 1 9 9 0 "arr" ""
+   concat r2,r2,r1
+   unlink r1
    .traceevent "O" 4 "R" "S" "r" 2 9 9 0 "" ""
    say r2
    .srcstep 10 10 17 "arg_semantics_array.crexx" 15 3 11 "  return 0"

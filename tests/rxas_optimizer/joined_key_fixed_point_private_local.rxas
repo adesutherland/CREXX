@@ -1,0 +1,26 @@
+* H01 fixed-point regression: once a key seed has been moved out of a reused
+* compiler temporary, a later epoch must reuse that private local in place.
+* Allocating a second private local can split established key consumers across
+* the old and new storage when intervening operations have signal edges.
+
+joined_key_fixed_point_private_local() .locals=8
+    load r1,0
+    load r2,"value"
+    load r7,0
+joined_key_fixed_point_loop:
+    brt joined_key_fixed_point_done,r7
+    iadd r1,r1,1
+    itos r1
+    concat r5,"Key.",r1
+    .traceevent "C" 4 "R" "S" "r" 5 1 1 0 "seed-key" ""
+    stemset r0,r5,r2
+    load r5,"temporary-reused"
+    concat r3,"Key.",r1
+    .traceevent "C" 4 "R" "S" "r" 3 2 2 0 "candidate-a" ""
+    stemget r4,r0,r3
+    concat r5,"Key.",r1
+    .traceevent "C" 4 "R" "S" "r" 5 3 3 0 "candidate-b" ""
+    stemget r6,r0,r5
+    br joined_key_fixed_point_loop
+joined_key_fixed_point_done:
+    ret r6

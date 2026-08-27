@@ -1,0 +1,18 @@
+options levelb
+import inline_storage_perf_dep
+
+main: procedure = .int
+  arg args = .string[]
+  iterations = 1000000
+  if args[0] >= 1 then iterations = args[1]
+
+  values = .inline_storage_perf_dep..store()
+  checksum = 0
+  do i = 1 to iterations
+    checksum = checksum + values.currentValue()
+    checksum = checksum + values.classAt(1)
+    checksum = checksum + values.byteAt(0)
+  end
+
+  say "PASS: inline storage" checksum
+  return 0

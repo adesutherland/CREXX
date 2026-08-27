@@ -18,7 +18,7 @@
 .meta "object_reference_regression.smallpayload.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=7
+main() .locals=6
    .meta "object_reference_regression.main"="b" ".int" main() ""
    .srcstep 12 12 17 "object_reference_regression.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -56,49 +56,49 @@ main() .locals=7
    .srcstep 5 5 17 "object_reference_regression.crexx" 10 3 39 "  say \"ref-rebind=\" || payload.summary()"
    .traceevent "V" 6 "R" "O" "r" 1 5 5 0 "payload" ""
    settp r1,256
-   call1 r2,§object_reference_regression.largepayload.summary(),r1
-   .traceevent "F" 4 "R" "S" "r" 2 5 5 0 "summary" ""
-   concat r4,"ref-rebind=",r2
-   .traceevent "O" 4 "R" "S" "r" 4 5 5 0 "" ""
-   say r4
+   call1 r3,§object_reference_regression.largepayload.summary(),r1
+   .traceevent "F" 4 "R" "S" "r" 3 5 5 0 "summary" ""
+   concat r5,"ref-rebind=",r3
+   .traceevent "O" 4 "R" "S" "r" 5 5 5 0 "" ""
+   say r5
    .srcstep 6 6 17 "object_reference_regression.crexx" 12 3 44 "  call mutatePayloadRef(payload, \"mutated\")"
    .traceevent "V" 6 "R" "O" "r" 1 6 6 0 "payload" ""
-   load r4,"mutated"
-   .traceevent "L" 4 "R" "S" "r" 4 6 6 0 "" ""
-   settp r4,768
-   call2 r6,mutatePayloadRef(),r1,r4
-   .traceevent "F" 4 "R" "V" "r" 6 6 6 0 "mutatepayloadref" ""
+   load r5,"mutated"
+   .traceevent "L" 4 "R" "S" "r" 5 6 6 0 "" ""
+   settp r5,768
+   call2 r2,mutatePayloadRef(),r1,r5
+   .traceevent "F" 4 "R" "V" "r" 2 6 6 0 "mutatepayloadref" ""
    .srcstep 7 7 17 "object_reference_regression.crexx" 13 3 39 "  say \"ref-mutate=\" || payload.summary()"
    .traceevent "V" 6 "R" "O" "r" 1 7 7 0 "payload" ""
    settp r1,256
-   call1 r2,§object_reference_regression.largepayload.summary(),r1
-   .traceevent "F" 4 "R" "S" "r" 2 7 7 0 "summary" ""
-   concat r4,"ref-mutate=",r2
-   .traceevent "O" 4 "R" "S" "r" 4 7 7 0 "" ""
-   say r4
+   call1 r3,§object_reference_regression.largepayload.summary(),r1
+   .traceevent "F" 4 "R" "S" "r" 3 7 7 0 "summary" ""
+   concat r5,"ref-mutate=",r3
+   .traceevent "O" 4 "R" "S" "r" 5 7 7 0 "" ""
+   say r5
    .srcstep 8 8 17 "object_reference_regression.crexx" 15 3 56 "  local_summary = replacePayloadLocal(payload, \"local\")"
    .meta "object_reference_regression.main.local_summary"="b" ".string" r0
    .traceevent "V" 6 "R" "O" "r" 1 8 8 0 "payload" ""
-   load r4,"local"
-   .traceevent "L" 4 "R" "S" "r" 4 8 8 0 "" ""
+   load r5,"local"
+   .traceevent "L" 4 "R" "S" "r" 5 8 8 0 "" ""
    settp r1,256
-   settp r4,768
-   call2 r0,replacePayloadLocal(),r1,r4
+   settp r5,768
+   call2 r0,replacePayloadLocal(),r1,r5
    .traceevent "F" 4 "R" "S" "r" 0 8 8 0 "replacepayloadlocal" ""
    .traceevent "A" 6 "R" "S" "r" 0 8 8 0 "local_summary" ""
    .srcstep 9 9 17 "object_reference_regression.crexx" 16 3 40 "  say \"local-replace=\" || local_summary"
    .traceevent "V" 6 "R" "S" "r" 0 9 9 0 "local_summary" ""
-   concat r4,"local-replace=",r0
-   .traceevent "O" 4 "R" "S" "r" 4 9 9 0 "" ""
-   say r4
+   concat r5,"local-replace=",r0
+   .traceevent "O" 4 "R" "S" "r" 5 9 9 0 "" ""
+   say r5
    .srcstep 10 10 17 "object_reference_regression.crexx" 17 3 40 "  say \"local-after=\" || payload.summary()"
    .traceevent "V" 6 "R" "O" "r" 1 10 10 0 "payload" ""
    settp r1,256
-   call1 r2,§object_reference_regression.largepayload.summary(),r1
-   .traceevent "F" 4 "R" "S" "r" 2 10 10 0 "summary" ""
-   concat r4,"local-after=",r2
-   .traceevent "O" 4 "R" "S" "r" 4 10 10 0 "" ""
-   say r4
+   call1 r3,§object_reference_regression.largepayload.summary(),r1
+   .traceevent "F" 4 "R" "S" "r" 3 10 10 0 "summary" ""
+   concat r5,"local-after=",r3
+   .traceevent "O" 4 "R" "S" "r" 5 10 10 0 "" ""
+   say r5
    .srcstep 11 11 17 "object_reference_regression.crexx" 19 3 11 "  return 0"
    ret 0
    .meta "object_reference_regression.main.local_summary"
@@ -407,18 +407,18 @@ l191doend:
    .traceevent "F" 4 "R" "V" "r" 7 66 66 0 "setname" ""
    .srcstep 67 67 17 "object_reference_regression.crexx" 92 5 29 "    marker8 = label || \":m8\""
    .traceevent "V" 6 "R" "S" "a" 2 67 67 0 "label" ""
-   concat r4,a2,":m8"
-   .traceevent "O" 4 "R" "S" "r" 4 67 67 0 "" ""
-   linkattr1 r5,a1,9
-   scopy r5,r4
-   unlink r5
+   concat r6,a2,":m8"
+   .traceevent "O" 4 "R" "S" "r" 6 67 67 0 "" ""
+   linkattr1 r7,a1,9
+   scopy r7,r6
+   unlink r7
    .srcstep 68 68 17 "object_reference_regression.crexx" 93 5 11 "    return"
    ret
    .meta "object_reference_regression.largepayload.rename.label"
    .meta "object_reference_regression.largepayload.rename.t_values"
    .meta "object_reference_regression.largepayload.rename.§this"
 
-§object_reference_regression.largepayload.summary() .locals=10
+§object_reference_regression.largepayload.summary() .locals=9
    .meta "object_reference_regression.largepayload.summary"="b" ".string" §object_reference_regression.largepayload.summary() ""
    .srcstep 72 72 17 "object_reference_regression.crexx" 95 3 28 "  summary: method = .string"
    assertinitialized a1
@@ -434,38 +434,38 @@ l191doend:
    .traceevent "F" 4 "R" "S" "r" 0 70 70 0 "getname" ""
    .traceevent "A" 6 "R" "S" "r" 0 70 70 0 "child_name" ""
    .srcstep 71 71 17 "object_reference_regression.crexx" 97 5 96 "    return name || \"|\" || values[1] || \"|\" || values[40] || \"|\" || child_name || \"|\" || marker8"
-   linkattr1 r3,a1,10
-   .traceevent "V" 6 "R" "S" "r" 3 71 71 0 "name" ""
-   concat r2,r3,"|"
-   unlink r3
-   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
-   linkattr1 r6,a1,11
-   minlinkattr1 r5,r6,1
-   .traceevent "V" 6 "R" "S" "r" 5 71 71 0 "values" ""
-   concat r2,r2,r5
-   unlinkn r5,r6
-   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
-   concat r2,r2,"|"
-   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
-   linkattr1 r8,a1,11
-   minlinkattr1 r7,r8,40
-   .traceevent "V" 6 "R" "S" "r" 7 71 71 0 "values" ""
-   concat r2,r2,r7
-   unlinkn r7,r8
-   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
-   concat r2,r2,"|"
-   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
+   linkattr1 r4,a1,10
+   .traceevent "V" 6 "R" "S" "r" 4 71 71 0 "name" ""
+   concat r3,r4,"|"
+   unlink r4
+   .traceevent "O" 4 "R" "S" "r" 3 71 71 0 "" ""
+   linkattr1 r5,a1,11
+   minlinkattr1 r2,r5,1
+   .traceevent "V" 6 "R" "S" "r" 2 71 71 0 "values" ""
+   concat r3,r3,r2
+   unlinkn r2,r5
+   .traceevent "O" 4 "R" "S" "r" 3 71 71 0 "" ""
+   concat r3,r3,"|"
+   .traceevent "O" 4 "R" "S" "r" 3 71 71 0 "" ""
+   linkattr1 r7,a1,11
+   minlinkattr1 r6,r7,40
+   .traceevent "V" 6 "R" "S" "r" 6 71 71 0 "values" ""
+   concat r3,r3,r6
+   unlinkn r6,r7
+   .traceevent "O" 4 "R" "S" "r" 3 71 71 0 "" ""
+   concat r3,r3,"|"
+   .traceevent "O" 4 "R" "S" "r" 3 71 71 0 "" ""
    .traceevent "V" 6 "R" "S" "r" 0 71 71 0 "child_name" ""
-   concat r2,r2,r0
-   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
-   concat r2,r2,"|"
-   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
-   linkattr1 r9,a1,9
-   .traceevent "V" 6 "R" "S" "r" 9 71 71 0 "marker8" ""
-   concat r2,r2,r9
-   unlink r9
-   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
-   ret r2
+   concat r3,r3,r0
+   .traceevent "O" 4 "R" "S" "r" 3 71 71 0 "" ""
+   concat r3,r3,"|"
+   .traceevent "O" 4 "R" "S" "r" 3 71 71 0 "" ""
+   linkattr1 r8,a1,9
+   .traceevent "V" 6 "R" "S" "r" 8 71 71 0 "marker8" ""
+   concat r3,r3,r8
+   unlink r8
+   .traceevent "O" 4 "R" "S" "r" 3 71 71 0 "" ""
+   ret r3
    .meta "object_reference_regression.largepayload.summary.child_name"
    .meta "object_reference_regression.largepayload.summary.§this"
 

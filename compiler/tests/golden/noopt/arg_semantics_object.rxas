@@ -61,9 +61,9 @@ main() .locals=6
    .srcstep 7 7 17 "arg_semantics_object.crexx" 10 3 35 "  say \"object-ref=\" || box.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 7 7 0 "box" ""
    settp r0,256
-   call1 r2,§arg_semantics_object.box.getname(),r0
-   .traceevent "F" 4 "R" "S" "r" 2 7 7 0 "getname" ""
-   concat r5,"object-ref=",r2
+   call1 r3,§arg_semantics_object.box.getname(),r0
+   .traceevent "F" 4 "R" "S" "r" 3 7 7 0 "getname" ""
+   concat r5,"object-ref=",r3
    .traceevent "O" 4 "R" "S" "r" 5 7 7 0 "" ""
    say r5
    .srcstep 8 8 17 "arg_semantics_object.crexx" 11 3 11 "  return 0"

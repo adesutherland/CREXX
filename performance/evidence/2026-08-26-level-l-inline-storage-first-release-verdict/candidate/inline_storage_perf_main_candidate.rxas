@@ -1,0 +1,147 @@
+/*
+ * SOURCE                 : inline_storage_perf_main.crexx
+ */
+
+.globals=0
+
+main() .locals=11
+   .meta "inline_storage_perf_main.main"="b" ".int" main() "args=.string[*]"
+   .srcstep 30 30 17 "inline_storage_perf_main.crexx" 4 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "inline_storage_perf_main.crexx" 5 7 21 "  arg args = .string[]"
+   .meta "inline_storage_perf_main.main.args"="b" ".string[*]" a1
+   .srcstep 2 2 17 "inline_storage_perf_main.crexx" 6 3 23 "  iterations = 1000000"
+   .meta "inline_storage_perf_main.main.iterations"="b" ".int" r2
+   load r2,1000000
+   .traceevent "L" 4 "R" "I" "r" 2 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 2 2 0 "iterations" ""
+   .srcstep 4 4 17 "inline_storage_perf_main.crexx" 7 3 18 "  if args[0] >= 1 then iterations = args[1]"
+   .traceevent "C" 4 "R" "V" "r" 4 4 4 0 "args" ""
+   getattrs r5,a1,0
+   .traceevent "V" 6 "R" "I" "r" 5 4 4 0 "args" ""
+   igte r5,r5,1
+   .traceevent "O" 4 "R" "B" "r" 5 4 4 0 "" ""
+   brf l26iffalse,r5
+   .srcstep 5 5 17 "inline_storage_perf_main.crexx" 7 19 23 "  if args[0] >= 1 then iterations = args[1]"
+   .srcstep 3 3 17 "inline_storage_perf_main.crexx" 7 24 43 "  if args[0] >= 1 then iterations = args[1]"
+   minlinkattr1 r6,a1,1
+   stoi r6
+   .traceevent "V" 6 "R" "I" "r" 6 3 3 0 "args" ""
+   igetunlink r2,r6
+   .traceevent "A" 6 "R" "I" "r" 2 3 3 0 "iterations" ""
+l26iffalse:
+   .srcstep 6 6 17 "inline_storage_perf_main.crexx" 9 3 43 "  values = .inline_storage_perf_dep..store()"
+   .meta "inline_storage_perf_main.main.values"="b" ".inline_storage_perf_dep..store" r3
+   load r6,0
+   call r3,§inline_storage_perf_dep.store.§factory(),r6
+   .traceevent "F" 4 "R" "O" "r" 3 6 6 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 3 6 6 0 "values" ""
+   .srcstep 7 7 17 "inline_storage_perf_main.crexx" 10 3 15 "  checksum = 0"
+   .meta "inline_storage_perf_main.main.checksum"="b" ".int" r1
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 7 7 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 7 7 0 "checksum" ""
+   .srcstep 26 26 17 "inline_storage_perf_main.crexx" 11 3 5 "  do i = 1 to iterations"
+   .srcstep 8 8 17 "inline_storage_perf_main.crexx" 11 6 11 "  do i = 1 to iterations"
+   .meta "inline_storage_perf_main.main.i"="b" ".int" r6
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 8 8 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 8 8 0 "i" ""
+   .srcstep 9 9 17 "inline_storage_perf_main.crexx" 11 12 25 "  do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "iterations" ""
+l34dostart:
+   .srcstep 9 9 17 "inline_storage_perf_main.crexx" 11 12 25 "  do i = 1 to iterations"
+   igt r5,r6,r2
+   brt l34doend,r5
+   .srcstep 15 15 17 "inline_storage_perf_main.crexx" 12 5 46 "    checksum = checksum + values.currentValue()"
+   .traceevent "V" 6 "R" "I" "r" 1 15 15 0 "checksum" ""
+   .srcstep 14 14 17 "inline_storage_perf_main.crexx" 12 27 33 "    checksum = checksum + values.currentValue()"
+   .srcstep 11 11 33 "inline_storage_perf_main.crexx" 12 27 33 "    checksum = checksum + values.currentValue()"
+   .traceevent "V" 6 "R" "O" "r" 3 11 11 0 "values" ""
+   .traceevent "A" 6 "R" "O" "r" 3 11 11 0 "§this" ""
+   .srcstep 12 12 6 "inline_storage_perf_dep@inline_storage_perf_dep.rxbin" 8 1 28 "currentvalue: method = .int"
+   .traceevent "V" 6 "R" "O" "r" 3 15 15 0 "§this" ""
+   assertinitialized r3
+   .srcstep 13 13 25 "inline_storage_perf_dep.crexx" 36 5 33 "    return current_.runtimeValue()"
+   linkattr1 r4,r3,3
+   .traceevent "V" 6 "R" "O" "r" 4 15 15 0 "current_" ""
+   load r7,1
+   settpswapcall r9,§inline_storage_perf_dep.token.runtimevalue(),r7,r4,256,r8
+   swap r4,r8
+   unlink r4
+   .traceevent "F" 4 "R" "I" "r" 9 15 15 0 "runtimevalue" ""
+   icopy r8,r9
+l177bexprend:
+   iadd r1,r1,r8
+   .traceevent "O" 4 "R" "I" "r" 1 15 15 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 15 15 0 "checksum" ""
+   .srcstep 20 20 17 "inline_storage_perf_main.crexx" 13 5 44 "    checksum = checksum + values.classAt(1)"
+   .traceevent "V" 6 "R" "I" "r" 1 20 20 0 "checksum" ""
+   .srcstep 19 19 17 "inline_storage_perf_main.crexx" 13 27 33 "    checksum = checksum + values.classAt(1)"
+   .srcstep 16 16 33 "inline_storage_perf_main.crexx" 13 27 33 "    checksum = checksum + values.classAt(1)"
+   .traceevent "V" 6 "R" "O" "r" 3 16 16 0 "values" ""
+   .traceevent "A" 6 "R" "O" "r" 3 16 16 0 "§this" ""
+   .srcstep 17 17 6 "inline_storage_perf_dep@inline_storage_perf_dep.rxbin" 9 1 40 "classat: method = .int\n  arg index=.int"
+   .traceevent "V" 6 "R" "O" "r" 3 20 20 0 "§this" ""
+   assertinitialized r3
+   .srcstep 18 18 25 "inline_storage_perf_dep.crexx" 40 5 26 "    return classes_[index]"
+   linkattr1 r8,r3,2
+   setattrs r8,2
+   linkattr1 r9,r8,1
+   .traceevent "V" 6 "R" "I" "r" 9 20 20 0 "classes_" ""
+   igetunlink r7,r9
+   unlink r8
+l187bexprend:
+   iadd r1,r1,r7
+   .traceevent "O" 4 "R" "I" "r" 1 20 20 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 20 20 0 "checksum" ""
+   .srcstep 25 25 17 "inline_storage_perf_main.crexx" 14 5 43 "    checksum = checksum + values.byteAt(0)"
+   .traceevent "V" 6 "R" "I" "r" 1 25 25 0 "checksum" ""
+   .srcstep 24 24 17 "inline_storage_perf_main.crexx" 14 27 33 "    checksum = checksum + values.byteAt(0)"
+   .srcstep 21 21 33 "inline_storage_perf_main.crexx" 14 27 33 "    checksum = checksum + values.byteAt(0)"
+   .traceevent "V" 6 "R" "O" "r" 3 21 21 0 "values" ""
+   .traceevent "A" 6 "R" "O" "r" 3 21 21 0 "§this" ""
+   .srcstep 22 22 6 "inline_storage_perf_dep@inline_storage_perf_dep.rxbin" 11 1 40 "byteat: method = .int\n  arg offset=.int"
+   .traceevent "V" 6 "R" "O" "r" 3 25 25 0 "§this" ""
+   assertinitialized r3
+   .srcstep 23 23 25 "inline_storage_perf_dep.crexx" 44 5 35 "    return <at..u8>(offset) bytes_"
+   linkattr1 r9,r3,1
+   .traceevent "V" 6 "R" "X" "r" 9 25 25 0 "bytes_" ""
+   load r8,0
+   .traceevent "L" 4 "R" "I" "r" 8 25 25 0 "" ""
+   bgetu8 r7,r9,r8
+   unlink r9
+   icopy r10,r7
+l200bexprend:
+   iadd r1,r1,r10
+   .traceevent "O" 4 "R" "I" "r" 1 25 25 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 25 25 0 "checksum" ""
+l34doinc:
+   .srcstep 10 10 17 "inline_storage_perf_main.crexx" 11 6 7 "  do i = 1 to iterations"
+   inc r6
+   .srcstep 27 27 17 "inline_storage_perf_main.crexx" 15 3 6 "  end"
+   br l34dostart
+l34doend:
+   .meta "inline_storage_perf_main.main.i"
+   .srcstep 28 28 17 "inline_storage_perf_main.crexx" 17 3 38 "  say \"PASS: inline storage\" checksum"
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 28 28 0 "checksum" ""
+   sconcat r10,"PASS: inline storage",r1
+   .traceevent "O" 4 "R" "S" "r" 10 28 28 0 "" ""
+   say r10
+   .srcstep 29 29 17 "inline_storage_perf_main.crexx" 18 3 11 "  return 0"
+   ret 0
+   .meta "inline_storage_perf_main.main.args"
+   .meta "inline_storage_perf_main.main.checksum"
+   .meta "inline_storage_perf_main.main.iterations"
+   .meta "inline_storage_perf_main.main.values"
+
+/* Imported Declaration from file: inline_storage_perf_dep@inline_storage_perf_dep.rxbin */
+
+§inline_storage_perf_dep.store.§factory() .expose=inline_storage_perf_dep.store.§factory
+   .meta "inline_storage_perf_dep.store.§factory"="b" ".inline_storage_perf_dep..store" §inline_storage_perf_dep.store.§factory() ""
+
+/* Imported Declaration from file: inline_storage_perf_dep@inline_storage_perf_dep.rxbin */
+
+§inline_storage_perf_dep.token.runtimevalue() .expose=inline_storage_perf_dep.token.runtimevalue
+   .meta "inline_storage_perf_dep.token.runtimevalue"="b" ".int" §inline_storage_perf_dep.token.runtimevalue() ""

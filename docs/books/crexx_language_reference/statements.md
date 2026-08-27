@@ -242,6 +242,21 @@ A qualified receiver can also be used:
 call list.add("red")
 ```
 
+The receiver may be a postfix expression, including an indexed value, a
+parenthesized expression, a factory or function result, or an earlier method
+result:
+
+```rexx
+call lists[index].add("red")
+call makeList().add("blue")
+call makeContainer().list().clear()
+```
+
+The receiver expression and each argument are evaluated once in normal call
+order. If the method mutates a variable-like receiver such as `lists[index]`,
+the changed object is written back through that same selected location. The
+method's returned value, if any, is discarded by `CALL`.
+
 Use an expression call when the returned value is required.
 
 ## Array Mutation

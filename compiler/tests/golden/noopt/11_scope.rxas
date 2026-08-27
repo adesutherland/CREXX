@@ -17,9 +17,9 @@ main() .locals=3
    .traceevent "F" 4 "R" "V" "r" 2 2 2 0 "inner" ""
    .srcstep 5 5 17 "11_scope.crexx" 5 1 10 "if a = 50 then say \"Outer A Preserved\""
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "a" ""
-   ieq r1,r0,50
-   .traceevent "O" 4 "R" "B" "r" 1 5 5 0 "" ""
-   brf l17iffalse,r1
+   ieq r2,r0,50
+   .traceevent "O" 4 "R" "B" "r" 2 5 5 0 "" ""
+   brf l17iffalse,r2
    .srcstep 6 6 17 "11_scope.crexx" 5 11 15 "if a = 50 then say \"Outer A Preserved\""
    .srcstep 3 3 17 "11_scope.crexx" 5 16 39 "if a = 50 then say \"Outer A Preserved\""
    say "Outer A Preserved"

@@ -256,8 +256,22 @@ static int inline_build_callable_summary(ASTNode *callable,
                             RXCP_INLINE_CONTEXT_NUMERIC;
 
     if (inline_callable_is_method(callable)) {
+        Symbol **mutation_visited = NULL;
+        size_t mutation_visited_count = 0;
+        int receiver_mutates;
+
         summary.control_flags |= RXCP_INLINE_CONTROL_METHOD_RECEIVER;
-        if (eligibility->check.has_class_attribute_write) {
+        /* Carry transitive receiver mutation through residual callable
+         * dependencies as part of the immutable imported-body proof.  Walk
+         * the body being summarized directly: a reconstructed callable's
+         * owning symbol can still carry the imported summary that this pass
+         * is independently validating. */
+        receiver_mutates = inline_subtree_writes_class_attribute(
+                eligibility->instrs,
+                &mutation_visited,
+                &mutation_visited_count);
+        free(mutation_visited);
+        if (receiver_mutates) {
             summary.control_flags |= RXCP_INLINE_CONTROL_RECEIVER_ATTRIBUTE_WRITE;
         }
     }

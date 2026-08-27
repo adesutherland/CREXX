@@ -6,7 +6,7 @@
 .meta "inline_test_object_return_assign.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=6
+main() .locals=5
    .meta "inline_test_object_return_assign.main"="b" ".int" main() ""
    .srcstep 10 10 17 "inline_test_object_return_assign.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -47,9 +47,9 @@ main() .locals=6
    .srcstep 7 7 17 "inline_test_object_return_assign.crexx" 10 3 18 "  say box.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 7 7 0 "box" ""
    settp r0,256
-   call1 r5,§inline_test_object_return_assign.box.getname(),r0
-   .traceevent "F" 4 "R" "S" "r" 5 7 7 0 "getname" ""
-   say r5
+   call1 r2,§inline_test_object_return_assign.box.getname(),r0
+   .traceevent "F" 4 "R" "S" "r" 2 7 7 0 "getname" ""
+   say r2
    .srcstep 8 8 17 "inline_test_object_return_assign.crexx" 11 3 51 "  say \"Object return assign inline test finished.\""
    say "Object return assign inline test finished."
    .srcstep 9 9 17 "inline_test_object_return_assign.crexx" 12 3 11 "  return 0"

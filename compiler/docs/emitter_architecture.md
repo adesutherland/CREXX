@@ -154,7 +154,7 @@ contracts.
 | **Manual Formatting** | Hardcoded `mprintf` strings for assembly templates are brittle. | Resolved: Potential bridge collisions avoided by renaming interpreter symbols to `rxvm_mprintf`. |
 | **Label Collisions** | Relies on `node_number` and suffix conventions. | Formalize label generation into a dedicated utility. |
 | **Duplication** | Operator emission is duplicated for constant vs. register cases. | Refactor into a unified `emit_op(op, target, left, right)` helper. |
-| **Register Assignment Pressure** | Inlining and future callable-lifetime attribute locals need a clearer register lifetime model than per-node temporaries alone. | TODO: reserve long-lived locals explicitly, keep call-frame temporaries from clobbering them, and add diagnostics explaining register growth. |
+| **Register Assignment Pressure** | Discarded standalone-call results and temporary member-call receivers are explicitly recycled and regression-capped by `rxc_call_statement_register_reuse`; broader inlining and future callable-lifetime attribute locals still need a clearer register lifetime model than per-node temporaries alone. | TODO: reserve long-lived locals explicitly, keep call-frame temporaries from clobbering them, and add diagnostics explaining remaining register growth. |
 | **Typed Emission Drift** | AST provenance or an expected target type can differ from the operation actually emitted after conversion. | Match large-instruction templates only against the final parsed typed mnemonic/operands; require direct AST emission sites to own and fix the complete operation. |
 
 ## 6. AST Assumptions

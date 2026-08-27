@@ -1785,6 +1785,11 @@ call(I) ::= TK_CALL(T) TK_CLASS_FACTORY(S) function_parameters(PP).
            I = ast_f(context, CALL, T);
            add_ast(I, F);
         }
+/* A CALL target may use the same computed receiver primaries as an expression.
+ * Requiring at least one member suffix keeps arbitrary value expressions out
+ * of statement position and leaves classic CALL name arg,... parsing intact. */
+call(I) ::= TK_CALL(T) call_member_postfix(F). [TK_STEM]
+        { I = ast_f(context, CALL, T); add_ast(I, F); }
 call(I) ::= TK_CALL(T) ANYTHING(E).
         { I = ast_f(context, CALL, T); add_ast(I,ast_err(context, "EXPECTED_PROCEDURE", E)); }
 
@@ -2008,6 +2013,46 @@ bracket(F)           ::= TK_CLASS_TYPE(S) function_parameters(P).
                                    F->node_string_length--;
                                }
                            }
+
+/* Computed/chained member target for standalone CALL. Keep the receiver base
+ * explicit: using bracket here would compete with classic CALL function-name
+ * recovery for every token which can name both a variable and a procedure. */
+call_member_primary(A) ::= TK_VAR_SYMBOL(S) array_parameters(P). [TK_OPEN_BRACKET]
+                         { A = ast_f(context, VAR_SYMBOL, S); if (P) add_ast(A,P); }
+call_member_primary(A) ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
+                         { A = B; }
+call_member_primary(A) ::= TK_VAR_SYMBOL(S) function_parameters(P). [TK_CLASS_TYPE]
+                         { A = ast_f(context, FUNCTION, S); if (P) add_ast(A,P); }
+call_member_primary(A) ::= TK_QUALIFIED_SYMBOL(S) function_parameters(P). [TK_CLASS_TYPE]
+                         { A = ast_f(context, FUNCTION, S); if (P) add_ast(A,P); }
+call_member_primary(A) ::= TK_CLASS_TYPE(S) function_parameters(P). [TK_CLASS_TYPE]
+                         { A = ast_f(context, FACTORY_CALL, S);
+                           if (A->node_string && A->node_string[0] == '.') {
+                               A->node_string++;
+                               A->node_string_length--; }
+                           if (P) add_ast(A,P); }
+call_member_primary(A) ::= TK_CLASS_TYPE(S) TK_CLASS_TYPE(M) function_parameters(P). [TK_CLASS_TYPE]
+                         { A = ast_f(context, FACTORY_CALL, S);
+                           if (A->node_string && A->node_string[0] == '.') {
+                               A->node_string++;
+                               A->node_string_length--; }
+                           A->association = ast_f(context, VAR_SYMBOL, M);
+                           if (A->association->node_string && A->association->node_string[0] == '.') {
+                               A->association->node_string++;
+                               A->association->node_string_length--; }
+                           if (P) add_ast(A,P); }
+call_member_postfix(A) ::= call_member_primary(B) TK_CLASS_TYPE(S) function_parameters(PP). [TK_CLASS_TYPE]
+                         { A = ast_f(context, MEMBER_CALL, S);
+                           if (A->node_string && A->node_string[0] == '.') {
+                               A->node_string++;
+                               A->node_string_length--; }
+                           add_ast(A,B); if (PP) add_ast(A,PP); }
+call_member_postfix(A) ::= call_member_postfix(B) TK_CLASS_TYPE(S) function_parameters(PP). [TK_CLASS_TYPE]
+                         { A = ast_f(context, MEMBER_CALL, S);
+                           if (A->node_string && A->node_string[0] == '.') {
+                               A->node_string++;
+                               A->node_string_length--; }
+                           add_ast(A,B); if (PP) add_ast(A,PP); }
 
 /* Command expressions use a left-spine variant so a bare TK_DO at statement
  * start remains reserved for statement DO blocks, while nested expressions can

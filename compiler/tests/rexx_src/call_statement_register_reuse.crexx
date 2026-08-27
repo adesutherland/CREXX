@@ -1,0 +1,137 @@
+options levelb
+namespace call_statement_register_reuse
+
+main: procedure = .int
+  wrapper = .Wrapper()
+
+  do choice = 0 to 31
+    call wrapper.dispatch(choice)
+  end
+
+  if wrapper.total() <> 528 then return 1
+  return 0
+
+Wrapper: class
+  _sink = .Sink
+
+  *: factory
+    _sink = .Sink()
+
+  dispatch: method = .void
+    arg choice = .int
+
+    select
+      when choice = 0 then do
+        call _sink.add(1)
+      end
+      when choice = 1 then do
+        call _sink.add(2)
+      end
+      when choice = 2 then do
+        call _sink.add(3)
+      end
+      when choice = 3 then do
+        call _sink.add(4)
+      end
+      when choice = 4 then do
+        call _sink.add(5)
+      end
+      when choice = 5 then do
+        call _sink.add(6)
+      end
+      when choice = 6 then do
+        call _sink.add(7)
+      end
+      when choice = 7 then do
+        call _sink.add(8)
+      end
+      when choice = 8 then do
+        call _sink.add(9)
+      end
+      when choice = 9 then do
+        call _sink.add(10)
+      end
+      when choice = 10 then do
+        call _sink.add(11)
+      end
+      when choice = 11 then do
+        call _sink.add(12)
+      end
+      when choice = 12 then do
+        call _sink.add(13)
+      end
+      when choice = 13 then do
+        call _sink.add(14)
+      end
+      when choice = 14 then do
+        call _sink.add(15)
+      end
+      when choice = 15 then do
+        call _sink.add(16)
+      end
+      when choice = 16 then do
+        call _sink.add(17)
+      end
+      when choice = 17 then do
+        call _sink.add(18)
+      end
+      when choice = 18 then do
+        call _sink.add(19)
+      end
+      when choice = 19 then do
+        call _sink.add(20)
+      end
+      when choice = 20 then do
+        call _sink.add(21)
+      end
+      when choice = 21 then do
+        call _sink.add(22)
+      end
+      when choice = 22 then do
+        call _sink.add(23)
+      end
+      when choice = 23 then do
+        call _sink.add(24)
+      end
+      when choice = 24 then do
+        call _sink.add(25)
+      end
+      when choice = 25 then do
+        call _sink.add(26)
+      end
+      when choice = 26 then do
+        call _sink.add(27)
+      end
+      when choice = 27 then do
+        call _sink.add(28)
+      end
+      when choice = 28 then do
+        call _sink.add(29)
+      end
+      when choice = 29 then do
+        call _sink.add(30)
+      end
+      when choice = 30 then do
+        call _sink.add(31)
+      end
+      when choice = 31 then do
+        call _sink.add(32)
+      end
+      otherwise return
+    end
+
+  total: method = .int
+    return _sink.total()
+
+Sink: class
+  _total = .int
+
+  *: factory
+    _total = 0
+
+  add: method = .void
+    arg amount = .int
+    _total = _total + amount
+
+  total: method = .int
+    return _total

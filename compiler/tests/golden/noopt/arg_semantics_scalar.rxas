@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=6
+main() .locals=5
    .meta "arg_semantics_scalar.main"="b" ".int" main() ""
    .srcstep 13 13 17 "arg_semantics_scalar.crexx" 4 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -53,33 +53,33 @@ main() .locals=6
    .srcstep 8 8 17 "arg_semantics_scalar.crexx" 13 3 36 "  say \"str-read=\" || readText(text)"
    .traceevent "V" 6 "R" "S" "r" 1 8 8 0 "text" ""
    settp r1,256
-   call1 r5,readText(),r1
-   .traceevent "F" 4 "R" "S" "r" 5 8 8 0 "readtext" ""
-   concat r5,"str-read=",r5
-   .traceevent "O" 4 "R" "S" "r" 5 8 8 0 "" ""
-   say r5
+   call1 r2,readText(),r1
+   .traceevent "F" 4 "R" "S" "r" 2 8 8 0 "readtext" ""
+   concat r4,"str-read=",r2
+   .traceevent "O" 4 "R" "S" "r" 4 8 8 0 "" ""
+   say r4
    .srcstep 9 9 17 "arg_semantics_scalar.crexx" 14 3 36 "  say \"str-mut=\" || shoutText(text)"
    .traceevent "V" 6 "R" "S" "r" 1 9 9 0 "text" ""
    settp r1,256
-   call1 r3,shoutText(),r1
-   .traceevent "F" 4 "R" "S" "r" 3 9 9 0 "shouttext" ""
-   concat r5,"str-mut=",r3
-   .traceevent "O" 4 "R" "S" "r" 5 9 9 0 "" ""
-   say r5
+   call1 r2,shoutText(),r1
+   .traceevent "F" 4 "R" "S" "r" 2 9 9 0 "shouttext" ""
+   concat r4,"str-mut=",r2
+   .traceevent "O" 4 "R" "S" "r" 4 9 9 0 "" ""
+   say r4
    .srcstep 10 10 17 "arg_semantics_scalar.crexx" 15 3 27 "  say \"str-after=\" || text"
    .traceevent "V" 6 "R" "S" "r" 1 10 10 0 "text" ""
-   concat r5,"str-after=",r1
-   .traceevent "O" 4 "R" "S" "r" 5 10 10 0 "" ""
-   say r5
+   concat r4,"str-after=",r1
+   .traceevent "O" 4 "R" "S" "r" 4 10 10 0 "" ""
+   say r4
    .srcstep 11 11 17 "arg_semantics_scalar.crexx" 16 3 39 "  say \"str-temp=\" || shoutText(\"temp\")"
-   load r5,"temp"
-   .traceevent "L" 4 "R" "S" "r" 5 11 11 0 "" ""
-   settp r5,768
-   call1 r3,shoutText(),r5
-   .traceevent "F" 4 "R" "S" "r" 3 11 11 0 "shouttext" ""
-   concat r5,"str-temp=",r3
-   .traceevent "O" 4 "R" "S" "r" 5 11 11 0 "" ""
-   say r5
+   load r4,"temp"
+   .traceevent "L" 4 "R" "S" "r" 4 11 11 0 "" ""
+   settp r4,768
+   call1 r2,shoutText(),r4
+   .traceevent "F" 4 "R" "S" "r" 2 11 11 0 "shouttext" ""
+   concat r4,"str-temp=",r2
+   .traceevent "O" 4 "R" "S" "r" 4 11 11 0 "" ""
+   say r4
    .srcstep 12 12 17 "arg_semantics_scalar.crexx" 17 3 11 "  return 0"
    ret 0
    .meta "arg_semantics_scalar.main.i"

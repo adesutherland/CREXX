@@ -31,15 +31,15 @@ main() .locals=4
    unlink r2
    .traceevent "F" 4 "R" "V" "r" 3 4 4 0 "fillslot" ""
    .srcstep 5 5 17 "inline_test_ref_stem.crexx" 10 1 13 "say outbuf[1]"
-   minlinkattr1 r2,g1,1
-   .traceevent "V" 6 "R" "S" "r" 2 5 5 0 "outbuf" ""
-   say r2
-   unlink r2
+   minlinkattr1 r3,g1,1
+   .traceevent "V" 6 "R" "S" "r" 3 5 5 0 "outbuf" ""
+   say r3
+   unlink r3
    .srcstep 6 6 17 "inline_test_ref_stem.crexx" 11 1 13 "say outbuf[2]"
-   minlinkattr1 r2,g1,2
-   .traceevent "V" 6 "R" "S" "r" 2 6 6 0 "outbuf" ""
-   say r2
-   unlink r2
+   minlinkattr1 r3,g1,2
+   .traceevent "V" 6 "R" "S" "r" 3 6 6 0 "outbuf" ""
+   say r3
+   unlink r3
    .srcstep 7 7 17 "inline_test_ref_stem.crexx" 12 1 37 "say \"Stem ref inline test finished.\""
    say "Stem ref inline test finished."
    .srcstep 8 8 17 "inline_test_ref_stem.crexx" 13 1 9 "return 0"

@@ -1920,7 +1920,13 @@ typedef struct flow_joined_key_group {
     size_t representative_selection;
     Assembler_Token *cache_token;
     Assembler_Token *trace_number_token;
+    int reuse_existing_cache;
 } flow_joined_key_group;
+
+/* Assembler_Token.optimised is otherwise boolean.  H01 needs one private
+ * provenance marker across fixed-point epochs so it can distinguish its own
+ * established cache destination from registers retargeted by other passes. */
+#define FLOW_JOINED_KEY_CACHE_TOKEN_MARKER 2
 
 static Assembler_Token *flow_new_numbered_token(
         flow_graph *graph, const Assembler_Token *from,
@@ -2033,6 +2039,8 @@ static size_t flow_reuse_joined_keys(
     unsigned char *claimed;
     size_t selection_count;
     size_t group_count;
+    size_t private_group_count;
+    size_t private_group_index;
     size_t candidate_index;
     size_t index;
 
@@ -2056,6 +2064,8 @@ static size_t flow_reuse_joined_keys(
                 graph->context->file_name);
     selection_count = 0;
     group_count = 0;
+    private_group_count = 0;
+    private_group_index = 0;
 
     for (candidate_index = 0; candidate_index < graph->item_count;
          candidate_index++) {
@@ -2118,6 +2128,7 @@ static size_t flow_reuse_joined_keys(
             size_t candidate_deletion;
             size_t group_index;
             int new_group;
+            int reuse_existing_cache;
             int valid;
 
             seed_index--;
@@ -2214,6 +2225,9 @@ static size_t flow_reuse_joined_keys(
                             plan.candidate_register) &&
                     !claimed[candidate_index] && !claimed[stem_index];
             new_group = group_index == RXAS_FLOW_ID_NONE;
+            reuse_existing_cache = new_group &&
+                    rxas_queue_operand(seed, 0)->optimised ==
+                            FLOW_JOINED_KEY_CACHE_TOKEN_MARKER;
             if (valid && new_group) {
                 size_t rewrite_index;
                 if (claimed[seed_index]) valid = 0;
@@ -2274,15 +2288,20 @@ static size_t flow_reuse_joined_keys(
                 groups[group_index].seed_index = seed_index;
                 groups[group_index].representative_selection =
                         selection_count;
-                claimed[seed_index] = 1;
-                for (rewrite_index = 0;
-                     rewrite_index < plan.seed_rewrite_count;
-                     rewrite_index++) {
-                    RxasFlowOperandRewrite rewrite;
-                    rxas_flow_joined_key_reuse_plan_seed_rewrite(
-                            proof, session->epoch, &plan,
-                            rewrite_index, &rewrite);
-                    claimed[rewrite.record_id] = 1;
+                groups[group_index].reuse_existing_cache =
+                        reuse_existing_cache;
+                if (!reuse_existing_cache) {
+                    private_group_count++;
+                    claimed[seed_index] = 1;
+                    for (rewrite_index = 0;
+                         rewrite_index < plan.seed_rewrite_count;
+                         rewrite_index++) {
+                        RxasFlowOperandRewrite rewrite;
+                        rxas_flow_joined_key_reuse_plan_seed_rewrite(
+                                proof, session->epoch, &plan,
+                                rewrite_index, &rewrite);
+                        claimed[rewrite.record_id] = 1;
+                    }
                 }
             }
             claimed[candidate_index] = 1;
@@ -2307,7 +2326,8 @@ static size_t flow_reuse_joined_keys(
     }
 
     if (!selection_count || graph->context->current_locals < 0 ||
-        group_count > (size_t)(INT_MAX - graph->context->current_locals)) {
+        private_group_count >
+                (size_t)(INT_MAX - graph->context->current_locals)) {
         if (selection_count) stats->rejected_effect += selection_count;
         free(claimed);
         free(groups);
@@ -2335,10 +2355,20 @@ static size_t flow_reuse_joined_keys(
         representative =
                 &selections[groups[index].representative_selection];
         seed = &graph->items[groups[index].seed_index];
-        local_number = (size_t)graph->context->current_locals + index;
+        if (groups[index].reuse_existing_cache) {
+            groups[index].cache_token = rxas_queue_operand(seed, 0);
+            groups[index].trace_number_token = 0;
+            continue;
+        }
+        local_number = (size_t)graph->context->current_locals +
+                private_group_index++;
         groups[index].cache_token = flow_new_numbered_token(
                 graph, rxas_queue_operand(seed, 0),
                 RREG, 'r', local_number);
+        if (groups[index].cache_token) {
+            groups[index].cache_token->optimised =
+                    FLOW_JOINED_KEY_CACHE_TOKEN_MARKER;
+        }
         groups[index].trace_number_token = flow_new_numbered_token(
                 graph, rxas_queue_operand(seed, 0),
                 INT, 0, local_number);
@@ -2400,7 +2430,8 @@ static size_t flow_reuse_joined_keys(
                     "PERF3 joined-key-reuse-select procedure=%s "
                     "seed=%llu candidate=%llu stem=%llu loop=%llu "
                     "cache=r%llu candidate=r%llu seed-redirect=%llu "
-                    "trace-delete=%llu preheader=spec:%d,must:%d(%s),"
+                    "trace-delete=%llu cache-mode=%s "
+                    "preheader=spec:%d,must:%d(%s),"
                     "invariant:%d(%s),trace-free:%d,eligible:%d\n",
                     graph->context->current_proc_name
                             ? graph->context->current_proc_name
@@ -2417,6 +2448,8 @@ static size_t flow_reuse_joined_keys(
                             selection->plan.seed_rewrite_count,
                     (unsigned long long)
                             selection->plan.trace_deletion_count,
+                    group->reuse_existing_cache
+                            ? "existing-private" : "new-private",
                     selection->plan.preheader_speculatable,
                     selection->plan.preheader_must_execute,
                     rxas_flow_proof_reason_name(
@@ -2431,8 +2464,8 @@ static size_t flow_reuse_joined_keys(
                 "joined-key-loop-reuse-private-local",
                 selection->plan.trace_deletion_count + 1);
     }
-    graph->private_locals_planned += group_count;
-    stats->joined_key_private_locals += group_count;
+    graph->private_locals_planned += private_group_count;
+    stats->joined_key_private_locals += private_group_count;
 
     free(claimed);
     free(groups);
