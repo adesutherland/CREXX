@@ -835,6 +835,70 @@ add_test(NAME rxc_scoped_register_reuse
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxc_scoped_register_reuse PROPERTIES LABELS "compiler;registers")
 
+set(RXC_CALL_STATEMENT_REGISTER_REUSE_SCRIPT
+    "${CMAKE_CURRENT_BINARY_DIR}/rxc_call_statement_register_reuse.cmake")
+set(RXC_CALL_STATEMENT_REGISTER_REUSE_CONTENT "")
+foreach(_mode IN ITEMS opt noopt)
+    if(_mode STREQUAL "noopt")
+        set(_flag "-n")
+        set(_max_dispatch_locals 40)
+    else()
+        set(_flag "")
+        set(_max_dispatch_locals 8)
+    endif()
+    string(APPEND RXC_CALL_STATEMENT_REGISTER_REUSE_CONTENT
+           "execute_process(\n"
+           "  COMMAND \"$<TARGET_FILE:rxc>\" -x -i \"${CMAKE_BINARY_DIR}/bin\" ${_flag} -o \"call_statement_register_reuse_${_mode}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/call_statement_register_reuse.crexx\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "  OUTPUT_VARIABLE rxc_${_mode}_out\n"
+           "  ERROR_VARIABLE rxc_${_mode}_err\n"
+           "  RESULT_VARIABLE rxc_${_mode}_res\n"
+           ")\n"
+           "set(full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxc_${_mode}_out}${RXAS_DIAG_DOLLAR}{rxc_${_mode}_err}\")\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "if(NOT rxc_${_mode}_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxc ${_mode} failed for call-statement register reuse.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "endif()\n"
+           "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/call_statement_register_reuse_${_mode}.rxas\" rxas_${_mode}_out)\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" rxas_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "string(REGEX MATCH [=[§call_statement_register_reuse\\.wrapper\\.dispatch\\(\\) \\.locals=([0-9]+)]=] dispatch_header \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT dispatch_header)\n"
+           "  message(FATAL_ERROR \"dispatch locals record missing in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "set(dispatch_locals \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+           "if(dispatch_locals GREATER ${_max_dispatch_locals})\n"
+           "  message(FATAL_ERROR \"Discarded calls or member receivers were not recycled in ${_mode}; dispatch locals=${RXAS_DIAG_DOLLAR}{dispatch_locals}, expected at most ${_max_dispatch_locals}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "execute_process(\n"
+           "  COMMAND \"$<TARGET_FILE:rxas>\" -o \"call_statement_register_reuse_${_mode}.rxbin\" \"call_statement_register_reuse_${_mode}\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "  OUTPUT_VARIABLE rxas_${_mode}_diag\n"
+           "  ERROR_VARIABLE rxas_${_mode}_err\n"
+           "  RESULT_VARIABLE rxas_${_mode}_res\n"
+           ")\n"
+           "if(NOT rxas_${_mode}_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxas ${_mode} failed for call-statement register reuse: ${RXAS_DIAG_DOLLAR}{rxas_${_mode}_diag}${RXAS_DIAG_DOLLAR}{rxas_${_mode}_err}\")\n"
+           "endif()\n"
+           "execute_process(\n"
+           "  COMMAND \"$<TARGET_FILE:rxbvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"call_statement_register_reuse_${_mode}.rxbin\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "  OUTPUT_VARIABLE rxvm_${_mode}_out\n"
+           "  ERROR_VARIABLE rxvm_${_mode}_err\n"
+           "  RESULT_VARIABLE rxvm_${_mode}_res\n"
+           ")\n"
+           "if(NOT rxvm_${_mode}_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxvm ${_mode} failed for call-statement register reuse: ${RXAS_DIAG_DOLLAR}{rxvm_${_mode}_out}${RXAS_DIAG_DOLLAR}{rxvm_${_mode}_err}\")\n"
+           "endif()\n")
+endforeach()
+file(GENERATE OUTPUT "${RXC_CALL_STATEMENT_REGISTER_REUSE_SCRIPT}"
+     CONTENT "${RXC_CALL_STATEMENT_REGISTER_REUSE_CONTENT}")
+
+add_test(NAME rxc_call_statement_register_reuse
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_CALL_STATEMENT_REGISTER_REUSE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxc_call_statement_register_reuse PROPERTIES
+        LABELS "compiler;registers;runtime")
+
 set(RXC_INLINE_BYVALUE_ARG_REUSE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_inline_byvalue_arg_reuse.cmake")
 set(RXC_INLINE_BYVALUE_ARG_REUSE_CONTENT "")
 string(APPEND RXC_INLINE_BYVALUE_ARG_REUSE_CONTENT

@@ -1706,6 +1706,9 @@ walker_result register_walker(walker_direction direction,
                            child1->symbolNode->symbol->register_num == node->additional_registers + 1 &&
                            child1->symbolNode->symbol->register_type == 'r') )
                         ret_reg(node->scope, node->additional_registers + 1);
+                    if (child1->register_num != node->additional_registers + 1) {
+                        return_child_reg(child1);
+                    }
                     c = child2;
                     i = node->additional_registers + 2;
                 } else {
@@ -1803,6 +1806,11 @@ walker_result register_walker(walker_direction direction,
                 else {
                     return_child_reg(child2);
                 }
+                break;
+
+            case CALL:
+                /* The statement form discards its call expression result. */
+                return_child_reg(child1);
                 break;
 
             case SAY:
@@ -1928,6 +1936,9 @@ walker_result register_walker(walker_direction direction,
         /* If this is a statement level node, return all deferred registers */
         if (node->parent && node->parent->node_type == INSTRUCTIONS &&
             !node_is_block_expr_leave(node)) {
+            if (is_call_node(node) && node->register_num >= 0) {
+                ret_reg(node->scope, node->register_num);
+            }
             return_statement_deferred_registers(node);
         }
 
