@@ -635,7 +635,8 @@ walker_result build_symbols_walker(walker_direction direction,
                         }
                     }
                 } else {
-                    /* Untyped usage resolves outward; if not found, will create in procedure scope (hoisting) */
+                    /* Implicit usage resolves outward; if no visible binding
+                     * exists, a new symbol is created in the current scope. */
                     symbol = sym_rslv_tiered(context->current_scope, node);
                     if (symbol) {
                         if (symbol->symbol_type != VARIABLE_SYMBOL && symbol->symbol_type != CONSTANT_SYMBOL) {
@@ -647,7 +648,8 @@ walker_result build_symbols_walker(walker_direction direction,
                             /* TEMPORAL CHECK: Only bind if the symbol was used/defined EARLIER in the source */
                             if (symbol->creation_ordinal != -1 && !symbol->is_global_var && symbol->creation_ordinal > node->high_ordinal) {
                                 /* The existing symbol appears later in the source.
-                                 * In Level B, we ignore "future" definitions to allow local creation/hoisting. */
+                                 * Ignore that future definition so this use creates
+                                 * a binding in its current lexical scope. */
                                 symbol = NULL;
                             }
                         }

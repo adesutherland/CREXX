@@ -28,6 +28,84 @@ ASan/LSan at `cmake-build-debugasan/asan-logs/20260823-100525-ctest`; the full
 ordinary Debug gate then passes 2,363/2,363 at
 `cmake-build-debug/asan-logs/20260823-100548-full`.
 
+Status later on 2026-08-26: SAN-006 is a final-head closure candidate. The
+bounded repair and all required local macOS gates pass. It remains open and
+release-blocking while GitHub runs, and becomes closed only if GitHub Sanitizer
+QA and Build CREXX both pass for the exact commit containing this record. A
+failure in either workflow leaves SAN-006 open; do not claim the current hotfix
+or Release 1 line is sanitizer-clean before the condition is satisfied.
+
+## Open findings
+
+### SAN-006 — superseded imported class context freed during recursive validation
+
+Status: closure candidate; the imported-context ownership repair is implemented
+and passes focused plus broad macOS qualification. SAN-006 remains open and
+release-blocking until the exact published commit passes GitHub Sanitizer QA,
+including its supported Linux x64 ASan/LSan and macOS arm64 ASan lanes, plus
+Build CREXX. When both workflows pass on that commit, this conditional record
+marks SAN-006 closed without weakening any sanitizer closure requirement.
+
+- Scope: compiler symbol construction in `sym_fn()` while a Level G class or
+  interface import recursively loads further class metadata.
+- Failure: Apple AddressSanitizer reports a one-byte heap-use-after-free read in
+  `sym_fn+0x180`. The freed allocation is reused during recursive
+  `load_another_file()` / `ensure_class_imported()` processing; ten parallel
+  class-library member compiles reproduce the same address-safety failure.
+- Original trigger:
+  `tools/asan-run.sh --phase build --build-leaks off --build-target
+  cri17_attached_provider_control-rxbvml --build-jobs 10`.
+- Permanent focused reproducer: CTest `san006_import_context_lifetime` stages
+  `classlib_native.rxbin`, the individual `KeyDB.rxbin`, `KeyDB.crexx`, and a
+  five-line Level B main source in an isolated directory, then invokes `rxc -x
+  --no-exe-import` against that directory. The aggregate and individual image
+  first establish a duplicate imported `KeyDB`; recursive validation then
+  replaces it with the richer source contract. Removing either duplicate image
+  eliminates the pre-repair failure. Ordinary Debug passed before the repair at
+  `cmake-build-debug/asan-logs/20260826-203459-ctest`, while Apple-ASan failed
+  with the exact `sym_fn()` use-after-free at
+  `cmake-build-debugasan/asan-logs/20260826-203511-ctest`.
+- Affected revision: clean code base `2aa4dd371121c5e452d7e1e6768c1f090521291f`
+  plus the in-progress CRI-17 test/runtime worktree. The compiler source itself
+  was not edited by CRI-17, so discovery attribution does not reduce priority.
+- Original retained log:
+  `cmake-build-debugasan/asan-logs/20260826-174436-build/build.log`.
+- Root cause: the richer-contract path in `add_class()` preserved the stable
+  imported-class registry record but immediately freed its former parsed
+  `Context` and shared file-name allocation. Active recursive import/validation
+  frames could still reach that context's AST `node_string` and file-name
+  pointers when `sym_fn()` resumed.
+- Repair: each stable imported-class record now owns a chain of superseded
+  `{Context *, file_name}` pairs. Richer replacement moves the former pair to
+  that chain, transfers the new `context`, `file_name`, `contract_node`,
+  `contract_type`, and merged implements metadata, and frees every retained
+  pair only when the registry record is destroyed. Equal or poorer duplicates
+  still free only their newly parsed inactive context. The adjacent audit also
+  verified stable class identity storage, implements-copy ownership, and the
+  imported-function duplicate paths; no recursive import behavior is disabled.
+- Local repair evidence:
+  - focused ordinary Debug pass:
+    `cmake-build-debug/asan-logs/20260826-203608-ctest`;
+  - focused Apple-ASan pass with leak detection off:
+    `cmake-build-debugasan/asan-logs/20260826-203621-ctest`;
+  - original CRI-17 sanitizer build trigger pass:
+    `cmake-build-debugasan/asan-logs/20260826-203628-build`;
+  - related CRI-17 ordinary Debug 56/56 and Apple-ASan 4/4 passes:
+    `cmake-build-debug/asan-logs/20260826-204004-ctest` and
+    `cmake-build-debugasan/asan-logs/20260826-204533-ctest`;
+  - complete ordinary Debug 2,391/2,391 pass:
+    `cmake-build-debug/asan-logs/20260826-205944-ctest`;
+  - complete Apple-ASan build and 2,391/2,391 CTest pass with build/test leak
+    detection off:
+    `cmake-build-debugasan/asan-logs/20260826-210616-full`.
+- Conditional closure gate: GitHub Sanitizer QA and Build CREXX must both pass
+  for the exact published commit containing this record. GitHub Sanitizer QA is
+  the named release-QA owner for the supported Linux x64 ASan/LSan and macOS
+  arm64 ASan proof. Apple LeakSanitizer is unsupported, so the local macOS
+  result is address-safety evidence only and does not satisfy the Linux
+  leak-closure authority. If either workflow fails or does not run, SAN-006
+  remains open and release-blocking.
+
 ## Platform coverage at task close
 
 - Apple ASan on the maintained macOS host does not provide supported leak
@@ -37,7 +115,7 @@ ordinary Debug gate then passes 2,363/2,363 at
 - GitHub Build CREXX supplies the final-head MinSizeRel build, CTest and package
   coverage across Linux, macOS and Windows. GitHub Sanitizer QA supplies the
   final-head Linux x64 ASan/LSan and macOS arm64 ASan gates.
-- No reproducible sanitizer or product defect from this campaign remains open.
+- SAN-006 is the only currently registered open sanitizer finding.
 
 ## Qualification infrastructure repairs
 

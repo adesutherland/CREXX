@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.24)
 project(keyaccess_plugin C)
 
-set(CMAKE_C_STANDARD 90)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)

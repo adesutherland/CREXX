@@ -1,0 +1,29 @@
+options levelb comments_dash
+
+import concurrency
+import rxfnsb
+
+main: procedure = .int
+  endpoint = .byteendpoint.memory(1, 8)
+  request = endpoint.start_read(1, 2000)
+  completion = request.wait(5000)
+
+  if completion.available() = 0 then do
+    call endpoint.cancel(.channelvalue.string_value("request wait returned before the operation deadline"))
+    call endpoint.close()
+    say "FAIL: channel request positive wait returned unavailable before terminal completion"
+    return 1
+  end
+
+  call endpoint.close()
+  if completion.state() <> 4 then do
+    say "FAIL: channel request positive wait state=" completion.state() "expected=4"
+    return 2
+  end
+  if completion.message() <> "byte operation deadline exceeded" then do
+    say "FAIL: channel request positive wait message=" completion.message()
+    return 3
+  end
+
+  say "PASS: channel request positive wait observes the operation deadline"
+  return 0

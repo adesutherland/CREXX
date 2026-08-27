@@ -14,6 +14,11 @@
 #include "rxvm.h"
 #include "rxvmintp.h"
 #include "rxvmprogram.h"
+#include "crexxpa.h"
+
+void rxvm_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
+                             char *name, char *option,
+                             char *type, char *args);
 
 typedef struct e4a_structure_counts {
     size_t module_count;
@@ -24,6 +29,15 @@ typedef struct e4a_structure_counts {
 } e4a_structure_counts;
 
 static int failures;
+
+static void cri17_native_first_probe(
+        rxinteger numargs, rxpa_attribute_value *args,
+        rxpa_attribute_value result, rxpa_attribute_value signal) {
+    (void)numargs;
+    (void)args;
+    (void)result;
+    (void)signal;
+}
 
 #define CHECK(condition, message)                                             \
     do {                                                                      \
@@ -596,6 +610,71 @@ cleanup:
     }
 }
 
+static void run_native_first_generation(const char *control_rxbin) {
+    rxvm_runtime *runtime = 0;
+    rxvm_context *source = 0;
+    rxvm_context *peer = 0;
+    const rxvm_program_generation *generation = 0;
+    size_t source_bytecode_modules = 0u;
+    size_t source_native_modules = 0u;
+    size_t index;
+    size_t runtime_leaks = 0u;
+    int failures_before = failures;
+
+    rxvm_addfunc_for_plugin(
+            "cri17-native-first", cri17_native_first_probe,
+            "cri17.native_first_probe", "b", ".void", "");
+    runtime = rxvm_runtime_create();
+    CHECK(runtime != 0, "create CRI-17 native-first runtime");
+    if (!runtime) goto cleanup;
+    source = rxvm_context_create_in_runtime(runtime);
+    peer = rxvm_context_create_in_runtime(runtime);
+    CHECK(source && peer, "create CRI-17 native-first contexts");
+    if (!source || !peer) goto cleanup;
+
+    CHECK(rxldmodp(source) > 0,
+          "materialize native provider before source bytecode");
+    CHECK(rxvm_load_file(source, (char *)control_rxbin) != 0,
+          "load bytecode after the native provider overlay");
+    for (index = 0u; index < source->num_modules; index++) {
+        if (source->modules[index]->native || source->modules[index]->file->native) {
+            source_native_modules++;
+        } else {
+            source_bytecode_modules++;
+        }
+    }
+    CHECK(source_native_modules > 0u && source_bytecode_modules > 0u,
+          "native-first source contains native and bytecode modules");
+    CHECK(rxvm_program_generation_seal(source, &generation) ==
+                  RXVM_PROGRAM_OK && generation != 0,
+          "seal only bytecode from a native-first source context");
+    CHECK(rxvm_program_generation_module_count(generation) ==
+                  source_bytecode_modules,
+          "native overlays are excluded from the immutable generation");
+
+    CHECK(rxldmodp(peer) > 0,
+          "materialize native provider before peer generation attach");
+    CHECK(rxvm_program_generation_attach(peer, generation) == RXVM_PROGRAM_OK,
+          "attach bytecode generation to a native-first peer context");
+    CHECK(rxvm_link(peer) == 0 && rxvm_prepare(peer) == 0,
+          "link and prepare native-first peer bytecode");
+    CHECK(rxvm_call(peer, "e4control.get", 0, 0) == 0,
+          "native-first attached peer executes shared bytecode");
+
+cleanup:
+    if (source) rxvm_destroy(source);
+    if (peer) rxvm_destroy(peer);
+    if (runtime) {
+        runtime_leaks = rxvm_runtime_destroy(runtime);
+        CHECK(runtime_leaks == 0u,
+              "CRI-17 native-first runtime tears down without leaks");
+    }
+    if (failures == failures_before) {
+        printf("CRI17_NATIVE_FIRST bytecode_generation=PASS "
+               "native_exclusion=PASS attach=PASS result=PASS\n");
+    }
+}
+
 int main(int argc, char **argv) {
     if (argc != 4) {
         fprintf(stderr,
@@ -606,6 +685,7 @@ int main(int argc, char **argv) {
 
     run_independent_control(argv[1], argv[2]);
     if (!failures) run_shared_generation(argv[1], argv[2], argv[3]);
+    if (!failures) run_native_first_generation(argv[1]);
     if (failures) {
         fprintf(stderr, "E4_PROGRAM_CONTROL result=FAIL failures=%d\n",
                 failures);

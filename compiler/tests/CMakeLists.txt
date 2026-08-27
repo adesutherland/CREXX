@@ -3612,6 +3612,18 @@ add_test(NAME san004_task_pending_object_result_compile
                 ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/san004_task_pending_object_result.crexx)
 set_tests_properties(san004_task_pending_object_result_compile PROPERTIES
         LABELS "sanitizer;san-004;compiler;levelg;concurrency;regression")
+add_test(NAME san006_import_context_lifetime
+        COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DCLASS_AGGREGATE=${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin
+                -DCLASS_MEMBER=${CMAKE_BINARY_DIR}/lib/classlib/KeyDB.rxbin
+                -DCLASS_SOURCE=${CMAKE_SOURCE_DIR}/lib/classlib/KeyDB.crexx
+                -DMAIN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/san006_import_context_main.crexx
+                -DWORK=${CMAKE_CURRENT_BINARY_DIR}/san006_import_context_lifetime_ws
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/san006_import_context_lifetime.cmake)
+set_tests_properties(san006_import_context_lifetime PROPERTIES
+        LABELS "sanitizer;san-006;compiler;imports;regression"
+        TIMEOUT 60)
 add_crexx_run_test(inline_test_computed_receiver_copyback rexx_src/inline_test_computed_receiver_copyback.crexx)
 add_crexx_run_test(inline_test_loop_bound_early_return_cleanup rexx_src/inline_test_loop_bound_early_return_cleanup.crexx)
 add_crexx_run_test(structured_exit_crossed_loop_cleanup rexx_src/structured_exit_crossed_loop_cleanup.crexx)
@@ -3738,6 +3750,18 @@ file(GENERATE OUTPUT "${WARN_SCRIPT}" CONTENT "${WARN_CONTENT}")
 add_test(NAME test_disjoint_detailed_warn
          COMMAND ${CMAKE_COMMAND} -P "${WARN_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+add_test(NAME cri18_scope_warning
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/cri18_scope_warning_ws
+                 -DCRI18_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/cri18_disjoint_scope_warning.crexx
+                 -DASSIGN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/disjoint_assignment_warning.crexx
+                 -DEXPLICIT_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/disjoint_explicit_intent.crexx
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/cri18_scope_warning.cmake)
+set_tests_properties(cri18_scope_warning PROPERTIES
+        LABELS "compiler;diagnostics;scope;cri-18")
 
 
 # Parsing Tests

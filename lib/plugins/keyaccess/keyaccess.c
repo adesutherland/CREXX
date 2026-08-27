@@ -188,15 +188,19 @@ struct IndexRecord {
 static void log_error(const char* operation, int error_code, const char* details);
 static int lock_file(struct FileHandle* handle);
 static int unlock_file(struct FileHandle* handle);
+static int truncate_file(FILE* file, long size);
 static const char* binary_file_mode(const char* mode);
 static char* create_index_path(const char* dataPath);
-static struct IndexRecord* find_key(FILE* indexFile, const char* searchKey);
 static void cache_init(struct FileHandle* handle);
 static void cache_clear(struct FileHandle* handle);
 static int restore_transaction(struct FileHandle* handle);
 static void hash_index_discard(struct FileHandle* handle);
 static int find_key_indexed(struct FileHandle* handle, const char* searchKey,
-                            struct IndexRecord* result);
+                            struct IndexRecord* result, long* resultOffset);
+static int hash_index_remove(struct FileHandle* handle, uint64_t hash,
+                             long indexOffset);
+static int hash_index_add(struct FileHandle* handle, uint64_t hash,
+                           long indexOffset);
 static uint64_t hash_key(const char* key);
 static size_t cache_bucket(uint64_t hash);
 static void cache_put(struct FileHandle* handle, const char* key, const char* value);
@@ -417,6 +421,9 @@ PROCEDURE(writekey) {
     char* value = GETSTRING(ARG2);
     struct IndexRecord record;
     long dataOffset;
+    long indexOffset = -1;
+    int lookupResult;
+    int isNew = 0;
 
     if (!handle || !key || !value) {
         log_error("writekey", KA_ERROR_PARAM, "Invalid parameters");
@@ -433,16 +440,20 @@ PROCEDURE(writekey) {
         RETURNINTX(KA_ERROR_TXINACTIVE);
     }
 
-    // Update existing or create new record
-    struct IndexRecord* existing = find_key(handle->indexFile, key);
-    if (existing) {
-        record = *existing;
+    /* Use the lazy hash index for existence checks.  It is built once per
+     * handle state and then maintained as this transaction adds records. */
+    lookupResult = find_key_indexed(handle, key, &record, &indexOffset);
+    if (lookupResult == KA_SUCCESS) {
         record.version++;
         record.deleted = 0;
-    } else {
+    } else if (lookupResult == KA_ERROR_NOTFOUND) {
         memset(&record, 0, sizeof(record));
         strncpy(record.key, key, MAX_KEY_LENGTH - 1);
         record.version = 1;
+        isNew = 1;
+    } else {
+        log_error("writekey", lookupResult, "Failed to find key in index");
+        RETURNINTX(lookupResult);
     }
 
     // Write data
@@ -460,14 +471,26 @@ PROCEDURE(writekey) {
     record.length = strlen(value);
     record.timestamp = time(NULL);
 
-    if (existing) {
+    if (indexOffset < 0) {
+        if (fseek(handle->indexFile, 0, SEEK_END) != 0) {
+            log_error("writekey", KA_ERROR_IO, "Failed to seek index file");
+            RETURNINTX(KA_ERROR_IO);
+        }
+        indexOffset = ftell(handle->indexFile);
+        if (indexOffset < 0) {
+            log_error("writekey", KA_ERROR_IO, "Failed to determine index offset");
+            RETURNINTX(KA_ERROR_IO);
+        }
+    }
+
+    if (!isNew) {
         if (fwrite(value, 1, strlen(value), handle->dataFile) != strlen(value)) {
             log_error("writekey", KA_ERROR_IO, "Failed to write value to data file");
             RETURNINTX(KA_ERROR_IO);
         }
 
         /* Replace an existing index record instead of appending a duplicate. */
-        if (fseek(handle->indexFile, -(long)sizeof(struct IndexRecord), SEEK_CUR) != 0 ||
+        if (fseek(handle->indexFile, indexOffset, SEEK_SET) != 0 ||
             fwrite(&record, sizeof(record), 1, handle->indexFile) != 1) {
             log_error("writekey", KA_ERROR_IO, "Failed to replace index record");
             RETURNINTX(KA_ERROR_IO);
@@ -477,7 +500,11 @@ PROCEDURE(writekey) {
         RETURNINTX(KA_ERROR_IO);
     }
 
-    hash_index_discard(handle);
+    if (isNew && hash_index_add(handle, hash_key(key), indexOffset) != KA_SUCCESS) {
+        hash_index_discard(handle);
+        log_error("writekey", KA_ERROR_MEMORY, "Failed to update hash index");
+        RETURNINTX(KA_ERROR_MEMORY);
+    }
 
     // Update statistics
     handle->stats.writes++;
@@ -510,9 +537,8 @@ PROCEDURE(readkey) {
     }
 
     // Look up in index
-    lookupResult = find_key_indexed(handle, key, &record);
+    lookupResult = find_key_indexed(handle, key, &record, NULL);
     if (lookupResult == KA_ERROR_NOTFOUND) {
-        log_error("readkey", KA_ERROR_NOTFOUND, "Key not found");
         RETURNSTRX("NOT_FOUND");
     }
     if (lookupResult != KA_SUCCESS) {
@@ -551,7 +577,9 @@ PROCEDURE(readkey) {
 PROCEDURE(deletekey) {
     struct FileHandle* handle = (struct FileHandle*)GETINT(ARG0);
     char* key = GETSTRING(ARG1);
-    struct IndexRecord* record;
+    struct IndexRecord record;
+    long indexOffset;
+    int lookupResult;
 
     if (!handle || !key) {
         log_error("deletekey", KA_ERROR_PARAM, "Invalid parameters");
@@ -563,28 +591,34 @@ PROCEDURE(deletekey) {
         RETURNINTX(KA_ERROR_TXINACTIVE);
     }
 
-    record = find_key(handle->indexFile, key);
-    if (!record) {
+    lookupResult = find_key_indexed(handle, key, &record, &indexOffset);
+    if (lookupResult == KA_ERROR_NOTFOUND) {
         log_error("deletekey", KA_ERROR_NOTFOUND, "Key not found");
         RETURNINTX(KA_ERROR_NOTFOUND);
     }
+    if (lookupResult != KA_SUCCESS) {
+        log_error("deletekey", lookupResult, "Failed to find key in index");
+        RETURNINTX(lookupResult);
+    }
 
     // Mark as deleted
-    record->deleted = 1;
-    record->timestamp = time(NULL);
+    record.deleted = 1;
+    record.timestamp = time(NULL);
 
     // Write updated record
-    if (fseek(handle->indexFile, -(long)sizeof(struct IndexRecord), SEEK_CUR) != 0) {
+    if (fseek(handle->indexFile, indexOffset, SEEK_SET) != 0) {
         log_error("deletekey", KA_ERROR_IO, "Failed to seek index record");
         RETURNINTX(KA_ERROR_IO);
     }
-    if (fwrite(record, sizeof(*record), 1, handle->indexFile) != 1) {
+    if (fwrite(&record, sizeof(record), 1, handle->indexFile) != 1) {
         log_error("deletekey", KA_ERROR_IO, "Failed to update index");
         RETURNINTX(KA_ERROR_IO);
     }
 
     cache_remove(handle, key);
-    hash_index_discard(handle);
+    if (hash_index_remove(handle, hash_key(key), indexOffset) != KA_SUCCESS) {
+        hash_index_discard(handle);
+    }
     // Update statistics
     handle->stats.deletes++;
 
@@ -708,6 +742,52 @@ PROCEDURE(validate_database) {
     }
 
     RETURNINTX(errors);
+    ENDPROC
+}
+
+/**
+ * Destructively reset a store without scanning its index.
+ *
+ * The operation is deliberately rejected during a transaction because the
+ * current rollback snapshot protects appended data, not data discarded by a
+ * file truncation.
+ */
+PROCEDURE(reset_database) {
+    struct FileHandle* handle = (struct FileHandle*)GETINT(ARG0);
+
+    if (!handle) {
+        log_error("reset_database", KA_ERROR_PARAM, "Invalid handle");
+        RETURNINTX(KA_ERROR_PARAM);
+    }
+
+    if (handle->transaction) {
+        log_error("reset_database", KA_ERROR_TXACTIVE,
+                  "Cannot reset during transaction");
+        RETURNINTX(KA_ERROR_TXACTIVE);
+    }
+
+    if (lock_file(handle) != KA_SUCCESS) {
+        RETURNINTX(KA_ERROR_LOCK);
+    }
+
+    if (fflush(handle->dataFile) != 0 || fflush(handle->indexFile) != 0 ||
+        truncate_file(handle->indexFile, 0) != 0 ||
+        truncate_file(handle->dataFile, 0) != 0 ||
+        fflush(handle->dataFile) != 0 || fflush(handle->indexFile) != 0 ||
+        fseek(handle->dataFile, 0, SEEK_SET) != 0 ||
+        fseek(handle->indexFile, 0, SEEK_SET) != 0) {
+        log_error("reset_database", KA_ERROR_IO,
+                  "Failed to truncate database files");
+        unlock_file(handle);
+        RETURNINTX(KA_ERROR_IO);
+    }
+
+    cache_clear(handle);
+    hash_index_discard(handle);
+    handle->indexCursor = 0;
+    unlock_file(handle);
+
+    RETURNINTX(KA_SUCCESS);
     ENDPROC
 }
 
@@ -954,19 +1034,7 @@ static char* create_index_path(const char* dataPath) {
     return indexPath;
 }
 
-// Find key in index
-static struct IndexRecord* find_key(FILE* indexFile, const char* searchKey) {
-    static struct IndexRecord record;
-
-    rewind(indexFile);
-    while (fread(&record, sizeof(record), 1, indexFile) == 1) {
-        if (strcmp(record.key, searchKey) == 0 && !record.deleted) {
-            return &record;
-        }
-    }
-    return NULL;
-}
-
+// In-memory hash index helpers
 static uint64_t hash_key(const char* key) {
     uint64_t hash = UINT64_C(1469598103934665603);
 
@@ -1010,6 +1078,37 @@ static int hash_index_add(struct FileHandle* handle, uint64_t hash,
     return KA_SUCCESS;
 }
 
+static int hash_index_remove(struct FileHandle* handle, uint64_t hash,
+                             long indexOffset) {
+    struct HashIndex* index = &handle->hashIndex;
+    size_t bucket;
+    int entry;
+    int previous = -1;
+
+    if (!index->built) {
+        return KA_SUCCESS;
+    }
+
+    bucket = hash % index->bucketCount;
+    entry = index->buckets[bucket];
+    while (entry >= 0) {
+        if (index->entries[entry].hash == hash &&
+            index->entries[entry].indexOffset == indexOffset) {
+            if (previous < 0) {
+                index->buckets[bucket] = index->entries[entry].next;
+            } else {
+                index->entries[previous].next = index->entries[entry].next;
+            }
+            index->entries[entry].next = -1;
+            return KA_SUCCESS;
+        }
+        previous = entry;
+        entry = index->entries[entry].next;
+    }
+
+    return KA_ERROR_NOTFOUND;
+}
+
 static int hash_index_build(struct FileHandle* handle) {
     struct IndexRecord record;
     long indexOffset = 0;
@@ -1049,7 +1148,7 @@ static int hash_index_build(struct FileHandle* handle) {
 }
 
 static int find_key_indexed(struct FileHandle* handle, const char* searchKey,
-                            struct IndexRecord* result) {
+                            struct IndexRecord* result, long* resultOffset) {
     struct HashIndex* index = &handle->hashIndex;
     uint64_t hash = hash_key(searchKey);
     int entry;
@@ -1074,6 +1173,9 @@ static int find_key_indexed(struct FileHandle* handle, const char* searchKey,
                 return KA_ERROR_IO;
             }
             if (!result->deleted && strcmp(result->key, searchKey) == 0) {
+                if (resultOffset) {
+                    *resultOffset = index->entries[entry].indexOffset;
+                }
                 return KA_SUCCESS;
             }
         }
@@ -1494,5 +1596,6 @@ LOADFUNCS
     ADDPROC(get_statistics, "keyaccess._stats",   "b", ".string", "handle=.int");
     ADDPROC(backup,        "keyaccess._backup",  "b", ".int",    "handle=.int,path=.string");
     ADDPROC(validate_database, "keyaccess._validate", "b", ".int", "handle=.int");
+    ADDPROC(reset_database, "keyaccess._reset", "b", ".int", "handle=.int");
     ADDPROC(compact_database, "keyaccess._compact",  "b", ".int", "handle=.int");
 ENDLOADFUNCS

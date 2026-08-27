@@ -4,7 +4,7 @@ do i = 1 to 3
   s[i] = "Item " || i
 end
 
-do i = 1 to 3
+do i = .int(1) to 3
   say "Arr " || i || ": " || s[i]
 end
 

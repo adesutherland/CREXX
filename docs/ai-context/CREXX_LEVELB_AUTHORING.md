@@ -462,9 +462,11 @@ Recent observations from the RexxScript evaluator refactor:
   as `items = .string[]`, can shadow the attribute instead of resetting the
   instance array. Reuse the instance array with an explicit count until the
   intended attribute-reset pattern is settled.
-- A method-local first assigned only inside a nested `do` block may not be
-  visible later in the outer method. Declare locals before the block when the
-  value is read later.
+- A method-local first assigned only inside a nested `do` block is not visible
+  later in the outer method. Declare it before the block when the value is read
+  later. A later implicit assignment or taken-constant read with the same name
+  remains legal, but receives `#NOT_IN_SAME_SCOPE`; an explicit declaration of
+  the separate later variable suppresses that warning.
 - Passing an object to a helper after a mutating method call, or passing a
   mutated-object method call inline as an argument, may expose stale state in
   some Level B paths. Snapshot state inside the owning method when correctness

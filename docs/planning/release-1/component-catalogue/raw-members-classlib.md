@@ -273,11 +273,13 @@ Stage 2 discovery data. A member is included only when its containing class or i
 | `MEM-data-keydb-keydb-isopen` | `data_KeyDB` | `KeyDB` | class | `isOpen` | method | `= .int` | `lib/classlib/KeyDB.crexx:113` |
 | `MEM-data-keydb-keydb-open` | `data_KeyDB` | `KeyDB` | class | `open` | method | `= .int` | `lib/classlib/KeyDB.crexx:93` |
 | `MEM-data-keydb-keydb-nextkey` | `data_KeyDB` | `KeyDB` | class | `nextKey` | method | `= .string` | `lib/classlib/KeyDB.crexx:195` |
+| `MEM-data-keydb-keydb-keyswithprefix` | `data_KeyDB` | `KeyDB` | class | `keysWithPrefix` | method | `= .string[]` | `lib/classlib/KeyDB.crexx:214` |
 | `MEM-data-keydb-keydb-put` | `data_KeyDB` | `KeyDB` | class | `put` | method | `= .int` | `lib/classlib/KeyDB.crexx:147` |
 | `MEM-data-keydb-keydb-putcommit` | `data_KeyDB` | `KeyDB` | class | `putCommit` | method | `= .int` | `lib/classlib/KeyDB.crexx:236` |
 | `MEM-data-keydb-keydb-remove` | `data_KeyDB` | `KeyDB` | class | `remove` | method | `= .int` | `lib/classlib/KeyDB.crexx:171` |
 | `MEM-data-keydb-keydb-removecommit` | `data_KeyDB` | `KeyDB` | class | `removeCommit` | method | `= .int` | `lib/classlib/KeyDB.crexx:253` |
 | `MEM-data-keydb-keydb-rollback` | `data_KeyDB` | `KeyDB` | class | `rollback` | method | `= .int` | `lib/classlib/KeyDB.crexx:135` |
+| `MEM-data-keydb-keydb-reset` | `data_KeyDB` | `KeyDB` | class | `reset` | method | `= .int` | `lib/classlib/KeyDB.crexx:299` |
 | `MEM-data-keydb-keydb-size` | `data_KeyDB` | `KeyDB` | class | `size` | method | `= .int` | `lib/classlib/KeyDB.crexx:179` |
 | `MEM-data-keydb-keydb-stats` | `data_KeyDB` | `KeyDB` | class | `stats` | method | `= .string` | `lib/classlib/KeyDB.crexx:186` |
 | `MEM-data-keydb-keydb-validate` | `data_KeyDB` | `KeyDB` | class | `validate` | method | `= .int` | `lib/classlib/KeyDB.crexx:204` |

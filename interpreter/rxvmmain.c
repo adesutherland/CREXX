@@ -420,11 +420,7 @@ int main(int argc, char *argv[]) {
         rxvm_program_result generation_result =
                 rxvm_program_generation_seal(&context, &generation);
 
-        /* Existing native-bearing images remain valid controller programs,
-         * but cannot seed attached bytecode workers.  Preserve their normal
-         * startup and let a later chanopen report provider unavailability. */
-        if (generation_result != RXVM_PROGRAM_OK &&
-            generation_result != RXVM_PROGRAM_NATIVE_EXCLUDED) {
+        if (generation_result != RXVM_PROGRAM_OK) {
             fprintf(stderr, "ERROR sealing executable program generation\n");
             rxfremod(&context);
             clear_rxvmplugin_factories();

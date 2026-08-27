@@ -32,6 +32,8 @@ options levelb comments_dash
 import data_KeyDB
 import rxfnsb
 
+arg benchmark_args = .string[]
+
 
 /* ================================================================= */
 /* Benchmark configuration                                           */
@@ -47,7 +49,7 @@ benchmark_args = .string[]
 if benchmark_args[0] >= 1 then
   key_count = benchmark_args[1]
 else
-  key_count = 5000
+  key_count = 500000
 
 if benchmark_args[0] >= 2 then
   hot_reads = benchmark_args[2]
@@ -85,15 +87,19 @@ end
 /*
  * Start from a known logical state.
  */
+start_us = time("us")
 
-rc = db.clear()
+rc = db.reset()
 
 if rc <> 0 then do
-  say "ERROR: clear failed:" rc
+  say "ERROR: reset failed:" rc
   call db.close()
   return 1
 end
 
+say "Reset store"
+say "Elapsed : " ElapsedTime(start_us)' [secs]'
+say
 
 /* ================================================================= */
 /* Load benchmark data                                               */
@@ -109,6 +115,7 @@ if rc <> 0 then do
   return 1
 end
 
+start_us = time("us")
 
 do i = 1 to key_count
 
@@ -126,18 +133,40 @@ do i = 1 to key_count
 
 end
 
+say "Add keys: " key_count
+say "Elapsed : " ElapsedTime(start_us)' [secs]'
+say
+
 
 rc = db.commit()
 
-if rc <> 0 then do
-  say "ERROR: commit failed:" rc
-  call db.close()
-  return 1
-end
+ if rc <> 0 then do
+    say "ERROR: commit failed:" rc
+    call db.close()
+    return 1
+ end
 
-say "Loaded" key_count "keys."
-say
+ say "Loaded" key_count "keys."
+ say
+ start_us = time("us")
+ say "--- Key listing ---"
+ keys=db.findkeys('key.1','oNLY')
 
+ say keys[0] 'matching keys found'
+
+ say "ONLY    : " key_count
+ say "Elapsed : " ElapsedTime(start_us)' [secs]'
+ say
+
+
+start_us = time("us")
+  say "--- Key listing ---"
+  keys=db.findkeys('4711','any')
+  say keys[0] 'matching keys found'
+
+  say "ANY     : " key_count
+  say "Elapsed : " elapsedTime(start_us)
+  say
 
 /* ================================================================= */
 /* Reopen to obtain a cold read state                                */
@@ -177,13 +206,8 @@ do i = 1 to key_count
   value = db.get("key." || i)
 end
 
-elapsed_us = time("us") - start_us
-
-if elapsed_us < 0 then
-  elapsed_us = elapsed_us + 86400000000
-
 say "Lookups : " key_count
-say "Elapsed : " elapsed_us/1000000' [secs]'
+say "Elapsed : " ElapsedTime(start_us)' [secs]'
 say
 
 
@@ -199,13 +223,8 @@ do i = 1 to key_count
   value = db.get("missing." || i)
 end
 
-elapsed_us = time("us") - start_us
-
-if elapsed_us < 0 then
-  elapsed_us = elapsed_us + 86400000000
-
 say "Lookups : " key_count
-say "Elapsed : " elapsed_us/1000000' [secs]'
+say "Elapsed : " ElapsedTime(start_us)' [secs]'
 say
 
 
@@ -228,14 +247,9 @@ do i = 1 to hot_reads
   value = db.get(hot_key)
 end
 
-elapsed_us = time("us") - start_us
-
-if elapsed_us < 0 then
-  elapsed_us = elapsed_us + 86400000000
-
 say "Key:      " hot_key
 say "Lookups:  " hot_reads
-say "Elapsed : " elapsed_us/1000000' [secs]'
+say "Elapsed : " ElapsedTime(start_us)' [secs]'
 
 say
 
@@ -258,3 +272,13 @@ say
 say "=== Benchmark complete ==="
 
 return 0
+
+/* --------------------------------------------------------------------------
+ * Calculate elapsed time in seconds.
+ * --------------------------------------------------------------------------
+ */
+elapsedTime: procedure=.float
+  arg start_us=.int
+  elapsed_us = time("us") - start_us
+  if elapsed_us < 0 then elapsed_us = elapsed_us + 86400000000
+return elapsed_us/1000000

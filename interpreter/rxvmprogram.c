@@ -197,6 +197,45 @@ static void rxvm_program_discard_unpublished(
     free(generation);
 }
 
+static int rxvm_program_module_is_bytecode(const module *mod) {
+    return mod && mod->file && !mod->native && !mod->file->native;
+}
+
+static size_t rxvm_program_context_bytecode_count(
+        const rxvm_context *context,
+        int *valid_out) {
+    size_t count = 0u;
+    size_t i;
+
+    if (valid_out) *valid_out = 0;
+    if (!context) return 0u;
+    for (i = 0u; i < context->num_modules; i++) {
+        module *mod = context->modules[i];
+
+        if (!mod || !mod->file) return 0u;
+        if (rxvm_program_module_is_bytecode(mod)) count++;
+    }
+    if (valid_out) *valid_out = 1;
+    return count;
+}
+
+static module *rxvm_program_context_bytecode_module(
+        const rxvm_context *context,
+        size_t bytecode_index) {
+    size_t current = 0u;
+    size_t i;
+
+    if (!context) return 0;
+    for (i = 0u; i < context->num_modules; i++) {
+        module *mod = context->modules[i];
+
+        if (!rxvm_program_module_is_bytecode(mod)) continue;
+        if (current == bytecode_index) return mod;
+        current++;
+    }
+    return 0;
+}
+
 rxvm_program_result rxvm_program_generation_seal(
         rxvm_context *context,
         const rxvm_program_generation **generation_out) {
@@ -204,7 +243,9 @@ rxvm_program_result rxvm_program_generation_seal(
     rxvm_program_generation *generation;
     rxvm_program_catalogue *catalogue;
     size_t prefix_count;
+    size_t bytecode_count;
     size_t i;
+    int valid_modules;
 
     if (generation_out) *generation_out = 0;
     if (!context || !context->worker.runtime || !generation_out) {
@@ -215,25 +256,23 @@ rxvm_program_result rxvm_program_generation_seal(
     }
     current = context->program_generation;
     prefix_count = current ? current->image_count : 0u;
-    if (!context->num_modules || context->num_modules < prefix_count) {
+    bytecode_count = rxvm_program_context_bytecode_count(
+            context, &valid_modules);
+    if (!valid_modules) return RXVM_PROGRAM_INVALID;
+    if (!bytecode_count || bytecode_count < prefix_count) {
         return RXVM_PROGRAM_INCOMPATIBLE;
     }
     if (current && current->catalogue->runtime != context->worker.runtime) {
         return RXVM_PROGRAM_WRONG_RUNTIME;
     }
     for (i = 0u; i < prefix_count; i++) {
-        if (context->modules[i]->file != current->images[i]->file) {
+        module *mod = rxvm_program_context_bytecode_module(context, i);
+
+        if (!mod || mod->file != current->images[i]->file) {
             return RXVM_PROGRAM_INCOMPATIBLE;
         }
     }
-    for (i = prefix_count; i < context->num_modules; i++) {
-        module *mod = context->modules[i];
-        if (!mod || !mod->file) return RXVM_PROGRAM_INVALID;
-        if (mod->native || mod->file->native) {
-            return RXVM_PROGRAM_NATIVE_EXCLUDED;
-        }
-    }
-    if (current && prefix_count == context->num_modules) {
+    if (current && prefix_count == bytecode_count) {
         *generation_out = current;
         return RXVM_PROGRAM_OK;
     }
@@ -243,25 +282,27 @@ rxvm_program_result rxvm_program_generation_seal(
     generation = (rxvm_program_generation *)calloc(1u, sizeof(*generation));
     if (!generation) return RXVM_PROGRAM_OUT_OF_MEMORY;
     generation->images = (rxvm_program_image **)calloc(
-            context->num_modules, sizeof(*generation->images));
+            bytecode_count, sizeof(*generation->images));
     if (!generation->images) {
         free(generation);
         return RXVM_PROGRAM_OUT_OF_MEMORY;
     }
     generation->catalogue = catalogue;
-    generation->image_count = context->num_modules;
+    generation->image_count = bytecode_count;
 
     for (i = 0u; i < prefix_count; i++) {
         generation->images[i] = current->images[i];
     }
     for (i = prefix_count; i < generation->image_count; i++) {
+        module *mod = rxvm_program_context_bytecode_module(context, i);
         rxvm_program_image *image =
                 (rxvm_program_image *)calloc(1u, sizeof(*image));
-        if (!image) {
+
+        if (!mod || !image) {
             rxvm_program_discard_unpublished(generation);
             return RXVM_PROGRAM_OUT_OF_MEMORY;
         }
-        image->file = context->modules[i]->file;
+        image->file = mod->file;
         generation->images[i] = image;
     }
 
@@ -291,7 +332,9 @@ rxvm_program_result rxvm_program_generation_attach(
             (rxvm_program_generation *)generation_const;
     rxvm_program_generation *current;
     size_t prefix_count;
+    size_t bytecode_count;
     size_t i;
+    int valid_modules;
 
     if (!context || !generation || !context->worker.runtime) {
         return RXVM_PROGRAM_INVALID;
@@ -305,14 +348,19 @@ rxvm_program_result rxvm_program_generation_attach(
     current = context->program_generation;
     if (current == generation) return RXVM_PROGRAM_OK;
     prefix_count = current ? current->image_count : 0u;
-    if ((!current && context->num_modules != 0u) ||
-        (current && context->num_modules != prefix_count) ||
+    bytecode_count = rxvm_program_context_bytecode_count(
+            context, &valid_modules);
+    if (!valid_modules ||
+        (!current && bytecode_count != 0u) ||
+        (current && bytecode_count != prefix_count) ||
         generation->image_count < prefix_count) {
         return RXVM_PROGRAM_INCOMPATIBLE;
     }
     for (i = 0u; i < prefix_count; i++) {
+        module *mod = rxvm_program_context_bytecode_module(context, i);
+
         if (current->images[i] != generation->images[i] ||
-            context->modules[i]->file != current->images[i]->file) {
+            !mod || mod->file != current->images[i]->file) {
             return RXVM_PROGRAM_INCOMPATIBLE;
         }
     }
@@ -476,10 +524,15 @@ int rxvm_program_generation_owns_module(
         const rxvm_context *context,
         size_t module_index) {
     const rxvm_program_generation *generation;
+    module *mod;
+    size_t i;
 
-    if (!context) return 0;
+    if (!context || module_index >= context->num_modules) return 0;
     generation = context->program_generation;
-    return generation && module_index < generation->image_count &&
-           context->modules[module_index]->file ==
-               generation->images[module_index]->file;
+    mod = context->modules[module_index];
+    if (!generation || !rxvm_program_module_is_bytecode(mod)) return 0;
+    for (i = 0u; i < generation->image_count; i++) {
+        if (mod->file == generation->images[i]->file) return 1;
+    }
+    return 0;
 }

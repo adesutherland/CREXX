@@ -38,6 +38,26 @@ failures = failures + check_string("get during enumeration", kdb.get(key), alpha
 failures = failures + check_string("next key after get", kdb.nextKey(), "beta")
 failures = failures + check_string("end of enumeration", kdb.nextKey(), "NOT_FOUND")
 
+/* Prefix search scans active keys and returns them in index order. */
+failures = failures + check_int("begin prefix data", kdb.begin(), 0)
+failures = failures + check_int("put prefix one", kdb.put("customer:001", "one"), 0)
+failures = failures + check_int("put prefix two", kdb.put("customer:002", "two"), 0)
+failures = failures + check_int("put other prefix", kdb.put("order:001", "order"), 0)
+failures = failures + check_int("commit prefix data", kdb.commit(), 0)
+prefix_keys = .string[]
+prefix_keys = kdb.findkeys("customer:",'ONLY')
+failures = failures + check_int("prefix match count", prefix_keys[0], 2)
+if prefix_keys[0] = 2 then do
+  failures = failures + check_string("prefix first key", prefix_keys[1], "customer:001")
+  failures = failures + check_string("prefix second key", prefix_keys[2], "customer:002")
+end
+empty_prefix = .string[]
+empty_prefix = kdb.findkeys("missing:",'only')
+failures = failures + check_int("prefix no match", empty_prefix[0], 0)
+failures = failures + check_int("remove prefix one", kdb.removeCommit("customer:001"), 0)
+failures = failures + check_int("remove prefix two", kdb.removeCommit("customer:002"), 0)
+failures = failures + check_int("remove other prefix", kdb.removeCommit("order:001"), 0)
+
 /* Updates replace the existing record and rollback restores both files. */
 failures = failures + check_int("begin update rollback", kdb.begin(), 0)
 failures = failures + check_int("update alpha", kdb.put("alpha", "rolled back"), 0)
@@ -86,6 +106,13 @@ else do
   failures = failures + check_int("clear", kdb.clear(), 0)
   failures = failures + check_int("size after clear", kdb.size(), 0)
   failures = failures + check_string("first key after clear", kdb.firstKey(), "NOT_FOUND")
+  failures = failures + check_int("begin reset data", kdb.begin(), 0)
+  failures = failures + check_int("put reset data", kdb.put("reset-me", "value"), 0)
+  failures = failures + check_int("commit reset data", kdb.commit(), 0)
+  failures = failures + check_string("reset data present", kdb.get("reset-me"), "value")
+  failures = failures + check_int("reset", kdb.reset(), 0)
+  failures = failures + check_int("size after reset", kdb.size(), 0)
+  failures = failures + check_string("reset removes data", kdb.get("reset-me"), "NOT_FOUND")
   failures = failures + check_int("close after reopen", kdb.close(), 0)
 end
 

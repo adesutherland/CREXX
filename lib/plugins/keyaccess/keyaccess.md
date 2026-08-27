@@ -8,56 +8,125 @@ require key-based access without an external database system.
 
 KeyAccess provides persistent key-value storage, transaction handling,
 sequential key traversal, caching, locking, and storage maintenance operations.
+It has no external dependencies, requires no server or database setup, and
+integrates directly with the cREXX runtime.
 
-It is a direct-access storage facility, not a database management system.
+KeyAccess is a direct-access storage facility, not a database management
+system. It is not intended to replace database functionality. For applications
+requiring SQL, relational queries, schemas, or more advanced database
+functionality, an embedded database such as SQLite is the appropriate choice.
 
 KeyAccess has two API layers:
 
 - The **keyaccess plugin** provides the low-level native storage functions.
-- The **`.KeyAccess` cREXX class** provides an object-oriented wrapper around the
-  native KeyAccess functions.
+- The **`.KeyAccess` cREXX class** provides an object-oriented wrapper around
+  the native KeyAccess functions.
 
 This document primarily describes the native KeyAccess interface. Where useful,
 the corresponding `.KeyAccess` methods are also shown.
 
+
 ## Table of Contents
 
 - [Features](#features)
+  - [Lookup Performance](#lookup-performance)
+  - [Representative Performance](#representative-performance)
 - [File Structure](#file-structure)
 - [API Layers](#api-layers)
 - [Available Functions](#available-functions)
+- [Transaction Management](#transaction-management)
+- [Storage Maintenance](#storage-maintenance)
 - [Error Codes](#error-codes)
 - [Usage Examples](#usage-examples)
 - [Version History](#version-history)
+
 
 ## Features
 
 - Persistent keyed storage with CRUD operations
 - Transaction support (`begin`, `commit`, `rollback`)
 - Sequential traversal of active keys
+- Key selection using prefix or substring matching through the `.KeyAccess`
+  wrapper
+- Lazy in-memory hash index for keyed access
+- Incremental in-memory index maintenance after writes and deletes
 - LRU cache for improved read performance
+- Full-key verification of hash matches
 - File locking for concurrent access
 - Storage maintenance (`backup`, `compact`, `validate`)
 - Error logging and statistics
 - No external database or server dependency
 
+
 ### Lookup Performance
 
-KeyAccess builds an in-memory hash index lazily on the first keyed read. The
-index stores a 64-bit hash and the corresponding index-file offset. A matching
-hash is always verified with the complete key, so hash collisions do not change
-the lookup result. The index is discarded and rebuilt after writes, deletes,
-rollback, compaction, and reopening the store.
+KeyAccess builds an in-memory hash index lazily on the first keyed read or
+write. The index stores a 64-bit hash and the corresponding index-file offset.
+
+A matching hash is always verified with the complete key, so hash collisions
+do not change the lookup result. A hash value is used only to locate candidate
+index records; it is never treated as proof that two keys are equal.
+
+Successful new writes and deletes maintain the in-memory index incrementally.
+Existing records can therefore be located through the same indexed lookup path
+used by normal keyed reads, avoiding repeated scans of the complete index
+during sequences of writes.
+
+The in-memory index is discarded when its contents can no longer safely
+describe the current index state, including after rollback, compaction, reset,
+close, and reopening the store. It is rebuilt lazily when keyed access next
+requires it.
 
 The handle-local LRU cache uses the same hash-directed lookup strategy. Cache
 collisions are resolved by comparing the complete key. A cache miss continues
-to the authoritative on-disk index; the cache does not change storage
-semantics or durability.
+to the authoritative keyed lookup using the in-memory hash index. Hash
+candidates are verified against the complete key stored in the index file; the
+cache does not change storage semantics or durability.
 
-The first keyed lookup may therefore include the cost of scanning the index to
-build the in-memory structure. Subsequent lookups avoid that scan while the
-handle remains open. `listkey` and sequential traversal continue to read the
-index records directly and are unaffected by the lookup cache.
+A missing key is a normal lookup result and is not treated as an operational
+error. `readkey` therefore does not write an error-log entry for
+`KA_ERROR_NOTFOUND`. Parameter, I/O, memory, and index failures continue to be
+logged normally. This avoids unnecessary log-file operations during negative
+lookups.
+
+The first keyed lookup may include the cost of scanning the index to build the
+in-memory structure. Subsequent keyed lookups avoid that scan while the
+structure remains valid for the open handle.
+
+`listkey` and sequential traversal continue to read index records directly and
+are unaffected by the keyed lookup cache and hash index.
+
+### Representative Performance
+
+KeyAccess is designed primarily for simplicity and self-contained keyed access,
+rather than as a replacement for a general-purpose database system. The
+implementation is nevertheless intended to remain practical for moderately
+sized local stores.
+
+As an illustrative measurement, the supplied KeyAccess lookup benchmark was
+run on Windows with 500,000 active keys:
+
+| Operation | Count | Elapsed |
+|-----------|------:|--------:|
+| Insert new keys | 500,000 | 14.19 s |
+| `ONLY` key selection | 500,000 scanned | 3.19 s |
+| `ANY` key selection | 500,000 scanned | 3.46 s |
+| Present keyed lookup | 500,000 | 10.84 s |
+| Missing keyed lookup | 500,000 | 9.69 s |
+| Repeated cached lookup | 10,000 | 0.030 s |
+
+This corresponds to approximately 35,000 new-key inserts per second and
+46,000 successful keyed lookups per second in this particular run.
+
+The `ONLY` and `ANY` measurements perform sequential traversal of all active
+keys; they are not secondary-index searches.
+
+These figures are representative measurements rather than performance
+guarantees. Results depend on hardware, operating system, compiler settings,
+storage, cache state, key/value sizes, and workload.
+
+The benchmark can be reproduced using the
+`examples/keydb_lookup_benchmark.crexx` sample.
 
 ## File Structure
 
@@ -65,10 +134,15 @@ A KeyAccess store uses separate files for data and index information.
 
 - **Data file**: Stores the actual key-value data.
 - **Index file**: Stores key locations and associated index metadata.
-- **Log file**: Records operations and errors where logging is enabled.
+- **Log file**: Records diagnostic and error information where logging is
+  enabled.
 
-The index may contain deleted records. Normal keyed access and sequential
-traversal expose only active records.
+The index is maintained in physical record order rather than key order.
+Direct keyed access is provided through the handle-local in-memory hash index,
+while sequential operations traverse active index records in storage order.
+
+Deleted index records may remain present until the store is compacted. Normal
+keyed access and sequential traversal expose only active records.
 
 ## API Layers
 
@@ -78,7 +152,7 @@ class.
 Typical mappings are:
 
 | Native function | `.KeyAccess` method |
-|-----------------|-----------------|
+|-----------------|---------------------|
 | `openkey` | `open()` |
 | `closekey` | `close()` |
 | `readkey` | `get()` |
@@ -86,9 +160,32 @@ Typical mappings are:
 | `deletekey` | `remove()` |
 | `firstkey` | `firstKey()` |
 | `nextkey` | `nextKey()` |
+| — | `findKeys()` |
+| — | `clear()` |
+| — | `reset()` |
 
-The native interface operates on an integer storage handle. The `.KeyAccess` class
-owns this handle and provides the corresponding operations as methods.
+The `.KeyAccess` wrapper also provides `findKeys(keyPart, matchMode)` as a
+convenience method for selecting active keys.
+
+The supported match modes are:
+
+| Mode | Meaning |
+|------|---------|
+| `ONLY` | `keyPart` must occur at the beginning of the key |
+| `ANY` | `keyPart` may occur anywhere in the key |
+
+`findKeys()` scans the active keys using `firstKey()` and `nextKey()` and
+returns a `.string[]` containing the matching keys. Results follow index
+traversal order and are not sorted.
+
+An empty `keyPart` matches every active key.
+
+The native KeyAccess plugin has no separate key-search function;
+`findKeys()` is implemented by the `.KeyAccess` cREXX wrapper.
+
+The native interface operates on an integer storage handle. The `.KeyAccess`
+class owns this handle and provides the corresponding operations as methods.
+
 
 ## Available Functions
 
@@ -116,11 +213,15 @@ Integer handle for the opened store, or a negative error code.
 handle = openkey("mystore.dat", "w+")
 ```
 
+
 ---
 
 #### closekey
 
 Closes an open KeyAccess store.
+
+Closing the store also releases handle-local resources such as the cache,
+in-memory lookup index, and traversal state.
 
 **Parameters:**
 
@@ -136,6 +237,7 @@ Integer status code.
 rc = closekey(handle)
 ```
 
+
 ---
 
 #### writekey
@@ -144,6 +246,12 @@ Writes a key-value pair to the store.
 
 If the key already exists, its active index record is replaced; a second
 active record is not created.
+
+Key existence is determined through the in-memory hash index when available.
+Hash candidates are always verified using the complete key.
+
+Successful writes update the in-memory lookup index incrementally rather than
+discarding and rebuilding the complete index after each write.
 
 **Parameters:**
 
@@ -161,11 +269,19 @@ Integer status code.
 rc = writekey(handle, "user.name", "John Doe")
 ```
 
+
 ---
 
 #### readkey
 
 Reads a value by key.
+
+Keyed lookup first checks the handle-local cache. If the value is not cached,
+the in-memory hash index is used to locate candidate index records. Every hash
+candidate is verified using the complete key before a value is returned.
+
+A key that does not exist is a normal lookup result. `KA_ERROR_NOTFOUND` is
+therefore not written to the error log by `readkey`.
 
 **Parameters:**
 
@@ -182,11 +298,18 @@ String value or an error/not-found indication.
 value = readkey(handle, "user.name")
 ```
 
+
 ---
 
 #### deletekey
 
 Deletes a key-value pair from the store.
+
+When the in-memory lookup index is available, the key is located through that
+index and the corresponding entry is removed incrementally after a successful
+delete.
+
+Hash candidates continue to be verified using the complete key.
 
 **Parameters:**
 
@@ -203,6 +326,7 @@ Integer status code.
 rc = deletekey(handle, "user.name")
 ```
 
+
 ---
 
 #### listkey
@@ -210,6 +334,9 @@ rc = deletekey(handle, "user.name")
 Returns the number of active keys in the store.
 
 Deleted index records are not included in the count.
+
+`listkey` scans index records directly; it does not depend on the in-memory
+keyed lookup index.
 
 **Parameters:**
 
@@ -225,8 +352,17 @@ Integer count of active keys.
 count = listkey(handle)
 ```
 
-The `.KeyAccess` wrapper also provides `clear()`, which removes all active keys in
-one transaction and returns the transaction status code.
+The `.KeyAccess` wrapper also provides `clear()`, which removes all active keys
+in one transaction and returns the transaction status code.
+
+The wrapper also provides `reset()`. This is a destructive, non-transactional
+operation that truncates both storage files directly, without scanning keys.
+It clears the cache and in-memory lookup index and rejects an active
+transaction.
+
+Use `clear()` when rollback-safe logical deletion is required and `reset()`
+when the store should be emptied immediately.
+
 
 ---
 
@@ -259,6 +395,7 @@ Calling `firstkey()` restarts sequential traversal for that handle.
 key = firstkey(handle)
 ```
 
+
 ---
 
 #### nextkey
@@ -290,7 +427,77 @@ key = nextkey(handle)
 A storage handle has one sequential traversal cursor. Calling `firstkey()`
 again restarts traversal for that handle.
 
-### Transaction Management
+
+### Key Selection Using `.KeyAccess`
+
+#### findKeys
+
+Returns active keys matching a specified part of the key.
+
+`findKeys()` is a convenience method implemented by the `.KeyAccess` wrapper.
+It scans active keys using `firstKey()` and `nextKey()`; it does not introduce
+a separate native KeyAccess search operation or secondary index.
+
+**Parameters:**
+
+- `keyPart` (string): Text to match against active keys.
+- `matchMode` (string): Determines how `keyPart` is matched.
+
+Supported match modes:
+
+| Mode | Meaning |
+|------|---------|
+| `ONLY` | The key must begin with `keyPart` |
+| `ANY` | `keyPart` may occur anywhere in the key |
+
+An empty `keyPart` matches every active key.
+
+**Returns:**
+
+A `.string[]` containing all matching active keys.
+
+Results follow index traversal order and are not sorted. An empty array is
+returned when no keys match.
+
+**Examples:**
+
+Select keys beginning with `type:`:
+
+```rexx
+keys = db.findKeys("type:", "ONLY")
+```
+
+Select keys containing `.Module17` anywhere in the key:
+
+```rexx
+keys = db.findKeys(".Module17", "ANY")
+```
+
+For structured keys such as:
+
+```text
+type:.Module17
+ref:calling:.Module16:.Module17
+ref:calling:.Module17:.Module18
+```
+
+all `calling` reference records can be selected using:
+
+```rexx
+keys = db.findKeys("ref:calling:", "ONLY")
+```
+
+All keys mentioning `.Module17` can be selected using:
+
+```rexx
+keys = db.findKeys(".Module17", "ANY")
+```
+
+`findKeys()` performs a sequential scan of active keys. It is therefore a
+convenience selection operation rather than an indexed secondary-key search.
+
+
+## Transaction Management
 
 #### txbegin
 
@@ -309,6 +516,7 @@ Integer status code.
 ```rexx
 rc = txbegin(handle)
 ```
+
 
 ---
 
@@ -330,6 +538,7 @@ Integer status code.
 rc = txcommit(handle)
 ```
 
+
 ---
 
 #### txrollback
@@ -337,8 +546,11 @@ rc = txcommit(handle)
 Rolls back the current transaction.
 
 Rollback restores the data and index files to their state at `txbegin`,
-including index records modified by updates or deletes. Cached values are
-invalidated after a successful rollback.
+including index records modified by updates or deletes.
+
+Cached values and the in-memory lookup index are invalidated after a
+successful rollback. The lookup index is rebuilt lazily when subsequent keyed
+access requires it.
 
 **Parameters:**
 
@@ -354,7 +566,8 @@ Integer status code.
 rc = txrollback(handle)
 ```
 
-### Storage Maintenance
+
+## Storage Maintenance
 
 #### stats
 
@@ -374,6 +587,7 @@ String containing storage statistics.
 storageStats = stats(handle)
 say storageStats
 ```
+
 
 ---
 
@@ -396,6 +610,7 @@ Integer status code.
 rc = backup(handle, "backup.dat")
 ```
 
+
 ---
 
 #### validate
@@ -416,11 +631,16 @@ Integer status indicating the number of errors found.
 errors = validate(handle)
 ```
 
+
 ---
 
 #### compact
 
 Compacts the store by removing deleted entries.
+
+Compaction changes the physical index layout and therefore invalidates the
+in-memory keyed lookup index. The index is rebuilt lazily when subsequent
+keyed access requires it.
 
 **Parameters:**
 
@@ -435,6 +655,7 @@ Integer status code.
 ```rexx
 rc = compact(handle)
 ```
+
 
 ## Error Codes
 
@@ -454,9 +675,13 @@ The native KeyAccess API uses the following status codes:
 | -9 | `KA_ERROR_TXINACTIVE` | No active transaction |
 | -10 | `KA_ERROR_TOOLONG` | Key or value too long |
 
+`KA_ERROR_NOTFOUND` represents a normal negative keyed lookup and is not logged
+as an operational error by `readkey`.
+
 Functions returning strings cannot directly return these integer error codes.
 In particular, the sequential traversal functions use `"NOT_FOUND"` to
 indicate the end of traversal and `"ERROR"` to indicate a traversal failure.
+
 
 ## Usage Examples
 
@@ -476,6 +701,7 @@ say "User name:" name
 /* Close store */
 call closekey handle
 ```
+
 
 ### Transaction Example
 
@@ -501,6 +727,7 @@ say storageStats
 call closekey handle
 ```
 
+
 ### Storage Maintenance Example
 
 ```rexx
@@ -524,6 +751,7 @@ end
 call closekey handle
 ```
 
+
 ### Sequential Key Traversal Using the Native API
 
 The native `firstkey` and `nextkey` functions can be used to enumerate all
@@ -546,10 +774,11 @@ Calling `readkey()` inside the loop does not disturb sequential traversal.
 
 Traversal follows index-record order and returns only active keys.
 
+
 ### Sequential Key Traversal Using `.KeyAccess`
 
-The `.KeyAccess` cREXX wrapper exposes the traversal operations as `firstKey()` and
-`nextKey()`:
+The `.KeyAccess` cREXX wrapper exposes the traversal operations as `firstKey()`
+and `nextKey()`:
 
 ```rexx
 key = db.firstKey()
@@ -565,10 +794,78 @@ end
 ```
 
 The traversal cursor belongs to the underlying KeyAccess handle. Index
-operations performed by `get()`, `containsKey()`, or other `.KeyAccess` methods do
-not change the next key returned by `nextKey()`.
+operations performed by `get()`, `containsKey()`, or other `.KeyAccess` methods
+do not change the next key returned by `nextKey()`.
 
 Calling `firstKey()` again restarts traversal.
+
+
+### Selecting Keys Using `.KeyAccess`
+
+The `.KeyAccess` wrapper provides `findKeys()` for simple selection of active
+keys.
+
+To select all keys beginning with a particular prefix:
+
+```rexx
+keys = db.findKeys("type:", "ONLY")
+
+do i = 1 to keys[0]
+    say keys[i]
+end
+```
+
+For example, a store containing:
+
+```text
+type:.Module01
+type:.Module02
+type:.Module03
+ref:calling:.Module01:.Module02
+```
+
+would return only the three `type:` keys.
+
+To select keys containing text anywhere in the key:
+
+```rexx
+keys = db.findKeys(".Module17", "ANY")
+
+do i = 1 to keys[0]
+    say keys[i]
+end
+```
+
+This is particularly useful when applications use structured keys. For
+example, given:
+
+```text
+type:.Module17
+ref:calling:.Module16:.Module17
+ref:calling:.Module17:.Module18
+ref:calling:.Module17:.MissingModule
+```
+
+the call:
+
+```rexx
+keys = db.findKeys(".Module17", "ANY")
+```
+
+selects all four keys because `.Module17` occurs somewhere in each key.
+
+A more selective query can take advantage of the application's key structure.
+For example:
+
+```rexx
+keys = db.findKeys("ref:calling:", "ONLY")
+```
+
+selects all `calling` reference records.
+
+`findKeys()` does not provide a secondary index. Both `ONLY` and `ANY`
+selection are implemented by sequential traversal of the active keys.
+
 
 ## Version History
 
@@ -576,3 +873,6 @@ Calling `firstKey()` again restarts traversal.
 |---------|------|-------------|
 | 1.0 | 2024-03-20 | Initial documentation |
 | 1.1 | 2026-08-25 | Added sequential active-key traversal and documented the KeyAccess/`.KeyAccess` API relationship |
+| 1.2 | 2026-08-26 | Added `.KeyAccess.findKeys()` with `ONLY` and `ANY` key selection |
+| 1.3 | 2026-08-26 | Added lazy in-memory hash indexing with incremental write/delete maintenance |
+| 1.4 | 2026-08-26 | Improved negative lookup handling; `NOT_FOUND` is no longer logged as an operational error |
