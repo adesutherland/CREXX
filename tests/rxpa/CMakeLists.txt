@@ -20,6 +20,11 @@ add_custom_target(cri07_rxpa_sdk_consumer_prereqs
                 id id_static
                 fs fs_static
                 _platform _platform_static)
+if(TARGET qa-prep)
+    # The installed-consumer test may build its private scratch consumer, but
+    # must never rebuild the active CREXX tree from inside CTest.
+    add_dependencies(qa-prep cri07_rxpa_sdk_consumer_prereqs)
+endif()
 
 add_test(
         NAME rxpa_external_sdk_consumer

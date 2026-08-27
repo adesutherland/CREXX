@@ -43,11 +43,6 @@ function(run_checked description)
     set(last_stderr "${err}" PARENT_SCOPE)
 endfunction()
 
-run_checked("build SDK consumer prerequisites"
-        COMMAND "${CMAKE_COMMAND}" --build "${CREXX_BUILD_DIR}"
-                --target cri07_rxpa_sdk_consumer_prereqs --parallel 4
-        WORKING_DIRECTORY "${CREXX_BUILD_DIR}")
-
 run_checked("install CREXX into fresh scratch prefix"
         COMMAND "${CMAKE_COMMAND}" --install "${CREXX_BUILD_DIR}" --prefix "${prefix}"
         WORKING_DIRECTORY "${WORK_ROOT}")

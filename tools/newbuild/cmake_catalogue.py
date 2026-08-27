@@ -686,6 +686,54 @@ def load_trace(
     }
 
 
+def _same_build_root(value: str, build_root: Path) -> bool:
+    if not value or "$" in value or "<" in value:
+        return False
+    try:
+        return Path(value).absolute().resolve() == build_root.absolute().resolve()
+    except OSError:
+        return False
+
+
+def ctest_invokes_active_build(command: list[str], build_root: Path) -> bool:
+    """Detect a CTest command that rebuilds the configured CREXX tree.
+
+    Scratch consumer builds are legitimate qualification work.  The hazard is
+    a direct build of the active tree, including one hidden in a CMake script
+    invoked with ``cmake -P``.
+    """
+
+    for index, token in enumerate(command[:-1]):
+        if token == "--build" and _same_build_root(command[index + 1], build_root):
+            return True
+
+    definitions: dict[str, str] = {}
+    for token in command:
+        match = re.match(r"^-D([^=]+)=(.*)$", token)
+        if match:
+            definitions[match.group(1)] = match.group(2)
+    definitions.setdefault("CMAKE_BINARY_DIR", str(build_root))
+
+    for index, token in enumerate(command[:-1]):
+        if token != "-P":
+            continue
+        script = Path(command[index + 1])
+        if not script.is_file():
+            continue
+        try:
+            content = script.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            continue
+        for match in re.finditer(r"--build\s+(?:\"([^\"]+)\"|'([^']+)'|([^\s\)]+))", content):
+            candidate = next(value for value in match.groups() if value is not None)
+            variable = re.fullmatch(r"\$\{([^}]+)\}", candidate)
+            if variable:
+                candidate = definitions.get(variable.group(1), "")
+            if _same_build_root(candidate, build_root):
+                return True
+    return False
+
+
 def load_ctest(path: Path, normalizer: PathNormalizer) -> list[dict[str, Any]]:
     data = read_json(path)
     graph = data.get("backtraceGraph", {})
@@ -701,7 +749,8 @@ def load_ctest(path: Path, normalizer: PathNormalizer) -> list[dict[str, Any]]:
         source = definition.get("file", "")
         surface = classify_surface(source, test["name"])
         tier = classify_test(labels, test["name"])
-        command = normalizer.text(test.get("command", []))
+        raw_command = [str(item) for item in test.get("command", [])]
+        command = normalizer.text(raw_command)
         tests.append(
             {
                 "name": test["name"],
@@ -717,7 +766,7 @@ def load_ctest(path: Path, normalizer: PathNormalizer) -> list[dict[str, Any]]:
                 "resource_locks": properties.get("RESOURCE_LOCK", []),
                 "run_serial": bool(properties.get("RUN_SERIAL", False)),
                 "timeout_seconds": properties.get("TIMEOUT"),
-                "nested_build": "--build" in command and any("cmake" in part.lower() for part in command),
+                "nested_build": ctest_invokes_active_build(raw_command, normalizer.build_root),
                 "properties": properties,
             }
         )

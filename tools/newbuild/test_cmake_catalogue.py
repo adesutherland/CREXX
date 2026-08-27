@@ -99,6 +99,25 @@ class CatalogueUnitTests(unittest.TestCase):
     def test_qa_classification_recognizes_explicit_qualification(self) -> None:
         self.assertEqual(catalogue.classify_test(["qualification", "performance"], "candidate"), "qualification")
 
+    def test_nested_build_detection_follows_cmake_scripts_but_allows_scratch_builds(self) -> None:
+        with tempfile.TemporaryDirectory() as root:
+            build = Path(root) / "build"
+            build.mkdir()
+            script = Path(root) / "qualification.cmake"
+            script.write_text(
+                'execute_process(COMMAND "${CMAKE_COMMAND}" --build "${CREXX_BUILD_DIR}" --target prereqs)\n',
+                encoding="utf-8",
+            )
+            command = ["cmake", f"-DCREXX_BUILD_DIR={build}", "-P", str(script)]
+            self.assertTrue(catalogue.ctest_invokes_active_build(command, build))
+
+            script.write_text(
+                'execute_process(COMMAND "${CMAKE_COMMAND}" --build "${consumer_build}")\n',
+                encoding="utf-8",
+            )
+            self.assertFalse(catalogue.ctest_invokes_active_build(command, build))
+            self.assertTrue(catalogue.ctest_invokes_active_build(["cmake", "--build", str(build)], build))
+
     def test_import_policy_accepts_direct_and_cmake_env_invocations(self) -> None:
         with tempfile.TemporaryDirectory() as root:
             base = Path(root)
