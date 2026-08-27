@@ -1,0 +1,284 @@
+/*
+ * KeyAccess lookup benchmark.
+ *
+ * Measures three lookup scenarios:
+ *
+ *   1. Cold lookup of existing keys
+ *   2. Cold lookup of missing keys
+ *   3. Repeated lookup of one cached key
+ *
+ * Arguments:
+ *
+ *   1. Number of keys
+ *      Default: 5000
+ *
+ *   2. Number of repeated cached reads
+ *      Default: 10000
+ *
+ *   3. Database path
+ *      Default: keydb_lookup_benchmark.db
+ *
+ * IMPORTANT:
+ *
+ * Use a disposable database path.
+ *
+ * The selected store is cleared before benchmark data is loaded.
+ * Opening with "w+" preserves an existing store while allowing it
+ * to be created if it does not yet exist.
+ */
+
+options levelb comments_dash
+
+import data_KeyDB
+import rxfnsb
+
+arg benchmark_args = .string[]
+
+
+/* ================================================================= */
+/* Benchmark configuration                                           */
+/* ================================================================= */
+
+benchmark_args = .string[]
+
+/*
+ * Populate benchmark_args here from the program arguments when the
+ * example is used with command-line parameters.
+ */
+
+if benchmark_args[0] >= 1 then
+  key_count = benchmark_args[1]
+else
+  key_count = 500000
+
+if benchmark_args[0] >= 2 then
+  hot_reads = benchmark_args[2]
+else
+  hot_reads = 10000
+
+if benchmark_args[0] >= 3 then
+  database_file = benchmark_args[3]
+else
+  database_file = "keydb_lookup_benchmark.db"
+
+
+say "=== KeyAccess lookup benchmark ==="
+say
+say "Database:            " database_file
+say "Keys:                " key_count
+say "Repeated hot reads:  " hot_reads
+say
+
+
+/* ================================================================= */
+/* Open and initialize benchmark store                               */
+/* ================================================================= */
+
+db = .KeyDB()
+
+rc = db.open(database_file, "w+")
+
+if rc < 0 then do
+  say "ERROR: open failed:" rc
+  return 1
+end
+
+
+/*
+ * Start from a known logical state.
+ */
+start_us = time("us")
+
+rc = db.reset()
+
+if rc <> 0 then do
+  say "ERROR: reset failed:" rc
+  call db.close()
+  return 1
+end
+
+say "Reset store"
+say "Elapsed : " ElapsedTime(start_us)' [secs]'
+say
+
+/* ================================================================= */
+/* Load benchmark data                                               */
+/* ================================================================= */
+
+say "--- Loading benchmark data ---"
+
+rc = db.begin()
+
+if rc <> 0 then do
+  say "ERROR: begin failed:" rc
+  call db.close()
+  return 1
+end
+
+start_us = time("us")
+
+do i = 1 to key_count
+
+  key = "key." || i
+  value = "value." || i
+
+  rc = db.put(key, value)
+
+  if rc <> 0 then do
+    say "ERROR: put failed at key" i ":" rc
+    call db.rollback()
+    call db.close()
+    return 1
+  end
+
+end
+
+say "Add keys: " key_count
+say "Elapsed : " ElapsedTime(start_us)' [secs]'
+say
+
+
+rc = db.commit()
+
+ if rc <> 0 then do
+    say "ERROR: commit failed:" rc
+    call db.close()
+    return 1
+ end
+
+ say "Loaded" key_count "keys."
+ say
+ start_us = time("us")
+ say "--- Key listing ---"
+ keys=db.findkeys('key.1','oNLY')
+
+ say keys[0] 'matching keys found'
+
+ say "ONLY    : " key_count
+ say "Elapsed : " ElapsedTime(start_us)' [secs]'
+ say
+
+
+start_us = time("us")
+  say "--- Key listing ---"
+  keys=db.findkeys('4711','any')
+  say keys[0] 'matching keys found'
+
+  say "ANY     : " key_count
+  say "Elapsed : " elapsedTime(start_us)
+  say
+
+/* ================================================================= */
+/* Reopen to obtain a cold read state                                */
+/* ================================================================= */
+
+/*
+ * Close and reopen the store so that the following lookup benchmark
+ * is not served by values placed in the handle-local cache while the
+ * benchmark data was written.
+ */
+
+rc = db.close()
+
+if rc <> 0 then do
+  say "ERROR: close before benchmark failed:" rc
+  return 1
+end
+
+
+rc = db.open(database_file, "r")
+
+if rc < 0 then do
+  say "ERROR: reopen failed:" rc
+  return 1
+end
+
+
+/* ================================================================= */
+/* Benchmark 1: cold lookup of existing keys                         */
+/* ================================================================= */
+
+say "--- Cold present lookup ---"
+
+start_us = time("us")
+
+do i = 1 to key_count
+  value = db.get("key." || i)
+end
+
+say "Lookups : " key_count
+say "Elapsed : " ElapsedTime(start_us)' [secs]'
+say
+
+
+/* ================================================================= */
+/* Benchmark 2: cold lookup of missing keys                          */
+/* ================================================================= */
+
+say "--- Cold missing lookup ---"
+
+start_us = time("us")
+
+do i = 1 to key_count
+  value = db.get("missing." || i)
+end
+
+say "Lookups : " key_count
+say "Elapsed : " ElapsedTime(start_us)' [secs]'
+say
+
+
+/* ================================================================= */
+/* Benchmark 3: repeated cached lookup                               */
+/* ================================================================= */
+
+/*
+ * The last existing key was read during the cold-present benchmark,
+ * so it should now be available from the handle-local value cache.
+ */
+
+say "--- Cached repeated lookup ---"
+
+hot_key = "key." || key_count
+
+start_us = time("us")
+
+do i = 1 to hot_reads
+  value = db.get(hot_key)
+end
+
+say "Key:      " hot_key
+say "Lookups:  " hot_reads
+say "Elapsed : " ElapsedTime(start_us)' [secs]'
+
+say
+
+
+/* ================================================================= */
+/* Final information                                                 */
+/* ================================================================= */
+
+say "--- Store information ---"
+say "Active keys: " db.size()
+
+rc = db.close()
+
+if rc <> 0 then do
+  say "ERROR: final close failed:" rc
+  return 1
+end
+
+say
+say "=== Benchmark complete ==="
+
+return 0
+
+/* --------------------------------------------------------------------------
+ * Calculate elapsed time in seconds.
+ * --------------------------------------------------------------------------
+ */
+elapsedTime: procedure=.float
+  arg start_us=.int
+  elapsed_us = time("us") - start_us
+  if elapsed_us < 0 then elapsed_us = elapsed_us + 86400000000
+return elapsed_us/1000000

@@ -1,0 +1,2 @@
+Error in reference_source_refsame_type_fail.crexx @ 9:6 - #REFERENCE_TYPE_MISMATCH, "number_ref <refsame> text_ref"
+1 error(s) in source file

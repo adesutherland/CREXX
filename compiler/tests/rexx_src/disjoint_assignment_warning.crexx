@@ -1,0 +1,13 @@
+options levelb
+
+main: procedure
+  do
+    i = 1
+  end
+  i = 2
+
+  do
+    j = 3
+  end
+  say j
+  return

@@ -71,6 +71,12 @@ addressexit: class
         auto_expose = .string[]
         section = .string
         depth = .int
+        i = .int
+        ti = .token
+        type = .string
+        text = .string
+        utext = .string
+        replacement = .string
 
         if tokens.0 < 1 then return error_result(1, "ADDRESS missing token stream")
 
@@ -411,6 +417,16 @@ emitGeneratedRequestResult: procedure = .exitresult
     sandbox_expr = .string
     stem_index = .int
     binding_index = .int
+    i = .int
+    ti = .token
+    type = .string
+    name = .string
+    auto_index = .int
+    auto_binding_index = .int
+    stem_var = .string
+    loop_var = .string
+    binding_var = .string
+    count_var = .string
 
     command_expr = emitTokenRange(tokens, command_start, command_end)
     input_expr = buildRedirect(tokens, input_start, input_end, "IN")
@@ -418,6 +434,7 @@ emitGeneratedRequestResult: procedure = .exitresult
     error_expr = buildRedirect(tokens, error_start, error_end, "OUT")
 
     call result.set_status("REPLACE")
+    call result.add_replacement_line(request_var || "=.addressrequest")
     call result.add_replacement_line(request_var || "=_address_new_request(" || env_expr || "," || command_expr || "," || input_expr || "," || output_expr || "," || error_expr || ")")
 
     if sandbox_start > 0 then do
@@ -444,6 +461,9 @@ emitGeneratedRequestResult: procedure = .exitresult
             stem_var = "__rxaddr_stem_" || stem_index
             loop_var = "__rxaddr_i_" || stem_index
             binding_var = "__rxaddr_binding_" || binding_index
+            call result.add_replacement_line(stem_var || "=.standardaddressstem")
+            call result.add_replacement_line(loop_var || "=.int")
+            call result.add_replacement_line(binding_var || "=.addressbinding")
             call result.add_replacement_line(stem_var || "=.standardaddressstem()")
             call result.add_replacement_line("call " || stem_var || ".set('0'," || name || ".0 || '')")
             call result.add_replacement_line("do " || loop_var || " = 1 to " || name || ".0")
@@ -455,6 +475,7 @@ emitGeneratedRequestResult: procedure = .exitresult
         end
         else do
             binding_var = "__rxaddr_binding_" || binding_index
+            call result.add_replacement_line(binding_var || "=.addressbinding")
             call result.add_replacement_line(binding_var || "=.addressbinding('var','" || name || "','" || name || "'," || name || ",'')")
             call result.add_replacement_line("call " || request_var || ".add_binding_plan(" || binding_var || ")")
         end
@@ -469,6 +490,9 @@ emitGeneratedRequestResult: procedure = .exitresult
             stem_index = stem_index + 1
             stem_var = "__rxaddr_stem_" || stem_index
             loop_var = "__rxaddr_i_" || stem_index
+            call result.add_replacement_line(stem_var || "=.standardaddressstem")
+            call result.add_replacement_line(loop_var || "=.int")
+            call result.add_replacement_line(binding_var || "=.addressbinding")
             call result.add_replacement_line(stem_var || "=.standardaddressstem()")
             call result.add_replacement_line("call " || stem_var || ".set('0'," || name || ".0 || '')")
             call result.add_replacement_line("do " || loop_var || " = 1 to " || name || ".0")
@@ -479,11 +503,13 @@ emitGeneratedRequestResult: procedure = .exitresult
             call result.add_replacement_line("call " || request_var || ".add_binding_plan(" || binding_var || ")")
         end
         else do
+            call result.add_replacement_line(binding_var || "=.addressbinding")
             call result.add_replacement_line(binding_var || "=.addressbinding('var','" || name || "','" || name || "'," || name || ",'')")
             call result.add_replacement_line("call " || request_var || ".add_binding_plan(" || binding_var || ")")
         end
     end
 
+    call result.add_replacement_line(response_var || "=.addressresponse")
     call result.add_replacement_line(response_var || "=_address_dispatch_request(" || request_var || ")")
 
     if sandbox_start > 0 then do
@@ -510,6 +536,7 @@ emitGeneratedRequestResult: procedure = .exitresult
             loop_var = "__rxaddr_i_" || stem_index
             count_var = "__rxaddr_count_" || stem_index
             call result.add_replacement_line("call _address_apply_response_request_stem(" || response_var || "," || request_var || "," || binding_index || ",'" || name || "')")
+            call result.add_replacement_line(count_var || "=.float")
             call result.add_replacement_line(count_var || "=" || request_var || ".get_binding_stem_value(" || binding_index || ",'0') + 0")
             call result.add_replacement_line("assembler SETATTRS " || name || "," || count_var)
             call result.add_replacement_line("do " || loop_var || " = 1 to " || count_var)
@@ -530,6 +557,7 @@ emitGeneratedRequestResult: procedure = .exitresult
             loop_var = "__rxaddr_i_" || stem_index
             count_var = "__rxaddr_count_" || stem_index
             call result.add_replacement_line("call _address_apply_response_request_stem(" || response_var || "," || request_var || "," || auto_binding_index || ",'" || name || "')")
+            call result.add_replacement_line(count_var || "=.float")
             call result.add_replacement_line(count_var || "=" || request_var || ".get_binding_stem_value(" || auto_binding_index || ",'0') + 0")
             call result.add_replacement_line("assembler SETATTRS " || name || "," || count_var)
             call result.add_replacement_line("do " || loop_var || " = 1 to " || count_var)

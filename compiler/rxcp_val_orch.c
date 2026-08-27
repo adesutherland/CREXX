@@ -1458,10 +1458,14 @@ static walker_result disjoint_scope_warning_walker(walker_direction direction,
             Symbol *symbol = node->symbolNode ? node->symbolNode->symbol : NULL;
             if (symbol && symbol->creation_node == node) {
                 /* This is the first mention of this symbol in this scope */
-                /* Look for same named symbol in disjoint branches of the same procedure */
-                /* Skip if parent is ASSIGN or DEFINE as requested */
-                if (node->parent && (node->parent->node_type == ASSIGN || node->parent->node_type == DEFINE)) {
-                    /* No warning needed for explicit assignments/definitions */
+                /* Look for the same name in an earlier disjoint scope.  An
+                 * implicit assignment is legal, but is still likely to be an
+                 * accidental attempt to use the earlier local.  Only an
+                 * explicit declaration makes the new binding unambiguous. */
+                if (node->parent &&
+                    (node->parent->node_type == DEFINE ||
+                     node->parent->node_type == CONSTANT_DEF)) {
+                    /* Explicit declaration: the separate binding is intentional. */
                 } else {
                     ASTNode *proc = ast_proc(node);
                     if (proc && proc->scope) {
@@ -2003,6 +2007,11 @@ void validate_ast(Context *context) {
          */
         context->current_scope = 0;
         ast_wlkr(context->ast, rewrite_constructor_walker, (void *) context);
+
+        /* Lower the closed Level G object-equivalence operator before symbol
+         * resolution. The lowered call retains an explicit validation marker. */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, rewrite_equivalence_walker, (void *) context);
 
         /* Re-write EXIT Instructions
          * Progress: rewrite_exit_walker is idempotent. Mutates EXIT to CALL.

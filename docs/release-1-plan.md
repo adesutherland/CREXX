@@ -1,8 +1,8 @@
 # CREXX Release 1 Plan
 
 Status: draft plan for maintainer review and GitHub discussion, updated for the
-beta 3 foundation work completed through 2026-08-16.
-Date: 2026-08-16.
+beta 3 foundation work completed through 2026-08-23.
+Date: 2026-08-23.
 Target release: end of August 2026.
 
 This plan describes the intended path from the tagged `v1.0.0-beta.2` release
@@ -292,6 +292,8 @@ common `rel1` label plus the tier and area labels shown here.
 | 39 | Add GPU VM plugin proof of concept behind experimental status | Adrian | `rel1`, `experimental`, `vm`, `plugins` | Publish design notes or keep the work out of the release branch. |
 | 40 | Qualify and decide publication of structured concurrency | Adrian | `rel1`, `initial`, `vm` | Local/process tasks and ownership-safe transfer are implemented; keep the surface initial unless portable conformance, package proof and release approval complete. Shared-memory subtasks remain out of scope. |
 | 41 | Design class and interface constants for Release 2 | Adrian | `r2`, `level-b`, `classes`, `compiler` | Keep Release 1 constants procedure-scoped; investigate whether constants should have a public view as part of the R2 class/interface constant design. |
+| 42 | Replace file RXAS instructions with a measured typed `rx_io` call surface | Adrian | `post-r1`, `rxas`, `vm`, `library`, `performance` | Preserve current opcodes and context-owned behavior unless an approved design proves exact ownership/error equivalence, representative performance, dual lowering or migration, packaging, both VMs and the selected RXBIN tombstone policy. Transferred from former RCC-6. |
+| 43 | Review remaining host-shaped RXAS instruction families using measured dispositions | Adrian | `post-r1`, `rxas`, `vm`, `performance`, `compatibility` | Keep the current instructions unless separate FNV-1a, clock/environment/version/random, socket and reflection reviews justify typed-call conversion with use, ownership, size, performance and cross-platform evidence. Transferred from former RCC-7. |
 
 ## Dependency Map
 

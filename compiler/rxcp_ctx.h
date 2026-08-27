@@ -127,6 +127,10 @@ struct Context {
     char in_exit_bridge;
     char disable_exits;
     char auto_import_rxas;
+    /* Contract-stub parsing validates declarations before the complete class
+     * registry exists. Imported inline bodies are attached later, when the
+     * stub enters a real consumer compilation context. */
+    char defer_imported_inline_attachments;
     void *exit_registry; /* Pointer to the list of registered exits (primary and additional keywords) */
     void *exit_additional_keywords; /* Pointer to the list of all additional keywords across all exits */
     void *exit_helper_registry; /* Pointer to per-file helper definitions injected by exits */
@@ -176,6 +180,15 @@ struct imported_func {
     struct imported_func *duplicate;
 };
 
+/* Superseded parsed class contracts remain reachable by active recursive
+ * import/validation frames.  Keep the Context and its shared file-name storage
+ * together until the owning imported-class registry record is destroyed. */
+struct retained_imported_class_context {
+    Context *context;
+    char *file_name;
+    struct retained_imported_class_context *next;
+};
+
 /*  Importable Classes */
 struct imported_class {
     char *namespace;
@@ -187,6 +200,7 @@ struct imported_class {
     NodeType contract_type;
     char **implements_fqnames;
     size_t implements_count;
+    struct retained_imported_class_context *retained_contexts;
 };
 
 /*  Importable Files */
@@ -285,6 +299,13 @@ int sym_is_imcls(Context *context, ASTNode *node);
 Symbol *sym_imcls(Context *context, ASTNode *node);
 /* Try and import an external class by name - return its symbol if successful */
 Symbol *ensure_class_imported(Context *context, const char *class_name, size_t class_name_length);
+/* Exact fully-qualified dependency lookup for sealed imported inline bodies.
+ * Unlike ordinary source lookup, this does not require the consumer source to
+ * import the producer's dependency namespace independently. */
+imported_func *rxcp_find_imported_function_exact(Context *context, const char *fqname);
+Symbol *ensure_function_imported_exact(Context *context,
+                                       const char *fqname,
+                                       size_t fqname_length);
 int sym_is_interface_symbol(Symbol *symbol);
 int sym_is_class_contract_symbol(Symbol *symbol);
 int symbol_names_equivalent(Context *context, const char *left_name, const char *right_name);

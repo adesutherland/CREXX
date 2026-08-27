@@ -49,6 +49,11 @@ sortexit: class
         arg tokens = .token[]
 
         result = .exitresult("EMPTY")
+        rule = .string[]
+        i = .int
+        ti = .token
+        t_type = .string
+        replacement = .string
         rule[2] = "identifier[]"
         rule[3] = "identifier/int_literal"
         rule[4] = "identifier/string_literal"
@@ -87,9 +92,9 @@ sortexit: class
             end
         end
 
-        if tokens.0 >= 5 then replacement = "__rc=arraysort({2},{3},{4},{5});"
-        else if tokens.0 = 4 then replacement = "__rc=arraysort({2},{3},{4});"
-        else replacement = "__rc=arraysort({2},{3});"
+        if tokens.0 >= 5 then replacement = "__rc=.int; __rc=arraysort({2},{3},{4},{5});"
+        else if tokens.0 = 4 then replacement = "__rc=.int; __rc=arraysort({2},{3},{4});"
+        else replacement = "__rc=.int; __rc=arraysort({2},{3});"
 
         call result.set_status("REPLACE")
         call result.add_replacement_line(replacement)
@@ -97,6 +102,7 @@ sortexit: class
 
 _type_allowed: procedure = .int
     arg t_type = .string, allowed = .string
+    j = .int
     allowed = translate(allowed,, '/\\')
     do j = 1 to words(allowed)
         if t_type = word(allowed, j) then return 1

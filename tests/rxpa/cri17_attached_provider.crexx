@@ -1,0 +1,43 @@
+options levelg comments_dash
+
+namespace cri17_attached_test expose provider_created provider_destroyed provider_live
+import concurrency
+import cri17provider
+
+worker_session: task = .int
+  return session_id()
+
+provider_created: procedure = .int
+  return created()
+
+provider_destroyed: procedure = .int
+  return destroyed()
+
+provider_live: procedure = .int
+  return live()
+
+main: procedure = .int
+  pool = .taskpool.local(2, 4)
+  scope = .taskscope.collectall(pool, 60000)
+  do parallel using scope
+    first_session = worker_session()
+    second_session = worker_session()
+  end
+  call pool.close()
+
+  if first_session = second_session then do
+    say "FAIL: CRI-17 attached workers shared one RXPA session" first_session
+    return 1
+  end
+  if provider_created() <> 3 then do
+    say "FAIL: CRI-17 expected controller plus two worker sessions" provider_created()
+    return 2
+  end
+  if provider_destroyed() <> 2 | provider_live() <> 1 then do
+    say "FAIL: CRI-17 worker session teardown" provider_destroyed() provider_live()
+    return 3
+  end
+  say "PASS: CRI-17 attached workers resolve distinct RXPA V2 sessions"
+  return 0
+
+exit main()

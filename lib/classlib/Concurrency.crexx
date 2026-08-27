@@ -1360,7 +1360,10 @@ channel_impl: class implements .channel
     end
     do forever
       if remaining_microseconds > 0 then do
-        next_wait = (remaining_microseconds + 999) % 1000
+        -- Convert the remaining microseconds to a ceiling millisecond wait.
+        -- Subtracting before division keeps the maximum accepted bound safe
+        -- from overflow under the default numeric_common integer semantics.
+        next_wait = ((remaining_microseconds - 1) / 1000) + 1
         observed = wait(next_wait) as .completion_impl
       end
       else observed = wait(wait_milliseconds) as .completion_impl

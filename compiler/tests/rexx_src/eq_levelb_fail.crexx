@@ -1,0 +1,11 @@
+options levelb
+namespace eq_levelb_fail
+
+left = .PlainKey()
+right = .PlainKey()
+if left <eq> right then exit 1
+exit 0
+
+PlainKey: class
+  *: factory
+    return

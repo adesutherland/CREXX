@@ -85,8 +85,12 @@ A fresh array needs no preliminary `arraydrop`. Reusing without a drop is the
 supported accumulation form, not an implicit reset operation.
 
 When `OUTPUT` or `ERROR` is omitted, that stream is written to the normal cRexx
-standard stream and flushed as the command emits it. Long-running later work
-does not delay already-emitted CREXX command output until task completion.
+standard stream and flushed as the command emits it. This includes the
+corresponding child stream from `ADDRESS CREXX "run ..."`: no hidden capture
+is inserted before the inherited stream. Long-running child or later work does
+not delay already-emitted CREXX command output until command or task
+completion. A stream with an explicit `OUTPUT` or `ERROR` destination retains
+the requested string/array capture semantics.
 
 ### Built-In Command Environments
 
@@ -237,6 +241,21 @@ A qualified receiver can also be used:
 ```rexx
 call list.add("red")
 ```
+
+The receiver may be a postfix expression, including an indexed value, a
+parenthesized expression, a factory or function result, or an earlier method
+result:
+
+```rexx
+call lists[index].add("red")
+call makeList().add("blue")
+call makeContainer().list().clear()
+```
+
+The receiver expression and each argument are evaluated once in normal call
+order. If the method mutates a variable-like receiver such as `lists[index]`,
+the changed object is written back through that same selected location. The
+method's returned value, if any, is discarded by `CALL`.
 
 Use an expression call when the returned value is required.
 

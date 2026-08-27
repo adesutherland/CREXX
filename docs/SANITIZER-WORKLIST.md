@@ -14,12 +14,167 @@ also passes both Linux x64 ASan/LSan and macOS arm64 ASan on that commit.
 SAN-001 through SAN-005 and SAN-QA-001 through SAN-QA-007 are therefore closed
 as sanitizer findings.
 
+Status at 2026-08-26: SAN-QA-008 is closed after the synchronized hotfix passed
+the original broad macOS arm64 trigger locally and GitHub Sanitizer QA run
+[32958593912](https://github.com/adesutherland/CREXX/actions/runs/32958593912)
+passed both Linux x64 ASan/LSan and macOS arm64 ASan on final published code
+revision `a744b4d2551d795cf9bbf09c46c5a3fd71e53d46`. The stronger diagnostic
+remains as regression evidence; no sanitizer or product failure reproduced.
+
 A later production process-channel repair in `c87809d2b` is not a sanitizer
 finding. Its exact three-test process panel passes ordinary Debug at
 `cmake-build-debug/asan-logs/20260823-100116-ctest` and leak-enabled Linux
 ASan/LSan at `cmake-build-debugasan/asan-logs/20260823-100525-ctest`; the full
 ordinary Debug gate then passes 2,363/2,363 at
 `cmake-build-debug/asan-logs/20260823-100548-full`.
+
+Status at 2026-08-27: SAN-006 and SAN-007 are final-head closure candidates.
+Their bounded repairs and required local macOS gates pass. They remain open and
+release-blocking while GitHub runs, and become closed only if GitHub Sanitizer
+QA and Build CREXX both pass for the exact published code revision. A failure
+in either workflow leaves the affected item open; do not claim the current
+hotfix or Release 1 line is sanitizer-clean before that condition is satisfied.
+
+## Open findings
+
+### SAN-007 — imported inline-payload AST freed during recursive function replacement
+
+Status: closure candidate and release-blocking pending exact-SHA hosted proof.
+The ownership repair and permanent regression pass normal Debug and the full
+maintained Apple-ASan gate. No suppression, exclusion or waiver is authorized;
+closure still requires GitHub Sanitizer QA's supported Linux ASan/LSan and
+macOS ASan lanes on the exact published code revision.
+
+- Scope: compiler imported-function replacement and inline-payload attachment
+  during recursive source-import validation.
+- Failure: `symbol_has_initializer_definition()` reads a freed imported inline
+  metadata AST node at `rxcp_val_sym.c:123`. `add_func()` frees the former
+  imported function context through `freimpfc()` while the active validation
+  tree still retains an initializer node allocated by
+  `inline_meta_import_node()` and attached by
+  `rxcp_inline_attach_imported_symbol()`.
+- Original trigger: `tools/asan-run.sh --phase full --test-jobs 8
+  --build-leaks off --leaks off --no-live-tail --tail-lines 50` on macOS arm64.
+  The instrumented build fails while generating
+  `lib/rxfnsg/rexx/httpcore.rxbin` from `httpcore.crexx`.
+- Focused reproducer: `tools/asan-run.sh --phase build --build-leaks off
+  --build-target lib/rxfnsg/rexx/httpcore.rxbin --build-jobs 1`. The
+  corresponding normal-Debug file target is the required non-sanitized
+  control. The focused runner reproduces the same allocation, free and invalid
+  read stacks deterministically at
+  `cmake-build-debugasan/asan-logs/20260827-155705-build/build.log`.
+- Affected revision: the repair is committed at
+  `759411507bea289dfe448926357ed84a5f8c91e1` and included in published code
+  revision `c0ac864d59428a807102a7b266933967f3b2e294`.
+- Retained log:
+  `cmake-build-debugasan/asan-logs/20260827-154123-full/build.log`.
+- Permanent regression: `san007_imported_inline_payload_lifetime` compiles the
+  maintained `httpcore.crexx` import chain in an isolated work directory. Its
+  pre-repair Apple-ASan failure is retained at
+  `cmake-build-debugasan/asan-logs/20260827-160157-ctest/ctest.log`.
+- Repair: context teardown now disconnects every AST-to-symbol connector while
+  both sides are live, and symbol teardown clears any surviving AST
+  back-pointer before freeing its connector. This repairs both destruction
+  orders without retaining a dead imported context or guarding the later
+  initializer query. The deterministic `httpcore` target passed through
+  `tools/asan-run.sh` at
+  `cmake-build-debugasan/asan-logs/20260827-160329-build/build.log`; SAN-006 and
+  SAN-007 then passed together at
+  `cmake-build-debugasan/asan-logs/20260827-161107-ctest/ctest.log`.
+- Broad Apple-ASan evidence: `tools/asan-run.sh --phase full --test-jobs 8
+  --build-leaks off --leaks off --no-live-tail --tail-lines 50` passed the
+  complete instrumented build and 2,398 of 2,398 CTests in 1,028.38 seconds.
+  Logs are retained under
+  `cmake-build-debugasan/asan-logs/20260827-161118-full/`. Apple leak detection
+  is unsupported and was disabled as required; this is address-safety evidence,
+  not Linux LSan closure.
+- Normal-product evidence: the full Debug suite passed 2,397/2,397 before the
+  teardown-only repair; SAN-006 and the new SAN-007 regression then passed 2/2
+  in normal Debug after the repair. The earlier ordinary profiling-off Release,
+  focused Release, both-VM, install and package gates remain applicable because
+  the repair changes compiler teardown ownership, not emitted RXAS, RXBIN,
+  parser or package surfaces. The complete post-repair Apple-ASan build and
+  2,398/2,398 CTest run supplies broad final-tree execution. No local gate was
+  repeated after the source-identical develop merge.
+- Owner/next action: hotfix QA. Require exact-SHA hosted Build CREXX and
+  Sanitizer QA for published code revision
+  `c0ac864d59428a807102a7b266933967f3b2e294` before closing this item.
+- Closure checks: the permanent focused regression must pass in normal Debug
+  and Apple ASan; the focused `httpcore` target must pass through the runner;
+  cumulative normal-product evidence and the full local Apple-ASan build/CTest
+  must cover the final code tree; and the exact published code SHA must pass
+  GitHub Sanitizer QA's Linux x64 ASan/LSan and macOS arm64 ASan lanes plus
+  Build CREXX. Apple leak detection remains unsupported and supplies no Linux
+  LSan closure authority.
+
+### SAN-006 — superseded imported class context freed during recursive validation
+
+Status: closure candidate; the imported-context ownership repair is implemented
+and passes focused plus broad macOS qualification. SAN-006 remains open and
+release-blocking until the exact published commit passes GitHub Sanitizer QA,
+including its supported Linux x64 ASan/LSan and macOS arm64 ASan lanes, plus
+Build CREXX. When both workflows pass on that commit, this conditional record
+marks SAN-006 closed without weakening any sanitizer closure requirement.
+
+- Scope: compiler symbol construction in `sym_fn()` while a Level G class or
+  interface import recursively loads further class metadata.
+- Failure: Apple AddressSanitizer reports a one-byte heap-use-after-free read in
+  `sym_fn+0x180`. The freed allocation is reused during recursive
+  `load_another_file()` / `ensure_class_imported()` processing; ten parallel
+  class-library member compiles reproduce the same address-safety failure.
+- Original trigger:
+  `tools/asan-run.sh --phase build --build-leaks off --build-target
+  cri17_attached_provider_control-rxbvml --build-jobs 10`.
+- Permanent focused reproducer: CTest `san006_import_context_lifetime` stages
+  `classlib_native.rxbin`, the individual `KeyDB.rxbin`, `KeyDB.crexx`, and a
+  five-line Level B main source in an isolated directory, then invokes `rxc -x
+  --no-exe-import` against that directory. The aggregate and individual image
+  first establish a duplicate imported `KeyDB`; recursive validation then
+  replaces it with the richer source contract. Removing either duplicate image
+  eliminates the pre-repair failure. Ordinary Debug passed before the repair at
+  `cmake-build-debug/asan-logs/20260826-203459-ctest`, while Apple-ASan failed
+  with the exact `sym_fn()` use-after-free at
+  `cmake-build-debugasan/asan-logs/20260826-203511-ctest`.
+- Affected revision: clean code base `2aa4dd371121c5e452d7e1e6768c1f090521291f`
+  plus the in-progress CRI-17 test/runtime worktree. The compiler source itself
+  was not edited by CRI-17, so discovery attribution does not reduce priority.
+- Original retained log:
+  `cmake-build-debugasan/asan-logs/20260826-174436-build/build.log`.
+- Root cause: the richer-contract path in `add_class()` preserved the stable
+  imported-class registry record but immediately freed its former parsed
+  `Context` and shared file-name allocation. Active recursive import/validation
+  frames could still reach that context's AST `node_string` and file-name
+  pointers when `sym_fn()` resumed.
+- Repair: each stable imported-class record now owns a chain of superseded
+  `{Context *, file_name}` pairs. Richer replacement moves the former pair to
+  that chain, transfers the new `context`, `file_name`, `contract_node`,
+  `contract_type`, and merged implements metadata, and frees every retained
+  pair only when the registry record is destroyed. Equal or poorer duplicates
+  still free only their newly parsed inactive context. The adjacent audit also
+  verified stable class identity storage, implements-copy ownership, and the
+  imported-function duplicate paths; no recursive import behavior is disabled.
+- Local repair evidence:
+  - focused ordinary Debug pass:
+    `cmake-build-debug/asan-logs/20260826-203608-ctest`;
+  - focused Apple-ASan pass with leak detection off:
+    `cmake-build-debugasan/asan-logs/20260826-203621-ctest`;
+  - original CRI-17 sanitizer build trigger pass:
+    `cmake-build-debugasan/asan-logs/20260826-203628-build`;
+  - related CRI-17 ordinary Debug 56/56 and Apple-ASan 4/4 passes:
+    `cmake-build-debug/asan-logs/20260826-204004-ctest` and
+    `cmake-build-debugasan/asan-logs/20260826-204533-ctest`;
+  - complete ordinary Debug 2,391/2,391 pass:
+    `cmake-build-debug/asan-logs/20260826-205944-ctest`;
+  - complete Apple-ASan build and 2,391/2,391 CTest pass with build/test leak
+    detection off:
+    `cmake-build-debugasan/asan-logs/20260826-210616-full`.
+- Conditional closure gate: GitHub Sanitizer QA and Build CREXX must both pass
+  for the exact published commit containing this record. GitHub Sanitizer QA is
+  the named release-QA owner for the supported Linux x64 ASan/LSan and macOS
+  arm64 ASan proof. Apple LeakSanitizer is unsupported, so the local macOS
+  result is address-safety evidence only and does not satisfy the Linux
+  leak-closure authority. If either workflow fails or does not run, SAN-006
+  remains open and release-blocking.
 
 ## Platform coverage at task close
 
@@ -30,9 +185,56 @@ ordinary Debug gate then passes 2,363/2,363 at
 - GitHub Build CREXX supplies the final-head MinSizeRel build, CTest and package
   coverage across Linux, macOS and Windows. GitHub Sanitizer QA supplies the
   final-head Linux x64 ASan/LSan and macOS arm64 ASan gates.
-- No reproducible sanitizer or product defect from this campaign remains open.
+- SAN-006 and SAN-007 are the currently registered closure candidates pending
+  exact-SHA hosted proof.
 
 ## Qualification infrastructure repairs
+
+### SAN-QA-008 — saturated child redirect loses typed timeout completion
+
+Status: closed; the exact macOS arm64 ASan failure and retained runner artifact
+are identified, the failure did not repeat in focused or contended local runs,
+and the local plus final-head broad platform gates pass.
+
+- Scope: the byte-channel child-process provider's deadline and saturated
+  output-redirect completion path, exercised by `rxvmchannel_byte_provider`.
+- Failure: macOS arm64 Sanitizer QA run
+  [32879812936](https://github.com/adesutherland/CREXX/actions/runs/32879812936)
+  failed only `rxvmchannel_byte_provider` at revision
+  `6fd40945d8665c5184b1044269697412310b538f`. The retained `ctest.log`
+  reports `FAIL: saturated redirect preserves typed timeout completion`.
+  There is no AddressSanitizer memory diagnostic in the retained log; this is
+  nevertheless a first-party failure in the maintained sanitizer lane and is
+  release-blocking until qualified.
+- Original trigger: `tools/asan-run.sh --phase full --build-jobs 4
+  --test-jobs 8 --build-leaks off --leaks off`, as recorded in the uploaded
+  `sanitizer-logs-macos` artifact for the run above.
+- Smallest permanent reproducer: the saturated bounded-output deadline case in
+  `interpreter/tests/test_rxvmchannel_byte.c`, run with
+  `tools/asan-run.sh --phase ctest --regex '^rxvmchannel_byte_provider$'
+  --leaks off --test-jobs 1` after building the focused target through the
+  runner. The case now reports both the returned completion state and error
+  code if it fails, so a future lane failure is diagnostic rather than another
+  one-bit assertion.
+- Local evidence: 200 serial ordinary Debug repetitions, 200 serial macOS
+  arm64 ASan repetitions and 400 macOS arm64 ASan repetitions across eight
+  concurrent runner-managed CTest processes all passed on the synchronized
+  hotfix source. The original broad macOS arm64 trigger then passed its build
+  and all 2,378/2,378 CTests on code commit `71aa1fd15` at
+  `cmake-build-debugasan/asan-logs/20260826-104630-full`; the formerly failing
+  `rxvmchannel_byte_provider` passed as test 1151 under eight-way load. No
+  memory-safety report or typed-state failure was reproduced.
+- Closure: GitHub Sanitizer QA run
+  [32958593912](https://github.com/adesutherland/CREXX/actions/runs/32958593912)
+  passed both macOS arm64 ASan and Linux x64 ASan/LSan on final published code
+  revision `a744b4d2551d795cf9bbf09c46c5a3fd71e53d46`, after the complete local
+  macOS arm64 ASan pass above. If the test recurs, its retained state and error
+  code distinguish deadline publication, child launch and redirect shutdown;
+  do not weaken the assertion or timeout.
+- Acceptance: retain a focused regression that fails for the original reason,
+  pass the same focused shape in ordinary Debug and maintained sanitizer
+  builds, rerun the original broad trigger cleanly, and pass both GitHub
+  sanitizer lanes on the final published revision.
 
 ### SAN-QA-007 — RXQUEUE export variants share a temporary file
 

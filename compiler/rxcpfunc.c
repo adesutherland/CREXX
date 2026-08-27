@@ -918,19 +918,48 @@ static int imported_contract_member_count(Context *ctx) {
 }
 
 static void free_imported_class_payload(struct imported_class *cls, int free_identity) {
+    struct retained_imported_class_context *retained;
+
     if (!cls) return;
     if (free_identity) {
         free(cls->name);
         free(cls->fqname);
         free(cls->namespace);
     }
-    free(cls->file_name);
     if (cls->implements_fqnames) {
         size_t k;
         for (k = 0; k < cls->implements_count; k++) free(cls->implements_fqnames[k]);
         free(cls->implements_fqnames);
     }
     if (cls->context) fre_cntx(cls->context);
+    free(cls->file_name);
+
+    retained = cls->retained_contexts;
+    while (retained) {
+        struct retained_imported_class_context *next = retained->next;
+        if (retained->context) fre_cntx(retained->context);
+        free(retained->file_name);
+        free(retained);
+        retained = next;
+    }
+}
+
+static void retain_imported_class_context(struct imported_class *cls) {
+    struct retained_imported_class_context *retained;
+
+    if (!cls || (!cls->context && !cls->file_name)) return;
+
+    retained = malloc(sizeof(struct retained_imported_class_context));
+    if (!retained) {
+        RX_PANIC_OOM("malloc retained imported class context",
+                     sizeof(struct retained_imported_class_context), cls->fqname);
+    }
+    retained->context = cls->context;
+    retained->file_name = cls->file_name;
+    retained->next = cls->retained_contexts;
+    cls->retained_contexts = retained;
+    cls->context = 0;
+    cls->file_name = 0;
 }
 
 static int imported_class_has_implements(const struct imported_class *cls, const char *interface_fqname) {
@@ -986,23 +1015,25 @@ static int add_class(Context *context, struct imported_class *cls) {
         if (existing_cls &&
             imported_contract_member_count(existing_cls->context) < imported_contract_member_count(cls->context)) {
             merge_imported_class_implements(cls, existing_cls);
-            free(existing_cls->file_name);
+            retain_imported_class_context(existing_cls);
             if (existing_cls->implements_fqnames) {
                 size_t k;
                 for (k = 0; k < existing_cls->implements_count; k++) free(existing_cls->implements_fqnames[k]);
                 free(existing_cls->implements_fqnames);
             }
-            if (existing_cls->context) fre_cntx(existing_cls->context);
 
             existing_cls->file_name = cls->file_name;
             existing_cls->context = cls->context;
+            existing_cls->contract_node = cls->contract_node;
             existing_cls->contract_type = cls->contract_type;
             existing_cls->implements_fqnames = cls->implements_fqnames;
             existing_cls->implements_count = cls->implements_count;
 
-            free(cls->name);
-            free(cls->fqname);
-            free(cls->namespace);
+            cls->file_name = 0;
+            cls->context = 0;
+            cls->implements_fqnames = 0;
+            cls->implements_count = 0;
+            free_imported_class_payload(cls, 1);
             free(cls);
             return 1;
         }
@@ -1063,6 +1094,7 @@ static struct imported_class *rximpcl_f(Context* context, char* file_name, char 
     cls->contract_type = contract_type;
     cls->implements_fqnames = implements_fqnames;
     cls->implements_count = implements_count;
+    cls->retained_contexts = 0;
 
     dot = strrchr(cls->fqname, '.');
     if (dot) {
@@ -1145,7 +1177,11 @@ static Symbol *load_imported_contract(Context *context, struct imported_class *f
         found_symbol->status = SYM_STATUS_RESOLVED_GLOBAL;
     }
 
-    attach_imported_member_inline_payloads(context, new_stub, imported_class_has_source_contract(found_cls));
+    if (!context->defer_imported_inline_attachments) {
+        attach_imported_member_inline_payloads(context,
+                                               new_stub,
+                                               imported_class_has_source_contract(found_cls));
+    }
 
     return found_symbol;
 }
@@ -1278,7 +1314,9 @@ static char error_in_node(ASTNode* node) {  // NOLINT
 }
 
 /* Forward declaration for local parser used by import stubs */
-static Context *parseRexx(Context* parent_context, char *location, char* file_name, RexxLevel level, int debug_mode, char* rexx_source, size_t bytes);
+static Context *parseRexx(Context* parent_context, char *location, char* file_name,
+                          RexxLevel level, int debug_mode, char* rexx_source,
+                          size_t bytes, int defer_imported_inline_attachments);
 
 /* Returns Argument source from the ARGS Node as a malloced string */
 static char *generate_arg_source(ASTNode *node) {
@@ -1721,7 +1759,7 @@ static walker_result class_signature_walker(walker_direction direction,
                 register_source_import_member_inline_payloads(p->import_context, node);
                 if (stub_source) {
                     Context *stub_ctx = parseRexx(p->parent_context, p->import_context->location, p->import_context->file_name,
-                                                  LEVELB, p->parent_context->debug_mode, stub_source, strlen(stub_source));
+                                                  LEVELB, p->parent_context->debug_mode, stub_source, strlen(stub_source), 1);
                     if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
                         if (node->node_type == INTERFACE_DEF) {
                             mark_source_import_interface_default_methods(stub_ctx, node);
@@ -2102,7 +2140,7 @@ static void import_class_meta_aggs(Context *context, char *full_file_name, class
                                           full_file_name,
                                           a->has_task_methods ? LEVELG : LEVELB,
                                           context->debug_mode, stub_source,
-                                          strlen(stub_source));
+                                          strlen(stub_source), 1);
             if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
                 remove_import_stub_implicit_main(stub_ctx);
                 if (a->contract_type == INTERFACE_DEF) {
@@ -3095,7 +3133,9 @@ Context *rxcp_parse_buffer(char* rexx_source, int debug_mode) {
     return context;
 }
 
-static Context *parseRexx(Context* parent_context, char *location, char* file_name, RexxLevel level, int debug_mode, char* rexx_source, size_t bytes) {
+static Context *parseRexx(Context* parent_context, char *location, char* file_name,
+                          RexxLevel level, int debug_mode, char* rexx_source,
+                          size_t bytes, int defer_imported_inline_attachments) {
     Context *context;
 
     switch (level){
@@ -3119,6 +3159,8 @@ static Context *parseRexx(Context* parent_context, char *location, char* file_na
             context->master_context = parent_context->master_context;
             context->disable_exits = parent_context->disable_exits;
             context->decimal_plugin = parent_context->decimal_plugin;
+            context->defer_imported_inline_attachments =
+                    (char)(defer_imported_inline_attachments != 0);
 
             rexbpars(context);
             break;
@@ -3168,7 +3210,8 @@ static int imported_return_declaration_parses(Context *context,
                               LEVELB,
                               context->debug_mode,
                               probe_source,
-                              strlen(probe_source));
+                              strlen(probe_source),
+                              0);
     valid = probe_context && probe_context->ast &&
             !error_in_node(probe_context->ast) &&
             probe_context->ast->child &&
@@ -3470,8 +3513,19 @@ int sym_is_imfn(Context *context, ASTNode *node) {
     return found;
 }
 
+imported_func *rxcp_find_imported_function_exact(Context *context,
+                                                 const char *fqname) {
+    imported_func *func = 0;
+
+    if (!context || !fqname || !*fqname) return 0;
+    do {
+        if (src_func(context, (char *)fqname, &func)) return func;
+    } while (load_another_file(context));
+    return 0;
+}
+
 /* Try and import an external function - return its symbol if successful */
-Symbol *sym_imfn(Context *context, ASTNode *node) {
+static Symbol *sym_imfn_impl(Context *context, ASTNode *node, int exact_fqname) {
     Symbol *symbol;
     ASTNode *func_node;
     Symbol *func_symbol;
@@ -3499,7 +3553,8 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
     /* Process all the unread files - but we just are interested in the first found variable - duplicates done next */
     do {
         /* Check if the function has been loaded */
-        if (src_fqfu(context, 0, name, &func)) {
+        if ((exact_fqname && src_func(context, name, &func)) ||
+            (!exact_fqname && src_fqfu(context, 0, name, &func))) {
             if (context->debug_mode >= 2)
                 printf("Importing Procedures - Found Procedure %s in file %s\n", func->fqname, func->file_name);
             found_func = func;
@@ -3618,6 +3673,23 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
 
     free(name);
     return found_symbol;
+}
+
+Symbol *sym_imfn(Context *context, ASTNode *node) {
+    return sym_imfn_impl(context, node, 0);
+}
+
+Symbol *ensure_function_imported_exact(Context *context,
+                                       const char *fqname,
+                                       size_t fqname_length) {
+    ASTNode lookup_node;
+
+    if (!context || !fqname || !fqname_length) return 0;
+    memset(&lookup_node, 0, sizeof(lookup_node));
+    lookup_node.node_string = (char *)fqname;
+    lookup_node.node_string_length = fqname_length;
+    lookup_node.scope = context->ast ? context->ast->scope : 0;
+    return sym_imfn_impl(context, &lookup_node, 1);
 }
 
 /* Set the type of a symbol from imported modules */
@@ -3813,7 +3885,8 @@ static imported_func *rximpf_provider_f(
             } else {
                 if (context->debug_mode >= 2) printf("Importing Procedures - Analysing procedure %s\n", func->fqname);
                 func->context = parseRexx(context, context->location, func->file_name, LEVELB, context->debug_mode, buffer,
-                                          strlen(buffer));
+                                          strlen(buffer),
+                                          context->defer_imported_inline_attachments);
 
                 if (!func->context || !func->context->ast ||
                     error_in_node(func->context->ast) ||
@@ -3851,6 +3924,7 @@ static imported_func *rximpf_provider_f(
          * real FACTORY node; treating this PROCEDURE stub as equivalent would
          * attach evidence to the wrong callable shape. */
         if (!func->error_state && func->implementation &&
+            !func->context->defer_imported_inline_attachments &&
             rxcp_inline_payload_is_supported(func->implementation) &&
             !parse_class_factory_fqname(func->fqname, 0, 0)) {
             rxcp_inline_attach_imported_body(func->context, func->implementation);

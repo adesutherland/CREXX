@@ -1,0 +1,75 @@
+options levelb
+namespace inline_receiver_signal_cleanup
+import rexx
+
+main: procedure = .int
+  caught = 0
+  holder = .ReceiverHolder()
+
+  if holder.run() <> 1 then do
+    say "FAIL: live receiver signal cleanup"
+    return 1
+  end
+
+  do
+    ignored_abbrev = .rexx("Print").abbrev("Pri", -1)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+
+  do
+    ignored_binary = .rexx("102").b2d()
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+
+  do
+    ignored_position = .rexx("abc").delstr(0)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+
+  do
+    ignored_delstr = .rexx("abc").delstr(1, -1)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+
+  if caught <> 4 then do
+    say "FAIL: expected four caught signals, got" caught
+    return 1
+  end
+
+  say "PASS: inline receiver signal cleanup"
+  return 0
+
+ReceiverToken: class
+  text_ = .string
+
+  *: factory
+    text_ = "before"
+    return
+
+  mutateAndSignal: method = .void
+    text_ = "after"
+    assembler signal "OTHER", "intentional receiver signal"
+
+  text: method = .string
+    return text_
+
+ReceiverHolder: class
+  token_ = .ReceiverToken
+
+  *: factory
+    token_ = .ReceiverToken()
+    return
+
+  run: method = .int
+    caught = 0
+    do
+      call token_.mutateAndSignal()
+    on signal other
+      caught = 1
+    end
+    if token_.text() <> "after" then return -1
+    return caught

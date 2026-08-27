@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define LINEIN_PROMPT "READY: linein stdin prompt"
+
 #ifdef _WIN32
 #include <windows.h>
 
@@ -23,6 +25,7 @@ static int run_child(const char *runner, const char *program,
     DWORD written = 0;
     DWORD exit_code = 1;
     DWORD wait_result;
+    ULONGLONG prompt_deadline;
     size_t command_size;
     char *command = NULL;
     size_t used = 0;
@@ -68,6 +71,50 @@ static int run_child(const char *runner, const char *program,
     stdin_read = NULL;
     CloseHandle(output_write);
     output_write = NULL;
+
+    prompt_deadline = GetTickCount64() + (ULONGLONG)timeout_milliseconds;
+    while (!strstr(output, LINEIN_PROMPT)) {
+        DWORD available = 0;
+        DWORD count = 0;
+        DWORD capacity;
+        if (!PeekNamedPipe(output_read, NULL, 0, NULL, &available, NULL)) {
+            fprintf(stderr,
+                    "linein stdin harness: prompt pipe read failed (%lu)\n",
+                    GetLastError());
+            TerminateProcess(process.hProcess, 1);
+            WaitForSingleObject(process.hProcess, INFINITE);
+            goto process_cleanup;
+        }
+        capacity = used + 1 < output_size
+                ? (DWORD)(output_size - used - 1) : 0;
+        if (available > capacity) available = capacity;
+        if (available > 0 &&
+                (!ReadFile(output_read, output + used, available,
+                           &count, NULL) || count == 0)) {
+            fprintf(stderr,
+                    "linein stdin harness: prompt pipe read failed (%lu)\n",
+                    GetLastError());
+            TerminateProcess(process.hProcess, 1);
+            WaitForSingleObject(process.hProcess, INFINITE);
+            goto process_cleanup;
+        }
+        used += count;
+        output[used] = '\0';
+        if (strstr(output, LINEIN_PROMPT)) break;
+        if (WaitForSingleObject(process.hProcess, 0) == WAIT_OBJECT_0) {
+            fprintf(stderr,
+                    "linein stdin harness: child exited before its prompt was visible\n");
+            goto process_cleanup;
+        }
+        if (GetTickCount64() >= prompt_deadline) {
+            fprintf(stderr,
+                    "linein stdin harness: prompt was not visible before input\n");
+            TerminateProcess(process.hProcess, 1);
+            WaitForSingleObject(process.hProcess, INFINITE);
+            goto process_cleanup;
+        }
+        Sleep(10);
+    }
 
     if (!WriteFile(stdin_write, "Ada\n", 4, &written, NULL) || written != 4) {
         fprintf(stderr, "linein stdin harness: input write failed (%lu)\n",
@@ -121,6 +168,7 @@ cleanup:
 #else
 
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -142,6 +190,7 @@ static int run_child(const char *runner, const char *program,
     int status = 0;
     int child_done = 0;
     int timed_out = 0;
+    int output_flags;
     size_t used = 0;
     double deadline;
     struct timespec pause_time = {0, 10000000};
@@ -178,6 +227,70 @@ static int run_child(const char *runner, const char *program,
     close(stdin_pipe[0]);
     close(output_pipe[1]);
 
+    output_flags = fcntl(output_pipe[0], F_GETFL, 0);
+    if (output_flags < 0 ||
+            fcntl(output_pipe[0], F_SETFL, output_flags | O_NONBLOCK) < 0) {
+        perror("linein stdin harness: prompt pipe flags");
+        kill(child, SIGKILL);
+        waitpid(child, &status, 0);
+        close(stdin_pipe[1]);
+        close(output_pipe[0]);
+        return 1;
+    }
+
+    deadline = monotonic_seconds() +
+            (double)timeout_milliseconds / 1000.0;
+    while (!strstr(output, LINEIN_PROMPT)) {
+        ssize_t count = read(output_pipe[0], output + used,
+                             output_size - used - 1);
+        if (count > 0) {
+            used += (size_t)count;
+            output[used] = '\0';
+            continue;
+        }
+        if (count == 0) {
+            break;
+        }
+        if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
+            perror("linein stdin harness: prompt pipe read");
+            break;
+        }
+        {
+            pid_t wait_result = waitpid(child, &status, WNOHANG);
+            if (wait_result == child) {
+                child_done = 1;
+                break;
+            }
+            if (wait_result < 0 && errno != EINTR) {
+                perror("linein stdin harness: waitpid");
+                break;
+            }
+        }
+        if (monotonic_seconds() >= deadline) {
+            timed_out = 1;
+            fprintf(stderr,
+                    "linein stdin harness: prompt was not visible before input\n");
+            kill(child, SIGKILL);
+            waitpid(child, &status, 0);
+            break;
+        }
+        nanosleep(&pause_time, NULL);
+    }
+
+    if (!strstr(output, LINEIN_PROMPT)) {
+        if (!timed_out) {
+            fprintf(stderr,
+                    "linein stdin harness: child exited before its prompt was visible\n");
+        }
+        if (!timed_out && !child_done) {
+            kill(child, SIGKILL);
+            waitpid(child, &status, 0);
+        }
+        close(stdin_pipe[1]);
+        close(output_pipe[0]);
+        return 1;
+    }
+
     if (write(stdin_pipe[1], "Ada\n", 4) != 4) {
         perror("linein stdin harness: write");
         kill(child, SIGKILL);
@@ -209,6 +322,7 @@ static int run_child(const char *runner, const char *program,
     }
 
     close(stdin_pipe[1]);
+    (void)fcntl(output_pipe[0], F_SETFL, output_flags);
     while (used + 1 < output_size) {
         ssize_t count = read(output_pipe[0], output + used,
                              output_size - used - 1);

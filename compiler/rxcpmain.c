@@ -257,6 +257,11 @@ void fre_cntx(Context *context)  {
     /* The flow overlay points at AST/symbol objects but does not own them. */
     rxcp_flow_free(context);
 
+    /* AST nodes and symbols form a bidirectional relationship. Imported
+     * contexts may bind nodes to symbols owned by the master context, so the
+     * dying context must unregister its side while both objects are live. */
+    ast_disconnect_symbols(context);
+
     /* Deallocate Scope and Symbols */
     if (context->ast &&  context->ast->scope) scp_free(context->ast->scope);
     scp_free_detached(context);

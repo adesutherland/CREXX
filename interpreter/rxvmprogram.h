@@ -29,18 +29,19 @@ typedef enum rxvm_program_result {
 } rxvm_program_result;
 
 /*
- * Publish the context's complete bytecode module prefix as a new immutable
- * generation.  Existing generation-owned images are retained; newly loaded
- * bytecode images are adopted only after the complete generation is ready.
+ * Publish the context's complete bytecode module sequence as a new immutable
+ * generation. Native overlays are context-owned and deliberately excluded.
+ * Existing generation-owned images are retained; newly loaded bytecode images
+ * are adopted only after the complete generation is ready.
  */
 rxvm_program_result rxvm_program_generation_seal(
         struct rxvm_context *context,
         const rxvm_program_generation **generation_out);
 
 /*
- * Attach an empty context, or advance a compatible context to an append-only
- * derived generation.  Every mutable runtime structure is materialized in the
- * attaching worker's allocator.
+ * Attach a context with no bytecode (native overlays are permitted), or advance
+ * a compatible context to an append-only derived generation. Every mutable
+ * runtime structure is materialized in the attaching worker's allocator.
  */
 rxvm_program_result rxvm_program_generation_attach(
         struct rxvm_context *context,

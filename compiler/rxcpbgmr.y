@@ -452,6 +452,8 @@ static ASTNode *named_binary_operator(Context *context, Token *token, ASTNode *l
     else if (named_operator_equals(token, "shl")) type = OP_BIT_SHL;
     else if (named_operator_equals(token, "shr")) type = OP_BIT_SHR;
     else if (named_operator_equals(token, "has")) type = OP_FLAG_HAS;
+    else if (named_operator_equals(token, "refsame")) type = OP_REFSAME;
+    else if (named_operator_equals(token, "eq")) type = OP_EQ;
 
     if (named_operator_equals(token, "clear")) {
         not_node = ast_f(context, OP_BIT_NOT, token);
@@ -473,7 +475,7 @@ static ASTNode *named_binary_operator(Context *context, Token *token, ASTNode *l
 }
 }
 
-%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL TK_STRING_CONTINUATION TK_INTRINSIC_LT TK_INTRINSIC_PREFIX_LT TK_INTRINSIC_NAME TK_INTRINSIC_GENERIC_OPEN TK_NAMED_OPERATOR TK_NAMED_MULT_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_OR_OPERATOR TK_TASK TK_PARALLEL TK_USING.
+%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL TK_STRING_CONTINUATION TK_INTRINSIC_LT TK_INTRINSIC_PREFIX_LT TK_INTRINSIC_NAME TK_INTRINSIC_GENERIC_OPEN TK_NAMED_OPERATOR TK_NAMED_MULT_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_OR_OPERATOR TK_NAMED_COMPARISON_OPERATOR TK_TASK TK_PARALLEL TK_USING.
 %wildcard ANYTHING.
 /* Gate F contextual words fall back to ordinary symbols outside the grammar
  * positions that name task declarations, task targets and parallel blocks. */
@@ -486,7 +488,7 @@ static ASTNode *named_binary_operator(Context *context, Token *token, ASTNode *l
 %left TK_EOC.
 %left TK_END.
 %left IMPLICIT_CONCAT.
-%left TK_NAMED_OPERATOR TK_NAMED_OR_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_SHIFT_OPERATOR.
+%left TK_NAMED_OPERATOR TK_NAMED_OR_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_COMPARISON_OPERATOR.
 %left TK_DOT TK_CLASS_TYPE.
 
 /* 0 Sets the stack to grow dynamically! */
@@ -1783,6 +1785,11 @@ call(I) ::= TK_CALL(T) TK_CLASS_FACTORY(S) function_parameters(PP).
            I = ast_f(context, CALL, T);
            add_ast(I, F);
         }
+/* A CALL target may use the same computed receiver primaries as an expression.
+ * Requiring at least one member suffix keeps arbitrary value expressions out
+ * of statement position and leaves classic CALL name arg,... parsing intact. */
+call(I) ::= TK_CALL(T) call_member_postfix(F). [TK_STEM]
+        { I = ast_f(context, CALL, T); add_ast(I, F); }
 call(I) ::= TK_CALL(T) ANYTHING(E).
         { I = ast_f(context, CALL, T); add_ast(I,ast_err(context, "EXPECTED_PROCEDURE", E)); }
 
@@ -2007,6 +2014,46 @@ bracket(F)           ::= TK_CLASS_TYPE(S) function_parameters(P).
                                }
                            }
 
+/* Computed/chained member target for standalone CALL. Keep the receiver base
+ * explicit: using bracket here would compete with classic CALL function-name
+ * recovery for every token which can name both a variable and a procedure. */
+call_member_primary(A) ::= TK_VAR_SYMBOL(S) array_parameters(P). [TK_OPEN_BRACKET]
+                         { A = ast_f(context, VAR_SYMBOL, S); if (P) add_ast(A,P); }
+call_member_primary(A) ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
+                         { A = B; }
+call_member_primary(A) ::= TK_VAR_SYMBOL(S) function_parameters(P). [TK_CLASS_TYPE]
+                         { A = ast_f(context, FUNCTION, S); if (P) add_ast(A,P); }
+call_member_primary(A) ::= TK_QUALIFIED_SYMBOL(S) function_parameters(P). [TK_CLASS_TYPE]
+                         { A = ast_f(context, FUNCTION, S); if (P) add_ast(A,P); }
+call_member_primary(A) ::= TK_CLASS_TYPE(S) function_parameters(P). [TK_CLASS_TYPE]
+                         { A = ast_f(context, FACTORY_CALL, S);
+                           if (A->node_string && A->node_string[0] == '.') {
+                               A->node_string++;
+                               A->node_string_length--; }
+                           if (P) add_ast(A,P); }
+call_member_primary(A) ::= TK_CLASS_TYPE(S) TK_CLASS_TYPE(M) function_parameters(P). [TK_CLASS_TYPE]
+                         { A = ast_f(context, FACTORY_CALL, S);
+                           if (A->node_string && A->node_string[0] == '.') {
+                               A->node_string++;
+                               A->node_string_length--; }
+                           A->association = ast_f(context, VAR_SYMBOL, M);
+                           if (A->association->node_string && A->association->node_string[0] == '.') {
+                               A->association->node_string++;
+                               A->association->node_string_length--; }
+                           if (P) add_ast(A,P); }
+call_member_postfix(A) ::= call_member_primary(B) TK_CLASS_TYPE(S) function_parameters(PP). [TK_CLASS_TYPE]
+                         { A = ast_f(context, MEMBER_CALL, S);
+                           if (A->node_string && A->node_string[0] == '.') {
+                               A->node_string++;
+                               A->node_string_length--; }
+                           add_ast(A,B); if (PP) add_ast(A,PP); }
+call_member_postfix(A) ::= call_member_postfix(B) TK_CLASS_TYPE(S) function_parameters(PP). [TK_CLASS_TYPE]
+                         { A = ast_f(context, MEMBER_CALL, S);
+                           if (A->node_string && A->node_string[0] == '.') {
+                               A->node_string++;
+                               A->node_string_length--; }
+                           add_ast(A,B); if (PP) add_ast(A,PP); }
+
 /* Command expressions use a left-spine variant so a bare TK_DO at statement
  * start remains reserved for statement DO blocks, while nested expressions can
  * still use BLOCK_EXPR through the regular expression grammar. */
@@ -2148,6 +2195,8 @@ command_comparison(A)        ::= command_comparison(B) TK_S_GTE(O) concatenation
                          { A = ast_f(context, OP_COMPARE_S_GTE, O); add_ast(A,B); add_ast(A,C); }
 command_comparison(A)        ::= command_comparison(B) TK_S_LTE(O) concatenation(C).
                          { A = ast_f(context, OP_COMPARE_S_LTE, O); add_ast(A,B); add_ast(A,C); }
+command_comparison(A)        ::= command_comparison(B) TK_NAMED_COMPARISON_OPERATOR(O) concatenation(C).
+                         { A = named_binary_operator(context, O, B, C); }
 command_comparison(A)        ::= command_comparison(B) TK_IS(O) type_def(T).
                          { A = ast_f(context, OP_TYPE_IS, O); add_ast(A,B); add_ast(A,T); }
 command_or_expression(P)     ::= command_comparison(E).
@@ -2367,6 +2416,8 @@ comparison(A)        ::= comparison(B) TK_S_GTE(O) concatenation(C).
                          { A = ast_f(context, OP_COMPARE_S_GTE, O); add_ast(A,B); add_ast(A,C); }
 comparison(A)        ::= comparison(B) TK_S_LTE(O) concatenation(C).
                          { A = ast_f(context, OP_COMPARE_S_LTE, O); add_ast(A,B); add_ast(A,C); }
+comparison(A)        ::= comparison(B) TK_NAMED_COMPARISON_OPERATOR(O) concatenation(C).
+                         { A = named_binary_operator(context, O, B, C); }
 comparison(A)        ::= comparison(B) TK_IS(O) type_def(T).
                          { A = ast_f(context, OP_TYPE_IS, O); add_ast(A,B); add_ast(A,T); }
 or_expression(P)     ::= comparison(E).
@@ -2409,6 +2460,7 @@ and_expression(E)  ::= TK_NAMED_SHIFT_OPERATOR(U) error. { E = ast_err(context, 
 and_expression(E)  ::= TK_NAMED_AND_OPERATOR(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_NAMED_XOR_OPERATOR(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_NAMED_OR_OPERATOR(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_NAMED_COMPARISON_OPERATOR(U) error. { E = ast_err(context, "BADEXPR", U); }
 
 expression(P)  ::= and_expression(E). { P = E; }
 expression(E)  ::= TK_COMMA(U) error. { E = ast_err(context, "BADEXPR", U); }

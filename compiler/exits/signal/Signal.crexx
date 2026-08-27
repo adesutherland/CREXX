@@ -137,6 +137,8 @@ processSignalRaise: procedure = .exitresult
 processCompactRaise: procedure = .exitresult
     arg tokens = .token[], start = .int
     result = .exitresult("REPLACE")
+    name = .string
+    payload_expr = .string
     name = canonicalSignalName(tokens[start].get_text())
     if name = "" then return error_result(start, "UNKNOWN_SIGNAL_NAME")
     if canRaiseSignal(name) = 0 then return error_result(start, "SIGNAL_CANNOT_BE_RAISED")
@@ -152,6 +154,7 @@ processCompactRaise: procedure = .exitresult
     end
 
     payload_expr = emitTokenRange(tokens, start + 1, tokens.0)
+    call result.add_replacement_line("__rxsignal_payload=.string")
     call result.add_replacement_line("__rxsignal_payload=" || payload_expr)
     call result.add_replacement_line("assembler signal """ || name || """,__rxsignal_payload")
     return result
@@ -162,6 +165,12 @@ processFactoryRaise: procedure = .exitresult
     name_end = .int
     payload_start = .int
     payload_end = .int
+    open = .int
+    close = .int
+    comma = .int
+    name = .string
+    name_expr = .string
+    payload_expr = .string
     result = .exitresult("REPLACE")
     open = factoryOpenIndex(tokens, start)
     close = findMatchingClose(tokens, open)
@@ -194,6 +203,7 @@ processFactoryRaise: procedure = .exitresult
                 call result.add_replacement_line("assembler signal """ || name || """," || payload_expr)
             end
             else do
+                call result.add_replacement_line("__rxsignal_payload=.string")
                 call result.add_replacement_line("__rxsignal_payload=" || payload_expr)
                 call result.add_replacement_line("assembler signal """ || name || """,__rxsignal_payload")
             end
@@ -202,6 +212,7 @@ processFactoryRaise: procedure = .exitresult
     end
 
     name_expr = emitTokenRange(tokens, name_start, name_end)
+    call result.add_replacement_line("__rxsignal_name=.string")
     call result.add_replacement_line("__rxsignal_name=" || name_expr)
     if payload_start = 0 then do
         call result.add_replacement_line("assembler signal __rxsignal_name")
@@ -209,6 +220,7 @@ processFactoryRaise: procedure = .exitresult
     end
 
     payload_expr = emitTokenRange(tokens, payload_start, payload_end)
+    call result.add_replacement_line("__rxsignal_payload=.string")
     call result.add_replacement_line("__rxsignal_payload=" || payload_expr)
     call result.add_replacement_line("assembler signal __rxsignal_name,__rxsignal_payload")
     return result

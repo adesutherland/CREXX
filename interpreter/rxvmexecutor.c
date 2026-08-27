@@ -383,6 +383,7 @@ static void executor_mailbox_publish(
 struct rxvm_executor {
     rxvm_runtime *runtime;
     const rxvm_program_generation *generation;
+    char *provider_location;
     rxvm_executor_worker *workers;
     size_t worker_count;
     size_t queue_capacity;
@@ -1776,6 +1777,11 @@ static void executor_worker_run(rxvm_executor_worker *worker) {
     worker->context = worker->startup_result == RXVM_EXECUTOR_OK
             ? rxvm_context_create_in_runtime(worker->executor->runtime) : 0;
     if (worker->context) {
+        worker->context->provider_location = executor_copy_string(
+                worker->executor->provider_location);
+        if (!worker->context->provider_location) {
+            worker->startup_result = RXVM_EXECUTOR_OUT_OF_MEMORY;
+        }
         worker->context->active.external_mailbox_owner = &worker->mailbox;
         worker->context->active.external_mailbox_claim =
                 executor_mailbox_claim;
@@ -1784,16 +1790,23 @@ static void executor_worker_run(rxvm_executor_worker *worker) {
                     &worker->mailbox.events;
         }
     }
-    if (!worker->context ||
-        rxvm_program_generation_attach(worker->context,
-                                       worker->executor->generation) !=
-                RXVM_PROGRAM_OK ||
-        rxldmodp(worker->context) < 0 ||
-        rxvm_link(worker->context) != 0 ||
-        rxvm_prepare(worker->context) != 0 ||
-        rxvm_initialize(worker->context) != 0) {
+    if (!worker->context) {
         worker->startup_result = RXVM_EXECUTOR_WORKER_START_FAILED;
-    } else {
+    } else if (worker->startup_result == RXVM_EXECUTOR_OK &&
+               rxvm_program_generation_attach(
+                       worker->context, worker->executor->generation) !=
+                       RXVM_PROGRAM_OK) {
+        worker->startup_result = RXVM_EXECUTOR_WORKER_START_FAILED;
+    } else if (worker->startup_result == RXVM_EXECUTOR_OK &&
+               (rxldmodp(worker->context) < 0 ||
+                rxvm_link(worker->context) != 0)) {
+        worker->startup_result =
+                RXVM_EXECUTOR_PROVIDER_RESOLUTION_FAILED;
+    } else if (worker->startup_result == RXVM_EXECUTOR_OK &&
+               (rxvm_prepare(worker->context) != 0 ||
+                rxvm_initialize(worker->context) != 0)) {
+        worker->startup_result = RXVM_EXECUTOR_WORKER_START_FAILED;
+    } else if (worker->startup_result == RXVM_EXECUTOR_OK) {
         worker->startup_result = RXVM_EXECUTOR_OK;
     }
 
@@ -1972,6 +1985,7 @@ static void executor_storage_destroy(rxvm_executor *executor) {
         executor_condition_destroy(&executor->completion_changed);
         executor_mutex_destroy(&executor->completion_mutex);
     }
+    free(executor->provider_location);
     free(executor);
 }
 
@@ -2114,6 +2128,7 @@ fail:
 rxvm_executor *rxvm_executor_create_attached(
         rxvm_runtime *runtime,
         const rxvm_program_generation *generation,
+        const char *provider_location,
         size_t worker_count,
         size_t queue_capacity,
         rxvm_executor_result *result_out) {
@@ -2129,6 +2144,11 @@ rxvm_executor *rxvm_executor_create_attached(
     }
     executor = (rxvm_executor *)calloc(1u, sizeof(*executor));
     if (!executor) {
+        result = RXVM_EXECUTOR_OUT_OF_MEMORY;
+        goto fail;
+    }
+    executor->provider_location = executor_copy_string(provider_location);
+    if (!executor->provider_location) {
         result = RXVM_EXECUTOR_OUT_OF_MEMORY;
         goto fail;
     }
@@ -2821,6 +2841,8 @@ const char *rxvm_executor_result_name(rxvm_executor_result result) {
         case RXVM_EXECUTOR_STOPPING: return "stopping";
         case RXVM_EXECUTOR_ALREADY_TERMINAL: return "already-terminal";
         case RXVM_EXECUTOR_DOORBELL_UNAVAILABLE: return "doorbell-unavailable";
+        case RXVM_EXECUTOR_PROVIDER_RESOLUTION_FAILED:
+            return "provider-resolution-failed";
         default: return "unknown";
     }
 }

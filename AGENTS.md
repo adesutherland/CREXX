@@ -58,6 +58,12 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
 - Pause for user approval before making language-design decisions, syntax changes, or architectural shifts. The user is the final authority on language direction.
 - For complex bugs or crashes, start with a minimal reproducer in cREXX where practical before changing core C code.
 - Run focused tests frequently during compiler work. If a change causes regressions, stop, report them clearly, and distinguish expected from unintended fallout.
+- Once the required full testing has passed, do not repeat it if no code or
+  test/build input has changed. Verify that with the relevant diff or tree
+  hashes and reuse the retained evidence. A history-only merge or
+  documentation-only commit does not by itself invalidate completed testing.
+  Exact-SHA hosted workflows required for publication remain separate gates;
+  they do not justify repeating unchanged local QA.
 - Keep documentation in sync with code. If you uncover important undocumented behaviour or architecture, update the relevant docs as part of the change.
 - Treat library development as an opportunity to validate the complete product
   toolchain. Library changes should exercise `rxc`, `rxas`, `rxlink`, and

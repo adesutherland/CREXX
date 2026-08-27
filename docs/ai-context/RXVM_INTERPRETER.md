@@ -266,7 +266,10 @@ error condition.
 `REFERENCE_INVALID` is the dedicated signal for a reference value whose target
 storage has been destroyed or invalidated. It defaults to halt, participates in
 normal signal handling, and can be probed without raising through the RXAS
-`refvalid` instruction. Raising operations include `deref`, `linkref`, and
+`refvalid` instruction. RXAS `refsame` is also non-raising: it compares the
+retained reference-identity cells without dereferencing, so copied references
+remain identical after target expiry while empty references compare false.
+Raising operations include `deref`, `linkref`, and
 `setref`; using a non-reference value with those operations is treated as an
 invalid reference. `endlife rLocal` is the RXAS storage-lifetime primitive used
 by compiler-generated scope cleanup. It invalidates references to `rLocal` and
@@ -1311,9 +1314,12 @@ The built-in command environments split into four spawn modes:
   systems, not a shell. It owns worker-local persistent
   `cd`/`pushd`/`popd` and environment overrides,
   file/text/process/time/network commands, `batch`, and `run` for direct
-  executable dispatch. Without an output or error redirect, emitted text is
-  flushed to the normal VM stdout or stderr stream immediately rather than
-  being held until task completion. CREXX expands host-variable scalar anchors
+  executable dispatch. Without an output or error redirect, both built-in
+  command text and a nested `run` child's corresponding stream inherit the
+  normal VM stdout or stderr stream and are flushed immediately rather than
+  being held until child or task completion. An explicitly redirected stream
+  retains the requested string/array capture semantics. CREXX expands
+  host-variable scalar anchors
   to one command argument and stem anchors to zero or more command arguments
   after its own command parsing; `run :argv[]` therefore launches the child
   through an argv vector rather than by flattening the array to a command

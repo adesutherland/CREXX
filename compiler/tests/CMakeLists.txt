@@ -835,6 +835,70 @@ add_test(NAME rxc_scoped_register_reuse
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxc_scoped_register_reuse PROPERTIES LABELS "compiler;registers")
 
+set(RXC_CALL_STATEMENT_REGISTER_REUSE_SCRIPT
+    "${CMAKE_CURRENT_BINARY_DIR}/rxc_call_statement_register_reuse.cmake")
+set(RXC_CALL_STATEMENT_REGISTER_REUSE_CONTENT "")
+foreach(_mode IN ITEMS opt noopt)
+    if(_mode STREQUAL "noopt")
+        set(_flag "-n")
+        set(_max_dispatch_locals 40)
+    else()
+        set(_flag "")
+        set(_max_dispatch_locals 8)
+    endif()
+    string(APPEND RXC_CALL_STATEMENT_REGISTER_REUSE_CONTENT
+           "execute_process(\n"
+           "  COMMAND \"$<TARGET_FILE:rxc>\" -x -i \"${CMAKE_BINARY_DIR}/bin\" ${_flag} -o \"call_statement_register_reuse_${_mode}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/call_statement_register_reuse.crexx\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "  OUTPUT_VARIABLE rxc_${_mode}_out\n"
+           "  ERROR_VARIABLE rxc_${_mode}_err\n"
+           "  RESULT_VARIABLE rxc_${_mode}_res\n"
+           ")\n"
+           "set(full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxc_${_mode}_out}${RXAS_DIAG_DOLLAR}{rxc_${_mode}_err}\")\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "if(NOT rxc_${_mode}_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxc ${_mode} failed for call-statement register reuse.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "endif()\n"
+           "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/call_statement_register_reuse_${_mode}.rxas\" rxas_${_mode}_out)\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" rxas_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "string(REGEX MATCH [=[§call_statement_register_reuse\\.wrapper\\.dispatch\\(\\) \\.locals=([0-9]+)]=] dispatch_header \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT dispatch_header)\n"
+           "  message(FATAL_ERROR \"dispatch locals record missing in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "set(dispatch_locals \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+           "if(dispatch_locals GREATER ${_max_dispatch_locals})\n"
+           "  message(FATAL_ERROR \"Discarded calls or member receivers were not recycled in ${_mode}; dispatch locals=${RXAS_DIAG_DOLLAR}{dispatch_locals}, expected at most ${_max_dispatch_locals}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "execute_process(\n"
+           "  COMMAND \"$<TARGET_FILE:rxas>\" -o \"call_statement_register_reuse_${_mode}.rxbin\" \"call_statement_register_reuse_${_mode}\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "  OUTPUT_VARIABLE rxas_${_mode}_diag\n"
+           "  ERROR_VARIABLE rxas_${_mode}_err\n"
+           "  RESULT_VARIABLE rxas_${_mode}_res\n"
+           ")\n"
+           "if(NOT rxas_${_mode}_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxas ${_mode} failed for call-statement register reuse: ${RXAS_DIAG_DOLLAR}{rxas_${_mode}_diag}${RXAS_DIAG_DOLLAR}{rxas_${_mode}_err}\")\n"
+           "endif()\n"
+           "execute_process(\n"
+           "  COMMAND \"$<TARGET_FILE:rxbvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"call_statement_register_reuse_${_mode}.rxbin\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "  OUTPUT_VARIABLE rxvm_${_mode}_out\n"
+           "  ERROR_VARIABLE rxvm_${_mode}_err\n"
+           "  RESULT_VARIABLE rxvm_${_mode}_res\n"
+           ")\n"
+           "if(NOT rxvm_${_mode}_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxvm ${_mode} failed for call-statement register reuse: ${RXAS_DIAG_DOLLAR}{rxvm_${_mode}_out}${RXAS_DIAG_DOLLAR}{rxvm_${_mode}_err}\")\n"
+           "endif()\n")
+endforeach()
+file(GENERATE OUTPUT "${RXC_CALL_STATEMENT_REGISTER_REUSE_SCRIPT}"
+     CONTENT "${RXC_CALL_STATEMENT_REGISTER_REUSE_CONTENT}")
+
+add_test(NAME rxc_call_statement_register_reuse
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_CALL_STATEMENT_REGISTER_REUSE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxc_call_statement_register_reuse PROPERTIES
+        LABELS "compiler;registers;runtime")
+
 set(RXC_INLINE_BYVALUE_ARG_REUSE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_inline_byvalue_arg_reuse.cmake")
 set(RXC_INLINE_BYVALUE_ARG_REUSE_CONTENT "")
 string(APPEND RXC_INLINE_BYVALUE_ARG_REUSE_CONTENT
@@ -1039,6 +1103,47 @@ add_crexx_compiler_fail_test(reference_source_deref_index rexx_src/reference_sou
 add_crexx_compiler_fail_test(reference_source_deref_global rexx_src/reference_source_deref_global_fail.crexx reference_source_deref_global_fail.txt)
 add_crexx_compiler_fail_test(reference_source_refvalid_nonref rexx_src/reference_source_refvalid_nonref_fail.crexx reference_source_refvalid_nonref_fail.txt)
 add_crexx_compiler_fail_test(reference_source_comparison rexx_src/reference_source_comparison_fail.crexx reference_source_comparison_fail.txt)
+add_crexx_compiler_fail_test(reference_source_refsame_nonref rexx_src/reference_source_refsame_nonref_fail.crexx reference_source_refsame_nonref_fail.txt)
+add_crexx_compiler_fail_test(reference_source_refsame_type rexx_src/reference_source_refsame_type_fail.crexx reference_source_refsame_type_fail.txt)
+add_crexx_compiler_fail_test(eq_levelb rexx_src/eq_levelb_fail.crexx eq_levelb_fail.txt)
+add_crexx_compiler_fail_test(eq_missing_interface rexx_src/eq_missing_interface_fail.crexx eq_missing_interface_fail.txt)
+add_crexx_compiler_fail_test(eq_nonobject rexx_src/eq_nonobject_fail.crexx eq_nonobject_fail.txt)
+
+set(_reference_driver_workdir
+        "${CMAKE_CURRENT_BINARY_DIR}/reference_driver_failure_ws")
+set(_reference_driver_script
+        "${CMAKE_CURRENT_BINARY_DIR}/reference_driver_failure.cmake")
+file(GENERATE OUTPUT "${_reference_driver_script}" CONTENT
+"file(REMOVE_RECURSE \"${_reference_driver_workdir}\")
+file(MAKE_DIRECTORY \"${_reference_driver_workdir}\")
+file(COPY
+  \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/reference_source_comparison_fail.crexx\"
+  DESTINATION \"${_reference_driver_workdir}\")
+execute_process(
+  COMMAND \"$<TARGET_FILE:crexx>\"
+          reference_source_comparison_fail.crexx -noexec -nocolor
+  WORKING_DIRECTORY \"${_reference_driver_workdir}\"
+  RESULT_VARIABLE result
+  OUTPUT_VARIABLE output
+  ERROR_VARIABLE error
+  TIMEOUT 20)
+set(combined \"\${output}\${error}\")
+if(NOT \"\${result}\" STREQUAL \"2\")
+  message(FATAL_ERROR
+          \"crexx driver did not return the compiler failure (\${result}):\\n\${combined}\")
+endif()
+string(FIND \"\${combined}\" \"#REFERENCE_COMPARISON_UNSUPPORTED\" diagnostic)
+if(diagnostic EQUAL -1)
+  message(FATAL_ERROR
+          \"crexx driver hid the compiler diagnostic:\\n\${combined}\")
+endif()
+")
+add_test(NAME crexx_driver_reference_failure_propagation
+         COMMAND ${CMAKE_COMMAND} -P "${_reference_driver_script}")
+set_tests_properties(crexx_driver_reference_failure_propagation PROPERTIES
+        LABELS "compiler;driver;negative;references"
+        TIMEOUT 30)
+
 add_crexx_compiler_fail_test(binary_memory_invalid_storage rexx_src/binary_memory_invalid_storage.crexx binary_memory_invalid_storage.txt)
 add_crexx_compiler_fail_test(binary_memory_fixed_for rexx_src/binary_memory_fixed_for.crexx binary_memory_fixed_for.txt)
 add_crexx_compiler_fail_test(binary_memory_missing_offset rexx_src/binary_memory_missing_offset.crexx binary_memory_missing_offset.txt)
@@ -1511,6 +1616,8 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
        FIXTURE STREQUAL "reference_source_iterator" OR
        FIXTURE STREQUAL "reference_source_inline_lifetime")
         string(APPEND CONTENT "foreach(op IN ITEMS mkref deref linkref refvalid)\n")
+    elseif(FIXTURE STREQUAL "reference_source_contract")
+        string(APPEND CONTENT "foreach(op IN ITEMS mkref deref refvalid refsame)\n")
     else()
         string(APPEND CONTENT "foreach(op IN ITEMS mkref deref refvalid)\n")
     endif()
@@ -2715,15 +2822,17 @@ string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.aliasblocked\\\"\" dep_alias_meta_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.refvargdynamicblocked\\\"\" dep_ref_varg_meta_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.residualcallblocked\\\"\" dep_residual_meta_pos)\n")
-string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.membercallblocked\\\"\" dep_member_meta_pos)\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.membercalldependency\\\"\" dep_member_meta_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_meta_pos EQUAL -1 OR dep_if_meta_pos EQUAL -1 OR dep_scoped_meta_pos EQUAL -1 OR dep_nested_meta_pos EQUAL -1 OR dep_sum_meta_pos EQUAL -1 OR dep_count_meta_pos EQUAL -1 OR dep_array_meta_pos EQUAL -1 OR dep_render_meta_pos EQUAL -1 OR dep_object_meta_pos EQUAL -1 OR dep_ref_meta_pos EQUAL -1 OR dep_opt_meta_pos EQUAL -1 OR dep_safe_asm_meta_pos EQUAL -1 OR dep_type_bump_meta_pos EQUAL -1 OR dep_varg_total_meta_pos EQUAL -1 OR dep_varg_pick_meta_pos EQUAL -1 OR dep_residual_func_meta_pos EQUAL -1 OR dep_residual_call_meta_pos EQUAL -1 OR dep_residual_target_meta_pos EQUAL -1 OR dep_box_getname_meta_pos EQUAL -1 OR dep_box_setname_meta_pos EQUAL -1 OR dep_inline_pos EQUAL -1)\n  message(FATAL_ERROR \"Dependency did not export expected inline metadata records\")\nendif()\n")
-string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_alias_meta_pos EQUAL -1 OR dep_ref_varg_meta_pos EQUAL -1 OR dep_residual_meta_pos EQUAL -1 OR dep_member_meta_pos EQUAL -1)\n  message(FATAL_ERROR \"Dependency did not emit expected fail-closed callable signatures\")\nendif()\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_alias_meta_pos EQUAL -1 OR dep_ref_varg_meta_pos EQUAL -1 OR dep_residual_meta_pos EQUAL -1 OR dep_member_meta_pos EQUAL -1)\n  message(FATAL_ERROR \"Dependency did not emit expected callable signatures\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.safelength\\\"=\\\".inline\\\" \\\"I6;c,1,\" dep_safe_asm_inline_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_safe_asm_inline_pos EQUAL -1)\n  message(FATAL_ERROR \"Safe assembler helper did not export inline metadata\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \";d,\" dep_dependency_record_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_dependency_record_pos EQUAL -1)\n  message(FATAL_ERROR \"Dependency did not export residual-call dependency records\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "foreach(expected_inline_name typebump vargtotal residualfunctiondependency residualcalldependency box.getname box.setname)\n  string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.\${expected_inline_name}\\\"=\\\".inline\\\" \\\"I6;c,1,\" dep_expected_inline_pos)\n  if(dep_expected_inline_pos EQUAL -1)\n    message(FATAL_ERROR \"Dependency did not export I6 callable summary metadata for \${expected_inline_name}\")\n  endif()\nendforeach()\n")
-string(APPEND INLINE_CROSS_FILE_CONTENT "foreach(blocked_name aliasblocked refvargdynamicblocked vargpick residualcalltarget residualcallblocked membercallblocked)\n  string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.\${blocked_name}\\\"=\\\".inline\\\" \\\"I6\" dep_blocked_inline_pos)\n  if(NOT dep_blocked_inline_pos EQUAL -1)\n    message(FATAL_ERROR \"Fail-closed callable \${blocked_name} unexpectedly exported inline metadata\")\n  endif()\nendforeach()\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.membercalldependency\\\"=\\\".inline\\\" \\\"I7;c,1,\" dep_member_inline_pos)\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_member_inline_pos EQUAL -1)\n  message(FATAL_ERROR \"Dependency did not export I7 residual member-call metadata\")\nendif()\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "foreach(blocked_name aliasblocked refvargdynamicblocked vargpick residualcalltarget residualcallblocked)\n  string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.\${blocked_name}\\\"=\\\".inline\\\" \\\"I6\" dep_blocked_inline_pos)\n  if(NOT dep_blocked_inline_pos EQUAL -1)\n    message(FATAL_ERROR \"Fail-closed callable \${blocked_name} unexpectedly exported inline metadata\")\n  endif()\nendforeach()\n")
 # Evidence-opening regression: remove the legacy ARG is_const_arg hint from the
 # serialized body.  The independently reconstructed I6 read-only summary must
 # still permit direct scalar binding; the I5/mismatch controls below must not.
@@ -2740,7 +2849,9 @@ string(APPEND INLINE_CROSS_FILE_CONTENT "file(READ \"\${work}/inline_cross_file_
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_roundtrip_rxas}\" \";d,\" dep_roundtrip_dependency_record_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_roundtrip_dependency_record_pos EQUAL -1)\n  message(FATAL_ERROR \"RXDAS roundtrip lost residual-call dependency records\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "foreach(roundtrip_inline_name inc typebump vargtotal residualfunctiondependency residualcalldependency box.getname box.setname)\n  string(FIND \"\${dep_roundtrip_rxas}\" \".meta \\\"inline_cross_file_dep.\${roundtrip_inline_name}\\\"=\\\".inline\\\" \\\"I6;c,1,\" dep_roundtrip_inline_pos)\n  if(dep_roundtrip_inline_pos EQUAL -1)\n    message(FATAL_ERROR \"RXDAS roundtrip lost I6 callable summary metadata for \${roundtrip_inline_name}\")\n  endif()\nendforeach()\n")
-string(APPEND INLINE_CROSS_FILE_CONTENT "foreach(blocked_name aliasblocked refvargdynamicblocked vargpick residualcalltarget residualcallblocked membercallblocked)\n  string(FIND \"\${dep_roundtrip_rxas}\" \".meta \\\"inline_cross_file_dep.\${blocked_name}\\\"=\\\".inline\\\" \\\"I6\" dep_roundtrip_blocked_inline_pos)\n  if(NOT dep_roundtrip_blocked_inline_pos EQUAL -1)\n    message(FATAL_ERROR \"RXDAS roundtrip unexpectedly gained inline metadata for \${blocked_name}\")\n  endif()\nendforeach()\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_roundtrip_rxas}\" \".meta \\\"inline_cross_file_dep.membercalldependency\\\"=\\\".inline\\\" \\\"I7;c,1,\" dep_roundtrip_member_inline_pos)\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_roundtrip_member_inline_pos EQUAL -1)\n  message(FATAL_ERROR \"RXDAS roundtrip lost I7 residual member-call metadata\")\nendif()\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "foreach(blocked_name aliasblocked refvargdynamicblocked vargpick residualcalltarget residualcallblocked)\n  string(FIND \"\${dep_roundtrip_rxas}\" \".meta \\\"inline_cross_file_dep.\${blocked_name}\\\"=\\\".inline\\\" \\\"I6\" dep_roundtrip_blocked_inline_pos)\n  if(NOT dep_roundtrip_blocked_inline_pos EQUAL -1)\n    message(FATAL_ERROR \"RXDAS roundtrip unexpectedly gained inline metadata for \${blocked_name}\")\n  endif()\nendforeach()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_cross_file_dep.roundtrip\" \"inline_cross_file_dep.roundtrip.rxas\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(APPEND full_out \"\${out}\")\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on rxdas inline dependency: \${out}\")\nendif()\n")
@@ -3398,6 +3509,23 @@ set_tests_properties(inline_packed_accessors_import_opt PROPERTIES
         LABELS "linked_opt;packed;binary;scalar-access;receiver;imports;rxdas"
         FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 
+add_test(NAME inline_receiver_storage_import_opt
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXDAS=$<TARGET_FILE:rxdas>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DDEP_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_storage_dep.crexx
+                 -DMAIN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_storage_main.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_storage_import_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_storage_import_opt.cmake)
+set_tests_properties(inline_receiver_storage_import_opt PROPERTIES
+        LABELS "linked_opt;level-l;receiver;objects;arrays;binary;imports;rxdas"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
 set(INLINE_COMPUTED_RECEIVER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_test_computed_receiver_copyback_opt_rewrites.cmake")
 set(INLINE_COMPUTED_RECEIVER_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_test_computed_receiver_copyback_opt_ws\")\n")
 string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
@@ -3407,13 +3535,15 @@ string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "if(NOT res EQUAL 0)\n  message(F
 string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"inline_test_computed_receiver_copyback\" \"\${work}/inline_test_computed_receiver_copyback.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on computed receiver inline test: \${out}\")\nendif()\n")
 string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "file(READ \"\${work}/inline_test_computed_receiver_copyback.rxas\" main_rxas)\n")
-string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "if(main_rxas MATCHES [=[call [^\\n]*inline_test_computed_receiver_copyback\\.box\\.setandreport\\(\\)]=])\n  message(FATAL_ERROR \"Optimized computed receiver test still calls setAndReport():\\n\${main_rxas}\")\nendif()\n")
+string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "if(main_rxas MATCHES [=[call[0-9]* [^\\n]*inline_test_computed_receiver_copyback\\.box\\.setandreport\\(\\)]=])\n  message(FATAL_ERROR \"Optimized computed receiver test still calls setAndReport():\\n\${main_rxas}\")\nendif()\n")
+string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "if(main_rxas MATCHES [=[call[0-9]* [^\\n]*inline_test_computed_receiver_copyback\\.box\\.setname\\(\\)]=])\n  message(FATAL_ERROR \"Optimized postfix CALL test still calls setName():\\n\${main_rxas}\")\nendif()\n")
 file(GENERATE OUTPUT "${INLINE_COMPUTED_RECEIVER_SCRIPT}" CONTENT "${INLINE_COMPUTED_RECEIVER_CONTENT}")
 
 add_test(NAME inline_test_computed_receiver_copyback_opt_rewrites
          COMMAND ${CMAKE_COMMAND} -P "${INLINE_COMPUTED_RECEIVER_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_tests_properties(inline_test_computed_receiver_copyback_opt_rewrites PROPERTIES LABELS "linked_opt")
+set_tests_properties(inline_test_computed_receiver_copyback_opt_rewrites PROPERTIES
+        LABELS "compiler;parser;levelb;call-postfix;inlining;linked_opt")
 
 add_test(NAME inline_loop_bound_early_return_cleanup_opt_rewrites
          COMMAND ${CMAKE_COMMAND}
@@ -3446,6 +3576,24 @@ add_test(NAME signal_crossed_loop_cleanup_opt_rewrites
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_signal_crossed_loop_cleanup.cmake)
 set_tests_properties(signal_crossed_loop_cleanup_opt_rewrites PROPERTIES
         LABELS "compiler;flow;signals;correctness;linked_opt"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(NAME inline_receiver_signal_cleanup
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXDAS=$<TARGET_FILE:rxdas>
+                 -DRXLINK=$<TARGET_FILE:rxlink>
+                 -DRXTVM=$<TARGET_FILE:rxtvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DCLASSLIB=${CMAKE_BINARY_DIR}/bin/classlib.rxbin
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_signal_cleanup.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_signal_cleanup_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_signal_cleanup.cmake)
+set_tests_properties(inline_receiver_signal_cleanup PROPERTIES
+        LABELS "compiler;flow;signals;receiver;inlining;correctness;linked_opt"
         FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 
 add_crexx_run_args_test(test_parse_arg_filename rexx_src/test_parse_arg_filename.crexx demo.rexx)
@@ -3569,7 +3717,38 @@ add_test(NAME san004_task_pending_object_result_compile
                 ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/san004_task_pending_object_result.crexx)
 set_tests_properties(san004_task_pending_object_result_compile PROPERTIES
         LABELS "sanitizer;san-004;compiler;levelg;concurrency;regression")
+add_test(NAME san006_import_context_lifetime
+        COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DCLASS_AGGREGATE=${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin
+                -DCLASS_MEMBER=${CMAKE_BINARY_DIR}/lib/classlib/KeyDB.rxbin
+                -DCLASS_SOURCE=${CMAKE_SOURCE_DIR}/lib/classlib/KeyDB.crexx
+                -DMAIN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/san006_import_context_main.crexx
+                -DWORK=${CMAKE_CURRENT_BINARY_DIR}/san006_import_context_lifetime_ws
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/san006_import_context_lifetime.cmake)
+set_tests_properties(san006_import_context_lifetime PROPERTIES
+        LABELS "sanitizer;san-006;compiler;imports;regression"
+        TIMEOUT 60)
+add_test(NAME san007_imported_inline_payload_lifetime
+        COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                -DSOURCE=${CMAKE_SOURCE_DIR}/lib/rxfnsg/rexx/httpcore.crexx
+                -DWORK=${CMAKE_CURRENT_BINARY_DIR}/san007_imported_inline_payload_lifetime_ws
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/san007_imported_inline_payload_lifetime.cmake)
+set_tests_properties(san007_imported_inline_payload_lifetime PROPERTIES
+        LABELS "sanitizer;san-007;compiler;imports;inlining;regression"
+        TIMEOUT 60)
 add_crexx_run_test(inline_test_computed_receiver_copyback rexx_src/inline_test_computed_receiver_copyback.crexx)
+add_crexx_run_test(call_postfix_surface rexx_src/call_postfix_surface.crexx)
+set_tests_properties(inline_test_computed_receiver_copyback_run_noopt PROPERTIES
+        LABELS "compiler;parser;levelb;call-postfix;inlining")
+set_tests_properties(inline_test_computed_receiver_copyback_run_opt PROPERTIES
+        LABELS "compiler;parser;levelb;call-postfix;inlining;linked_opt")
+set_tests_properties(call_postfix_surface_run_noopt PROPERTIES
+        LABELS "compiler;parser;levelb;call-postfix")
+set_tests_properties(call_postfix_surface_run_opt PROPERTIES
+        LABELS "compiler;parser;levelb;call-postfix;linked_opt")
 add_crexx_run_test(inline_test_loop_bound_early_return_cleanup rexx_src/inline_test_loop_bound_early_return_cleanup.crexx)
 add_crexx_run_test(structured_exit_crossed_loop_cleanup rexx_src/structured_exit_crossed_loop_cleanup.crexx)
 add_crexx_run_test(signal_crossed_loop_cleanup rexx_src/signal_crossed_loop_cleanup.crexx)
@@ -3695,6 +3874,28 @@ file(GENERATE OUTPUT "${WARN_SCRIPT}" CONTENT "${WARN_CONTENT}")
 add_test(NAME test_disjoint_detailed_warn
          COMMAND ${CMAKE_COMMAND} -P "${WARN_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+add_test(NAME cri18_scope_warning
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/cri18_scope_warning_ws
+                 -DCRI18_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/cri18_disjoint_scope_warning.crexx
+                 -DASSIGN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/disjoint_assignment_warning.crexx
+                 -DEXPLICIT_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/disjoint_explicit_intent.crexx
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/cri18_scope_warning.cmake)
+set_tests_properties(cri18_scope_warning PROPERTIES
+        LABELS "compiler;diagnostics;scope;cri-18")
+
+add_test(NAME cri18_exit_scratch_warning
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/cri18_exit_scratch_warning_ws
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/cri18_exit_scratch_explicit.crexx
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/cri18_exit_scratch_warning.cmake)
+set_tests_properties(cri18_exit_scratch_warning PROPERTIES
+        LABELS "compiler;compiler-exit;diagnostics;scope;cri-18")
 
 
 # Parsing Tests

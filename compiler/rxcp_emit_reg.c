@@ -716,7 +716,8 @@ static int symbol_uses_scoped_register(Symbol *symbol) {
     if (symbol->inline_value_alias) return 0;
     if (!scope_recycles_named_registers(symbol->scope)) return 0;
     if (symbol->exposed || symbol->is_arg || symbol->is_ref_arg ||
-        symbol->is_this || symbol->is_factory) return 0;
+        (symbol->is_this && !symbol->inline_borrowed_receiver) ||
+        symbol->is_factory) return 0;
     if (symbol->has_reference_target) return 0;
     if (symbol_name_starts_with(symbol, "__inline")) return 0;
     if (symbol_name_starts_with(symbol, "__rxtrace")) return 0;
@@ -757,7 +758,8 @@ static void assign_symbol_registers_worker(Symbol *symbol, void *payload) {
             } else if (!(symbol->scope &&
                          symbol->scope->defining_node &&
                          symbol->scope->defining_node->node_type == CLASS_DEF)) {
-                if (symbol_uses_scoped_register(symbol)) {
+                if (symbol_uses_scoped_register(symbol) ||
+                    symbol->inline_borrowed_receiver) {
                     symbol->register_num = get_reg(symbol->scope);
                 } else {
                     symbol->register_num = get_reg_perm(symbol->scope);
@@ -843,6 +845,35 @@ static void release_scoped_registers_for_node(ASTNode *node) {
     }
 
     free(registers);
+    free(symbols);
+}
+
+/* A live-linked inline receiver borrows caller storage and is explicitly
+ * unlinked on every exit. Compiler-generated inline blocks inherit their
+ * parent's register scope, so they intentionally bypass ordinary named-local
+ * recycling; return only these ownership-marked receiver registers when the
+ * generated lifetime boundary closes. */
+static void release_borrowed_receiver_registers_for_node(ASTNode *node) {
+    Symbol **symbols;
+    size_t i;
+
+    if (!node || !node->scope || node->scope->defining_node != node) return;
+
+    symbols = scp_syms(node->scope);
+    if (!symbols) return;
+    for (i = 0; symbols[i]; i++) {
+        Symbol *symbol = symbols[i];
+
+        if (!symbol->inline_borrowed_receiver ||
+            symbol->register_type != 'r' || symbol->register_num < 0) {
+            continue;
+        }
+        if (node->register_type == symbol->register_type &&
+            node->register_num == symbol->register_num) {
+            continue;
+        }
+        ret_reg(node->scope, symbol->register_num);
+    }
     free(symbols);
 }
 
@@ -1362,6 +1393,7 @@ walker_result register_walker(walker_direction direction,
             case OP_BIT_SHL:
             case OP_BIT_SHR:
             case OP_FLAG_HAS:
+            case OP_REFSAME:
 
             /* The order of the operands of these instructions are significant
              * however the instructions do not support both being a constant */
@@ -1705,6 +1737,9 @@ walker_result register_walker(walker_direction direction,
                            child1->symbolNode->symbol->register_num == node->additional_registers + 1 &&
                            child1->symbolNode->symbol->register_type == 'r') )
                         ret_reg(node->scope, node->additional_registers + 1);
+                    if (child1->register_num != node->additional_registers + 1) {
+                        return_child_reg(child1);
+                    }
                     c = child2;
                     i = node->additional_registers + 2;
                 } else {
@@ -1802,6 +1837,11 @@ walker_result register_walker(walker_direction direction,
                 else {
                     return_child_reg(child2);
                 }
+                break;
+
+            case CALL:
+                /* The statement form discards its call expression result. */
+                return_child_reg(child1);
                 break;
 
             case SAY:
@@ -1927,10 +1967,14 @@ walker_result register_walker(walker_direction direction,
         /* If this is a statement level node, return all deferred registers */
         if (node->parent && node->parent->node_type == INSTRUCTIONS &&
             !node_is_block_expr_leave(node)) {
+            if (is_call_node(node) && node->register_num >= 0) {
+                ret_reg(node->scope, node->register_num);
+            }
             return_statement_deferred_registers(node);
         }
 
         release_scoped_registers_for_node(node);
+        release_borrowed_receiver_registers_for_node(node);
     }
 
     return result_normal;

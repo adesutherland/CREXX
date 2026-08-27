@@ -60,13 +60,13 @@ queryexit: class
 
         if arg1 = "crexx" then do
             call result.set_status("REPLACE")
-            call result.add_replacement_line("do; _q_info = ''; assembler rxvers _q_info; say 'cREXX Version ' || word(_q_info, 3); end;")
+            call result.add_replacement_line("do; _q_info=.string; _q_info = ''; assembler rxvers _q_info; say 'cREXX Version ' || word(_q_info, 3); end;")
             return result
         end
 
         if arg1 = "os" then do
             call result.set_status("REPLACE")
-            call result.add_replacement_line("do; _q_info = ''; assembler rxvers _q_info; say 'OS: ' || word(_q_info, 1); end;")
+            call result.add_replacement_line("do; _q_info=.string; _q_info = ''; assembler rxvers _q_info; say 'OS: ' || word(_q_info, 1); end;")
             return result
         end
 

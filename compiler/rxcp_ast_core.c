@@ -311,6 +311,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->is_interface_default_method = 0;
     node->is_task_callable = 0;
     node->is_initializer = 0;
+    node->is_equivalence_operator = 0;
     node->is_internal_diagnostic = 0;
     node->is_source_diagnostic_recorded = 0;
     node->mark_internal_diagnostics = 0;
@@ -322,6 +323,8 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->skip_exit_dispatch = 0;
     node->emit_primary_reporting_anchor = 0;
     node->is_inline_pruned = 0;
+    node->inline_receiver_effect_known = 0;
+    node->inline_receiver_attribute_write = 0;
     node->flow_skip_arg_copy = 0;
     node->flow_share_arg_input = 0;
     node->flow_skip_assignment_store = 0;
@@ -447,6 +450,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->is_interface_default_method = node->is_interface_default_method;
     new_node->is_task_callable = node->is_task_callable;
     new_node->is_initializer = node->is_initializer;
+    new_node->is_equivalence_operator = node->is_equivalence_operator;
     new_node->is_internal_diagnostic = node->is_internal_diagnostic;
     new_node->mark_internal_diagnostics = node->mark_internal_diagnostics;
     new_node->force_local_scope = node->force_local_scope;
@@ -456,6 +460,8 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->suppress_symbol_metadata = node->suppress_symbol_metadata;
     new_node->skip_exit_dispatch = node->skip_exit_dispatch;
     new_node->is_inline_pruned = node->is_inline_pruned;
+    new_node->inline_receiver_effect_known = node->inline_receiver_effect_known;
+    new_node->inline_receiver_attribute_write = node->inline_receiver_attribute_write;
     new_node->flow_skip_arg_copy = 0;
     new_node->flow_share_arg_input = 0;
     new_node->flow_skip_assignment_store = 0;
@@ -619,6 +625,7 @@ walker_result add_dast_walker_handler1(walker_direction direction,
                 new_symbol->is_const_arg = symbol->is_const_arg;
                 new_symbol->is_opt_arg = symbol->is_opt_arg;
                 new_symbol->has_reference_target = symbol->has_reference_target;
+                new_symbol->inline_borrowed_receiver = symbol->inline_borrowed_receiver;
 
                 sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
             } else {
@@ -1596,6 +1603,10 @@ const char *ast_ndtp(NodeType type) {
             return "OP_SNAPSHOT";
         case OP_REFVALID:
             return "OP_REFVALID";
+        case OP_REFSAME:
+            return "OP_REFSAME";
+        case OP_EQ:
+            return "OP_EQ";
         case OP_INITIALIZED:
             return "OP_INITIALIZED";
         case OP_SCONCAT:
@@ -1914,6 +1925,18 @@ void ast_del(ASTNode* node) {
     /* Orphan the deleted node */
     node->parent = NULL;
     node->sibling = NULL;
+}
+
+void ast_disconnect_symbols(Context *context) {
+    ASTNode *node;
+
+    if (!context) return;
+
+    for (node = context->free_list; node; node = node->free_list) {
+        if (node->symbolNode && node->symbolNode->symbol) {
+            sym_dno(node->symbolNode->symbol, node);
+        }
+    }
 }
 
 void free_ast(Context *context) {

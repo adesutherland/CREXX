@@ -1,0 +1,5 @@
+options levelb
+namespace san006_main
+
+main: procedure = .int
+  return 0

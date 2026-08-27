@@ -21,6 +21,8 @@ set(REXXBINS
   testObjectCollections
   testStringObjectMaps
   testObjectObjectTreeMap
+  testObjectObjectHashMap
+  testObjectEquality
   testTreeMap
   testRexxComparator
   testQfind
@@ -206,4 +208,37 @@ foreach(_runner IN LISTS _concurrency_doc_runners)
   crexx_label_concurrency_tests(SP05
     "testTaskContextEndpoint_${_runner}_noopt"
     "testTaskContextEndpoint_${_runner}_opt")
+endforeach()
+
+# A request-specific positive wait must retain its full caller-supplied bound.
+# Exercise a terminal byte-endpoint deadline through the complete toolchain so
+# unit conversion mistakes in the Level B wrapper cannot hide behind fast local
+# completions.
+add_custom_target(testChannelRequestWait)
+add_dependencies(testclasses testChannelRequestWait)
+
+foreach(_runner IN LISTS _concurrency_doc_runners)
+  crexx_add_rexx_opt_matrix(
+    LINKED_ALL_MODES
+    NAME "testChannelRequestWait_${_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/testChannelRequestWait.crexx"
+    TARGET_GROUP testChannelRequestWait
+    RUNNER "${_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x
+    DEPENDS library classlib "${CMAKE_CURRENT_SOURCE_DIR}/testChannelRequestWait.crexx"
+    RUNTIME_ARGS ${CLASSLIB_RUNTIMES}
+    TEST_LABELS classlib concurrency levelb channel endpoint deadline linked "${_runner}"
+    REQUIRED_OUTPUT_REGEX "PASS: channel request positive wait observes the operation deadline"
+    FORBIDDEN_OUTPUT_REGEX "FAIL:"
+  )
+  crexx_label_concurrency_tests(SP04
+    "testChannelRequestWait_${_runner}_noopt"
+    "testChannelRequestWait_${_runner}_opt")
+  crexx_label_concurrency_tests(SP05
+    "testChannelRequestWait_${_runner}_noopt"
+    "testChannelRequestWait_${_runner}_opt")
+  crexx_label_concurrency_tests(SP08
+    "testChannelRequestWait_${_runner}_noopt"
+    "testChannelRequestWait_${_runner}_opt")
 endforeach()
