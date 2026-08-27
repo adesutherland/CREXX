@@ -1,5 +1,5 @@
 options levelb comments_dash
-import system_Os
+import system
 import rxfnsb
 
 x = .Os()

@@ -26,7 +26,6 @@ options levelb numeric_classic comments_dash
 namespace time expose ISO8601
 
 import rxfnsb
-import time
 
 /**
  * Provides ISO 8601 parsing and formatting for DateTime values.

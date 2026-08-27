@@ -132,8 +132,8 @@ set(CLASS_DEPS_ObjectObjectHashMapIterator ObjectIterator)
 set(CLASS_DEPS_ObjectObjectHashMap ObjectObjectHashMapIterator ObjectKeyStrategy Map)
 set(CLASS_DEPS_TreeMap Map TreeMapIterator Comparator Printable)
 set(CLASS_DEPS_ArrayBag  ArrayBagIterator Bag Printable)
-set(CLASS_DEPS_OffsetDateTime DateTime Printable)
-set(CLASS_DEPS_DateTime ISO8601 Printable)
+set(CLASS_DEPS_ISO8601 OffsetDateTime Printable)
+
 
 
 
