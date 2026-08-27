@@ -3763,6 +3763,16 @@ add_test(NAME cri18_scope_warning
 set_tests_properties(cri18_scope_warning PROPERTIES
         LABELS "compiler;diagnostics;scope;cri-18")
 
+add_test(NAME cri18_exit_scratch_warning
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/cri18_exit_scratch_warning_ws
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/cri18_exit_scratch_explicit.crexx
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/cri18_exit_scratch_warning.cmake)
+set_tests_properties(cri18_exit_scratch_warning PROPERTIES
+        LABELS "compiler;compiler-exit;diagnostics;scope;cri-18")
+
 
 # Parsing Tests
 add_crexx_parsing_test(expr_abut_01 parsing_src/expr_abut_01.crexx)

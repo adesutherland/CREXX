@@ -49,6 +49,19 @@ sortexit2: class
         arg tokens = .token[]
 
         result = .exitresult("EMPTY")
+        i = .int
+        j = .int
+        ti = .token
+        t_type = .string
+        txt = .string
+        ranges = .string[]
+        args = .string[]
+        split_indx = .int
+        parenDepth = .int
+        split_start = .int
+        split_end = .int
+        joined_parm = .string
+        parms = .string
 
         if tokens[0] < 4 then do
             call result.set_status("REJECT")
@@ -72,7 +85,6 @@ sortexit2: class
             end
         end
 
-        ranges = .string[]
         split_indx = 2
         parenDepth = 0
         do i = 2 to tokens[0]
@@ -93,7 +105,6 @@ sortexit2: class
         if split_indx > tokens[0] then return error_result(1, "Empty final parameter")
         ranges[ranges[0] + 1] = split_indx || " " || tokens[0]
 
-        args = .string[]
         do j = 1 to ranges[0]
             split_start = word(ranges[j], 1)
             split_end = word(ranges[j], 2)
@@ -115,7 +126,7 @@ sortexit2: class
         end
 
         call result.set_status("REPLACE")
-        call result.add_replacement_line("__rc=arraysort(" || parms || ")")
+        call result.add_replacement_line("__rc=.int; __rc=arraysort(" || parms || ")")
         return result
 
 error_result: procedure = .exitresult

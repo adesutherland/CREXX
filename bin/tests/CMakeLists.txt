@@ -243,6 +243,17 @@ file(GENERATE OUTPUT "${CREXX_DIAGNOSTIC_PLUMBING_SCRIPT}" CONTENT "${CREXX_DIAG
 add_test(NAME crexx_diagnostic_plumbing
          COMMAND ${CMAKE_COMMAND} -P "${CREXX_DIAGNOSTIC_PLUMBING_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME crexx_driver_compile_progress
+         COMMAND ${CMAKE_COMMAND}
+                 -DCREXX=$<TARGET_FILE:crexx>
+                 -DSOURCE=${CMAKE_SOURCE_DIR}/tests/benchmarks/rexxcps_levelb.crexx
+                 -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/crexx_driver_compile_progress_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/crexx_driver_compile_progress.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(crexx_driver_compile_progress PROPERTIES
+        LABELS "driver;regression;diagnostics;cri-18"
+        RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK}
+        TIMEOUT 150)
 set_tests_properties(crexx_help_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_simple_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_rexx_levelc_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
