@@ -3,11 +3,11 @@
 ## Status
 
 Phase 1 is in progress on `temp/newbuild`. The current checkpoint completes
-three bounded ownership/preparation waves and incorporates `origin/develop`
+four bounded ownership/preparation waves and incorporates `origin/develop`
 through `ac9dcc14270f4b6094f6ca815063c186a55d34e2`. The Phase 1 gate is not yet
-complete: shared cleanup remains in classlib and rxfnsc, 30 tests still start
-nested builds, resource pools are not defined, and the provisional wave graph
-still needs review.
+complete: shared cleanup remains in classlib and rxfnsc, two example tests
+still start nested builds, resource pools are not defined, and the provisional
+wave graph still needs review.
 
 No performance measurement was run. Host timings below are diagnostic only;
 other work was active on the machine.
@@ -129,18 +129,42 @@ After preparation:
   and
 - no performance measurement executed.
 
+## Wave 4: compiler-exit QA preparation
+
+The 28 compiler-exit runtime artifact builds now belong to one explicit
+`qa-prep-compiler-exits` target, which is part of `qa-prep`. Their 56 no-opt
+and opt runtime consumers no longer require build fixtures, and the 28
+`*_bin_build` tests have been removed. Artifact commands, their existing
+dependencies and the runtime test commands are otherwise unchanged.
+
+The first jobs-30 preparation after checkpoint B ran 457 actions in about 223
+seconds. As in Wave 3, the retained tree had crossed a commit identity, so
+this is regeneration evidence rather than a comparative timing. An immediate
+repeat took 0.13 seconds and ran only the existing `rxvm` symlink action.
+
+After preparation:
+
+- all 56 compiler-exit consumers passed at parallel 30 in 2.50 seconds;
+- the line count and SHA-256 of `.ninja_log` were unchanged across that CTest
+  run, proving that the tests did not invoke Ninja;
+- `ninja -t missingdeps qa-prep-compiler-exits` processed 779 nodes and found
+  no missing generated-file dependency;
+- the re-export is schema-valid, graph-clean and has no fallback
+  classification; and
+- no performance measurement executed.
+
 ## Current graph movement
 
-The current Debug export covers 1,506 targets, 1,349 custom commands and 2,397
+The current Debug export covers 1,507 targets, 1,349 custom commands and 2,369
 tests.
 
 | Finding | Phase 0 | This checkpoint |
 | --- | ---: | ---: |
 | multiple candidate output owners | 2 | 0 |
 | cleanup touches another action's output | 251 | 245 |
-| tests that invoke a build | 31 | 30 |
-| fixture setup tests | 31 | 30 |
-| tests with fixture requirements | 937 | 58 |
+| tests that invoke a build | 31 | 2 |
+| fixture setup tests | 31 | 2 |
+| tests with fixture requirements | 937 | 2 |
 | provisional wave inversions | 813 | 813 |
 | performance-measurement tests | 24 | 24 |
 
@@ -167,9 +191,9 @@ test timing.
 
 ## Next waves
 
-1. Move the 28 compiler-exit artifact build fixtures into a dedicated
-   `qa-prep-compiler-exits` target, then convert the two remaining example
-   fixtures.
+1. Convert the two remaining example fixtures into a dedicated
+   `qa-prep-examples` target, completing removal of top-level nested CTest
+   builds.
 2. Convert rxfnsc and classlib member/consolidation families to private outputs
    and single-owner publication, one family at a time.
 3. Replace predecessor serialization with direct semantic dependencies after

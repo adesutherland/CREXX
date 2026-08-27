@@ -1,6 +1,6 @@
 # New Build System Vision and Migration Plan
 
-- **Status:** Vision retained; Phase 0 complete; Phase 1 checkpoint B implemented locally
+- **Status:** Vision retained; Phase 0 complete; Phase 1 checkpoint C implemented
 - **Baseline:** `origin/develop` at `dc44d92909e706adc575932ba9ae72f2d6f05b7d`
 - **Planning branch:** `temp/newbuild`
 - **Date:** 2026-08-27
@@ -598,7 +598,12 @@ CTest into `qa-prep-linked-opt-runtime` and the aggregate `qa-prep` stage.
 Nested build tests fell from 31 to 30 and fixture requirements from 939 to 58
 relative to checkpoint A. Active CI and the maintained sanitizer runner now
 prepare before CTest; correctness selections exclude performance measurement.
-The next preparation slice is the 28-test compiler-exit fixture family.
+
+**2026-08-27 checkpoint C:** the 28 compiler-exit artifact fixtures have moved
+into `qa-prep-compiler-exits`. Their 56 runtime consumers passed directly at
+parallel 30 without changing the Ninja log. Nested build tests, fixture setup
+tests and fixture requirements are now the same two example fixtures. The next
+slice removes those last top-level build-as-test cases.
 
 ### Phase 2: make imports and metadata deterministic
 
@@ -704,11 +709,10 @@ following should be approved separately before implementation:
 ## 18. Immediate next step
 
 Continue Phase 1 as bounded ownership and QA-preparation waves. The next slice
-moves the 28 compiler-exit artifact build fixtures into
-`qa-prep-compiler-exits`, followed by the two example fixtures. Then convert
-rxfnsc and classlib shared cleanup/consolidation one family at a time. Re-export
-after every slice, reuse valid focused evidence, and reserve the broad Debug
-sweep for the Phase 1 checkpoint.
+moves the two remaining example artifact fixtures into `qa-prep-examples`.
+Then convert rxfnsc and classlib shared cleanup/consolidation one family at a
+time. Re-export after every slice, reuse valid focused evidence, and reserve
+the broad Debug sweep for the Phase 1 checkpoint.
 
 ## References
 
