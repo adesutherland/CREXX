@@ -266,12 +266,19 @@ static int inline_subtree_writes_class_attribute(ASTNode *node,
 
     if (inline_native_stem_call_mutates_class_attribute(node)) return 1;
 
+    if (node->node_type == MEMBER_CALL &&
+        node->inline_receiver_effect_known &&
+        node->inline_receiver_attribute_write) {
+        return 1;
+    }
+
     if ((node->node_type == FUNCTION ||
          node->node_type == MEMBER_CALL ||
          node->node_type == FACTORY_CALL) &&
         node->symbolNode &&
         node->symbolNode->symbol &&
-        node->symbolNode->symbol->ast_template &&
+        !(node->node_type == MEMBER_CALL &&
+          node->inline_receiver_effect_known) &&
         inline_callable_writes_class_attribute(node->symbolNode->symbol, visited, visited_count)) {
         return 1;
     }
@@ -288,14 +295,23 @@ static int inline_subtree_writes_class_attribute(ASTNode *node,
 static int inline_callable_writes_class_attribute(Symbol *start,
                                                   Symbol ***visited,
                                                   size_t *visited_count) {
+    ASTNode *callable;
     ASTNode *instrs;
 
     if (!start) return 0;
-    if (!inline_symbol_has_callable_template(start)) return 1;
+    if (start->inline_summary &&
+        (start->inline_summary->control_flags &
+         RXCP_INLINE_CONTROL_RECEIVER_ATTRIBUTE_WRITE)) {
+        return 1;
+    }
+    callable = inline_symbol_has_callable_template(start) ?
+               start->ast_template : sym_proc(start);
+    if (!callable || !inline_node_is_callable_def(callable)) return 1;
     if (inline_symbol_in_list(*visited, *visited_count, start)) return 0;
     if (!inline_append_symbol(visited, visited_count, start)) return 1;
 
-    instrs = ast_chld(start->ast_template, INSTRUCTIONS, 0);
+    instrs = ast_chld(callable, INSTRUCTIONS, 0);
+    if (!instrs) return 1;
     return inline_subtree_writes_class_attribute(instrs, visited, visited_count);
 }
 
@@ -1625,7 +1641,9 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
     if ((assign_node->parent && assign_node->parent->node_type == REPEAT) ||
         lhs->child ||
         (proc_sym && proc_sym->value_dims > 0)) {
-        if (method_needs_receiver_copyback) {
+        if (method_needs_receiver_copyback &&
+            !inline_is_class_attribute_receiver_copyback_target(
+                    inline_call_receiver(call_node))) {
             inline_debug_fail_closed(context, call_node, proc_sym,
                                      "mutating method assignment inline requires statement-position copyback");
             return 0;
@@ -1794,7 +1812,9 @@ int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym
     }
     if (inline_method_writes_class_attribute(proc_sym->ast_template) &&
         inline_callable_is_method(proc_sym->ast_template) &&
-        !inline_is_direct_receiver_copyback_target(inline_call_receiver(call_node))) {
+        !inline_is_direct_receiver_copyback_target(inline_call_receiver(call_node)) &&
+        !inline_is_class_attribute_receiver_copyback_target(
+                inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
                                  "mutating method expression inline requires a direct receiver copyback target");
         return 0;

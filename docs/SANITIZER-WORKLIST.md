@@ -37,6 +37,68 @@ or Release 1 line is sanitizer-clean before the condition is satisfied.
 
 ## Open findings
 
+### SAN-007 — imported inline-payload AST freed during recursive function replacement
+
+Status: closure candidate and release-blocking pending exact-SHA hosted proof.
+The ownership repair and permanent regression pass normal Debug and the full
+maintained Apple-ASan gate. No suppression, exclusion or waiver is authorized;
+publication still requires GitHub Sanitizer QA's supported Linux ASan/LSan and
+macOS ASan lanes on the exact published revision.
+
+- Scope: compiler imported-function replacement and inline-payload attachment
+  during recursive source-import validation.
+- Failure: `symbol_has_initializer_definition()` reads a freed imported inline
+  metadata AST node at `rxcp_val_sym.c:123`. `add_func()` frees the former
+  imported function context through `freimpfc()` while the active validation
+  tree still retains an initializer node allocated by
+  `inline_meta_import_node()` and attached by
+  `rxcp_inline_attach_imported_symbol()`.
+- Original trigger: `tools/asan-run.sh --phase full --test-jobs 8
+  --build-leaks off --leaks off --no-live-tail --tail-lines 50` on macOS arm64.
+  The instrumented build fails while generating
+  `lib/rxfnsg/rexx/httpcore.rxbin` from `httpcore.crexx`.
+- Focused reproducer: `tools/asan-run.sh --phase build --build-leaks off
+  --build-target lib/rxfnsg/rexx/httpcore.rxbin --build-jobs 1`. The
+  corresponding normal-Debug file target is the required non-sanitized
+  control. The focused runner reproduces the same allocation, free and invalid
+  read stacks deterministically at
+  `cmake-build-debugasan/asan-logs/20260827-155705-build/build.log`.
+- Affected revision: local `hotfix` at
+  `0f6481a2bdc02a9f0c78d8e47f8c253112b422a9` plus the in-progress receiver,
+  cleanup and optimizer repairs under QA on 2026-08-27. The exact final repair
+  revision will replace this working-tree description when committed.
+- Retained log:
+  `cmake-build-debugasan/asan-logs/20260827-154123-full/build.log`.
+- Permanent regression: `san007_imported_inline_payload_lifetime` compiles the
+  maintained `httpcore.crexx` import chain in an isolated work directory. Its
+  pre-repair Apple-ASan failure is retained at
+  `cmake-build-debugasan/asan-logs/20260827-160157-ctest/ctest.log`.
+- Repair: context teardown now disconnects every AST-to-symbol connector while
+  both sides are live, and symbol teardown clears any surviving AST
+  back-pointer before freeing its connector. This repairs both destruction
+  orders without retaining a dead imported context or guarding the later
+  initializer query. The deterministic `httpcore` target passed through
+  `tools/asan-run.sh` at
+  `cmake-build-debugasan/asan-logs/20260827-160329-build/build.log`; SAN-006 and
+  SAN-007 then passed together at
+  `cmake-build-debugasan/asan-logs/20260827-161107-ctest/ctest.log`.
+- Broad Apple-ASan evidence: `tools/asan-run.sh --phase full --test-jobs 8
+  --build-leaks off --leaks off --no-live-tail --tail-lines 50` passed the
+  complete instrumented build and 2,398 of 2,398 CTests in 1,028.38 seconds.
+  Logs are retained under
+  `cmake-build-debugasan/asan-logs/20260827-161118-full/`. Apple leak detection
+  is unsupported and was disabled as required; this is address-safety evidence,
+  not Linux LSan closure.
+- Owner/next action: hotfix QA. Rerun the final normal Debug and Release gates
+  on the frozen source, then require exact-SHA hosted Build CREXX and Sanitizer
+  QA before closing this item.
+- Closure checks: the permanent focused regression must pass in normal Debug
+  and Apple ASan; the focused `httpcore` target must pass through the runner;
+  the complete normal Debug suite and full local Apple-ASan build/CTest must
+  pass; and the exact published SHA must pass GitHub Sanitizer QA's Linux x64
+  ASan/LSan and macOS arm64 ASan lanes plus Build CREXX. Apple leak detection
+  remains unsupported and supplies no Linux LSan closure authority.
+
 ### SAN-006 — superseded imported class context freed during recursive validation
 
 Status: closure candidate; the imported-context ownership repair is implemented

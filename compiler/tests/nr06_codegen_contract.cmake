@@ -70,7 +70,7 @@ assert_matches(nr06_opt "\nmain\\(\\) \\.locals=11\n"
                "NR-06 optimized main register high-water mark")
 assert_matches(nr06_opt "\nconflictCases\\(\\) \\.locals=10\n"
                "NR-06 optimized fallback register high-water mark")
-assert_matches(nr06_noopt "\nmain\\(\\) \\.locals=9\n"
+assert_matches(nr06_noopt "\nmain\\(\\) \\.locals=8\n"
                "NR-06 no-opt main register high-water mark")
 assert_matches(nr06_noopt "\nconflictCases\\(\\) \\.locals=9\n"
                "NR-06 no-opt fallback register high-water mark")

@@ -253,6 +253,8 @@ typedef struct {
     Symbol *symbol;
     size_t id;
     int is_member;
+    int receiver_effect_known;
+    int receiver_attribute_write;
 } InlineMetaDependencyEntry;
 
 typedef struct {
@@ -289,6 +291,8 @@ typedef struct {
     char *args;
     Symbol *symbol;
     int is_member;
+    int receiver_effect_known;
+    int receiver_attribute_write;
 } InlineMetaImportedDependency;
 
 typedef struct {
@@ -691,7 +695,6 @@ static int inline_meta_member_uses_direct_dependency(InlineMetaExport *meta,
                          "reject member dependency: target is not an ordinary concrete method");
         return 0;
     }
-
     receiver_class = inline_resolve_class_symbol(meta->context,
                                                  receiver->scope,
                                                  receiver->value_class);
@@ -1245,6 +1248,13 @@ static int inline_meta_collect_dependency(InlineMetaExport *meta, ASTNode *node)
     meta->dependencies[meta->dependency_count].id = meta->dependency_count;
     meta->dependencies[meta->dependency_count].is_member =
             node->node_type == MEMBER_CALL;
+    meta->dependencies[meta->dependency_count].receiver_effect_known =
+            node->node_type == MEMBER_CALL;
+    meta->dependencies[meta->dependency_count].receiver_attribute_write =
+            node->node_type == MEMBER_CALL &&
+            (node->inline_receiver_effect_known
+                    ? node->inline_receiver_attribute_write
+                    : inline_method_writes_class_attribute(dependency_proc));
     meta->dependency_count++;
     return 1;
 }
@@ -1530,13 +1540,14 @@ static int inline_meta_emit_dependencies(InlineMetaText *text, InlineMetaExport 
 
         if (!inline_meta_text_appendf(text,
                                       meta->version >= 7
-                                              ? ";d,%zu,%s,%s,%s,%c"
+                                              ? ";d,%zu,%s,%s,%s,%c,%d"
                                               : ";d,%zu,%s,%s,%s",
                                       meta->dependencies[i].id,
                                       fqname_hex,
                                       type_hex,
                                       args_hex,
-                                      meta->dependencies[i].is_member ? 'm' : 'f')) {
+                                      meta->dependencies[i].is_member ? 'm' : 'f',
+                                      meta->dependencies[i].receiver_attribute_write ? 1 : 0)) {
             free(fqname_hex);
             free(type_hex);
             free(args_hex);
@@ -2042,6 +2053,8 @@ static int inline_meta_ensure_dependency_slot(InlineMetaImport *meta, size_t id)
         meta->dependencies[i].args = NULL;
         meta->dependencies[i].symbol = NULL;
         meta->dependencies[i].is_member = 0;
+        meta->dependencies[i].receiver_effect_known = 0;
+        meta->dependencies[i].receiver_attribute_write = 0;
     }
     return 1;
 }
@@ -2365,6 +2378,13 @@ static Symbol *inline_meta_resolve_member_dependency_symbol(Context *context,
     if (symbol && symbol->symbol_type == FUNCTION_SYMBOL) return symbol;
     symbol = sym_rfqv(context->ast, fqname);
     if (symbol && symbol->symbol_type == FUNCTION_SYMBOL) return symbol;
+    if (context->master_context && context->master_context != context &&
+        context->master_context->ast) {
+        symbol = sym_rfqn(context->master_context->ast, fqname);
+        if (symbol && symbol->symbol_type == FUNCTION_SYMBOL) return symbol;
+        symbol = sym_rfqv(context->master_context->ast, fqname);
+        if (symbol && symbol->symbol_type == FUNCTION_SYMBOL) return symbol;
+    }
 
     member_name = strrchr(fqname, '.');
     if (!member_name || member_name == fqname || !member_name[1]) return NULL;
@@ -2398,8 +2418,6 @@ static Symbol *inline_meta_resolve_dependency_symbol(Context *context,
                                                      const char *fqname,
                                                      int is_member) {
     Symbol *symbol;
-    ASTNode *lookup;
-    char *lookup_name;
 
     if (!context || !context->ast || !fqname || !*fqname) return NULL;
     if (is_member) {
@@ -2411,23 +2429,24 @@ static Symbol *inline_meta_resolve_dependency_symbol(Context *context,
 
     symbol = sym_rfqv(context->ast, fqname);
     if (symbol && symbol->symbol_type == FUNCTION_SYMBOL) return symbol;
-
-    lookup_name = strdup(fqname);
-    if (!lookup_name) return NULL;
-
-    lookup = ast_ftt(context, FUNCTION, lookup_name);
-    if (!lookup) {
-        free(lookup_name);
-        return NULL;
+    if (context->master_context && context->master_context != context &&
+        context->master_context->ast) {
+        symbol = sym_rfqn(context->master_context->ast, fqname);
+        if (symbol && symbol->symbol_type == FUNCTION_SYMBOL) return symbol;
+        symbol = sym_rfqv(context->master_context->ast, fqname);
+        if (symbol && symbol->symbol_type == FUNCTION_SYMBOL) return symbol;
     }
-    lookup->free_node_string = 1;
-    lookup->scope = meta ? meta->scope : NULL;
 
-    symbol = sym_imfn(context, lookup);
+    symbol = ensure_function_imported_exact(context, fqname, strlen(fqname));
     if (symbol && symbol->symbol_type == FUNCTION_SYMBOL) return symbol;
 
     symbol = sym_rfqn(context->ast, fqname);
     if (symbol && symbol->symbol_type == FUNCTION_SYMBOL) return symbol;
+    if (context->master_context && context->master_context != context &&
+        context->master_context->ast) {
+        symbol = sym_rfqn(context->master_context->ast, fqname);
+        if (symbol && symbol->symbol_type == FUNCTION_SYMBOL) return symbol;
+    }
 
     return NULL;
 }
@@ -2442,18 +2461,12 @@ static int inline_meta_dependency_signature_matches(Context *context,
                                                     const char *type,
                                                     const char *args) {
     imported_func *func;
-    char *lookup_name;
-    int found;
 
     if (!context || !fqname) return 0;
 
-    lookup_name = strdup(fqname);
-    if (!lookup_name) return 0;
-    func = NULL;
-    found = src_fqfu(context, 0, lookup_name, &func);
-    free(lookup_name);
+    func = rxcp_find_imported_function_exact(context, fqname);
 
-    if (!found || !func) return 1;
+    if (!func) return 1;
     if (func->is_variable) return 0;
     if (!inline_meta_nullable_strings_equal(func->type, type)) return 0;
     if (!inline_meta_nullable_strings_equal(func->args, args)) return 0;
@@ -2467,6 +2480,7 @@ static int inline_meta_import_dependency(Context *context, InlineMetaImport *met
     char *type_field;
     char *args_field;
     char *kind_field;
+    char *receiver_write_field;
     size_t id;
     size_t length;
     char *fqname;
@@ -2474,6 +2488,8 @@ static int inline_meta_import_dependency(Context *context, InlineMetaImport *met
     char *args;
     Symbol *symbol;
     int is_member;
+    int receiver_effect_known;
+    int receiver_attribute_write;
 
     if (!context || !meta || !record) return 0;
 
@@ -2489,6 +2505,15 @@ static int inline_meta_import_dependency(Context *context, InlineMetaImport *met
         return 0;
     }
     is_member = kind_field && strcmp(kind_field, "m") == 0;
+    receiver_write_field = meta->version >= 7 ? inline_meta_next_field(&cursor) : NULL;
+    receiver_effect_known = is_member && receiver_write_field != NULL;
+    receiver_attribute_write = receiver_write_field && strcmp(receiver_write_field, "1") == 0;
+    if (receiver_write_field &&
+        strcmp(receiver_write_field, "0") != 0 &&
+        strcmp(receiver_write_field, "1") != 0) {
+        return 0;
+    }
+    if (receiver_attribute_write && !is_member) return 0;
 
     id = (size_t)strtoul(id_field, NULL, 10);
     if (!inline_meta_ensure_dependency_slot(meta, id)) return 0;
@@ -2533,6 +2558,8 @@ static int inline_meta_import_dependency(Context *context, InlineMetaImport *met
     meta->dependencies[id].args = args;
     meta->dependencies[id].symbol = symbol;
     meta->dependencies[id].is_member = is_member;
+    meta->dependencies[id].receiver_effect_known = receiver_effect_known;
+    meta->dependencies[id].receiver_attribute_write = receiver_attribute_write;
     return 1;
 }
 
@@ -2757,6 +2784,10 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
         symbol = meta->dependencies[dependency_id].symbol;
         if (!symbol || symbol->symbol_type != FUNCTION_SYMBOL) return 0;
         sym_adnd(symbol, node, 1, 0);
+        node->inline_receiver_effect_known =
+                (char)meta->dependencies[dependency_id].receiver_effect_known;
+        node->inline_receiver_attribute_write =
+                (char)meta->dependencies[dependency_id].receiver_attribute_write;
     }
     if (symbol_id >= 0) {
         Symbol *symbol;

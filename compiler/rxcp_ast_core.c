@@ -323,6 +323,8 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->skip_exit_dispatch = 0;
     node->emit_primary_reporting_anchor = 0;
     node->is_inline_pruned = 0;
+    node->inline_receiver_effect_known = 0;
+    node->inline_receiver_attribute_write = 0;
     node->flow_skip_arg_copy = 0;
     node->flow_share_arg_input = 0;
     node->flow_skip_assignment_store = 0;
@@ -458,6 +460,8 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->suppress_symbol_metadata = node->suppress_symbol_metadata;
     new_node->skip_exit_dispatch = node->skip_exit_dispatch;
     new_node->is_inline_pruned = node->is_inline_pruned;
+    new_node->inline_receiver_effect_known = node->inline_receiver_effect_known;
+    new_node->inline_receiver_attribute_write = node->inline_receiver_attribute_write;
     new_node->flow_skip_arg_copy = 0;
     new_node->flow_share_arg_input = 0;
     new_node->flow_skip_assignment_store = 0;
@@ -621,6 +625,7 @@ walker_result add_dast_walker_handler1(walker_direction direction,
                 new_symbol->is_const_arg = symbol->is_const_arg;
                 new_symbol->is_opt_arg = symbol->is_opt_arg;
                 new_symbol->has_reference_target = symbol->has_reference_target;
+                new_symbol->inline_borrowed_receiver = symbol->inline_borrowed_receiver;
 
                 sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
             } else {
@@ -1920,6 +1925,18 @@ void ast_del(ASTNode* node) {
     /* Orphan the deleted node */
     node->parent = NULL;
     node->sibling = NULL;
+}
+
+void ast_disconnect_symbols(Context *context) {
+    ASTNode *node;
+
+    if (!context) return;
+
+    for (node = context->free_list; node; node = node->free_list) {
+        if (node->symbolNode && node->symbolNode->symbol) {
+            sym_dno(node->symbolNode->symbol, node);
+        }
+    }
 }
 
 void free_ast(Context *context) {

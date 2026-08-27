@@ -3578,6 +3578,24 @@ set_tests_properties(signal_crossed_loop_cleanup_opt_rewrites PROPERTIES
         LABELS "compiler;flow;signals;correctness;linked_opt"
         FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 
+add_test(NAME inline_receiver_signal_cleanup
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXDAS=$<TARGET_FILE:rxdas>
+                 -DRXLINK=$<TARGET_FILE:rxlink>
+                 -DRXTVM=$<TARGET_FILE:rxtvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DCLASSLIB=${CMAKE_BINARY_DIR}/bin/classlib.rxbin
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_signal_cleanup.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_signal_cleanup_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_signal_cleanup.cmake)
+set_tests_properties(inline_receiver_signal_cleanup PROPERTIES
+        LABELS "compiler;flow;signals;receiver;inlining;correctness;linked_opt"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
 add_crexx_run_args_test(test_parse_arg_filename rexx_src/test_parse_arg_filename.crexx demo.rexx)
 add_crexx_run_args_test(implicit_main_arg_compat rexx_src/implicit_main_arg_compat.crexx alpha beta)
 add_crexx_run_args_test(arg_compat_no_vargs rexx_src/arg_compat_no_vargs.crexx alpha beta)
@@ -3710,6 +3728,16 @@ add_test(NAME san006_import_context_lifetime
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/san006_import_context_lifetime.cmake)
 set_tests_properties(san006_import_context_lifetime PROPERTIES
         LABELS "sanitizer;san-006;compiler;imports;regression"
+        TIMEOUT 60)
+add_test(NAME san007_imported_inline_payload_lifetime
+        COMMAND ${CMAKE_COMMAND}
+                -DRXC=$<TARGET_FILE:rxc>
+                -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                -DSOURCE=${CMAKE_SOURCE_DIR}/lib/rxfnsg/rexx/httpcore.crexx
+                -DWORK=${CMAKE_CURRENT_BINARY_DIR}/san007_imported_inline_payload_lifetime_ws
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/san007_imported_inline_payload_lifetime.cmake)
+set_tests_properties(san007_imported_inline_payload_lifetime PROPERTIES
+        LABELS "sanitizer;san-007;compiler;imports;inlining;regression"
         TIMEOUT 60)
 add_crexx_run_test(inline_test_computed_receiver_copyback rexx_src/inline_test_computed_receiver_copyback.crexx)
 add_crexx_run_test(call_postfix_surface rexx_src/call_postfix_surface.crexx)

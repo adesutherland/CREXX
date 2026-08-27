@@ -516,10 +516,8 @@ static void flow_emit_descendant_unlinks(OutputFragment *output,
     ASTNode *child;
 
     if (!output || !node) return;
-    if (node->node_type == DO) {
-        if (node->branch_cleanup) {
-            flow_append_output_copy(output, node->branch_cleanup);
-        }
+    if (node->branch_cleanup) {
+        flow_append_output_copy(output, node->branch_cleanup);
     }
     if (flow_scope_owns_cleanup(node)) {
         flow_emit_scope_dereference_unlinks(output, node->scope);
@@ -897,10 +895,10 @@ void emit_flow(ASTNode *node, void *pl) {
                             node->node_number, node->node_number);
             output_append_text(node->output, temp1);
             if (child1->cleanup) {
-                /* Keep a detached copy for SIGNAL handlers emitted after this
-                 * loop has already been joined into its parent's output chain. */
-                if (!node->branch_cleanup) node->branch_cleanup = output_f();
-                flow_append_output_copy(node->branch_cleanup, child1->cleanup);
+                /* The transient producer retains its own detached
+                 * branch_cleanup.  Copying the aggregate REPEAT cleanup here
+                 * would make a SIGNAL handler visit both copies and unlink the
+                 * same live mapping twice. */
                 output_concat(node->output, child1->cleanup);
             }
             if (flow_scope_owns_cleanup(node)) {

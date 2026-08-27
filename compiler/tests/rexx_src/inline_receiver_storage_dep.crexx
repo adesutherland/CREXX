@@ -18,6 +18,15 @@ token: class
     assembler unlink value
     return value
 
+  setText: method = .void
+    arg text = .string
+    text_ = text
+    /* Keep this dependency ordinary so the caller summary must propagate
+     * receiver mutation through a residual member call. */
+    detached = text_
+    assembler unlink detached
+    return
+
 store: class
   current_ = .inline_receiver_storage_dep..token
   classes_ = .int[2]
@@ -37,6 +46,12 @@ store: class
 
   currentText: method = .string
     return "outer:" || current_.runtimeText()
+
+  /* Exercise transitive mutation through a residual member dependency. */
+  mutateCurrentThroughForwarder: method = .void
+    arg text = .string
+    call current_.setText(text)
+    return
 
   classAt: method = .int
     arg index = .int

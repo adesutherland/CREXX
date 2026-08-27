@@ -6,6 +6,10 @@ main: procedure = .int
   values = .inline_receiver_storage_dep..store()
 
   if values.currentText() <> "outer:current" then return fail("object forwarding")
+  call values.mutateCurrentThroughForwarder("updated")
+  if values.currentText() <> "outer:updated" then return fail("mutating object forwarding retained")
+  holder = .Holder()
+  if holder.mutateAndRead() <> "outer:held" then return fail("class-attribute receiver copyback")
   if .inline_receiver_storage_dep..store().classAt(1) <> 11 then return fail("produced receiver read")
   if values.classAt(1) <> 11 then return fail("integer array read")
   call values.setClass(2, 42)
@@ -33,6 +37,11 @@ main: procedure = .int
   if written <> 73 then return fail("computed receiver return")
   if stores[1].classAt(1) <> 73 then return fail("computed receiver copyback")
 
+  coerced_index = .float
+  do coerced_index = 1.0 to 1.0
+    if stores[coerced_index].classAt(1) <> 73 then return fail("coerced receiver index")
+  end
+
   replacement = .int[2]
   replacement[1] = 91
   call values.replaceClasses(replacement)
@@ -51,3 +60,15 @@ fail: procedure = .int
   arg label = .string
   say "FAIL:" label
   return 1
+
+Holder: class
+  store_ = .inline_receiver_storage_dep..store
+
+  *: factory
+    store_ = .inline_receiver_storage_dep..store()
+    return
+
+  /* Exercise nested optimization of an imported class-attribute receiver. */
+  mutateAndRead: method = .string
+    call store_.mutateCurrentThroughForwarder("held")
+    return store_.currentText()

@@ -97,6 +97,8 @@ struct ASTNode {
     char skip_exit_dispatch;
     char emit_primary_reporting_anchor;
     char is_inline_pruned;
+    char inline_receiver_effect_known;
+    char inline_receiver_attribute_write;
     char flow_skip_arg_copy; /* NR-26: private formal is safely overwritten before its first read */
     char flow_share_arg_input; /* NR-26: all physical writes are elided; incoming slot stays authoritative */
     char flow_skip_assignment_store; /* NR-26: RHS/TRACE stay live but the scalar destination is dead */
@@ -236,6 +238,9 @@ ASTNode *mknd_war2(ASTNode* node, const char *code, const char *name1, const cha
 ASTNode *mknd_war3(ASTNode* node, const char *code, const char *name1, const char *value1,
                    const char *name2, const char *value2, const char *name3, const char *value3);
 void ast_set_diagnostic(ASTNode *node, RxcpDiagnostic *diagnostic);
+/* Disconnect every AST node owned by a context from its symbol before either
+ * side of the bidirectional relationship is destroyed. */
+void ast_disconnect_symbols(Context *context);
 void free_ast(Context* context);
 void pdot_tree(ASTNode *tree, char* output_file, char* prefix);
 /* Set the string value of an ASTNode. string must be malloced. memory is
