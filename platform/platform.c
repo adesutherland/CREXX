@@ -314,6 +314,14 @@ void platform_term_restore(void)
         termios_saved = 0;
 }
 
+#else
+
+void platform_term_restore() {
+    if (termios_saved) {
+        tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
+    }
+}
+
 #endif
 
 static void signal_handler(int sig) {
