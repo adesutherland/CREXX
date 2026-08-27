@@ -65,6 +65,19 @@ load `rexxscript.rxbin` at runtime in addition to `library.rxbin`.
 The same source directory also builds the standalone `bin/rexxscript`
 executable, which packages a file runner around an isolated
 `.rexxscriptevaluator()` instance.
+
+The CMake build gives each RexxScript source member a private work directory
+under `rexxscript/members/`. Compiler imports are copied into the curated
+`rexxscript/imports/` staging directory, and `rxc` is invoked with
+`--no-exe-import` so an older executable-directory `rexxscript.rxbin` cannot
+be selected while its replacement is being built. The members are linked to
+the private `rexxscript/linked/rexxscript.rxbin` image. One publication action
+then replaces `bin/rexxscript.rxbin`; member actions do not delete or rewrite
+that shared product. The standalone runner likewise imports only from `bin/`,
+not from member work directories. This separation is a build-graph ownership
+rule: generated RXAS/RXBIN metadata remains owned by the action that generated
+it until the consolidated image is published.
+
 The product master documentation is in `rexxscript/doc/`.
 
 `lib/rxfnsb/rexx/rxjson.crexx` contains the first JSON foundation library module

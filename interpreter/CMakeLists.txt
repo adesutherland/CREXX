@@ -929,11 +929,15 @@ function(crexx_add_generated_jtable_matrix ALGORITHM DISPLAY_NAME)
             PASS_REGULAR_EXPRESSION "PASS: Jump Table ${DISPLAY_NAME} Source Matrix")
 endfunction()
 
-function(crexx_add_jtable_corruption_fixture NAME ALGORITHM MUTATION)
+function(crexx_add_jtable_corruption_base ALGORITHM)
     set(BASE_NAME tests_jump_table_corruption_${ALGORITHM})
     set(BASE_SOURCE "${CMAKE_CURRENT_BINARY_DIR}/${BASE_NAME}.rxas")
     set(BASE_RXBIN "${CMAKE_CURRENT_BINARY_DIR}/${BASE_NAME}.rxbin")
-    set(CORRUPT_RXBIN "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.rxbin")
+    set(BASE_TARGET prepare_${BASE_NAME})
+
+    if(TARGET ${BASE_TARGET})
+        return()
+    endif()
 
     set(ALGORITHM "${ALGORITHM}")
     configure_file(
@@ -948,15 +952,27 @@ function(crexx_add_jtable_corruption_fixture NAME ALGORITHM MUTATION)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             COMMENT "cREXX RXAS jump-table corruption base (${ALGORITHM}) ...")
 
+    add_custom_target(${BASE_TARGET} DEPENDS ${BASE_RXBIN})
+endfunction()
+
+function(crexx_add_jtable_corruption_fixture NAME ALGORITHM MUTATION)
+    set(BASE_NAME tests_jump_table_corruption_${ALGORITHM})
+    set(BASE_RXBIN "${CMAKE_CURRENT_BINARY_DIR}/${BASE_NAME}.rxbin")
+    set(BASE_TARGET prepare_${BASE_NAME})
+    set(CORRUPT_RXBIN "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.rxbin")
+
+    crexx_add_jtable_corruption_base(${ALGORITHM})
+
     add_custom_command(
             OUTPUT ${CORRUPT_RXBIN}
             COMMAND $<TARGET_FILE:mutate_jtable_rxbin>
                     ${BASE_RXBIN} ${CORRUPT_RXBIN} ${MUTATION}
-            DEPENDS ${BASE_RXBIN} mutate_jtable_rxbin
+            DEPENDS ${BASE_RXBIN} ${BASE_TARGET} mutate_jtable_rxbin
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             COMMENT "Mutating jump table ${NAME} (${MUTATION}) ...")
 
     add_custom_target(run_${NAME} ALL DEPENDS ${CORRUPT_RXBIN})
+    add_dependencies(run_${NAME} ${BASE_TARGET})
     add_test(
             NAME ${NAME}_rxvm
             COMMAND ${CMAKE_COMMAND}

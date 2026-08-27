@@ -7,10 +7,10 @@ set(REXXSCRIPT_MODULES
 )
 
 set(REXXSCRIPT_BINS)
-set(REXXSCRIPT_SOURCES)
+set(REXXSCRIPT_MEMBER_ROOT "${CMAKE_CURRENT_BINARY_DIR}/members")
 foreach(MOD IN LISTS REXXSCRIPT_MODULES)
-  list(APPEND REXXSCRIPT_BINS "${CMAKE_CURRENT_BINARY_DIR}/${MOD}.rxbin")
-  list(APPEND REXXSCRIPT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${MOD}.crexx")
+  list(APPEND REXXSCRIPT_BINS
+    "${REXXSCRIPT_MEMBER_ROOT}/${MOD}/${MOD}.rxbin")
 endforeach()
 
 set(REXXSCRIPT_MEMBER_BUILD_DEPS
@@ -20,18 +20,30 @@ set(REXXSCRIPT_MEMBER_BUILD_DEPS
   rxfnsc
 )
 
-set(_rexxscript_member_clean_stamp "${CMAKE_CURRENT_BINARY_DIR}/rexxscript_member_clean.stamp")
+set(REXXSCRIPT_IMPORT_ROOT "${CMAKE_CURRENT_BINARY_DIR}/imports")
+set(REXXSCRIPT_IMPORT_LIBRARY "${REXXSCRIPT_IMPORT_ROOT}/library.rxbin")
+set(REXXSCRIPT_IMPORT_RXFNSC "${REXXSCRIPT_IMPORT_ROOT}/rxfnsc.rxbin")
 add_custom_command(
-  OUTPUT "${_rexxscript_member_clean_stamp}"
-  COMMAND ${CMAKE_COMMAND} -E rm -f
-    "${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin"
-    ${REXXSCRIPT_BINS}
-    "${CMAKE_CURRENT_BINARY_DIR}/RexxScriptRunner.rxbin"
-    "${CMAKE_CURRENT_BINARY_DIR}/RexxScriptRunner_linked.rxbin"
-  COMMAND ${CMAKE_COMMAND} -E touch "${_rexxscript_member_clean_stamp}"
-  DEPENDS ${REXXSCRIPT_SOURCES} ${REXXSCRIPT_MEMBER_BUILD_DEPS}
-  COMMENT "Clearing stale RexxScript runtime member images ..."
+  OUTPUT
+    "${REXXSCRIPT_IMPORT_LIBRARY}"
+    "${REXXSCRIPT_IMPORT_RXFNSC}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${REXXSCRIPT_IMPORT_ROOT}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+    "${REXXSCRIPT_IMPORT_LIBRARY}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+    "${REXXSCRIPT_IMPORT_RXFNSC}"
+  DEPENDS
+    library
+    rxfnsc
+    "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+  COMMENT "Staging immutable RexxScript compiler imports ..."
   VERBATIM
+)
+add_custom_target(rexxscript_imports
+  DEPENDS "${REXXSCRIPT_IMPORT_LIBRARY}" "${REXXSCRIPT_IMPORT_RXFNSC}"
 )
 
 set(REXXSCRIPT_SELECTORS ${REXXSCRIPT_MODULES})
@@ -40,31 +52,44 @@ set(REXXSCRIPT_DEPS_RexxScriptEvaluateCompat RexxScriptRuntime)
 
 foreach(_binfile IN LISTS REXXSCRIPT_BINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
+  get_filename_component(_member_dir "${_binfile}" DIRECTORY)
   set(_rexxscript_deps)
+  set(_rexxscript_import_roots "${REXXSCRIPT_IMPORT_ROOT}")
   foreach(_dep IN LISTS REXXSCRIPT_DEPS_${_basename})
-    list(APPEND _rexxscript_deps "${CMAKE_CURRENT_BINARY_DIR}/${_dep}.rxbin")
+    list(APPEND _rexxscript_deps
+      "${REXXSCRIPT_MEMBER_ROOT}/${_dep}/${_dep}.rxbin")
+    list(APPEND _rexxscript_import_roots
+      "${REXXSCRIPT_MEMBER_ROOT}/${_dep}")
   endforeach()
   add_custom_command(
     OUTPUT "${_binfile}"
-    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin"
+    BYPRODUCTS "${_member_dir}/${_basename}.rxas"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_member_dir}"
     COMMAND $<TARGET_FILE:rxc>
     -x
-    -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
+    --no-exe-import
+    -i "${_rexxscript_import_roots}"
     -o "${_basename}"
     "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
     COMMAND $<TARGET_FILE:rxas> "${_basename}"
     DEPENDS
       "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
-      "${_rexxscript_member_clean_stamp}"
+      rexxscript_imports
+      "${REXXSCRIPT_IMPORT_LIBRARY}"
+      "${REXXSCRIPT_IMPORT_RXFNSC}"
       ${_rexxscript_deps}
       ${REXXSCRIPT_MEMBER_BUILD_DEPS}
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    WORKING_DIRECTORY "${_member_dir}"
     COMMENT "cREXX compile and assemble RexxScript runtime ${_basename} ..."
     VERBATIM
   )
 endforeach()
 
 set(_rexxscript_control_file ${CMAKE_CURRENT_BINARY_DIR}/rexxscript_link_$<CONFIG>.ctl)
+set(_rexxscript_link_root "${CMAKE_CURRENT_BINARY_DIR}/linked")
+set(_rexxscript_link_image "${_rexxscript_link_root}/rexxscript.rxbin")
+set(_rexxscript_publish_image "${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin")
+set(_rexxscript_publish_temp "${CMAKE_CURRENT_BINARY_DIR}/publish/rexxscript.rxbin.tmp")
 string(CONCAT _rexxscript_control_text
   "* Auto-generated control file for the consolidated RexxScript runtime library\n")
 foreach(_rexxscript_bin IN LISTS REXXSCRIPT_BINS)
@@ -76,12 +101,13 @@ endforeach()
 string(APPEND _rexxscript_control_text
   "PRESERVE INLINE\n"
   "$<$<NOT:$<CONFIG:Debug>>:STRIP SOURCE\n>"
-  "OUTPUT ${CMAKE_BINARY_DIR}/bin/rexxscript\n")
+  "OUTPUT ${_rexxscript_link_root}/rexxscript\n")
 
 file(GENERATE OUTPUT ${_rexxscript_control_file} CONTENT "${_rexxscript_control_text}")
 
 add_custom_command(
-  OUTPUT "${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin"
+  OUTPUT "${_rexxscript_link_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${_rexxscript_link_root}"
   COMMAND $<TARGET_FILE:rxlink> -c ${_rexxscript_control_file}
   DEPENDS rxlink ${REXXSCRIPT_BINS} ${_rexxscript_control_file}
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
@@ -89,8 +115,22 @@ add_custom_command(
   VERBATIM
 )
 
+add_custom_command(
+  OUTPUT "${_rexxscript_publish_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/publish"
+  COMMAND ${CMAKE_COMMAND} -E copy
+    "${_rexxscript_link_image}"
+    "${_rexxscript_publish_temp}"
+  COMMAND ${CMAKE_COMMAND} -E rename
+    "${_rexxscript_publish_temp}"
+    "${_rexxscript_publish_image}"
+  DEPENDS "${_rexxscript_link_image}"
+  COMMENT "Publishing consolidated RexxScript runtime library image ..."
+  VERBATIM
+)
+
 add_custom_target(rexxscript ALL
-  DEPENDS "${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin"
+  DEPENDS "${_rexxscript_publish_image}"
 )
 
 add_dependencies(rexxscript library rxfnsc)
@@ -104,7 +144,8 @@ add_custom_command(
     "${CMAKE_CURRENT_BINARY_DIR}/RexxScriptRunner_linked.rxbin"
   COMMAND $<TARGET_FILE:rxc>
     -x
-    -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
+    --no-exe-import
+    -i "${CMAKE_BINARY_DIR}/bin"
     -o RexxScriptRunner
     "${REXXSCRIPT_RUNNER_SOURCE}"
   COMMAND $<TARGET_FILE:rxas> RexxScriptRunner
