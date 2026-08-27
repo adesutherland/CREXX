@@ -633,6 +633,17 @@ Ninja. Two member artifacts remain byte-different from the former mixed-route
 baseline, so source/RXBIN route parity remains a Phase 2 qualification item.
 The next bounded ownership work is the three native-backed classlib adapters.
 
+**2026-08-27 checkpoint G:** the `Id`, `KeyDB`, and `Os` native-backed
+classlib adapters now use private, dependency-keyed source/provider roots,
+curated base imports, `--no-exe-import`, private linking, and single-owner
+publication. Each adapter can see only its declared native providers. Jobs 1,
+5, and 30 produced identical member and public hashes, and all six runtime
+consumers passed without invoking Ninja. Cross-action cleanup findings are now
+zero; only two preprocessor actions that rewrite their own declared outputs
+remain. `KeyDB` retains route-sensitive generated label/debug identities, so
+permanent source/RXBIN/plugin route parity remains a Phase 2 qualification
+item. The next bounded ownership work is the preprocessor family.
+
 ### Phase 2: make imports and metadata deterministic
 
 1. Add dependency/resolution reports to rxc, rxas and rxlink.
@@ -737,7 +748,8 @@ following should be approved separately before implementation:
 ## 18. Immediate next step
 
 Continue Phase 1 as bounded ownership and QA-preparation waves. The next slice
-converts rxfnsc and classlib shared cleanup/consolidation one family at a time.
+removes the two remaining preprocessor self-rewrite actions, then introduces
+measured resource pools and reviews the provisional wave/test classifications.
 Re-export after every slice, reuse valid focused evidence, and reserve the
 broad Debug sweep for the Phase 1 checkpoint.
 

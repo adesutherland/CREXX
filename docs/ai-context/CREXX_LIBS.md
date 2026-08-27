@@ -491,6 +491,17 @@ modules. Do not rewrite these wrappers in Rexx merely to avoid native code;
 classify or remove the underlying capability explicitly if it is not part of
 the intended release surface.
 
+The native adapter build uses the same ownership discipline as the core
+classlib. `library.rxbin` and `rxcexits.rxbin` are staged in a curated base
+import root, while every adapter receives a dependency-keyed private source and
+plugin root. `Id` sees only `rxid.rxplugin`, `KeyDB` sees only
+`rx_keyaccess.rxplugin`, and `Os` sees only `rxfs.rxplugin` and
+`rxplatform.rxplugin`. Each member runs `rxc --no-exe-import` and `rxas` in its
+own directory. `rxlink` writes the complete image under
+`lib/classlib/linked/native/`, and one temporary-file-and-rename action
+publishes `bin/classlib_native.rxbin`. Do not add a plugin to a broad shared
+search directory; declare it against the adapter that imports it.
+
 Bare collection names such as `Iterator`, `Iterable`, `ArrayList`, `HashMap`,
 `TreeMap`, and `Stack` are intentionally left free for future Level G generic
 or generic-like surfaces. Object-key maps and object sets are also deferred

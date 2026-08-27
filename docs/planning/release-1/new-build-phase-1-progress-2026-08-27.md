@@ -3,12 +3,12 @@
 ## Status
 
 Phase 1 is in progress on `temp/newbuild`. The current checkpoint completes
-seven bounded ownership/preparation waves and incorporates `origin/develop`
+eight bounded ownership/preparation waves and incorporates `origin/develop`
 through `657b833d9f70e3f0e69536e6d76e4dd6a9e953aa`. The Phase 1 gate is not yet
-complete: shared cleanup remains in the native-backed classlib adapters, two
-preprocessor actions still rewrite their own outputs, resource pools are not
-defined, and the provisional wave graph still needs review. Top-level CTest no
-longer contains a build fixture or invokes a nested build.
+complete: two preprocessor actions still rewrite their own outputs, resource
+pools are not defined, and the provisional wave graph still needs review.
+Top-level CTest no longer contains a build fixture or invokes a nested build,
+and the configured graph has no remaining cross-action cleanup finding.
 
 No performance measurement was run. Host timings below are diagnostic only;
 other work was active on the machine.
@@ -288,28 +288,76 @@ Concurrency and functional evidence:
 These checks exercise `rxc`, `rxas`, `rxlink`, `rxdas`, and `rxvm`. No
 performance measurement executed.
 
+## Wave 8: native-backed classlib isolation
+
+The `Id`, `KeyDB`, and `Os` adapters no longer share a compiler work directory,
+delete one another's member images, or delete the public
+`bin/classlib_native.rxbin` image. Their replacement graph:
+
+1. stages only `library.rxbin` and mandatory `rxcexits.rxbin` in a curated
+   native-classlib base import root;
+2. records the precise native providers for each member: `Id` sees only
+   `rxid.rxplugin`, `KeyDB` sees only `rx_keyaccess.rxplugin`, and `Os` sees
+   only `rxfs.rxplugin` and `rxplatform.rxplugin`;
+3. copies those providers and the member source into dependency-keyed private
+   roots;
+4. runs `rxc --no-exe-import` and `rxas` in the member's private directory;
+5. links the three private member images under
+   `lib/classlib/linked/native/`; and
+6. publishes the complete image through one temporary-file-and-rename action.
+
+This explicitly closes the broad-search ambiguity between a provider needed by
+one adapter and incidental plugins present in `bin/`. Baseline RXAS provenance
+confirmed that `KeyDB` also obtains `strip`, `arrayappend`, `left`, and `pos`
+from `library.rxbin`; no additional plugin is in its curated root.
+
+`Id` and `Os` retain exact baseline RXAS/RXBIN hashes. `KeyDB` resolves the
+same named provider declarations but the removal of executable-directory
+search changes compiler-generated label IDs and their debug trace names. After
+normalising only those IDs, the old and private `KeyDB` RXAS files match
+line-for-line. The resulting deterministic public image SHA-256 is
+`be960d9afd05ea86ebcbad6ae39a7a658294e33a98f45a8e9ba65746e23cfc43`;
+the former broad-search image was
+`5dcf9ad8c700309e40e7eaac572491c0edb5049e1ebfb660097a28f6611592f6`.
+This remains route-sensitive byte provenance, not an observed semantic change;
+permanent route-parity qualification remains Phase 2 work.
+
+Concurrency and functional evidence:
+
+- all seven family actions rebuilt from retained empty owned-output positions
+  at jobs 1, 5, and 30 in approximately 2.04, 0.85, and 0.88 seconds;
+  timings are diagnostic only because other activity was present;
+- the three member RXAS hashes, three member RXBIN hashes, and public image hash
+  were identical across jobs 1, 5, and 30;
+- an immediate repeat was a no-op;
+- `ninja -t missingdeps classlib_native` processed 544 nodes without finding a
+  missing generated-file dependency; and
+- all six prepared no-opt/opt `Id`, `KeyDB`, and `Os` runtime consumers passed
+  at parallel 30 in 0.46 seconds without changing the Ninja log.
+
+These checks exercise `rxc`, `rxas`, `rxlink`, and `rxvm`. No performance
+measurement executed.
+
 ## Current graph movement
 
-The current Debug export covers 1,510 targets, 1,351 custom commands and 2,367
+The current Debug export covers 1,511 targets, 1,352 custom commands and 2,367
 tests.
 
 | Finding | Phase 0 | This checkpoint |
 | --- | ---: | ---: |
 | multiple candidate output owners | 2 | 0 |
-| cleanup touches another action's output | 251 | 7 |
+| cleanup touches another action's output | 251 | 0 |
 | tests that invoke a build | 31 | 0 |
 | fixture setup tests | 31 | 0 |
 | tests with fixture requirements | 937 | 0 |
 | provisional wave inversions | 813 | 813 |
 | performance-measurement tests | 24 | 24 |
 
-The remaining seven cross-action cleanup findings are all in the three
-native-backed classlib adapters. Two additional preprocessor findings rewrite
-their own declared output, for nine cleanup findings in total. The main
-classlib family has moved from 107 cleanup findings to zero. The manifest
-projection is schema-valid and has no ownership/dependency graph error, while
-the 813 provisional wave inversions remain review inputs rather than accepted
-dependencies.
+Only the two preprocessor findings that rewrite their own declared output now
+remain. Both main and native-backed classlib families have zero cleanup
+findings. The manifest projection is schema-valid and has no
+ownership/dependency graph error, while the 813 provisional wave inversions
+remain review inputs rather than accepted dependencies.
 
 ## Original QA/build-cycle evidence
 
@@ -327,12 +375,10 @@ test timing.
 
 ## Next waves
 
-1. Convert the three native-backed classlib adapters to private outputs and
-   single-owner publication.
-2. Remove the two preprocessor self-rewrite cleanup patterns.
-3. Introduce measured resource pools for heavyweight optimized compiler,
+1. Remove the two preprocessor self-rewrite cleanup patterns.
+2. Introduce measured resource pools for heavyweight optimized compiler,
    assembler and VM work.
-4. Complete test labels/selections and review the 813 provisional wave
+3. Complete test labels/selections and review the 813 provisional wave
    inversions before the broad Phase 1 checkpoint.
 
 Windows publication/rename behaviour and Linux exact-tree proof remain hosted

@@ -285,79 +285,129 @@ add_custom_target(classlib ALL
 
 add_dependencies(classlib library)
 
+set(CLASSLIB_NATIVE_MEMBER_ROOT "${CMAKE_CURRENT_BINARY_DIR}/members/native")
+set(CLASSLIB_NATIVE_IMPORT_ROOT "${CMAKE_CURRENT_BINARY_DIR}/imports/native")
+set(CLASSLIB_NATIVE_IMPORT_LIBRARY "${CLASSLIB_NATIVE_IMPORT_ROOT}/library.rxbin")
+set(CLASSLIB_NATIVE_IMPORT_EXITS "${CLASSLIB_NATIVE_IMPORT_ROOT}/rxcexits.rxbin")
 set(CLASSLIB_NATIVE_BINS)
-set(CLASSLIB_NATIVE_SOURCES)
 foreach(CLS IN LISTS CLASSLIB_NATIVE_CLSS)
-  list(APPEND CLASSLIB_NATIVE_BINS "${CMAKE_CURRENT_BINARY_DIR}/${CLS}.rxbin")
-  list(APPEND CLASSLIB_NATIVE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${CLS}.crexx")
+  list(APPEND CLASSLIB_NATIVE_BINS
+    "${CLASSLIB_NATIVE_MEMBER_ROOT}/${CLS}/${CLS}.rxbin")
 endforeach()
 
-set(CLASSLIB_NATIVE_MEMBER_BUILD_DEPS
-  rxc
-  rxas
-  library
-  compiler_exit_bin
-  id
-  _keyaccess
-  fs
-  _platform
-)
-
-set(_classlib_native_member_clean_stamp "${CMAKE_CURRENT_BINARY_DIR}/classlib_native_member_clean.stamp")
-set(_classlib_native_member_clean_paths "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin" ${CLASSLIB_NATIVE_BINS})
-if(WIN32)
-  set(_classlib_native_member_clean_command
-    COMMAND ${CMAKE_COMMAND}
-      "-DREMOVE_PATHS=${_classlib_native_member_clean_paths}"
-      -DREMOVE_RETRIES=120
-      -DREMOVE_DELAY=0.25
-      -P "${CMAKE_SOURCE_DIR}/cmake/CrexxRemoveWithRetry.cmake")
-else()
-  set(_classlib_native_member_clean_command
-    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin" ${CLASSLIB_NATIVE_BINS})
-endif()
 add_custom_command(
-  OUTPUT "${_classlib_native_member_clean_stamp}"
-  ${_classlib_native_member_clean_command}
-  COMMAND ${CMAKE_COMMAND} -E touch "${_classlib_native_member_clean_stamp}"
-  DEPENDS ${CLASSLIB_NATIVE_SOURCES} ${CLASSLIB_NATIVE_MEMBER_BUILD_DEPS}
-  COMMENT "Clearing stale native-backed class library member images ..."
+  OUTPUT
+    "${CLASSLIB_NATIVE_IMPORT_LIBRARY}"
+    "${CLASSLIB_NATIVE_IMPORT_EXITS}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${CLASSLIB_NATIVE_IMPORT_ROOT}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+    "${CLASSLIB_NATIVE_IMPORT_LIBRARY}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+    "${CLASSLIB_NATIVE_IMPORT_EXITS}"
+  DEPENDS
+    library
+    compiler_exit_bin
+    "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+  COMMENT "Staging immutable native-backed class library compiler imports ..."
   VERBATIM
 )
+add_custom_target(classlib_native_imports
+  DEPENDS
+    "${CLASSLIB_NATIVE_IMPORT_LIBRARY}"
+    "${CLASSLIB_NATIVE_IMPORT_EXITS}"
+)
 
-if(WIN32)
-  set(_classlib_native_remove_consolidated_command
-    COMMAND ${CMAKE_COMMAND}
-      "-DREMOVE_PATHS=${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin"
-      -DREMOVE_RETRIES=120
-      -DREMOVE_DELAY=0.25
-      -P "${CMAKE_SOURCE_DIR}/cmake/CrexxRemoveWithRetry.cmake")
-else()
-  set(_classlib_native_remove_consolidated_command
-    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin")
-endif()
+# A native-backed adapter may see only the providers it declares here.  This
+# keeps rxc's source/RXBIN/plugin search order deterministic and prevents a
+# plugin built for another adapter from silently satisfying an import.
+set(CLASSLIB_NATIVE_PROVIDER_TARGETS_Id id)
+set(CLASSLIB_NATIVE_PROVIDER_FILES_Id rxid.rxplugin)
+set(CLASSLIB_NATIVE_PROVIDER_TARGETS_KeyDB _keyaccess)
+set(CLASSLIB_NATIVE_PROVIDER_FILES_KeyDB rx_keyaccess.rxplugin)
+set(CLASSLIB_NATIVE_PROVIDER_TARGETS_Os fs _platform)
+set(CLASSLIB_NATIVE_PROVIDER_FILES_Os rxfs.rxplugin rxplatform.rxplugin)
 
 foreach(_binfile IN LISTS CLASSLIB_NATIVE_BINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
+  get_filename_component(_member_dir "${_binfile}" DIRECTORY)
+  set(_provider_targets ${CLASSLIB_NATIVE_PROVIDER_TARGETS_${_basename}})
+  set(_provider_files ${CLASSLIB_NATIVE_PROVIDER_FILES_${_basename}})
+  list(LENGTH _provider_targets _provider_target_count)
+  list(LENGTH _provider_files _provider_file_count)
+  if(NOT _provider_target_count EQUAL _provider_file_count)
+    message(FATAL_ERROR
+      "Native classlib adapter ${_basename} has mismatched provider targets and files")
+  endif()
+
+  string(JOIN ";" _provider_signature ${_provider_files})
+  string(SHA256 _native_dep_signature
+    "${_basename};providers=${_provider_signature};base=library.rxbin,rxcexits.rxbin")
+  string(SUBSTRING "${_native_dep_signature}" 0 12 _native_dep_signature_short)
+  set(_member_source_root
+    "${_member_dir}/sources-${_native_dep_signature_short}")
+  set(_member_plugin_root
+    "${_member_dir}/plugins-${_native_dep_signature_short}")
+  set(_member_source "${_member_source_root}/${_basename}.crexx")
+  set(_provider_stage_commands)
+  set(_provider_staged_files)
+  set(_provider_deps)
+  if(_provider_target_count GREATER 0)
+    math(EXPR _provider_last_index "${_provider_target_count} - 1")
+    foreach(_provider_index RANGE ${_provider_last_index})
+      list(GET _provider_targets ${_provider_index} _provider_target)
+      list(GET _provider_files ${_provider_index} _provider_file)
+      set(_provider_staged_file "${_member_plugin_root}/${_provider_file}")
+      list(APPEND _provider_stage_commands
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "$<TARGET_FILE:${_provider_target}>"
+          "${_provider_staged_file}")
+      list(APPEND _provider_staged_files "${_provider_staged_file}")
+      list(APPEND _provider_deps ${_provider_target})
+    endforeach()
+  endif()
+
   add_custom_command(
     OUTPUT "${_binfile}"
-    ${_classlib_native_remove_consolidated_command}
-    COMMAND $<TARGET_FILE:rxc>
-      -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
-      -o "${_basename}"
+    BYPRODUCTS
+      "${_member_source}"
+      "${_member_dir}/${_basename}.rxas"
+      ${_provider_staged_files}
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+      "${_member_source_root}"
+      "${_member_plugin_root}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
       "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+      "${_member_source}"
+    ${_provider_stage_commands}
+    COMMAND $<TARGET_FILE:rxc>
+      --no-exe-import
+      -i "${CLASSLIB_NATIVE_IMPORT_ROOT};${_member_plugin_root}"
+      -o "${_basename}"
+      "${_member_source}"
     COMMAND $<TARGET_FILE:rxas> "${_basename}"
     DEPENDS
       "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
-      "${_classlib_native_member_clean_stamp}"
-      ${CLASSLIB_NATIVE_MEMBER_BUILD_DEPS}
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+      classlib_native_imports
+      "${CLASSLIB_NATIVE_IMPORT_LIBRARY}"
+      "${CLASSLIB_NATIVE_IMPORT_EXITS}"
+      rxc
+      rxas
+      ${_provider_deps}
+    WORKING_DIRECTORY "${_member_dir}"
     COMMENT "cREXX compile and assemble native-backed classlib adapter ${_basename} ..."
     VERBATIM
   )
 endforeach()
 
 set(_classlib_native_control_file ${CMAKE_CURRENT_BINARY_DIR}/classlib_native_link_$<CONFIG>.ctl)
+set(_classlib_native_link_root "${CMAKE_CURRENT_BINARY_DIR}/linked/native")
+set(_classlib_native_link_image "${_classlib_native_link_root}/classlib_native.rxbin")
+set(_classlib_native_publish_image "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin")
+set(_classlib_native_publish_temp
+  "${CMAKE_CURRENT_BINARY_DIR}/publish/classlib_native.rxbin.tmp")
 string(CONCAT _classlib_native_control_text
   "* Auto-generated control file for native-backed cREXX class library adapters\n")
 foreach(_cls_bin IN LISTS CLASSLIB_NATIVE_BINS)
@@ -369,12 +419,13 @@ endforeach()
 string(APPEND _classlib_native_control_text
   "PRESERVE INLINE\n"
   "$<$<NOT:$<CONFIG:Debug>>:STRIP SOURCE\n>"
-  "OUTPUT ${CMAKE_BINARY_DIR}/bin/classlib_native\n")
+  "OUTPUT ${_classlib_native_link_root}/classlib_native\n")
 
 file(GENERATE OUTPUT ${_classlib_native_control_file} CONTENT "${_classlib_native_control_text}")
 
 add_custom_command(
-  OUTPUT "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin"
+  OUTPUT "${_classlib_native_link_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${_classlib_native_link_root}"
   COMMAND $<TARGET_FILE:rxlink> -c ${_classlib_native_control_file}
   DEPENDS rxlink ${CLASSLIB_NATIVE_BINS} ${_classlib_native_control_file}
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
@@ -382,11 +433,23 @@ add_custom_command(
   VERBATIM
 )
 
-add_custom_target(classlib_native ALL
-  DEPENDS "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin"
+add_custom_command(
+  OUTPUT "${_classlib_native_publish_image}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/publish"
+  COMMAND ${CMAKE_COMMAND} -E copy
+    "${_classlib_native_link_image}"
+    "${_classlib_native_publish_temp}"
+  COMMAND ${CMAKE_COMMAND} -E rename
+    "${_classlib_native_publish_temp}"
+    "${_classlib_native_publish_image}"
+  DEPENDS "${_classlib_native_link_image}"
+  COMMENT "Publishing native-backed class library image ..."
+  VERBATIM
 )
 
-add_dependencies(classlib_native library id _keyaccess fs _platform)
+add_custom_target(classlib_native ALL
+  DEPENDS "${_classlib_native_publish_image}"
+)
 
 add_test(
   NAME classlib_rxdas_inline_preserve_smoke
