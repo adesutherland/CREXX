@@ -1648,8 +1648,7 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
              COMMAND ${CMAKE_COMMAND} -P "${SCRIPT}"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(${NAME} PROPERTIES
-            LABELS "${LABELS}"
-            FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+            LABELS "${LABELS}")
 endfunction()
 
 foreach(_crexx_reference_fixture IN ITEMS reference_source_explicit reference_source_contract reference_source_iterator reference_source_dereference_live reference_source_inline_lifetime reference_source_block_lifetime)
@@ -3097,8 +3096,7 @@ add_test(NAME inline_rhs_block_expr_concat_binary_opt
          COMMAND ${CMAKE_COMMAND} -P "${INLINE_RHS_BLOCK_EXPR_CONCAT_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(inline_rhs_block_expr_concat_binary_opt PROPERTIES
-        LABELS "linked_opt"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "linked_opt")
 
 set(INLINE_NESTED_BINARY_OWNER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_nested_binary_block_owner_shape.cmake")
 set(INLINE_NESTED_BINARY_OWNER_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_nested_binary_block_owner_shape_ws\")\n")
@@ -3395,8 +3393,7 @@ add_test(NAME inline_receiver_nested_this_direct_placement_opt
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_nested_this_opt_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_nested_this_opt.cmake)
 set_tests_properties(inline_receiver_nested_this_direct_placement_opt PROPERTIES
-        LABELS "linked_opt;receiver"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "linked_opt;receiver")
 
 add_test(NAME inline_receiver_detached_guard_opt
          COMMAND ${CMAKE_COMMAND}
@@ -3412,8 +3409,7 @@ add_test(NAME inline_receiver_detached_guard_opt
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_detached_guard_opt_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_guard_opt.cmake)
 set_tests_properties(inline_receiver_detached_guard_opt PROPERTIES
-        LABELS "linked_opt;receiver"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "linked_opt;receiver")
 
 add_test(NAME inline_receiver_production_ladder_opt
          COMMAND ${CMAKE_COMMAND}
@@ -3427,8 +3423,7 @@ add_test(NAME inline_receiver_production_ladder_opt
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_production_ladder_opt_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_production_ladder.cmake)
 set_tests_properties(inline_receiver_production_ladder_opt PROPERTIES
-        LABELS "linked_opt;receiver"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "linked_opt;receiver")
 
 add_test(NAME inline_receiver_reference_alias_opt
          COMMAND ${CMAKE_COMMAND}
@@ -3442,8 +3437,7 @@ add_test(NAME inline_receiver_reference_alias_opt
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_reference_alias_opt_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_reference_alias_opt.cmake)
 set_tests_properties(inline_receiver_reference_alias_opt PROPERTIES
-        LABELS "linked_opt;reference"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "linked_opt;reference")
 
 add_test(NAME inline_reference_member_accessors_opt
          COMMAND ${CMAKE_COMMAND}
@@ -3457,8 +3451,7 @@ add_test(NAME inline_reference_member_accessors_opt
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_reference_member_accessors_opt_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_reference_member_accessors_opt.cmake)
 set_tests_properties(inline_reference_member_accessors_opt PROPERTIES
-        LABELS "linked_opt;reference;receiver"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "linked_opt;reference;receiver")
 
 add_test(NAME inline_reference_accessors_import_opt
          COMMAND ${CMAKE_COMMAND}
@@ -3473,8 +3466,7 @@ add_test(NAME inline_reference_accessors_import_opt
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_reference_accessors_import_opt_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_reference_accessors_import_opt.cmake)
 set_tests_properties(inline_reference_accessors_import_opt PROPERTIES
-        LABELS "linked_opt;reference;receiver;imports"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "linked_opt;reference;receiver;imports")
 
 add_test(NAME inline_scalar_accessors_import_opt
          COMMAND ${CMAKE_COMMAND}
@@ -3489,8 +3481,7 @@ add_test(NAME inline_scalar_accessors_import_opt
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_scalar_accessors_import_opt_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_scalar_accessors_import_opt.cmake)
 set_tests_properties(inline_scalar_accessors_import_opt PROPERTIES
-        LABELS "linked_opt;scalar-access;receiver;signals;interfaces;imports"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "linked_opt;scalar-access;receiver;signals;interfaces;imports")
 
 add_test(NAME inline_packed_accessors_import_opt
          COMMAND ${CMAKE_COMMAND}
@@ -3506,8 +3497,7 @@ add_test(NAME inline_packed_accessors_import_opt
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_packed_accessors_import_opt_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_packed_accessors_import_opt.cmake)
 set_tests_properties(inline_packed_accessors_import_opt PROPERTIES
-        LABELS "linked_opt;packed;binary;scalar-access;receiver;imports;rxdas"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "linked_opt;packed;binary;scalar-access;receiver;imports;rxdas")
 
 add_test(NAME inline_receiver_storage_import_opt
          COMMAND ${CMAKE_COMMAND}
@@ -3523,8 +3513,7 @@ add_test(NAME inline_receiver_storage_import_opt
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_storage_import_opt_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_storage_import_opt.cmake)
 set_tests_properties(inline_receiver_storage_import_opt PROPERTIES
-        LABELS "linked_opt;level-l;receiver;objects;arrays;binary;imports;rxdas"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "linked_opt;level-l;receiver;objects;arrays;binary;imports;rxdas")
 
 set(INLINE_COMPUTED_RECEIVER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_test_computed_receiver_copyback_opt_rewrites.cmake")
 set(INLINE_COMPUTED_RECEIVER_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_test_computed_receiver_copyback_opt_ws\")\n")
@@ -3553,8 +3542,7 @@ add_test(NAME inline_loop_bound_early_return_cleanup_opt_rewrites
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_loop_bound_early_return_cleanup_opt_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_loop_bound_early_return_cleanup.cmake)
 set_tests_properties(inline_loop_bound_early_return_cleanup_opt_rewrites PROPERTIES
-        LABELS "compiler;inlining;correctness;linked_opt"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "compiler;inlining;correctness;linked_opt")
 
 add_test(NAME structured_exit_crossed_loop_cleanup_opt_rewrites
          COMMAND ${CMAKE_COMMAND}
@@ -3564,8 +3552,7 @@ add_test(NAME structured_exit_crossed_loop_cleanup_opt_rewrites
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/structured_exit_crossed_loop_cleanup_opt_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_structured_exit_crossed_loop_cleanup.cmake)
 set_tests_properties(structured_exit_crossed_loop_cleanup_opt_rewrites PROPERTIES
-        LABELS "compiler;flow;correctness;linked_opt"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "compiler;flow;correctness;linked_opt")
 
 add_test(NAME signal_crossed_loop_cleanup_opt_rewrites
          COMMAND ${CMAKE_COMMAND}
@@ -3575,8 +3562,7 @@ add_test(NAME signal_crossed_loop_cleanup_opt_rewrites
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/signal_crossed_loop_cleanup_opt_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_signal_crossed_loop_cleanup.cmake)
 set_tests_properties(signal_crossed_loop_cleanup_opt_rewrites PROPERTIES
-        LABELS "compiler;flow;signals;correctness;linked_opt"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "compiler;flow;signals;correctness;linked_opt")
 
 add_test(NAME inline_receiver_signal_cleanup
          COMMAND ${CMAKE_COMMAND}
@@ -3593,8 +3579,7 @@ add_test(NAME inline_receiver_signal_cleanup
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_signal_cleanup_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_signal_cleanup.cmake)
 set_tests_properties(inline_receiver_signal_cleanup PROPERTIES
-        LABELS "compiler;flow;signals;receiver;inlining;correctness;linked_opt"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "compiler;flow;signals;receiver;inlining;correctness;linked_opt")
 
 add_crexx_run_args_test(test_parse_arg_filename rexx_src/test_parse_arg_filename.crexx demo.rexx)
 add_crexx_run_args_test(implicit_main_arg_compat rexx_src/implicit_main_arg_compat.crexx alpha beta)
@@ -3766,8 +3751,7 @@ add_test(NAME inline_late_profitability_guard
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_late_profitability_guard_ws
                  -P ${CMAKE_SOURCE_DIR}/cmake/CheckInlineLateProfitability.cmake)
 set_tests_properties(inline_late_profitability_guard PROPERTIES
-        LABELS "compiler;inlining;performance;regression"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "compiler;inlining;performance;regression")
 add_crexx_run_test(flow_copy_fixed_point_inline_result rexx_src/flow_copy_fixed_point_inline_result.crexx)
 add_test(
         NAME flow_copy_fixed_point_inline_result_contract

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-DEFAULT_FOCUSED_REGEX='^(linked_opt_runtime_artifacts_build|crexx_spaced_source_smoke|inline_cross_file_.*|source_import_.*|interface_.*import.*)$'
+DEFAULT_FOCUSED_REGEX='^(crexx_spaced_source_smoke|inline_cross_file_.*|source_import_.*|interface_.*import.*)$'
 
 build_dir="cmake-build-debugasan"
 build_jobs=4
@@ -33,8 +33,8 @@ Usage: tools/asan-run.sh [options]
 
 Phases:
   --phase build          Full cmake build only.
-  --phase full           Full build, then full ctest. Default test leaks: on.
-  --phase ctest          Run ctest only. Use after a full build.
+  --phase full           Full build, qa-prep, then full ctest. Default test leaks: on.
+  --phase ctest          Run ctest only. Use after the required qa-prep target.
   --phase focused-lsan   Build focused dependencies, then focused LSan tests.
   --phase rerun-failed   Run ctest --rerun-failed.
 
@@ -374,13 +374,14 @@ case "$phase" in
         ;;
     full)
         run_cmake_build build
+        run_cmake_build qa-prep --target qa-prep
         run_ctest ctest
         ;;
     ctest)
         run_ctest ctest
         ;;
     focused-lsan)
-        run_cmake_build focused-build --target rxc rxdas crexx linked_opt_runtime_artifacts \
+        run_cmake_build focused-build --target rxc rxdas crexx qa-prep-linked-opt-runtime \
             fs_static _platform_static _treemap_static _llist_static _keyaccess_static id_static
         run_ctest focused-lsan
         ;;

@@ -52,6 +52,9 @@ class CatalogueUnitTests(unittest.TestCase):
         self.assertEqual(catalogue.classify_surface("<SOURCE>/lib/veclib/CMakeLists.txt", "veclib")["product_layer"], "B1")
         self.assertEqual(catalogue.classify_surface("<SOURCE>/lib/veclib/CMakeLists.txt", "generated-action")["product_layer"], "B1")
         self.assertEqual(catalogue.classify_surface("<SOURCE>/CMakeLists.txt", "concurrency-qa")["qa_tier"], "comprehensive")
+        prep = catalogue.classify_surface("<SOURCE>/CMakeLists.txt", "qa-prep-linked-opt-runtime", "UTILITY")
+        self.assertEqual((prep["product_layer"], prep["wave"], prep["qa_tier"]), ("Product", 7, "none"))
+        self.assertEqual(prep["basis"], "qa-prep-target")
 
     def test_import_policy_accepts_direct_and_cmake_env_invocations(self) -> None:
         with tempfile.TemporaryDirectory() as root:

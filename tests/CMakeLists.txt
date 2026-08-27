@@ -298,7 +298,9 @@ endforeach()
 crexx_label_smoke_tests(rxas_optimizer_copy_acopy_opt)
 
 add_custom_target(linked_opt_sweep
-        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -L linked_opt
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+                -L linked_opt
+                --label-exclude "^performance-measurement$"
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         DEPENDS crexx rxlink
         USES_TERMINAL

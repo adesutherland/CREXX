@@ -2,10 +2,10 @@
 
 ## Status
 
-Phase 1 is in progress on `temp/newbuild`. This checkpoint completes two
-bounded ownership waves and incorporates `origin/develop` through
-`ac9dcc14270f4b6094f6ca815063c186a55d34e2`. The Phase 1 gate is not yet
-complete: shared cleanup remains in classlib and rxfnsc, 31 tests still start
+Phase 1 is in progress on `temp/newbuild`. The current checkpoint completes
+three bounded ownership/preparation waves and incorporates `origin/develop`
+through `ac9dcc14270f4b6094f6ca815063c186a55d34e2`. The Phase 1 gate is not yet
+complete: shared cleanup remains in classlib and rxfnsc, 30 tests still start
 nested builds, resource pools are not defined, and the provisional wave graph
 still needs review.
 
@@ -25,11 +25,14 @@ edit. Each ownership family is handled as a separate wave:
 6. retain that evidence until a code, test or build input invalidates it.
 
 A broad Debug correctness sweep belongs at a meaningful Phase 1 checkpoint,
-not after each wave. A history-only merge or documentation edit does not cause
-another local run. Compiler, assembler or linker changes do invalidate the
-post-bootstrap products they generate. Correctness/stress workers always
-exclude `performance-measurement`; performance execution receives an idle,
-isolated worker later.
+not after each wave. A history-only merge or documentation edit does not
+invalidate retained QA evidence. The current configured build identity can
+still make a later build regenerate artifacts when the commit changes; that
+fan-out is now a recorded fragility to separate from evidence validity.
+Compiler, assembler or linker changes do invalidate the post-bootstrap products
+they generate. Correctness/stress workers always exclude
+`performance-measurement`; performance execution receives an idle, isolated
+worker later.
 
 ## Wave 1: jump-table corruption bases
 
@@ -89,16 +92,55 @@ after that merge. The changed compiler invalidated the Level B product chain;
 an incremental `testrexxscript` rebuild therefore ran 414 required steps. The
 four runtime/compatibility tests and CLI smoke test then all passed.
 
+## Wave 3: explicit linked-runtime QA preparation
+
+The broad `linked_opt_runtime_artifacts_build` CTest fixture has moved into the
+build graph:
+
+- `qa-prep-linked-opt-runtime` owns the existing generated-runtime aggregate;
+- `qa-prep` is the human/CI aggregate preparation stage;
+- linked-runtime tests no longer declare the removed build fixture;
+- `linked_opt_sweep` depends on preparation and then runs CTest, excluding
+  `performance-measurement` explicitly; and
+- active macOS, Linux and Windows workflows, the maintained sanitizer runner's
+  existing full/focused paths, and developer documentation now prepare before
+  CTest.
+
+This is staging work, not an ASan scope redesign. The sanitizer runner retains
+its existing selections and leak policy; only the required artifacts move from
+a hidden CTest build to the visible preparation target.
+
+The first jobs-30 `qa-prep` proof exposed 1,273 build actions and took about
+288 seconds on the active host. That inventory had been hidden inside CTest.
+The retained tree also changed from the pre-documentation merge identity to the
+checkpoint commit identity, so this run records the combined preparation and
+configured-identity fan-out rather than a comparative performance number.
+
+After preparation:
+
+- the five selected RexxScript tests ran directly in 1.01 seconds, with no
+  setup test;
+- a repeated direct CTest run took 0.75 seconds and left both the line count
+  and SHA-256 of `.ninja_log` unchanged;
+- `ninja -t missingdeps qa-prep` processed 3,844 nodes and found no missing
+  generated-file dependency;
+- actionlint passed after excluding three pre-existing shellcheck diagnostics,
+  `bash -n tools/asan-run.sh` passed, and all ten exporter unit tests passed;
+  and
+- no performance measurement executed.
+
 ## Current graph movement
 
-The post-merge Debug export covers 1,504 targets, 1,349 custom commands and
-2,398 tests.
+The current Debug export covers 1,506 targets, 1,349 custom commands and 2,397
+tests.
 
 | Finding | Phase 0 | This checkpoint |
 | --- | ---: | ---: |
 | multiple candidate output owners | 2 | 0 |
 | cleanup touches another action's output | 251 | 245 |
-| tests that invoke a build | 31 | 31 |
+| tests that invoke a build | 31 | 30 |
+| fixture setup tests | 31 | 30 |
+| tests with fixture requirements | 937 | 58 |
 | provisional wave inversions | 813 | 813 |
 | performance-measurement tests | 24 | 24 |
 
@@ -109,7 +151,7 @@ projection is schema-valid and has no ownership/dependency graph error, while
 the 813 provisional wave inversions remain review inputs rather than accepted
 dependencies.
 
-## QA/build-cycle evidence
+## Original QA/build-cycle evidence
 
 The selected RexxScript CTest command still triggered the
 `linked_opt_runtime_artifacts_build` fixture. After the compiler merge that
@@ -125,8 +167,9 @@ test timing.
 
 ## Next waves
 
-1. Move the `linked_opt_runtime_artifacts` nested build into the first explicit
-   `qa-prep` slice, then continue through the other 30 build fixtures.
+1. Move the 28 compiler-exit artifact build fixtures into a dedicated
+   `qa-prep-compiler-exits` target, then convert the two remaining example
+   fixtures.
 2. Convert rxfnsc and classlib member/consolidation families to private outputs
    and single-owner publication, one family at a time.
 3. Replace predecessor serialization with direct semantic dependencies after
@@ -138,4 +181,3 @@ test timing.
 
 Windows publication/rename behaviour and Linux exact-tree proof remain hosted
 or Minikube checkpoint gates; this macOS checkpoint does not claim either.
-

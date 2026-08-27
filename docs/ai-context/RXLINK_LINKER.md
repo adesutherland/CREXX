@@ -222,8 +222,13 @@ When changing `rxlink`, keep three layers of coverage in mind:
 For broader confidence, the runtime `_opt` path is now wired through linked
 images in normal `ctest` coverage. For a focused rerun, use:
 
-- `ctest -L linked_opt --output-on-failure`
+- `cmake --build <build-dir> --target qa-prep-linked-opt-runtime`
+- `ctest --test-dir <build-dir> -L linked_opt --label-exclude
+  '^performance-measurement$' --output-on-failure`
 - `cmake --build <build-dir> --target linked_opt_sweep`
+
+The first two commands expose preparation and execution as separate stages;
+`linked_opt_sweep` is the convenience target that performs both in that order.
 
 Be conservative with stripping. If a proposed change removes anything beyond
 the current source-level debug set (`META_SOURCE_STEP` and `META_TRACE_EVENT`),

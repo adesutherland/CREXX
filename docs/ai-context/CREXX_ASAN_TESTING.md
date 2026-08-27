@@ -101,7 +101,6 @@ That phase builds the needed targets with build leak detection on, then runs thi
 CTest surface with test leaks on and `--parallel 1`:
 
 ```text
-linked_opt_runtime_artifacts_build
 crexx_spaced_source_smoke
 inline_cross_file_.*
 source_import_.*
@@ -109,10 +108,10 @@ interface_.*import.*
 ```
 
 The focused phase intentionally builds `rxdas`, `crexx`,
-`linked_opt_runtime_artifacts`, and the static plugin archives used by native
-driver smoke coverage. Missing those build prerequisites can produce false
-focused failures from absent disassembly tools or native link inputs rather
-than ASan/LSan regressions.
+`qa-prep-linked-opt-runtime`, and the static plugin archives used by native
+driver smoke coverage before CTest starts. Missing those build prerequisites
+can produce false focused failures from absent disassembly tools or native link
+inputs rather than ASan/LSan regressions.
 
 ### Apple dynamic-provider lifetime
 
@@ -138,10 +137,10 @@ For a proper full ASan/LSan check:
 tools/asan-run.sh --phase full --test-jobs 8
 ```
 
-This performs a full build first, then runs all CTests. The full build step is
-important because many tests consume generated `.rxbin` artifacts directly. A
-CTest-only run against a partially built tree can fail with missing module files
-and should not be treated as a code failure.
+This performs a full build, runs the explicit `qa-prep` build stage, then runs
+all CTests. Both build steps are important because many tests consume generated
+`.rxbin` artifacts directly. A CTest-only run against a partially prepared tree
+can fail with missing module files and should not be treated as a code failure.
 
 For a stepwise full leak-clean loop after the tree is already built:
 
@@ -156,16 +155,11 @@ generated `.rxbin` artifacts, prebuild those artifacts through the runner before
 resuming a leak-on CTest range:
 
 ```sh
-tools/asan-run.sh --phase build --build-target linked_opt_runtime_artifacts
+tools/asan-run.sh --phase build --build-target qa-prep-linked-opt-runtime
 ```
 
-For focused test regexes that normally require the linked-artifacts fixture,
-exclude the automatic setup fixture after the prebuild so CTest does not launch
-that build test under `detect_leaks=1`:
-
-```sh
-tools/asan-run.sh --phase ctest --regex '^testName$' --leaks on --fixture-exclude-setup linked_opt_runtime_artifacts
-```
+Once preparation succeeds, focused CTest commands run the requested tests
+directly; no linked-artifacts setup test is added to the selection.
 
 For long full runs, use CTest's index range through the runner to continue from
 a known point after a fixed first failure:

@@ -82,10 +82,6 @@ function(_crexx_register_runtime_test)
     if(_crexx_labels)
         set_tests_properties(${CREXX_NAME} PROPERTIES LABELS "${_crexx_labels}")
     endif()
-    # The linked-opt fixture builds generated runtime artifacts inside the
-    # active build tree. Keep all helper-generated runtime tests behind that
-    # setup step so no test executes while CTest is still driving a build.
-    set_tests_properties(${CREXX_NAME} PROPERTIES FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 endfunction()
 
 function(crexx_add_rexx_opt_matrix)
@@ -159,10 +155,9 @@ function(crexx_add_rexx_opt_matrix)
         if(CREXX_TARGET_GROUP)
             add_dependencies(${CREXX_TARGET_GROUP} ${_crexx_artifact_target})
         endif()
-        # Every generated runtime test requires the serialized artifact fixture,
-        # so that fixture must own the exact image for both modes.  Registering
-        # only the optimized image leaves non-ALL noopt groups dependent on a
-        # stale warm-tree artifact and makes a clean CTest run nondeterministic.
+        # Explicit qa-prep owns the exact image for both modes. Registering only
+        # the optimized image leaves non-ALL noopt groups dependent on a stale
+        # warm-tree artifact and makes a clean CTest run nondeterministic.
         _crexx_register_linked_opt_artifact(${_crexx_artifact_target})
 
         set(_crexx_runtime_test_args)

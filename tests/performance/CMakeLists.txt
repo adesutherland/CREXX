@@ -130,7 +130,6 @@ foreach(_decimal_adapter_provider IN LISTS _decimal_adapter_providers)
                     LABELS "performance;decimal;decimal01;gate1;adapter;qualification"
                     PASS_REGULAR_EXPRESSION "PASS: DECIMAL-01 Gate 1 adapter payload"
                     FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
-                    FIXTURES_REQUIRED linked_opt_runtime_artifacts
             )
         endforeach()
     endforeach()
@@ -191,7 +190,6 @@ foreach(_decimal_standard IN ITEMS common18 classic9)
         )
         set_tests_properties(${_decimal_integrity_test} PROPERTIES
                 LABELS "performance;decimal;decimal01;gate1;qualification;optimizer-integrity"
-                FIXTURES_REQUIRED linked_opt_runtime_artifacts
         )
     endforeach()
 
@@ -224,7 +222,6 @@ foreach(_decimal_standard IN ITEMS common18 classic9)
                         PASS_REGULAR_EXPRESSION
                                 "PASS: DECIMAL-01 Gate 1 decimal workload"
                         FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
-                        FIXTURES_REQUIRED linked_opt_runtime_artifacts
                 )
             endforeach()
         endforeach()
@@ -275,7 +272,6 @@ foreach(_decimal_runner IN ITEMS rxvm rxbvm)
                     LABELS "performance;decimal;decimal01;gate1;qualification;rexxcps-control"
                     PASS_REGULAR_EXPRESSION "PASS: RexxCPS family control"
                     FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
-                    FIXTURES_REQUIRED linked_opt_runtime_artifacts
             )
         endforeach()
     endforeach()
@@ -471,7 +467,6 @@ add_test(
 )
 set_tests_properties(postperf04_scalar_access_codegen PROPERTIES
         LABELS "performance;scalar-access;postperf04;codegen"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts
 )
 
 add_custom_target(performance_binary_packed_float ALL)

@@ -372,6 +372,10 @@ add_subdirectory(tests)
 add_subdirectory(bin crexx_driver)
 
 if(BUILD_TESTING)
+    # Build preparation is an explicit graph phase. CTest executes tests only;
+    # it must not start a nested build in the active test worker pool.
+    add_custom_target(qa-prep)
+
     if(WIN32)
         set(_crexx_concurrency_default_test_jobs 1)
     else()
@@ -476,19 +480,13 @@ if(TARGET linked_opt_runtime_artifacts)
             add_dependencies(linked_opt_runtime_artifacts ${_crexx_linked_opt_runtime_dependency})
         endif()
     endforeach()
-    add_test(
-            NAME linked_opt_runtime_artifacts_build
-            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target linked_opt_runtime_artifacts
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
-    # This test invokes a nested build; keep it out of the parallel test pool so
-    # generated artifacts cannot race with tests that use the same build tree.
-    set_tests_properties(linked_opt_runtime_artifacts_build PROPERTIES
-            FIXTURES_SETUP linked_opt_runtime_artifacts
-            RUN_SERIAL TRUE
-            TIMEOUT 1800)
+
+    add_custom_target(qa-prep-linked-opt-runtime)
+    add_dependencies(qa-prep-linked-opt-runtime linked_opt_runtime_artifacts)
+    add_dependencies(qa-prep qa-prep-linked-opt-runtime)
+
     if(TARGET linked_opt_sweep)
-        add_dependencies(linked_opt_sweep linked_opt_runtime_artifacts)
+        add_dependencies(linked_opt_sweep qa-prep-linked-opt-runtime)
     endif()
 endif()
 

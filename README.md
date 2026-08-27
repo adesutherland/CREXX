@@ -40,7 +40,8 @@ qualification but is not a released, stable or fully cross-platform contract.
 cmake -S . -B cmake-build-debug
 cmake --build cmake-build-debug
 ctest --test-dir cmake-build-debug -L smoke --output-on-failure --parallel 10 --timeout 600
-ctest --test-dir cmake-build-debug --output-on-failure --parallel 10 --timeout 600
+cmake --build cmake-build-debug --target qa-prep --parallel 10
+ctest --test-dir cmake-build-debug --label-exclude '^performance-measurement$' --output-on-failure --parallel 10 --timeout 600
 ```
 
 The build creates the toolchain under `cmake-build-debug/bin`.
@@ -49,9 +50,12 @@ to `rxbvm`, GCC builds link it to `rxtvm`, and MSVC builds copy the sole
 `rxbvm.exe` engine to `rxvm.exe`. The ordinary test suite follows `rxvm`; a
 small dispatch contract test still exercises each concrete engine that was
 built.
-The `smoke` CTest label is the fast local gate; the full suite remains the
-release/CI gate. The explicit CTest timeout keeps 10-way local runs from
-failing slow-but-progressing tests under load.
+The `smoke` CTest label is the fast local gate and runs before broad
+preparation. The full suite remains the release/CI gate. `qa-prep` builds
+non-default generated test artifacts before that full CTest starts; tests never
+initiate a nested build. The explicit CTest timeout keeps 10-way local runs from
+failing slow-but-progressing tests under load. Performance measurements are a
+separate, idle-host selection and are excluded from the correctness run above.
 
 Parser-mode and syntax-highlighting support use DSL Syntax Highlighter (DSLSH).
 If a sibling checkout exists at `../DSL-Syntax-Highlighter`, CMake uses it.

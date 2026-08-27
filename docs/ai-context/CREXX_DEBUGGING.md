@@ -172,10 +172,10 @@ Process lessons:
   cmake --build cmake-build-asan --target crexx_test_driver
   ```
 
-* If a test unexpectedly fails in a broad setup target such as
-  `linked_opt_runtime_artifacts_build`, check whether CTest is building a
-  prerequisite rather than hanging. Under ASAN that setup can take much longer
-  than the actual focused tests.
+* Build broad generated prerequisites explicitly with
+  `cmake --build <build-dir> --target qa-prep-linked-opt-runtime` before linked
+  optimized tests. CTest no longer starts that build, so a missing-artifact
+  failure means the preparation stage was omitted or failed.
 
 Reference source-syntax lessons:
 

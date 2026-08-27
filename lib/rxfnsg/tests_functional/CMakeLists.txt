@@ -402,7 +402,6 @@ set_tests_properties(
   ts_http_policy_skipped_copy_reassignment_shape
   PROPERTIES
     LABELS "compiler;flow;regression;http;linked_opt"
-    FIXTURES_REQUIRED linked_opt_runtime_artifacts
 )
 
 add_custom_target(ts_http_codec)

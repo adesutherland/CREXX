@@ -126,7 +126,9 @@ everything in the `build.ninja` specification file. These are a lot of
 parts, and the good news is, when they are built once, only the changed
 source will be built, which will be fast.
 
-After this, the generated test suite is run with the `ctest' command.
+After the product build, prepare the generated test artifacts with the
+`qa-prep` target. The generated test suite is then run with the `ctest'
+command. CTest executes tests only; it does not start another build.
 This knows what to do, as the tests were defined in the Cmake recipes, and will show you successes and failures. If what
 you checked out if git is not a released version, there is a 
 change that some test cases fail, but generally these should indicate
@@ -138,7 +140,8 @@ For routine system validation, run the full build and full test suite:
 
 ```sh
 cmake --build cmake-build-debug
-ctest --test-dir cmake-build-debug --output-on-failure
+cmake --build cmake-build-debug --target qa-prep --parallel 10
+ctest --test-dir cmake-build-debug --label-exclude '^performance-measurement$' --output-on-failure --parallel 10
 ```
 
 For standard-library and BIF work, useful focused checks are:

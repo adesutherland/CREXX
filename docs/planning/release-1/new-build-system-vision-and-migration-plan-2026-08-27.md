@@ -1,6 +1,6 @@
 # New Build System Vision and Migration Plan
 
-- **Status:** Vision retained; Phase 0 evidence complete; no production build implementation has been changed
+- **Status:** Vision retained; Phase 0 complete; Phase 1 checkpoint B implemented locally
 - **Baseline:** `origin/develop` at `dc44d92909e706adc575932ba9ae72f2d6f05b7d`
 - **Planning branch:** `temp/newbuild`
 - **Date:** 2026-08-27
@@ -593,6 +593,13 @@ resource pools and wave review remain. Work proceeds family by family; broad
 QA is reserved for a meaningful checkpoint. See
 `docs/planning/release-1/new-build-phase-1-progress-2026-08-27.md`.
 
+**2026-08-27 checkpoint B:** `linked_opt_runtime_artifacts_build` has moved from
+CTest into `qa-prep-linked-opt-runtime` and the aggregate `qa-prep` stage.
+Nested build tests fell from 31 to 30 and fixture requirements from 939 to 58
+relative to checkpoint A. Active CI and the maintained sanitizer runner now
+prepare before CTest; correctness selections exclude performance measurement.
+The next preparation slice is the 28-test compiler-exit fixture family.
+
 ### Phase 2: make imports and metadata deterministic
 
 1. Add dependency/resolution reports to rxc, rxas and rxlink.
@@ -697,11 +704,11 @@ following should be approved separately before implementation:
 ## 18. Immediate next step
 
 Continue Phase 1 as bounded ownership and QA-preparation waves. The next slice
-moves `linked_opt_runtime_artifacts_build` out of CTest and into explicit
-`qa-prep`, using the retained 168-second hidden-build observation as its
-baseline. Then convert rxfnsc and classlib shared cleanup/consolidation one
-family at a time. Re-export after every slice, reuse valid focused evidence,
-and reserve the broad Debug sweep for the Phase 1 checkpoint.
+moves the 28 compiler-exit artifact build fixtures into
+`qa-prep-compiler-exits`, followed by the two example fixtures. Then convert
+rxfnsc and classlib shared cleanup/consolidation one family at a time. Re-export
+after every slice, reuse valid focused evidence, and reserve the broad Debug
+sweep for the Phase 1 checkpoint.
 
 ## References
 

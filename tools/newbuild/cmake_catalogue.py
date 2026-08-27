@@ -161,6 +161,8 @@ def classify_surface(source: str, name: str, target_type: str = "") -> dict[str,
     if target in explicit_names:
         layer, wave, qa_tier = explicit_names[target]
         return {"product_layer": layer, "wave": wave, "qa_tier": qa_tier, "basis": "target-name"}
+    if target == "qa-prep" or target.startswith("qa-prep-"):
+        return {"product_layer": "Product", "wave": 7, "qa_tier": "none", "basis": "qa-prep-target"}
 
     path_rules = (
         ("/compiler/exits/", "X", 4),

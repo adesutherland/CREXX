@@ -178,8 +178,7 @@ add_test(
                 -DSCRATCH=${CMAKE_CURRENT_BINARY_DIR}/rcc_provider_rejection
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/check_provider_rejection.cmake)
 set_tests_properties(rcc_provider_wrong_identity_rejected PROPERTIES
-        LABELS "rxpa;provider;autoload;negative"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "rxpa;provider;autoload;negative")
 
 add_test(
         NAME rcc_provider_package_names
@@ -189,8 +188,7 @@ add_test(
                 -DSTATIC_SUFFIX=${CMAKE_STATIC_LIBRARY_SUFFIX}
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/check_provider_package_names.cmake)
 set_tests_properties(rcc_provider_package_names PROPERTIES
-        LABELS "rxpa;provider;package"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "rxpa;provider;package")
 
 add_test(
         NAME rcc_provider_unused_import_elided
@@ -203,8 +201,7 @@ add_test(
                 -DSCRATCH=${CMAKE_CURRENT_BINARY_DIR}/rcc_provider_unused
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/check_unused_provider.cmake)
 set_tests_properties(rcc_provider_unused_import_elided PROPERTIES
-        LABELS "compiler;rxpa;provider;negative"
-        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+        LABELS "compiler;rxpa;provider;negative")
 localize_test_plugin_output(_rxpa_dynlink)
 add_dependencies(_rxpa_dynlink rxpa library rxvm rxc) # The test (not plugin) depends on rxpa, library, rxvm, and rxc
 

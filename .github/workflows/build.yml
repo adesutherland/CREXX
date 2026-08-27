@@ -170,6 +170,18 @@ jobs:
         run: |
           cmake --build "${{ runner.temp }}/build" --parallel 4
 
+      - name: Prepare QA artifacts
+        if: matrix.platform != 'windows'
+        shell: bash
+        run: |
+          cmake --build "${{ runner.temp }}/build" --target qa-prep --parallel 2
+
+      - name: Prepare QA artifacts
+        if: matrix.platform == 'windows'
+        shell: msys2 {0}
+        run: |
+          cmake --build "${{ runner.temp }}/build" --target qa-prep --parallel 4
+
       - name: CTest
         if: matrix.platform != 'windows'
         shell: bash
