@@ -2758,15 +2758,17 @@ string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.aliasblocked\\\"\" dep_alias_meta_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.refvargdynamicblocked\\\"\" dep_ref_varg_meta_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.residualcallblocked\\\"\" dep_residual_meta_pos)\n")
-string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.membercallblocked\\\"\" dep_member_meta_pos)\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.membercalldependency\\\"\" dep_member_meta_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_meta_pos EQUAL -1 OR dep_if_meta_pos EQUAL -1 OR dep_scoped_meta_pos EQUAL -1 OR dep_nested_meta_pos EQUAL -1 OR dep_sum_meta_pos EQUAL -1 OR dep_count_meta_pos EQUAL -1 OR dep_array_meta_pos EQUAL -1 OR dep_render_meta_pos EQUAL -1 OR dep_object_meta_pos EQUAL -1 OR dep_ref_meta_pos EQUAL -1 OR dep_opt_meta_pos EQUAL -1 OR dep_safe_asm_meta_pos EQUAL -1 OR dep_type_bump_meta_pos EQUAL -1 OR dep_varg_total_meta_pos EQUAL -1 OR dep_varg_pick_meta_pos EQUAL -1 OR dep_residual_func_meta_pos EQUAL -1 OR dep_residual_call_meta_pos EQUAL -1 OR dep_residual_target_meta_pos EQUAL -1 OR dep_box_getname_meta_pos EQUAL -1 OR dep_box_setname_meta_pos EQUAL -1 OR dep_inline_pos EQUAL -1)\n  message(FATAL_ERROR \"Dependency did not export expected inline metadata records\")\nendif()\n")
-string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_alias_meta_pos EQUAL -1 OR dep_ref_varg_meta_pos EQUAL -1 OR dep_residual_meta_pos EQUAL -1 OR dep_member_meta_pos EQUAL -1)\n  message(FATAL_ERROR \"Dependency did not emit expected fail-closed callable signatures\")\nendif()\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_alias_meta_pos EQUAL -1 OR dep_ref_varg_meta_pos EQUAL -1 OR dep_residual_meta_pos EQUAL -1 OR dep_member_meta_pos EQUAL -1)\n  message(FATAL_ERROR \"Dependency did not emit expected callable signatures\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.safelength\\\"=\\\".inline\\\" \\\"I6;c,1,\" dep_safe_asm_inline_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_safe_asm_inline_pos EQUAL -1)\n  message(FATAL_ERROR \"Safe assembler helper did not export inline metadata\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \";d,\" dep_dependency_record_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_dependency_record_pos EQUAL -1)\n  message(FATAL_ERROR \"Dependency did not export residual-call dependency records\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "foreach(expected_inline_name typebump vargtotal residualfunctiondependency residualcalldependency box.getname box.setname)\n  string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.\${expected_inline_name}\\\"=\\\".inline\\\" \\\"I6;c,1,\" dep_expected_inline_pos)\n  if(dep_expected_inline_pos EQUAL -1)\n    message(FATAL_ERROR \"Dependency did not export I6 callable summary metadata for \${expected_inline_name}\")\n  endif()\nendforeach()\n")
-string(APPEND INLINE_CROSS_FILE_CONTENT "foreach(blocked_name aliasblocked refvargdynamicblocked vargpick residualcalltarget residualcallblocked membercallblocked)\n  string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.\${blocked_name}\\\"=\\\".inline\\\" \\\"I6\" dep_blocked_inline_pos)\n  if(NOT dep_blocked_inline_pos EQUAL -1)\n    message(FATAL_ERROR \"Fail-closed callable \${blocked_name} unexpectedly exported inline metadata\")\n  endif()\nendforeach()\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.membercalldependency\\\"=\\\".inline\\\" \\\"I7;c,1,\" dep_member_inline_pos)\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_member_inline_pos EQUAL -1)\n  message(FATAL_ERROR \"Dependency did not export I7 residual member-call metadata\")\nendif()\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "foreach(blocked_name aliasblocked refvargdynamicblocked vargpick residualcalltarget residualcallblocked)\n  string(FIND \"\${dep_rxas}\" \".meta \\\"inline_cross_file_dep.\${blocked_name}\\\"=\\\".inline\\\" \\\"I6\" dep_blocked_inline_pos)\n  if(NOT dep_blocked_inline_pos EQUAL -1)\n    message(FATAL_ERROR \"Fail-closed callable \${blocked_name} unexpectedly exported inline metadata\")\n  endif()\nendforeach()\n")
 # Evidence-opening regression: remove the legacy ARG is_const_arg hint from the
 # serialized body.  The independently reconstructed I6 read-only summary must
 # still permit direct scalar binding; the I5/mismatch controls below must not.
@@ -2783,7 +2785,9 @@ string(APPEND INLINE_CROSS_FILE_CONTENT "file(READ \"\${work}/inline_cross_file_
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_roundtrip_rxas}\" \";d,\" dep_roundtrip_dependency_record_pos)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_roundtrip_dependency_record_pos EQUAL -1)\n  message(FATAL_ERROR \"RXDAS roundtrip lost residual-call dependency records\")\nendif()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "foreach(roundtrip_inline_name inc typebump vargtotal residualfunctiondependency residualcalldependency box.getname box.setname)\n  string(FIND \"\${dep_roundtrip_rxas}\" \".meta \\\"inline_cross_file_dep.\${roundtrip_inline_name}\\\"=\\\".inline\\\" \\\"I6;c,1,\" dep_roundtrip_inline_pos)\n  if(dep_roundtrip_inline_pos EQUAL -1)\n    message(FATAL_ERROR \"RXDAS roundtrip lost I6 callable summary metadata for \${roundtrip_inline_name}\")\n  endif()\nendforeach()\n")
-string(APPEND INLINE_CROSS_FILE_CONTENT "foreach(blocked_name aliasblocked refvargdynamicblocked vargpick residualcalltarget residualcallblocked membercallblocked)\n  string(FIND \"\${dep_roundtrip_rxas}\" \".meta \\\"inline_cross_file_dep.\${blocked_name}\\\"=\\\".inline\\\" \\\"I6\" dep_roundtrip_blocked_inline_pos)\n  if(NOT dep_roundtrip_blocked_inline_pos EQUAL -1)\n    message(FATAL_ERROR \"RXDAS roundtrip unexpectedly gained inline metadata for \${blocked_name}\")\n  endif()\nendforeach()\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "string(FIND \"\${dep_roundtrip_rxas}\" \".meta \\\"inline_cross_file_dep.membercalldependency\\\"=\\\".inline\\\" \\\"I7;c,1,\" dep_roundtrip_member_inline_pos)\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "if(dep_roundtrip_member_inline_pos EQUAL -1)\n  message(FATAL_ERROR \"RXDAS roundtrip lost I7 residual member-call metadata\")\nendif()\n")
+string(APPEND INLINE_CROSS_FILE_CONTENT "foreach(blocked_name aliasblocked refvargdynamicblocked vargpick residualcalltarget residualcallblocked)\n  string(FIND \"\${dep_roundtrip_rxas}\" \".meta \\\"inline_cross_file_dep.\${blocked_name}\\\"=\\\".inline\\\" \\\"I6\" dep_roundtrip_blocked_inline_pos)\n  if(NOT dep_roundtrip_blocked_inline_pos EQUAL -1)\n    message(FATAL_ERROR \"RXDAS roundtrip unexpectedly gained inline metadata for \${blocked_name}\")\n  endif()\nendforeach()\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"inline_cross_file_dep.roundtrip\" \"inline_cross_file_dep.roundtrip.rxas\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "string(APPEND full_out \"\${out}\")\n")
 string(APPEND INLINE_CROSS_FILE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on rxdas inline dependency: \${out}\")\nendif()\n")
@@ -3439,6 +3443,23 @@ add_test(NAME inline_packed_accessors_import_opt
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_packed_accessors_import_opt.cmake)
 set_tests_properties(inline_packed_accessors_import_opt PROPERTIES
         LABELS "linked_opt;packed;binary;scalar-access;receiver;imports;rxdas"
+        FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+
+add_test(NAME inline_receiver_storage_import_opt
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXDAS=$<TARGET_FILE:rxdas>
+                 -DRXVM=${CREXX_RXVM_EXECUTABLE}
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                 -DDEP_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_storage_dep.crexx
+                 -DMAIN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_storage_main.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_storage_import_opt_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_storage_import_opt.cmake)
+set_tests_properties(inline_receiver_storage_import_opt PROPERTIES
+        LABELS "linked_opt;level-l;receiver;objects;arrays;binary;imports;rxdas"
         FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 
 set(INLINE_COMPUTED_RECEIVER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_test_computed_receiver_copyback_opt_rewrites.cmake")

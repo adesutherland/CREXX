@@ -469,7 +469,7 @@ static int inline_class_attribute_is_binary_register_zero_view(Symbol *symbol) {
            strncasecmp(view->node_string, "binary", 6) == 0;
 }
 
-static int inline_class_attribute_shape_is_portable(Symbol *symbol) {
+static int inline_class_attribute_shape_is_i6_portable(Symbol *symbol) {
     if (!inline_symbol_is_class_attribute(symbol)) return 1;
     if (symbol->is_this || symbol->is_factory) return 1;
     if (symbol->value_dims > 0) return 0;
@@ -491,6 +491,116 @@ static int inline_class_attribute_shape_is_portable(Symbol *symbol) {
         default:
             return 0;
     }
+}
+
+static int inline_object_node_is_concrete(Context *context, ASTNode *node) {
+    const char *class_name;
+    Symbol *class_symbol;
+    Symbol *symbol;
+
+    symbol = node && node->symbolNode ? node->symbolNode->symbol : NULL;
+    if (!context || !node || node->value_type != TP_OBJECT ||
+        node->value_dims != 0 || node->target_type == TP_REFERENCE ||
+        (symbol && (symbol->type != TP_OBJECT || symbol->is_ref_arg ||
+                    symbol->has_reference_target))) {
+        return 0;
+    }
+
+    class_name = node->value_class;
+    if ((!class_name || !*class_name) && symbol) class_name = symbol->value_class;
+    if (!class_name || !*class_name) return 0;
+
+    class_symbol = inline_resolve_class_symbol(context, node->scope, class_name);
+    return class_symbol && class_symbol->defines_scope &&
+           !inline_class_has_reference_attribute(context, node->scope, class_name);
+}
+
+static int inline_class_attribute_index_is_direct(ASTNode *node) {
+    ASTNode *index;
+
+    if (!node || (node->node_type != VAR_SYMBOL && node->node_type != VAR_TARGET) ||
+        !(index = node->child) || index->sibling || index->value_dims != 0 ||
+        index->value_type != TP_INTEGER) {
+        return 0;
+    }
+    return 1;
+}
+
+static int inline_class_attribute_array_access_is_portable(Context *context,
+                                                           ASTNode *node,
+                                                           Symbol *symbol) {
+    if (!context || !node || !symbol || symbol->value_dims != 1 ||
+        symbol->is_ref_arg || symbol->has_reference_target ||
+        !inline_class_attribute_index_is_direct(node)) {
+        return 0;
+    }
+
+    switch (symbol->type) {
+        case TP_INTEGER:
+        case TP_BOOLEAN:
+        case TP_FLOAT:
+        case TP_STRING:
+            return 1;
+        case TP_OBJECT:
+            return inline_object_node_is_concrete(context, node);
+        default:
+            return 0;
+    }
+}
+
+static int inline_class_attribute_binary_access_is_bounded(ASTNode *node,
+                                                           Symbol *symbol) {
+    ASTNode *access;
+
+    if (!node || !symbol || symbol->type != TP_BINARY ||
+        symbol->value_dims != 0 || symbol->is_ref_arg ||
+        symbol->has_reference_target || node->node_type != VAR_SYMBOL ||
+        node->child || !node->symbolNode ||
+        (!node->symbolNode->readUsage && !node->symbolNode->writeUsage) ||
+        !(access = node->parent) ||
+        (access->node_type != OP_BINARY_AT &&
+         access->node_type != OP_PACKED_AT)) {
+        return 0;
+    }
+
+    /* Portable <at..type> and host-native <packed..type> accesses have
+     * distinct operator nodes.  In either case the binary is borrowed only
+     * for the one bounds-checked load/store and cannot escape the expression. */
+    if (!node->symbolNode->writeUsage) return 1;
+
+    /* A write is portable only when the bounded access is the complete
+     * assignment target.  In particular, this does not admit returning,
+     * passing, or replacing the child binary itself. */
+    return access->parent && access->parent->node_type == ASSIGN &&
+           access->parent->child == access && access->sibling;
+}
+
+static int inline_class_attribute_access_is_portable(Context *context,
+                                                     ASTNode *node) {
+    Symbol *symbol;
+
+    if (!node || !node->symbolNode || !(symbol = node->symbolNode->symbol) ||
+        !inline_symbol_is_class_attribute(symbol)) {
+        return 1;
+    }
+    if (symbol->is_this || symbol->is_factory) return 1;
+    if (inline_class_attribute_is_flag_view(symbol)) return 0;
+    if (inline_class_attribute_shape_is_i6_portable(symbol)) return 1;
+
+    if (symbol->value_dims > 0) {
+        return inline_class_attribute_array_access_is_portable(context, node, symbol);
+    }
+    if (symbol->type == TP_OBJECT) {
+        return node->node_type == VAR_SYMBOL && !node->child &&
+               node->symbolNode->readUsage && !node->symbolNode->writeUsage &&
+               node->parent && node->parent->node_type == MEMBER_CALL &&
+               inline_call_receiver(node->parent) == node &&
+               inline_object_node_is_concrete(context, node);
+    }
+    if (symbol->type == TP_BINARY) {
+        return inline_class_attribute_binary_access_is_bounded(node, symbol);
+    }
+    return 0;
 }
 
 static int inline_class_attribute_register_num(Symbol *symbol) {

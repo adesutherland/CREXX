@@ -1,0 +1,33 @@
+options levelb
+import inline_receiver_storage_dep
+
+main: procedure = .int
+  values = .inline_receiver_storage_dep..store()
+
+  if values.currentText() <> "outer:current" then return fail("object forwarding")
+  if values.classAt(1) <> 11 then return fail("integer array read")
+  call values.setClass(2, 42)
+  if values.classAt(2) <> 42 then return fail("integer array write")
+  if values.nameAt(1) <> "alpha" then return fail("string array read")
+  call values.setName(2, "beta")
+  if values.nameAt(2) <> "beta" then return fail("string array write")
+  if values.tokenTextAt(1) <> "first" then return fail("object array read")
+
+  call values.setByte(0, 65)
+  call values.setByte(1, 66)
+  if values.byteAt(0) <> 65 | values.byteAt(1) <> 66 then return fail("child binary")
+
+  replacement = .int[2]
+  replacement[1] = 91
+  call values.replaceClasses(replacement)
+  if values.classAt(1) <> 91 then return fail("retained whole-array replacement")
+  escaped = values.binaryValue()
+  if <at..u8>(0) escaped <> 65 then return fail("retained binary escape")
+
+  say "PASS: imported receiver storage"
+  return 0
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1

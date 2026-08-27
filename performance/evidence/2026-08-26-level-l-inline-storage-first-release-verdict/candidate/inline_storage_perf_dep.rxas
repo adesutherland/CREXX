@@ -1,0 +1,177 @@
+/*
+ * SOURCE                 : inline_storage_perf_dep.crexx
+ */
+
+.meta "inline_storage_perf_dep.store"="b" ".unknown" .class
+.meta "inline_storage_perf_dep.store.bytes_"="b" ".binary" .attr 1
+.meta "inline_storage_perf_dep.store.classes_"="b" ".int[2]" .attr 2
+.meta "inline_storage_perf_dep.store.current_"="b" ".inline_storage_perf_dep..token" .attr 3
+.meta "inline_storage_perf_dep.token"="b" ".unknown" .class
+.meta "inline_storage_perf_dep.token.value_"="b" ".int" .attr 1
+.globals=0
+
+§inline_storage_perf_dep.token.§factory() .locals=3 .expose=inline_storage_perf_dep.token.§factory
+   .meta "inline_storage_perf_dep.token.§factory"="b" ".inline_storage_perf_dep..token" §inline_storage_perf_dep.token.§factory() "value=.int"
+   .meta "inline_storage_perf_dep.token.§factory"=".inline" "I6;c,1,1,1,0,4,0,7,6,1,0,0,0,3,0,400;f,0,696E6C696E655F73746F726167655F706572665F6465702E6372657878;u,0,0,8,9,21,1,202020206172672076616C7565203D202E696E74;u,1,0,8,9,14,1,202020206172672076616C7565203D202E696E74;u,2,0,8,17,21,1,202020206172672076616C7565203D202E696E74;u,3,0,9,5,19,1,2020202076616C75655F203D2076616C7565;u,4,0,9,5,11,1,2020202076616C75655F203D2076616C7565;u,5,0,9,14,19,1,2020202076616C75655F203D2076616C7565;u,6,0,10,5,11,1,2020202072657475726E;q,0,-1,3;q,1,-1,2;s,0,0,76616C7565,2,3,0,-,-,-,1,a,1;s,1,1,76616C75655F,2,3,0,-,-,-,256,r,1;s,2,0,C2A7666163746F7279,2,8,0,-,-,746F6B656E,128,r,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,3,3,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,3,3,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,76616C7565,-;<;>,0,2,14,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E696E74,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,6,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,4,112,3,3,0,0,-,-,-,-,-,-,0,1,-1,0,1,0,0,0,76616C75655F,-;<;>,0,5,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;<;>,0,6,98,8,8,0,0,-,-,-,-,746F6B656E,746F6B656E,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,-1,111,8,8,0,0,-,-,-,-,746F6B656E,746F6B656E,0,2,-1,1,0,0,0,0,C2A7666163746F7279,-;<;<;<"
+   .srcstep 4 4 17 "inline_storage_perf_dep.crexx" 8 3 13 "  *: factory"
+   setattrs r1,2
+   setobjtype r1,"inline_storage_perf_dep.token"
+   numsci 18,1,1
+   .srcstep 1 1 17 "inline_storage_perf_dep.crexx" 9 9 21 "    arg value = .int"
+   .meta "inline_storage_perf_dep.token.§factory.value"="b" ".int" a1
+   .meta "inline_storage_perf_dep.token.§factory.§factory"="b" ".token" r1
+   .srcstep 2 2 17 "inline_storage_perf_dep.crexx" 10 5 19 "    value_ = value"
+   .traceevent "V" 6 "R" "I" "a" 1 2 2 0 "value" ""
+   isetattr1 r1,1,a1
+   .srcstep 3 3 17 "inline_storage_perf_dep.crexx" 11 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 3 3 0 "§factory" ""
+   ret r1
+   .meta "inline_storage_perf_dep.token.§factory.value"
+   .meta "inline_storage_perf_dep.token.§factory.§factory"
+
+§inline_storage_perf_dep.token.runtimevalue() .locals=3 .expose=inline_storage_perf_dep.token.runtimevalue
+   .meta "inline_storage_perf_dep.token.runtimevalue"="b" ".int" §inline_storage_perf_dep.token.runtimevalue() ""
+   .srcstep 9 9 17 "inline_storage_perf_dep.crexx" 15 3 30 "  runtimeValue: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .meta "inline_storage_perf_dep.token.runtimevalue.value"="b" ".int" r0
+   .srcstep 5 5 17 "inline_storage_perf_dep.crexx" 16 5 17 "    value = .int"
+   .srcstep 6 6 17 "inline_storage_perf_dep.crexx" 17 5 19 "    value = value_"
+   .meta "inline_storage_perf_dep.token.runtimevalue.§this"="b" ".token" a1
+   linkattr1 r2,a1,1
+   .traceevent "V" 6 "R" "I" "r" 2 6 6 0 "value_" ""
+   igetunlink r0,r2
+   .traceevent "A" 6 "R" "I" "r" 0 6 6 0 "value" ""
+   .srcstep 7 7 17 "inline_storage_perf_dep.crexx" 18 15 27 "    assembler unlink value"
+   .traceevent "V" 6 "R" "I" "r" 0 0 0 0 "value" ""
+   unlink r0
+   .srcstep 8 8 17 "inline_storage_perf_dep.crexx" 19 5 17 "    return value"
+   .traceevent "V" 6 "R" "I" "r" 0 8 8 0 "value" ""
+   ret r0
+   .meta "inline_storage_perf_dep.token.runtimevalue.value"
+   .meta "inline_storage_perf_dep.token.runtimevalue.§this"
+
+§inline_storage_perf_dep.store.§factory() .locals=11 .expose=inline_storage_perf_dep.store.§factory
+   .meta "inline_storage_perf_dep.store.§factory"="b" ".inline_storage_perf_dep..store" §inline_storage_perf_dep.store.§factory() ""
+   .srcstep 25 25 17 "inline_storage_perf_dep.crexx" 26 3 13 "  *: factory"
+   setattrs r1,4
+   setobjtype r1,"inline_storage_perf_dep.store"
+   numsci 18,1,1
+   .meta "inline_storage_perf_dep.store.§factory.data"="b" ".binary" r0
+   .srcstep 10 10 17 "inline_storage_perf_dep.crexx" 29 5 19 "    data = .binary"
+   null r0
+   .srcstep 15 15 17 "inline_storage_perf_dep.crexx" 27 5 50 "    current_ = .inline_storage_perf_dep..token(3)"
+   .srcstep 11 11 6 "inline_storage_perf_dep.crexx" 8 3 13 "  *: factory"
+   setattrs r2,2
+   .srcstep 12 12 6 "inline_storage_perf_dep.crexx" 8 3 13 "  *: factory"
+   setobjtype r2,"inline_storage_perf_dep.token"
+   .srcstep 13 13 17 "inline_storage_perf_dep.crexx" 10 5 19 "    value_ = value"
+   load r4,3
+   .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
+   isetattr1 r2,1,r4
+   .srcstep 14 14 33 "inline_storage_perf_dep.crexx" 11 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 2 14 14 0 "§factory" ""
+   linkattr1 r3,r1,3
+   copy r3,r2
+   unlink r3
+   .srcstep 16 16 17 "inline_storage_perf_dep.crexx" 28 5 21 "    classes_[1] = 11"
+   .meta "inline_storage_perf_dep.store.§factory.§factory"="b" ".store" r1
+   linkattr1 r5,r1,2
+   setattrs r5,2
+   linkattr1 r3,r5,1
+   iloadsetunlinkn r6,r3,11,r5
+   .traceevent "L" 4 "R" "I" "r" 6 16 16 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 16 16 0 "classes_" ""
+   .srcstep 21 21 17 "inline_storage_perf_dep.crexx" 30 5 27 "    call binresize data, 1"
+   .srcstep 17 17 33 "inline_storage_perf_dep.crexx" 30 27 27 "    call binresize data, 1"
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 17 17 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 17 17 0 "length" ""
+   .srcstep 18 18 25 "binary.crexx" 248 3 13 "  result = 0"
+   load r10,0
+   .traceevent "L" 4 "R" "I" "r" 10 18 18 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 18 18 0 "result" ""
+   .srcstep 19 19 25 "binary.crexx" 249 13 32 "  assembler bresize data,length"
+   .traceevent "V" 6 "R" "X" "r" 0 0 0 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 9 0 0 0 "length" ""
+   bresize r0,r9
+   .srcstep 20 20 25 "binary.crexx" 250 13 29 "  assembler blen result,data"
+   .traceevent "V" 6 "R" "I" "r" 10 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 0 0 0 0 "data" ""
+   blen r10,r0
+   .traceevent "V" 6 "R" "I" "r" 10 0 0 0 "result" ""
+   .traceevent "A" 6 "R" "I" "r" 10 0 0 0 "__inline_unused_169" ""
+   .srcstep 22 22 17 "inline_storage_perf_dep.crexx" 31 5 18 "    bytes_ = data"
+   .traceevent "V" 6 "R" "X" "r" 0 22 22 0 "data" ""
+   linkattr1 r6,r1,1
+   bcopy r6,r0
+   unlink r6
+   .srcstep 23 23 17 "inline_storage_perf_dep.crexx" 32 5 27 "    <at..u8>(0) bytes_ = 7"
+   linkattr1 r6,r1,1
+   .traceevent "V" 6 "R" "X" "r" 6 23 23 0 "bytes_" ""
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 23 23 0 "" ""
+   load r3,7
+   .traceevent "L" 4 "R" "I" "r" 3 23 23 0 "" ""
+   bsetu8 r6,r5,r3
+   unlink r6
+   .srcstep 24 24 17 "inline_storage_perf_dep.crexx" 33 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 24 24 0 "§factory" ""
+   ret r1
+   .meta "inline_storage_perf_dep.store.§factory.data"
+   .meta "inline_storage_perf_dep.store.§factory.§factory"
+
+§inline_storage_perf_dep.store.currentvalue() .locals=5 .expose=inline_storage_perf_dep.store.currentvalue
+   .meta "inline_storage_perf_dep.store.currentvalue"="b" ".int" §inline_storage_perf_dep.store.currentvalue() ""
+   .meta "inline_storage_perf_dep.store.currentvalue"=".inline" "I7;c,1,0,3,0,4,1,7,4,0,0,1,0;f,0,696E6C696E655F73746F726167655F706572665F6465702E6372657878;u,0,0,35,5,33,1,2020202072657475726E2063757272656E745F2E72756E74696D6556616C75652829;u,1,0,35,12,33,1,2020202072657475726E2063757272656E745F2E72756E74696D6556616C75652829;u,2,0,35,12,20,1,2020202072657475726E2063757272656E745F2E72756E74696D6556616C75652829;q,0,-1,3;q,1,-1,2;s,0,1,63757272656E745F,2,8,0,-,-,696E6C696E655F73746F726167655F706572665F6465702E746F6B656E,256,r,3;d,0,696E6C696E655F73746F726167655F706572665F6465702E746F6B656E2E72756E74696D6576616C7565,2E696E74,-,m;a;>,0,-1,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;<;b;>,0,0,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,1,129,3,3,0,0,-,-,-,-,-,-,0,-1,0,0,0,0,0,0,72756E74696D6556616C7565,-;>,0,2,111,8,8,0,0,-,-,-,-,696E6C696E655F73746F726167655F706572665F6465702E746F6B656E,696E6C696E655F73746F726167655F706572665F6465702E746F6B656E,0,0,-1,1,0,0,0,0,63757272656E745F,-;<;<;<;<"
+   .srcstep 27 27 17 "inline_storage_perf_dep.crexx" 35 3 30 "  currentValue: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 26 26 17 "inline_storage_perf_dep.crexx" 36 5 33 "    return current_.runtimeValue()"
+   .meta "inline_storage_perf_dep.store.currentvalue.§this"="b" ".store" a1
+   linkattr1 r3,a1,3
+   .traceevent "V" 6 "R" "O" "r" 3 26 26 0 "current_" ""
+   settp r3,256
+   call1 r4,§inline_storage_perf_dep.token.runtimevalue(),r3
+   unlink r3
+   .traceevent "F" 4 "R" "I" "r" 4 26 26 0 "runtimevalue" ""
+   ret r4
+   .meta "inline_storage_perf_dep.store.currentvalue.§this"
+
+§inline_storage_perf_dep.store.classat() .locals=4 .expose=inline_storage_perf_dep.store.classat
+   .meta "inline_storage_perf_dep.store.classat"="b" ".int" §inline_storage_perf_dep.store.classat() "index=.int"
+   .meta "inline_storage_perf_dep.store.classat"=".inline" "I7;c,1,1,3,0,4,1,7,4,0,0,0,0,3,0,400;f,0,696E6C696E655F73746F726167655F706572665F6465702E6372657878;u,0,0,38,9,21,1,2020202061726720696E646578203D202E696E74;u,1,0,38,9,14,1,2020202061726720696E646578203D202E696E74;u,2,0,38,17,21,1,2020202061726720696E646578203D202E696E74;u,3,0,39,5,26,1,2020202072657475726E20636C61737365735F5B696E6465785D;u,4,0,39,12,26,1,2020202072657475726E20636C61737365735F5B696E6465785D;u,5,0,39,21,26,1,2020202072657475726E20636C61737365735F5B696E6465785D;q,0,-1,3;q,1,-1,2;s,0,0,696E646578,2,3,0,-,-,-,1,a,2;s,1,1,636C61737365735F,2,3,1,1,2,-,256,r,2;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,3,3,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,3,3,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,696E646578,-;<;>,0,2,14,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E696E74,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,4,111,3,3,0,0,-,-,-,-,-,-,0,1,-1,1,0,0,0,0,636C61737365735F,-;>,0,5,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,696E646578,-;<;<;<;<"
+   .srcstep 30 30 17 "inline_storage_perf_dep.crexx" 38 3 25 "  classAt: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 28 28 17 "inline_storage_perf_dep.crexx" 39 9 21 "    arg index = .int"
+   .meta "inline_storage_perf_dep.store.classat.index"="b" ".int" a2
+   .meta "inline_storage_perf_dep.store.classat.§this"="b" ".store" a1
+   .srcstep 29 29 17 "inline_storage_perf_dep.crexx" 40 5 26 "    return classes_[index]"
+   linkattr1 r3,a1,2
+   .traceevent "V" 6 "R" "I" "a" 2 29 29 0 "index" ""
+   .traceevent "C" 4 "R" "I" "a" 2 29 29 0 "classes_" ""
+   setlinkattr1 r2,r3,2,a2
+   .traceevent "V" 6 "R" "I" "r" 2 29 29 0 "classes_" ""
+   ret r2
+   .meta "inline_storage_perf_dep.store.classat.index"
+   .meta "inline_storage_perf_dep.store.classat.§this"
+
+§inline_storage_perf_dep.store.byteat() .locals=4 .expose=inline_storage_perf_dep.store.byteat
+   .meta "inline_storage_perf_dep.store.byteat"="b" ".int" §inline_storage_perf_dep.store.byteat() "offset=.int"
+   .meta "inline_storage_perf_dep.store.byteat"=".inline" "I7;c,1,1,3,0,4,1,7,6,0,0,0,0,3,0,400;f,0,696E6C696E655F73746F726167655F706572665F6465702E6372657878;u,0,0,42,9,22,1,20202020617267206F6666736574203D202E696E74;u,1,0,42,9,15,1,20202020617267206F6666736574203D202E696E74;u,2,0,42,18,22,1,20202020617267206F6666736574203D202E696E74;u,3,0,43,5,35,1,2020202072657475726E203C61742E2E75383E286F6666736574292062797465735F;u,4,0,43,12,35,1,2020202072657475726E203C61742E2E75383E286F6666736574292062797465735F;u,5,0,43,15,19,1,2020202072657475726E203C61742E2E75383E286F6666736574292062797465735F;u,6,0,43,29,35,1,2020202072657475726E203C61742E2E75383E286F6666736574292062797465735F;u,7,0,43,20,28,1,2020202072657475726E203C61742E2E75383E286F6666736574292062797465735F;q,0,-1,3;q,1,-1,2;s,0,0,6F6666736574,2,3,0,-,-,-,1,a,2;s,1,1,62797465735F,2,7,0,-,-,-,256,r,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,3,3,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,3,3,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,6F6666736574,-;<;>,0,2,14,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E696E74,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,4,78,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3C,-;>,0,5,14,8,8,0,0,-,-,-,-,7538,7538,0,-1,-1,0,0,0,0,0,7538,-;<;>,0,6,111,7,7,0,0,-,-,-,-,-,-,0,1,-1,1,0,0,0,0,62797465735F,-;<;>,0,7,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,6F6666736574,-;<;<;<;<"
+   .srcstep 33 33 17 "inline_storage_perf_dep.crexx" 42 3 24 "  byteAt: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 31 31 17 "inline_storage_perf_dep.crexx" 43 9 22 "    arg offset = .int"
+   .meta "inline_storage_perf_dep.store.byteat.offset"="b" ".int" a2
+   .meta "inline_storage_perf_dep.store.byteat.§this"="b" ".store" a1
+   .srcstep 32 32 17 "inline_storage_perf_dep.crexx" 44 5 35 "    return <at..u8>(offset) bytes_"
+   linkattr1 r2,a1,1
+   .traceevent "V" 6 "R" "X" "r" 2 32 32 0 "bytes_" ""
+   .traceevent "V" 6 "R" "I" "a" 2 32 32 0 "offset" ""
+   bgetu8 r3,r2,a2
+   unlink r2
+   ret r3
+   .meta "inline_storage_perf_dep.store.byteat.offset"
+   .meta "inline_storage_perf_dep.store.byteat.§this"

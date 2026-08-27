@@ -1,0 +1,80 @@
+options levelb
+namespace inline_receiver_storage_dep expose token store
+import rxfnsb
+
+token: class
+  text_ = .string
+
+  *: factory
+    arg text = .string
+    text_ = text
+    return
+
+  /* Keep the forwarding target deliberately dynamic. The outer imported
+   * method should inline while this one residual member call remains. */
+  runtimeText: method = .string
+    value = .string
+    value = text_
+    assembler unlink value
+    return value
+
+store: class
+  current_ = .inline_receiver_storage_dep..token
+  classes_ = .int[2]
+  names_ = .string[2]
+  tokens_ = .inline_receiver_storage_dep..token[2]
+  bytes_ = .binary
+
+  *: factory
+    current_ = .inline_receiver_storage_dep..token("current")
+    classes_[1] = 11
+    names_[1] = "alpha"
+    tokens_[1] = .inline_receiver_storage_dep..token("first")
+    data = .binary
+    call binresize data, 4
+    bytes_ = data
+    return
+
+  currentText: method = .string
+    return "outer:" || current_.runtimeText()
+
+  classAt: method = .int
+    arg index = .int
+    return classes_[index]
+
+  setClass: method = .void
+    arg index = .int, value = .int
+    classes_[index] = value
+    return
+
+  nameAt: method = .string
+    arg index = .int
+    return names_[index]
+
+  setName: method = .void
+    arg index = .int, value = .string
+    names_[index] = value
+    return
+
+  tokenTextAt: method = .string
+    arg index = .int
+    item = tokens_[index]
+    return item.runtimeText()
+
+  byteAt: method = .int
+    arg offset = .int
+    return <at..u8>(offset) bytes_
+
+  setByte: method = .void
+    arg offset = .int, value = .int
+    <at..u8>(offset) bytes_ = value
+    return
+
+  /* These deliberately cross the initial proof boundary. */
+  replaceClasses: method = .void
+    arg replacement = .int[2]
+    classes_ = replacement
+    return
+
+  binaryValue: method = .binary
+    return bytes_

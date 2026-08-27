@@ -2027,8 +2027,12 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
 
         if (node->symbolNode &&
             node->symbolNode->symbol &&
-            !inline_class_attribute_shape_is_portable(node->symbolNode->symbol)) {
-            check->has_unportable_class_attribute_shape = 1;
+            inline_symbol_is_class_attribute(node->symbolNode->symbol)) {
+            if (!inline_class_attribute_access_is_portable(check->context, node)) {
+                check->has_unportable_class_attribute_shape = 1;
+            } else if (!inline_class_attribute_shape_is_i6_portable(node->symbolNode->symbol)) {
+                check->has_extended_class_attribute_shape = 1;
+            }
         }
 
         if (node->node_type == OP_ARG_VALUE) {

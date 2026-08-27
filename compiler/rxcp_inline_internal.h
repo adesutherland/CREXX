@@ -84,6 +84,7 @@ typedef struct {
     int has_unsupported_reference;
     int has_class_attribute_write;
     int has_unportable_class_attribute_shape;
+    int has_extended_class_attribute_shape;
     size_t max_required_varg_index;
     int ref_varg_mode;
 } InlinableCheck;
