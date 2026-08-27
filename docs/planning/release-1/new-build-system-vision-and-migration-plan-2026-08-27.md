@@ -1,6 +1,6 @@
 # New Build System Vision and Migration Plan
 
-- **Status:** Design proposal; no build implementation has been changed
+- **Status:** Vision retained; Phase 0 evidence complete; no production build implementation has been changed
 - **Baseline:** `origin/develop` at `dc44d92909e706adc575932ba9ae72f2d6f05b7d`
 - **Planning branch:** `temp/newbuild`
 - **Date:** 2026-08-27
@@ -328,6 +328,20 @@ measurement starts it records the host, build configuration, power state and
 load, waits for build-owned work to become quiescent, and rejects or clearly
 marks a run whose background load exceeds the approved threshold.
 
+### 9.1 Local Linux proving
+
+The common Linux build and QA actions should be runnable in temporary,
+resource-bounded Minikube namespaces using the same manifest selections as CI.
+This provides fast local proof, schedule/load experimentation and retained logs
+without depending on GitHub runner availability. Each run must use an exact
+source archive, an explicit builder image/toolchain and an isolated build root,
+then remove only its uniquely named namespace.
+
+Minikube Linux ARM64 evidence complements rather than silently replaces the
+supported hosted matrix. It does not emulate Windows, another CPU architecture
+or GitHub service behaviour; hosted jobs remain the platform-qualification
+gate for those surfaces.
+
 ## 10. Output isolation and publication
 
 Each action writes only beneath an action-specific directory, for example:
@@ -550,6 +564,12 @@ run is a graph defect, not a flaky-test waiver.
 **Gate:** all current generated products have an owner and provisional layer,
 wave and QA classification.
 
+**2026-08-27 result:** evidence capture and classification are complete. The
+final exporter has no fallback classifications, but the strict ownership/graph
+gate is not clean: two paths have multiple candidate owners and 813 provisional
+wave inversions require review. See
+`docs/planning/release-1/new-build-phase-0-report-2026-08-27.md`.
+
 ### Phase 1: make the current CMake graph race-safe
 
 1. Split work, staging and publication roots.
@@ -668,11 +688,12 @@ following should be approved separately before implementation:
 
 ## 18. Immediate next step
 
-Build a generated current-state catalogue from the existing CMake files. It
-should list every action, target, output, byproduct, cleanup path, import root,
-fixture, test label and lock, then flag ambiguous ownership and resolution. That
-catalogue becomes the input to Phase 0 review and the first draft of the
-declarative graph; it should not yet alter production build behaviour.
+Review the Phase 0 gate report and approve a bounded Phase 1 implementation
+slice. The recommended first slice gives the jump-table corruption bases one
+owner, then converts one shared library cleanup/consolidation family to private
+member outputs and single-owner publication. Re-export the graph and prove that
+the selected findings disappear before widening the change. Production build
+behaviour should not change until that Phase 1 slice is explicitly approved.
 
 ## References
 

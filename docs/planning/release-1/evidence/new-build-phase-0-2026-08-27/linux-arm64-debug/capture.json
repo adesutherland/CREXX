@@ -1,0 +1,175 @@
+{
+  "commands": [
+    {
+      "command": [
+        "cmake",
+        "-S",
+        "/work/source",
+        "-B",
+        "/work/build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "--trace-expand",
+        "--trace-format=json-v1",
+        "--trace-redirect=/work/evidence/cmake-trace.jsonl"
+      ],
+      "exit_code": 0,
+      "finished_at": "2026-08-27T11:50:32+00:00",
+      "label": "configure",
+      "log": "configure.log.gz",
+      "metrics": {
+        "elapsed_seconds": 8.3,
+        "maximum_resident_set_bytes": 99295232,
+        "raw": "Command being timed: \"cmake -S /work/source -B /work/build -G Ninja -DCMAKE_BUILD_TYPE=Debug --trace-expand --trace-format=json-v1 --trace-redirect=/work/evidence/cmake-trace.jsonl\"\n\tUser time (seconds): 1.61\n\tSystem time (seconds): 0.36\n\tPercent of CPU this job got: 23%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:08.30\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 96968\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 37\n\tMinor (reclaiming a frame) page faults: 276842\n\tVoluntary context switches: 4075\n\tInvoluntary context switches: 123\n\tSwaps: 0\n\tFile system inputs: 5368\n\tFile system outputs: 150344\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0",
+        "system_seconds": 0.36,
+        "user_seconds": 1.61
+      },
+      "started_at": "2026-08-27T11:50:23+00:00",
+      "time_file": "configure.time.txt"
+    },
+    {
+      "command": [
+        "cmake",
+        "--build",
+        "/work/build",
+        "--parallel",
+        "5"
+      ],
+      "exit_code": 0,
+      "finished_at": "2026-08-27T11:58:54+00:00",
+      "label": "build",
+      "log": "build.log.gz",
+      "metrics": {
+        "elapsed_seconds": 502.79,
+        "maximum_resident_set_bytes": 453386240,
+        "raw": "Command being timed: \"cmake --build /work/build --parallel 5\"\n\tUser time (seconds): 1314.94\n\tSystem time (seconds): 31.06\n\tPercent of CPU this job got: 267%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 8:22.79\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 442760\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 109\n\tMinor (reclaiming a frame) page faults: 35519656\n\tVoluntary context switches: 27625\n\tInvoluntary context switches: 646117\n\tSwaps: 0\n\tFile system inputs: 10856\n\tFile system outputs: 1730544\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0",
+        "system_seconds": 31.06,
+        "user_seconds": 1314.94
+      },
+      "started_at": "2026-08-27T11:50:32+00:00",
+      "time_file": "build.time.txt"
+    },
+    {
+      "command": [
+        "ninja",
+        "-C",
+        "/work/build",
+        "-t",
+        "targets",
+        "all"
+      ],
+      "exit_code": 0,
+      "label": "ninja-targets.txt"
+    },
+    {
+      "command": [
+        "ninja",
+        "-C",
+        "/work/build",
+        "-t",
+        "graph",
+        "all"
+      ],
+      "exit_code": 0,
+      "label": "ninja-graph.dot"
+    },
+    {
+      "command": [
+        "ninja",
+        "-C",
+        "/work/build",
+        "-t",
+        "commands",
+        "all"
+      ],
+      "exit_code": 0,
+      "label": "ninja-commands.txt"
+    },
+    {
+      "command": [
+        "ninja",
+        "-C",
+        "/work/build",
+        "-t",
+        "missingdeps",
+        "all"
+      ],
+      "exit_code": 0,
+      "label": "ninja-missingdeps.txt"
+    },
+    {
+      "command": [
+        "/usr/bin/python3",
+        "/work/tools/cmake_catalogue.py",
+        "export",
+        "--source",
+        "/work/source",
+        "--build",
+        "/work/build",
+        "--trace",
+        "/work/evidence/cmake-trace.jsonl",
+        "--ctest-json",
+        "/work/evidence/ctest.json",
+        "--source-commit",
+        "dc44d92909e706adc575932ba9ae72f2d6f05b7d",
+        "--output",
+        "/work/evidence"
+      ],
+      "exit_code": 0,
+      "label": "catalogue-export"
+    }
+  ],
+  "configuration": "Debug",
+  "host_after": {
+    "captured_at": "2026-08-27T11:58:56+00:00",
+    "cpu_count": 4,
+    "cpu_models": [],
+    "load_average_1_5_15": [
+      3.65576171875,
+      3.458984375,
+      1.8681640625
+    ],
+    "machine": "aarch64",
+    "meminfo": "MemTotal:        8126168 kB\nMemFree:          811600 kB\nMemAvailable:    6118344 kB\nBuffers:          258608 kB\nCached:          5773356 kB\nSwapCached:            0 kB\nActive:          2190828 kB\nInactive:        4555380 kB",
+    "platform": "Linux-6.6.95-aarch64-with-glibc2.39",
+    "power": "not available in generic Linux capture",
+    "release": "6.6.95",
+    "system": "Linux"
+  },
+  "host_before": {
+    "captured_at": "2026-08-27T11:50:23+00:00",
+    "cpu_count": 4,
+    "cpu_models": [],
+    "load_average_1_5_15": [
+      1.45556640625,
+      0.54736328125,
+      0.314453125
+    ],
+    "machine": "aarch64",
+    "meminfo": "MemTotal:        8126168 kB\nMemFree:          169544 kB\nMemAvailable:    6048328 kB\nBuffers:          256280 kB\nCached:          6352336 kB\nSwapCached:            0 kB\nActive:          1669472 kB\nInactive:        5729708 kB",
+    "platform": "Linux-6.6.95-aarch64-with-glibc2.39",
+    "power": "not available in generic Linux capture",
+    "release": "6.6.95",
+    "system": "Linux"
+  },
+  "jobs": 5,
+  "schema_version": "crexx.phase0-capture/v1",
+  "source": {
+    "clean": "archive-assumed",
+    "commit": "dc44d92909e706adc575932ba9ae72f2d6f05b7d",
+    "git_available": false
+  },
+  "status": "complete",
+  "timing_policy": {
+    "classification": "indicative-non-comparative",
+    "permitted_use": "gross build shape and resource-pressure observation only",
+    "prohibited_use": "performance baseline, regression verdict or product comparison",
+    "reason": "Other host and cluster activities were allowed during Phase 0 capture."
+  },
+  "tools": {
+    "cmake": "cmake version 3.28.3",
+    "ninja": "1.11.1",
+    "python": "3.12.3 (main, Jul 15 2026, 23:46:41) [GCC 13.3.0]"
+  }
+}
