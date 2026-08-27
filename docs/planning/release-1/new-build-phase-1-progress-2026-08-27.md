@@ -2,14 +2,14 @@
 
 ## Status
 
-Phase 1 is in progress on `temp/newbuild`. The current checkpoint completes
-twelve bounded ownership, preparation and classification waves and
-incorporates `origin/develop` through
-`657b833d9f70e3f0e69536e6d76e4dd6a9e953aa`. The Phase 1 implementation is
-ready for its broad macOS correctness and exact-tree Linux gates. Top-level
-CTest contains no build fixture and invokes no nested build, the configured
-graph has no ownership, cleanup or wave finding, and named Ninja pools bound
-the evidenced high-pressure native work.
+Phase 1 is complete on `temp/newbuild`. Thirteen bounded ownership,
+preparation, classification and gate-repair waves incorporate `origin/develop`
+through `657b833d9f70e3f0e69536e6d76e4dd6a9e953aa`. Implementation commit
+`2a840950e268c790b138ea90e8976bfbac211099` passed the broad macOS Debug gate
+and exact-tree Linux ARM64 Debug and Release captures. CTest contains no build
+fixture and does not rebuild the active tree, the configured graph has no
+ownership, cleanup or wave finding, and named Ninja pools bound the evidenced
+high-pressure native work.
 
 No performance measurement was run. Host timings below are diagnostic only;
 other work was active on the machine.
@@ -501,6 +501,25 @@ ordinary hosted/local correctness workflows exclude both stress and
 measurement. Sanitizer scope has deliberately not been redesigned as part of
 this wave.
 
+## Wave 13: indirect active-tree build detection and removal
+
+The first broad gate exposed three new Ninja-log entries during CTest even
+though the direct test commands contained no `cmake --build`. The cause was
+`rxpa_external_sdk_consumer`: its direct command invoked a CMake script, and
+that script rebuilt the active CREXX tree before creating its isolated SDK
+consumer.
+
+The `cri07_rxpa_sdk_consumer_prereqs` target is now owned by `qa-prep`, and the
+qualification script only installs the already prepared product and builds its
+private scratch consumer. A focused rerun passed and left the active Ninja log
+byte-for-byte unchanged.
+
+The catalogue audit now follows CTest `cmake -P` scripts and resolves their
+`-D` variables sufficiently to distinguish a build of the active tree from a
+legitimate scratch consumer build. Its regression proves both cases. This
+closes the detection gap that allowed the first direct-command-only inventory
+to report a false zero.
+
 ## Current graph movement
 
 The current Debug export covers 1,518 targets, 1,354 custom commands and 2,366
@@ -521,6 +540,34 @@ The only review findings are three command-bearing run/check targets without
 declared byproducts; they do not claim generated file ownership. The manifest
 projection is schema-valid and graph-clean.
 
+## Phase 1 gates
+
+On macOS ARM64, implementation commit `2a840950e` passed:
+
+- the 2,335-test normal correctness selection at 30 workers in 208.31 seconds;
+- all seven stress-tier tests in a separate 30-worker invocation;
+- byte-identical 8,100-line Ninja logs before and after both CTest invocations;
+  and
+- the final exact-commit catalogue export with zero graph findings, zero
+  active-tree nested builds and all 2,366 tests assigned exactly one tier.
+
+The 24 performance-measurement tests did not run. The times above are retained
+only as diagnostic gate durations on a shared host, not as performance
+evidence.
+
+The exact implementation commit then completed clean, offline Linux ARM64
+Minikube captures using five global jobs and the portable resource profile:
+
+| Configuration | Clean build | Peak process RSS | Graph result |
+| --- | ---: | ---: | --- |
+| Debug | 348.63 s | 452,796,416 bytes | clean; 5,730-node missing-dependency check passed |
+| Release | 289.39 s | 1,360,756,736 bytes | clean; 5,730-node missing-dependency check passed |
+
+Both Linux catalogues contain 2,288 platform-applicable tests, zero fixtures,
+zero active-tree nested builds and zero manifest graph findings. Their timings
+and memory observations are indicative only. The Minikube profile was returned
+to its prior stopped state after evidence was copied out.
+
 ## Original QA/build-cycle evidence
 
 The selected RexxScript CTest command still triggered the
@@ -535,14 +582,14 @@ cannot silently build unrelated artifacts. It is also evidence that action
 timing and resource-pool classification should be retained separately from
 test timing.
 
-## Next waves
+## Remaining gates and Phase 2 boundary
 
-1. Run the broad macOS Debug correctness gate from a fully prepared tree,
-   proving CTest does not alter the Ninja build log.
-2. Run stress separately from correctness and keep all performance measurement
-   out of the busy worker pool.
-3. Prove the exact committed tree with the portable five-job profile in Linux
-   ARM64 Minikube.
+1. Windows publication/rename behaviour remains a hosted gate because no local
+   Windows runner is available.
+2. A deliberately reduced ASan scope remains separate work; Phase 1 does not
+   claim sanitizer closure or redesign the maintained sanitizer runner.
+3. Phase 2 can now turn the reviewed catalogue into the declarative manifest
+   and begin the Level B post-bootstrap orchestrator without carrying hidden
+   active-tree build behavior forward.
 
-Windows publication/rename behaviour and Linux exact-tree proof remain hosted
-or Minikube checkpoint gates; this macOS checkpoint does not claim either.
+Phase 1 makes no Windows or sanitizer-clean claim.

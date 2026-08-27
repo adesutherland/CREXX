@@ -1,6 +1,6 @@
 # New Build System Vision and Migration Plan
 
-- **Status:** Vision retained; Phase 0 complete; Phase 1 implementation complete, broad gates in progress
+- **Status:** Vision retained; Phase 0 and Phase 1 complete; Phase 2 ready
 - **Baseline:** `origin/develop` at `dc44d92909e706adc575932ba9ae72f2d6f05b7d`
 - **Develop incorporated:** through `657b833d9f70e3f0e69536e6d76e4dd6a9e953aa`
 - **Planning branch:** `temp/newbuild`
