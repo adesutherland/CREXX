@@ -3,12 +3,11 @@
 ## Status
 
 Phase 1 is in progress on `temp/newbuild`. The current checkpoint completes
-eight bounded ownership/preparation waves and incorporates `origin/develop`
+nine bounded ownership/preparation waves and incorporates `origin/develop`
 through `657b833d9f70e3f0e69536e6d76e4dd6a9e953aa`. The Phase 1 gate is not yet
-complete: two preprocessor actions still rewrite their own outputs, resource
-pools are not defined, and the provisional wave graph still needs review.
-Top-level CTest no longer contains a build fixture or invokes a nested build,
-and the configured graph has no remaining cross-action cleanup finding.
+complete: resource pools are not defined, and the provisional wave graph still
+needs review. Top-level CTest no longer contains a build fixture or invokes a
+nested build, and the configured graph has no cleanup finding.
 
 No performance measurement was run. Host timings below are diagnostic only;
 other work was active on the machine.
@@ -338,9 +337,58 @@ Concurrency and functional evidence:
 These checks exercise `rxc`, `rxas`, `rxlink`, and `rxvm`. No performance
 measurement executed.
 
+## Wave 9: private RXPP production pipeline
+
+RXPP no longer compiles, links, and packages in one directory that is also an
+`rxc` import root. The two deletions of its own `rxpp.rxbin` and
+`rxpp_linked.rxbin` outputs have been replaced by four explicit actions:
+
+1. stage the declared `library`, classlib, `rxfnsc`, RexxScript,
+   `rxcexits`, and `rxprecomp` compiler inputs in an immutable curated root;
+2. copy `rxpp.crexx` into a private member root, then run
+   `rxc --no-exe-import` and `rxas` there;
+3. link that member and the four runtime library images into the private
+   `preprocessor/linked/rxpp/rxpp_linked.rxbin`; and
+4. package the linked image through a temporary C file and atomic rename before
+   the ordinary native compiler consumes it.
+
+An older `rxpp.rxbin` or `rxpp_linked.rxbin` is therefore never a candidate
+while RXPP rebuilds. The private RXAS and RXBIN are exactly byte-identical to
+the former route, with SHA-256 values
+`6d7c7d818d2ec681172f8f911b73a46d7faf0aec105455c9b9a6d12cfdb26fb8`
+and
+`a87142d0db7006f79c6c5c5424f4dd0a61730c9710a372a33feb851affdf49b3`.
+The old retained linked image was not a valid current-input baseline: its
+timestamp predates all four regenerated runtime library inputs. Repeating the
+old link invocation against the current inputs produced the exact private link
+hash
+`e01619a71c2895940ac0b7130daf6381e4f10eb2ac0e54be90f574fe30f14e34`.
+
+Concurrency and functional evidence:
+
+- all six pipeline/native actions rebuilt from retained empty owned-output
+  positions at jobs 1, 5, and 30 in approximately 4.45, 4.31, and 4.31
+  seconds; the largely serial dependency chain is intentionally not expected
+  to accelerate, and timings are diagnostic only;
+- all six staged imports, staged source, RXAS, RXBIN, linked image, generated C
+  and generated C object hashes were identical across jobs 1, 5, and 30;
+- the final macOS Debug executable differed only after the identical object
+  input entered the native link; its Mach-O UUID/debug/signature metadata is a
+  platform link reproducibility question, not build-order evidence;
+- an immediate repeat was a no-op;
+- `ninja -t missingdeps rxpp` processed 1,508 nodes without finding a missing
+  generated-file dependency; and
+- all eight maintained RXPP, source-map, diagnostics, and parser-wrapper checks
+  passed. Five ran immediately; the three parser-wrapper checks first proved
+  that CTest would not hide their absent tools, then passed after explicit
+  `rxpp_sh` and `parser_tester` preparation. Both test runs left the Ninja log
+  unchanged.
+
+No performance measurement executed.
+
 ## Current graph movement
 
-The current Debug export covers 1,511 targets, 1,352 custom commands and 2,367
+The current Debug export covers 1,512 targets, 1,355 custom commands and 2,367
 tests.
 
 | Finding | Phase 0 | This checkpoint |
@@ -353,9 +401,9 @@ tests.
 | provisional wave inversions | 813 | 813 |
 | performance-measurement tests | 24 | 24 |
 
-Only the two preprocessor findings that rewrite their own declared output now
-remain. Both main and native-backed classlib families have zero cleanup
-findings. The manifest projection is schema-valid and has no
+There is now no cleanup finding. The only non-wave review findings are three
+command-bearing custom targets without declared byproducts and 963 tests with
+no label. The manifest projection is schema-valid and has no
 ownership/dependency graph error, while the 813 provisional wave inversions
 remain review inputs rather than accepted dependencies.
 
@@ -375,10 +423,9 @@ test timing.
 
 ## Next waves
 
-1. Remove the two preprocessor self-rewrite cleanup patterns.
-2. Introduce measured resource pools for heavyweight optimized compiler,
+1. Introduce measured resource pools for heavyweight optimized compiler,
    assembler and VM work.
-3. Complete test labels/selections and review the 813 provisional wave
+2. Complete test labels/selections and review the 813 provisional wave
    inversions before the broad Phase 1 checkpoint.
 
 Windows publication/rename behaviour and Linux exact-tree proof remain hosted

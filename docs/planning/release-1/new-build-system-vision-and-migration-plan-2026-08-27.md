@@ -644,6 +644,17 @@ remain. `KeyDB` retains route-sensitive generated label/debug identities, so
 permanent source/RXBIN/plugin route parity remains a Phase 2 qualification
 item. The next bounded ownership work is the preprocessor family.
 
+**2026-08-27 checkpoint H:** RXPP now stages only its declared compiler
+inputs, compiles with `--no-exe-import` in a private member directory, links a
+private runtime image, and atomically publishes generated C for the native
+compiler. Its two self-rewrite cleanup findings are gone, leaving no cleanup
+finding in the configured graph. Jobs 1, 5, and 30 retained identical staged,
+RXAS, RXBIN, linked, C, and object artifacts; all eight maintained focused
+checks passed without CTest invoking Ninja. The final macOS Debug executable
+retains native linker UUID/debug/signature entropy and is recorded separately
+from build-order determinism. The next work is resource pools and provisional
+wave/test classification review.
+
 ### Phase 2: make imports and metadata deterministic
 
 1. Add dependency/resolution reports to rxc, rxas and rxlink.

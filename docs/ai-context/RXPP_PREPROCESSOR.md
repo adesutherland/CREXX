@@ -19,6 +19,16 @@ The root `preprocessor/CMakeLists.txt` builds:
 The native `precomp` helper remains an RXPP implementation detail. Do not move
 it back under `lib/plugins/` unless RXPP itself moves.
 
+The CMake production path separates imports, work, linking, and packaging.
+Declared library RXBINs, `rxcexits.rxbin`, and `rxprecomp.rxplugin` are copied
+to `preprocessor/imports/compiler/`. `rxpp.crexx` is compiled with
+`--no-exe-import` under `preprocessor/members/rxpp/`, so a previous self-image
+cannot satisfy an import. The runtime image is written under
+`preprocessor/linked/rxpp/`; `rxcpack` writes a temporary C file under
+`preprocessor/generated/rxpp/` and that file is renamed atomically before the
+native compiler consumes it. Do not merge those directories or reintroduce a
+shared cleanup step: generated metadata and every intermediate have one owner.
+
 ## Pipeline Role
 
 For `.rxpp` input the supported pipeline is:

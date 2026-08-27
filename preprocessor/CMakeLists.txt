@@ -37,39 +37,121 @@ add_static_plugin_target(precomp precomp.c)
 # Create the dynamic link module - this is needed for rxc to compile rxpp.crexx
 add_dynamic_plugin_target(precomp precomp.c)
 
+set(RXPP_IMPORT_ROOT ${CMAKE_CURRENT_BINARY_DIR}/imports/compiler)
+set(RXPP_IMPORT_RXFNSB ${RXPP_IMPORT_ROOT}/library.rxbin)
+set(RXPP_IMPORT_CLASSLIB ${RXPP_IMPORT_ROOT}/classlib.rxbin)
+set(RXPP_IMPORT_RXFNSC ${RXPP_IMPORT_ROOT}/rxfnsc.rxbin)
+set(RXPP_IMPORT_REXXSCRIPT ${RXPP_IMPORT_ROOT}/rexxscript.rxbin)
+set(RXPP_IMPORT_EXITS ${RXPP_IMPORT_ROOT}/rxcexits.rxbin)
+set(RXPP_IMPORT_PRECOMP ${RXPP_IMPORT_ROOT}/rxprecomp.rxplugin)
 add_custom_command(
-        BYPRODUCTS
-                ${CMAKE_CURRENT_BINARY_DIR}/rxpp.rxbin
-                ${CMAKE_CURRENT_BINARY_DIR}/rxpp_linked.rxbin
-        # rxpp's binary import root is also its output directory.  Never let a
-        # previous linked self-image reintroduce stale callable contracts while
-        # rebuilding after a library signature change.
-        COMMAND ${CMAKE_COMMAND} -E rm -f
-                ${CMAKE_CURRENT_BINARY_DIR}/rxpp.rxbin
-                ${CMAKE_CURRENT_BINARY_DIR}/rxpp_linked.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i "\"${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}\"" -o rxpp ${CMAKE_CURRENT_SOURCE_DIR}/rxpp
-        COMMAND $<TARGET_FILE:rxas> rxpp
-        COMMAND $<TARGET_FILE:rxlink> -s -o rxpp_linked
-        rxpp
-        ${CMAKE_BINARY_DIR}/bin/library
-        ${CMAKE_BINARY_DIR}/bin/classlib
-        ${CMAKE_BINARY_DIR}/bin/rxfnsc
-        ${CMAKE_BINARY_DIR}/bin/rexxscript
-        COMMAND $<TARGET_FILE:rxcpack> -o rxpp rxpp_linked
+        OUTPUT
+                ${RXPP_IMPORT_RXFNSB}
+                ${RXPP_IMPORT_CLASSLIB}
+                ${RXPP_IMPORT_RXFNSC}
+                ${RXPP_IMPORT_REXXSCRIPT}
+                ${RXPP_IMPORT_EXITS}
+                ${RXPP_IMPORT_PRECOMP}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RXPP_IMPORT_ROOT}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RXFNSB_RXBIN} ${RXPP_IMPORT_RXFNSB}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CLASSLIB_RXBIN} ${RXPP_IMPORT_CLASSLIB}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RXFNSC_RXBIN} ${RXPP_IMPORT_RXFNSC}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${REXXSCRIPT_RXBIN} ${RXPP_IMPORT_REXXSCRIPT}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin ${RXPP_IMPORT_EXITS}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                $<TARGET_FILE:precomp> ${RXPP_IMPORT_PRECOMP}
         DEPENDS
-        precomp rxas rxc rxlink rxpp.crexx
-        library classlib rxfnsc rexxscript
-        compiler_exit_bin
-        ${RXFNSB_RXBIN}
-        ${CLASSLIB_RXBIN}
-        ${RXFNSC_RXBIN}
-        ${REXXSCRIPT_RXBIN}
-        rxcpack rxpa
-        OUTPUT rxpp.c
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "rxpp compile, assemble, link and package rxpp ...")
+                precomp
+                library classlib rxfnsc rexxscript compiler_exit_bin
+                ${RXFNSB_RXBIN}
+                ${CLASSLIB_RXBIN}
+                ${RXFNSC_RXBIN}
+                ${REXXSCRIPT_RXBIN}
+                ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
+        COMMENT "Stage immutable rxpp compiler imports ..."
+        VERBATIM)
+add_custom_target(rxpp_compiler_imports
+        DEPENDS
+                ${RXPP_IMPORT_RXFNSB}
+                ${RXPP_IMPORT_CLASSLIB}
+                ${RXPP_IMPORT_RXFNSC}
+                ${RXPP_IMPORT_REXXSCRIPT}
+                ${RXPP_IMPORT_EXITS}
+                ${RXPP_IMPORT_PRECOMP})
 
-add_executable(rxpp rxpp.c)
+set(RXPP_MEMBER_ROOT ${CMAKE_CURRENT_BINARY_DIR}/members/rxpp)
+set(RXPP_MEMBER_SOURCE_ROOT ${RXPP_MEMBER_ROOT}/source)
+set(RXPP_MEMBER_SOURCE ${RXPP_MEMBER_SOURCE_ROOT}/rxpp.crexx)
+set(RXPP_MEMBER_RXAS ${RXPP_MEMBER_ROOT}/rxpp.rxas)
+set(RXPP_MEMBER_RXBIN ${RXPP_MEMBER_ROOT}/rxpp.rxbin)
+add_custom_command(
+        OUTPUT ${RXPP_MEMBER_RXBIN}
+        BYPRODUCTS ${RXPP_MEMBER_SOURCE} ${RXPP_MEMBER_RXAS}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RXPP_MEMBER_SOURCE_ROOT}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${CMAKE_CURRENT_SOURCE_DIR}/rxpp.crexx ${RXPP_MEMBER_SOURCE}
+        COMMAND $<TARGET_FILE:rxc>
+                --no-exe-import
+                -i ${RXPP_IMPORT_ROOT}
+                -o rxpp
+                ${RXPP_MEMBER_SOURCE}
+        COMMAND $<TARGET_FILE:rxas> rxpp
+        DEPENDS
+                ${CMAKE_CURRENT_SOURCE_DIR}/rxpp.crexx
+                rxpp_compiler_imports
+                ${RXPP_IMPORT_RXFNSB}
+                ${RXPP_IMPORT_CLASSLIB}
+                ${RXPP_IMPORT_RXFNSC}
+                ${RXPP_IMPORT_REXXSCRIPT}
+                ${RXPP_IMPORT_EXITS}
+                ${RXPP_IMPORT_PRECOMP}
+                rxc rxas
+        WORKING_DIRECTORY ${RXPP_MEMBER_ROOT}
+        COMMENT "Compile and assemble rxpp in its private member directory ..."
+        VERBATIM)
+
+set(RXPP_LINK_ROOT ${CMAKE_CURRENT_BINARY_DIR}/linked/rxpp)
+set(RXPP_LINK_IMAGE ${RXPP_LINK_ROOT}/rxpp_linked.rxbin)
+add_custom_command(
+        OUTPUT ${RXPP_LINK_IMAGE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RXPP_LINK_ROOT}
+        COMMAND $<TARGET_FILE:rxlink>
+                -s
+                -o ${RXPP_LINK_IMAGE}
+                ${RXPP_MEMBER_RXBIN}
+                ${RXFNSB_RXBIN}
+                ${CLASSLIB_RXBIN}
+                ${RXFNSC_RXBIN}
+                ${REXXSCRIPT_RXBIN}
+        DEPENDS
+                rxlink
+                ${RXPP_MEMBER_RXBIN}
+                ${RXFNSB_RXBIN}
+                ${CLASSLIB_RXBIN}
+                ${RXFNSC_RXBIN}
+                ${REXXSCRIPT_RXBIN}
+        COMMENT "Link the private rxpp runtime image ..."
+        VERBATIM)
+
+set(RXPP_GENERATED_ROOT ${CMAKE_CURRENT_BINARY_DIR}/generated/rxpp)
+set(RXPP_GENERATED_C ${RXPP_GENERATED_ROOT}/rxpp.c)
+set(RXPP_GENERATED_C_TEMP_STEM ${RXPP_GENERATED_ROOT}/rxpp.tmp)
+set(RXPP_GENERATED_C_TEMP ${RXPP_GENERATED_C_TEMP_STEM}.c)
+add_custom_command(
+        OUTPUT ${RXPP_GENERATED_C}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RXPP_GENERATED_ROOT}
+        COMMAND $<TARGET_FILE:rxcpack>
+                -o ${RXPP_GENERATED_C_TEMP_STEM}
+                ${RXPP_LINK_ROOT}/rxpp_linked
+        COMMAND ${CMAKE_COMMAND} -E rename
+                ${RXPP_GENERATED_C_TEMP}
+                ${RXPP_GENERATED_C}
+        DEPENDS rxcpack ${RXPP_LINK_IMAGE}
+        COMMENT "Package the private rxpp runtime image as C ..."
+        VERBATIM)
+
+add_executable(rxpp ${RXPP_GENERATED_C})
 # Ensure precomp static lib is force-loaded, then append providers (rxpashim, rxpa) after it
 # This ordering is important for Unix linkers when resolving symbols from static archives.
 # First, inject the whole-archive of precomp_static so its objects come before providers
