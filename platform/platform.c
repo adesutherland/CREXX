@@ -294,34 +294,11 @@ void platform_term_save() {
     }
 }
 
-#if !defined(_WIN32)
-
-#include <unistd.h>
-#include <termios.h>
-
-void platform_term_restore(void)
-{
-    if (!termios_saved)
-        return;
-
-    if (!isatty(STDIN_FILENO))
-        return;
-
-    if (tcgetpgrp(STDIN_FILENO) != getpgrp())
-        return;
-
-    if (tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios) == 0)
-        termios_saved = 0;
+void platform_term_restore() {
+    if (termios_saved) {
+        tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
+    }
 }
-
-#endif
-
-
-/* void platform_term_restore() { */
-/*     if (termios_saved) { */
-/*         tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios); */
-/*     } */
-/* } */
 
 static void signal_handler(int sig) {
     platform_term_restore();
