@@ -1,4 +1,4 @@
-# New-build Phase 0 tooling
+# New-build graph tooling
 
 These tools observe the current CMake build. They do not modify CMake targets,
 dependencies or production build behaviour.
@@ -22,12 +22,24 @@ The exporter writes:
 The projection is deliberately marked `observed-provisional-not-executable`.
 It is an input to the new graph design, not a second build system.
 
-The future manifest contract is documented by
-`build-manifest.schema.json`. The standard-library validator provides the
-checks needed during bootstrap, without requiring a Python package download.
-It validates required fields and classifications, action identities, output
-ownership, known dependencies and wave direction. `--strict` also makes
+The manifest contract is documented by `build-manifest.schema.json`. Phase 2
+retains the aggregate observed import roots for catalogue comparison and also
+records every `rxc` invocation separately, including ordered source/binary
+roots, allowed artifact kinds, automatic RXAS discovery, executable-directory
+visibility, the future resolution report and expected provider identities.
+The standard-library validator provides the checks needed during bootstrap,
+without requiring a Python package download. It validates required fields and
+classifications, action identities, import-policy shape, output ownership,
+known dependencies and wave direction. A declared import selection must name
+its resolution report and content-digested providers. `--strict` also makes
 current graph findings fail the command.
+
+`import-resolution-report.schema.json` defines the canonical observe/enforce
+evidence that `rxc` will emit in the next bounded slice. Candidate discovery
+events are separate from final provider bindings: recording that a source,
+RXAS, RXBIN or native candidate was admitted or replaced is not by itself a
+claim that it supplied a requested symbol. The initial schema does not change
+the compiler's current search or precedence behaviour.
 
 Example after a trace-enabled configure:
 

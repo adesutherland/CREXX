@@ -159,6 +159,78 @@ class CatalogueUnitTests(unittest.TestCase):
     def test_ordered_unique_preserves_import_search_order(self) -> None:
         self.assertEqual(catalogue.ordered_unique(["second", "first", "second", "third"]), ["second", "first", "third"])
 
+    def test_manifest_import_invocation_preserves_policy_and_visibility(self) -> None:
+        invocation = catalogue.manifest_import_invocation(
+            {
+                "tool": "<BUILD>/bin/rxc",
+                "source_roots": ["<SOURCE>/first", "<SOURCE>/second"],
+                "binary_roots": ["<BUILD>/private"],
+                "import_rxas": True,
+                "exe_import": False,
+            }
+        )
+        self.assertEqual(invocation["source_roots"], ["<SOURCE>/first", "<SOURCE>/second"])
+        self.assertEqual(invocation["binary_roots"], ["<BUILD>/private"])
+        self.assertEqual(invocation["allowed_kinds"], ["rxas", "rxbin", "rxplugin", "source"])
+        self.assertTrue(invocation["auto_import_rxas"])
+        self.assertEqual(invocation["executable_directory"], "excluded")
+        self.assertIsNone(invocation["resolution_report"])
+        self.assertEqual(invocation["expected_providers"], [])
+
+    def test_manifest_validator_requires_report_and_provider_digest_for_declared_imports(self) -> None:
+        policy = {
+            "status": "declared",
+            "source_roots": [],
+            "binary_roots": ["<BUILD>/private"],
+            "allowed_kinds": ["rxbin"],
+            "invocations": [
+                {
+                    "tool": "<BUILD>/bin/rxc",
+                    "source_roots": [],
+                    "binary_roots": ["<BUILD>/private"],
+                    "allowed_kinds": ["rxbin"],
+                    "auto_import_rxas": False,
+                    "executable_directory": "excluded",
+                    "resolution_report": None,
+                    "expected_providers": [
+                        {
+                            "request": "provider",
+                            "kind": "rxbin",
+                            "path": "<BUILD>/private/provider.rxbin",
+                            "sha256": "not-a-digest",
+                        }
+                    ],
+                }
+            ],
+        }
+        errors: list[str] = []
+        catalogue._validate_import_policy(policy, "action.import_policy", errors)
+        self.assertTrue(any("resolution_report is required" in error for error in errors))
+        self.assertTrue(any("lowercase SHA-256 digest" in error for error in errors))
+
+    def test_manifest_validator_keeps_observed_v1_projection_compatible(self) -> None:
+        observed = {
+            "status": "observed",
+            "source_roots": ["<SOURCE>/imports"],
+            "binary_roots": [],
+            "allowed_kinds": ["source"],
+        }
+        observed_errors: list[str] = []
+        catalogue._validate_import_policy(observed, "observed.import_policy", observed_errors)
+        self.assertEqual(observed_errors, [])
+
+        declared = {**observed, "status": "declared"}
+        declared_errors: list[str] = []
+        catalogue._validate_import_policy(declared, "declared.import_policy", declared_errors)
+        self.assertTrue(any("invocations is required" in error for error in declared_errors))
+
+    def test_import_resolution_report_schema_has_stable_identity(self) -> None:
+        schema = catalogue.read_json(Path(__file__).with_name("import-resolution-report.schema.json"))
+        self.assertEqual(
+            schema["properties"]["schema_version"]["const"],
+            "crexx.import-resolution-report/v1",
+        )
+
     def test_finds_non_verbatim_custom_target_with_trailing_dollar(self) -> None:
         custom_target = {
             "id": "add_custom_target:<SOURCE>/CMakeLists.txt:1:1",
@@ -207,7 +279,13 @@ class CatalogueUnitTests(unittest.TestCase):
             "outputs": ["<BUILD>/same"],
             "byproducts": [],
             "needs": [],
-            "import_policy": {"status": "declared", "source_roots": [], "binary_roots": [], "allowed_kinds": []},
+            "import_policy": {
+                "status": "declared",
+                "source_roots": [],
+                "binary_roots": [],
+                "allowed_kinds": [],
+                "invocations": [],
+            },
             "metadata_policy": {"status": "declared", "required": [], "preserved": [], "stripped": []},
             "work_dir": "<BUILD>/work",
             "resources": {"cpu": 1, "memory_weight": 1, "io_weight": 1, "exclusive": []},

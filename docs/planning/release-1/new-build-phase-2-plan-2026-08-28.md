@@ -167,6 +167,18 @@ and approved. This is correctness qualification, not a timing baseline.
 
 ### Wave P2.2 — harden manifest v1 and its validator
 
+**Progress (2026-08-28): first contract slice complete.** The v1 schema and
+standard-library validator now retain each observed `rxc` invocation separately
+with ordered roots, permitted kinds, RXAS scanning and executable-directory
+visibility. Declared import actions must name their resolution report and
+content-digested expected providers. The canonical
+`crexx.import-resolution-report/v1` schema separates candidate discovery
+events from final provider bindings and can record missing/read-failed
+candidates without losing the report. Existing observed v1 projections remain
+valid when they lack the new optional invocation detail; the current exporter
+always emits it. Seventeen lightweight catalogue tests pass. Cycle, full path
+conflict, `plan` and `explain` work remains in P2.2.
+
 Extend the manifest so that an action can declare:
 
 - normalized source, work, staging and publication paths;
@@ -199,6 +211,16 @@ rules remain represented, and deliberately invalid fixtures cover every new
 validator rule.
 
 ### Wave P2.3 — record `rxc` import resolution at the decision point
+
+**Implementation note (2026-08-28):** read-only source inspection confirms
+that discovery currently scans the primary/source roots before binary roots,
+keeps the first same-stage module found across ordered roots, and, when
+`--import-rxas` exposes both RXAS and RXBIN for one module in the same binary
+root, chooses the newer mtime before using artifact kind as the tie-break. The
+observe-only fixture must capture that timestamp-sensitive behaviour before a
+separate reviewed change replaces it with the approved deterministic policy.
+Candidate admission is not equivalent to final namespace/symbol binding, so
+both event classes remain distinct in the report.
 
 Instrument the existing resolver before changing its precedence. The report
 must be emitted by the code that chooses the provider, not reconstructed from

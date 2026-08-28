@@ -80,6 +80,102 @@
         "type": "string"
       }
     },
+    "artifact_kind": {
+      "type": "string",
+      "enum": [
+        "source",
+        "rxas",
+        "rxbin",
+        "rxplugin"
+      ]
+    },
+    "expected_provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request",
+        "kind",
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "request": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "$ref": "#/$defs/artifact_kind"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "import_invocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tool",
+        "source_roots",
+        "binary_roots",
+        "allowed_kinds",
+        "auto_import_rxas",
+        "executable_directory",
+        "resolution_report",
+        "expected_providers"
+      ],
+      "properties": {
+        "tool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_roots": {
+          "$ref": "#/$defs/string_array"
+        },
+        "binary_roots": {
+          "$ref": "#/$defs/string_array"
+        },
+        "allowed_kinds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact_kind"
+          },
+          "uniqueItems": true
+        },
+        "auto_import_rxas": {
+          "type": "boolean"
+        },
+        "executable_directory": {
+          "type": "string",
+          "enum": [
+            "included",
+            "excluded"
+          ]
+        },
+        "resolution_report": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected_providers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/expected_provider"
+          }
+        }
+      }
+    },
     "action": {
       "type": "object",
       "required": [
@@ -140,6 +236,7 @@
         },
         "import_policy": {
           "type": "object",
+          "additionalProperties": false,
           "required": [
             "status",
             "source_roots",
@@ -164,17 +261,33 @@
             "allowed_kinds": {
               "type": "array",
               "items": {
-                "type": "string",
-                "enum": [
-                  "source",
-                  "rxas",
-                  "rxbin",
-                  "rxplugin"
-                ]
+                "$ref": "#/$defs/artifact_kind"
               },
               "uniqueItems": true
+            },
+            "invocations": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/import_invocation"
+              }
             }
-          }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "declared"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "invocations"
+                ]
+              }
+            }
+          ]
         },
         "metadata_policy": {
           "type": "object",

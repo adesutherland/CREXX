@@ -26,6 +26,9 @@ CATALOGUE_SCHEMA = "crexx.cmake-catalogue/v1"
 MANIFEST_SCHEMA = "crexx.build-manifest/v1"
 PRODUCT_LAYERS = {"C0", "C1", "B0", "X", "B1", "C", "G", "L", "Product", "Optional"}
 QA_TIERS = {"none", "graph", "essential", "smoke", "comprehensive", "qualification", "stress", "measurement"}
+MANIFEST_STATUSES = {"observed-provisional-not-executable", "draft", "executable"}
+IMPORT_POLICY_STATUSES = {"not-observed", "observed", "declared"}
+IMPORT_ARTIFACT_KINDS = {"source", "rxas", "rxbin", "rxplugin"}
 
 CUSTOM_KEYWORDS = {
     "ALL",
@@ -134,6 +137,28 @@ def counter_dict(values: Iterable[Any]) -> dict[str, int]:
 
 def ordered_unique(values: Iterable[str]) -> list[str]:
     return list(dict.fromkeys(values))
+
+
+def manifest_import_invocation(record: dict[str, Any]) -> dict[str, Any]:
+    source_roots = list(record.get("source_roots", []))
+    binary_roots = list(record.get("binary_roots", []))
+    allowed_kinds: list[str] = []
+    if source_roots:
+        allowed_kinds.append("source")
+    if binary_roots or record.get("exe_import", True):
+        allowed_kinds.extend(("rxbin", "rxplugin"))
+    if record.get("import_rxas"):
+        allowed_kinds.append("rxas")
+    return {
+        "tool": str(record.get("tool", "rxc")),
+        "source_roots": source_roots,
+        "binary_roots": binary_roots,
+        "allowed_kinds": sorted(set(allowed_kinds)),
+        "auto_import_rxas": bool(record.get("import_rxas")),
+        "executable_directory": "included" if record.get("exe_import", True) else "excluded",
+        "resolution_report": None,
+        "expected_providers": [],
+    }
 
 
 def classify_surface(source: str, name: str, target_type: str = "") -> dict[str, Any]:
@@ -968,7 +993,13 @@ def create_manifest(catalogue: dict[str, Any]) -> dict[str, Any]:
                 "outputs": target["artifacts"],
                 "byproducts": [],
                 "needs": [target_action_ids[item["id"]] for item in target["dependencies"] if item["id"] in target_action_ids],
-                "import_policy": {"status": "not-observed", "source_roots": [], "binary_roots": [], "allowed_kinds": []},
+                "import_policy": {
+                    "status": "not-observed",
+                    "source_roots": [],
+                    "binary_roots": [],
+                    "allowed_kinds": [],
+                    "invocations": [],
+                },
                 "metadata_policy": {"status": "not-observed", "required": [], "preserved": [], "stripped": []},
                 "work_dir": target["build_dir"],
                 "resources": {"cpu": 1, "memory_weight": 1, "io_weight": 1, "exclusive": []},
@@ -983,13 +1014,12 @@ def create_manifest(catalogue: dict[str, Any]) -> dict[str, Any]:
     for action in catalogue["custom_commands"] + catalogue["custom_targets"]:
         classification = action["classification"]
         import_records = [item for item in catalogue["import_invocations"] if item["source"].get("action") == action["id"]]
+        import_invocations = [manifest_import_invocation(item) for item in import_records]
         source_roots = ordered_unique(root for item in import_records for root in item["source_roots"])
         binary_roots = ordered_unique(root for item in import_records for root in item["binary_roots"])
-        allowed_kinds = ["source"] if source_roots else []
-        if binary_roots:
-            allowed_kinds.append("rxbin")
-        if any(item["import_rxas"] for item in import_records):
-            allowed_kinds.append("rxas")
+        allowed_kinds = sorted(
+            {kind for invocation in import_invocations for kind in invocation["allowed_kinds"]}
+        )
         actions.append(
             {
                 "id": f"observed:{action['id']}",
@@ -1007,7 +1037,8 @@ def create_manifest(catalogue: dict[str, Any]) -> dict[str, Any]:
                     "status": "observed" if import_records else "not-observed",
                     "source_roots": source_roots,
                     "binary_roots": binary_roots,
-                    "allowed_kinds": sorted(set(allowed_kinds)),
+                    "allowed_kinds": allowed_kinds,
+                    "invocations": import_invocations,
                 },
                 "metadata_policy": {"status": "not-observed", "required": [], "preserved": [], "stripped": []},
                 "work_dir": action["working_directory"] or "<UNRESOLVED>",
@@ -1055,11 +1086,116 @@ def create_manifest(catalogue: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _validate_string_array(value: Any, subject: str, schema_errors: list[str]) -> bool:
+    if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
+        schema_errors.append(f"{subject} must be an array of strings")
+        return False
+    return True
+
+
+def _validate_expected_provider(value: Any, subject: str, schema_errors: list[str]) -> None:
+    if not isinstance(value, dict):
+        schema_errors.append(f"{subject} must be an object")
+        return
+    required = {"request", "kind", "path", "sha256"}
+    missing = sorted(required - set(value))
+    if missing:
+        schema_errors.append(f"{subject} missing: {', '.join(missing)}")
+    for field in ("request", "path"):
+        if not isinstance(value.get(field), str) or not value.get(field):
+            schema_errors.append(f"{subject}.{field} must be a non-empty string")
+    if value.get("kind") not in IMPORT_ARTIFACT_KINDS:
+        schema_errors.append(f"{subject}.kind must be a supported import artifact kind")
+    digest = value.get("sha256")
+    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+        schema_errors.append(f"{subject}.sha256 must be a lowercase SHA-256 digest")
+
+
+def _validate_import_invocation(value: Any, subject: str, status: Any, schema_errors: list[str]) -> None:
+    if not isinstance(value, dict):
+        schema_errors.append(f"{subject} must be an object")
+        return
+    required = {
+        "tool",
+        "source_roots",
+        "binary_roots",
+        "allowed_kinds",
+        "auto_import_rxas",
+        "executable_directory",
+        "resolution_report",
+        "expected_providers",
+    }
+    missing = sorted(required - set(value))
+    if missing:
+        schema_errors.append(f"{subject} missing: {', '.join(missing)}")
+    if not isinstance(value.get("tool"), str) or not value.get("tool"):
+        schema_errors.append(f"{subject}.tool must be a non-empty string")
+    _validate_string_array(value.get("source_roots"), f"{subject}.source_roots", schema_errors)
+    _validate_string_array(value.get("binary_roots"), f"{subject}.binary_roots", schema_errors)
+    kinds = value.get("allowed_kinds")
+    if _validate_string_array(kinds, f"{subject}.allowed_kinds", schema_errors):
+        invalid = sorted(set(kinds) - IMPORT_ARTIFACT_KINDS)
+        if invalid:
+            schema_errors.append(f"{subject}.allowed_kinds contains unsupported kinds: {', '.join(invalid)}")
+        if len(kinds) != len(set(kinds)):
+            schema_errors.append(f"{subject}.allowed_kinds must not contain duplicates")
+    if not isinstance(value.get("auto_import_rxas"), bool):
+        schema_errors.append(f"{subject}.auto_import_rxas must be boolean")
+    if value.get("executable_directory") not in {"included", "excluded"}:
+        schema_errors.append(f"{subject}.executable_directory must be included or excluded")
+    report = value.get("resolution_report")
+    if report is not None and (not isinstance(report, str) or not report):
+        schema_errors.append(f"{subject}.resolution_report must be null or a non-empty string")
+    if status == "declared" and kinds and report is None:
+        schema_errors.append(f"{subject}.resolution_report is required for declared import selection")
+    providers = value.get("expected_providers")
+    if not isinstance(providers, list):
+        schema_errors.append(f"{subject}.expected_providers must be an array")
+    else:
+        for index, provider in enumerate(providers):
+            _validate_expected_provider(provider, f"{subject}.expected_providers[{index}]", schema_errors)
+
+
+def _validate_import_policy(value: Any, subject: str, schema_errors: list[str]) -> None:
+    if not isinstance(value, dict):
+        schema_errors.append(f"{subject} must be an object")
+        return
+    required = {"status", "source_roots", "binary_roots", "allowed_kinds"}
+    missing = sorted(required - set(value))
+    if missing:
+        schema_errors.append(f"{subject} missing: {', '.join(missing)}")
+    status = value.get("status")
+    if status not in IMPORT_POLICY_STATUSES:
+        schema_errors.append(f"{subject}.status must be not-observed, observed or declared")
+    _validate_string_array(value.get("source_roots"), f"{subject}.source_roots", schema_errors)
+    _validate_string_array(value.get("binary_roots"), f"{subject}.binary_roots", schema_errors)
+    kinds = value.get("allowed_kinds")
+    if _validate_string_array(kinds, f"{subject}.allowed_kinds", schema_errors):
+        invalid = sorted(set(kinds) - IMPORT_ARTIFACT_KINDS)
+        if invalid:
+            schema_errors.append(f"{subject}.allowed_kinds contains unsupported kinds: {', '.join(invalid)}")
+        if len(kinds) != len(set(kinds)):
+            schema_errors.append(f"{subject}.allowed_kinds must not contain duplicates")
+    invocations = value.get("invocations", [])
+    if status == "declared" and "invocations" not in value:
+        schema_errors.append(f"{subject}.invocations is required for declared import selection")
+    elif not isinstance(invocations, list):
+        schema_errors.append(f"{subject}.invocations must be an array")
+    else:
+        for index, invocation in enumerate(invocations):
+            _validate_import_invocation(invocation, f"{subject}.invocations[{index}]", status, schema_errors)
+
+
 def validate_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
     schema_errors: list[str] = []
     graph_findings: list[dict[str, Any]] = []
     if manifest.get("schema_version") != MANIFEST_SCHEMA:
         schema_errors.append(f"schema_version must be {MANIFEST_SCHEMA}")
+    if manifest.get("status") not in MANIFEST_STATUSES:
+        schema_errors.append("status must identify an observed, draft or executable manifest")
+    source_commit = manifest.get("source_commit")
+    if not isinstance(source_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", source_commit):
+        schema_errors.append("source_commit must be a lowercase 40-character commit id")
     actions = manifest.get("actions")
     tests = manifest.get("tests")
     if not isinstance(actions, list):
@@ -1113,6 +1249,7 @@ def validate_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
         for field in ("argv", "inputs", "outputs", "byproducts", "needs", "qa_tags"):
             if not isinstance(action.get(field), list):
                 schema_errors.append(f"{action_id}: {field} must be an array")
+        _validate_import_policy(action.get("import_policy"), f"{action_id}.import_policy", schema_errors)
     output_owners: dict[str, list[str]] = collections.defaultdict(list)
     for action in actions:
         if not isinstance(action, dict) or not isinstance(action.get("id"), str):
