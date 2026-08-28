@@ -220,6 +220,7 @@ test_domain_signals: procedure = .int
     if problem.name() \= "INVALID_ARGUMENTS" | pos("RXDECIMAL.SQRT", problem.message()) = 0 then failures = failures + 1
   end
   do
+    ignored = .decimal
     ignored = rxdecimal..ln(0)
     say "FAIL: decimal contract ln zero did not signal"
     failures = failures + 1
@@ -227,6 +228,7 @@ test_domain_signals: procedure = .int
     if problem.name() \= "INVALID_ARGUMENTS" | pos("RXDECIMAL.LN", problem.message()) = 0 then failures = failures + 1
   end
   do
+    ignored = .decimal
     ignored = rxdecimal..ln(-1)
     say "FAIL: decimal contract ln negative did not signal"
     failures = failures + 1
@@ -234,6 +236,7 @@ test_domain_signals: procedure = .int
     if problem.name() \= "INVALID_ARGUMENTS" | pos("RXDECIMAL.LN", problem.message()) = 0 then failures = failures + 1
   end
   do
+    ignored = .decimal
     ignored = rxdecimal..exp("1E+2000" as .decimal)
     say "FAIL: decimal contract exp unsupported range did not signal"
     failures = failures + 1

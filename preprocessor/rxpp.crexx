@@ -318,9 +318,10 @@ RXPPPassTwo: procedure
   if aifblock.0=0 then say "+++ no Pre Source Expansion occurred"
   else do i=1 to aifblock.0
      if aifblock.i=0 then iterate
+     lnk = .int
      lnk=aifblock.i
      say right(i,4,'0')' 'left(strip(source.i),15)' linked to --> ' right(lnk,4,'0') ' ' strip(source.lnk)'  <+++ PASS2: IF/ENDIF linked; PASS3 decides emit or skip>'
-     do j=i+1 to lnk-1
+     do j=.int(i+1) to lnk-1
         say '? controlled by IF: 'right(j,4,'0')' 'strip(source.j)
      end
      say right(lnk,4,'0')' 'left(strip(source.lnk),15)' (block end)'
@@ -437,7 +438,7 @@ early_flag_pick_up: procedure=.int
      line = strip(substr(line, 3, length(line) - 4))
      already_wrapped = 1
   end
-  else already_wrapped = 0
+  else already_wrapped = .int(0)
 
   cflags = ' ' || subword(line, 2)
   call setvar 'cflags', cflags
@@ -1408,7 +1409,7 @@ CMD_for: procedure
   end
   stepx=qsplit(step,',')
   update=''
-  do i=1 to stepx.0
+  do i=.int(1) to stepx.0
      update=update||stepx.i';'
   end
 
@@ -1421,7 +1422,7 @@ CMD_for: procedure
   source[lino+4]='   if __first_'select_count'=1 then __first_'select_count'=0'
   source[lino+5]='   else do; 'update'; end'
   source[lino+6]='   if 'condc' then nop; else leave'
-  do i=1 to 6
+  do i=.int(1) to 6
      stype[nlino+i]=' '
   end
 return
@@ -1609,7 +1610,7 @@ newMacros:  procedure=.string
   tail_insert = 0
   source_len  = length(original_call)
 
-  do kk = 1 to out[0]
+  do kk = .int(1) to out[0]
      line = changestr("''", out[kk], "")
      testline = strip(line, 'L')
      if left(testline, 10) = '@.section@' then do
@@ -1625,16 +1626,18 @@ newMacros:  procedure=.string
      if left(testline, 7) = '@.tail@' then do
         tail_insert = tail_insert + 1
         if tail_insert = 1 then source[source[0] + 1] = '/* Appended by 'original_call' */'
+        p = .int
         p = pos('@.tail@', line)
         source[source[0] + 1] = substr(line, p + 7)
         if rxpp_srcmap_enabled() then source[source[0]] = rxpp_srcmap_span(1, source_len, source[source[0]])
         iterate
      end
   end
+  rc = .int
   rc= insert_source(linnum+1,out[0]-tail_insert+1)
   inew=linnum+1
   source_len=length(original_call)
-  do kk=1 to out[0]
+  do kk=.int(1) to out[0]
      if pos('@.tail@',out[kk])>0 then iterate
      if pos('@.section@',out[kk])>0 then iterate
      /*
@@ -1811,7 +1814,8 @@ replaceFixArg: Procedure=.string
        callargs.i=tso2func(callargs.i)
   end
 ## start matching macro definition parm list to calling parameters (keywords only)
-  do k=keypositional to wrds        ## run through the macroc header definition
+  do k=.int(keypositional) to wrds        ## run through the macroc header definition
+     aname = .string
      aname = translate(word(xargs, k),,'=')         ## aname is the keyword definition in the macro header
      adefault=word(aname,2)                        ## 2. word is the default value
      if adefault='' then adefault="''"             ## if not there, use empty string
@@ -1820,6 +1824,7 @@ replaceFixArg: Procedure=.string
      do j=1 to wrds                  ## find the appropriate keyword, sequence is free
         if fpos(aname'=',callargs.j,1)>0 then leave    ### +++++++++++ modify  ## use fpos function to search case-insensitive
      end
+     aval = .string
      aval=callargs.j                       ## identifies the call of the macro
      value_source_col=0
      if pos('=',aval)=0 then aval=adefault ## if keyword is not defined use the default in the macro def part
@@ -2124,7 +2129,7 @@ printmacs: procedure
   say macros_mname.0' substitution macros defined'
   say 'Scripted Macro List'
     say '-------------------------------------------------------'
-    do i=1 to scriptMacros[0]
+    do i=.int(1) to scriptMacros[0]
        say left(scriptMacros[i],35)
     end
     say scriptMacros[0]' scripted macros defined'
@@ -2307,6 +2312,7 @@ parsevar: Procedure=.int
  * Classify tokens in token_types
  * ----------------------------------------------------------------------
  */
+  j = .int
   j=0
   insert=.string[]
   do i=1 to tokenhi
@@ -2582,7 +2588,7 @@ normalisePath: procedure=.string
 
   if absolute then normalised = normalised || '/'
 
-  do i = 1 to norm[0]
+  do i = .int(1) to norm[0]
     if right(normalised, 1) \= '/' then normalised = normalised || '/'
     normalised = normalised || norm[i]
   end

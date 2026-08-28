@@ -251,6 +251,7 @@ RexxValue: class
     if (flags <has> RV_FLAG_INT) then do
       temp = int_value as .string
       string_value = temp
+      new_flags = .int
       new_flags = flags <set> RV_FLAG_STRING
       if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
@@ -259,6 +260,7 @@ RexxValue: class
     if (flags <has> RV_FLAG_FLOAT) then do
       temp = float_value as .string
       string_value = temp
+      new_flags = .int
       new_flags = flags <set> RV_FLAG_STRING
       if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
@@ -267,6 +269,7 @@ RexxValue: class
     if (flags <has> RV_FLAG_BINARY) then do
       temp = binary_value as .string
       string_value = temp
+      new_flags = .int
       new_flags = flags <set> RV_FLAG_STRING
       if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
@@ -382,16 +385,20 @@ RexxValue: class
       temp = text as .binary
     end
     else if (flags <has> RV_FLAG_INT) then do
+      text = .string
       text = int_value as .string
       string_value = text
+      new_flags = .int
       new_flags = flags <set> RV_FLAG_STRING
       if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
       temp = text as .binary
     end
     else if (flags <has> RV_FLAG_FLOAT) then do
+      text = .string
       text = float_value as .string
       string_value = text
+      new_flags = .int
       new_flags = flags <set> RV_FLAG_STRING
       if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
@@ -415,6 +422,7 @@ RexxValue: class
       cache_flags = new_flags
       return 1
     end
+    text = .string
     text = asString()
     return 1
 
@@ -535,6 +543,7 @@ RexxValue: class
     left_dec = "0" as .decimal
     right_dec = "0" as .decimal
     result = "0" as .decimal
+    quotient = .int
     quotient = 0
     numeric_digits = rexxvalue_numeric_digits()
     numeric_fuzz = rexxvalue_numeric_fuzz()

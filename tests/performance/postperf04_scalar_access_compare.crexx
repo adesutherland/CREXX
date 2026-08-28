@@ -28,24 +28,24 @@ int_direct_read_us = elapsedUs(started)
 int_box = .ScalarIntBox(7)
 int_accessor_sum = 0
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     int_accessor_sum = int_accessor_sum + int_box.read()
   end
 end
 int_accessor_read_us = elapsedUs(started)
 
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     int_direct_value = index
   end
 end
 int_direct_write_us = elapsedUs(started)
 
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     call int_box.write(index)
   end
 end
@@ -54,8 +54,8 @@ int_accessor_write_us = elapsedUs(started)
 float_direct_value = 0.5 as .float
 float_direct_sum = 0 as .float
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     float_direct_sum = float_direct_sum + float_direct_value
   end
 end
@@ -64,24 +64,24 @@ float_direct_read_us = elapsedUs(started)
 float_box = .ScalarFloatBox(0.5)
 float_accessor_sum = 0 as .float
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     float_accessor_sum = float_accessor_sum + float_box.read()
   end
 end
 float_accessor_read_us = elapsedUs(started)
 
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     float_direct_value = index as .float
   end
 end
 float_direct_write_us = elapsedUs(started)
 
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     call float_box.write(index as .float)
   end
 end
@@ -89,15 +89,15 @@ float_accessor_write_us = elapsedUs(started)
 
 i64_direct = .binary
 call binresize i64_direct, dimension * 8
-do index = 1 to dimension
+do index = .int(1) to dimension
   <at..i64>((index - 1) * 8) i64_direct = index
 end
 i64_probe = .PackedI64Probe(i64_direct)
 
 i64_direct_sum = 0
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     i64_direct_sum = i64_direct_sum + <at..i64>((index - 1) * 8) i64_direct
   end
 end
@@ -105,8 +105,8 @@ i64_direct_read_us = elapsedUs(started)
 
 i64_accessor_sum = 0
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     i64_accessor_sum = i64_accessor_sum + i64_probe.read(index)
   end
 end
@@ -115,8 +115,8 @@ i64_accessor_read_us = elapsedUs(started)
 i64_direct_write = .binary
 call binresize i64_direct_write, dimension * 8
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     <at..i64>((index - 1) * 8) i64_direct_write = index
   end
 end
@@ -126,8 +126,8 @@ i64_accessor_write = .binary
 call binresize i64_accessor_write, dimension * 8
 i64_write_probe = .PackedI64Probe(i64_accessor_write)
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     call i64_write_probe.write(index, index)
   end
 end
@@ -135,15 +135,15 @@ i64_accessor_write_us = elapsedUs(started)
 
 f32_direct = .binary
 call binresize f32_direct, dimension * 4
-do index = 1 to dimension
+do index = .int(1) to dimension
   <at..f32>((index - 1) * 4) f32_direct = 0.5
 end
 f32_probe = .PackedF32Probe(f32_direct)
 
 f32_direct_sum = 0 as .float
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     f32_direct_sum = f32_direct_sum + <at..f32>((index - 1) * 4) f32_direct
   end
 end
@@ -151,8 +151,8 @@ f32_direct_read_us = elapsedUs(started)
 
 f32_accessor_sum = 0 as .float
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     f32_accessor_sum = f32_accessor_sum + f32_probe.read(index)
   end
 end
@@ -161,8 +161,8 @@ f32_accessor_read_us = elapsedUs(started)
 f32_direct_write = .binary
 call binresize f32_direct_write, dimension * 4
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     <at..f32>((index - 1) * 4) f32_direct_write = index as .float
   end
 end
@@ -172,8 +172,8 @@ f32_accessor_write = .binary
 call binresize f32_accessor_write, dimension * 4
 f32_write_probe = .PackedF32Probe(f32_accessor_write)
 started = time("us")
-do repetition = 1 to iterations
-  do index = 1 to dimension
+do repetition = .int(1) to iterations
+  do index = .int(1) to dimension
     call f32_write_probe.write(index, index as .float)
   end
 end

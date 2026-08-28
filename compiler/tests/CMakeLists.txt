@@ -3883,6 +3883,7 @@ add_test(NAME cri18_scope_warning
                  -DCRI18_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/cri18_disjoint_scope_warning.crexx
                  -DASSIGN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/disjoint_assignment_warning.crexx
                  -DEXPLICIT_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/disjoint_explicit_intent.crexx
+                 -DLEXICAL_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/disjoint_lexical_paths.crexx
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/cri18_scope_warning.cmake)
 set_tests_properties(cri18_scope_warning PROPERTIES
         LABELS "compiler;diagnostics;scope;cri-18")

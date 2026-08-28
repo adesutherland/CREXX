@@ -117,36 +117,43 @@ on signal out_of_range
   caught = caught + 1
 end
 do
+  ignored = .binary
   ignored = binsetbyte(d,1,256)
 on signal out_of_range
   caught = caught + 1
 end
 do
+  ignored = .binary
   ignored = binsubstr(d,0)
 on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .binary
   ignored = binoverlay("ffff"x as .binary,d,4)
 on signal out_of_range
   caught = caught + 1
 end
 do
+  ignored = .binary
   ignored = bindelstr(d,0,1)
 on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .binary
   ignored = bindelstr(d,1,-1)
 on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .int
   ignored = binpos("00"x as .binary,d,0)
 on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .binary
   ignored = x2bin("zz")
 on signal invalid_arguments
   caught = caught + 1

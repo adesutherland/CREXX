@@ -64,6 +64,7 @@ errors = errors + check(1,caught,"qsplitsafe mismatch signal")
 
 caught = 0
 do
+  ignored = .string
   ignored = qextractpair('(',')','a(b',1,'X')
 on signal invalid_arguments
   caught = caught + 1
@@ -72,6 +73,7 @@ errors = errors + check(1,caught,"qextractpair unclosed signal")
 
 caught = 0
 do
+  ignored = .string
   ignored = qextractpair('(',')','a)b',1,'X')
 on signal invalid_arguments
   caught = caught + 1
@@ -80,6 +82,7 @@ errors = errors + check(1,caught,"qextractpair mismatched closer signal")
 
 caught = 0
 do
+  ignored = .string
   ignored = qremoveall('(',')','a(b)c','bad')
 on signal invalid_arguments
   caught = caught + 1
@@ -88,6 +91,7 @@ errors = errors + check(1,caught,"qremoveall mode signal")
 
 caught = 0
 do
+  ignored = .string
   ignored = qword("one 'two",1)
 on signal invalid_arguments
   caught = caught + 1
@@ -96,6 +100,7 @@ errors = errors + check(1,caught,"qword unmatched quote signal")
 
 caught = 0
 do
+  ignored = .string
   ignored = qsubword('one two',1,-1)
 on signal invalid_arguments
   caught = caught + 1

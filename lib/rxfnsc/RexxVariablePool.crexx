@@ -336,6 +336,7 @@ RexxVariablePool: class
     end
 
     if hasBinding(resolved) then do
+      slot = .int
       slot = slotFor(resolved)
       if kinds[slot] = RVP_BINDING_VALUE | kinds[slot] = RVP_BINDING_ALIAS_VALUE then
         return value(resolved)
@@ -345,11 +346,13 @@ RexxVariablePool: class
     derived_tail = substr(resolved, stem_end + 1)
     if \hasBinding(stem_name) then return .RexxValue(resolved)
 
+    slot = .int
     slot = slotFor(stem_name)
     if kinds[slot] = RVP_BINDING_STEM then do
       item_stem = stems[slot]
     end
     else if kinds[slot] = RVP_BINDING_ALIAS_STEM then do
+      alias = .rexxpoolalias
       alias = aliases[slot]
       item_stem = alias.stem()
     end
@@ -574,6 +577,7 @@ RexxVariablePool: class
       kinds[slot] = RVP_BINDING_DROPPED
       return
     end
+    slot = .int
     slot = createSlot(normalized)
     kinds[slot] = RVP_BINDING_DROPPED
     return

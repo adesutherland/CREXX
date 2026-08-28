@@ -208,6 +208,7 @@ live_count = 0
 live_beta = 0
 live_gamma = 0
 loop while live.hasNext()
+  tail = .string
   tail = live.next()
   val = live.value()
   live_count = live_count + 1

@@ -39,16 +39,19 @@ on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .int
   ignored = verify("a", "a", "X")
 on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .int
   ignored = verify("a", "a", "N", 0)
 on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .int
   ignored = verify("a", "a", "N", -1)
 on signal invalid_arguments
   caught = caught + 1

@@ -20,6 +20,7 @@ errors = errors + check(1,caught,"invalid word number signal")
 
 caught = 0
 do
+  ignored = .int
   ignored = qwordlength("one 'two",1)
 on signal invalid_arguments
   caught = caught + 1

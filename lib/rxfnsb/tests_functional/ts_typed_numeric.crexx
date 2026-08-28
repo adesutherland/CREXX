@@ -68,6 +68,7 @@ errors = errors + check_bool(caught = 1, "floatmin NaN signal")
 
 caught = 0
 do
+  ignored_float = .float
   ignored_float = floatmax(nan_value,1.0)
 on signal invalid_arguments
   caught = caught + 1
@@ -76,6 +77,7 @@ errors = errors + check_bool(caught = 1, "floatmax NaN signal")
 
 caught = 0
 do
+  ignored_int = .int
   ignored_int = floatsign(nan_value)
 on signal invalid_arguments
   caught = caught + 1
@@ -103,6 +105,7 @@ errors = errors + check_bool(caught = 1, "floattrunc negative fraction signal")
 
 caught = 0
 do
+  ignored_text = .string
   ignored_text = floattrunc(positive_infinity)
 on signal invalid_arguments
   caught = caught + 1
@@ -111,6 +114,7 @@ errors = errors + check_bool(caught = 1, "floattrunc infinity signal")
 
 caught = 0
 do
+  ignored_text = .string
   ignored_text = floatformat(nan_value)
 on signal invalid_arguments
   caught = caught + 1
@@ -119,6 +123,7 @@ errors = errors + check_bool(caught = 1, "floatformat NaN signal")
 
 caught = 0
 do
+  ignored_text = .string
   ignored_text = intformat(12,-1)
 on signal invalid_arguments
   caught = caught + 1
@@ -129,6 +134,7 @@ bad_number = "not-a-"
 bad_number = bad_number || "number"
 caught = 0
 do
+  ignored_int = .int
   ignored_int = intabs(bad_number)
 on signal conversion_error
   caught = caught + 1
@@ -137,6 +143,7 @@ errors = errors + check_bool(caught = 1, "integer conversion signal")
 
 caught = 0
 do
+  ignored_float = .float
   ignored_float = floatabs(bad_number)
 on signal conversion_error
   caught = caught + 1
@@ -145,6 +152,7 @@ errors = errors + check_bool(caught = 1, "float conversion signal")
 
 caught = 0
 do
+  ignored_text = .string
   ignored_text = floatformat(1.0,,bad_number)
 on signal conversion_error
   caught = caught + 1

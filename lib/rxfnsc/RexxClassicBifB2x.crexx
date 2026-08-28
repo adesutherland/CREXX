@@ -65,7 +65,7 @@ rexxclassicbif_b2x: procedure = .RexxValue
   group_size = bit_count // 4
   if group_size = 0 then group_size = 4
 
-  do i = 0 to binary_length - 1
+  do i = .int(0) to binary_length - 1
     assembler strchar codepoint,binary,i
     if codepoint = blank_character then iterate
     value = value * 2 + codepoint - zero_character

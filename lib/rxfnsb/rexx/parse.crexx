@@ -63,7 +63,7 @@ parse: procedure = .int
   end
   call parsestring_values source,token_count,token,token_type,variable,variable_content,template,token_value
 
-  if strip_option = 1 | case_option > 0 then do item = 1 to variable_content[0]
+  if strip_option = 1 | case_option > 0 then do item = .int(1) to variable_content[0]
     transformed = variable_content[item]
     if strip_option = 1 then transformed = _parse_strip_value(transformed)
     if case_option = 1 then do

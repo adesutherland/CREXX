@@ -33,16 +33,16 @@ call listitems ll1
 
 say "SWAP " swapitem(ll1,3,9)
 call listitems ll1
-do i=1 to ll1.0
+do i=.int(1) to ll1.0
    say "XPULL "i" "pull(ll1)
 end
 call listitems ll1
 
-do i=1 to 15
+do i=.int(1) to 15
    say 'Queue 'i' 'queue(ll1,"Line "i)
 end
 call listitems ll1
-do i=1 to ll1.0
+do i=.int(1) to ll1.0
    say "XPULLQ "i" "pullq(ll1)
 end
 call listitems ll1

@@ -20,7 +20,7 @@ end
 method_elapsed = time("us") - start
 
 start = time("us")
-do i = 1 to factory_iterations
+do i = .int(1) to factory_iterations
   target = .lookup24()
   checksum = checksum + target.value()
 end

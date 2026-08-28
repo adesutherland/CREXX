@@ -47,7 +47,9 @@ rexxclassic_datatype_test: procedure = .boolean
     return state = 1
   end
   if option = "W" then do
+    state = .int
     state = 0
+    normalized = .string
     normalized = rexxclassic_datatype_normalize_number(value,config,state)
     if state <> 1 then return 0
     return _normalized_whole(normalized)
@@ -350,6 +352,7 @@ _normalize_text_number: procedure = .string
   end
 
   normalized = ""
+  index = .int
   index = start
   assembler strchar codepoint,text,index
   if codepoint = 43 | codepoint = 45 then do
@@ -407,11 +410,13 @@ _normalize_text_number: procedure = .string
   exponent_digits = 0
   do while index < finish
     assembler strchar codepoint,text,index
+    digit = .int
     digit = _text_digit(codepoint,digits)
     if digit < 0 then do
       state = 0
       return ""
     end
+    output = .int
     output = digit + 48
     assembler appendchar normalized,output
     exponent_digits = exponent_digits + 1

@@ -41,6 +41,7 @@ integrationservice: class implements .httpservice .taskwork
       return .httpresponse.text(200, request.verb() || " " || request.target(), headers)
     end
     if request.verb() = "PUT" & request.target() = "/binary" then do
+      headers = .httpheaders
       headers = .httpheaders.media_type("application/octet-stream").add("X-Service", "integration")
       return .httpresponse.binary(201, request.body_bytes(), headers)
     end

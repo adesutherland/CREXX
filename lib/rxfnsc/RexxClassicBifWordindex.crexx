@@ -75,8 +75,11 @@ rexxclassicbif_wordindex: procedure = .RexxValue
   assembler strlen string_length,string
   if string_length = 0 then return .RexxValue("0")
 
+  scan = .int
   scan = 0
+  current_word = .int
   current_word = 0
+  word_start = .int
   word_start = 0
   do while scan < string_length
     word_start = rexxclassic_find_text_nonblank(string, scan, text_other_blanks)

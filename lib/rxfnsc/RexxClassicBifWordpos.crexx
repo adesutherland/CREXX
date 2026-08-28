@@ -137,12 +137,16 @@ rexxclassicbif_wordpos: procedure = .RexxValue
   assembler strlen search_length,search
   if string_length = 0 | search_length = 0 then return .RexxValue("0")
 
+  search_first = .int
   search_first = 0
   search_first = rexxclassic_find_text_nonblank(search, search_first, text_other_blanks)
   if search_first < 0 then return .RexxValue("0")
 
+  scan = .int
   scan = 0
+  candidate_start = .int
   candidate_start = 0
+  candidate_word = .int
   candidate_word = 0
   do while candidate_word < start
     candidate_start = rexxclassic_find_text_nonblank(string, scan, text_other_blanks)
@@ -153,14 +157,23 @@ rexxclassicbif_wordpos: procedure = .RexxValue
     if scan < 0 then return .RexxValue("0")
   end
 
+  search_word_start = .int
   search_word_start = 0
+  search_word_end = .int
   search_word_end = 0
+  search_word_length = .int
   search_word_length = 0
+  source_word_start = .int
   source_word_start = 0
+  source_word_end = .int
   source_word_end = 0
+  source_word_length = .int
   source_word_length = 0
+  next_search_word = .int
   next_search_word = 0
+  next_source_word = .int
   next_source_word = 0
+  candidate_end = .int
   candidate_end = 0
   char_offset = 0
   search_index = 0
@@ -171,6 +184,7 @@ rexxclassicbif_wordpos: procedure = .RexxValue
   do while candidate_start >= 0
     search_word_start = search_first
     source_word_start = candidate_start
+    matched = .int
     matched = 1
 
     do while matched

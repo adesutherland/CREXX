@@ -425,6 +425,7 @@ CDRedBlackTree: class
         end
       end
       else do
+        uncle = .int
         uncle = left_[grandparent]
         if isRed(uncle) then do
           color_[parent] = 0
@@ -591,6 +592,7 @@ CDRedBlackTree: class
         end
       end
       else do
+        sibling = .int
         sibling = left_[current_parent]
         if isRed(sibling) then do
           color_[sibling] = 0
@@ -663,8 +665,10 @@ CDDetector: class
 
     remove_count = 0
     remove_callsigns = .int[]
+    state_node = .int
     state_node = state_.first()
     do while state_node <> 0
+      callsign = .int
       callsign = state_.keyX(state_node) as .int
       if seen_callsigns_.find(callsign, 0.0) = 0 then do
         remove_count = remove_count + 1
@@ -672,7 +676,7 @@ CDDetector: class
       end
       state_node = state_.successor(state_node)
     end
-    do index = 1 to remove_count
+    do index = .int(1) to remove_count
       removed_value = state_.remove(remove_callsigns[index], 0.0)
     end
 
@@ -785,6 +789,7 @@ CDDetector: class
       low_y = (voxel_y - radius - y0) / yv
       high_y = (voxel_y + 2.0 + radius - y0) / yv
       if yv < 0.0 then do
+        swap = .float
         swap = low_y
         low_y = high_y
         high_y = swap

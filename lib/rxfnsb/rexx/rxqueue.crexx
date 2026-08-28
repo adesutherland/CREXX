@@ -383,6 +383,7 @@ rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _q
     /* it is the working reference used by queue operations.  */
     /*--------------------------------------------------------*/
     if operation = "SETX" then do
+        slot = .int
         slot = _queue_find(name)
         if slot = 0 then do
            _queue_count = _queue_count + 1
@@ -406,6 +407,7 @@ rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _q
     /* SESSION becomes current before the arrays are compacted.*/
     /*--------------------------------------------------------*/
     if operation = "DELETE" then do
+        slot = .int
         slot = _queue_find(name)
 
         if slot = 0 | name = "SESSION" then return "4"
@@ -449,7 +451,7 @@ rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _q
     if operation = "LIST" then do
         result = ""
 
-        do i = 1 to _queue_count
+        do i = .int(1) to _queue_count
             if i > 1 then result = result || " "
             result = result || _queue_names[i]
         end
@@ -465,6 +467,7 @@ rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _q
     /* Without a name, INFO describes the current queue.      */
     /*--------------------------------------------------------*/
     if operation = "INFO" then do
+        slot = .int
         if name = "" then
             slot = _queue_current
         else
@@ -491,6 +494,7 @@ rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _q
     /* Remove all entries from the specified/current queue.   */
     /*--------------------------------------------------------*/
     if operation = "CLEAR" then do
+        slot = .int
         if name = "" then
             slot = _queue_current
         else
@@ -498,6 +502,7 @@ rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _q
 
         if slot = 0 then return "4"
 
+        active_queue = .rexxqueue
         active_queue = _queue_objects[slot]
         call active_queue.clear()
 
@@ -517,9 +522,11 @@ rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _q
     if operation = "EXPORT" then do
         if name = "" | path = "" then return "4"
 
+        slot = .int
         slot = _queue_find(name)
         if slot = 0 then return "4"
 
+        active_queue = .rexxqueue
         if slot = _queue_current then
             active_queue = _queue_active
         else
@@ -545,9 +552,11 @@ rxqueue: procedure = .string expose _queue_names _queue_objects _queue_active _q
         if values[0] = 1 & values[1] = "-8 OPEN ERROR" then
             return "4"
 
+        replacement = .rexxqueue
         replacement = .RexxQueue()
         call replacement.replace(values)
 
+        slot = .int
         slot = _queue_find(name)
 
         if slot = 0 then do

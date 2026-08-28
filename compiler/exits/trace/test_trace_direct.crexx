@@ -396,6 +396,7 @@ test_errors: procedure = .int
   result = tx.process(tokens)
   if check_equal("trace invalid result-prefix status", "ERROR", result.get_status()) = 0 then failures = failures + 1
   if result.get_diagnostic_count() > 0 then do
+    diagnostic = .rxcp..exitdiagnostic
     diagnostic = result.get_diagnostic(1)
     if check_equal("trace invalid result-prefix code", "TRACE_UNKNOWN_OPTION", diagnostic.get_code()) = 0 then failures = failures + 1
   end

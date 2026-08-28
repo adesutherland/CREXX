@@ -176,7 +176,7 @@ NBodySystem: class
       end
     end
 
-    do i = 1 to body_count
+    do i = .int(1) to body_count
       body_ref = reference bodies[i]
       body = dereference body_ref
       call body.setX(body.getX() + dt * body.getVX())

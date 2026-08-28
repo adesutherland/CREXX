@@ -33,6 +33,7 @@ on signal invalid_arguments
   invalid_caught = invalid_caught + 1
 end
 do
+  ignored = .int
   ignored = arrayfind("a", values, 1, 2)
 on signal invalid_arguments
   invalid_caught = invalid_caught + 1

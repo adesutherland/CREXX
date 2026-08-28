@@ -141,6 +141,7 @@ main: procedure = .int
     samples = .int[]
     total_ns = 0
     do run = 1 to runs
+      elapsed_ns = .int
       elapsed_ns = run_once(command, expected_provenance)
       if elapsed_ns < 0 then return 1
       samples[run] = elapsed_ns
@@ -270,12 +271,12 @@ run_once: procedure = .int
     end
     say "stdout:"
     if child_output[0] = 0 then say "  <empty>"
-    else do i = 1 to child_output[0]
+    else do i = .int(1) to child_output[0]
       say "  " || child_output[i]
     end
     say "stderr:"
     if child_error[0] = 0 then say "  <empty>"
-    else do i = 1 to child_error[0]
+    else do i = .int(1) to child_error[0]
       say "  " || child_error[i]
     end
     return -1
@@ -367,7 +368,7 @@ emit_csv: procedure = .int
     return 0
   end
 
-  do i = 1 to csv_lines[0]
+  do i = .int(1) to csv_lines[0]
     write_rc = lineout(output_path, csv_lines[i])
     if write_rc <> 0 then do
       call lineout output_path

@@ -121,10 +121,10 @@ churn = .StringTreeMap()
 do i = 1 to 40
   rc = churn.put(right("000" || i, 3), "v" || i)
 end
-do i = 1 to 40 by 2
+do i = .int(1) to 40 by 2
   rc = churn.remove(right("000" || i, 3))
 end
-do i = 41 to 60
+do i = .int(41) to 60
   rc = churn.put(right("000" || i, 3), "v" || i)
 end
 failures = failures + check_int("churn size", churn.size(), 40)

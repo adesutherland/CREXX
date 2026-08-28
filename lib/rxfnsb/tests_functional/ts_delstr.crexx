@@ -23,6 +23,7 @@ on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = delstr(source, 2, -1)
 on signal invalid_arguments
   caught = caught + 1

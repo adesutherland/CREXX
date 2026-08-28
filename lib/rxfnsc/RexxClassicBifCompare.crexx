@@ -66,11 +66,11 @@ rexxclassicbif_compare: procedure = .RexxValue
       assembler getbyte right_byte,right_bytes,i
       if left_byte <> right_byte then return .RexxValue((i + 1) || "")
     end
-    if left_length > right_length then do i = common_length to left_length - 1
+    if left_length > right_length then do i = .int(common_length) to left_length - 1
       assembler getbyte left_byte,left_bytes,i
       if left_byte <> pad_byte then return .RexxValue((i + 1) || "")
     end
-    else if right_length > left_length then do i = common_length to right_length - 1
+    else if right_length > left_length then do i = .int(common_length) to right_length - 1
       assembler getbyte right_byte,right_bytes,i
       if pad_byte <> right_byte then return .RexxValue((i + 1) || "")
     end
@@ -87,6 +87,7 @@ rexxclassicbif_compare: procedure = .RexxValue
   pad_character = .int
   left_character = .int
   right_character = .int
+  pad_index = .int
   pad_index = 0
   i = .int
 

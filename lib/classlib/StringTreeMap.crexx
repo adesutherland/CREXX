@@ -216,17 +216,24 @@ free_	    = .int[]
         subtree = rotate_x
       end
       else if balance < -1 then do
+        child = .int
         child = right_[subtree]
+        child_left_height = .int
         child_left_height = 0
+        child_right_height = .int
         child_right_height = 0
+        grandchild = .int
         grandchild = left_[child]
         if grandchild <> 0 then child_left_height = height_[grandchild]
         grandchild = right_[child]
         if grandchild <> 0 then child_right_height = height_[grandchild]
 
         if child_right_height < child_left_height then do
+          rotate_y = .int
           rotate_y = child
+          rotate_x = .int
           rotate_x = left_[rotate_y]
+          transfer = .int
           transfer = right_[rotate_x]
           right_[rotate_x] = rotate_y
           left_[rotate_y] = transfer
@@ -252,8 +259,11 @@ free_	    = .int[]
           right_[subtree] = rotate_x
         end
 
+        rotate_x = .int
         rotate_x = subtree
+        rotate_y = .int
         rotate_y = right_[rotate_x]
+        transfer = .int
         transfer = left_[rotate_y]
         left_[rotate_y] = rotate_x
         right_[rotate_x] = transfer
@@ -366,6 +376,7 @@ free_	    = .int[]
       removed = successor
     end
     else do
+      replacement = .int
       replacement = left_[node]
       if replacement = 0 then replacement = right_[node]
       if depth = 0 then root_ = replacement
@@ -463,17 +474,24 @@ free_	    = .int[]
         subtree = rotate_x
       end
       else if balance < -1 then do
+        child = .int
         child = right_[subtree]
+        child_left_height = .int
         child_left_height = 0
+        child_right_height = .int
         child_right_height = 0
+        grandchild = .int
         grandchild = left_[child]
         if grandchild <> 0 then child_left_height = height_[grandchild]
         grandchild = right_[child]
         if grandchild <> 0 then child_right_height = height_[grandchild]
 
         if child_right_height < child_left_height then do
+          rotate_y = .int
           rotate_y = child
+          rotate_x = .int
           rotate_x = left_[rotate_y]
+          transfer = .int
           transfer = right_[rotate_x]
           right_[rotate_x] = rotate_y
           left_[rotate_y] = transfer
@@ -499,8 +517,11 @@ free_	    = .int[]
           right_[subtree] = rotate_x
         end
 
+        rotate_x = .int
         rotate_x = subtree
+        rotate_y = .int
         rotate_y = right_[rotate_x]
+        transfer = .int
         transfer = left_[rotate_y]
         left_[rotate_y] = rotate_x
         right_[rotate_x] = transfer
@@ -528,6 +549,7 @@ free_	    = .int[]
 
       if level = 1 then root_ = subtree
       else do
+        parent = .int
         parent = path[level - 1]
         if direction[level - 1] < 0 then left_[parent] = subtree
         else right_[parent] = subtree

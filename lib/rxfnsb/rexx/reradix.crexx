@@ -83,7 +83,7 @@ reradix: procedure = .string
 
   /* Preserve four binary digits for every supplied hexadecimal digit. */
   if FromRadix = 16 & ToRadix = 2 then do
-    do input_index = 1 to subject_length
+    do input_index = .int(1) to subject_length
       digit = input_digits[input_index]
       bit_value = 8
       do 4
@@ -103,7 +103,7 @@ reradix: procedure = .string
   output_digits = .int[]
   output_count = 1
   output_digits[1] = 0
-  do input_index = 1 to subject_length
+  do input_index = .int(1) to subject_length
     carry = input_digits[input_index]
     do output_index = 1 to output_count
       combined = output_digits[output_index] * FromRadix + carry
@@ -117,7 +117,7 @@ reradix: procedure = .string
     end
   end
 
-  do output_index = output_count to 1 by -1
+  do output_index = .int(output_count) to 1 by -1
     digit = output_digits[output_index]
     assembler strchar codepoint,table,digit
     assembler appendchar result,codepoint

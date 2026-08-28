@@ -323,7 +323,9 @@ cRexx Level B introduces block-level scoping for certain control structures. It 
   compiler reports `#NOT_IN_SAME_SCOPE` because it commonly indicates an
   accidental attempt to use the earlier block-local. An explicit declaration
   such as `x = .int` makes the new binding intentional and suppresses this
-  warning.
+  warning. This check is lexical, not path-sensitive: an early `RETURN`,
+  mutually exclusive branches, or other control-flow fact does not make an
+  implicit same-named binding unambiguous.
 
 This difference in behavior between single-instruction branches and `DO` blocks is an intentional architectural design choice in Level B to balance REXX compatibility with modern structured scoping.
 
@@ -361,7 +363,7 @@ This difference in behavior between single-instruction branches and `DO` blocks 
     do i = 1 to 3   /* reuses outer i */
       /* ... */
     end
-    /* i is 100 here (outer one modified) */
+    /* i is 4 here (the reused outer control variable is one past the limit) */
 
     do j = 1 to 3   /* creates loop-local j */
       /* ... */
@@ -371,7 +373,7 @@ This difference in behavior between single-instruction branches and `DO` blocks 
     do i = .int(1) to 3 /* explicit shadowing loop-local */
       /* ... */
     end
-    /* i is still 100 here (outer one wasn't modified) */
+    /* i is still 4 here (the explicit loop-local did not modify it) */
 ```
 
 Note: This syntax candy `do i = .int(1) to 3` desugars into a wrapped block `do; i = .int; do i = 1 to 3; ...; end; end`.

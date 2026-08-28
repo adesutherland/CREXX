@@ -466,7 +466,10 @@ Recent observations from the RexxScript evaluator refactor:
   later in the outer method. Declare it before the block when the value is read
   later. A later implicit assignment or taken-constant read with the same name
   remains legal, but receives `#NOT_IN_SAME_SCOPE`; an explicit declaration of
-  the separate later variable suppresses that warning.
+  the separate later variable suppresses that warning. The warning is lexical
+  and deliberately path-independent, so an early `return` or mutually
+  exclusive branch does not suppress it; use an explicit declaration when the
+  separate binding is intentional.
 - Passing an object to a helper after a mutating method call, or passing a
   mutated-object method call inline as an argument, may expose stale state in
   some Level B paths. Snapshot state inside the owning method when correctness

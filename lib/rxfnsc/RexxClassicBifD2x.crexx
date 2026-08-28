@@ -121,7 +121,7 @@ rexxclassic_decimal_to_hex: procedure = .string
 
   if negative then do
     carry = 1
-    do i = 1 to hex_count
+    do i = .int(1) to hex_count
       digit = 15 - hex_digits[i] + carry
       if digit >= 16 then do
         digit = digit - 16
@@ -132,7 +132,7 @@ rexxclassic_decimal_to_hex: procedure = .string
     end
   end
 
-  do i = hex_count to 1 by -1
+  do i = .int(hex_count) to 1 by -1
     digit = hex_digits[i]
     assembler strchar codepoint,table,digit
     assembler appendchar result,codepoint

@@ -94,7 +94,7 @@ BounceBenchmark: class
 
     bounces = 0
     do step = 1 to 50
-      do i = 1 to balls[0]
+      do i = .int(1) to balls[0]
         ball_ref = reference balls[i]
         ball = dereference ball_ref
         if ball.bounce() then bounces = bounces + 1

@@ -17,6 +17,7 @@ errors = errors + check(caught = 1 & unchanged(values), "offset")
 
 caught = 0
 do
+  ignored = .int
   ignored = arraysort(values, 1, "SIDEWAYS")
 on signal invalid_arguments
   caught = caught + 1
@@ -25,6 +26,7 @@ errors = errors + check(caught = 1 & unchanged(values), "order")
 
 caught = 0
 do
+  ignored = .int
   ignored = arraysort(values, 1, "ASC", 2)
 on signal invalid_arguments
   caught = caught + 1

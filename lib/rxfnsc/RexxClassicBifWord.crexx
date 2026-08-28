@@ -82,9 +82,13 @@ rexxclassicbif_word: procedure = .RexxValue
   assembler strlen string_length,string
   if string_length = 0 then return .RexxValue("")
 
+  scan = .int
   scan = 0
+  current_word = .int
   current_word = 0
+  word_start = .int
   word_start = 0
+  word_end = .int
   word_end = 0
   word_length = 0
   result = ""

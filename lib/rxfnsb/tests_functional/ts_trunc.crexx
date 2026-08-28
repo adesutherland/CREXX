@@ -34,6 +34,7 @@ invalid = "not-a-number"
 if test_args[0] = 1 then invalid = test_args[1]
 caught = 0
 do
+  ignored = .string
   ignored = trunc(invalid)
 on signal conversion_error
   caught = caught + 1

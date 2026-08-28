@@ -102,8 +102,11 @@ rexxclassicbif_subword: procedure = .RexxValue
   assembler strlen string_length,string
   if string_length = 0 then return .RexxValue("")
 
+  scan = .int
   scan = 0
+  current_word = .int
   current_word = 0
+  selection_start = .int
   selection_start = 0
   do while scan < string_length
     selection_start = rexxclassic_find_text_nonblank(string, scan, text_other_blanks)
@@ -114,10 +117,14 @@ rexxclassicbif_subword: procedure = .RexxValue
     if scan < 0 then return .RexxValue("")
   end
 
+  selection_end = .int
   selection_end = selection_start
+  selected = .int
   selected = 0
   scan = selection_start
+  word_end = .int
   word_end = 0
+  next_word = .int
   next_word = 0
   do while \count_supplied | selected < wordcount
     word_end = rexxclassic_find_text_blank(string, scan, text_other_blanks)

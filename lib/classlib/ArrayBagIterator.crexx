@@ -73,6 +73,7 @@ ArrayBagIterator: class
     bag = dereference bag_ref_
     if position_ > bag.size() then return ""
 
+    value = .string
     value = bag.at(position_)
     position_ = position_ + 1
     return value

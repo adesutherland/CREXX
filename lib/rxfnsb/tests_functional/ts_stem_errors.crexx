@@ -16,6 +16,7 @@ errors = errors + check(caught = 1 & item.get("A") == "1", "key")
 
 caught = 0
 do
+  ignored = .string
   ignored = item.value(2)
 on signal invalid_arguments
   caught = caught + 1
@@ -24,6 +25,7 @@ errors = errors + check(caught = 1 & item.get("A") == "1", "value")
 
 caught = 0
 do
+  ignored = .string
   ignored = item.valueAt(-1)
 on signal invalid_arguments
   caught = caught + 1
@@ -32,6 +34,7 @@ errors = errors + check(caught = 1 & item.get("A") == "1", "valueAt")
 
 caught = 0
 do
+  ignored = .stemiterator
   ignored = .stemIterator(reference item, 2)
 on signal invalid_arguments
   caught = caught + 1

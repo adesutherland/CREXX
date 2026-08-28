@@ -163,96 +163,115 @@ test_signals: procedure = .int
     caught = caught + 1
   end
   do
+    ignored = .int
     ignored = .rexx("102").b2d()
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("abc").delstr(0)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("abc").delstr(1, -1)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("abc").insert("x", -1)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("abc").left(4, "")
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("abc").overlay("x", 0)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .int
     ignored = .rexx("abc").pos("a", 0)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .int
     ignored = .rexx("abc").lastpos("a", 0)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("abc").right(4, "xy")
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("abc").strip(, "")
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("abc").substr(0)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("abc").substr(1, -1)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("not-a-number").abs()
   on signal conversion_error
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("not-a-number").sign()
   on signal conversion_error
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("not-a-number").trunc()
   on signal conversion_error
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("123").format(2)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("1").trunc(-1)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .rexx..rexx
     ignored = .rexx("1G").x2b()
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .int
     ignored = .rexx("81").x2d(-1)
   on signal invalid_arguments
     caught = caught + 1

@@ -63,6 +63,7 @@ read_request: procedure = .string
   wanted = content_length(left(request, start - 1))
   if wanted < 0 then return ""
   do while binlength(substr(request, start) as .binary) < wanted
+    chunk = .string
     chunk = socketrecv(socket, 4096)
     if length(chunk) = 0 then return ""
     request = request || chunk

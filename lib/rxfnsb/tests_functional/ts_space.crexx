@@ -40,11 +40,13 @@ on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = space("", 0, "")
 on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = space("a b", 1, "xy")
 on signal invalid_arguments
   caught = caught + 1

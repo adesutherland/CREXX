@@ -63,7 +63,7 @@ arrayfind: procedure = .int
     folded_needle = ""
     folded_candidate = ""
     assembler strupper folded_needle,needle
-    do index = from to high
+    do index = .int(from) to high
       candidate = array[index]
       assembler strupper folded_candidate,candidate
       found_position = 1

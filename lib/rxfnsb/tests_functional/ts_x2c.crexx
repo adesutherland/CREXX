@@ -30,21 +30,25 @@ on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = x2c("A ")
 on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = x2c("1 0")
 on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = x2c("0G")
 on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = x2c("0" || "09"x || "0")
 on signal invalid_arguments
   caught = caught + 1

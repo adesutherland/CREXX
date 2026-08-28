@@ -28,6 +28,7 @@ end
 
 if socketconnecttls(sock, host, port) <> 0 then do
   say "socketconnecttls failed:" socketerror(sock)
+  drop_rc = .int
   drop_rc = socketclose(sock)
   exit 1
 end

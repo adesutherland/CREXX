@@ -229,6 +229,7 @@ scan_comment: procedure=.int
 
   /* Block comment handling. */
   if two = "/" || "*" then do
+     start = .int
      start = i
      i = i + 2
 

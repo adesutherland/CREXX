@@ -82,16 +82,19 @@ test_invalid_dates: procedure = .int
     caught = caught + 1
   end
   do
+    ignored = .int
     ignored = _jdn(31,4,2024)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .int
     ignored = _jdn(1,13,2024)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .int
     ignored = _jdn(1,1,0)
   on signal invalid_arguments
     caught = caught + 1

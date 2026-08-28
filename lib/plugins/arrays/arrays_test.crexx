@@ -29,7 +29,7 @@ call list_array array,imax-10,imax
 
 ## Step 3 Sort Array ascending order, sort criteria is column 9
 j=imax
-do i=1 to imax
+do i=.int(1) to imax
    array.i = 'X'right(j,8,'0')
    j=j-1
 end
@@ -89,11 +89,11 @@ call list_array newarray,imax-10,imax
 imax=100
 xarray.1=''
 marray.1=''
-do i=1 to imax
+do i=.int(1) to imax
    xarray.i  = 'Record 'right(i*2,8,'0')
 end
 j=1
-do i=1 to imax
+do i=.int(1) to imax
    marray.i = 'Record 'right(j,8,'0')'X'
    j=j+2
 end

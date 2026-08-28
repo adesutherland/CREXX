@@ -912,6 +912,7 @@ httpclient: class implements ._httpclient_contract
       colon = lastpos(":", authority)
       call _http_failure_if colon > 0 & pos(":", authority) <> colon, "HTTP IPv6 origins must use bracketed authority syntax"
       if colon > 0 then do
+        port_text = .string
         port_text = substr(authority, colon + 1)
         call _http_failure_if datatype(port_text, "W") = 0, "HTTP origin port is invalid"
         _port = port_text
@@ -1849,6 +1850,7 @@ httpconnectionowner: class implements .taskwork
           return response
         end
         transfer_encoding = translate(http_header_value(response_headers, "Transfer-Encoding"))
+        content_length = .int
         content_length = http_content_length(response_headers)
         received_body = binlength(binsubstr(response, body_start))
         if pos("CHUNKED", transfer_encoding) > 0 | (content_length >= 0 & received_body < content_length) then do

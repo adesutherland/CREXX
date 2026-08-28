@@ -58,7 +58,7 @@ arrayindexof: procedure=.int
     folded_value = ""
     folded_candidate = ""
     assembler strupper folded_value,value
-    do i = from to high
+    do i = .int(from) to high
       candidate = array[i]
       assembler strupper folded_candidate,candidate
       if folded_candidate == folded_value then return i

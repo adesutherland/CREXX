@@ -29,6 +29,7 @@ on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .int
   ignored = compare("a", "b", "xy")
 on signal invalid_arguments
   caught = caught + 1

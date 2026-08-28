@@ -26,11 +26,13 @@ on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = center("abc", 5, "")
 on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = center("abc", 5, "xy")
 on signal invalid_arguments
   caught = caught + 1

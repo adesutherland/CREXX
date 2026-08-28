@@ -108,6 +108,7 @@ rag_http_server: class implements .taskwork
         seen = seen + 1
       end
       else if pos("POST /v1/embeddings HTTP/1.1", request) > 0 then do
+        valid = .boolean
         valid = pos('"model":"embed-test"', request) > 0 & ,
                 pos('"input":"hello"', request) > 0 & ,
                 pos('"encoding_format":"float"', request) > 0 & ,
@@ -127,6 +128,7 @@ rag_http_server: class implements .taskwork
       if socketsendb(client, response_body) <> binlength(response_body) then return .channelvalue.integer_value(-80 - request_index)
       drop_rc = socketclose(client)
     end
+    drop_rc = .int
     drop_rc = socketclose(server)
     return .channelvalue.integer_value(seen)
 

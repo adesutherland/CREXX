@@ -216,6 +216,7 @@ current_ = .int
       return setAddress(current_ + offset)
     end
     if left(pos, 1) = "-" then do
+      offset = .string
       offset = substr(pos, 2)
       return setAddress(current_ - offset)
     end

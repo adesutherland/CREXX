@@ -35,26 +35,31 @@ on signal invalid_arguments
   invalid_caught = invalid_caught + 1
 end
 do
+  ignored = .int
   ignored = x2d(" A")
 on signal invalid_arguments
   invalid_caught = invalid_caught + 1
 end
 do
+  ignored = .int
   ignored = x2d("A ")
 on signal invalid_arguments
   invalid_caught = invalid_caught + 1
 end
 do
+  ignored = .int
   ignored = x2d("1 0")
 on signal invalid_arguments
   invalid_caught = invalid_caught + 1
 end
 do
+  ignored = .int
   ignored = x2d("0" || "09"x || "0")
 on signal invalid_arguments
   invalid_caught = invalid_caught + 1
 end
 do
+  ignored = .int
   ignored = x2d("1", -1)
 on signal invalid_arguments
   invalid_caught = invalid_caught + 1
@@ -63,16 +68,19 @@ errors = errors + check(6, invalid_caught, "invalid text and negative length sig
 
 overflow_caught = 0
 do
+  ignored = .int
   ignored = x2d("8000000000000000")
 on signal overflow_underflow
   overflow_caught = overflow_caught + 1
 end
 do
+  ignored = .int
   ignored = x2d("08000000000000000", 17)
 on signal overflow_underflow
   overflow_caught = overflow_caught + 1
 end
 do
+  ignored = .int
   ignored = x2d("F7FFFFFFFFFFFFFFF", 17)
 on signal overflow_underflow
   overflow_caught = overflow_caught + 1

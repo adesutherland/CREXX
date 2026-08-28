@@ -85,12 +85,14 @@ rexxclassicbif_overlay: procedure = .RexxValue
     if overlay_length > 0 then do
       copy_length = overlay_length
       if new_length < copy_length then copy_length = new_length
+      segment_bytes = .binary
       segment_bytes = rexxclassic_byte_slice_pad(new_bytes,0,copy_length,overlay_length,pad_byte)
       assembler bappend result_bytes,segment_bytes
     end
     tail_start = before + overlay_length
     if tail_start < target_length then do
       tail_length = target_length - tail_start
+      segment_bytes = .binary
       segment_bytes = rexxclassic_byte_slice(target_bytes,tail_start,tail_length)
       assembler bappend result_bytes,segment_bytes
     end
@@ -105,6 +107,7 @@ rexxclassicbif_overlay: procedure = .RexxValue
   new_length = .int
   target_length = .int
   pad_character = .int
+  pad_index = .int
   pad_index = 0
   before = .int
   padding_needed = .int

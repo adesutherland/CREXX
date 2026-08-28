@@ -154,18 +154,24 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
       return result
     end
     if _driver = "ANTHROPIC" then do
+      client = .anthropic
       client = .anthropic(_model, "demo-key")
+      result = .string
       result = client.buildBody(prompt)
       call client.close()
       return result
     end
     if _driver = "GEMINI" then do
+      client = .gemini
       client = .gemini(_model, "demo-key")
+      result = .string
       result = client.buildBody(prompt)
       call client.close()
       return result
     end
+    client = .llm
     client = .llm(_model)
+    result = .string
     result = client.buildBody(prompt)
     call client.close()
     return result
@@ -181,18 +187,24 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
       return result
     end
     if _driver = "ANTHROPIC" then do
+      client = .anthropic
       client = .anthropic(_model, "demo-key")
+      result = .string
       result = llm_mask_request(client.buildRequest(prompt))
       call client.close()
       return result
     end
     if _driver = "GEMINI" then do
+      client = .gemini
       client = .gemini(_model, "demo-key")
+      result = .string
       result = llm_mask_request(client.buildRequest(prompt))
       call client.close()
       return result
     end
+    client = .llm
     client = .llm(_model)
+    result = .string
     result = client.buildRequest(prompt)
     call client.close()
     return result
@@ -209,6 +221,7 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
       return result
     end
     if _driver = "ANTHROPIC" then do
+      client = .anthropic
       client = .anthropic(_model, "demo-key")
       result = client.extractText(response_json)
       _status = client.status()
@@ -217,6 +230,7 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
       return result
     end
     if _driver = "GEMINI" then do
+      client = .gemini
       client = .gemini(_model, "demo-key")
       result = client.extractText(response_json)
       _status = client.status()
@@ -224,6 +238,7 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
       call client.close()
       return result
     end
+    client = .llm
     client = .llm(_model)
     result = client.extractText(response_json)
     _status = client.status()
@@ -251,6 +266,7 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
       return result
     end
     if _driver = "ANTHROPIC" then do
+      client = .anthropic
       client = .anthropic(_model)
       response_json = client.generateJson(prompt)
       if client.status() <> 0 then do
@@ -266,6 +282,7 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
       return result
     end
     if _driver = "GEMINI" then do
+      client = .gemini
       client = .gemini(_model)
       response_json = client.generateJson(prompt)
       if client.status() <> 0 then do
@@ -280,6 +297,7 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
       call client.close()
       return result
     end
+    client = .llm
     client = .llm(_model)
     response_json = client.generateJson(prompt)
     if client.status() <> 0 then do

@@ -117,6 +117,7 @@ policy_http_server: class implements .taskwork
     end
 
     if _scenario = 2 then do
+      drop_rc = .int
       drop_rc = socketclose(client)
       client = socketaccept(server)
       if client <= 0 then return .channelvalue.integer_value(-21)
@@ -130,6 +131,7 @@ policy_http_server: class implements .taskwork
     end
 
     if _scenario = 3 then do
+      drop_rc = .int
       drop_rc = socketclose(client)
       drop_rc = socketclose(server)
       return .channelvalue.integer_value(301)
@@ -138,22 +140,27 @@ policy_http_server: class implements .taskwork
     if _scenario = 4 then do
       call sockettimeout client, 250
       ignored_text = socketrecv(client, 1)
+      drop_rc = .int
       drop_rc = socketclose(client)
       drop_rc = socketclose(server)
       return .channelvalue.integer_value(401)
     end
 
     if _scenario = 5 then do
+      fields = .string
       fields = "X-One: 1" || crlf || "X-Two: 2" || crlf
       if send_response(client, "200 OK", fields, "too-many-headers", "close") <= 0 then return .channelvalue.integer_value(-51)
+      drop_rc = .int
       drop_rc = socketclose(client)
       drop_rc = socketclose(server)
       return .channelvalue.integer_value(501)
     end
 
     if _scenario = 6 then do
+      fields = .string
       fields = "Location: https://example.invalid/other" || crlf
       if send_response(client, "307 Temporary Redirect", fields, "", "close") <= 0 then return .channelvalue.integer_value(-61)
+      drop_rc = .int
       drop_rc = socketclose(client)
       drop_rc = socketclose(server)
       return .channelvalue.integer_value(601)
@@ -162,11 +169,13 @@ policy_http_server: class implements .taskwork
     if _scenario = 7 then do
       response = "HTTP/1.1 204 No Content" || crlf || "Connection: keep-alive" || crlf || crlf
       if socketsend(client, response) <= 0 then return .channelvalue.integer_value(-71)
+      drop_rc = .int
       drop_rc = socketclose(client)
       drop_rc = socketclose(server)
       return .channelvalue.integer_value(701)
     end
 
+    drop_rc = .int
     drop_rc = socketclose(client)
     drop_rc = socketclose(server)
     return .channelvalue.integer_value(-99)

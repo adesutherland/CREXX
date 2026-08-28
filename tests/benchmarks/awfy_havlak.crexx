@@ -290,7 +290,7 @@ HavlakProgram: class
     end
     call constructCFG(10, 10, 5)
     call findLoops(1)
-    do iteration = 1 to finder_repeats
+    do finder_iteration = 1 to finder_repeats
       call findLoops(0)
     end
     call main_lsg_.calculateNestingLevel()
@@ -516,39 +516,39 @@ HavlakProgram: class
     end
     header_[1] = 1
 
-    do w = size to 1 by -1
+    do reverse_block = size to 1 by -1
       node_pool = .HIntList()
-      node_w = uf_block_[w]
-      if node_w <> 0 then do
-        if back_present_[w] then do
-          backs = back_preds_[w]
-          do index = 1 to backs.size()
-            v = backs.get(index)
-            if v <> w then call node_pool.append(findSet(v))
-            else type_[w] = 3
+      reverse_node = uf_block_[reverse_block]
+      if reverse_node <> 0 then do
+        if back_present_[reverse_block] then do
+          backs = back_preds_[reverse_block]
+          do back_index = 1 to backs.size()
+            back_value = backs.get(back_index)
+            if back_value <> reverse_block then call node_pool.append(findSet(back_value))
+            else type_[reverse_block] = 3
           end
         end
 
         work_list = .HIntList()
-        do index = 1 to node_pool.size()
-          call work_list.append(node_pool.get(index))
+        do pool_index = 1 to node_pool.size()
+          call work_list.append(node_pool.get(pool_index))
         end
-        if node_pool.size() <> 0 then type_[w] = 2
+        if node_pool.size() <> 0 then type_[reverse_block] = 2
 
         do while \work_list.isEmpty()
           x = work_list.removeFirst()
           if non_back_present_[x] then do
             non_backs = non_back_preds_[x]
             if non_backs.size() > 32768 then return
-            do index = 1 to non_backs.size()
-              y = non_backs.get(index)
+            do non_back_index = 1 to non_backs.size()
+              y = non_backs.get(non_back_index)
               ydash = findSet(y)
-              if \isAncestor(w, ydash) then do
-                type_[w] = 4
-                call addNonBackPred(w, ydash)
+              if \isAncestor(reverse_block, ydash) then do
+                type_[reverse_block] = 4
+                call addNonBackPred(reverse_block, ydash)
               end
               else do
-                if ydash <> w & \node_pool.contains(ydash) then do
+                if ydash <> reverse_block & \node_pool.contains(ydash) then do
                   call work_list.append(ydash)
                   call node_pool.append(ydash)
                 end
@@ -557,13 +557,13 @@ HavlakProgram: class
           end
         end
 
-        if node_pool.size() > 0 | type_[w] = 3 then do
-          loop_handle = createActiveLoop(node_w, type_[w] <> 4)
-          uf_loop_[w] = loop_handle
-          do index = 1 to node_pool.size()
-            node = node_pool.get(index)
-            header_[node] = w
-            uf_parent_[node] = w
+        if node_pool.size() > 0 | type_[reverse_block] = 3 then do
+          loop_handle = createActiveLoop(reverse_node, type_[reverse_block] <> 4)
+          uf_loop_[reverse_block] = loop_handle
+          do loop_index = 1 to node_pool.size()
+            node = node_pool.get(loop_index)
+            header_[node] = reverse_block
+            uf_parent_[node] = reverse_block
             nested_loop = uf_loop_[node]
             if nested_loop <> 0 then call setActiveLoopParent(nested_loop, loop_handle)
             else call addActiveLoopBlock(loop_handle, uf_block_[node])

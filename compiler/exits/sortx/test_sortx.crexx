@@ -11,7 +11,7 @@ do i=1 to max
 end
 
 say 'Before'
-do i=1 to a[0]
+do i=.int(1) to a[0]
    say i a[i]
 end
 k=1
@@ -19,7 +19,7 @@ myOrder='DESCENDING'
 sortx a,k+2,substr(myorder,1,4)
 
 say 'After'
-do i=1 to a[0]
+do i=.int(1) to a[0]
    say i a[i]
 end
 say 'SUCCESS'

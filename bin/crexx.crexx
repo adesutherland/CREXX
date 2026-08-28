@@ -138,6 +138,7 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
            argsStart = i + 1
            leave
 	 end
+	 ret = .string
 	 if fn.i = '-help'       then ret = help(nocolor)
 	 if fn.i = '-exec'       then execute=1
 	 if fn.i = '-noexec'     then execute=0
@@ -272,7 +273,9 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
                say 'missing library path after' fn.i
                return 2
              end
+             fullLibrary = .string
              fullLibrary = resolveLibraryPath(rxpath, dirsep, optarg)
+             lastSlash = .int
              lastSlash = lastpos('/',fullLibrary)
              if lastSlash = 0 then lastSlash = lastpos('\',fullLibrary)
              libs = libs';'fullLibrary
@@ -388,7 +391,7 @@ err = .string[]
 
 /* see if there is a .rxpp file to run the preprocessor against        */
 /* while we have no exists(file) function, specify the .rxpp extension */
-do i=1 to filenames[0]
+do i=.int(1) to filenames[0]
   filename=filenames[i]
   sourceFile=filename
   if i=filenames[0] then lastfile=1
@@ -484,10 +487,11 @@ do i=1 to filenames[0]
   do j = 1 to rxcOut.0
     say '> rxc output:' rxcOut.j
   end
-  do j = 1 to rxcErr.0
+  do j = .int(1) to rxcErr.0
     call emitRxcDiagnostic rxcErr.j
   end
   if verbose then do
+    res = .string
     if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
     else res = esc||ANSI_RED||RC||esc||ANSI_RESET
     if compile then say '[ 'res' ] rxc      - Compiled       ' esc||ANSI_BLUE||sourceFile||esc||ANSI_RESET
@@ -513,6 +517,7 @@ do i=1 to filenames[0]
     if RC<>0 then say '[rxas     - Assembly Failed    ' esc||ANSI_BLUE||binfile'.rxas'||esc||ANSI_RESET
     if verbose then do
       if verbose>1 then say esc||ANSI_GREEN||'rxas command    :'   asmcmd
+      res = .string
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
       say '[ 'res' ] rxas     - Assembled      ' esc||ANSI_BLUE||binfile'.rxas'||esc||ANSI_RESET
@@ -593,6 +598,7 @@ do i=1 to filenames[0]
     if verbose>1 then say esc||ANSI_GREEN'rxlink command  :'esc||ANSI_RESET link_cmd
     address crexx "run :linkArgs[]" output out error err
     if verbose then do
+      res = .string
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
       say '[ 'res' ] rxlink   - Linked         ' esc||ANSI_BLUE||linkedOutput'.rxbin'||esc||ANSI_RESET
@@ -614,6 +620,7 @@ do i=1 to filenames[0]
       end
     address crexx "run :packArgs[]" output out error err
     if verbose then do
+      res = .string
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
       say '[ 'res' ] rxcpack  - C-Packed ' esc||ANSI_BLUE||outputStem||esc||ANSI_RESET
@@ -706,6 +713,7 @@ do i=1 to filenames[0]
     
     if verbose then
       do
+	res = .string
 	if RC = 0 then res='OK'esc||ANSI_RESET
 	else res = esc||ANSI_RED||RC||esc||ANSI_RESET
 	say '[ 'res' ] cc        - C-Compiled' esc||ANSI_BLUE||outputStem||esc||ANSI_RESET
@@ -750,6 +758,7 @@ do i=1 to filenames[0]
 end   -- do i
 
   /* now determine if the compile/link intermediates need to be deleted */
+  delrc = .int
   if \keep & native=0 then delrc = deleteFiles(cleanupFiles,verbose)
   
 return 0

@@ -42,7 +42,7 @@ if float_array <= 0 | float_document.node_count(float_array) \= dimension then r
 
 float_element_walk_sum = 0 as .float
 started = time("us")
-do i = 1 to dimension
+do i = .int(1) to dimension
   node = float_document.element(float_array, i)
   status = float_document.node_float(node, number)
   if status \= 0 then return fail("float element walk value")
@@ -60,7 +60,8 @@ if float_child_count \= dimension then return fail("float children")
 float_traverse_sum = 0 as .float
 started = time("us")
 do repetition = 1 to iterations
-  do i = 1 to dimension
+  do i = .int(1) to dimension
+    status = .int
     status = float_document.node_float(float_nodes[i], number)
     if status \= 0 then return fail("float traversal value")
     float_traverse_sum = float_traverse_sum + number
@@ -72,7 +73,8 @@ if float_traverse_sum \= expected_float_sum then return fail("float traversal ch
 
 float_values = .float[]
 started = time("us")
-do i = 1 to dimension
+do i = .int(1) to dimension
+  status = .int
   status = float_document.node_float(float_nodes[i], number)
   if status \= 0 then return fail("float materialization value")
   float_values[i] = number
@@ -82,7 +84,7 @@ if float_values[0] \= dimension then return fail("float materialization count")
 
 float_copy = .float[]
 started = time("us")
-do i = 1 to dimension
+do i = .int(1) to dimension
   float_copy[i] = float_values[i]
 end
 float_copy_us = elapsed_us(started)
@@ -91,7 +93,7 @@ if float_copy[dimension] \= 0.5 then return fail("float copy checksum")
 float_packed = .binary
 call binresize float_packed, dimension * 4
 started = time("us")
-do i = 1 to dimension
+do i = .int(1) to dimension
   <at..f32>((i - 1) * 4) float_packed = float_values[i]
 end
 float_pack_us = elapsed_us(started)
@@ -99,18 +101,19 @@ float_pack_us = elapsed_us(started)
 production_float_packed = .binary
 projection_error = ""
 started = time("us")
+status = .int
 status = float_document.node_f32_array(float_array, dimension, production_float_packed, projection_error)
 production_float_project_us = elapsed_us(started)
 if status \= 0 then return fail("production float projection: " || projection_error)
 if binlength(production_float_packed) \= dimension * 4 then return fail("production float projection bytes")
-do i = 1 to dimension
+do i = .int(1) to dimension
   if <at..f32>((i - 1) * 4) production_float_packed \= 0.5 then return fail("production float projection value")
 end
 
 float_packed_sum = 0 as .float
 started = time("us")
-do repetition = 1 to iterations
-  do i = 1 to dimension
+do repetition = .int(1) to iterations
+  do i = .int(1) to dimension
     float_packed_sum = float_packed_sum + <at..f32>((i - 1) * 4) float_packed
   end
 end
@@ -134,7 +137,7 @@ if integer_child_count \= dimension then return fail("integer children")
 
 integer_values = .int[]
 started = time("us")
-do i = 1 to dimension
+do i = .int(1) to dimension
   status = integer_document.node_int(integer_nodes[i], integer_value)
   if status \= 0 then return fail("integer materialization value")
   integer_values[i] = integer_value
@@ -143,7 +146,7 @@ integer_materialize_us = elapsed_us(started)
 
 integer_copy = .int[]
 started = time("us")
-do i = 1 to dimension
+do i = .int(1) to dimension
   integer_copy[i] = integer_values[i]
 end
 integer_copy_us = elapsed_us(started)
@@ -152,7 +155,7 @@ if integer_copy[dimension] \= dimension then return fail("integer copy checksum"
 integer_packed = .binary
 call binresize integer_packed, dimension * 8
 started = time("us")
-do i = 1 to dimension
+do i = .int(1) to dimension
   <at..i64>((i - 1) * 8) integer_packed = integer_values[i]
 end
 integer_pack_us = elapsed_us(started)
@@ -164,14 +167,14 @@ status = integer_document.node_i64_array(integer_array, dimension, production_in
 production_integer_project_us = elapsed_us(started)
 if status \= 0 then return fail("production integer projection: " || projection_error)
 if binlength(production_integer_packed) \= dimension * 8 then return fail("production integer projection bytes")
-do i = 1 to dimension
+do i = .int(1) to dimension
   if <at..i64>((i - 1) * 8) production_integer_packed \= i then return fail("production integer projection value")
 end
 
 integer_packed_sum = 0
 started = time("us")
-do repetition = 1 to iterations
-  do i = 1 to dimension
+do repetition = .int(1) to iterations
+  do i = .int(1) to dimension
     integer_packed_sum = integer_packed_sum + <at..i64>((i - 1) * 8) integer_packed
   end
 end
@@ -181,7 +184,7 @@ if integer_packed_sum \= expected_integer_sum then return fail("integer packed c
 
 encoded_values = .string[]
 started = time("us")
-do i = 1 to dimension
+do i = .int(1) to dimension
   encoded_values[i] = (<at..f32>((i - 1) * 4) float_packed) as .string
 end
 encoded_json = jsonarray(encoded_values)
@@ -197,12 +200,12 @@ total_nodes = .int[]
 if total_document.children(total_array, total_nodes) \= dimension then return fail("total children")
 total_packed = .binary
 call binresize total_packed, dimension * 4
-do i = 1 to dimension
+do i = .int(1) to dimension
   status = total_document.node_float(total_nodes[i], number)
   if status \= 0 then return fail("total conversion")
   <at..f32>((i - 1) * 4) total_packed = number
 end
-do i = 1 to dimension
+do i = .int(1) to dimension
   total_sum = total_sum + <at..f32>((i - 1) * 4) total_packed
 end
 total_us = elapsed_us(started)
@@ -216,7 +219,7 @@ production_array = production_document.member(production_document.root(), "value
 production_packed = .binary
 status = production_document.node_f32_array(production_array, dimension, production_packed, production_error)
 if status \= 0 then return fail("production total projection: " || production_error)
-do i = 1 to dimension
+do i = .int(1) to dimension
   production_total_sum = production_total_sum + <at..f32>((i - 1) * 4) production_packed
 end
 production_total_us = elapsed_us(started)

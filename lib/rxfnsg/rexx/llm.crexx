@@ -290,6 +290,7 @@ openai: class
     end
 
     if jsontype(responseJson, "output.1.content.1.text") = "string" then do
+      text = .string
       text = jsonget(responseJson, "output.1.content.1.text")
       call _set_error 0, ""
       return text

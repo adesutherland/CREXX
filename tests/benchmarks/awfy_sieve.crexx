@@ -28,7 +28,7 @@ sieve_once: procedure = .int
   end
 
   prime_count = 0
-  do i = 2 to 5000
+  do i = .int(2) to 5000
     if flags[i] then do
       prime_count = prime_count + 1
       do k = i + i to 5000 by i

@@ -251,11 +251,13 @@ format: procedure = .string
   afte = ""
   if after > 0 then do
     assembler appendchar afte,point_character
+    segment = .string
     segment = ""
     start = point
     assembler substring segment,integer,start,after
     assembler append afte,segment
   end
+  segment = .string
   segment = ""
   if point > 0 then do
     start = 0
@@ -268,6 +270,7 @@ format: procedure = .string
     assembler signal "INVALID_ARGUMENTS","FORMAT integer part does not fit before width"
   if point < before then do
     padding_count = before - point
+    padding = .string
     padding = ""
     assembler padstr padding,zero_character,padding_count
     integer = padding || integer
@@ -306,6 +309,7 @@ format: procedure = .string
       assembler signal "INVALID_ARGUMENTS","FORMAT exponent does not fit exponent width"
     if exponent_length < expp then do
       padding_count = expp - exponent_length
+      padding = .string
       padding = ""
       assembler padstr padding,zero_character,padding_count
       exponent_text = padding || exponent_text

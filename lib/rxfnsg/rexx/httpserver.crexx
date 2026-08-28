@@ -377,7 +377,9 @@ httpserver: class
         if frame_valid then frame_valid = 64 + header_length + body_length + error_length = binlength(response_frame)
       end
       if frame_valid = 0 then do
+        error_headers = .string
         error_headers = "Content-Type: text/plain; charset=utf-8" || "0d0a"x
+        built = .httpcorewire
         built = http_build_response(500, error_headers, "HTTP service returned an invalid response frame" as .binary, 0, 1)
         wire = built.bytes()
         keep_alive = 0
@@ -390,7 +392,9 @@ httpserver: class
         response_within_limits = response_within_limits & binlength(response_headers as .binary) <= _maximum_header_bytes
         response_within_limits = response_within_limits & binlength(response_body) <= _maximum_body_bytes
         if response.streaming() | response.transport_status() <> 0 | response_within_limits = 0 then do
+          error_headers = .string
           error_headers = "Content-Type: text/plain; charset=utf-8" || "0d0a"x
+          built = .httpcorewire
           built = http_build_response(500, error_headers, "HTTP service returned an unusable response" as .binary, 0, 1)
           wire = built.bytes()
           keep_alive = 0
@@ -398,19 +402,24 @@ httpserver: class
         else do
           response_status = response.status()
           send_body = _methods[slot] <> "HEAD"
+          built = .httpcorewire
           built = http_build_response(response_status, response_headers, response_body, keep_alive, send_body)
           wire = built.bytes()
         end
       end
       if binlength(wire) = 0 then do
+        error_headers = .string
         error_headers = "Content-Type: text/plain; charset=utf-8" || "0d0a"x
+        built = .httpcorewire
         built = http_build_response(500, error_headers, "HTTP service returned invalid response fields" as .binary, 0, 1)
         wire = built.bytes()
         keep_alive = 0
       end
     end
     else do
+      error_headers = .string
       error_headers = "Content-Type: text/plain; charset=utf-8" || "0d0a"x
+      built = .httpcorewire
       built = http_build_response(500, error_headers, "HTTP service task failed" as .binary, 0, 1)
       wire = built.bytes()
       keep_alive = 0
@@ -479,18 +488,25 @@ httpserver: class
       return 1
     end
     if parsed.state() = 2 then do
+      error_headers = .string
       error_headers = "Content-Type: text/plain; charset=utf-8" || "0d0a"x
       error_status = parsed.status()
       error_body = parsed.error() as .binary
+      built = .httpcorewire
       built = http_build_response(error_status, error_headers, error_body, 0, 1)
+      wire = .binary
       wire = built.bytes()
+      sent = .int
       sent = 1
       if socketblocking(_sockets[slot], 1) <> 0 then sent = 0
       if sent & sockettimeout(_sockets[slot], 5000) <> 0 then sent = 0
+      offset = .int
       offset = 0
+      total = .int
       total = binlength(wire)
       do while sent & offset < total
         chunk = binsubstr(wire, offset + 1, total - offset)
+        sent_count = .int
         sent_count = socketsendb(_sockets[slot], chunk)
         if sent_count <= 0 then sent = 0
         else offset = offset + sent_count
@@ -568,7 +584,7 @@ httpserver: class
         idle_bytes = socketrecvb(_pacer_reader, 1)
       end
     end
-    do slot = 1 to _maximum_connections
+    do slot = .int(1) to _maximum_connections
       if _active[slot] then call _close_slot slot
     end
     _serving = 0

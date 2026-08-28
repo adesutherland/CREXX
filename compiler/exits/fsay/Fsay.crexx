@@ -63,7 +63,7 @@ fsayexit: class
             return result
         end
 
-        do i = 2 to tokens.0
+        do i = .int(2) to tokens.0
             if strip(tokens[i].get_type()) = "identifier" & tokens[i].get_value_type() = ".unknown" then do
                 call result.set_status("PENDING")
                 return result

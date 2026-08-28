@@ -251,11 +251,13 @@ rexxclassicbif_format: procedure = .RexxValue
   afte = ""
   if after > 0 then do
     assembler appendchar afte,point_character
+    segment = .string
     segment = ""
     start = point
     assembler substring segment,integer,start,after
     assembler append afte,segment
   end
+  segment = .string
   segment = ""
   if point > 0 then do
     start = 0
@@ -270,6 +272,7 @@ rexxclassicbif_format: procedure = .RexxValue
   end
   if point < before then do
     padding_count = before - point
+    padding = .string
     padding = ""
     assembler padstr padding,zero_character,padding_count
     integer = padding || integer
@@ -310,6 +313,7 @@ rexxclassicbif_format: procedure = .RexxValue
     end
     if exponent_length < expp then do
       padding_count = expp - exponent_length
+      padding = .string
       padding = ""
       assembler padstr padding,zero_character,padding_count
       exponent_text = padding || exponent_text

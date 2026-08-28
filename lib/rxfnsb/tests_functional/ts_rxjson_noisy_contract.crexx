@@ -78,7 +78,7 @@ do i = 1 to 64
   stress = stress || "{noise"
 end
 stress = stress || payload
-do i = 1 to 64
+do i = .int(1) to 64
   stress = stress || "}"
 end
 status = extract_next_container(stress, 1, extracted, start_at, after, attempts, parsed_bytes)

@@ -24,11 +24,11 @@ do i = 1 to 1000
   assembler append large_source,x
 end
 large_expected = ""
-do i = 1 to 500
+do i = .int(1) to 500
   assembler append large_expected,x
 end
 dot = "."
-do i = 1 to 250
+do i = .int(1) to 250
   assembler append large_expected,dot
 end
 errors = errors + check_pad(large_expected, large_source, "501", "750", ".")

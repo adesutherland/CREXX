@@ -472,6 +472,7 @@ fmtNumMask: procedure=.string
          else intslots = intslots + 1
       end
    end
+   txt = .string
    txt = strip(format(value, intslots, decs))
 
    ipi=pos('.',txt)
@@ -485,7 +486,7 @@ fmtNumMask: procedure=.string
 
    outint = ""
    j = length(intpart)
-   do i = dot - 1 to 1 by -1
+   do i = .int(dot - 1) to 1 by -1
       ch = substr(mask, i, 1)
       if ch = "9" | ch = "$" then do
          if j > 0 then do
@@ -514,6 +515,8 @@ fmtNumMask: procedure=.string
    if curr \= "" then do
     /*  numStart = pos(strip(txt), txt) */
 /* rxpp: fastpos(numStart,strip(txt), txt) */
+      numStart = .int
+      __srch = .string
       numStart = 1; __srch=strip(txt); assembler strpos numStart,__srch,txt;
       if numStart > 1 then txt = overlay(curr, txt, numStart - 1, 1)
    end

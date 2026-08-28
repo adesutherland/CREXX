@@ -133,7 +133,7 @@ rexxclassic_bounded_digit_length: procedure = .int
     end
   end
   result = 0
-  do index = start to text_length - 1
+  do index = .int(start) to text_length - 1
     assembler strchar codepoint,length_text,index
     result = result * 10 + codepoint - 48
   end
@@ -184,6 +184,7 @@ rexxclassic_hex_to_decimal: procedure = .string
 
   if negative then do
     carry = 1
+    limb_index = .int
     limb_index = 1
     do while carry > 0 & limb_index <= limb_count
       combined = limbs[limb_index] + carry
@@ -205,7 +206,7 @@ rexxclassic_hex_to_decimal: procedure = .string
 
   result = ""
   result = limbs[limb_count]
-  do limb_index = limb_count - 1 to 1 by -1
+  do limb_index = .int(limb_count - 1) to 1 by -1
     segment = ""
     segment = limbs[limb_index]
     segment_length = .int

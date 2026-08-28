@@ -61,7 +61,7 @@ count_ = .int
     do i = 1 to count_
       result[i] = keys_[i]
     end
-    do i = 1 to count_ - 1
+    do i = .int(1) to count_ - 1
       do j = 1 to count_ - i
         if result[j] > result[j + 1] then do
           swap = result[j]

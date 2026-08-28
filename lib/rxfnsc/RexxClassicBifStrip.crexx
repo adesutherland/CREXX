@@ -105,6 +105,7 @@ rexxclassicbif_strip: procedure = .RexxValue
   trim_character = .int
   current_character = .int
   string_length = .int
+  start = .int
   start = 0
   end_position = .int
   search = .int

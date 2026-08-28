@@ -127,26 +127,31 @@ test_validation_signals: procedure = .int
     errors = errors + check(token[1] = "sentinel" & kind[1] = 1,"compile signal preserves outputs")
   end
   do
+    ignored = .int
     ignored = parsecompile("a +x b",token,kind)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .int
     ignored = parsecompile("a () b",token,kind)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .int
     ignored = parsecompile("a (name b",token,kind)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .int
     ignored = parsecompile("a 9223372036854775808 b",token,kind)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .int
     ignored = parsecompile("a +9223372036854775808 b",token,kind)
   on signal invalid_arguments
     caught = caught + 1
@@ -205,11 +210,13 @@ test_validation_signals: procedure = .int
     caught = caught + 1
   end
   do
+    ignored = .int
     ignored = parse("abc","a",variable,value,2,0)
   on signal invalid_arguments
     caught = caught + 1
   end
   do
+    ignored = .int
     ignored = parse("abc","a",variable,value,0,3)
   on signal invalid_arguments
     caught = caught + 1
