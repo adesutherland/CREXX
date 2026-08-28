@@ -2,7 +2,7 @@
 
 ## Status and programme context
 
-- **Status:** P2A and P2B locally complete; P2C active
+- **Status:** P2A and P2B complete; P2C local gate complete, hosted gate pending
 - **Planning branch:** `temp/newbuild`
 - **Current `develop` incorporated:** `origin/develop` through
   `ee8e8f8fefbdc3ee9217f2ef4dd7edf0c8d288e6`
@@ -285,6 +285,37 @@ measurement is not run in this phase.
 **P2C gate:** the clean, no-op and changed-input contracts pass; stage and QA
 selection are independently usable; the final exact SHA is hosted-green on all
 four maintained platforms.
+
+**P2C local result (2026-08-28):** complete. The committed product graph built
+cleanly with the Apple ARM64 `developer-fast` profile at jobs 30 (634 actions),
+with the portable profile at jobs 5 (622 actions with optional parser mode
+disabled), and with that same portable graph strictly serialized at jobs 1.
+Immediate repeats reported `ninja: no work to do`; the only scheduled check was
+CMake's glob verification, with zero product actions.
+
+Incremental checks ran against an isolated archive of the committed tree, so
+no source mutation could affect the working checkout or another active build.
+A Level L `tinyexpr.crexx` leaf change executed only its compile and the Level
+L relink. A comment-only change to the final Level B bootstrap source initially
+dirtied the reverse closure but `copy_if_different`/Ninja restat reduced it to
+23 product actions because the provider content was unchanged. A real Level B
+provider-content change altered `library.rxbin` from
+`0c898d5c721e30f0bbf7d81a38acb19a63756d3111fc948a9e3a35b6b81f7ee4`
+to
+`3624578d3cf39cf4a012b54583d6ba1199ad1a2d5bbf452717431f123b57dbce`
+and executed the expected 198 product actions across exits, class libraries,
+Level C/G/L, Rexx-based tools and packaging, without rebuilding the native C
+toolchain.
+
+Tier-specific preparation and execution passed 3/3 essential tests and the
+cumulative 150/150 essential-plus-smoke selection. CTest started after smoke
+preparation and did not change `.ninja_log`; its timestamp remained at the end
+of preparation. The full configured 5,886-node graph passed
+`ninja -t missingdeps all`, while the observation manifest remained
+schema-valid and graph-clean with zero ownership/graph findings. These are
+correctness and scheduling results only; shared-host elapsed times are not
+performance evidence. The remaining P2C gate is the ordinary exact-SHA hosted
+workflow on Linux x64, Windows x64, macOS ARM64 and macOS Intel.
 
 ## 4. Work removed or deferred from Phase 2
 
