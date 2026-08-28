@@ -28,6 +28,8 @@ if(BUILD_TESTING)
     add_test(NAME rxsha256_unit COMMAND test_rxsha256)
     set_tests_properties(rxsha256_unit PROPERTIES
             LABELS "unit;library;hash;sha256;file")
+    set_property(TEST rxsha256_unit APPEND PROPERTY
+            CREXX_PREP_TARGETS test_rxsha256)
 
     add_executable(test_rxgraph tests/test_rxgraph.c)
     target_link_libraries(test_rxgraph PRIVATE rxbin)

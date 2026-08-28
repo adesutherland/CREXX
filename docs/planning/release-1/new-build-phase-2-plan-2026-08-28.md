@@ -179,6 +179,21 @@ clean tree; essential and smoke preparation do not pull unrelated comprehensive
 or qualification-only artifacts; CTest performs no build and leaves the active
 Ninja log byte-identical.
 
+**Progress P2A.2a (2026-08-28): essential closure locally complete; P2A.2
+remains active.** Test-generating helpers can now register their exact artifact,
+runner and linker prerequisites while each directory assigns final QA tiers;
+the complete tree attaches those names only after all producer targets exist.
+The first dependency review found that eight Level G integer/decimal runtime
+contracts and their source-surface check were classified as essential merely
+because they carried the topical `contract` label. They are now explicitly
+smoke tests. The essential tier is consequently three short toolchain checks
+with four preparation targets: `rxc`, `rxas`, `crexx-contract` and
+`test_rxsha256`. All three tests pass, the preparation target immediately
+repeats with `ninja: no work to do`, and the Ninja log is byte-identical before
+and after CTest. Smoke preparation mapping is the next P2A.2 slice. No smoke,
+broad CTest, stress, sanitizer, performance measurement or hosted workflow was
+run for P2A.2a.
+
 ### P2B — minimum deterministic import closure
 
 **Programme purpose:** ensure that the CMake reference/bootstrap build does not

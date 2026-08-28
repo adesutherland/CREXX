@@ -76,5 +76,48 @@ function(crexx_finalize_directory_qa_tiers)
                         "Measurement test ${_crexx_test} must declare RUN_SERIAL")
             endif()
         endif()
+
+        get_property(_crexx_prep_targets TEST "${_crexx_test}" PROPERTY
+                CREXX_PREP_TARGETS)
+        if(_crexx_prep_targets AND
+           NOT _crexx_prep_targets MATCHES "NOTFOUND$")
+            if(_crexx_tier STREQUAL "performance-measurement")
+                set(_crexx_prep_tier measurement)
+            else()
+                set(_crexx_prep_tier "${_crexx_tier}")
+            endif()
+            string(TOUPPER "${_crexx_prep_tier}" _crexx_prep_tier_upper)
+            set_property(GLOBAL APPEND PROPERTY
+                    "CREXX_QA_PREP_${_crexx_prep_tier_upper}_TARGETS"
+                    ${_crexx_prep_targets})
+        endif()
+    endforeach()
+endfunction()
+
+# Test directories are configured before every possible producer target exists.
+# Resolve and attach the collected names once the complete tree is declared.
+function(crexx_finalize_qa_prep_targets)
+    foreach(_crexx_prep_tier IN ITEMS
+            essential smoke comprehensive qualification stress measurement)
+        string(TOUPPER "${_crexx_prep_tier}" _crexx_prep_tier_upper)
+        get_property(_crexx_prep_targets GLOBAL PROPERTY
+                "CREXX_QA_PREP_${_crexx_prep_tier_upper}_TARGETS")
+        if(NOT _crexx_prep_targets)
+            continue()
+        endif()
+        list(REMOVE_DUPLICATES _crexx_prep_targets)
+        set(_crexx_prep_aggregate "qa-prep-${_crexx_prep_tier}")
+        if(NOT TARGET "${_crexx_prep_aggregate}")
+            message(FATAL_ERROR
+                    "Missing QA preparation aggregate: ${_crexx_prep_aggregate}")
+        endif()
+        foreach(_crexx_prep_target IN LISTS _crexx_prep_targets)
+            if(NOT TARGET "${_crexx_prep_target}")
+                message(FATAL_ERROR
+                        "QA tier ${_crexx_prep_tier} has missing preparation dependency: ${_crexx_prep_target}")
+            endif()
+            add_dependencies("${_crexx_prep_aggregate}"
+                    "${_crexx_prep_target}")
+        endforeach()
     endforeach()
 endfunction()

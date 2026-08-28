@@ -14,7 +14,8 @@ function(_crexx_register_runtime_test)
     set(options PASS_TEST_NAME_ARGUMENT LINKED)
     set(oneValueArgs NAME RUNNER PROGRAM WORKING_DIRECTORY
             EXPECTED_EXIT_CODE EXPECTED_FAILURE_DESCRIPTION)
-    set(multiValueArgs RUNTIME_ARGS TEST_LABELS REQUIRED_OUTPUT_REGEX FORBIDDEN_OUTPUT_REGEX)
+    set(multiValueArgs RUNTIME_ARGS TEST_LABELS PREP_TARGETS
+            REQUIRED_OUTPUT_REGEX FORBIDDEN_OUTPUT_REGEX)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     set(_crexx_runner_cmd ${CREXX_RUNNER})
@@ -83,6 +84,10 @@ function(_crexx_register_runtime_test)
 
     if(_crexx_labels)
         set_tests_properties(${CREXX_NAME} PROPERTIES LABELS "${_crexx_labels}")
+    endif()
+    if(CREXX_PREP_TARGETS)
+        set_property(TEST ${CREXX_NAME} APPEND PROPERTY
+                CREXX_PREP_TARGETS ${CREXX_PREP_TARGETS})
     endif()
 endfunction()
 
@@ -169,6 +174,15 @@ function(crexx_add_rexx_opt_matrix)
         if(CREXX_LINKED_ALL_MODES)
             list(APPEND _crexx_runtime_test_args LINKED)
         endif()
+        set(_crexx_prep_targets ${_crexx_artifact_target})
+        if(CREXX_RUNNER STREQUAL "rxvm")
+            list(APPEND _crexx_prep_targets rxvm)
+        elseif(NOT "${CREXX_RUNNER}" MATCHES "^\\$<" AND TARGET ${CREXX_RUNNER})
+            list(APPEND _crexx_prep_targets ${CREXX_RUNNER})
+        endif()
+        if(CREXX_LINKED_ALL_MODES OR _crexx_mode STREQUAL "opt")
+            list(APPEND _crexx_prep_targets rxlink)
+        endif()
         _crexx_register_runtime_test(
                 NAME ${CREXX_NAME}_${_crexx_mode}
                 RUNNER ${CREXX_RUNNER}
@@ -178,6 +192,7 @@ function(crexx_add_rexx_opt_matrix)
                 EXPECTED_FAILURE_DESCRIPTION "${CREXX_EXPECTED_FAILURE_DESCRIPTION}"
                 RUNTIME_ARGS ${CREXX_RUNTIME_ARGS}
                 TEST_LABELS ${CREXX_TEST_LABELS}
+                PREP_TARGETS ${_crexx_prep_targets}
                 REQUIRED_OUTPUT_REGEX ${CREXX_REQUIRED_OUTPUT_REGEX}
                 FORBIDDEN_OUTPUT_REGEX ${CREXX_FORBIDDEN_OUTPUT_REGEX}
                 ${_crexx_runtime_test_args}
@@ -236,6 +251,15 @@ function(crexx_add_rxas_opt_matrix)
         if(CREXX_PASS_TEST_NAME_ARGUMENT)
             list(APPEND _crexx_runtime_test_args PASS_TEST_NAME_ARGUMENT)
         endif()
+        set(_crexx_prep_targets ${_crexx_artifact_target})
+        if(CREXX_RUNNER STREQUAL "rxvm")
+            list(APPEND _crexx_prep_targets rxvm)
+        elseif(NOT "${CREXX_RUNNER}" MATCHES "^\\$<" AND TARGET ${CREXX_RUNNER})
+            list(APPEND _crexx_prep_targets ${CREXX_RUNNER})
+        endif()
+        if(_crexx_mode STREQUAL "opt")
+            list(APPEND _crexx_prep_targets rxlink)
+        endif()
         _crexx_register_runtime_test(
                 NAME ${CREXX_NAME}_${_crexx_mode}
                 RUNNER ${CREXX_RUNNER}
@@ -243,6 +267,7 @@ function(crexx_add_rxas_opt_matrix)
                 WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
                 RUNTIME_ARGS ${CREXX_RUNTIME_ARGS}
                 TEST_LABELS ${CREXX_TEST_LABELS}
+                PREP_TARGETS ${_crexx_prep_targets}
                 ${_crexx_runtime_test_args}
         )
     endforeach()

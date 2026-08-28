@@ -76,7 +76,7 @@ add_test(
     -DDECIMAL_CONTRACT=${CMAKE_CURRENT_SOURCE_DIR}/ts_math_decimal_contract.crexx
     -P ${CMAKE_CURRENT_SOURCE_DIR}/check_math_contract_surface.cmake)
 set_tests_properties(rcc5c_math_contract_surface_coverage PROPERTIES
-  LABELS "library;math;integer;decimal;levelg;contract")
+  LABELS "library;math;integer;decimal;levelg;contract;smoke")
 
 foreach(_math_contract_suite IN ITEMS integer decimal)
   set(_math_contract_target "ts_math_${_math_contract_suite}_contract")
@@ -106,7 +106,7 @@ foreach(_math_contract_suite IN ITEMS integer decimal)
       RUNTIME_ARGS ${_numeric_test_support_base} ${LIBRPATH}
         ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
       TEST_LABELS
-        "library;math;${_math_contract_suite};levelg;contract;${_math_contract_runner}"
+        "library;math;${_math_contract_suite};levelg;contract;smoke;${_math_contract_runner}"
       REQUIRED_OUTPUT_REGEX "${_math_contract_output}"
       FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
   endforeach()

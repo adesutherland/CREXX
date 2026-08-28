@@ -1,7 +1,7 @@
 # New Build System Vision and Migration Plan
 
 - **Status:** simplified vision approved; Phase 0 and Phase 1 complete;
-  revised Phase 2 P2A started
+  revised Phase 2 P2A.1 complete and P2A.2 active
 - **Current `develop` incorporated:**
   `ee8e8f8fefbdc3ee9217f2ef4dd7edf0c8d288e6`
 - **Planning branch:** `temp/newbuild`

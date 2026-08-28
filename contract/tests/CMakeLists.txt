@@ -13,6 +13,8 @@ add_test(
 
 set_tests_properties(crexx_contract_generation PROPERTIES
         LABELS "contract;compiler;binutils")
+set_property(TEST crexx_contract_generation APPEND PROPERTY
+        CREXX_PREP_TARGETS rxc rxas crexx-contract)
 
 add_test(
         NAME crexx_contract_installed_consumer

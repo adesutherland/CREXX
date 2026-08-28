@@ -373,6 +373,25 @@ install(FILES "${CREXX_VERSION_FILE_PATH}" "${CREXX_BUILDINFO_PATH}" DESTINATION
 set(CREXX_CLASSLIB_NATIVE_MEMBER_ROOT
         "${CMAKE_BINARY_DIR}/lib/classlib/members/native")
 
+if(BUILD_TESTING)
+    # Tier preparation targets must exist before test directories are added so
+    # their deferred tier finalizers can attach exact artifact prerequisites.
+    add_custom_target(qa-prep)
+    add_custom_target(qa-prep-essential)
+    add_custom_target(qa-prep-smoke)
+    add_custom_target(qa-prep-comprehensive)
+    add_custom_target(qa-prep-qualification)
+    add_custom_target(qa-prep-stress)
+    add_custom_target(qa-prep-measurement)
+    add_dependencies(qa-prep-smoke qa-prep-essential)
+    add_dependencies(qa-prep
+            qa-prep-essential
+            qa-prep-smoke
+            qa-prep-comprehensive
+            qa-prep-qualification
+            qa-prep-stress)
+endif()
+
 add_subdirectory(platform)
 add_subdirectory(avl_tree)
 add_subdirectory(cpacker)
@@ -393,6 +412,12 @@ add_subdirectory(examples)
 add_subdirectory(tests)
 add_subdirectory(bin crexx_driver)
 
+# Test directories register their exact generated-artifact requirements while
+# assigning tiers.  Attach those dependencies only after all producers exist.
+if(BUILD_TESTING)
+    crexx_finalize_qa_prep_targets()
+endif()
+
 # These non-owning aggregate targets expose the product stages without
 # replacing or duplicating the direct dependencies declared by their members.
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxBuildStages.cmake)
@@ -400,8 +425,6 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxBuildStages.cmake)
 if(BUILD_TESTING)
     # Build preparation is an explicit graph phase. CTest executes tests only;
     # it must not start a nested build in the active test worker pool.
-    add_custom_target(qa-prep)
-
     if(WIN32)
         set(_crexx_concurrency_default_test_jobs 1)
     else()
@@ -549,7 +572,6 @@ if(BUILD_TESTING)
         set(_crexx_qa_ctest_configuration -C "$<CONFIG>")
     endif()
 
-    add_custom_target(qa-prep-measurement)
     foreach(_crexx_measurement_target IN ITEMS
             test_persistent_worker_executor_bin
             persistent_worker_executor-rxvml
@@ -567,7 +589,7 @@ if(BUILD_TESTING)
                     --parallel "${CREXX_QA_CTEST_JOBS}"
                     --output-on-failure
                     --label-regex "^essential$"
-            DEPENDS qa-prep
+            DEPENDS qa-prep-essential
             USES_TERMINAL
             VERBATIM
             COMMENT "Running essential QA")
