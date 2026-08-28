@@ -3706,7 +3706,7 @@ add_test(NAME san006_import_context_lifetime
         COMMAND ${CMAKE_COMMAND}
                 -DRXC=$<TARGET_FILE:rxc>
                 -DCLASS_AGGREGATE=${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin
-                -DCLASS_MEMBER=${CMAKE_BINARY_DIR}/lib/classlib/KeyDB.rxbin
+                -DCLASS_MEMBER=${CREXX_CLASSLIB_NATIVE_MEMBER_ROOT}/KeyDB/KeyDB.rxbin
                 -DCLASS_SOURCE=${CMAKE_SOURCE_DIR}/lib/classlib/KeyDB.crexx
                 -DMAIN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/san006_import_context_main.crexx
                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/san006_import_context_lifetime_ws

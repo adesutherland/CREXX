@@ -367,6 +367,12 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 install(FILES ${CMAKE_BINARY_DIR}/generated/crexx_version.h DESTINATION include)
 install(FILES "${CREXX_VERSION_FILE_PATH}" "${CREXX_BUILDINFO_PATH}" DESTINATION .)
 
+# Shared generated-artifact contracts used across subdirectory configuration
+# boundaries. The compiler tests are declared before lib/classlib, so both the
+# producer and its consumers must derive the native member path from here.
+set(CREXX_CLASSLIB_NATIVE_MEMBER_ROOT
+        "${CMAKE_BINARY_DIR}/lib/classlib/members/native")
+
 add_subdirectory(platform)
 add_subdirectory(avl_tree)
 add_subdirectory(cpacker)
@@ -510,6 +516,16 @@ if(TARGET linked_opt_runtime_artifacts)
     if(TARGET linked_opt_sweep)
         add_dependencies(linked_opt_sweep qa-prep-linked-opt-runtime)
     endif()
+endif()
+
+if(BUILD_TESTING)
+    # SAN-006 consumes both the native KeyDB member image and the published
+    # native-backed aggregate. Keep those clean-tree inputs inside qa-prep
+    # rather than relying on a preceding default build or a stale legacy path.
+    add_custom_target(qa-prep-compiler-import-regressions)
+    add_dependencies(qa-prep-compiler-import-regressions
+            classlib_native)
+    add_dependencies(qa-prep qa-prep-compiler-import-regressions)
 endif()
 
 if(BUILD_TESTING)
