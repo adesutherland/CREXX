@@ -651,6 +651,7 @@ def load_trace(
                     "working_directory": normalizer.text(working_directory),
                     "commands": normalizer.text(command_sections),
                     "uses_terminal": "USES_TERMINAL" in args,
+                    "verbatim": "VERBATIM" in args,
                     "job_pool": sections(args, "JOB_POOL")[0][0] if sections(args, "JOB_POOL") and sections(args, "JOB_POOL")[0] else None,
                     "raw_args": normalized_args,
                     "_actual_outputs": output_actual + byproduct_actual,
@@ -838,6 +839,21 @@ def build_findings(file_api: dict[str, Any], trace: dict[str, Any], tests: list[
                 }
             )
     for action in trace["custom_targets"]:
+        if (
+            not action["verbatim"]
+            and any(token.endswith("$") for command in action["commands"] for token in command)
+        ):
+            findings.append(
+                {
+                    "severity": "hazard",
+                    "code": "non-verbatim-trailing-dollar",
+                    "subject": action["id"],
+                    "detail": (
+                        "A non-VERBATIM custom target command ends an argument with '$'; "
+                        "this can corrupt Unix Ninja commands and is rejected by Windows Ninja."
+                    ),
+                }
+            )
         if (
             action["commands"]
             and not action["byproducts"]

@@ -549,6 +549,7 @@ if(BUILD_TESTING)
                     --label-regex "^essential$"
             DEPENDS qa-prep
             USES_TERMINAL
+            VERBATIM
             COMMENT "Running essential QA")
     add_custom_target(qa-smoke
             COMMAND ${CMAKE_CTEST_COMMAND}
@@ -559,6 +560,7 @@ if(BUILD_TESTING)
                     --label-regex "^(essential|smoke)$"
             DEPENDS qa-prep
             USES_TERMINAL
+            VERBATIM
             COMMENT "Running essential and smoke QA")
     add_custom_target(qa-comprehensive
             COMMAND ${CMAKE_CTEST_COMMAND}
@@ -569,6 +571,7 @@ if(BUILD_TESTING)
                     --label-exclude "^(stress|performance-measurement)$"
             DEPENDS qa-prep
             USES_TERMINAL
+            VERBATIM
             COMMENT "Running comprehensive correctness QA without stress or measurement")
     add_custom_target(qa-qualification
             COMMAND ${CMAKE_CTEST_COMMAND}
@@ -579,6 +582,7 @@ if(BUILD_TESTING)
                     --label-regex "^qualification$"
             DEPENDS qa-prep
             USES_TERMINAL
+            VERBATIM
             COMMENT "Running qualification QA")
     add_custom_target(qa-stress
             COMMAND ${CMAKE_CTEST_COMMAND}
@@ -589,6 +593,7 @@ if(BUILD_TESTING)
                     --label-regex "^stress$"
             DEPENDS qa-prep
             USES_TERMINAL
+            VERBATIM
             COMMENT "Running explicit stress QA")
     add_custom_target(qa-measurement
             COMMAND ${CMAKE_CTEST_COMMAND}
@@ -599,6 +604,7 @@ if(BUILD_TESTING)
                     --label-regex "^performance-measurement$"
             DEPENDS qa-prep-measurement
             USES_TERMINAL
+            VERBATIM
             COMMENT "Running measurement tests serially; requires a quiescent host")
 endif()
 

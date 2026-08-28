@@ -304,6 +304,7 @@ add_custom_target(linked_opt_sweep
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         DEPENDS crexx rxlink
         USES_TERMINAL
+        VERBATIM
         COMMENT "Running linked opt-runtime coverage through CTest"
 )
 

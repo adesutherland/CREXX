@@ -159,6 +159,42 @@ class CatalogueUnitTests(unittest.TestCase):
     def test_ordered_unique_preserves_import_search_order(self) -> None:
         self.assertEqual(catalogue.ordered_unique(["second", "first", "second", "third"]), ["second", "first", "third"])
 
+    def test_finds_non_verbatim_custom_target_with_trailing_dollar(self) -> None:
+        custom_target = {
+            "id": "add_custom_target:<SOURCE>/CMakeLists.txt:1:1",
+            "commands": [["ctest", "--label-regex", "^essential$"]],
+            "verbatim": False,
+            "byproducts": [],
+            "classification": {"basis": "qa-runner-target"},
+        }
+        findings = catalogue.build_findings(
+            {"targets": []},
+            {
+                "custom_commands": [],
+                "custom_targets": [custom_target],
+                "cleanup_operations": [],
+            },
+            [],
+        )
+        self.assertEqual(
+            [item["code"] for item in findings],
+            ["non-verbatim-trailing-dollar"],
+        )
+
+        custom_target["verbatim"] = True
+        self.assertEqual(
+            catalogue.build_findings(
+                {"targets": []},
+                {
+                    "custom_commands": [],
+                    "custom_targets": [custom_target],
+                    "cleanup_operations": [],
+                },
+                [],
+            ),
+            [],
+        )
+
     def test_manifest_validator_detects_duplicate_output_owner(self) -> None:
         base_action = {
             "kind": "test",
