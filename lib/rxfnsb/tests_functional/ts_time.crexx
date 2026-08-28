@@ -32,7 +32,8 @@ end
 second_elapsed = time("E") + 0
 reset_elapsed = time("R") + 0
 after_reset = time("E") + 0
-do index = 1 to 10000
+do index = .int(1) to 10000
+  scratch = .int
   scratch = index
 end
 next_reset_elapsed = time("R") + 0

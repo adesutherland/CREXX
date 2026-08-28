@@ -189,7 +189,7 @@ _httpinflater: class
       if width > 0 then table[width] = table[width] + 1
     end
     left = 1
-    do width = 1 to 15
+    do width = .int(1) to 15
       left = (left <shl> 1) - table[width]
       if left < 0 then do
         call fail("DEFLATE Huffman tree is oversubscribed")
@@ -198,10 +198,11 @@ _httpinflater: class
     end
     offsets = .int[16]
     offsets[1] = 17
-    do width = 2 to 15
+    do width = .int(2) to 15
       offsets[width] = offsets[width - 1] + table[width - 1]
     end
-    do symbol = 1 to count
+    do symbol = .int(1) to count
+      width = .int
       width = lengths[symbol]
       if width > 0 then do
         table[offsets[width]] = symbol - 1
@@ -272,16 +273,16 @@ _httpinflater: class
     do symbol = 0 to 143
       literal_lengths[symbol + 1] = 8
     end
-    do symbol = 144 to 255
+    do symbol = .int(144) to 255
       literal_lengths[symbol + 1] = 9
     end
-    do symbol = 256 to 279
+    do symbol = .int(256) to 279
       literal_lengths[symbol + 1] = 7
     end
-    do symbol = 280 to 287
+    do symbol = .int(280) to 287
       literal_lengths[symbol + 1] = 8
     end
-    do symbol = 1 to 32
+    do symbol = .int(1) to 32
       distance_lengths[symbol] = 5
     end
     call decode_compressed(literal_lengths, 288, distance_lengths, 32)
@@ -322,12 +323,13 @@ _httpinflater: class
           call fail("DEFLATE repeat code exceeds the dynamic tree")
           return
         end
-        do index = 1 to repeat
+        do index = .int(1) to repeat
           combined[position] = value
           position = position + 1
         end
       end
       else if symbol = 17 | symbol = 18 then do
+        repeat = .int
         if symbol = 17 then repeat = read_bits(3) + 3
         else repeat = read_bits(7) + 11
         if position + repeat - 1 > total then do
@@ -343,10 +345,10 @@ _httpinflater: class
     end
     literal_lengths = .int[286]
     distance_lengths = .int[32]
-    do index = 1 to literal_count
+    do index = .int(1) to literal_count
       literal_lengths[index] = combined[index]
     end
-    do index = 1 to distance_count
+    do index = .int(1) to distance_count
       distance_lengths[index] = combined[literal_count + index]
     end
     if literal_lengths[257] = 0 then do
@@ -435,13 +437,17 @@ http_decode_content: procedure = .httpdecodedcontent
     return decoded
   end
   if normalized = "DEFLATE" then do
+    total = .int
     total = binlength(data)
     if total < 6 then return .httpdecodedcontent.failure("zlib response is truncated")
     cmf = <at..u8>(0) data
+    flags = .int
     flags = <at..u8>(1) data
     if (cmf <and> 15) <> 8 | (cmf <shr> 4) > 7 | (cmf * 256 + flags) <mod> 31 <> 0 then return .httpdecodedcontent.failure("zlib response header is invalid")
     if (flags <and> 32) <> 0 then return .httpdecodedcontent.failure("zlib preset dictionaries are unsupported")
+    inflater = ._httpinflater
     inflater = ._httpinflater.new(data, 2, total - 6, maximum)
+    decoded = .httpdecodedcontent
     decoded = inflater.inflate()
     if decoded.succeeded() = 0 then return decoded
     actual_adler = _httpcodec_adler32(decoded.data())

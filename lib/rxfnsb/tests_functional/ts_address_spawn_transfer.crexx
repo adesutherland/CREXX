@@ -92,7 +92,7 @@ failures = failures + check_str("partial stderr", failure_error[1], "partial-err
 
 argv[2] = "early"
 early_input = .string[]
-do i = 1 to 128
+do i = .int(1) to 128
   early_input[i] = copies("b", 300)
 end
 early_output = .string[]
@@ -103,7 +103,7 @@ failures = failures + check_int("broken pipe stdout", early_output.0, 0)
 failures = failures + check_int("broken pipe stderr", early_error.0, 0)
 
 argv[2] = "empty"
-do i = 1 to 12
+do i = .int(1) to 12
   address crexx "run :argv[]" output empty_output error empty_error
   failures = failures + check_int("repeated cleanup rc", rc, 0)
 end

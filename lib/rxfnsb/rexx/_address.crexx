@@ -432,6 +432,7 @@ addressredirect: class
     end
     if start < byte_count then do
       line = .binary
+      line_length = .int
       line_length = byte_count - start
       assembler bslice line,_captured,start,line_length
       target_array[target_array[0] + 1] = line as .string
@@ -1046,7 +1047,7 @@ _address: procedure = .int
     if update_alias = "" then update_alias = update_internal
     update_value = update.get_value()
 
-    do i = 1 to arg[0] by 2
+    do i = .int(1) to arg[0] by 2
       j = i + 1
       if j > arg[0] then iterate
 
@@ -1124,7 +1125,7 @@ _address_with_sandbox: procedure = .int
     if update_alias = "" then update_alias = update_internal
     update_value = update.get_value()
 
-    do i = 1 to arg[0] by 2
+    do i = .int(1) to arg[0] by 2
       j = i + 1
       if j > arg[0] then iterate
 
@@ -1723,9 +1724,11 @@ _address_cv_flags_at: procedure = .int
   if tag = 9 then do
     schema_length = <at..int>(offset + 12) bytes
     fields = <at..int>(offset + 24 + schema_length) bytes
+    child = .int
     child = offset + 32 + schema_length
+    flags = .int
     flags = 0
-    do i = 1 to fields
+    do i = .int(1) to fields
       name_length = <at..int>(child) bytes
       child = child + 8 + name_length
       flags = _address_cv_merge_flags(flags, _address_cv_flags_at(bytes, child))
@@ -1805,7 +1808,7 @@ _address_cv_record: procedure = .binary
     sorted_names[i] = names[i]
     sorted_values[i] = values[i]
   end
-  do i = 2 to sorted_names[0]
+  do i = .int(2) to sorted_names[0]
     name = sorted_names[i]
     encoded = sorted_values[i]
     j = i - 1
@@ -1828,7 +1831,7 @@ _address_cv_record: procedure = .binary
   <at..u32>(0) trailer = 1
   <at..int>(4) trailer = sorted_names[0]
   assembler bappend payload,trailer
-  do i = 1 to sorted_names[0]
+  do i = .int(1) to sorted_names[0]
     name_bytes = sorted_names[i] as .binary
     name_length = 0
     assembler blen name_length,name_bytes
@@ -2166,20 +2169,26 @@ spawn_request: procedure = .addressresponse
         call stdout_adapter.append_bytes(stream_bytes)
         stream_details = _address_cv_field(stream_completion, "details")
         stdout_done = _address_cv_as_boolean(_address_cv_field(stream_details, "eof"))
+        stdout_ticket = .int
         if stdout_done = 0 then stdout_ticket = _address_byte_start_drain(stdout_handle)
       end
     end
 
     if stderr_done = 0 then do
+      stream_completion = .binary
       stream_completion = _address_chan_wait(stderr_handle, 0)
+      stream_length = .int
       stream_length = 0
       assembler blen stream_length,stream_completion
       if stream_length > 0 then do
+        stream_state = .int
         stream_state = _address_cv_as_integer(_address_cv_field(stream_completion, "state"))
         if stream_state <> 1 then call _address_channel_error "ADDRESS stderr drain", stream_state
         call stderr_adapter.append_bytes(_address_cv_as_binary(_address_cv_field(stream_completion, "result")))
+        stream_details = .binary
         stream_details = _address_cv_field(stream_completion, "details")
         stderr_done = _address_cv_as_boolean(_address_cv_field(stream_details, "eof"))
+        stderr_ticket = .int
         if stderr_done = 0 then stderr_ticket = _address_byte_start_drain(stderr_handle)
       end
     end

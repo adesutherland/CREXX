@@ -163,6 +163,7 @@ streaming_server: class implements .taskwork
     if socketsend(client, head) <> binlength(head as .binary) then return .channelvalue.integer_value(-22)
     chunks = "generation-|and-|embedding-|streamed"
     do index = 1 to 4
+      piece = .string
       piece = subword(translate(chunks, " ", "|"), index, 1)
       framed = d2x(binlength(piece as .binary)) || crlf || piece || crlf
       if socketsend(client, framed) <> binlength(framed as .binary) then return .channelvalue.integer_value(-23)

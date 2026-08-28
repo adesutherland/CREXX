@@ -213,12 +213,11 @@ void ret_reg(Scope *scope, int reg);
 /* Return a linked register later (end of statement) */
 void ret_reg_later(Scope *scope, int reg);
 
-/* Return all deferred registers */
-void ret_reg_all_deferred(Scope *scope);
-
-/* Return deferred registers except for the listed registers, which remain
- * deferred until a later statement boundary. */
-void ret_reg_all_deferred_except(Scope *scope, const int *registers, size_t count);
+/* Mark the current deferred-register boundary and return only registers added
+ * after that boundary. Nested statements use this to retain enclosing cleanup
+ * temporaries until the enclosing statement finishes. */
+size_t deferred_reg_mark(Scope *scope);
+void ret_reg_deferred_since(Scope *scope, size_t mark);
 
 /* Get number of free register from scope - returns the start of a sequence
  * n, n+1, n+2, ... n+number */

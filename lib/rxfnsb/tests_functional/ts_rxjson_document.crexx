@@ -131,7 +131,7 @@ invalid_numbers[6] = "1e+"
 invalid_numbers[7] = "--1"
 invalid_numbers[8] = "NaN"
 invalid_numbers[9] = "truex"
-do i = 1 to invalid_numbers.0
+do i = .int(1) to invalid_numbers.0
   failures = failures + check_int("invalid number token " || i, jsonvalid(invalid_numbers[i]), 0)
 end
 

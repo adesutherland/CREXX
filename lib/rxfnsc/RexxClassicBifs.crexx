@@ -277,7 +277,8 @@ rexxclassicbif_check_args: procedure = .int
     return 0
   end
 
-  do i = 1 to argc
+  do i = .int(1) to argc
+    item = .string
     item = word(checklist, i)
     required = left(item, 1)
     rule = substr(item, 2)
@@ -415,7 +416,9 @@ _check_arg_type: procedure = .int
   end
 
   if rule = "WHOLENUM" | rule = "WHOLENUM>=0" then do
+    number_state = .int
     number_state = 0
+    normalized_number = .string
     normalized_number = rexxclassic_datatype_normalize_number(argument_value,config,number_state)
     if number_state = 2 then do
       call _set_bif_error(context_ref, "40.9", index, value, "")
@@ -425,7 +428,9 @@ _check_arg_type: procedure = .int
       call _set_bif_error(context_ref, "40.12", index, value, "")
       return 0
     end
+    whole_valid = .int
     whole_valid = 0
+    whole = .string
     whole = _normalize_wholenum_text(normalized_number, whole_valid)
     if \whole_valid then do
       call _set_bif_error(context_ref, "40.12", index, value, "")
@@ -468,6 +473,7 @@ _check_arg_type: procedure = .int
       call _set_bif_error(context_ref, "40.21", index, value, "")
       return 0
     end
+    option = .string
     option = translate(left(value, 1))
     if pos(option, rule) = 0 then do
       call _set_bif_error(context_ref, "40.28", index, value, rule)
@@ -828,7 +834,7 @@ _bif_minmax: procedure = .RexxValue
   best_value = "0" as .decimal
   candidate_value = "0" as .decimal
   best_value = .RexxValue(best_text).asDecimal()
-  do i = 2 to argc
+  do i = .int(2) to argc
     candidate_text = context.argumentText(i)
     candidate_value = .RexxValue(candidate_text).asDecimal()
     if mode = "MAX" then do
@@ -1067,8 +1073,11 @@ rexxclassicbif_subword: procedure = .RexxValue
   assembler strlen string_length,string
   if string_length = 0 then return _ok("")
 
+  scan = .int
   scan = 0
+  current_word = .int
   current_word = 0
+  selection_start = .int
   selection_start = 0
   do while scan < string_length
     selection_start = rexxclassic_find_text_nonblank(string, scan, text_other_blanks)
@@ -1079,10 +1088,14 @@ rexxclassicbif_subword: procedure = .RexxValue
     if scan < 0 then return _ok("")
   end
 
+  selection_end = .int
   selection_end = selection_start
+  selected = .int
   selected = 0
   scan = selection_start
+  word_end = .int
   word_end = 0
+  next_word = .int
   next_word = 0
   do while \count_supplied | selected < wordcount
     word_end = rexxclassic_find_text_blank(string, scan, text_other_blanks)
@@ -1303,7 +1316,7 @@ _expand_whole_decimal: procedure = .string
 
   fractional_start = decimal_position
   if fractional_start < 0 then fractional_start = 0
-  if fractional_start < digit_length then do i = fractional_start to digit_length - 1
+  if fractional_start < digit_length then do i = .int(fractional_start) to digit_length - 1
     assembler strchar codepoint,digits,i
     if codepoint <> zero_character then return ""
   end
@@ -1312,7 +1325,7 @@ _expand_whole_decimal: procedure = .string
   if integer_source_length < 0 then integer_source_length = 0
   if integer_source_length > digit_length then integer_source_length = digit_length
   first_nonzero = -1
-  if integer_source_length > 0 then do i = 0 to integer_source_length - 1
+  if integer_source_length > 0 then do i = .int(0) to integer_source_length - 1
     assembler strchar codepoint,digits,i
     if codepoint <> zero_character then do
       first_nonzero = i

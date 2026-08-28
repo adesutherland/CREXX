@@ -158,6 +158,7 @@ main: procedure = .int
 
   if write_summary(output_dir || "/summary.csv", output_dir || "/ratios.csv", ,
       output_dir || "/geomeans.csv", manifest_rows, samples, measurement) <> 0 then return 1
+  completed = .string
   completed = timestamp_utc()
   if write_capture_manifest(manifest_out, manifest_path, measurement, warmups, runs, ,
       started, completed, "pass") <> 0 then return 1
@@ -499,7 +500,7 @@ write_aggregates: procedure = .int
     return write_lines(geomeans_path, geomeans)
   end
 
-  do summary_index = 1 to ids[0]
+  do summary_index = .int(1) to ids[0]
     if aggregates[summary_index] <> "yes" | runtimes[summary_index] <> "crexx" then iterate
     select
       when vms[summary_index] = "rxvm" then comparison_start = 1
@@ -509,6 +510,7 @@ write_aggregates: procedure = .int
           vms[summary_index])
     end
     do reference_offset = 0 to 1
+      comparison_index = .int
       comparison_index = comparison_start + reference_offset
       reference_runtime = "oorexx"
       if reference_offset = 1 then reference_runtime = "netrexx"
@@ -536,6 +538,7 @@ write_aggregates: procedure = .int
     end
   end
   if write_lines(ratios_path, ratios) <> 0 then return 1
+  geomeans = .string[]
   geomeans = format_geomeans(comparison_names, products, counts, memberships)
   if geomeans[0] = 1 then return execution_error("no cREXX aggregate was produced")
   return write_lines(geomeans_path, geomeans)
@@ -922,7 +925,7 @@ pairwise_schedule_self_test: procedure = .int
     do round_number = 1 to TEST_ROUNDS
       order = .int[]
       seen = .int[]
-      do index = 1 to group_count
+      do index = .int(1) to group_count
         seen[index] = 0
       end
       do position = 1 to group_count
@@ -941,14 +944,15 @@ pairwise_schedule_self_test: procedure = .int
         left_cell = order[left_position]
         do right_position = left_position + 1 to group_count
           right_cell = order[right_position]
+          slot = .int
           slot = left_cell * group_count + right_cell + 1
           directions[slot] = directions[slot] + 1
         end
       end
     end
 
-    do left_cell = 0 to group_count - 2
-      do right_cell = left_cell + 1 to group_count - 1
+    do left_cell = .int(0) to group_count - 2
+      do right_cell = .int(left_cell + 1) to group_count - 1
         left_slot = left_cell * group_count + right_cell + 1
         right_slot = right_cell * group_count + left_cell + 1
         if directions[left_slot] <> directions[right_slot] then
@@ -959,7 +963,7 @@ pairwise_schedule_self_test: procedure = .int
     /* The standard 12-round formal group sizes also balance every position. */
     if group_count = 2 | group_count = 3 | group_count = 4 | group_count = 6 then do
       expected_positions = TEST_ROUNDS <idiv> group_count
-      do index = 1 to group_count * group_count
+      do index = .int(1) to group_count * group_count
         if position_counts[index] <> expected_positions then
           return execution_error("pairwise schedule did not balance absolute position")
       end

@@ -85,7 +85,8 @@ ScanLexRun: procedure
   operator_count   = 0
   comment_count    = 0
 
-  do i = 1 to tokens.0
+  do i = .int(1) to tokens.0
+     tok = .scanlex..scanlex_token
      tok = tokens[i]
      type = tok.get_type()
 
@@ -115,7 +116,8 @@ ScanLexRun: procedure
 
   /* Example: find all identifiers. */
   say "Identifiers found:"
-  do i = 1 to tokens.0
+  do i = .int(1) to tokens.0
+     tok = .scanlex..scanlex_token
      tok = tokens[i]
      if tok.get_type() = "identifier" then
         say "  " tok.get_text()
@@ -127,7 +129,7 @@ ScanLexRun: procedure
    */
   say "Possible function calls:"
   fi=0
-  do i = 1 to tokens.0 - 1
+  do i = .int(1) to tokens.0 - 1
      if tokens[i].get_type() = "identifier" & ,
         tokens[i + 1].get_type() = "bracket" & ,
         tokens[i + 1].get_text() = "(" then do

@@ -36,6 +36,7 @@ The emitter avoids most global variables by storing state directly in the `ASTNo
 | `node->loop...` | `ASTNode` | Specialized fragments for loops: `loopstartchecks`, `loopinc`, `loopendchecks`. |
 | `node->register_num` | `ASTNode` | The assigned register index. |
 | `node->register_type` | `ASTNode` | The register type prefix (`i`, `s`, `f`, `d`, `a`, `o`, `b`). |
+| `node->deferred_register_mark` | `ASTNode` | The deferred-register boundary captured before a statement's descendants are allocated. |
 | `payload->file` | `walker_payload` | The output `FILE` pointer. |
 | `payload->globals` | `walker_payload` | Counter for global variables. |
 
@@ -143,6 +144,21 @@ instruction stream, and readers reject a fixed-call opcode without it. See
 `docs/ai-context/RXBIN_007_SEMANTIC_GRAPH.md`, and
 `docs/ai-context/RXVM_INTERPRETER.md` for the assembler, format, and runtime
 contracts.
+
+## 4.3 Nested Deferred-Register Lifetimes
+
+Indexed and property reads can leave registers linked until the owning
+statement emits its cleanup. A nested statement must therefore not return an
+enclosing condition's or assignment target's deferred registers to the free
+pool. The register walker records the current deferred-register boundary on
+entry to every statement and, on exit, releases only registers added after
+that boundary. The enclosing statement retains its prefix until its own exit.
+
+This is an ownership rule, not a register-pressure preference. Reusing an
+enclosing linked register can make an ordinary local assignment or call result
+write through the link and corrupt attribute storage before `unlink` runs.
+`deferred_register_outer_if_lifetime` covers direct outer-`IF`, typed-loop, and
+loop-plus-`IF` shapes in both no-opt and optimized modes.
 
 ## 5. Risk Registry
 

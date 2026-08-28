@@ -834,6 +834,7 @@ _json_parse_value: procedure = .int
     return 1
   end
   if kind = 6 then do
+    literal = .binary
     literal = "null" as .binary
     if p + 4 > len then do
       error_code = "truncated"
@@ -1412,7 +1413,7 @@ _json_i64_text: procedure = .int
   if scale < 0 then do
     trim = -scale
     if trim >= length(digits) then return 0
-    do i = length(digits) - trim + 1 to length(digits)
+    do i = .int(length(digits) - trim + 1) to length(digits)
       if substr(digits, i, 1) \= "0" then return 0
     end
     digits = substr(digits, 1, length(digits) - trim)

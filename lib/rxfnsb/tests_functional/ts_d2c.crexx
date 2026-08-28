@@ -24,26 +24,31 @@ on signal conversion_error
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = d2c(77, 2)
 on signal conversion_error
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = d2c(-1)
 on signal conversion_error
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = d2c(1114112)
 on signal conversion_error
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = d2c(55296)
 on signal conversion_error
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = d2c(57343)
 on signal conversion_error
   caught = caught + 1

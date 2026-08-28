@@ -104,6 +104,7 @@ time: procedure = .string
   if normalized = "M" then return hour * 60 + minute
   if normalized = "S" then return seconds_today
 
+  result = .string
   result = ""
   if normalized = "C" then do
     civil_hour = hour
@@ -129,6 +130,7 @@ time: procedure = .string
     return result
   end
 
+  codepoint = .int
   codepoint = 48 + hour % 10
   assembler appendchar result,codepoint
   codepoint = 48 + hour // 10

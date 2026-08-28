@@ -97,11 +97,13 @@ rexxclassicbif_verify: procedure = .RexxValue
     return .RexxValue(start || "")
   end
 
-  do index = start - 1 to source_length - 1
+  do index = .int(start - 1) to source_length - 1
     assembler strchar source_code,string,index
     assembler poschar reference_position,refchars,source_code
+    found = .boolean
     found = reference_position >= 0 & reference_position < reference_length
     if found = want_match then do
+      position = .int
       position = index + 1
       return .RexxValue(position || "")
     end

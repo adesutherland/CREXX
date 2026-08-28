@@ -17,7 +17,8 @@ array_elapsed = time("us") - start
 
 start = time("us")
 tree_map = .StringTreeMap()
-do i = 1 to iterations
+do i = .int(1) to iterations
+  rc = .int
   rc = tree_map.put("aap" || i, "noot")
 end
 tree_elapsed = time("us") - start
@@ -28,13 +29,13 @@ if tree_map.get("aap1") <> "noot" then return fail("tree first get")
 if tree_map.get("aap" || iterations) <> "noot" then return fail("tree last get")
 
 start = time("us")
-do i = 1 to iterations
+do i = .int(1) to iterations
   if array_map.get("aap" || i) <> "noot" then return fail("array get " || i)
 end
 array_get_elapsed = time("us") - start
 
 start = time("us")
-do i = 1 to iterations
+do i = .int(1) to iterations
   if tree_map.get("aap" || i) <> "noot" then return fail("tree get " || i)
 end
 tree_get_elapsed = time("us") - start

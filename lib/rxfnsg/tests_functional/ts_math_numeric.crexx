@@ -15,6 +15,7 @@ test_integer_signals: procedure = .int
     nop
   end
   do
+    ignored = .int
     ignored = rxint..powmod(2, -1, 5)
     say "FAIL: RCC-5C POWMOD negative exponent did not signal"
     failures = failures + 1
@@ -22,6 +23,7 @@ test_integer_signals: procedure = .int
     nop
   end
   do
+    ignored = .int
     ignored = rxint..powmod(2, 3, 0)
     say "FAIL: RCC-5C POWMOD invalid modulus did not signal"
     failures = failures + 1
@@ -29,6 +31,7 @@ test_integer_signals: procedure = .int
     nop
   end
   do
+    ignored = .int
     ignored = rxint..gcd(-9223372036854775807 - 1, 0)
     say "FAIL: RCC-5C GCD unrepresentable result did not signal"
     failures = failures + 1
@@ -36,6 +39,7 @@ test_integer_signals: procedure = .int
     nop
   end
   do
+    ignored = .int
     ignored = rxint..lcm(-9223372036854775807 - 1, 1)
     say "FAIL: RCC-5C LCM overflow did not signal"
     failures = failures + 1
@@ -43,6 +47,7 @@ test_integer_signals: procedure = .int
     nop
   end
   do
+    ignored = .int
     ignored = rxint..factorial(21)
     say "FAIL: RCC-5C FACTORIAL overflow did not signal"
     failures = failures + 1

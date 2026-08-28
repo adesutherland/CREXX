@@ -89,6 +89,7 @@ rexxclassicbif_center: procedure = .RexxValue
   half = .int
   start = .int
   pad_character = .int
+  pad_index = .int
   pad_index = 0
   padding = ""
   result = ""

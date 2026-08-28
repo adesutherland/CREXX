@@ -231,7 +231,9 @@ ISO8601: class
     if sign = "-" then
       offset = -offset
 
+    local_text = .string
     local_text = left(text,offset_start - 1)
+    dt = .DateTime
     dt = parse(local_text)
 
     return .OffsetDateTime(dt,offset)

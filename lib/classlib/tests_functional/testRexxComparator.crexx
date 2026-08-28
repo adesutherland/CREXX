@@ -16,9 +16,11 @@ loop i=9 to 1 by -1
 end
 if val.toString() <> 'bar1' then failures=failures+1
 if a.size() <> 9 then failures=failures+1
+rc = .int
 rc = legacy.put(.rexx('legacy') as .object, .rexx('compatible') as .object)
 if legacy.size() <> 1 then failures=failures+1
 
+i = .data..ObjectObjectTreeMapIterator
 i = a.iterator()
 loop while i.hasNext()
   key = i.next() as .rexx

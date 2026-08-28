@@ -84,11 +84,13 @@ rexxclassicbif_insert: procedure = .RexxValue
     if insert_length > 0 then do
       copy_length = insert_length
       if new_length < copy_length then copy_length = new_length
+      segment_bytes = .binary
       segment_bytes = rexxclassic_byte_slice_pad(new_bytes,0,copy_length,insert_length,pad_byte)
       assembler bappend result_bytes,segment_bytes
     end
     if before < target_length then do
       tail_length = target_length - before
+      segment_bytes = .binary
       segment_bytes = rexxclassic_byte_slice(target_bytes,before,tail_length)
       assembler bappend result_bytes,segment_bytes
     end
@@ -103,6 +105,7 @@ rexxclassicbif_insert: procedure = .RexxValue
   new_length = .int
   target_length = .int
   pad_character = .int
+  pad_index = .int
   pad_index = 0
   padding_needed = .int
   tail_length = .int

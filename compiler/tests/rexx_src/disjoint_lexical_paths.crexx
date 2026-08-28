@@ -1,0 +1,38 @@
+options levelb
+
+main: procedure
+  call early_return 0
+  call sibling_blocks 1
+  call repeated_loops
+  return
+
+early_return: procedure = .int
+  arg stop = .int
+  if stop then do
+    value = 1
+    return value
+  end
+  value = 2
+  return value
+
+sibling_blocks: procedure
+  arg choose_first = .int
+  if choose_first then do
+    item = 1
+  end
+  else do
+    item = 2
+  end
+  return
+
+repeated_loops: procedure
+  do i = 1 to 1
+    nop
+  end
+  do i = 1 to 1
+    nop
+  end
+  do i = .int(1) to 1
+    nop
+  end
+  return

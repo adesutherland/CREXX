@@ -73,7 +73,7 @@ b2d: procedure = .int
   end
 
   significant = 0
-  do i = 0 to binary_length - 1
+  do i = .int(0) to binary_length - 1
     assembler strchar codepoint,binary,i
     if codepoint = blank_character then iterate
     if \significant & codepoint = zero_character then iterate

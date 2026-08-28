@@ -215,6 +215,7 @@ main: procedure = .int
   verification[6] = "PASS: generated summaries preserve procedure metrics, the dynamic call census, and paired unprofiled timing deltas"
   if write_lines(output_dir || "/verification.txt", verification) <> 0 then return 1
 
+  completed_utc = .string
   completed_utc = timestamp_utc()
   if write_bundle_manifest(bundle_manifest, manifest_path, release_build, ,
       profile_build, vm_name, profile_mode, output_dir, args, started_utc, ,
@@ -308,10 +309,14 @@ process_entry: procedure = .int
       return execution_error("warmup correctness failed for " || entry_id)
   end
 
-  do sequence = 1 to runs
+  do sequence = .int(1) to runs
+    elapsed_ns = .int
     elapsed_ns = 0
+    child_rc = .int
     child_rc = 0
+    correctness = .string
     correctness = "fail"
+    sample_rc = .int
     sample_rc = capture_timed_sample(timing_command, expectation, "recorded", ,
         sequence, timing_dir || "/raw", elapsed_ns, child_rc, correctness)
     samples[samples[0] + 1] = timing_sample_row(entry_id, pair_name, workload, ,
@@ -359,7 +364,7 @@ process_entry: procedure = .int
     analyse_command[1] = rxseq_tool
     analyse_command[2] = rxseq_path
     analyse_command[3] = image
-    do module_index = 1 to modules[0]
+    do module_index = .int(1) to modules[0]
       analyse_command[analyse_command[0] + 1] = modules[module_index]
     end
     analyse_command[analyse_command[0] + 1] = "--output"
@@ -682,7 +687,7 @@ vm_command: procedure = .string[]
   end
   if arguments[0] > 0 then do
     command[command[0] + 1] = "-a"
-    do i = 1 to arguments[0]
+    do i = .int(1) to arguments[0]
       command[command[0] + 1] = arguments[i]
     end
   end
@@ -1027,19 +1032,19 @@ write_entry_manifest: procedure = .int
         jsonquote(module_hashes[i]) || "}"
   end
   argument_json = .string[]
-  do i = 1 to arguments[0]
+  do i = .int(1) to arguments[0]
     argument_json[i] = jsonquote(arguments[i])
   end
   timing_json = .string[]
-  do i = 1 to timing_command[0]
+  do i = .int(1) to timing_command[0]
     timing_json[i] = jsonquote(timing_command[i])
   end
   profile_json = .string[]
-  do i = 1 to profile_command[0]
+  do i = .int(1) to profile_command[0]
     profile_json[i] = jsonquote(profile_command[i])
   end
   sequence_json = .string[]
-  do i = 1 to sequence_commands[0]
+  do i = .int(1) to sequence_commands[0]
     sequence_json[i] = jsonquote(sequence_commands[i])
   end
   output = .string[]
@@ -1186,7 +1191,7 @@ write_call_census_markdown: procedure = .int
   output[output[0] + 1] = ""
   output[output[0] + 1] = "| Arity | Calls |"
   output[output[0] + 1] = "|---:|---:|"
-  do i = 1 to keys[0]
+  do i = .int(1) to keys[0]
     if left(keys[i], length("census|arity|")) = "census|arity|" then do
       arity = substr(keys[i], length("census|arity|") + 1)
       output[output[0] + 1] = "| " || arity || " | " || counts[i] || " |"

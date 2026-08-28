@@ -79,7 +79,7 @@ DBIdList: class
       if values_[index] = value then found = index
     end
     if found = 0 then return
-    do index = found to count_ - 1
+    do index = .int(found) to count_ - 1
       values_[index] = values_[index + 1]
     end
     values_[count_] = 0
@@ -426,6 +426,7 @@ DBPlanner: class
     end
 
     input = constraint_v1_[constraint_id]
+    output = .int
     output = constraint_v2_[constraint_id]
     if constraint_direction_[constraint_id] <> 1 then do
       input = constraint_v2_[constraint_id]
@@ -527,7 +528,8 @@ DBPlanner: class
       end
 
       determining = variable_determined_by_[variable_id]
-      do index = 1 to constraints.size()
+      do index = .int(1) to constraints.size()
+        constraint_id = .int
         constraint_id = constraints.get(index)
         if constraint_id <> determining then do
           if isSatisfied(constraint_id) then do
@@ -559,7 +561,7 @@ DBPlanner: class
     do index = 1 to problem_size + 1
       variables[index] = newVariable(0)
     end
-    do index = 1 to problem_size
+    do index = .int(1) to problem_size
       constraint_id = addEqualityConstraint(variables[index], ,
           variables[index + 1], -800)
     end
@@ -613,7 +615,7 @@ DBPlanner: class
     end
 
     call change(scale, 5)
-    do index = 1 to problem_size - 1
+    do index = .int(1) to problem_size - 1
       expected = index * 5 + 1000
       if variable_value_[destinations[index]] <> expected then do
         call setError("projection test 3 failed at destination " || index)
@@ -622,7 +624,8 @@ DBPlanner: class
     end
 
     call change(offset, 2000)
-    do index = 1 to problem_size - 1
+    do index = .int(1) to problem_size - 1
+      expected = .int
       expected = index * 5 + 2000
       if variable_value_[destinations[index]] <> expected then do
         call setError("projection test 4 failed at destination " || index)

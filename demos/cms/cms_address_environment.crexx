@@ -170,7 +170,7 @@ cmsaddressenvironment: class implements .addressenvironment .addressinstance .ad
 
     if normalized = "SET BUFFER UPDATED" then do
       response = .addressresponse(0)
-      do i = 1 to request.get_binding_count()
+      do i = .int(1) to request.get_binding_count()
         binding = request.get_binding(i)
         if _address_normalize_environment_name(binding.get_kind()) = "VAR" & _address_normalize_environment_name(binding.get_internal_name()) = "BUFFER" then do
           call response.add_updated_binding("var", binding.get_internal_name(), binding.get_external_alias(), "cms-updated", "")

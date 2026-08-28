@@ -424,41 +424,31 @@ void ret_reg_later(Scope *scope, int reg) {
     dpa_add(deferred_array, (void*)(size_t)reg);
 }
 
-/* Return all deferred registers */
-void ret_reg_all_deferred(Scope *scope) {
-    size_t i;
+/* Mark the current deferred-register boundary. */
+size_t deferred_reg_mark(Scope *scope) {
+    Scope *rs = scope && scope->reg_scope ? scope->reg_scope : scope;
     dpa *deferred_array;
-    Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
-    deferred_array = (dpa*)(rs->deferred_registers_array);
 
-    for (i=0; i<deferred_array->size; i++) {
-        ret_reg_free(rs, (int)(size_t)deferred_array->pointers[i]);
-    }
-    deferred_array->size = 0;
+    if (!rs) return 0;
+    deferred_array = (dpa*)(rs->deferred_registers_array);
+    return deferred_array ? deferred_array->size : 0;
 }
 
-/* Return deferred registers except for a protected set. */
-void ret_reg_all_deferred_except(Scope *scope, const int *registers, size_t count) {
+/* Return only registers deferred after a nested statement boundary. */
+void ret_reg_deferred_since(Scope *scope, size_t mark) {
     size_t i;
-    size_t retained = 0;
     dpa *deferred_array;
-    Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
+    Scope *rs = scope && scope->reg_scope ? scope->reg_scope : scope;
+
+    if (!rs) return;
     deferred_array = (dpa*)(rs->deferred_registers_array);
+    if (!deferred_array) return;
+    if (mark > deferred_array->size) mark = deferred_array->size;
 
-    for (i=0; i<deferred_array->size; i++) {
-        int reg = (int)(size_t)deferred_array->pointers[i];
-        size_t protected_index;
-
-        for (protected_index=0; protected_index<count; protected_index++) {
-            if (registers[protected_index] == reg) break;
-        }
-        if (protected_index < count) {
-            deferred_array->pointers[retained++] = deferred_array->pointers[i];
-        } else {
-            ret_reg_free(rs, reg);
-        }
+    for (i=mark; i<deferred_array->size; i++) {
+        ret_reg_free(rs, (int)(size_t)deferred_array->pointers[i]);
     }
-    deferred_array->size = retained;
+    deferred_array->size = mark;
 }
 
 /* Get number of free register from scope - returns the start of a sequence

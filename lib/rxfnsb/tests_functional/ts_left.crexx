@@ -28,11 +28,13 @@ on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = left("abc", 3, "")
 on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = left("abc", 3, "xy")
 on signal invalid_arguments
   caught = caught + 1

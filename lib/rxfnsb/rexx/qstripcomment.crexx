@@ -57,9 +57,12 @@ qstripcomment: procedure = .string
   else do
     count = .int
     assembler idiv count,spans[0],4
-    do index = 1 to count
+    do index = .int(1) to count
+      base = .int
       base = (index - 1) * 4
+      remove_start = .int
       remove_start = spans[base + 1]
+      remove_end = .int
       remove_end = spans[base + 4]
       out = out || substr(text,cursor + 1,remove_start - cursor)
       cursor = remove_end

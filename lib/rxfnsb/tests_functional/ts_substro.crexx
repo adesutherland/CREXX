@@ -22,11 +22,11 @@ do i = 1 to 1000
   assembler append large_source,x
 end
 large_expected = ""
-do i = 1 to 500
+do i = .int(1) to 500
   assembler append large_expected,x
 end
 dot = "."
-do i = 1 to 250
+do i = .int(1) to 250
   assembler append large_expected,dot
 end
 errors = errors + check(substro(large_source, 501, 750, ".") = large_expected, "substantial slice and pad")
@@ -38,16 +38,19 @@ on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = substro("abc", 1, -1)
 on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = substro("", 1, 0, "")
 on signal invalid_arguments
   caught = caught + 1
 end
 do
+  ignored = .string
   ignored = substro("abc", 1, 1, "xy")
 on signal invalid_arguments
   caught = caught + 1

@@ -179,6 +179,7 @@ rexxscriptcoreevaluator: class
       return _build_result(error_message)
     end
 
+    text = .string
     text = strip(substr(statements, start))
     if text <> "" then do
       statement_count = statement_count + 1
@@ -186,7 +187,7 @@ rexxscriptcoreevaluator: class
       statement_numbers[statement_count] = stmtno || ""
     end
 
-    do i = 1 to statement_count
+    do i = .int(1) to statement_count
       text = strip(statement_texts[i])
       if _is_label_statement(text) = 1 then do
         label_name = strip(substr(text, 1, length(text) - 1))
@@ -248,7 +249,7 @@ rexxscriptcoreevaluator: class
     if output_count > 0 then do
       base = export_count * 2 + 2
       result[base] = output_count
-      do i = 1 to output_count
+      do i = .int(1) to output_count
         result[base + i] = output_lines[i]
       end
     end
@@ -588,6 +589,7 @@ rexxscriptcoreevaluator: class
       return 1
     end
     if _starts_keyword(text, ".GEN") = 1 then do
+       expr = .string
        expr = strip(substr(text, 5))
        if expr == "" then return _set_error("missing_expression", "missing .GEN expression", stmtno, 1)
        expr=_modify_var_symbol(expr)
@@ -597,6 +599,7 @@ rexxscriptcoreevaluator: class
        return 1
     end
     if _starts_keyword(text, ".MCALL") = 1 then do
+           expr = .string
            expr = strip(substr(text, 7))
            if left(expr,2) \='##' then expr = '##'expr
            if expr == "" then return _set_error("missing_expression", "missing .MCALL expression", stmtno, 1)
@@ -607,6 +610,7 @@ rexxscriptcoreevaluator: class
            return 1
         end
     if _starts_keyword(text, ".TAIL") = 1 then do
+       expr = .string
        expr = strip(substr(text, 6))
        if expr == "" then return _set_error("missing_expression", "missing .TAIL expression", stmtno, 1)
        expr=_modify_var_symbol(expr)
@@ -624,6 +628,7 @@ rexxscriptcoreevaluator: class
          * Remove exactly one separator character between the section name  and the generated payload.
          * Any additional whitespace belongs to the generated line and must be preserved.
          */
+        expr = .string
         expr = afterword(text, 2)
         if left(expr, 1) = " " then expr = substr(expr, 2)
 
@@ -694,6 +699,7 @@ rexxscriptcoreevaluator: class
             if _starts_keyword(rest, "WHILE") = 1 then return _set_error("syntax_error", "DO WHILE is not supported directly after ELSE", stmtno, else_pos + 1)
           end
           if translate(else_action) == "DO" then return _set_error("syntax_error", "ELSE with DO block is not supported", stmtno, else_pos + 1)
+          result = .int
           result = _execute_statement(else_action, stmtno, pc)
           if result = 0 then return 0
           if result = 2 then return 2
@@ -884,6 +890,7 @@ rexxscriptcoreevaluator: class
 
     /* Permit side-effecting intrinsic calls such as CALL LINEOUT(...). */
     if _starts_keyword(text, "CALL") = 1 then do
+      expr = .string
       expr = strip(substr(text, 5))
       if expr == "" then return _set_error("missing_expression", "missing CALL expression", stmtno, 1)
       if _eval_expression(expr, stmtno) = 0 then return 0
@@ -893,6 +900,7 @@ rexxscriptcoreevaluator: class
     eq = _find_assignment(text)
     if eq = 0 then return _set_error("unknown_statement", "unknown statement '" text"'", stmtno, 1)
     name = strip(substr(text, 1, eq - 1))
+    expr = .string
     expr = strip(substr(text, eq + 1))
     if _is_identifier(name) = 0 then return _set_error("invalid_assignment", "invalid assignment target", stmtno, 1)
     if expr == "" then return _set_error("missing_expression", "missing assignment expression", stmtno, eq + 1)
@@ -1150,7 +1158,9 @@ rexxscriptcoreevaluator: class
       else if cmp_op == "<>" | cmp_op == "\=" then truth = left_value <> right_value
       else do
         if _is_integer_text(left_value) = 0 | _is_integer_text(right_value) = 0 then return _set_error("type_mismatch", "relational IF comparison requires integers", stmtno, cmp_pos)
+        left_int = .float
         left_int = left_value + 0
+        right_int = .float
         right_int = right_value + 0
         if cmp_op == "<" then truth = left_int < right_int
         else if cmp_op == ">" then truth = left_int > right_int
@@ -1264,6 +1274,7 @@ rexxscriptcoreevaluator: class
     end
 
     if pos(ch, "0123456789") > 0 then do
+      start = .int
       start = expr_pos
       do while expr_pos <= length(expr_text) & pos(substr(expr_text, expr_pos, 1), "0123456789") > 0
         expr_pos = expr_pos + 1
@@ -1274,6 +1285,7 @@ rexxscriptcoreevaluator: class
     end
 
     if _is_identifier_start(ch) = 1 then do
+      start = .int
       start = expr_pos
       do while expr_pos <= length(expr_text) & _is_identifier_part(substr(expr_text, expr_pos, 1)) = 1
         expr_pos = expr_pos + 1
@@ -1589,7 +1601,7 @@ rexxscriptcoreevaluator: class
 
     bif_args = .RexxValue[]
     bif_exists = .int[]
-    do i = 1 to parsed_arg_count
+    do i = .int(1) to parsed_arg_count
       bif_exists[i] = parsed_exists[i]
       if parsed_exists[i] <> 0 then do
         if _eval_expression(parsed_args[i], stmtno) = 0 then return 0
@@ -1694,7 +1706,7 @@ return quoted_string
     say 'Parsed Statements ('stmts[0]')'
     say copies('-',72)
     inc=0
-    do i=1 to stmts[0]
+    do i=.int(1) to stmts[0]
        lstmt=lower(stmts[i])
        if word(lstmt,1)='end' then inc=inc-3
        say right(i,4,'0')copies(' ',inc) stmts[i]

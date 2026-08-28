@@ -23,25 +23,25 @@ end
 valid_elapsed = time("us") - start
 
 start = time("us")
-do i = 1 to iterations
+do i = .int(1) to iterations
   if jsonget(payload, "choices.1.message.content") \= "Hello from JSON performance" then return fail("llm path")
 end
 deep_get_elapsed = time("us") - start
 
 start = time("us")
-do i = 1 to iterations
+do i = .int(1) to iterations
   if jsonget(payload, target_path) \= target_sku then return fail("tail array path")
 end
 tail_get_elapsed = time("us") - start
 
 start = time("us")
-do i = 1 to iterations
+do i = .int(1) to iterations
   if jsoncount(payload, "items") \= rows then return fail("items count")
 end
 count_elapsed = time("us") - start
 
 start = time("us")
-do i = 1 to iterations
+do i = .int(1) to iterations
   member_count = jsonmembers(payload, "usage", names)
   if member_count \= 2 then return fail("usage members count")
   if names[1] \= "total_tokens" then return fail("usage member one")
@@ -54,7 +54,7 @@ document_build_elapsed = time("us") - start
 if document.valid() \= 1 then return fail("jsondocument build")
 
 start = time("us")
-do i = 1 to iterations
+do i = .int(1) to iterations
   if document.get(target_path) \= target_sku then return fail("document tail path")
 end
 document_path_elapsed = time("us") - start
@@ -62,17 +62,17 @@ document_path_elapsed = time("us") - start
 tail_node = document.find(target_path)
 if tail_node <= 0 then return fail("document tail node")
 start = time("us")
-do i = 1 to iterations
+do i = .int(1) to iterations
   if document.node_get(tail_node) \= target_sku then return fail("document tail node get")
 end
 document_node_elapsed = time("us") - start
 
 stress = ""
-do i = 1 to 64
+do i = .int(1) to 64
   stress = stress || "{noise"
 end
 stress = stress || payload
-do i = 1 to 64
+do i = .int(1) to 64
   stress = stress || "}"
 end
 scanned = .jsondocument("")

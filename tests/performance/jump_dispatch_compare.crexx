@@ -53,7 +53,8 @@ bench_int2: procedure = .int
   table_elapsed = time("us") - start
   branch_sum = 0
   start = time("us")
-  do i = 0 to iterations - 1
+  do i = .int(0) to iterations - 1
+    value = .int
     if pattern = 0 then value = 0
     else if pattern = 1 then value = 1
     else if pattern = 2 then value = 2
@@ -84,7 +85,8 @@ bench_int3: procedure = .int
   table_elapsed = time("us") - start
   branch_sum = 0
   start = time("us")
-  do i = 0 to iterations - 1
+  do i = .int(0) to iterations - 1
+    value = .int
     if pattern = 0 then value = 0
     else if pattern = 1 then value = 2
     else if pattern = 2 then value = 3
@@ -117,7 +119,8 @@ bench_int4: procedure = .int
   table_elapsed = time("us") - start
   branch_sum = 0
   start = time("us")
-  do i = 0 to iterations - 1
+  do i = .int(0) to iterations - 1
+    value = .int
     if pattern = 0 then value = 0
     else if pattern = 1 then value = 3
     else if pattern = 2 then value = 4
@@ -153,7 +156,8 @@ bench_int6: procedure = .int
   table_elapsed = time("us") - start
   branch_sum = 0
   start = time("us")
-  do i = 0 to iterations - 1
+  do i = .int(0) to iterations - 1
+    value = .int
     if pattern = 0 then value = 0
     else if pattern = 1 then value = 5
     else if pattern = 2 then value = 6
@@ -193,7 +197,8 @@ bench_int8: procedure = .int
   table_elapsed = time("us") - start
   branch_sum = 0
   start = time("us")
-  do i = 0 to iterations - 1
+  do i = .int(0) to iterations - 1
+    value = .int
     if pattern = 0 then value = 0
     else if pattern = 1 then value = 7
     else if pattern = 2 then value = 8
@@ -225,7 +230,7 @@ bench_string2: procedure = .int
   table_elapsed = time("us") - start
   branch_sum = 0
   start = time("us")
-  do i = 1 to iterations
+  do i = .int(1) to iterations
     if "key00" = value then branch_sum = branch_sum + 1
     else if "key01" = value then branch_sum = branch_sum + 2
     else branch_sum = branch_sum - 1
@@ -248,7 +253,7 @@ bench_string3: procedure = .int
   table_elapsed = time("us") - start
   branch_sum = 0
   start = time("us")
-  do i = 1 to iterations
+  do i = .int(1) to iterations
     if "key00" = value then branch_sum = branch_sum + 1
     else if "key01" = value then branch_sum = branch_sum + 2
     else if "key02" = value then branch_sum = branch_sum + 3
@@ -277,7 +282,7 @@ bench_string8: procedure = .int
   table_elapsed = time("us") - start
   branch_sum = 0
   start = time("us")
-  do i = 1 to iterations
+  do i = .int(1) to iterations
     if "key00" = value then branch_sum = branch_sum + 1
     else if "key01" = value then branch_sum = branch_sum + 2
     else if "key02" = value then branch_sum = branch_sum + 3
@@ -305,7 +310,7 @@ bench_numeric2: procedure = .int
   table_elapsed = time("us") - start
   branch_sum = 0
   start = time("us")
-  do i = 1 to iterations
+  do i = .int(1) to iterations
     if "1" = value then branch_sum = branch_sum + 1
     else if "2.0" = value then branch_sum = branch_sum + 2
     else branch_sum = branch_sum - 1
@@ -328,7 +333,7 @@ bench_numeric3: procedure = .int
   table_elapsed = time("us") - start
   branch_sum = 0
   start = time("us")
-  do i = 1 to iterations
+  do i = .int(1) to iterations
     if "1" = value then branch_sum = branch_sum + 1
     else if "2.0" = value then branch_sum = branch_sum + 2
     else if "3e0" = value then branch_sum = branch_sum + 3
@@ -357,7 +362,7 @@ bench_numeric8: procedure = .int
   table_elapsed = time("us") - start
   branch_sum = 0
   start = time("us")
-  do i = 1 to iterations
+  do i = .int(1) to iterations
     if "1" = value then branch_sum = branch_sum + 1
     else if "2" = value then branch_sum = branch_sum + 2
     else if "3" = value then branch_sum = branch_sum + 3

@@ -21,6 +21,7 @@ errors = errors + check(1,caught,"empty needle signal")
 
 caught = 0
 do
+  ignored = .int
   ignored = qpos(';', 'say "unfinished; quote')
 on signal invalid_arguments
   caught = caught + 1
@@ -29,6 +30,7 @@ errors = errors + check(1,caught,"unmatched quote signal")
 
 caught = 0
 do
+  ignored = .int
   ignored = qpos(';', 'a;b', 0)
 on signal invalid_arguments
   caught = caught + 1

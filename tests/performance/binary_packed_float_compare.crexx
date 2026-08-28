@@ -33,7 +33,7 @@ elapsed_us = 0
 if variant = "packed-read" then do
   started = time("us")
   do repetition = 1 to iterations
-    do index = 0 to cells - 1
+    do index = .int(0) to cells - 1
       checksum = checksum + <packed..float>(index) values
     end
   end
@@ -41,9 +41,10 @@ if variant = "packed-read" then do
   if checksum <> cells * iterations * 0.5 then return fail("packed read checksum")
 end
 else if variant = "encoded-read" then do
+  started = .string
   started = time("us")
-  do repetition = 1 to iterations
-    do index = 0 to cells - 1
+  do repetition = .int(1) to iterations
+    do index = .int(0) to cells - 1
       checksum = checksum + <at..f64>(index * 8) values
     end
   end
@@ -51,9 +52,10 @@ else if variant = "encoded-read" then do
   if checksum <> cells * iterations * 0.5 then return fail("encoded read checksum")
 end
 else if variant = "packed-write" then do
+  started = .string
   started = time("us")
-  do repetition = 1 to iterations
-    do index = 0 to cells - 1
+  do repetition = .int(1) to iterations
+    do index = .int(0) to cells - 1
       <packed..float>(index) values = index + repetition
     end
   end
@@ -62,9 +64,10 @@ else if variant = "packed-write" then do
   if checksum <> cells - 1 + iterations * 2 then return fail("packed write checksum")
 end
 else if variant = "encoded-write" then do
+  started = .string
   started = time("us")
-  do repetition = 1 to iterations
-    do index = 0 to cells - 1
+  do repetition = .int(1) to iterations
+    do index = .int(0) to cells - 1
       <at..f64>(index * 8) values = index + repetition
     end
   end

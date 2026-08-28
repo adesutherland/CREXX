@@ -182,6 +182,7 @@ test_invalid_argument_signals: procedure = .int
     failures = failures + numerictestsupport..check_bool(problem.name() = "INVALID_ARGUMENTS" & pos("RXINT.ISQRT", problem.message()) > 0, "isqrt negative signal identity")
   end
   do
+    ignored = .int
     ignored = rxint..powmod(2, -1, 5)
     say "FAIL: integer contract powmod negative exponent did not signal"
     failures = failures + 1
@@ -189,6 +190,7 @@ test_invalid_argument_signals: procedure = .int
     failures = failures + numerictestsupport..check_bool(problem.name() = "INVALID_ARGUMENTS" & pos("RXINT.POWMOD", problem.message()) > 0, "powmod negative exponent signal identity")
   end
   do
+    ignored = .int
     ignored = rxint..powmod(2, 3, 0)
     say "FAIL: integer contract powmod zero modulus did not signal"
     failures = failures + 1
@@ -196,6 +198,7 @@ test_invalid_argument_signals: procedure = .int
     failures = failures + numerictestsupport..check_bool(problem.name() = "INVALID_ARGUMENTS" & pos("RXINT.POWMOD", problem.message()) > 0, "powmod zero modulus signal identity")
   end
   do
+    ignored = .int
     ignored = rxint..powmod(2, 3, -1)
     say "FAIL: integer contract powmod negative modulus did not signal"
     failures = failures + 1
@@ -203,6 +206,7 @@ test_invalid_argument_signals: procedure = .int
     failures = failures + numerictestsupport..check_bool(problem.name() = "INVALID_ARGUMENTS" & pos("RXINT.POWMOD", problem.message()) > 0, "powmod negative modulus signal identity")
   end
   do
+    ignored = .int
     ignored = rxint..factorial(-1)
     say "FAIL: integer contract factorial negative did not signal"
     failures = failures + 1
@@ -222,6 +226,7 @@ test_overflow_signals: procedure = .int
     failures = failures + numerictestsupport..check_bool(problem.name() = "OVERFLOW_UNDERFLOW" & pos("RXINT.GCD", problem.message()) > 0, "gcd overflow signal identity")
   end
   do
+    ignored = .int
     ignored = rxint..lcm(minimum, 1)
     say "FAIL: integer contract lcm minimum did not signal"
     failures = failures + 1
@@ -229,6 +234,7 @@ test_overflow_signals: procedure = .int
     failures = failures + numerictestsupport..check_bool(problem.name() = "OVERFLOW_UNDERFLOW" & pos("RXINT.LCM", problem.message()) > 0, "lcm minimum signal identity")
   end
   do
+    ignored = .int
     ignored = rxint..lcm(3037000500, 3037000501)
     say "FAIL: integer contract lcm boundary did not signal"
     failures = failures + 1
@@ -239,6 +245,7 @@ test_overflow_signals: procedure = .int
     end
   end
   do
+    ignored = .int
     ignored = rxint..factorial(21)
     say "FAIL: integer contract factorial 21 did not signal"
     failures = failures + 1
@@ -246,6 +253,7 @@ test_overflow_signals: procedure = .int
     failures = failures + numerictestsupport..check_bool(problem.name() = "OVERFLOW_UNDERFLOW" & pos("RXINT.FACTORIAL", problem.message()) > 0, "factorial 21 signal identity")
   end
   do
+    ignored = .int
     ignored = rxint..factorial(9223372036854775807)
     say "FAIL: integer contract factorial maximum did not signal"
     failures = failures + 1

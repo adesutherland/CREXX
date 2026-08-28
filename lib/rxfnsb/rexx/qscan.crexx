@@ -429,6 +429,7 @@ qscan_word_spans: procedure = .int[]
     assembler signal "INVALID_ARGUMENTS", "unmatched quote in quote-aware words"
   if word_start >= 0 then do
     word_count = word_count + 1
+    base = .int
     base = (word_count - 1) * 2
     spans[base + 1] = word_start
     spans[base + 2] = text_length - word_start

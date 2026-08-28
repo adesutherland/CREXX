@@ -86,6 +86,7 @@ rexxclassicbif_changestr: procedure = .RexxValue
   replacement = context.argumentText(3)
   needle_length = .int
   haystack_length = .int
+  position = .int
   position = 1
   found = .int
   segment_start = .int

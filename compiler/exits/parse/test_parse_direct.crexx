@@ -79,6 +79,7 @@ test_parse_plan: procedure = .int
      if check_equal("parse abc dimensions", "1", binding.get_dimensions()) = 0 then failures = failures + 1
   end
   if first_bind > 0 then do
+     binding = .rxcp..bindingplan
      binding = plan.get_binding(first_bind)
      if check_equal("parse first provenance", "parse_target", binding.get_provenance()) = 0 then failures = failures + 1
   end

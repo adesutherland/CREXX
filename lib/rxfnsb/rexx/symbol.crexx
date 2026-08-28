@@ -84,7 +84,7 @@ symbol: procedure = .string
     do a = addr to 0 by -1
         /* Get the metadata for that address */
         assembler metaloaddata meta_array,module,a
-        do i = 1 to meta_array
+        do i = .int(1) to meta_array
             assembler linkattr1 meta_entry,meta_array,i
             if meta_entry = ".meta_clear" then do /* Object type */
                 assembler linkattr1 sym,meta_entry,1

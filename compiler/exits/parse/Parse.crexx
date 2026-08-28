@@ -290,9 +290,13 @@ token_end = tokens.0
  * -------------------------------------------------------------------------------------------------------------------
  */
   do while token_end >= token_ix + 1
+     ti = .token
      ti   = tokens[token_end]
+     type = .string
      type = strip(ti.get_type())
+     text = .string
      text = strip(ti.get_text())
+     utext = .string
      utext=upper(text)
 
      if isParseIdentifierToken(ti) & _into='' & token_end > token_ix + 1 then do
@@ -395,13 +399,17 @@ token_end = tokens.0
  * returns the current exit plan.
  * -------------------------------------------------------------------------------------------------------------------
  */
+  i = .int
   i = token_ix-1
   with_seen=0
   prevkind = 0
   do while i < token_end
      i=i+1
+     ti = .token
      ti   = tokens[i]
+     type = .string
      type = strip(ti.get_type())
+     text = .string
      text = strip(ti.get_text())
      tlen=length(text)
 
@@ -452,6 +460,7 @@ token_end = tokens.0
      if type = "operator" then do
         if text = "+" | text = "-" | text = "=" then do
            if i + 1 <= token_end then do
+              tj = .token
               tj    = tokens[i+1]
               ntype = strip(tj.get_type())
               ntext = strip(tj.get_text())
@@ -464,11 +473,14 @@ token_end = tokens.0
                  iterate
               end
               if ntype = "bracket" & ntext = "(" & i + 3 <= token_end then do
+                 dynamic_token = .token
                  dynamic_token = tokens[i + 2]
+                 dynamic_close = .token
                  dynamic_close = tokens[i + 3]
                  if strip(dynamic_token.get_type()) = "identifier" &,
                     strip(dynamic_close.get_type()) = "bracket" &,
                     strip(dynamic_close.get_text()) = ")" then do
+                    kind = .int
                     if text = "=" then kind = 8
                     else if text = "+" then kind = 9
                     else kind = 10
@@ -582,7 +594,9 @@ token_end = tokens.0
         end
      end
      if words(_template_kindtab)=6 then do
+        target1 = .string
         target1=word(_template_texttab,2)
+        target2 = .string
         target2=word(_template_texttab,4)
         target3=word(_template_texttab,6)
         simple_targets=isSimpleDirectTarget(target1,target2,target3)
@@ -626,8 +640,11 @@ token_end = tokens.0
         end
      end
      if _direct_kind='' & words(_template_kindtab)=8 then do
+        target1 = .string
         target1=word(_template_texttab,2)
+        target2 = .string
         target2=word(_template_texttab,4)
+        target3 = .string
         target3=word(_template_texttab,6)
         if word(_template_texttab,8)='.' & isSimpleDirectTarget(target1,target2,target3) then do
            if word(_template_kindtab,1)='3' & word(_template_texttab,1)='1' &,
@@ -804,13 +821,20 @@ process: method = .exitresult
        return result
     end
     if _direct_kind='PATTERN_POS3' then do
+       direct_source = .string
        direct_source='__rxcpx_parse_source_' || _node_id
+       direct1 = .string
        direct1='__rxcpx_parse_direct1_' || _node_id
+       direct2 = .string
        direct2='__rxcpx_parse_direct2_' || _node_id
        direct3='__rxcpx_parse_direct3_' || _node_id
+       cursor = .string
        cursor='__rxcpx_pattern_cursor_' || _node_id
+       boundary = .string
        boundary='__rxcpx_pattern_boundary_' || _node_id
+       span_length = .string
        span_length='__rxcpx_pattern_length_' || _node_id
+       source_length = .string
        source_length='__rxcpx_pattern_source_length_' || _node_id
        operand1='__rxcpx_pattern_operand1_' || _node_id
        operand2='__rxcpx_pattern_operand2_' || _node_id
@@ -843,9 +867,13 @@ process: method = .exitresult
        return result
     end
     if _direct_kind='WORDS3' | _direct_kind='WORDS3DROP' then do
+       direct_source = .string
        direct_source='__rxcpx_parse_source_' || _node_id
+       direct1 = .string
        direct1='__rxcpx_parse_direct1_' || _node_id
+       direct2 = .string
        direct2='__rxcpx_parse_direct2_' || _node_id
+       direct3 = .string
        direct3='__rxcpx_parse_direct3_' || _node_id
        if _direct_kind='WORDS3' then
           replacement = replacement || '; assembler parsewords3 ' || direct1 || ',' || direct2 || ',' || direct3 || ',' || direct_source
@@ -859,8 +887,11 @@ process: method = .exitresult
        return result
     end
     if _direct_kind='POSITION2' then do
+       direct_source = .string
        direct_source='__rxcpx_parse_source_' || _node_id
+       direct1 = .string
        direct1='__rxcpx_parse_direct1_' || _node_id
+       direct2 = .string
        direct2='__rxcpx_parse_direct2_' || _node_id
        replacement = replacement || '; assembler parsepos2 ' || direct1 || ',' || direct2 || ',' || direct_source || ',' || _direct_split
        replacement = replacement || '; ' || _direct_target1 || '=' || direct1
@@ -870,11 +901,14 @@ process: method = .exitresult
        return result
     end
     if _direct_kind='WORDSCHAIN' then do
+       direct_source = .string
        direct_source='__rxcpx_parse_source_' || _node_id
        pair_count=(_direct_count-1)/2
        do pair_index=1 to pair_count
           field_index=pair_index*2-1
+          direct1 = .string
           direct1='__rxcpx_parse_word_' || _node_id || '_' || field_index
+          direct2 = .string
           direct2='__rxcpx_parse_word_' || _node_id || '_' || (field_index+1)
           direct_tail='__rxcpx_parse_tail_' || _node_id || '_' || pair_index
           if pair_index=1 then chain_source=direct_source
@@ -900,12 +934,13 @@ process: method = .exitresult
        return result
     end
     if _prepared_plan_hex \= '' then do
+       direct_source = .string
        direct_source='__rxcpx_parse_source_' || _node_id
        if _into \= '' then prepared_results=_into
        else prepared_results='__rxcpx_parse_prepared_' || _node_id
        dynamic_slot=0
        wrds=words(_template_kindtab)
-       do i=1 to wrds
+       do i=.int(1) to wrds
           dynamic_kind=word(_template_kindtab,i)
           if dynamic_kind<'7' | dynamic_kind>'10' then iterate
           dynamic_name=word(_template_texttab,i)
@@ -930,8 +965,9 @@ process: method = .exitresult
        end
        replacement = replacement || '; assembler parseplan ' || prepared_results || ',' || direct_source || ',"' || _prepared_plan_hex || '"x'
        prepared_index=0
-       do i=1 to wrds
+       do i=.int(1) to wrds
           if word(_template_kindtab,i) \= '1' then iterate
+          var = .string
           var=word(_template_texttab,i)
           if var='.' then iterate
           prepared_index=prepared_index+1
@@ -978,7 +1014,7 @@ preparedCompletedTargetIndex: procedure = .int
   target_index=0
   output_index=0
   resolved_index=0
-  do i=1 to position-1
+  do i=.int(1) to position-1
      if pkind[i]=1 then do
         target_index=target_index+1
         if ptext[i]\='.' then output_index=output_index+1
@@ -1023,7 +1059,7 @@ preparedCompletedTargetIndexFromTabs: procedure = .int
   target_index=0
   output_index=0
   resolved_index=0
-  do i=1 to position-1
+  do i=.int(1) to position-1
      if word(kindtab,i)='1' then do
         target_index=target_index+1
         target_name=word(texttab,i)
@@ -1143,7 +1179,8 @@ preparedNativeInteger: procedure = .int
      if pos(ch,'0123456789')=0 then return 0
   end
   if length(text)<19 then return 1
-  do i=1 to 19
+  do i=.int(1) to 19
+     ch = .string
      ch=substr(text,i,1)
      limit_ch=substr(limit,i,1)
      if ch<limit_ch then return 1

@@ -81,7 +81,7 @@ if mode = "all" | mode = "prepared" then do
 end
 
 if mode = "all" | mode = "chain" then do
-  do iteration = 1 to repetitions
+  do iteration = .int(1) to repetitions
     parse var odd_source o1 o2 o3 o4 o5 o6 o7
     parse var odd_source2 q1 q2 q3 q4 q5 q6 q7
 

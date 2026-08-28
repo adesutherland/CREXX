@@ -147,7 +147,7 @@ do trial = 1 to 2
 
   /* Now the true timer loop; average timing again. */
   full = 0.0
-  do i = 1 to averaging
+  do i = .int(1) to averaging
     trace value tracevar
     call time("R")
     do count

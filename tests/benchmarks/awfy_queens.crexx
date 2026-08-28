@@ -38,7 +38,7 @@ QueensBenchmark: class
       free_maxs[i] = 1
       free_mins[i] = 1
     end
-    do i = 1 to 8
+    do i = .int(1) to 8
       free_rows[i] = 1
       queen_rows[i] = -1
     end
@@ -56,7 +56,7 @@ QueensBenchmark: class
       free_maxs[i] = 1
       free_mins[i] = 1
     end
-    do i = 1 to 8
+    do i = .int(1) to 8
       free_rows[i] = 1
       queen_rows[i] = -1
     end

@@ -1486,7 +1486,9 @@ static walker_result disjoint_scope_warning_walker(walker_direction direction,
                                         free(line_text);
                                         free(column_text);
                                     } else {
-                                        mknd_war(node, "NOT_IN_SAME_SCOPE");
+                                        mknd_war2(node, "NOT_IN_SAME_SCOPE",
+                                                  "line", "unknown",
+                                                  "column", "unknown");
                                     }
                                     break;
                                 }

@@ -67,7 +67,9 @@ rexxclassicbif_words: procedure = .RexxValue
   text_other_blanks = config.textOtherBlanks()
   string_length = .int
   assembler strlen string_length,string
+  scan = .int
   scan = 0
+  count = .int
   count = 0
   do while scan < string_length
     scan = rexxclassic_find_text_nonblank(string, scan, text_other_blanks)

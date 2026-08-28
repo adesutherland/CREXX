@@ -110,13 +110,17 @@ arraysort: procedure=.int
   /* Move each heap root to its final position and restore the heap. */
   heap_end = n
   do while heap_end > 1
+    temp_value = .string
     temp_value = a[heap_end]
+    temp_key = .string
     temp_key = keys[heap_end]
     a[heap_end] = a[1]
     keys[heap_end] = keys[1]
     heap_end = heap_end - 1
 
+    root = .int
     root = 1
+    child = .int
     child = 2
     do while child <= heap_end
       if child < heap_end then do

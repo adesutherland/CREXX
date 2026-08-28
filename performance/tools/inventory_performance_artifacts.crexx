@@ -220,7 +220,7 @@ write_and_verify_checksums: procedure = .int
   end
   checksum_path = root || "/checksums.sha256"
   if write_lines(checksum_path, checksum_lines) <> 0 then return 1
-  do i = 1 to files[0]
+  do i = .int(1) to files[0]
     actual = sha256_file(root || "/" || files[i])
     if actual <> word(checksum_lines[i], 1) then
       return execution_error("checksum verification failed: " || files[i])

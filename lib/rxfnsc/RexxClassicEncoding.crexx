@@ -71,7 +71,7 @@ rexxclassic_hex_to_bytes: procedure = .binary
   assembler bresize result,output_length
   assembler imod nibble,digit_count,2
   if nibble <> 0 then high_nibble = 0
-  do index = 0 to text_length - 1
+  do index = .int(0) to text_length - 1
     assembler strchar codepoint,hexadecimal,index
     if codepoint = 32 then iterate
     if codepoint <= 57 then nibble = codepoint - 48
@@ -115,6 +115,7 @@ rexxclassic_bytes_are_utf8: procedure = .boolean
 
     if first >= 224 & first <= 239 then do
       if index + 2 >= byte_length then return 0
+      next_index = .int
       next_index = index + 1
       assembler getbyte second,bytes,next_index
       next_index = index + 2
@@ -133,6 +134,7 @@ rexxclassic_bytes_are_utf8: procedure = .boolean
 
     if first >= 240 & first <= 244 then do
       if index + 3 >= byte_length then return 0
+      next_index = .int
       next_index = index + 1
       assembler getbyte second,bytes,next_index
       next_index = index + 2

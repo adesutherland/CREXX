@@ -124,9 +124,11 @@ rexxclassicbif_translate: procedure = .RexxValue
   replacement_codepoint = .int
   assembler strlen source_length,source_text
   assembler strlen output_length,output_text
+  result_text = .string
   result_text = ""
-  do source_index = 0 to source_length - 1
+  do source_index = .int(0) to source_length - 1
     assembler strchar source_codepoint,source_text,source_index
+    table_position = .int
     table_position = -1
     assembler poschar table_position,input_text,source_codepoint
     replacement_codepoint = source_codepoint

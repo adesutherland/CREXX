@@ -104,7 +104,9 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
         program remains valid. An explicit declaration such as `x = .int`
         records deliberate creation of the separate binding and suppresses
         this warning; using an already-visible outer binding does not create a
-        disjoint symbol and is also quiet.
+        disjoint symbol and is also quiet. This is a lexical diagnostic rather
+        than a control-flow proof: early returns and mutually exclusive paths
+        do not suppress it.
 
 12. **Exit Dispatch (`exit_dispatch_walker` - Pass B)**:
     *   Allows plugins to react to resolved symbols or types.

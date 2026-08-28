@@ -234,6 +234,7 @@ stephandler: procedure = .int expose controller gui next_instruction last_instru
 
                 if type = ".int" then do
                   assembler metalinkpreg ires,r_num       /* Link parent-frame-register */
+                  ires_copy = .int
                   ires_copy = ires /* Don't want to alter ires with any side effects */
                   assembler unlink ires
                   value = "(r"r_num ".int)" ires_copy
@@ -241,6 +242,7 @@ stephandler: procedure = .int expose controller gui next_instruction last_instru
 
                 else if type = ".float" then do
                   assembler metalinkpreg fres,r_num       /* Link parent-frame-register */
+                  fres_copy = .float
                   fres_copy = fres
                   assembler unlink fres
                   value = "(r"r_num ".float)" fres_copy
@@ -248,6 +250,7 @@ stephandler: procedure = .int expose controller gui next_instruction last_instru
 
                 else do
                   assembler metalinkpreg sres,r_num       /* Link parent-frame-register */
+                  sres_copy = .string
                   sres_copy = sres
                   assembler unlink sres
                   value = "(r"r_num ".STRING)" sres_copy

@@ -147,10 +147,12 @@ main: procedure = .int
     if result <> 0 then return result
   end
   if runtime = "all" | runtime = "oorexx" then do
+    result = .int
     result = capture_oorexx(repo_root, oorexx_home, output_dir, runs, sequence_offset, rows)
     if result <> 0 then return result
   end
   if runtime = "all" | runtime = "netrexx" then do
+    result = .int
     result = capture_netrexx(repo_root, netrexx_home, output_dir, runs, sequence_offset, rows)
     if result <> 0 then return result
   end
@@ -396,10 +398,11 @@ write_summary: procedure = .int
 
   output = .string[]
   output[1] = "runtime,vm,phase,n,min_ns,q1_ns,median_ns,q3_ns,max_ns,mad_ns,relative_mad_percent,span_percent,rerun_recommended"
-  do key_index = 1 to keys[0]
+  do key_index = .int(1) to keys[0]
     key_fields = split_delimited(keys[key_index], "|")
     values = .float[]
-    do row_index = 2 to rows[0]
+    do row_index = .int(2) to rows[0]
+      fields = .string[]
       fields = split_delimited(rows[row_index], ",")
       if fields[1] = key_fields[1] & fields[2] = key_fields[2] & ,
           fields[4] = key_fields[3] & fields[7] = "pass" then

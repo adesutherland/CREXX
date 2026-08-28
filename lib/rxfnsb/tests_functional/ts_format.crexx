@@ -15,6 +15,7 @@ errors = errors + check("1", caught || "", "before fit uses signal")
 
 caught = 0
 do
+  ignored = .string
   ignored = format("1E20", 1, 1, 1, 1)
 on signal invalid_arguments
   caught = caught + 1
@@ -25,6 +26,7 @@ invalid = "not-a-number"
 if test_args[0] = 1 then invalid = test_args[1]
 caught = 0
 do
+  ignored = .string
   ignored = format(invalid)
 on signal conversion_error
   caught = caught + 1

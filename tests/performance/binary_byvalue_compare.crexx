@@ -33,7 +33,7 @@ main: procedure = .int
   by_value_sum = 0
   started = time("us")
   do iteration = 1 to iterations
-    do i = 1 to dimension
+    do i = .int(1) to dimension
       by_value_sum = by_value_sum + readByValue(data, (i - 1) * 4)
     end
   end
@@ -41,8 +41,8 @@ main: procedure = .int
 
   exposed_sum = 0
   started = time("us")
-  do iteration = 1 to iterations
-    do i = 1 to dimension
+  do iteration = .int(1) to iterations
+    do i = .int(1) to dimension
       exposed_sum = exposed_sum + readExposed(data, (i - 1) * 4)
     end
   end
@@ -50,8 +50,8 @@ main: procedure = .int
 
   direct_sum = 0
   started = time("us")
-  do iteration = 1 to iterations
-    do i = 1 to dimension
+  do iteration = .int(1) to iterations
+    do i = .int(1) to dimension
       direct_sum = direct_sum + <at..u32>((i - 1) * 4) data
     end
   end

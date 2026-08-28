@@ -77,6 +77,7 @@ rexxclassicbif_value: procedure = .RexxValue
   pool_ref = context.callerPool()
   pool = dereference pool_ref
   name = context.argumentText(1)
+  previous = .rexxvalue..rexxvalue
   previous = pool.symbolValue(name)
   if context.argumentExists(2) then call pool.setSymbolValue(name, context.argument(2))
   return previous

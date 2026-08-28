@@ -3857,6 +3857,11 @@ add_crexx_run_test(inline_test_array_return_temp rexx_src/inline_test_array_retu
 add_crexx_run_test(inline_test_block_expr_live_sibling rexx_src/inline_test_block_expr_live_sibling.crexx)
 add_crexx_run_test(inline_test_imported_bif_block_expr_lifetime rexx_src/inline_test_imported_bif_block_expr_lifetime.crexx)
 add_crexx_run_test(attr_array_call_result_lifetime rexx_src/attr_array_call_result_lifetime.crexx)
+add_crexx_run_test(deferred_register_outer_if_lifetime
+        rexx_src/deferred_register_outer_if_lifetime.crexx)
+set_tests_properties(deferred_register_outer_if_lifetime_run_noopt
+        deferred_register_outer_if_lifetime_run_opt PROPERTIES
+        LABELS "compiler;register-lifetime;regression")
 add_crexx_run_test(inline_indexed_attr_factory_lifetime
         rexx_src/inline_indexed_attr_factory_lifetime.crexx)
 add_test(NAME inline_indexed_attr_factory_lifetime_shape
@@ -3926,6 +3931,7 @@ add_test(NAME cri18_scope_warning
                  -DCRI18_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/cri18_disjoint_scope_warning.crexx
                  -DASSIGN_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/disjoint_assignment_warning.crexx
                  -DEXPLICIT_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/disjoint_explicit_intent.crexx
+                 -DLEXICAL_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/disjoint_lexical_paths.crexx
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/cri18_scope_warning.cmake)
 set_tests_properties(cri18_scope_warning PROPERTIES
         LABELS "compiler;diagnostics;scope;cri-18")

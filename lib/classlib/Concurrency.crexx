@@ -585,9 +585,11 @@ _cv_flags_at: procedure = .int
   if tag = 9 then do
     schema_length = <at..int>(offset + 12) bytes
     fields = <at..int>(offset + 24 + schema_length) bytes
+    child = .int
     child = offset + 32 + schema_length
+    flags = .int
     flags = 0
-    do i = 1 to fields
+    do i = .int(1) to fields
       name_length = <at..int>(child) bytes
       child = child + 8 + name_length
       flags = _cv_merge_flags(flags, _cv_flags_at(bytes, child))
@@ -614,11 +616,14 @@ _cv_depth_at: procedure = .int
   if tag = 9 then do
     schema_length = <at..int>(offset + 12) bytes
     fields = <at..int>(offset + 24 + schema_length) bytes
+    child = .int
     child = offset + 32 + schema_length
+    maximum = .int
     maximum = 0
-    do i = 1 to fields
+    do i = .int(1) to fields
       name_length = <at..int>(child) bytes
       child = child + 8 + name_length
+      depth = .int
       depth = _cv_depth_at(bytes, child)
       if depth > maximum then maximum = depth
       child = child + 12 + <at..int>(child + 4) bytes
@@ -643,9 +648,11 @@ _cv_members_at: procedure = .int
   if tag = 9 then do
     schema_length = <at..int>(offset + 12) bytes
     fields = <at..int>(offset + 24 + schema_length) bytes
+    child = .int
     child = offset + 32 + schema_length
+    members = .int
     members = fields
-    do i = 1 to fields
+    do i = .int(1) to fields
       name_length = <at..int>(child) bytes
       child = child + 8 + name_length
       members = members + _cv_members_at(bytes, child)
@@ -813,7 +820,7 @@ channelvalue_impl: class implements .channelvalue
       sorted_names[i] = names[i]
       sorted_values[i] = values[i]
     end
-    do i = 2 to names[0]
+    do i = .int(2) to names[0]
       name = sorted_names[i]
       value = sorted_values[i]
       j = i - 1
@@ -837,7 +844,7 @@ channelvalue_impl: class implements .channelvalue
     <at..u32>(0) trailer = version
     <at..int>(4) trailer = names[0]
     assembler bappend payload,trailer
-    do i = 1 to names[0]
+    do i = .int(1) to names[0]
       if i > 1 then call _channel_require sorted_names[i] <> sorted_names[i - 1], "channelvalue.record.duplicate"
       name_bytes = sorted_names[i] as .binary
       name_length = 0
@@ -846,6 +853,7 @@ channelvalue_impl: class implements .channelvalue
       <at..int>(0) prefix = name_length
       assembler bappend payload,prefix
       assembler bappend payload,name_bytes
+      value = .channelvalue_impl
       value = sorted_values[i] as .channelvalue_impl
       node = _cv_root_node(value.encode())
       assembler bappend payload,node
@@ -1368,7 +1376,7 @@ channel_impl: class implements .channel
       end
       else observed = wait(wait_milliseconds) as .completion_impl
       if observed.available() = 0 then return observed
-      do i = 1 to _tickets[0]
+      do i = .int(1) to _tickets[0]
         if _tickets[i] = ticket then do
           if _terminals[i] then return _completions[i]
           leave
@@ -1422,7 +1430,7 @@ channel_impl: class implements .channel
     do i = 1 to _tickets[0]
       if _terminals[i] = 0 then call cancel_ticket(_tickets[i], reason)
     end
-    do i = 1 to _tickets[0]
+    do i = .int(1) to _tickets[0]
       if _terminals[i] = 0 then completed = wait_for(_tickets[i], -1)
     end
     call close(2)
