@@ -640,6 +640,58 @@ int sym_copy_inline_summary(Symbol *dest, const InlineCallableSummary *summary) 
     return 1;
 }
 
+void sym_clear_constant_alias(Symbol *symbol) {
+    ConstantAlias *alias;
+
+    if (!symbol || !symbol->constant_alias) return;
+    alias = symbol->constant_alias;
+    symbol->constant_alias = 0;
+    if (--alias->reference_count) return;
+
+    free(alias->name);
+    free(alias->value);
+    free(alias);
+}
+
+int sym_set_constant_alias(Symbol *symbol, const char *name, ValueType type,
+                           const char *value, size_t value_length) {
+    ConstantAlias *alias;
+
+    if (!symbol || !name || !value) return 0;
+
+    alias = calloc(1, sizeof(*alias));
+    if (!alias) return 0;
+    alias->name = strdup(name);
+    alias->value = malloc(value_length + 1);
+    if (!alias->name || !alias->value) {
+        free(alias->name);
+        free(alias->value);
+        free(alias);
+        return 0;
+    }
+    memcpy(alias->value, value, value_length);
+    alias->value[value_length] = 0;
+    alias->type = type;
+    alias->value_length = value_length;
+    alias->reference_count = 1;
+
+    sym_clear_constant_alias(symbol);
+    symbol->constant_alias = alias;
+    return 1;
+}
+
+void sym_copy_constant_alias(Symbol *dest, const Symbol *src) {
+    ConstantAlias *alias;
+
+    if (!dest || !src || dest == src) return;
+    alias = src->constant_alias;
+    if (dest->constant_alias == alias) return;
+    sym_clear_constant_alias(dest);
+    if (!alias) return;
+    alias->reference_count++;
+    dest->constant_alias = alias;
+}
+
 
 /* Returns the type of a symbol as a text string in a malloced buffer */
 char* sym_2tp(Symbol *symbol) {
@@ -767,6 +819,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->inline_summary = 0;
     symbol->is_inlinable = 0;
     symbol->ast_template = 0;
+    symbol->constant_alias = 0;
     symbol->creation_ordinal = -1;
     symbol->creation_node = 0;
 
@@ -1227,6 +1280,7 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
         new_symbol->suppress_metadata = symbol->suppress_metadata;
         new_symbol->inline_borrowed_receiver = symbol->inline_borrowed_receiver;
         (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
+        sym_copy_constant_alias(new_symbol, symbol);
     } else {
         /* Merge status and type if the incoming symbol has more info */
         if (new_symbol->status == SYM_STATUS_UNRESOLVED) new_symbol->status = symbol->status;
@@ -1252,6 +1306,9 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
         if (!new_symbol->inline_summary && symbol->inline_summary) {
             (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
         }
+        if (!new_symbol->constant_alias && symbol->constant_alias) {
+            sym_copy_constant_alias(new_symbol, symbol);
+        }
     }
 
     /* Move all the node/symbol connectors */
@@ -1271,6 +1328,7 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
     if (symbol->dim_elements) free(symbol->dim_elements);
     sym_clear_reference_type(symbol);
     sym_clear_inline_summary(symbol);
+    sym_clear_constant_alias(symbol);
     free_dpa(symbol->ast_node_array);
     free(symbol);
 
@@ -1342,6 +1400,7 @@ Symbol *sym_dup(Scope *new_scope, Symbol *symbol) {
     new_symbol->inline_skip_default_initiation = symbol->inline_skip_default_initiation;
     new_symbol->inline_borrowed_receiver = symbol->inline_borrowed_receiver;
     (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
+    sym_copy_constant_alias(new_symbol, symbol);
     new_symbol->is_inlinable = symbol->is_inlinable;
     new_symbol->ast_template = symbol->ast_template;
 
@@ -1386,6 +1445,7 @@ void free_sym(Symbol *symbol) {
     if (symbol->dim_elements) free(symbol->dim_elements);
     sym_clear_reference_type(symbol);
     sym_clear_inline_summary(symbol);
+    sym_clear_constant_alias(symbol);
 
     /* Free SymbolNode Connectors */
     for (i=0; i < ((dpa*)(symbol->ast_node_array))->size; i++) {

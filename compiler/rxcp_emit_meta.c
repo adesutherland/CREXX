@@ -275,8 +275,13 @@ void meta_set_symbol(Symbol *symbol, void *payload) {
             type = sym_2tp(symbol);
             symbol_fqn = sym_frnm(symbol);
 
-            symbol_node = sym_trnd(symbol, 0);
-            if (symbol_node) {
+            if (symbol->constant_alias) {
+                buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" \"%s\"\n",
+                                 symbol_fqn,
+                                 type,
+                                 symbol->constant_alias->name);
+            }
+            else if ((symbol_node = sym_trnd(symbol, 0))) {
                 buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" \"%.*s\"\n",
                                  symbol_fqn,
                                  type,

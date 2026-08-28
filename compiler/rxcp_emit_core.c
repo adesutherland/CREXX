@@ -1149,6 +1149,18 @@ char* format_constant(ValueType type, ASTNode* node) {
     int flag;
     size_t i;
 
+    if (node && node->symbolNode && node->symbolNode->symbol &&
+        node->symbolNode->symbol->constant_alias) {
+        ConstantAlias *alias = node->symbolNode->symbol->constant_alias;
+        if (alias->type == type && node->value_type == type &&
+            node->node_string_length == alias->value_length &&
+            (node->node_string == alias->value ||
+             memcmp(node->node_string, alias->value, alias->value_length) == 0)) {
+            alias->used = 1;
+            return strdup(alias->name);
+        }
+    }
+
     if (type == TP_STRING) {
         buffer = mprintf("\"%.*s\"",
                          printf_string_precision(node->node_string_length),

@@ -59,10 +59,11 @@ is not a formal clean-host or dual-VM performance verdict. Exact figures and
 scope are retained in
 `experiments/unicode/nfd-performance/evidence/2026-08-28-normalization-certificate-informal.txt`.
 
-The slice remains unclosed as a product until the compiler owns named constant
-reuse, the experimental sealer is removed, sources/data move out of
-`experiments/`, the private implementation and public facade are extracted,
-and proportional integration, packaging and sanitizer qualification pass.
+The compiler now owns named binary-constant reuse and the experimental sealer
+has been removed. The slice remains unclosed as a product until sources/data
+move out of `experiments/`, the private implementation and public facade are
+extracted, and proportional integration, packaging and sanitizer qualification
+pass.
 
 ## Language Boundary
 
@@ -161,16 +162,15 @@ Release evidence.
 - Unicode data is pinned to 17.0.0 with upstream URL, licence and checksum.
 - Generation is deterministic and fails closed on unexpected version or input
   shape.
-- The shipped normalization runtime reads exactly one linked
-  `.const UNICODE_DATA` item. The current prepared image is 11,237,664 bytes.
+- The generated normalization runtime reads one compiler-emitted,
+  module-scoped binary `.const` item. The current prepared image is 11,237,664
+  bytes.
 - No normalizer object owns or copies the image.
 - The generator and UCD parser are build tools, not public runtime classes.
 - Product sources must not depend permanently on an `experiments/` path.
-- The current textual RXAS sealing workaround is not the preferred product
-  boundary. A focused compiler-lowering repair should emit one named binary
-  constant and make all uses reference that pool item. If that repair is not
-  bounded, its replacement requires a separate approval rather than silently
-  productising the experimental sealer.
+- `rxc` now retains one shared compiler-side payload, emits one named binary
+  constant and makes exact uses reference that pool item. The former textual
+  RXAS sealing program and sidecar format are removed from the build.
 
 The initial product retains the portable fixed-width table layout. The
 host-native packed and load/convert-once layouts remain measured alternatives;
@@ -233,6 +233,13 @@ Unicode-specific postprocessor, must emit the existing module-scoped constant
 alias once and reference it at every use. It must not replace the direct
 read-only operand with a mutable global register or runtime table copy.
 
+The compiler-lowering and sealer-removal portion of step 2 is implemented on
+this branch. Optimized and no-opt compiler shape tests cover one payload and
+repeated alias operands; the complete dual-VM Unicode harness passes with the
+11,237,664-byte generated source constant. Moving the runtime and data into the
+product tree and extracting the private/public class boundary remain the next
+normalization-product work, not an implication of this compiler change.
+
 The detailed normalization steps are:
 
 1. Preserve the current dirty experimental worktree in recoverable focused
@@ -244,8 +251,9 @@ The detailed normalization steps are:
    failure contract and serial-instance ownership.
 4. Move pinned inputs and deterministic generation to a product-owned data/tool
    location.
-5. Add a minimal named-binary-constant reproducer and repair the one-constant
-   compiler lowering, or stop for approval of a bounded alternative.
+5. Completed on the Unicode branch: add optimized/no-opt named-binary-constant
+   coverage, repair one-constant compiler lowering, and remove the Unicode
+   sealer.
 6. Extract the four-form runtime into a private Level B implementation module
    and remove binary, lexer and generator surfaces from the shipped API.
 7. Add the public Level G facade, RexxDoc, user guide and AI context.

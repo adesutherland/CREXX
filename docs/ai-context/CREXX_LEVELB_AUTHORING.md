@@ -278,8 +278,13 @@ until the next top-level callable boundary, so statements after a declaration
 procedure belong to that procedure unless a new boundary is present.
 
 The initializer must fold at compile time. Integer constants used as assembler
-immediates are emitted as literals; string, decimal, float, and binary constants
-use the normal constant-pool machinery.
+immediates are emitted as literals. An exact `.binary` use of a named constant
+is emitted through one compiler-private, module-scoped RXAS `.const` alias, so
+large payload text appears once and every operand resolves to the same RXBIN
+constant-pool item. This is a read-only operand reference, not a hidden mutable
+register or runtime copy. Converted or completely folded uses follow their
+ordinary result lowering. String, decimal, and float constants retain their
+normal constant-pool machinery.
 
 Generated code that shares a family of constants inside one source module must
 list each name explicitly in the declaration procedure's `procedure expose`

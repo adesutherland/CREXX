@@ -540,8 +540,18 @@ string(APPEND RXC_BINARY_MEMORY_SOURCE_CONTENT
        "    message(FATAL_ERROR \"Binary memory source did not emit ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "  endif()\n"
        "endforeach()\n"
-       "if(NOT rxas_out MATCHES [=[bgetu32 [^\\n]*,0x78563412fe7f0000000000000000f03f4f4b]=])\n"
-       "  message(FATAL_ERROR \"Binary memory source did not read a fixed-width field directly from a binary constant.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "string(REGEX MATCH [=[\\.const ([^ ]+) binary 0x78563412fe7f0000000000000000f03f4f4b]=] header_alias_decl \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "set(header_alias \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+       "if(header_alias STREQUAL \"\")\n"
+       "  message(FATAL_ERROR \"Binary memory source did not emit one named HEADER constant.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "string(REGEX MATCHALL [=[0x78563412fe7f0000000000000000f03f4f4b]=] header_payloads \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "list(LENGTH header_payloads header_payload_count)\n"
+       "if(NOT header_payload_count EQUAL 1)\n"
+       "  message(FATAL_ERROR \"Binary memory HEADER payload was not emitted exactly once; count=${RXAS_DIAG_DOLLAR}{header_payload_count}.\")\n"
+       "endif()\n"
+       "if(NOT rxas_out MATCHES \"bgetu32 [^\\n]*,${RXAS_DIAG_DOLLAR}{header_alias},\")\n"
+       "  message(FATAL_ERROR \"Binary memory source did not read a fixed-width field through its named constant.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "endif()\n"
        "foreach(_opcode bcheckrange bslice)\n"
        "  if(rxas_out MATCHES \"${RXAS_DIAG_DOLLAR}{_opcode}\")\n"
@@ -558,6 +568,53 @@ file(GENERATE OUTPUT "${RXC_BINARY_MEMORY_SOURCE_SCRIPT}" CONTENT "${RXC_BINARY_
 
 add_test(NAME rxc_binary_memory_source
          COMMAND ${CMAKE_COMMAND} -P "${RXC_BINARY_MEMORY_SOURCE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(RXC_BINARY_CONSTANT_ALIAS_OPT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_binary_constant_alias_opt.cmake")
+file(GENERATE OUTPUT "${RXC_BINARY_CONSTANT_ALIAS_OPT_SCRIPT}" CONTENT
+"execute_process(
+  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"binary_constant_alias_opt\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_memory_source.crexx\"
+  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
+  OUTPUT_VARIABLE rxc_out
+  ERROR_VARIABLE rxc_err
+  RESULT_VARIABLE rxc_res
+)
+if(NOT rxc_res EQUAL 0)
+  message(FATAL_ERROR \"optimized rxc failed for named binary constant check.\\nOutput:\\n\${rxc_out}\${rxc_err}\")
+endif()
+file(READ \"${CMAKE_CURRENT_BINARY_DIR}/binary_constant_alias_opt.rxas\" rxas_out)
+string(REGEX MATCH [=[\\.const ([^ ]+) binary 0x78563412fe7f0000000000000000f03f4f4b]=] header_alias_decl \"\${rxas_out}\")
+set(header_alias \"\${CMAKE_MATCH_1}\")
+if(header_alias STREQUAL \"\")
+  message(FATAL_ERROR \"optimized rxc did not emit one named HEADER constant.\")
+endif()
+string(REGEX MATCHALL [=[0x78563412fe7f0000000000000000f03f4f4b]=] header_payloads \"\${rxas_out}\")
+list(LENGTH header_payloads header_payload_count)
+if(NOT header_payload_count EQUAL 1)
+  message(FATAL_ERROR \"optimized HEADER payload was not emitted exactly once; count=\${header_payload_count}.\")
+endif()
+if(NOT rxas_out MATCHES \"load r[0-9]+,\${header_alias}\")
+  message(FATAL_ERROR \"optimized named binary constant load is missing.\")
+endif()
+if(NOT rxas_out MATCHES \"blen r[0-9]+,\${header_alias}\")
+  message(FATAL_ERROR \"optimized named binary constant length read is missing.\")
+endif()
+if(NOT rxas_out MATCHES \"bgetu32 [^\\n]*,\${header_alias},\")
+  message(FATAL_ERROR \"optimized named binary constant field read is missing.\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxas>\" -o \"binary_constant_alias_opt\" \"binary_constant_alias_opt\"
+  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
+  OUTPUT_VARIABLE rxas_diag
+  ERROR_VARIABLE rxas_diag
+  RESULT_VARIABLE rxas_res
+)
+if(NOT rxas_res EQUAL 0 OR NOT rxas_diag STREQUAL \"\")
+  message(FATAL_ERROR \"optimized named binary constant RXAS did not assemble cleanly.\\nOutput:\\n\${rxas_diag}\")
+endif()
+")
+add_test(NAME rxc_binary_constant_alias_opt
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_BINARY_CONSTANT_ALIAS_OPT_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 set(RXC_PACKED_NUMERIC_SOURCE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_packed_numeric_source.cmake")
@@ -580,8 +637,13 @@ string(APPEND RXC_PACKED_NUMERIC_SOURCE_CONTENT
        "    message(FATAL_ERROR \"Packed numeric source did not emit ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "  endif()\n"
        "endforeach()\n"
-       "if(NOT rxas_out MATCHES [=[load r[0-9]+,0x0000000000000000]=])\n"
-       "  message(FATAL_ERROR \"Packed constant source was not materialized into aligned runtime binary storage.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "string(REGEX MATCH [=[\\.const ([^ ]+) binary 0x0000000000000000]=] zero_alias_decl \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "set(zero_alias \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+       "if(zero_alias STREQUAL \"\")\n"
+       "  message(FATAL_ERROR \"Packed constant source was not emitted as aligned shared binary storage.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "if(NOT rxas_out MATCHES \"load r[0-9]+,${RXAS_DIAG_DOLLAR}{zero_alias}\")\n"
+       "  message(FATAL_ERROR \"Packed constant source was not materialized in a register from its shared binary constant.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "endif()\n"
        "if(rxas_out MATCHES [=[pget[if] [^\\n]*,0x]=])\n"
        "  message(FATAL_ERROR \"Packed access bypassed runtime-aligned binary storage.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"

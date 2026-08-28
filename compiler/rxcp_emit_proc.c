@@ -217,6 +217,34 @@ static int class_attribute_count(ASTNode *class_node) {
     return n_attrs;
 }
 
+static void emit_constant_alias(Symbol *symbol, void *payload) {
+    OutputFragment *output = (OutputFragment *)payload;
+    ConstantAlias *alias;
+    char *prefix;
+
+    if (!symbol || !output) return;
+    alias = symbol->constant_alias;
+    if (!alias || !alias->used || alias->emitted) return;
+    if (alias->type != TP_BINARY) return;
+
+    prefix = mprintf(".const %s binary ", alias->name);
+    output_append_text(output, prefix);
+    output_append_text(output, alias->value);
+    output_append_text(output, "\n");
+    free(prefix);
+    alias->emitted = 1;
+}
+
+static void emit_constant_aliases(Scope *scope, OutputFragment *output) {
+    size_t i;
+
+    if (!scope || !output) return;
+    scp_4all(scope, emit_constant_alias, output);
+    for (i = 0; i < scp_noch(scope); i++) {
+        emit_constant_aliases(scp_chd(scope, i), output);
+    }
+}
+
 void emit_proc(ASTNode *node, void *pl) {
     walker_payload *payload = (walker_payload*) pl;
     ASTNode *child1, *child2, *child3, *n;
@@ -271,6 +299,11 @@ void emit_proc(ASTNode *node, void *pl) {
             if (node->output) output_prepend_text(buf, node->output);
             else node->output = output_fs(buf);
             free(buf);
+
+            /* Explicit binary language constants are module-scoped RXAS
+             * aliases. Operand emission has already marked the aliases that
+             * survived folding, so write each payload exactly once here. */
+            emit_constant_aliases(node->scope, node->output);
 
             /* Add exposed global variables */
             add_exposed_global_variable(node);

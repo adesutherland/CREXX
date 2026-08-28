@@ -38,6 +38,23 @@ The emitter avoids most global variables by storing state directly in the `ASTNo
 | `node->register_type` | `ASTNode` | The register type prefix (`i`, `s`, `f`, `d`, `a`, `o`, `b`). |
 | `payload->file` | `walker_payload` | The output `FILE` pointer. |
 | `payload->globals` | `walker_payload` | Counter for global variables. |
+| `symbol->constant_alias` | `Symbol` | Reference-counted payload and compiler-private RXAS name for an explicit named binary constant. Exact propagated uses borrow this one value. |
+
+### Named binary constants
+
+Explicit named `.binary` constants are captured during language constant
+propagation. The owning `ConstantAlias` holds one payload; exact-type AST uses
+borrow it rather than allocating a copy per use. Cloned symbols retain the same
+reference-counted alias. Converted uses receive ordinary private folded values.
+
+During operand formatting, a surviving exact use marks the alias live and emits
+the compiler-private `§rxc.const.<ordinal>.<name>` identifier. `PROGRAM_FILE`
+then writes each live alias once, immediately after `.globals`, before any
+function body. Repeated emission resets the live/emitted state first. Constant
+metadata records the short alias name rather than duplicating the payload.
+RXAS resolves every alias operand directly to the assembler's deduplicated
+binary constant-pool entry; no runtime register, initialization instruction, or
+table copy is introduced.
 
 ## 3. Logic Categorization (Modular Structure)
 

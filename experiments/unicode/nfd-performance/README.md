@@ -239,7 +239,7 @@ The common-table comparator now covers `normalize` and `is_normalized` for
 NFD, NFKD, NFC, and NFKC. It has the same preparation/run split and fingerprint
 checks as the prepared-NFD comparator. Canonical cells construct an ordinary
 `unicode_d` normalizer over a per-instance prepared image; shared cells use the
-single sealed `UNICODE_DATA` constant; Apple cells are non-conforming
+single compiler-emitted binary constant; Apple cells are non-conforming
 CoreFoundation magnitude controls. Predicate Apple cells normalize a mutable
 copy and compare it because CoreFoundation has no direct public normalization
 predicate.

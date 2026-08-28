@@ -44,34 +44,34 @@ test_core() .locals=20
     brt core_fail,r0
 
     settpswap r1,256,r2
-    gettp r9,r2
+    getandtp r9,r2,768
     ine r0,r9,256
     brt core_fail,r0
 
     loadsettp2 r1,11,r2,512
     ine r0,r1,11
     brt core_fail,r0
-    gettp r9,r2
+    getandtp r9,r2,768
     ine r0,r9,512
     brt core_fail,r0
 
     loadsettpswap r1,12,r2,256,r3
-    gettp r9,r3
+    getandtp r9,r3,768
     ine r0,r9,256
     brt core_fail,r0
 
     swapsettp r1,r2,r3,512
-    gettp r9,r3
+    getandtp r9,r3,768
     ine r0,r9,512
     brt core_fail,r0
 
     swapsettpswap r1,r2,r3,256,r4
-    gettp r9,r4
+    getandtp r9,r4,768
     ine r0,r9,256
     brt core_fail,r0
 
     settpswapsettpswap r1,512,r2,r3,r4
-    gettp r9,r4
+    getandtp r9,r4,768
     ine r0,r9,512
     brt core_fail,r0
 

@@ -144,6 +144,15 @@ UAX #15 composer retaining the active starter, D117 blocking CCC, and
 still-mutable ordered tail. The binary ingress validates shortest-form UTF-8
 and rejects malformed, surrogate, truncated, and out-of-range encodings.
 
+`unicode_normalization_generate.crexx` embeds the combined 11,237,664-byte
+normalization and case-fold image once in the generated Level B source as the
+named `.binary` constant `UNICODE_DATA`. Production `rxc` owns the lowering:
+it retains one shared compiler-side payload, writes one compiler-private
+module-scoped RXAS `.const`, and uses that alias for every exact table operand.
+The former placeholder, `.rxasconst` sidecar, and Rexx RXAS-sealing program are
+removed. This changes build ownership only; runtime table access remains
+read-only and zero-copy.
+
 The retained hand-written oracle accepts `.binary` directly and implements its
 `.string` wrapper through the existing explicit string/binary conversions. The
 experimental raw string-byte RXAS surface was rolled back. The selected NFD
