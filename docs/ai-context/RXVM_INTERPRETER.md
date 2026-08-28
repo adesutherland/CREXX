@@ -789,10 +789,18 @@ never retains a live Rexx register/value. Execution-local CSPRNG references
 carry validated direction rights and resolve through the type `4` registry,
 not through native payloads or transferable OS handles. The child provider
 snapshots command/arguments, logical working directory, merged environment,
-CREXX bindings and three optional endpoint references before launch. POSIX
-children use process groups and Windows children use jobs for bounded
-termination. Controller-mode CREXX execution remains synchronous where it
-must preserve command-environment state.
+CREXX bindings and three optional endpoint references before launch. Ordinary
+synchronous POSIX children inherit the caller's process group. A
+cancellable/deadline-controlled POSIX child receives a provider-owned process
+group only when its terminal-facing streams are redirected or headless. A
+controlled child that inherits a real terminal stream remains in the caller's
+terminal job so foreground ownership is preserved; cancellation then targets
+the direct child rather than an unowned group. The equivalent controlled
+Windows children receive a provider-owned job. Group/job ownership is recorded
+explicitly and is used for bounded tree termination. A controlled POSIX child
+that stops unexpectedly is terminated with a diagnostic instead of leaving a
+wait loop stalled. Controller-mode CREXX execution remains synchronous where
+it must preserve command-environment state.
 
 The certified ADDRESS exit and `_address.crexx` now adapt classic string/array
 redirects onto these two providers and apply captured output only on the

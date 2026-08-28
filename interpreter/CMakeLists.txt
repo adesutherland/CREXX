@@ -505,6 +505,21 @@ if(BUILD_TESTING)
     add_test(NAME crexx_address_unredirected_flush COMMAND test_rxcrexxcmd_flush)
     set_tests_properties(crexx_address_unredirected_flush PROPERTIES
             LABELS "interpreter;address;runtime")
+
+    if(NOT WIN32)
+        add_executable(test_rxspawn_diagnostics
+                tests/test_rxspawn_diagnostics.c)
+        target_include_directories(test_rxspawn_diagnostics PRIVATE
+                . ./rxvmplugin ../assembler ../binutils/include
+                ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+        target_link_libraries(test_rxspawn_diagnostics PRIVATE rxvml)
+        add_test(NAME rxspawn_posix_launch_diagnostic
+                COMMAND test_rxspawn_diagnostics)
+        set_tests_properties(rxspawn_posix_launch_diagnostic PROPERTIES
+                LABELS "interpreter;spawn;diagnostic;posix"
+                PASS_REGULAR_EXPRESSION
+                        "PASS: POSIX child setup diagnostic names stage and errno")
+    endif()
 endif()
 if(BUILD_TESTING)
     set(_crexx_vm_instrumented_targets rxbvm_instrumented)

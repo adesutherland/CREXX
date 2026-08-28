@@ -277,63 +277,153 @@ char *strip_rightmost_extension_if(const char *name, const char *ext) {
 }
 
 #if !defined(_WIN32) && !defined(__CMS__)
+#include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
 #include <signal.h>
 
 static struct termios orig_termios;
 static int termios_saved = 0;
+static int termios_fd = -1;
+static pid_t termios_owner = (pid_t)-1;
+static int termios_handlers_installed = 0;
 
-void platform_term_save() {
-    if (!termios_saved) {
-        if (isatty(STDIN_FILENO)) {
-            if (tcgetattr(STDIN_FILENO, &orig_termios) == 0) {
-                termios_saved = 1;
-            }
-        }
-    }
+static int platform_term_disconnected_error(int error_number) {
+    return error_number == EBADF || error_number == ENOTTY ||
+           error_number == EIO || error_number == ENXIO;
 }
 
-#if !defined(_WIN32)
-
-#include <unistd.h>
-#include <termios.h>
-
-void platform_term_restore(void)
-{
-    if (!termios_saved)
-        return;
-
-    if (!isatty(STDIN_FILENO))
-        return;
-
-    if (tcgetpgrp(STDIN_FILENO) != getpgrp())
-        return;
-
-    if (tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios) == 0)
-        termios_saved = 0;
+static void platform_term_report(const char *operation, int error_number) {
+    fprintf(stderr,
+            "CREXX terminal restore: %s failed for the saved terminal "
+            "(errno=%d: %s)\n",
+            operation, error_number, strerror(error_number));
 }
 
+static void platform_term_forget(void) {
+    int saved_fd = termios_fd;
+    termios_saved = 0;
+    termios_fd = -1;
+    termios_owner = (pid_t)-1;
+    if (saved_fd >= 0) close(saved_fd);
+}
+
+static int platform_term_duplicate_stdin(void) {
+    int duplicate_fd;
+#ifdef F_DUPFD_CLOEXEC
+    duplicate_fd = fcntl(STDIN_FILENO, F_DUPFD_CLOEXEC, 3);
 #else
-
-void platform_term_restore() {
-    if (termios_saved) {
-        tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
+    duplicate_fd = fcntl(STDIN_FILENO, F_DUPFD, 3);
+    if (duplicate_fd >= 0 &&
+            fcntl(duplicate_fd, F_SETFD, FD_CLOEXEC) != 0) {
+        int saved_errno = errno;
+        close(duplicate_fd);
+        errno = saved_errno;
+        return -1;
     }
+#endif
+    return duplicate_fd;
 }
 
-#endif
+void platform_term_save(void) {
+    pid_t foreground_group;
+    int duplicate_fd;
+
+    if (termios_saved) return;
+    if (!isatty(STDIN_FILENO)) return;
+
+    duplicate_fd = platform_term_duplicate_stdin();
+    if (duplicate_fd < 0) {
+        platform_term_report("duplicate", errno);
+        return;
+    }
+
+    errno = 0;
+    foreground_group = tcgetpgrp(duplicate_fd);
+    if (foreground_group == (pid_t)-1) {
+        int saved_errno = errno;
+        close(duplicate_fd);
+        if (!platform_term_disconnected_error(saved_errno)) {
+            platform_term_report("query foreground process group",
+                                 saved_errno);
+        }
+        return;
+    }
+    if (foreground_group != getpgrp()) {
+        /* A background process must not claim or mutate the terminal. */
+        close(duplicate_fd);
+        return;
+    }
+    if (tcgetattr(duplicate_fd, &orig_termios) != 0) {
+        int saved_errno = errno;
+        close(duplicate_fd);
+        if (!platform_term_disconnected_error(saved_errno)) {
+            platform_term_report("snapshot attributes", saved_errno);
+        }
+        return;
+    }
+
+    termios_fd = duplicate_fd;
+    termios_owner = getpid();
+    termios_saved = 1;
+}
+
+static void platform_term_restore_internal(int report_errors) {
+    pid_t foreground_group;
+
+    if (!termios_saved || termios_fd < 0) return;
+    if (termios_owner != getpid()) return;
+
+    errno = 0;
+    foreground_group = tcgetpgrp(termios_fd);
+    if (foreground_group == (pid_t)-1) {
+        int saved_errno = errno;
+        if (platform_term_disconnected_error(saved_errno)) {
+            /* The saved terminal endpoint no longer exists: do not apply the
+             * snapshot to a replacement stdin, and do not report a false
+             * restoration failure. */
+            platform_term_forget();
+        } else if (report_errors) {
+            platform_term_report("query foreground process group",
+                                 saved_errno);
+        }
+        return;
+    }
+    if (foreground_group != getpgrp()) {
+        /* Restoration is only safe while this process group owns the same
+         * terminal that was snapshotted.  Retain the snapshot for a possible
+         * later foreground restoration. */
+        return;
+    }
+
+    while (tcsetattr(termios_fd, TCSANOW, &orig_termios) != 0) {
+        int saved_errno = errno;
+        if (saved_errno == EINTR) continue;
+        if (platform_term_disconnected_error(saved_errno)) {
+            platform_term_forget();
+        } else if (report_errors) {
+            platform_term_report("restore attributes", saved_errno);
+        }
+        return;
+    }
+    platform_term_forget();
+}
+
+void platform_term_restore(void) {
+    platform_term_restore_internal(1);
+}
 
 static void signal_handler(int sig) {
-    platform_term_restore();
+    /* Avoid stdio diagnostics from a signal context. */
+    platform_term_restore_internal(0);
     /* Re-raise the signal or exit */
     signal(sig, SIG_DFL);
     raise(sig);
 }
 
-void platform_install_signal_handlers() {
+void platform_install_signal_handlers(void) {
     platform_term_save();
-    if (termios_saved) {
+    if (termios_saved && !termios_handlers_installed) {
         atexit(platform_term_restore);
         signal(SIGSEGV, signal_handler);
         signal(SIGILL, signal_handler);
@@ -342,13 +432,14 @@ void platform_install_signal_handlers() {
         signal(SIGABRT, signal_handler);
         signal(SIGINT, signal_handler);
         signal(SIGTERM, signal_handler);
+        termios_handlers_installed = 1;
     }
 }
 #else
 /* Stub for Windows or other platforms if not needed */
-void platform_term_save() {}
-void platform_term_restore() {}
-void platform_install_signal_handlers() {}
+void platform_term_save(void) {}
+void platform_term_restore(void) {}
+void platform_install_signal_handlers(void) {}
 #endif
 
 /*
