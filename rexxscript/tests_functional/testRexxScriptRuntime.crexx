@@ -176,6 +176,18 @@ if rexxscript_value("x") <> "1:ababab:2:the:4:12.5:-1:-1:MIXED:mixed:3" then do
   say "REXXSCRIPT expanded BIF value failed:" rexxscript_value("x")
 end
 
+result = rexxscript_evaluate("x = wordpos('brown fox', 'the quick brown fox') || ':' || lastpos('a', 'banana') || ':' || changestr('a', 'banana', 'X') || ':' || countstr('ana', 'banana') || ':' || translate('abc', '123', 'abc') || ':' || delstr('abcdef', 2, 2) || ':' || insert('X', 'abc', 2) || ':' || overlay('XY', 'abcdef', 2) || ':' || delword('one two three', 2, 1)", 0)
+if result[1] <> "OK" | rexxscript_value("x") <> "3:6:bXnXnX:1:123:adef:abXc:aXYdef:one three" then do
+  errors = errors + 1
+  say "REXXSCRIPT string BIF status/value failed:" result[1] rexxscript_value("x")
+end
+
+result = rexxscript_evaluate("d = date(); t = time(); u = time('UTC')", 0)
+if result[1] <> "OK" | rexxscript_value("d") = "" | rexxscript_value("t") = "" | rexxscript_value("u") = "" then do
+  errors = errors + 1
+  say "REXXSCRIPT DATE/TIME failed:" result[1] rexxscript_value("d") rexxscript_value("t") rexxscript_value("u")
+end
+
 result = rexxscript_evaluate("x = substr('abc', 0)", 0)
 if pos("RXC-LC-40.14", result[1]) = 0 then do
   errors = errors + 1
@@ -187,6 +199,52 @@ if pos("undefined function not_allowed", lower(result[1])) = 0 then do
   errors = errors + 1
   say "REXXSCRIPT intrinsic allow-list failed:" result[1]
 end
+
+/* RexxScript streams are evaluator-local and retain one cursor per filename. */
+input_file = "rexxscript_lineio_input.tmp"
+output_file = "rexxscript_lineio_output.tmp"
+call eraseFile input_file
+call lineout input_file, "alpha"
+call lineout input_file, "beta"
+call lineout input_file
+
+runner = .rexxscriptevaluator()
+result = runner.evaluate("p = lines('" || input_file || "'); a = linein('" || input_file || "'); q = lines('" || input_file || "'); b = linein('" || input_file || "'); r = lines('" || input_file || "'); c = linein('" || input_file || "'); e = lines('" || input_file || "')", 0)
+if result[1] <> "OK" | runner.value("p") <> "1" | runner.value("a") <> "alpha" | runner.value("q") <> "1" | runner.value("b") <> "beta" | runner.value("r") <> "0" | runner.value("c") <> "" | runner.value("e") <> "0" then do
+  errors = errors + 1
+  say "REXXSCRIPT LINEIN/LINES cursor failed:" result[1] runner.value("p") runner.value("a") runner.value("q") runner.value("b") runner.value("r") runner.value("c") runner.value("e")
+end
+
+/* Reset closes the old stream, so a new evaluation starts at the beginning. */
+result = runner.evaluate("a = linein('" || input_file || "')", 0)
+if result[1] <> "OK" | runner.value("a") <> "alpha" then do
+  errors = errors + 1
+  say "REXXSCRIPT LINEIN reset failed:" result[1] runner.value("a")
+end
+
+result = runner.evaluate("r = lineout('" || output_file || "', 'one'); r = lineout('" || output_file || "', 'two'); call lineout('" || output_file || "')", 0)
+if result[1] <> "OK" | runner.value("r") <> "0" then do
+  errors = errors + 1
+  say "REXXSCRIPT LINEOUT status failed:" result[1] runner.value("r")
+end
+
+written = readLines(output_file)
+if written[0] <> 2 | written[1] <> "one" | written[2] <> "two" then do
+  errors = errors + 1
+  say "REXXSCRIPT LINEOUT content failed:" written[0] written[1] written[2]
+end
+result = runner.evaluate("r = eraseFile('" || output_file || "')", 0)
+if result[1] <> "OK" | runner.value("r") <> "0" then do
+  errors = errors + 1
+  say "REXXSCRIPT ERASEFILE status failed:" result[1] runner.value("r")
+end
+written = readLines(output_file)
+if written[0] <> 0 then do
+  errors = errors + 1
+  say "REXXSCRIPT ERASEFILE content failed:" written[0]
+end
+call eraseFile input_file
+call eraseFile output_file
 
 if errors = 0 then say "PASS: RexxScript runtime"
 else say "FAIL: RexxScript runtime" errors

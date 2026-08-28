@@ -81,6 +81,7 @@ typedef struct shelldata {
     HANDLE ChildJob;
 #else
     int ChildProcessPID;
+    unsigned char ChildProcessGroupOwned;
 #endif
     int ChildProcessRC;
     char* buffer;
@@ -212,6 +213,8 @@ typedef struct redirect_endpoint_payload {
 
 // Private functions
 static void Error(char *context, char **errorText);
+static void ErrorCode(const char *context, int error_number,
+                      char **errorText);
 static void CleanUp(SHELLDATA* data);
 static char *copy_string(const char *text);
 static int ParseCommand(const char *command_string, char **command, char **file, char ***argv);
@@ -224,7 +227,7 @@ static int spawn_argv_capture(const char *const *argv,
                               value* variables,
                               int *rc,
                               char **errorText);
-static int launchChild(SHELLDATA* data);
+static int launchChild(SHELLDATA* data, char **errorText);
 static void WaitForProcess(SHELLDATA* data);
 static void appendTextOutput(char **outputText, char *inputText);
 static void WriteToStdin(REDIRECT* data, char *line, size_t nBytes);
@@ -2142,6 +2145,7 @@ int shellspawn (const char *command,
     data.ChildJob = NULL;
 #else
     data.ChildProcessPID = 0;
+    data.ChildProcessGroupOwned = 0u;
 #endif
     data.ChildProcessRC = 0;
     data.pInput = pIn;
@@ -2309,7 +2313,7 @@ int shellspawn (const char *command,
 
     /* Launch the command */
     int lrc;
-    lrc = launchChild(&data);
+    lrc = launchChild(&data, errorText);
     if (lrc) {
         CleanUp(&data);
         return lrc;
@@ -2360,6 +2364,7 @@ static int spawn_argv_capture(const char *const *argv,
     data.ChildJob = NULL;
 #else
     data.ChildProcessPID = 0;
+    data.ChildProcessGroupOwned = 0u;
 #endif
     data.ChildProcessRC = 0;
     data.pInput = pIn;
@@ -2457,7 +2462,7 @@ static int spawn_argv_capture(const char *const *argv,
     }
 #endif
 
-    lrc = launchChild(&data);
+    lrc = launchChild(&data, errorText);
     if (lrc) {
         CleanUp(&data);
         return lrc;
@@ -3340,6 +3345,43 @@ void WriteToStdin(REDIRECT* data, char *line, size_t nBytes)
     }
 }
 
+#ifndef _WIN32
+static int rxspawn_terminate_posix_child(SHELLDATA *data, int signal_number) {
+    pid_t child_pid;
+    int result;
+
+    if (!data || data->ChildProcessPID <= 0) return 0;
+    child_pid = (pid_t)data->ChildProcessPID;
+    result = kill(data->ChildProcessGroupOwned ? -child_pid : child_pid,
+                  signal_number);
+    if (result == -1 && errno == ESRCH && data->ChildProcessGroupOwned) {
+        result = kill(child_pid, signal_number);
+    }
+    if (result == -1 && errno == ESRCH) return 0;
+    return result;
+}
+
+static int rxspawn_posix_child_needs_process_group(const SHELLDATA *data) {
+    int bounded_child;
+
+    if (!data) return 0;
+    bounded_child = data->cancelled || data->deadline_microseconds;
+    if (!bounded_child) return 0;
+
+    /* A child inheriting any real terminal stream remains in the caller's
+     * terminal job.  Moving it to a private group without also transferring
+     * foreground ownership would make reads/restores stop it with
+     * SIGTTIN/SIGTTOU.  Redirected/headless controlled children can safely own
+     * a private group for tree termination. */
+    if ((!data->pInput && isatty(STDIN_FILENO)) ||
+        (!data->pOutput && isatty(STDOUT_FILENO)) ||
+        (!data->pError && isatty(STDERR_FILENO))) {
+        return 0;
+    }
+    return 1;
+}
+#endif
+
 int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes)
 {
     REDIRECT* redirect;
@@ -3436,12 +3478,13 @@ void CleanUp(SHELLDATA* data)
 
         /* CleanUp is an abandonment path: stop and reap the direct child
          * before joining pipe owners, so no inherited end can keep them live. */
-        if (kill(-child_pid, SIGKILL) == -1 &&
-            errno == ESRCH && kill(child_pid, SIGKILL) == -1 &&
-            errno != ESRCH) data->waitThreadRC = 1;
+        if (rxspawn_terminate_posix_child(data, SIGKILL) != 0) {
+            data->waitThreadRC = 1;
+        }
         while (waitpid(child_pid, &child_status, 0) == -1 && errno == EINTR) {
         }
         data->ChildProcessPID = 0;
+        data->ChildProcessGroupOwned = 0u;
     }
 
     // Close any pipes
@@ -3608,7 +3651,9 @@ void WaitForProcess(SHELLDATA* data)
 #else
 
     pid_t w;
+    pid_t pid;
     int status;
+    int bounded_child;
 
     // Close the child ends of any pipes
     if (data->pInput && data->pInput->hRead != -1) {
@@ -3624,22 +3669,19 @@ void WaitForProcess(SHELLDATA* data)
         data->pError->hWrite = -1;
     }
 
-    // Wait for child process to exit
-    int pid;
-    pid = data->ChildProcessPID;
+    /* Ordinary synchronous children remain in this process's group so they
+     * retain foreground-terminal access.  Only cancellable/deadline children
+     * own a private group and require bounded polling. */
+    pid = (pid_t)data->ChildProcessPID;
+    bounded_child = data->cancelled || data->deadline_microseconds;
 
     for (;;) {
-        w = waitpid(pid, &status, WUNTRACED | WCONTINUED |
-                                 ((data->cancelled ||
-                                   data->deadline_microseconds)
-                                  ? WNOHANG : 0));
+        int wait_options = bounded_child
+                ? WUNTRACED | WCONTINUED | WNOHANG : 0;
+        w = waitpid(pid, &status, wait_options);
         if (w == 0) {
             if (rxspawn_stop_requested(data)) {
-                int kill_result = kill(-pid, SIGKILL);
-                if (kill_result == -1 && errno == ESRCH) {
-                    kill_result = kill(pid, SIGKILL);
-                }
-                if (kill_result == -1 && errno != ESRCH) {
+                if (rxspawn_terminate_posix_child(data, SIGKILL) != 0) {
                     data->waitThreadRC = 1;
                     Error("Failure spawn terminate",
                           &data->waitThreadErrorText);
@@ -3667,10 +3709,46 @@ void WaitForProcess(SHELLDATA* data)
             if (errno == ECHILD) data->ChildProcessPID = 0;
             break;
         }
+        if (WIFSTOPPED(status)) {
+            char stopped_message[160];
+            int stopped_signal = WSTOPSIG(status);
+            snprintf(stopped_message, sizeof(stopped_message),
+                     "Controlled child process stopped unexpectedly by "
+                     "signal %d; terminal job-control or child lifecycle "
+                     "ownership is invalid",
+                     stopped_signal);
+            data->waitThreadRC = 1;
+            appendTextOutput(&data->waitThreadErrorText, stopped_message);
+            if (rxspawn_terminate_posix_child(data, SIGKILL) != 0) {
+                char *termination_error = NULL;
+                Error("Failure terminating stopped child",
+                      &termination_error);
+                if (termination_error) {
+                    appendTextOutput(&data->waitThreadErrorText, ". ");
+                    appendTextOutput(&data->waitThreadErrorText,
+                                     termination_error);
+                    free(termination_error);
+                }
+            }
+            do {
+                w = waitpid(pid, &status, 0);
+            } while (w == -1 && errno == EINTR);
+            break;
+        }
         if (WIFEXITED(status) || WIFSIGNALED(status)) break;
     }
     if (w != -1) {
+        /* Match Windows kill-on-job-close semantics: after the direct child
+         * completes, a controlled process group must not leave descendants
+         * holding redirect handles open. */
+        if (data->ChildProcessGroupOwned &&
+                rxspawn_terminate_posix_child(data, SIGKILL) != 0) {
+            data->waitThreadRC = 1;
+            Error("Failure terminating controlled child descendants",
+                  &data->waitThreadErrorText);
+        }
         data->ChildProcessPID = 0;
+        data->ChildProcessGroupOwned = 0u;
         if (data->terminated) {
             data->ChildProcessRC = data->timed_out ? 124 : 130;
         } else if (WIFEXITED(status)) {
@@ -3739,16 +3817,25 @@ void WaitForProcess(SHELLDATA* data)
     }
 }
 
+static void ErrorCode(const char *context, int error_number,
+                      char **errorText) {
+    size_t message_len;
+    const char *message = "%s. Details: RC=%d Text=%s";
+    const char *error_string = strerror(error_number);
+
+    if (!error_string) error_string = "unknown system error";
+    message_len = strlen(message) + strlen(error_string) + strlen(context) +
+                  32u;
+    *errorText = malloc(message_len);
+    if (!*errorText) return;
+    snprintf(*errorText, message_len, message, context, error_number,
+             error_string);
+}
+
 void Error(char *context, char **errorText)
 {
-    size_t message_len;
-    char *message = "%s. Details: RC=%s Text=%s";
-    char sRC[10];
-    sprintf(sRC, "%d", errno);
-
-    message_len = strlen(message) + strlen((char*)strerror(errno)) + strlen(context) + 11;
-    *errorText = malloc(message_len);
-    snprintf(*errorText, message_len, context, sRC, (char*)strerror(errno));
+    int saved_errno = errno;
+    ErrorCode(context, saved_errno, errorText);
 }
 
 /* Parse the command to get the arguments */
@@ -3951,9 +4038,60 @@ static int merge_child_variables(SHELLDATA *data) {
     return 0;
 }
 
-int launchChild(SHELLDATA* data) {
+#ifndef _WIN32
+enum rxspawn_child_launch_stage {
+    RXSPAWN_CHILD_SETPGID = 1,
+    RXSPAWN_CHILD_CHDIR = 2,
+    RXSPAWN_CHILD_ENVIRONMENT = 3,
+    RXSPAWN_CHILD_STDIN = 4,
+    RXSPAWN_CHILD_STDOUT = 5,
+    RXSPAWN_CHILD_STDERR = 6,
+    RXSPAWN_CHILD_EXEC = 7
+};
+
+typedef struct rxspawn_child_launch_error {
+    int stage;
+    int error_number;
+} RXSPAWN_CHILD_LAUNCH_ERROR;
+
+static const char *rxspawn_child_launch_context(int stage) {
+    switch (stage) {
+        case RXSPAWN_CHILD_SETPGID:
+            return "Failure creating controlled child process group";
+        case RXSPAWN_CHILD_CHDIR:
+            return "Failure entering child working directory";
+        case RXSPAWN_CHILD_ENVIRONMENT:
+            return "Failure preparing child environment variable";
+        case RXSPAWN_CHILD_STDIN:
+            return "Failure attaching child standard input";
+        case RXSPAWN_CHILD_STDOUT:
+            return "Failure attaching child standard output";
+        case RXSPAWN_CHILD_STDERR:
+            return "Failure attaching child standard error";
+        case RXSPAWN_CHILD_EXEC:
+            return "Failure executing child process";
+        default:
+            return "Failure during child process setup";
+    }
+}
+
+static void rxspawn_child_launch_fail(int status_fd, int stage,
+                                      int error_number) {
+    RXSPAWN_CHILD_LAUNCH_ERROR failure;
+    failure.stage = stage;
+    failure.error_number = error_number;
+    (void)write(status_fd, &failure, sizeof(failure));
+    _exit(127);
+}
+#endif
+
+int launchChild(SHELLDATA* data, char **errorText) {
+    int bounded_child = data->cancelled || data->deadline_microseconds;
 
     if (merge_child_variables(data) != 0) {
+        int saved_errno = errno ? errno : ENOMEM;
+        ErrorCode("Failure preparing child environment", saved_errno,
+                  errorText);
         CleanUp(data);
         return SHELLSPAWN_FAILURE;
     }
@@ -3967,7 +4105,6 @@ int launchChild(SHELLDATA* data) {
     JOBOBJECT_EXTENDED_LIMIT_INFORMATION job_information;
     int inheritedHandleCount;
     int useHandleList;
-    int controlled_child;
     int i;
 
     // Set up the start up info struct.
@@ -3980,7 +4117,6 @@ int launchChild(SHELLDATA* data) {
     si.StartupInfo.hStdInput = (data->pInput && data->pInput->hRead != INVALID_HANDLE_VALUE) ? data->pInput->hRead : GetStdHandle(STD_INPUT_HANDLE);
 
     int flags = CREATE_UNICODE_ENVIRONMENT; // UTF16 Environment Variables
-    controlled_child = data->cancelled || data->deadline_microseconds;
     attributeListSize = 0;
     inheritedHandleCount = 0;
     useHandleList = data->pInput && data->pOutput && data->pError
@@ -4186,7 +4322,7 @@ int launchChild(SHELLDATA* data) {
 
     /* Controlled providers use a kill-on-close job and create suspended so a
      * descendant cannot escape before the direct child is assigned. */
-    if (controlled_child) {
+    if (bounded_child) {
         data->ChildJob = CreateJobObjectW(NULL, NULL);
         ZeroMemory(&job_information, sizeof(job_information));
         job_information.BasicLimitInformation.LimitFlags =
@@ -4256,29 +4392,107 @@ int launchChild(SHELLDATA* data) {
     return 0;
 
 #else
+    int launch_status_pipe[2] = {-1, -1};
+    RXSPAWN_CHILD_LAUNCH_ERROR child_failure;
+    size_t child_failure_bytes = 0u;
+    int process_group_child = bounded_child &&
+            rxspawn_posix_child_needs_process_group(data);
 
-    if ((data->ChildProcessPID = fork()) == -1) {
-        // Error("Failure spawn U33", errorText);
-        data->ChildProcessPID = 0;
-        CleanUp(data);
+    if (pipe(launch_status_pipe) != 0) {
+        Error("Failure creating child launch status pipe", errorText);
+        return SHELLSPAWN_FAILURE;
+    }
+    if (fcntl(launch_status_pipe[1], F_SETFD, FD_CLOEXEC) != 0) {
+        int saved_errno = errno;
+        close(launch_status_pipe[0]);
+        close(launch_status_pipe[1]);
+        ErrorCode("Failure protecting child launch status pipe",
+                  saved_errno, errorText);
         return SHELLSPAWN_FAILURE;
     }
 
-    if (data->ChildProcessPID != 0) { // Parent process owns the child group.
-        if (setpgid(data->ChildProcessPID, data->ChildProcessPID) != 0 &&
-            errno != EACCES && errno != ESRCH) {
-            CleanUp(data);
-            return SHELLSPAWN_FAILURE;
-        }
-        return 0;
+    if ((data->ChildProcessPID = fork()) == -1) {
+        int saved_errno = errno;
+        close(launch_status_pipe[0]);
+        close(launch_status_pipe[1]);
+        data->ChildProcessPID = 0;
+        ErrorCode("Failure forking child process", saved_errno, errorText);
+        return SHELLSPAWN_FAILURE;
     }
 
-    if (setpgid(0, 0) != 0) _exit(127);
+    if (data->ChildProcessPID != 0) {
+        pid_t child_pid = (pid_t)data->ChildProcessPID;
+        ssize_t count;
+        close(launch_status_pipe[1]);
+        launch_status_pipe[1] = -1;
+
+        if (process_group_child) {
+            if (setpgid(child_pid, child_pid) != 0 &&
+                    errno != EACCES && errno != ESRCH) {
+                int saved_errno = errno;
+                (void)kill(child_pid, SIGKILL);
+                while (waitpid(child_pid, NULL, 0) == -1 && errno == EINTR) {
+                }
+                close(launch_status_pipe[0]);
+                data->ChildProcessPID = 0;
+                ErrorCode("Failure creating controlled child process group",
+                          saved_errno, errorText);
+                return SHELLSPAWN_FAILURE;
+            }
+            data->ChildProcessGroupOwned = 1u;
+        }
+
+        while (child_failure_bytes < sizeof(child_failure)) {
+            count = read(launch_status_pipe[0],
+                         (char *)&child_failure + child_failure_bytes,
+                         sizeof(child_failure) - child_failure_bytes);
+            if (count > 0) {
+                child_failure_bytes += (size_t)count;
+                continue;
+            }
+            if (count < 0 && errno == EINTR) continue;
+            if (count < 0) {
+                int saved_errno = errno;
+                (void)rxspawn_terminate_posix_child(data, SIGKILL);
+                while (waitpid(child_pid, NULL, 0) == -1 && errno == EINTR) {
+                }
+                close(launch_status_pipe[0]);
+                data->ChildProcessPID = 0;
+                data->ChildProcessGroupOwned = 0u;
+                ErrorCode("Failure reading child launch status",
+                          saved_errno, errorText);
+                return SHELLSPAWN_FAILURE;
+            }
+            break;
+        }
+        close(launch_status_pipe[0]);
+
+        if (child_failure_bytes == 0u) return 0;
+        while (waitpid(child_pid, NULL, 0) == -1 && errno == EINTR) {
+        }
+        data->ChildProcessPID = 0;
+        data->ChildProcessGroupOwned = 0u;
+        if (child_failure_bytes != sizeof(child_failure)) {
+            ErrorCode("Incomplete child launch failure report", EIO,
+                      errorText);
+        } else {
+            ErrorCode(rxspawn_child_launch_context(child_failure.stage),
+                      child_failure.error_number, errorText);
+        }
+        return SHELLSPAWN_FAILURE;
+    }
+
+    close(launch_status_pipe[0]);
+    launch_status_pipe[0] = -1;
+
+    if (process_group_child && setpgid(0, 0) != 0) {
+        rxspawn_child_launch_fail(launch_status_pipe[1],
+                                  RXSPAWN_CHILD_SETPGID, errno);
+    }
 
     if (data->working_directory && chdir(data->working_directory) != 0) {
-        static const char message[] = "Failure spawn working directory\n";
-        (void)write(2, message, sizeof(message) - 1u);
-        _exit(127);
+        rxspawn_child_launch_fail(launch_status_pipe[1],
+                                  RXSPAWN_CHILD_CHDIR, errno);
     }
 
     /* Set Environmental Variables */
@@ -4290,6 +4504,10 @@ int launchChild(SHELLDATA* data) {
         /* Variable Name */
         name = rxspawn_memory_alloc(
             data->variables->attributes[i]->string_length + 1u);
+        if (!name) {
+            rxspawn_child_launch_fail(launch_status_pipe[1],
+                                      RXSPAWN_CHILD_ENVIRONMENT, ENOMEM);
+        }
         memcpy(name, data->variables->attributes[i]->string_value, data->variables->attributes[i]->string_length);
         name[data->variables->attributes[i]->string_length] = 0;
 
@@ -4303,11 +4521,23 @@ int launchChild(SHELLDATA* data) {
         /* Variable Value */
         value = rxspawn_memory_alloc(
             data->variables->attributes[i + 1]->string_length + 1u);
+        if (!value) {
+            rxspawn_memory_free(name);
+            rxspawn_child_launch_fail(launch_status_pipe[1],
+                                      RXSPAWN_CHILD_ENVIRONMENT, ENOMEM);
+        }
         memcpy(value, data->variables->attributes[i + 1]->string_value, data->variables->attributes[i + 1]->string_length);
         value[data->variables->attributes[i + 1]->string_length] = 0;
 
         /* Set/export variable */
-        setenv(name, value,1);
+        if (setenv(name, value, 1) != 0) {
+            int saved_errno = errno;
+            rxspawn_memory_free(value);
+            rxspawn_memory_free(name);
+            rxspawn_child_launch_fail(launch_status_pipe[1],
+                                      RXSPAWN_CHILD_ENVIRONMENT,
+                                      saved_errno);
+        }
 
         rxspawn_memory_free(value);
         rxspawn_memory_free(name);
@@ -4329,13 +4559,22 @@ int launchChild(SHELLDATA* data) {
 
     /* Duplicate to replace standard streams */
     if (data->pInput && data->pInput->hRead != -1) {
-        dup2(data->pInput->hRead, 0);
+        if (dup2(data->pInput->hRead, STDIN_FILENO) < 0) {
+            rxspawn_child_launch_fail(launch_status_pipe[1],
+                                      RXSPAWN_CHILD_STDIN, errno);
+        }
     }
     if (data->pOutput && data->pOutput->hWrite != -1) {
-        dup2(data->pOutput->hWrite, 1);
+        if (dup2(data->pOutput->hWrite, STDOUT_FILENO) < 0) {
+            rxspawn_child_launch_fail(launch_status_pipe[1],
+                                      RXSPAWN_CHILD_STDOUT, errno);
+        }
     }
     if (data->pError && data->pError->hWrite != -1) {
-        dup2(data->pError->hWrite, 2);
+        if (dup2(data->pError->hWrite, STDERR_FILENO) < 0) {
+            rxspawn_child_launch_fail(launch_status_pipe[1],
+                                      RXSPAWN_CHILD_STDERR, errno);
+        }
     }
 
     /* Set the handling for job control signals back to the default. */
@@ -4349,11 +4588,9 @@ int launchChild(SHELLDATA* data) {
     // Execute the command
     if (data->environment) execve(data->file_path, data->argv, data->environment);
     else execv(data->file_path, data->argv);
-    {
-        static const char message[] = "Failure spawn launchChild\n";
-        (void)write(2, message, sizeof(message) - 1u);
-    }
-    _exit(127);
+    rxspawn_child_launch_fail(launch_status_pipe[1],
+                              RXSPAWN_CHILD_EXEC, errno);
+    return SHELLSPAWN_FAILURE; /* rxspawn_child_launch_fail() does not return. */
 #endif
 }
 

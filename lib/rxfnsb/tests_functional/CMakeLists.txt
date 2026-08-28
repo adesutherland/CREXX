@@ -152,6 +152,13 @@ add_executable(address_spawn_transfer_fixture address_spawn_transfer_fixture.c)
 
 add_executable(linein_stdin_harness linein_stdin_harness.c)
 
+if(APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_executable(linein_tty_harness linein_tty_harness.c)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        target_link_libraries(linein_tty_harness PRIVATE util)
+    endif()
+endif()
+
 set(_linein_stdin_program "${CMAKE_CURRENT_BINARY_DIR}/ts_linein_stdin.rxbin")
 add_custom_command(
         OUTPUT ${_linein_stdin_program}
@@ -197,6 +204,26 @@ set_tests_properties(ts_linein_stdin_crexx_driver PROPERTIES
         PASS_REGULAR_EXPRESSION "PASS: linein stdin returns after one newline"
         TIMEOUT 20
 )
+
+if(APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(_linein_tty_driver_workdir
+            "${CMAKE_CURRENT_BINARY_DIR}/ts_linein_stdin_crexx_tty")
+    file(MAKE_DIRECTORY "${_linein_tty_driver_workdir}")
+    add_test(
+            NAME ts_linein_stdin_crexx_tty
+            COMMAND $<TARGET_FILE:linein_tty_harness>
+                    $<TARGET_FILE:crexx>
+                    ${CMAKE_CURRENT_SOURCE_DIR}/ts_linein_stdin.crexx
+                    15000
+            WORKING_DIRECTORY "${_linein_tty_driver_workdir}"
+    )
+    set_tests_properties(ts_linein_stdin_crexx_tty PROPERTIES
+            LABELS "classlib;driver;interpreter;stdin;tty;job-control"
+            PASS_REGULAR_EXPRESSION
+                    "PASS: linein stdin returns after one newline"
+            TIMEOUT 20
+    )
+endif()
 
 set(_loadmodule_provider "${CMAKE_CURRENT_BINARY_DIR}/ts_loadmodule_provider.rxbin")
 add_custom_command(

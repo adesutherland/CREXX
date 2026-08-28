@@ -93,10 +93,20 @@ instances when multiple scripts are active.
 RexxScript runs in a sandbox variable pool.
 
 - Intrinsic BIF helpers receive the RexxScript sandbox pool as caller context.
+- `LINEIN()` and `LINEOUT()` use streams owned by the evaluator instance.
+- `LINES()` reports whether another line is available without consuming it.
+- Multiple filenames may be open at once; repeated `LINEIN()` calls on one
+  filename continue from that filename's retained position.
+- `LINEOUT(filename)` without a line closes that evaluator-owned stream.
+- `LINEOUT("stdout", text)` appends to the evaluator's captured output.
+- `ERASEFILE(filename)` truncates or creates a file and returns `0` on success
+  or `-1` when it cannot perform the operation.
+- `DATE()` and `TIME()` use the shared Level B date/time implementations,
+  including their documented optional format arguments.
 - The host CREXX variable pool is not exposed directly.
 - Host variables cross the boundary only through `EXPOSE`.
-- RexxScript does not provide `ADDRESS`, shell command execution, `CALL`,
-  external function dispatch, or host environment access in the current slice.
+- RexxScript does not provide `ADDRESS`, shell command execution, external
+  function dispatch, or host environment access in the current slice.
 
 ## Language Surface
 
@@ -117,6 +127,7 @@ label:
 SIGNAL label
 GOTO label
 RETURN
+CALL intrinsic(...)
 ```
 
 `GOTO label` is accepted as an alias for `SIGNAL label`.
@@ -151,23 +162,38 @@ RexxScript currently supports this shared Classic-compatible intrinsic set:
 ```text
 ABBREV
 ABS
+CHANGESTR
+COUNTSTR
 COPIES
+DATE
 DATATYPE
+DELSTR
+DELWORD
 LENGTH
 LEFT
+INSERT
+LASTPOS
 LOWER
 MAX
 MIN
+OVERLAY
 POS
 RIGHT
 SIGN
 SPACE
 STRIP
 SUBSTR
+TIME
+TRANSLATE
 UPPER
 VERIFY
 WORD
 WORDS
+WORDPOS
+LINEIN
+LINEOUT
+LINES
+ERASEFILE
 ```
 
 Function names are matched case-insensitively. RexxScript owns the sandbox-safe

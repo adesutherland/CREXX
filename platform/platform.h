@@ -158,7 +158,10 @@ int has_any_extension(const char *name);
 char *strip_rightmost_extension_if(const char *name, const char *ext);
 
 /*
- * Terminal management functions for ensuring sane terminal state on exit/crash
+ * Terminal management functions for ensuring sane terminal state on exit or
+ * crash.  A snapshot is bound to the foreground terminal endpoint and owning
+ * process that saved it.  Restore never applies that snapshot to a replacement
+ * stdin and safely abandons it if the terminal has disconnected.
  */
 void platform_term_save(void);
 void platform_term_restore(void);
