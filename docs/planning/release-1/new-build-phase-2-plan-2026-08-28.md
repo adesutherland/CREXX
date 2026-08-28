@@ -232,6 +232,19 @@ emit a compiler depfile, enforce expected providers, or replace the current
 timestamp-sensitive policy. Those remain the next reviewed P2.3 work; the
 wave gate below is therefore not yet complete.
 
+**Hosted qualification (2026-08-28): green.** Build CREXX run
+`33186425039` passed at exact implementation SHA
+`f4c17459a273d7c1684f3428c7a81784560901a0`: Windows x64 passed 2270 tests,
+and Linux x64, macOS ARM64 and macOS Intel each passed 2342 tests. The observed
+job durations were 20m43s, 26m07s, 18m52s and 39m58s respectively; they are
+hosted correctness-run observations, not controlled performance evidence. Two
+superseded Windows build failures exposed namespace collisions between the
+Windows SDK and existing compiler AST identifiers. The final repair isolates
+`MoveFileExA` in a small publication translation unit that includes no compiler
+headers; the green Windows run proves both compilation and the atomic-overwrite
+fixture. The other three maintained platforms were also green. No sanitizer
+claim is made by this workflow.
+
 **Implementation note (2026-08-28):** read-only source inspection confirms
 that discovery currently scans the primary/source roots before binary roots,
 keeps the first same-stage module found across ordered roots, and, when
