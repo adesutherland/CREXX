@@ -1,798 +1,308 @@
 # New Build System Vision and Migration Plan
 
-- **Status:** Vision retained; Phase 0 and Phase 1 complete; Phase 2 approved;
-  Wave P2.1 complete
-- **Baseline:** `origin/develop` at `b64f67a00b3585b130f909640a30d120095e64f6`
-- **Develop incorporated:** through `b64f67a00b3585b130f909640a30d120095e64f6`
+- **Status:** simplified vision approved; Phase 0 and Phase 1 complete;
+  revised Phase 2 P2A started
+- **Current `develop` incorporated:**
+  `ee8e8f8fefbdc3ee9217f2ef4dd7edf0c8d288e6`
 - **Planning branch:** `temp/newbuild`
 - **Last updated:** 2026-08-28
 
 ## 1. Purpose
 
-The new build should make the cREXX product structure understandable to a
-human, expose every real dependency to the build engine, exploit safe
-parallelism from the start, and use the resulting workload to qualify cREXX's
-own file, hashing, process and task facilities.
+The build should make the cREXX product structure understandable, expose real
+dependencies, exploit safe parallelism, and make incremental work proportional
+to the source change.
 
-The desired end state is not a collection of faster shell scripts. It is one
-declarative build graph with:
+The end state has two deliberately separate executors:
 
-- clear product layers;
-- explicit execution waves where a barrier is genuinely required;
-- independently runnable actions within each wave;
-- isolated work and publication locations;
-- recorded source, RXAS and RXBIN dependency resolution;
-- metadata treated as a first-class generated product;
-- resource-aware parallel scheduling;
-- layered QA with defined coverage; and
-- static and dynamic checks for undeclared dependencies and file races.
+1. CMake/Ninja builds the host-native toolchain and the Level B bootstrap.
+2. Once that bootstrap is qualified, a small cREXX Level B builder owns the
+   post-bootstrap libraries, REXX-based tools, product assembly and optional
+   material.
 
-CMake and Ninja should remain responsible for the host C/C++ bootstrap. Once
-the necessary Level B runtime and libraries exist, a cREXX Level B builder
-should become the normal orchestrator for post-bootstrap work. Both parts must
-consume the same graph rather than encode two build systems independently.
+A simple human-facing stage view joins those halves. There is no requirement
+for both executors to consume the same complete low-level graph, because they
+do not own the same actions.
+
+The practical success criteria are:
+
+- a clear named stage can be requested directly;
+- independent work within that selection runs in parallel;
+- an immediate repeat does no work;
+- a source change rebuilds only its real reverse dependency closure;
+- essential or smoke QA does not prepare unrelated comprehensive fixtures;
+- build results do not depend on stale import products or job count; and
+- performance measurement remains isolated from build, correctness and stress
+  workloads.
 
 ## 2. Governing principles
 
-1. **A product layer and an execution wave are different concepts.** Product
-   layers explain the system. Execution waves express only the dependencies
-   that prevent concurrent work.
-2. **One generated path has exactly one owner.** No action may delete, replace
-   or append to another action's output.
-3. **Every generated input has a declared producer.** Directory order,
-   timestamps and a previous build must never make a clean build succeed.
-4. **Import resolution is part of the action identity.** The source roots,
-   binary roots, allowed artifact kinds, search order and selected providers
-   must be declared and recorded.
-5. **Metadata is a semantic artifact.** Compiler, assembler, linker and
-   disassembler metadata behaviour is included in correctness, dependency and
-   reproducibility checks.
-6. **Parallel by construction.** Serialization is permitted only for a real
-   dependency, a measured resource limit or an intentionally exclusive
-   facility.
-7. **Tests consume an already built product.** Normal CTest execution must not
-   invoke a nested build in the same tree.
-8. **Clean builds are the design point.** Incremental and cached builds are
-   optimisations of a correct clean graph.
-9. **Self-hosting is staged and reversible.** The CMake/Ninja bootstrap remains
-   a reference path until the cREXX builder proves graph, artifact and QA
-   parity.
-10. **Aggressive simplification is allowed on this branch.** Unnecessary
-    dependencies and compatibility scaffolding may be removed, but each
-    removal must be justified by the declared graph and qualified against a
-    clean `develop` reference build.
+1. **One owner per action and artifact.** CMake owns through the bootstrap
+   boundary; Level B owns the post-bootstrap graph after migration.
+2. **Stages explain; dependencies schedule.** A named stage is a useful product
+   selection, not permission to serialize independent actions.
+3. **Explicit inputs and outputs.** A generated input has a declared producer;
+   a producer writes privately and publishes one complete result.
+4. **Incremental behaviour is a primary contract.** Clean correctness, no-op
+   behaviour and changed-input closure are tested directly.
+5. **Import ambiguity is removed structurally.** Production compiler actions
+   receive curated immutable roots with one eligible provider; interactive
+   compiler flexibility need not be redesigned.
+6. **QA preparation follows QA selection.** Tests consume already prepared
+   artifacts and never build or delete the active product tree.
+7. **Parallelism is bounded by evidence.** Use 30 jobs on the current macOS
+   development host and 5 on portable/unknown hosts, with narrow resource pools
+   only for work proven to need them.
+8. **Performance is separate.** Measurement runs serially on a quiet host and
+   is not inferred from shared-host or hosted-runner timing.
+9. **Migration is direct on the feature branch.** Small implementation waves
+   are retained for diagnosis, but permanent shadow graphs and duplicate
+   production paths are not.
+10. **Assurance stays proportional.** Static ownership, Ninja dependency checks,
+    no-op evidence and high-parallel repetition are routine; OS tracing and
+    schedule fuzzing are focused diagnostics.
 
-## 3. Current-state findings
+## 3. Product stages
 
-The present build already contains useful foundations, including shared VM
-object libraries, explicit class-library and Level C dependency tables, a
-private Level G HTTP staging area, and CTest fixtures. It also exposes several
-forms of implicit coordination that should not survive the migration:
+The human-facing build model is:
 
-- Level B BIF modules are forced through a predecessor chain rather than
-  expressing only their semantic dependencies.
-- Several library targets delete a shared consolidated image when rebuilding
-  an individual member.
-- the common `bin` directory acts as both publication directory and compiler
-  import root, so stale and in-progress products can influence resolution;
-- broad CTest fixture use can trigger builds while tests are running;
-- some generated-runtime suites are globally gated by one fixture even when
-  their artifacts are independent;
-- many custom targets participate in the default build, which makes the
-  product boundary harder to see;
-- examples, demonstrations and optional remote/parser facilities are mixed
-  into ordinary configuration or build paths; and
-- CMake currently defines no named job pools for high-memory compilations,
-  link work or exclusive generators.
+| Stage | Contents | Executor at completion |
+| --- | --- | --- |
+| C0: native foundations | platform support, generator tools, RXBIN support, native libraries | CMake/Ninja |
+| C1: core C toolchain | compiler, assembler, linker, VMs, disassembler and native helpers | CMake/Ninja |
+| B0: Level B bootstrap | core Level B BIF modules and `library.rxbin` | CMake/Ninja |
+| X: certified exits | exit-token support and certified exits image | CMake/Ninja |
+| B1: Level B substrate | class/native libraries plus filesystem, hashing, process and task facilities | CMake/Ninja |
+| C: core REXX tools | Level C library, RexxScript, preprocessor and debugger | Level B after Phase 3 |
+| G: Level G library | network and other Level G facilities | Level B after Phase 3 |
+| L: Level L libraries | independent specialist libraries | Level B after Phase 3 |
+| Product | driver, runtime composition, install and package inputs | Level B after Phase 3 |
+| Optional | examples, demonstrations, contributions and experiments | Level B after Phase 3 |
 
-`ninja -t missingdeps all` reports no depfile-known generated-file omission in
-the existing configured Release graph. That is useful but limited evidence: it
-does not detect undeclared custom-command reads, two writers to the same path,
-delete-versus-read conflicts, or resolution against a stale artifact.
+Dependencies, not the table order alone, determine readiness. An independent
+Level L action may run beside a Level G or Level C action once its declared
+bootstrap inputs are ready.
 
-The migration should retain the strong parts of the current graph while
-replacing serialized chains, shared destructive cleanup and build-during-test
+## 4. Parallel and incremental execution
+
+Each action declares at least:
+
+- stable name and stage;
+- tool and arguments;
+- direct inputs and dependencies;
+- complete outputs and byproducts;
+- private work directory;
+- publication path; and
+- the small set of environment or resource settings that affect it.
+
+Phase 2 continues to express those facts in CMake. Phase 3 expresses only the
+post-bootstrap actions in the Level B build description.
+
+For Level B actions, a successful action key is derived from the tool identity,
+arguments and content of declared inputs. An action is skipped only when that
+key matches and all declared outputs exist. Remote caching, distributed
+execution and a general cache protocol are not part of the initial runner.
+
+The first scheduler has ordered stages and a bounded parallel job pool within
+each stage. Direct dependencies may further limit readiness. Weighted pools or
+exclusive locks are added only for an observed resource problem; they are not
+part of the minimum API.
+
+## 5. Import boundary
+
+`rxc` supports ordered source and binary roots, source/RXAS/RXBIN/plugin
+candidates, executable-directory imports and timestamp-sensitive RXAS/RXBIN
+selection. That flexibility is useful interactively but must not make a build
+depend on a previous or concurrent publication.
+
+The production rule is simpler than a universal provider database:
+
+- construct a private import root for an action or coherent family;
+- stage only declared immutable providers;
+- use `--no-exe-import` where an action must not see installed/build-tree
+  products;
+- ensure one eligible provider per namespace or stem; and
+- declare the staged providers as build inputs.
+
+The existing opt-in resolution report remains a diagnostic for ambiguous or
+route-sensitive cases. A depfile is added only where `rxc` genuinely discovers
+an input that the build action cannot declare directly.
+
+Broad route parity and metadata transformation remain important compiler,
+assembler and linker qualification subjects, but they are not prerequisites
+for an efficient build system.
+
+## 6. Output isolation and race prevention
+
+Every action writes beneath an action-private work directory. Consumers read
+immutable staged outputs. Assembly has one owner, and completed products are
+published by temporary-file-and-rename rather than shared append/delete
 coordination.
 
-## 4. Human-facing product layers
+Routine race proof consists of:
 
-The documented product model should use these layers:
+- one normalized owner for each output;
+- no unordered write/write, delete/read or write/read overlap;
+- declared producer reachability for generated inputs;
+- `ninja -t missingdeps` for the CMake graph;
+- unchanged Ninja logs during CTest;
+- repeated clean and incremental builds at maintained job profiles; and
+- deliberate stale-import checks at the compiler boundary.
 
-| Layer | Contents | Result |
+Platform file tracing, randomized schedules and injected delays are available
+when an unexplained race remains. They are not required in every normal build
+or on every platform.
+
+## 7. QA model
+
+| Tier | Purpose | Scheduling rule |
 | --- | --- | --- |
-| C0: host foundations | platform support, generators, AVL tree, RXBIN support and native third-party inputs | native objects and generator tools |
-| C1: core C toolchain | VM variants, assembler, linker, compiler, disassembler, contract tools and native packaging helpers | runnable bootstrap toolchain |
-| B0: Level B bootstrap | core Level B BIF modules and the Level B library image | `library.rxbin` and module artifacts |
-| X: certified exits | exit-token support and certified exit modules | certified exits image |
-| B1: Level B substrate | class library, required native providers, hashing/filesystem/task primitives and build-runner substrate | self-host-capable Level B environment |
-| C: core cREXX tools | Level C library, RexxScript, preprocessor, debugger and other core REXX-based tools | normal developer tool suite |
-| G: Level G library | network and other Level G facilities | Level G modules/images |
-| L: Level L libraries | independent specialist libraries such as TinyExpr | Level L modules/images |
-| Product | installed driver, runtime composition, packages and install tree | installable cREXX product |
-| Optional | examples, demonstrations, contributions, benchmarks and experiments | explicitly requested auxiliary artifacts |
-
-This taxonomy must be visible in documentation and command names. It must not
-create false barriers: for example, an independent Level L library can build
-at the same time as Level G or a Level C lane if its declared prerequisites are
-ready.
-
-## 5. Proposed execution waves
-
-The initial graph should use these coarse waves. The manifest may expose more
-fine-grained dependencies within them, but no action in a later wave starts
-until the stated barrier is satisfied.
-
-```text
-Wave 0  Resolve configuration, host tools and pinned external inputs
-   |
-Wave 1  Build host generators and native foundations
-   |
-Wave 2  Build and verify the core C toolchain
-   |
-Wave 3  Build the isolated Level B bootstrap
-   |
-Wave 4  Build certified exits
-   |
-Wave 5  Build Level B class/native substrate and the cREXX builder
-   |
-Wave 6  +----------------+----------------+----------------+---------------+
-        | Level C lane   | Level G lane   | Level L lanes  | debugger/etc  |
-        +----------------+----------------+----------------+---------------+
-   |
-Wave 7  Assemble/install product; optionally build examples, demos and contrib
-```
-
-Within a wave, actions run as soon as their direct prerequisites are complete.
-A wave barrier is a human-readable safety boundary, not a substitute for the
-fine-grained DAG. As the graph is proven, unnecessary barriers should be
-removed while retaining the product-layer labels.
-
-## 6. Dependency resolution contract
-
-### 6.1 Existing compiler behaviour that the build must control
-
-`rxc` has separate ordered search spaces for source and binary imports:
-
-- source roots can provide `.crexx`, `.crx`, `.rexx` or the initial source's
-  extension;
-- binary roots can provide `.rxbin`, optional `.rxas`, and `.rxplugin`;
-- the initial source directory is the primary source root and `-s` adds source
-  roots;
-- `-i` adds binary roots, while the compiler executable directory is normally
-  another binary root;
-- repeated `-s` and `-i` options preserve order;
-- source is searched ahead of deployed binary artifacts;
-- same-stem binary candidates in one root collapse to the freshest artifact,
-  with `.rxbin` preferred over `.rxas` on a timestamp tie;
-- `--import-rxas` enables RXAS imports; and
-- `--no-exe-import` removes the compiler executable directory from the binary
-  search path.
-
-This flexibility is appropriate for interactive development, but it is too
-ambiguous for a deterministic library build. A parallel build must never
-present a consumer with stale source, RXAS and RXBIN candidates and allow
-timestamp order to decide which one wins.
-
-### 6.2 Hermetic build policy
-
-Every compiler action must declare:
-
-- ordered source roots;
-- ordered binary roots;
-- permitted import kinds: source, RXAS, RXBIN and/or plugin;
-- whether the executable directory is visible;
-- the expected provider for every non-system import;
-- whether the action is bootstrap, ordinary library, tool, test or example;
-  and
-- the metadata preservation/stripping policy expected downstream.
-
-The normal build should use private, immutable import roots constructed for
-the action or action family. Each namespace/stem should have one eligible
-provider in those roots. In particular:
-
-- Level B bootstrap actions use only the approved bootstrap source and RXAS
-  roots, with `--no-exe-import`;
-- an in-progress consolidated library is never placed in a consumer's import
-  root;
-- old and new `library.rxbin` files never coexist as eligible providers;
-- publication happens only after validation and by atomic rename; and
-- timestamps never select between alternative build products.
-
-### 6.3 Resolution evidence and depfiles
-
-`rxc`, `rxas` and `rxlink` should gain a machine-readable dependency mode. For
-each action it should emit a depfile plus a resolution record containing at
-least:
-
-- requested namespace and symbol;
-- selected source/RXAS/RXBIN/plugin path;
-- artifact kind and search-root index;
-- content digest, size and relevant metadata digest;
-- tool version and resolution flags; and
-- rejected same-stem candidates, if any were visible.
-
-The build fails if the actual resolution record differs from the manifest or
-if an undeclared candidate affected the decision. This evidence also becomes
-part of the cache key and reproducibility record.
-
-### 6.4 Route-parity qualification
-
-Focused tests must compile representative consumers through each supported
-route:
-
-1. provider source;
-2. provider RXAS metadata;
-3. provider RXBIN metadata; and
-4. linked-library metadata where that route is supported.
-
-The tests compare callable contracts, provider identity, overload choice,
-inline metadata, class/interface metadata, diagnostics and resulting runtime
-behaviour. Differences must be either eliminated or documented as deliberate
-route semantics. This becomes a permanent regression group because the same
-area has previously failed while a library was being built.
-
-## 7. Metadata and artifact contract
-
-Metadata is produced and transformed throughout the toolchain:
-
-- `rxc` emits callable, provider, contract, class/interface, inline,
-  initializer, source-step and trace metadata in RXAS;
-- `rxas` validates and packs constants, metadata and the semantic graph into
-  RXBIN;
-- `rxlink` selects modules, remaps identifiers, checks provider signatures,
-  rebuilds the canonical graph and preserves or strips defined metadata
-  classes according to policy; and
-- `rxdas` must round-trip supported metadata spellings without creating a
-  different import contract.
-
-Therefore an action's output is not just its executable instructions. Its
-metadata is part of its public interface and must participate in:
-
-- content hashes and cache keys;
-- API/ABI compatibility checks;
-- source/RXAS/RXBIN parity tests;
-- link selection and initializer retention checks;
-- strip/preserve policy tests;
-- reproducibility comparisons; and
-- installed-product qualification.
-
-Each generated RXAS, RXBIN or linked image should have a sidecar artifact
-manifest. It should record the producer, input digests, resolved imports,
-exported providers/contracts, metadata classes present, strip policy, semantic
-graph digest and final artifact digest. Metadata-only modules are valid outputs
-and must not be discarded as empty work.
-
-## 8. One declarative graph
-
-The source of truth should be a versioned, human-readable manifest. CMake
-adapters, the Level B builder, CI jobs and QA selection all consume it. Stage
-scripts may provide convenient entry points, but may not recreate dependency
-logic.
-
-Every action record should contain:
-
-| Field | Meaning |
-| --- | --- |
-| `id` | stable action identity |
-| `product_layer` | C0, C1, B0, X, B1, C, G, L, Product or Optional |
-| `wave` | coarse barrier membership |
-| `tool` and `argv` | exact executable and arguments |
-| `inputs` | declared source, generated and control inputs |
-| `outputs` | all owned outputs and byproducts |
-| `needs` | direct action dependencies |
-| `import_policy` | ordered roots, allowed kinds and resolution flags |
-| `metadata_policy` | required, preserved and stripped metadata classes |
-| `work_dir` | action-private workspace |
-| `resources` | CPU, memory, I/O and exclusive-resource weights |
-| `environment` | explicitly allowed environment variables |
-| `cache_policy` | cacheability and complete action-key inputs |
-| `qa_tags` | tier, component, level, capability and platform coverage |
-
-The manifest compiler should reject duplicate outputs, missing producers,
-cycles, undeclared wave inversions, ambiguous import roots and references to
-paths outside approved work/publication roots before executing any command.
-
-## 9. Parallel execution and resource control
-
-Parallelism is a scheduler setting over an already correct DAG, never the
-mechanism used to discover dependencies.
-
-The first profiles should be:
-
-- `developer-fast`: up to 30 runnable actions on Adrian's current macOS
-  development machine;
-- `portable`: 5 runnable actions on slower or unknown hosts;
-- `memory-constrained`: host-derived capacity with heavyweight VM compilation
-  limited independently;
-- `race-stress`: 30 actions plus deterministic delay injection and schedule
-  variation; and
-- `measurement-isolated`: one controlled benchmark/measurement workload with
-  all unrelated build and QA activity quiescent.
-
-CPU count alone is not sufficient. The graph needs named/weighted resource
-pools for:
-
-- high-memory optimized compilation, especially VM interpreter variants;
-- link steps;
-- disk-intensive archive or package assembly;
-- parser-thread tooling that is proven exclusive; and
-- external facilities such as network ports or a deliberately shared service.
-
-CMake/Ninja should map these to Ninja job pools where possible. The Level B
-runner should implement the same resource model rather than using a single
-global thread count. Locks must identify the actual resource; they must not be
-used to conceal output collisions.
-
-Performance and build-time measurements must never share the general parallel
-worker pool. The scheduler should treat measurement as mutually exclusive with
-compilation, linking, correctness QA, stress QA and other benchmarks. Before a
-measurement starts it records the host, build configuration, power state and
-load, waits for build-owned work to become quiescent, and rejects or clearly
-marks a run whose background load exceeds the approved threshold.
-
-### 9.1 Local Linux proving
-
-The common Linux build and QA actions should be runnable in temporary,
-resource-bounded Minikube namespaces using the same manifest selections as CI.
-This provides fast local proof, schedule/load experimentation and retained logs
-without depending on GitHub runner availability. Each run must use an exact
-source archive, an explicit builder image/toolchain and an isolated build root,
-then remove only its uniquely named namespace.
-
-Minikube Linux ARM64 evidence complements rather than silently replaces the
-supported hosted matrix. It does not emulate Windows, another CPU architecture
-or GitHub service behaviour; hosted jobs remain the platform-qualification
-gate for those surfaces.
-
-## 10. Output isolation and publication
-
-Each action writes only beneath an action-specific directory, for example:
-
-```text
-build/work/<action-id>/...
-build/stage/<layer>/<namespace>/...
-build/publish/<configuration>/...
-```
-
-Rules:
-
-- an action cannot delete a shared library or directory to mark itself dirty;
-- archive/link assembly is a separate single-owner action;
-- consumers read immutable staged artifacts, never another action's work area;
-- successful outputs are validated, fsynced where required, then atomically
-  renamed into the staging or publication location;
-- temporary names are unique to the action and invocation;
-- cleanup removes only paths owned by the selected action or complete build
-  root; and
-- installed-product tests use the install tree, not accidental build-tree
-  fallbacks.
-
-These rules remove the current need for serial predecessor chains and shared
-clean stamps where no semantic dependency exists.
-
-## 11. Level B builder takeover
-
-### 11.1 Bootstrap boundary
-
-The Level B runner becomes eligible only after Wave 5 provides:
-
-- a qualified VM and compiler toolchain;
-- `library.rxbin` and certified exits;
-- required class/native libraries;
-- filesystem enumeration and atomic publication;
-- cryptographic hashing;
-- process execution and exit-status capture;
-- parallel task primitives with cancellation; and
-- deterministic manifest parsing.
-
-Before that point, CMake/Ninja drives the build. After it, the Level B runner
-orchestrates Level C, G and L libraries, REXX-based tools, optional products and
-their QA preparation.
-
-### 11.2 Human-facing stage script
-
-The Level B interface should make barriers and concurrent actions obvious. A
-conceptual form is:
-
-```text
-stage "level-c-foundations" {
-  parallel {
-    build "rxfnsc-core"
-    build "classlib-dependent-tools"
-  }
-}
-
-stage "rexx-tools" requires "level-c-foundations" {
-  parallel {
-    build "rexxscript"
-    build "rxpp"
-    build "rxdb"
-  }
-}
-```
-
-This is illustrative, not a proposed new language syntax. The actual form must
-use established Level B syntax and requires a separate design approval before
-implementation.
-
-### 11.3 Dual-run qualification
-
-During migration, CMake/Ninja and the Level B runner should build the same
-post-bootstrap slice into separate roots. Qualification compares:
-
-- planned DAG and selected providers;
-- action and metadata manifests;
-- final artifact hashes where deterministic;
-- semantic/disassembly comparison where non-semantic bytes vary;
-- essential and smoke QA results; and
-- clean, incremental and failure-recovery behaviour.
-
-The Level B path becomes default only after repeated clean parity at job counts
-1, 5 and 30 and after injected action failures leave no publishable partial
-artifacts.
-
-## 12. QA model
-
-### 12.1 Tiers
-
-| Tier | Purpose | Expected use |
-| --- | --- | --- |
-| Graph | manifest validation, duplicate writers, cycles, import ambiguity and missing producers | every configure/plan |
-| Essential | minimum compiler/assembler/linker/VM and bootstrap correctness; blocks all further work | every build and commit |
-| Smoke | representative end-to-end product behaviour across major layers | normal developer and PR loop |
-| Comprehensive | full component, language, library, negative and regression suites | broad CI and release preparation |
-| Qualification | clean build, install/package, source-RXAS-RXBIN parity, reproducibility and supported-platform gates | scheduled and release gates |
-| Stress | parallel schedule fuzzing, task load, cancellation, repeated clean/incremental builds and race detection | scheduled and focused concurrency work |
-| Measurement | controlled performance/build-time evidence with retained host, configuration, power and load data | explicit isolated runs only; never concurrent with build, QA, stress or another measurement |
-
-These tiers are orthogonal to existing compiler-internal stage labels. Test
-labels should independently encode tier, component, product level, capability,
-mode and platform so a user can answer both "how much QA?" and "what does it
-cover?"
-
-### 12.2 Fixture policy
-
-All normal artifacts and fixtures are built by an explicit `qa-prep` graph
-before CTest starts. Tests then:
-
-- read immutable product/fixture artifacts;
-- write only to a unique per-test directory;
-- use unique ports, databases and temporary names;
-- declare a resource lock only for a real exclusive facility; and
-- never rebuild or delete a shared runtime image.
-
-Multi-step test scenarios can have their own setup/run/cleanup DAG, but they
-must be materialized before or outside the general parallel CTest pool. A test
-failure must not invalidate another test's inputs.
-
-### 12.3 Timeouts and heavy-load interpretation
-
-A timeout has different meanings in normal QA and deliberate load testing:
-
-- essential, smoke, comprehensive and qualification tests run under a defined
-  resource profile and must meet their maintained timeouts there;
-- race/stress runs may deliberately overload the host, and a timeout that occurs
-  only beyond the supported profile is retained as a capacity/stress result
-  rather than automatically treated as a functional failure;
-- the same timed-out test must be rerun in isolation or under its normal QA
-  profile to distinguish starvation from a correctness defect; and
-- performance tests are not used as correctness fixtures and never run in the
-  heavily parallel correctness/stress workload.
-
-Timeouts should be declared per test class from retained normal-load evidence,
-not globally inflated until overloaded runs happen to pass. Reports must state
-the scheduler profile, job count, host load and whether the result is a normal
-QA failure, a stress-capacity observation or an invalid performance run.
-
-## 13. Build-race detection
-
-### 13.1 Static graph proof
-
-For two unordered actions `A` and `B`, safe concurrency requires:
-
-```text
-W(A) intersect (R(B) union W(B)) = empty
-W(B) intersect (R(A) union W(A)) = empty
-```
-
-where `R` and `W` are the declared read and write path sets after path
-normalization. In addition:
-
-- every generated read has exactly one reachable producer;
-- every output has exactly one owner;
-- a directory output has an explicit ownership boundary;
-- deletes are writes over the complete affected path set; and
-- an action may publish only after all reads of any replaced generation are
-  complete, normally avoided by immutable generation paths.
-
-The manifest compiler can enforce most of this before a build. CMake's Ninja
-generator and `ninja -t missingdeps` remain useful secondary checks for
-depfile-visible generated inputs.
-
-### 13.2 Dynamic file-access audit
-
-Static declarations must be checked against actual execution. An audit wrapper
-should record process-tree file opens, stats, directory scans, renames,
-deletions and writes, then compare them with the action manifest. The exact
-backend is platform-specific:
-
-- Linux can use fanotify/eBPF or `strace`-class tracing;
-- macOS can use supported Endpoint Security/DTrace-derived facilities or a
-  purpose-built interposition/audit helper;
-- Windows can use ETW/Process Monitor-class evidence.
-
-The normal solution must not require weakening host security controls. A
-portable compiler/toolchain-level audit is therefore also needed: rxc, rxas,
-rxlink, the Level B runner and fixture helpers should directly report all files
-they resolved or changed. OS tracing is the independent cross-check, not the
-only source of truth.
-
-The audit fails on:
-
-- a read not covered by a declared input or approved system root;
-- a write/delete outside the action work directory or owned output set;
-- two concurrent writers to the same normalized path;
-- a write concurrent with another action's read;
-- an undeclared directory scan that can change resolution; or
-- a published output read before its atomic commit.
-
-### 13.3 Schedule fuzzing and reproducibility
-
-The stress runner should execute the same clean graph repeatedly with:
-
-- job limits 1, 5 and 30;
-- seeded random readiness delays;
-- reversed and randomized ready-queue ordering;
-- injected tool failures before and during publication;
-- filesystem timestamp equalization and perturbation; and
-- repeated builds from deliberately contaminated parent directories while the
-  build root remains clean.
-
-Each successful run compares action manifests, provider selections, metadata
-inventories and final hashes. A serially successful but parallel-only divergent
-run is a graph defect, not a flaky-test waiver.
-
-## 14. Migration workstreams
-
-### Phase 0: freeze evidence and define the graph
-
-1. Record clean `develop` Debug and Release build graphs, timings, peak memory,
-   artifact inventories and QA selections on macOS and Linux.
-2. Catalogue every custom target/command, output, byproduct, import root,
-   cleanup path, fixture and resource lock.
-3. Define the manifest schema and graph validator.
-4. Add a read-only export of the current CMake graph for comparison.
-
-**Gate:** all current generated products have an owner and provisional layer,
-wave and QA classification.
-
-**2026-08-27 result:** evidence capture and classification are complete. The
-final exporter has no fallback classifications, but the strict ownership/graph
-gate is not clean: two paths have multiple candidate owners and 813 provisional
-wave inversions require review. See
-`docs/planning/release-1/new-build-phase-0-report-2026-08-27.md`.
-
-### Phase 1: make the current CMake graph race-safe
-
-1. Split work, staging and publication roots.
-2. Replace shared-output deletion and append/consolidation patterns with
-   single-owner assembly actions.
-3. Replace predecessor chains with direct semantic dependencies.
-4. Declare all custom-command outputs, byproducts, depfiles and terminal needs.
-5. Add resource pools for high-memory/native-heavy work.
-6. Move examples, demonstrations, contributions, downloads and experiments
-   behind explicit options/targets.
-7. Move all nested CTest builds into `qa-prep`.
-
-**Gate:** clean builds pass at 1, 5 and 30 jobs; parallel execution produces no
-shared-path collision and no test initiates a build.
-
-**2026-08-27 checkpoint A:** the jump-table base and RexxScript ownership waves
-are complete. Multiple-candidate output owners fell from two to zero and
-cross-action cleanup findings fell from 251 to 245. Focused jobs 1, 5 and 30
-proof is green, but 31 nested build tests, classlib/rxfnsc shared cleanup,
-resource pools and wave review remain. Work proceeds family by family; broad
-QA is reserved for a meaningful checkpoint. See
-`docs/planning/release-1/new-build-phase-1-progress-2026-08-27.md`.
-
-**2026-08-27 checkpoint B:** `linked_opt_runtime_artifacts_build` has moved from
-CTest into `qa-prep-linked-opt-runtime` and the aggregate `qa-prep` stage.
-Nested build tests fell from 31 to 30 and fixture requirements from 939 to 58
-relative to checkpoint A. Active CI and the maintained sanitizer runner now
-prepare before CTest; correctness selections exclude performance measurement.
-
-**2026-08-27 checkpoint C:** the 28 compiler-exit artifact fixtures have moved
-into `qa-prep-compiler-exits`. Their 56 runtime consumers passed directly at
-parallel 30 without changing the Ninja log. Nested build tests, fixture setup
-tests and fixture requirements are now the same two example fixtures. The next
-slice removes those last top-level build-as-test cases.
-
-**2026-08-27 checkpoint D:** the last two example fixtures have moved into
-`qa-prep-examples`. The example consumers passed directly without changing the
-Ninja log. The current catalogue reports zero nested build tests, zero fixture
-setup tests and zero fixture requirements. Phase 1 continues with shared-output
-ownership in rxfnsc and classlib.
-
-**2026-08-27 checkpoint E:** all 65 `rxfnsc` members now compile from private,
-dependency-keyed source roots with a curated external RXBIN import root and
-`--no-exe-import`. Direct semantic source dependencies replace shared-directory
-discovery; private link and single-owner temporary-file-and-rename publication
-replace 131 cleanup hazards. Jobs 1, 5, and 30 produced identical member and
-public hashes, and 112 focused runtime tests plus five RexxScript consumers
-passed without initiating a build. The coherent source route intentionally
-replaces the previous mixed source/RXBIN metadata route; permanent route-parity
-qualification remains Phase 2 work. The next bounded ownership work is the
-main and native-backed classlib families.
-
-**2026-08-27 checkpoint F:** the 53 Rexx-only classlib members now use private
-work directories, curated compiler imports, an explicit deterministic split
-between internal source and RXBIN providers, private link assembly, and
-single-owner publication. Main classlib cleanup hazards fell from 107 to zero.
-Jobs 1, 5, and 30 produced identical member and public hashes; 42 runtime
-consumers and five metadata/documentation inspections passed without invoking
-Ninja. Two member artifacts remain byte-different from the former mixed-route
-baseline, so source/RXBIN route parity remains a Phase 2 qualification item.
-The next bounded ownership work is the three native-backed classlib adapters.
-
-**2026-08-27 checkpoint G:** the `Id`, `KeyDB`, and `Os` native-backed
-classlib adapters now use private, dependency-keyed source/provider roots,
-curated base imports, `--no-exe-import`, private linking, and single-owner
-publication. Each adapter can see only its declared native providers. Jobs 1,
-5, and 30 produced identical member and public hashes, and all six runtime
-consumers passed without invoking Ninja. Cross-action cleanup findings are now
-zero; only two preprocessor actions that rewrite their own declared outputs
-remain. `KeyDB` retains route-sensitive generated label/debug identities, so
-permanent source/RXBIN/plugin route parity remains a Phase 2 qualification
-item. The next bounded ownership work is the preprocessor family.
-
-**2026-08-27 checkpoint H:** RXPP now stages only its declared compiler
-inputs, compiles with `--no-exe-import` in a private member directory, links a
-private runtime image, and atomically publishes generated C for the native
-compiler. Its two self-rewrite cleanup findings are gone, leaving no cleanup
-finding in the configured graph. Jobs 1, 5, and 30 retained identical staged,
-RXAS, RXBIN, linked, C, and object artifacts; all eight maintained focused
-checks passed without CTest invoking Ninja. The final macOS Debug executable
-retains native linker UUID/debug/signature entropy and is recorded separately
-from build-order determinism. The next work is resource pools and provisional
-wave/test classification review.
-
-**2026-08-27 checkpoint I:** named Ninja pools now separate high-memory VM-core
-compilation from native linking and from the global runnable-action limit.
-`developer-fast`, `portable`, and `memory-constrained` resolve to VM/link
-depths `4/6`, `2/2`, and `1/1`; `auto` selects the first on Apple ARM64 and the
-portable profile elsewhere. A 52-object live proof under global parallel 30
-never exceeded four concurrent VM-pool actions. `rxc`/`rxas` generation remains
-unthrottled because the retained evidence identifies optimized VM C compilation,
-not Rexx generation, as the memory-pressure source. The next work is optional
-product, test-tier, and provisional wave review.
-
-### Phase 2: make imports and metadata deterministic
-
-1. Record actual import resolution at the `rxc` selection point; give `rxas`,
-   `rxlink` and `rxdas` artifact/metadata reports appropriate to their roles.
-2. Give bootstrap and ordinary library actions curated immutable import roots.
-3. Add sidecar action/artifact/metadata manifests.
-4. Add permanent source/RXAS/RXBIN route-parity tests.
-5. Add metadata preserve/strip and disassembler round-trip tests.
-6. Prove one bounded manifest-generated action family through CMake/Ninja.
-
-**Gate:** no build selection depends on timestamps, executable-directory
-contents or a previous build; all selected providers are recorded and match
-the manifest. The detailed, approval-gated wave plan is
-`docs/planning/release-1/new-build-phase-2-plan-2026-08-28.md`.
-
-### Phase 3: introduce the Level B runner
-
-1. Build the smallest runner over established filesystem, hash, process and
-   task APIs.
-2. Parse and validate the same declarative graph used by CMake adapters.
-3. Implement barriers, direct DAG scheduling, resource pools, cancellation and
-   atomic publication.
-4. Migrate one independent Level L module as the first proving slice.
-5. Migrate Level G, then Level C/RexxScript/core REXX tools.
-
-**Gate:** dual-run graph, resolution, metadata and QA parity across repeated
-clean and incremental builds at 1, 5 and 30 jobs.
-
-### Phase 4: consolidate the product workflow
-
-1. Make the Level B runner the normal post-bootstrap entry point.
-2. Retain a bootstrap/reference comparison target.
-3. Standardize install, package, examples, demos and contributions as manifest
+| essential | minimum toolchain and bootstrap correctness | every build/commit loop; smallest preparation closure |
+| smoke | representative end-to-end confidence | normal developer and PR loop; essential plus smoke preparation |
+| comprehensive | maintained broad correctness | phase checkpoints and broad CI |
+| qualification | install, package, platform and focused route contracts | explicit selection |
+| stress | concurrency, capacity and failure work | separate from normal correctness |
+| measurement | governed performance evidence | serial, isolated and quiescent |
+
+Each tier has a matching preparation target. A test reads immutable prepared
+inputs, writes only its own temporary paths, and never invokes a build in the
+active tree. A shared facility receives a named resource lock only when the
+facility is genuinely exclusive.
+
+A timeout under deliberate heavy load is retained as a capacity observation
+and rerun under the normal profile. It is not hidden by globally increasing
+timeouts. Performance tests never share the general parallel build or QA pool.
+
+## 8. Migration programme
+
+### Phase 0 — observe the current graph: complete
+
+Captured the configured CMake, Ninja and CTest graph; assigned provisional
+owners, stages and QA tiers; and retained local/macOS and Linux/Minikube
+evidence. The catalogue remains diagnostic rather than executable.
+
+### Phase 1 — make CMake race-safe: complete
+
+Removed duplicate owners and shared cleanup, isolated the major library
+families, moved active-tree builds out of CTest, separated optional material and
+measurement, introduced named native resource pools, and qualified the exact
+implementation SHA across the hosted matrix.
+
+### Phase 2 — efficient CMake foundation: active
+
+#### P2A — stage and QA selection
+
+1. Add named non-owning product-stage targets.
+2. Map each QA tier to its exact executable and generated-artifact preparation
+   closure.
+3. Preserve `qa-prep` as a compatibility aggregate while making essential and
+   smoke preparation genuinely narrow.
+
+#### P2B — minimum deterministic imports
+
+1. Find remaining production compiler actions with broad or ambiguous roots.
+2. Isolate only those actions with curated inputs and `--no-exe-import`.
+3. Retain focused stale/source/RXAS/RXBIN precedence regressions.
+4. Use the resolver report or add a depfile only when a real dependency gap
+   requires it.
+
+#### P2C — incremental and hosted acceptance
+
+1. Prove clean, immediate no-op, leaf-change and shared-provider rebuild
+   behaviour.
+2. Prove essential and smoke QA do not build unrelated tiers.
+3. Run ownership, missing-dependency and unchanged-Ninja-log checks.
+4. Qualify the exact final SHA once on Linux x64, Windows x64, macOS ARM64 and
+   macOS Intel.
+
+**Phase 2 gate:** CMake provides a clear, deterministic and incrementally
+efficient reference/bootstrap build and selective QA interface.
+
+### Phase 3 — direct Level B takeover
+
+1. Define the small bootstrap handoff contract.
+2. Implement a Level B runner with readable stages, parallel jobs, explicit
+   inputs/outputs, content-keyed skipping, fail-fast execution and atomic
+   publication.
+3. Migrate one complete independent post-bootstrap lane as the first real
+   cutover, not as a shadow manifest-to-CMake experiment.
+4. Migrate the remaining Level C, G, L, product and optional lanes in bounded
+   waves.
+5. After each lane passes focused clean/no-op/incremental QA, remove its
+   superseded post-bootstrap CMake ownership.
+
+**Phase 3 gate:** the complete post-bootstrap product is owned by Level B and
+passes focused and broad clean/incremental QA without a permanent dual-run path.
+
+### Phase 4 — consolidate and qualify
+
+1. Confirm CMake owns only native/bootstrap work and no superseded
+   post-bootstrap actions remain.
+2. Complete product assembly, install, packaging and explicit optional
    selections.
-4. Publish build profiles and QA tiers in developer documentation and CI.
-5. Remove superseded CMake/script dependency logic only after parity evidence
-   is retained.
+3. Run clean/no-op/change-closure checks at jobs 1, 5 and 30.
+4. Run essential, smoke, comprehensive and qualification QA; run stress
+   separately and the designed ASan scope under its maintained runner.
+5. Run one exact-SHA hosted platform gate and publish the developer workflow.
 
-**Gate:** a fresh checkout can build, test, install and reproduce the supported
-product without undeclared tools, network access, stale build products or
-manual sequencing.
+**Phase 4 gate:** a fresh checkout builds, tests, installs and packages the
+supported product without stale inputs, manual sequencing, hidden network
+requirements or build-during-test behaviour.
 
-## 15. Proposed user interface
+## 9. Human-facing interface
 
-The final command names can change, but the workflow should offer these
-concepts consistently through CMake presets/wrappers and the Level B runner:
+The exact spelling may evolve, but the concepts remain small:
 
 ```text
-build plan                         # validate and display layers/waves/DAG
-build bootstrap                    # Waves 0-5
-build product --jobs 30            # normal product, no optional material
-build layer G --jobs 5             # selected product layer plus prerequisites
-build optional examples,demos      # explicit auxiliary products
-build qa essential                 # essential preparation and tests
-build qa smoke --jobs 30           # smoke preparation and tests
-build qa comprehensive             # full maintained suite
-build audit-races --seed <seed>     # dynamic access audit and schedule fuzzing
-build explain <action-or-artifact>  # dependency, provider and metadata reasons
+build stage c-toolchain --jobs 30
+build stage level-b-bootstrap --jobs 5
+build product --jobs 30
+build optional examples,demos
+build qa essential --jobs 30
+build qa smoke --jobs 30
+build qa comprehensive
+build qa stress
+build qa measurement       # serial; quiet host only
 ```
 
-`build explain` is important for human comprehension. It should show why an
-action ran, which provider was selected, which metadata contract was consumed,
-what waits for it and why a barrier or resource limit applies.
+During Phase 2 these map to named CMake targets. During Phase 3 the bootstrap
+commands remain CMake-backed and post-bootstrap commands are Level B-backed.
 
-## 16. Acceptance criteria
+## 10. Completion criteria
 
-The migration is complete only when:
+The programme is complete when:
 
-- the documented product layers map to queryable manifest selections;
-- all generated outputs and byproducts have one owner;
-- the static graph has no undeclared producer, output or unordered path
-  conflict;
-- actual file access agrees with declarations in race-audit runs;
-- Level B bootstrap imports cannot resolve against a stale installed or
-  in-progress library;
-- source, RXAS and RXBIN import routes pass their declared parity contract;
-- metadata generation, transformation and stripping are explicitly tested;
-- clean output is independent of ready-queue order and job counts 1, 5 and 30;
-- ordinary tests never build or mutate shared fixtures;
-- normal QA timeouts are qualified independently from deliberate heavy-load
-  stress results;
-- essential, smoke, comprehensive, qualification, stress and measurement
-  suites have stated coverage and stable selection commands;
-- measurement suites run only in an isolated, quiescent resource profile and
-  reject or mark contaminated runs;
-- the Level B runner survives the full post-bootstrap workload, failure and
-  cancellation tests without partial publication;
-- a clean install is tested without build-tree fallbacks; and
-- CI uses deliberate job/resource profiles rather than serial execution as a
-  correctness mechanism.
+- the stage ownership boundary is documented and mechanically true;
+- each generated output has one owner and every generated input has a producer;
+- immediate rebuilds are no-ops;
+- representative leaf and shared-input changes rebuild only the correct
+  closures;
+- production compiler actions cannot see undeclared stale providers;
+- essential and smoke QA have narrow, clean-tree preparation paths;
+- normal CTest never builds or mutates the active tree;
+- clean output is independent of jobs 1, 5 and 30;
+- performance measurement is isolated from build, correctness and stress work;
+- the Level B runner completes the post-bootstrap workload without partial
+  publication; and
+- the final exact SHA passes the supported hosted matrix and designed sanitizer
+  scope.
 
-## 17. Decisions still requiring approval
+## 11. Decisions requiring separate approval
 
-This document establishes the architecture and migration direction, but the
-following should be approved separately before implementation:
+Only these remaining architectural choices require a new approval:
 
-1. the concrete manifest format and versioning policy;
-2. the Level B runner's user-facing API or any new language/library surface;
-3. the exact boundary between CMake/Ninja and the self-hosted runner;
-4. whether deterministic RXBIN byte identity is mandatory or semantic
-   equivalence is sufficient for specific artifact classes;
-5. the supported dynamic file-audit backends per platform; and
-6. the point at which the reference CMake post-bootstrap path may be removed.
-
-## 18. Immediate next step
-
-Use
-`docs/planning/release-1/new-build-phase-2-plan-2026-08-28.md` as the bounded
-Phase 2 implementation plan. The P2-0
-manifest/reproducibility/execution/audit contracts are approved and the
-resynchronised `develop` inputs passed the P2.1 four-platform hosted gate. The
-next implementation slice is schema validation plus an observe-only `rxc`
-resolution report and one precedence fixture; it must not change provider
-selection or introduce the Level B runner.
+1. the public Level B build/task API, if any new public surface is required;
+2. the exact serialized shape of the bootstrap handoff contract;
+3. a change to interactive compiler import precedence;
+4. a requirement for platform OS-level file-audit infrastructure; or
+5. moving work across the agreed CMake/Level B bootstrap ownership boundary.
 
 ## References
 
-- `docs/ai-context/CREXX_ARCHITECTURE.md`
-- `docs/ai-context/CREXX_LIBS.md`
-- `docs/ai-context/RXAS_ASSEMBLER.md`
-- `docs/ai-context/RXLINK_LINKER.md`
-- `docs/ai-context/RXVM_INTERPRETER.md`
 - `docs/planning/release-1/new-build-phase-2-plan-2026-08-28.md`
-- `compiler/rxcpmain.c`
-- `lib/rxfnsb/rexx/CMakeLists.txt`
-- `lib/classlib/CMakeLists.txt`
-- `lib/rxfnsc/CMakeLists.txt`
-- `lib/rxfnsg/rexx/CMakeLists.txt`
-- `rexxscript/CMakeLists.txt`
+- `docs/planning/release-1/new-build-phase-1-progress-2026-08-27.md`
+- `docs/planning/release-1/new-build-phase-0-report-2026-08-27.md`
+- `cmake/CrexxBuildResources.cmake`
+- `cmake/CrexxQaTiers.cmake`
 - `cmake/CrexxTestModes.cmake`
+- `tools/newbuild/README.md`

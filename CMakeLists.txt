@@ -393,6 +393,10 @@ add_subdirectory(examples)
 add_subdirectory(tests)
 add_subdirectory(bin crexx_driver)
 
+# These non-owning aggregate targets expose the product stages without
+# replacing or duplicating the direct dependencies declared by their members.
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxBuildStages.cmake)
+
 if(BUILD_TESTING)
     # Build preparation is an explicit graph phase. CTest executes tests only;
     # it must not start a nested build in the active test worker pool.

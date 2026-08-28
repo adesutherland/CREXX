@@ -165,6 +165,27 @@ def classify_surface(source: str, name: str, target_type: str = "") -> dict[str,
     path = source.lower().replace("\\", "/")
     target = name.lower()
 
+    stage_names = {
+        "stage-c0-native": ("C0", 1),
+        "stage-c1-toolchain": ("C1", 2),
+        "stage-b0-bootstrap": ("B0", 3),
+        "stage-x-exits": ("X", 4),
+        "stage-b1-substrate": ("B1", 5),
+        "stage-c-rexx-tools": ("C", 6),
+        "stage-g-library": ("G", 6),
+        "stage-l-libraries": ("L", 6),
+        "stage-product": ("Product", 7),
+        "stage-optional": ("Optional", 7),
+    }
+    if target in stage_names:
+        layer, wave = stage_names[target]
+        return {
+            "product_layer": layer,
+            "wave": wave,
+            "qa_tier": "none",
+            "basis": "stage-target",
+        }
+
     explicit_names = {
         "library": ("B0", 3, "none"),
         "library-rexx": ("B0", 3, "none"),

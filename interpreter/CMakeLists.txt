@@ -336,28 +336,33 @@ if(CREXX_THREADED_VM_SUPPORTED)
     list(APPEND CREXX_CONCRETE_VM_TARGETS rxtvm)
 endif()
 
-# Keep rxvm as the stable build and executable product path.  Recreate the
-# compatibility entry point on every rxvm target build so removing an otherwise
-# up-to-date symlink/copy cannot leave the product target incomplete.
+# Keep rxvm as the stable build and executable product path.  Model the
+# compatibility entry point as an output so an unchanged build is a real no-op,
+# while removing it still makes Ninja recreate it from the selected concrete VM.
+set(_crexx_rxvm_compatibility_path
+        "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rxvm${CMAKE_EXECUTABLE_SUFFIX}")
 if(WIN32)
-    add_custom_target(rxvm ALL
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    add_custom_command(
+            OUTPUT "${_crexx_rxvm_compatibility_path}"
+            COMMAND ${CMAKE_COMMAND} -E copy
                     "$<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>"
-                    "$<TARGET_FILE_DIR:${CREXX_DEFAULT_VM_TARGET}>/rxvm${CMAKE_EXECUTABLE_SUFFIX}"
+                    "${_crexx_rxvm_compatibility_path}"
             DEPENDS ${CREXX_DEFAULT_VM_TARGET}
             COMMENT "Creating rxvm copy of ${CREXX_DEFAULT_VM_TARGET}"
             VERBATIM)
 else()
-    add_custom_target(rxvm ALL
+    add_custom_command(
+            OUTPUT "${_crexx_rxvm_compatibility_path}"
             COMMAND ${CMAKE_COMMAND} -E rm -f
-                    "$<TARGET_FILE_DIR:${CREXX_DEFAULT_VM_TARGET}>/rxvm${CMAKE_EXECUTABLE_SUFFIX}"
+                    "${_crexx_rxvm_compatibility_path}"
             COMMAND ${CMAKE_COMMAND} -E create_symlink
                     "$<TARGET_FILE_NAME:${CREXX_DEFAULT_VM_TARGET}>"
-                    "$<TARGET_FILE_DIR:${CREXX_DEFAULT_VM_TARGET}>/rxvm${CMAKE_EXECUTABLE_SUFFIX}"
+                    "${_crexx_rxvm_compatibility_path}"
             DEPENDS ${CREXX_DEFAULT_VM_TARGET}
             COMMENT "Creating rxvm symlink to ${CREXX_DEFAULT_VM_TARGET}"
             VERBATIM)
 endif()
+add_custom_target(rxvm ALL DEPENDS "${_crexx_rxvm_compatibility_path}")
 message(STATUS
         "cREXX product VM: rxvm -> ${CREXX_DEFAULT_VM_TARGET} (${CMAKE_C_COMPILER_ID})")
 

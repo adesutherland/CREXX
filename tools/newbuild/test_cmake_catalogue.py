@@ -96,6 +96,29 @@ class CatalogueUnitTests(unittest.TestCase):
         )
         self.assertEqual((embedded_vm["product_layer"], embedded_vm["wave"]), ("Product", 7))
 
+    def test_classification_recognizes_named_build_stages(self) -> None:
+        expected = {
+            "stage-c0-native": ("C0", 1),
+            "stage-c1-toolchain": ("C1", 2),
+            "stage-b0-bootstrap": ("B0", 3),
+            "stage-x-exits": ("X", 4),
+            "stage-b1-substrate": ("B1", 5),
+            "stage-c-rexx-tools": ("C", 6),
+            "stage-g-library": ("G", 6),
+            "stage-l-libraries": ("L", 6),
+            "stage-product": ("Product", 7),
+            "stage-optional": ("Optional", 7),
+        }
+        for target, classification in expected.items():
+            with self.subTest(target=target):
+                result = catalogue.classify_surface(
+                    "<SOURCE>/CMakeLists.txt", target, "UTILITY"
+                )
+                self.assertEqual(
+                    (result["product_layer"], result["wave"]), classification
+                )
+                self.assertEqual(result["basis"], "stage-target")
+
     def test_qa_classification_recognizes_explicit_qualification(self) -> None:
         self.assertEqual(catalogue.classify_test(["qualification", "performance"], "candidate"), "qualification")
 
