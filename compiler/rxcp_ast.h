@@ -135,6 +135,7 @@ struct ASTNode {
     OutputFragment *loopinc;         /* Loop increments */
     OutputFragment *loopendchecks;   /* End Loop exit checks */
     OutputFragment *branch_cleanup;  /* Detached cleanup copy for non-local control transfers */
+    size_t deferred_register_mark;   /* Register-pass boundary for nested statement temporaries */
     char is_duplicate_warning;
 };
 

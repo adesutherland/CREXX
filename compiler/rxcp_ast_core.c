@@ -300,6 +300,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->register_type = 'r';
     node->additional_registers = -1;
     node->num_additional_registers = 0;
+    node->deferred_register_mark = 0;
     node->is_ref_arg = 0;
     node->is_const_arg = 0;
     node->is_opt_arg = 0;

@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=8
+main() .locals=9
    .meta "select_dispatch_general.main"="b" ".int" main() ""
    .srcstep 22 22 17 "select_dispatch_general.crexx" 4 1 23 "main: procedure = .int"
    numsci 18,1,1
@@ -51,10 +51,10 @@ l20dostart:
    iadd r6,r1,11
    .traceevent "O" 4 "R" "I" "r" 6 9 9 0 "" ""
    .traceevent "V" 6 "R" "I" "r" 1 9 9 0 "index" ""
-   call2 r2,mixed_if(),r6,r1
-   itos r2
-   .traceevent "F" 4 "R" "S" "r" 2 9 9 0 "mixed_if" ""
-   say r2
+   call2 r8,mixed_if(),r6,r1
+   itos r8
+   .traceevent "F" 4 "R" "S" "r" 8 9 9 0 "mixed_if" ""
+   say r8
 l20doinc:
    .srcstep 5 5 17 "select_dispatch_general.crexx" 8 6 11 "  do index = -1 to 6"
    inc r1
@@ -62,64 +62,64 @@ l20doinc:
    br l20dostart
 l20doend:
    .srcstep 12 12 17 "select_dispatch_general.crexx" 15 3 23 "  say mixed_if(10, 99)"
-   load r6,10
-   .traceevent "L" 4 "R" "I" "r" 6 12 12 0 "" ""
-   load r7,99
+   load r7,10
    .traceevent "L" 4 "R" "I" "r" 7 12 12 0 "" ""
-   call2 r4,mixed_if(),r6,r7
-   itos r4
-   .traceevent "F" 4 "R" "S" "r" 4 12 12 0 "mixed_if" ""
-   say r4
-   .srcstep 13 13 17 "select_dispatch_general.crexx" 16 3 23 "  say referenced_if(2)"
-   load r7,2
-   .traceevent "L" 4 "R" "I" "r" 7 13 13 0 "" ""
-   call1 r5,referenced_if(),r7
+   load r8,99
+   .traceevent "L" 4 "R" "I" "r" 8 12 12 0 "" ""
+   call2 r5,mixed_if(),r7,r8
    itos r5
-   .traceevent "F" 4 "R" "S" "r" 5 13 13 0 "referenced_if" ""
+   .traceevent "F" 4 "R" "S" "r" 5 12 12 0 "mixed_if" ""
    say r5
+   .srcstep 13 13 17 "select_dispatch_general.crexx" 16 3 23 "  say referenced_if(2)"
+   load r8,2
+   .traceevent "L" 4 "R" "I" "r" 8 13 13 0 "" ""
+   call1 r6,referenced_if(),r8
+   itos r6
+   .traceevent "F" 4 "R" "S" "r" 6 13 13 0 "referenced_if" ""
+   say r6
    .srcstep 14 14 17 "select_dispatch_general.crexx" 17 3 20 "  exposed_value = 3"
    load r0,3
    .traceevent "L" 4 "R" "I" "r" 0 14 14 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 14 14 0 "exposed_value" ""
    .srcstep 15 15 17 "select_dispatch_general.crexx" 18 3 32 "  say exposed_if(exposed_value)"
    .traceevent "V" 6 "R" "I" "r" 0 15 15 0 "exposed_value" ""
-   call1 r5,exposed_if(),r0
-   itos r5
-   .traceevent "F" 4 "R" "S" "r" 5 15 15 0 "exposed_if" ""
-   say r5
+   call1 r6,exposed_if(),r0
+   itos r6
+   .traceevent "F" 4 "R" "S" "r" 6 15 15 0 "exposed_if" ""
+   say r6
    .srcstep 16 16 17 "select_dispatch_general.crexx" 19 3 20 "  say exposed_value"
    itos r0
    .traceevent "V" 6 "R" "S" "r" 0 16 16 0 "exposed_value" ""
    say r0
    .srcstep 17 17 17 "select_dispatch_general.crexx" 20 3 21 "  say string_if(\"b\")"
-   load r7,"b"
-   .traceevent "L" 4 "R" "S" "r" 7 17 17 0 "" ""
-   settp r7,768
-   call1 r5,string_if(),r7
-   itos r5
-   .traceevent "F" 4 "R" "S" "r" 5 17 17 0 "string_if" ""
-   say r5
+   load r8,"b"
+   .traceevent "L" 4 "R" "S" "r" 8 17 17 0 "" ""
+   settp r8,768
+   call1 r6,string_if(),r8
+   itos r6
+   .traceevent "F" 4 "R" "S" "r" 6 17 17 0 "string_if" ""
+   say r6
    .srcstep 18 18 17 "select_dispatch_general.crexx" 21 3 18 "  say short_if(2)"
-   load r7,2
-   .traceevent "L" 4 "R" "I" "r" 7 18 18 0 "" ""
-   call1 r5,short_if(),r7
-   itos r5
-   .traceevent "F" 4 "R" "S" "r" 5 18 18 0 "short_if" ""
-   say r5
+   load r8,2
+   .traceevent "L" 4 "R" "I" "r" 8 18 18 0 "" ""
+   call1 r6,short_if(),r8
+   itos r6
+   .traceevent "F" 4 "R" "S" "r" 6 18 18 0 "short_if" ""
+   say r6
    .srcstep 19 19 17 "select_dispatch_general.crexx" 22 3 19 "  say public_if(2)"
-   load r7,2
-   .traceevent "L" 4 "R" "I" "r" 7 19 19 0 "" ""
-   call1 r5,public_if(),r7
-   itos r5
-   .traceevent "F" 4 "R" "S" "r" 5 19 19 0 "public_if" ""
-   say r5
+   load r8,2
+   .traceevent "L" 4 "R" "I" "r" 8 19 19 0 "" ""
+   call1 r6,public_if(),r8
+   itos r6
+   .traceevent "F" 4 "R" "S" "r" 6 19 19 0 "public_if" ""
+   say r6
    .srcstep 20 20 17 "select_dispatch_general.crexx" 23 3 22 "  say duplicate_if(1)"
-   load r7,1
-   .traceevent "L" 4 "R" "I" "r" 7 20 20 0 "" ""
-   call1 r5,duplicate_if(),r7
-   itos r5
-   .traceevent "F" 4 "R" "S" "r" 5 20 20 0 "duplicate_if" ""
-   say r5
+   load r8,1
+   .traceevent "L" 4 "R" "I" "r" 8 20 20 0 "" ""
+   call1 r6,duplicate_if(),r8
+   itos r6
+   .traceevent "F" 4 "R" "S" "r" 6 20 20 0 "duplicate_if" ""
+   say r6
    .srcstep 21 21 17 "select_dispatch_general.crexx" 24 3 11 "  return 0"
    ret 0
    .meta "select_dispatch_general.main.exposed_value"
