@@ -9,14 +9,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(_WIN32)
-#include <windows.h>
-#endif
-
 #include "platform.h"
 #include "rxcpmain.h"
 #include "rxcp_import_report.h"
 #include "rxsha256.h"
+
+/* windows.h defines ERROR, which is also a compiler AST node kind. Include it
+ * only after the compiler headers have declared their identifiers. */
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 
 typedef struct RxcpImportEvent {
     size_t sequence;
