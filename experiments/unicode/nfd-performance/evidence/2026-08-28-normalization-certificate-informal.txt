@@ -1,0 +1,89 @@
+UNICODE-CERT-01 normalization-certificate informal screen — 2026-08-28
+
+Scope
+  Quick regression screen of the frozen normalization-certificate
+  implementation on the dirty unicode research branch. This is documentation
+  checkpoint evidence, not a formal clean-host, dual-VM, cross-platform or
+  publication verdict.
+
+Prepared product
+  profiling-off Release preparation:
+    cmake-build-unicode-release/unicode-common-compare/prepared.k83Z3w
+  product VM:
+    rxvm -> rxbvm
+  implementation, benchmark and prepared artifacts were unchanged during the
+  run and remained covered by the preparation manifest fingerprints.
+
+Host and protocol
+  macOS 26.5.2, Apple Mac17,3, 10 logical CPUs
+  battery power at 80%; no thermal or performance warning
+  load before: 2.12/2.05/1.76
+  load after:  2.36/2.14/1.81
+  one untimed warmup and three retained samples per cell
+  focused row repeat: one warmup and seven retained samples
+  buffer: eight joined Unicode normalization corpus blocks
+  serial execution; zero Unicode 17 mismatches in every cell
+
+The reference is the preceding mostly-clear AC directional run in
+2026-08-28-common-normalization-directional.txt. Current row figures use the
+seven-sample focused repeat; current buffer figures use the three-sample
+screen. Predicate buffer inputs are byte-identical known-normalized values with
+certificates deliberately cleared outside the timer.
+
+Pre-certificate/current product rxbvm medians
+
+  operation  workload  previous    current    change
+  NFD        rows       13.022 ms   13.005 ms   -0.13%
+  NFKD       rows       15.161 ms   15.802 ms   +4.23%
+  NFC        rows       22.644 ms   23.340 ms   +3.07%
+  NFKC       rows       24.220 ms   25.416 ms   +4.94%
+  NFD        buffer     84.507 ms   80.838 ms   -4.34%
+  NFKD       buffer    114.177 ms  107.517 ms   -5.83%
+  NFC        buffer    276.375 ms  269.931 ms   -2.33%
+  NFKC       buffer    291.661 ms  282.113 ms   -3.27%
+  is-NFD     rows        4.004 ms    4.081 ms   +1.92%
+  is-NFKD    rows        4.543 ms    4.562 ms   +0.42%
+  is-NFC     rows        5.951 ms    5.112 ms  -14.10%
+  is-NFKC    rows        6.534 ms    5.397 ms  -17.40%
+  is-NFD     buffer     25.781 ms   25.951 ms   +0.66%
+  is-NFKD    buffer     48.224 ms   50.054 ms   +3.79%
+  is-NFC     buffer    285.181 ms  285.823 ms   +0.23%
+  is-NFKC    buffer    295.031 ms  289.952 ms   -1.72%
+
+The predicate row cells exercise the ordinary public surface after benchmark
+correctness setup, so successful rows may already carry certificates. The
+predicate buffer comparison above is the like-for-like cold algorithm check.
+The larger buffer cells are neutral or faster within the run's uncontrolled
+host envelope; no material regression is indicated.
+
+Byte-identical normalized buffer certificate medians
+
+  operation  cold        hit       cold/hit
+  NFD         54.376 ms   2.081 ms    26.1x
+  NFKD        83.418 ms   1.836 ms    45.4x
+  NFC        244.358 ms   1.826 ms   133.8x
+  NFKC       244.588 ms   1.850 ms   132.2x
+  is-NFD      25.951 ms   1.731 ms    15.0x
+  is-NFKD     50.054 ms   2.648 ms    18.9x
+  is-NFC     285.823 ms   1.842 ms   155.2x
+  is-NFKC    289.952 ms   1.746 ms   166.1x
+
+Raw retained build-tree evidence
+  initial screen:
+    cmake-build-unicode-release/unicode-common-compare/prepared.k83Z3w/
+      runs/informal-cert.nyTjzJ/evidence/results.txt
+  focused seven-sample row repeat:
+    cmake-build-unicode-release/unicode-common-compare/prepared.k83Z3w/
+      runs/informal-cert.nyTjzJ/evidence/focused-repeat/results.txt
+  host state:
+    cmake-build-unicode-release/unicode-common-compare/prepared.k83Z3w/
+      runs/informal-cert.nyTjzJ/evidence/host-before.txt
+    cmake-build-unicode-release/unicode-common-compare/prepared.k83Z3w/
+      runs/informal-cert.nyTjzJ/evidence/host-after.txt
+
+Conclusion
+  The informal product-VM screen identifies no significant performance
+  regression and confirms that normalization certificates make repeated
+  operations on unchanged normalized buffers materially cheaper. It does not
+  close a later explicitly requested formal clean-host or dual-VM performance
+  gate.

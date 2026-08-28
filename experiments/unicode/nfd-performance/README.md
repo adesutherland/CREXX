@@ -233,6 +233,80 @@ slower on a 101,506-byte buffer. That historical result describes the rejected
 byte-DFA successor, not the prepared-symbol codepoint algorithm above. Its
 exact evidence remains in `evidence/2026-08-26-generated-nfd-rough.txt`.
 
+## Common Four-Form Directional Result — 2026-08-28
+
+The common-table comparator now covers `normalize` and `is_normalized` for
+NFD, NFKD, NFC, and NFKC. It has the same preparation/run split and fingerprint
+checks as the prepared-NFD comparator. Canonical cells construct an ordinary
+`unicode_d` normalizer over a per-instance prepared image; shared cells use the
+single sealed `UNICODE_DATA` constant; Apple cells are non-conforming
+CoreFoundation magnitude controls. Predicate Apple cells normalize a mutable
+copy and compare it because CoreFoundation has no direct public normalization
+predicate.
+
+The complete Release functional gate passes optimized/noopt on both VMs:
+400,680 Unicode 17 normalization relations and 400,680 exact predicate checks.
+Optimized RXAS contains one 11,237,664-byte constant and no normalizer-owned
+image attribute. The image includes a 557,056-byte packed Unicode 17
+NFC_QC/NFKC_QC section (two scalars per byte). The four string forms scan with
+`STRCHAR`, use direct constant-backed fixed-width reads, and never convert the
+input through `.binary`.
+
+On the mostly clear AC host, using one warmup and three serial samples, final
+shared/canonical normalization ratios are 0.940x–1.103x. The 1.103x outlier is
+the noisy `rxtvm` NFC row cell; its `rxbvm` peer is 0.996x and every other cell
+is 0.940x–1.024x. Against the earlier clean 2/10 run, NFKD improves 58.84x–82.12x
+canonical and 295.26x–346.71x shared; NFC improves 8.66x–10.34x canonical and
+29.81x–48.39x shared; NFKC improves 8.57x–10.52x canonical and
+29.75x–54.23x shared. NFD remains in the same broad band and was 1–12% slower
+under the less settled host. These are directional cross-session comparisons,
+but the compatibility/composition gains are far outside the observed host
+movement.
+
+D-form predicates are direct decomposition/order checks. C-form predicates now
+implement the canonical Unicode Quick_Check front end: `No` rejects, an
+ordered all-`Yes` scan accepts, and `Maybe` invokes the prior exact
+allocation-free decomposition/composition stream. On mixed true/false rows,
+shared NFC improves 3.893x/3.990x and shared NFKC improves 4.245x/3.870x on
+`rxtvm`/`rxbvm`. Canonical-instance results improve by a similar amount.
+
+The known-normalized joined NFC/NFKC buffers contain `Maybe`, so the selected
+canonical algorithm pays the preliminary scan and then the whole-input exact
+fallback. Shared NFC is consequently 9.99%/9.92% slower and shared NFKC
+10.97%/11.17% slower than the old exact-only path in those cells. A
+stable-region/local-`Maybe` successor could avoid repeated prefix work, but is
+a separate algorithm experiment rather than part of this correction.
+
+The comparator defaults to the full normalization/case-fold panel. A bounded
+operation subset can be selected with
+`CREXX_UNICODE_COMMON_COMPARE_OPERATIONS`. Predicate buffer cells use the
+known-normalized expected buffer, forcing a complete true-path scan rather
+than timing an early false return.
+
+Full before/after medians, host state, RXAS counts, Apple mismatch counts,
+retained paths, and the invalidated early-return predicate-buffer observation
+are recorded in
+`evidence/2026-08-28-common-normalization-directional.txt`.
+
+## Normalization-Certificate Informal Screen — 2026-08-28
+
+After the four language-owned normalization certificates were implemented, a
+bounded profiling-off Release screen checked the product `rxbvm` across all
+four normalizers and all four predicates. The host was on battery under
+moderate desktop load, so the run is deliberately labelled informal rather
+than a clean-host verdict. Every cell retained zero Unicode mismatches.
+
+Against the earlier directional medians, large-buffer normalization was
+2.33–5.83% faster and deliberately cold large-buffer predicates ranged from
+1.72% faster to 3.79% slower. Certified hits were 26.1–133.8x faster for the
+four normalizers and 15.0–166.1x faster for the predicates. Small-row
+normalization moved by -0.13% to +4.94%, within the noise envelope already seen
+on the non-dedicated host.
+
+Exact before/after medians, cold/hit figures, host qualifications and raw
+evidence paths are retained in
+`evidence/2026-08-28-normalization-certificate-informal.txt`.
+
 ## Acceptance Boundary
 
 Both CREXX layouts must pass the complete selected relation set. Both Apple
