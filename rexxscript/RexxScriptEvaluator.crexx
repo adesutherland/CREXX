@@ -28,8 +28,17 @@ options levelb
 namespace rexxscriptcore expose rexxscriptcoreevaluator
 import rxfnsb
 import rexxclassicbifs
+import rexxclassicbifchangestr
+import rexxclassicbifcountstr
+import rexxclassicbifdelstr
+import rexxclassicbifdelword
 import rexxclassicbifdatatype
+import rexxclassicbifinsert
+import rexxclassicbiflastpos
+import rexxclassicbifoverlay
 import rexxclassicbifrandom
+import rexxclassicbiftranslate
+import rexxclassicbifwordpos
 import rexxclassicconfig
 import rexxpool
 import rexxvalue
@@ -38,8 +47,9 @@ import rexxvalue
 /**
  * RexxScript core evaluator instance.
  *
- * Each instance owns its variable pool, output buffer, parser state, and
- * BIF call context. The public rexxscript facade wraps this class so the
+ * Each instance owns its variable pool, output buffer, parser state,
+ * evaluator-local text streams, and BIF call context. The public rexxscript
+ * facade wraps this class so the
  * legacy last-result API stays outside the core engine.
  */
 rexxscriptcoreevaluator: class
@@ -83,6 +93,12 @@ rexxscriptcoreevaluator: class
   fn_exists = .int[]
   fn_arg_count = .int
   dbgtrace = .int
+  /* Streams are owned by this evaluator instance, never by the module. */
+  stream_names = .string[]
+  stream_ids = .int[]
+  stream_modes = .string[]
+  stream_pending = .string[]
+  stream_pending_present = .int[]
 
   *: factory
     env_count = 0
@@ -105,6 +121,11 @@ rexxscriptcoreevaluator: class
     block_count = 0
     fn_arg_count = 0
     dbgtrace=0
+    assembler SETATTRS stream_names,0
+    assembler SETATTRS stream_ids,0
+    assembler SETATTRS stream_modes,0
+    assembler SETATTRS stream_pending,0
+    assembler SETATTRS stream_pending_present,0
     return
 
   evaluate: method = .string[]
@@ -234,6 +255,7 @@ rexxscriptcoreevaluator: class
     return result
 
   _reset: method = .void
+    call _close_streams()
     env_count = 0
     script_pool = .RexxVariablePool()
     output_count = 0
@@ -252,6 +274,262 @@ rexxscriptcoreevaluator: class
     jump_target = 0
     block_count = 0
     return
+
+  /** Close all evaluator-owned streams before state is reset. */
+  _close_streams: method = .void
+    rc = .int
+    do i = 1 to stream_names[0]
+      if stream_ids[i] <> 0 then do
+        /* Standard streams are owned by the VM and must not be closed here. */
+        if stream_names[i] <> "stdin" & stream_names[i] <> "stdout" & stream_names[i] <> "stderr" then do
+          assembler fclose rc,stream_ids[i]
+        end
+      end
+    end
+    assembler SETATTRS stream_names,0
+    assembler SETATTRS stream_ids,0
+    assembler SETATTRS stream_modes,0
+    assembler SETATTRS stream_pending,0
+    assembler SETATTRS stream_pending_present,0
+    return
+
+  _stream_open: method = .int
+    arg name = .string, mode = .string, stmtno = .int
+    if name = "" then do
+      call _set_error("invalid_arguments", "file name must not be empty", stmtno, 1)
+      return 0
+    end
+
+    slot = 0
+    empty_slot = 0
+    do i = 1 to stream_names[0]
+      if stream_names[i] = name then slot = i
+      else if empty_slot = 0 & stream_names[i] = "" then empty_slot = i
+    end
+
+    if slot > 0 & stream_modes[slot] = mode then return stream_ids[slot]
+
+    if slot > 0 then do
+      rc = 0
+      assembler fclose rc,stream_ids[slot]
+      if rc <> 0 then do
+        call _set_error("io_error", "could not close file while changing mode: " || name, stmtno, 1)
+        return 0
+      end
+      stream_names[slot] = ""
+      stream_ids[slot] = 0
+      stream_modes[slot] = ""
+      stream_pending[slot] = ""
+      stream_pending_present[slot] = 0
+    end
+    else if empty_slot > 0 then slot = empty_slot
+    else slot = stream_names[0] + 1
+
+    fileid = 0
+    assembler fopen fileid,name,mode
+    if fileid = 0 then do
+      call _set_error("io_error", "could not open file: " || name, stmtno, 1)
+      return 0
+    end
+    stream_names[slot] = name
+    stream_ids[slot] = fileid
+    stream_modes[slot] = mode
+    stream_pending[slot] = ""
+    stream_pending_present[slot] = 0
+    return fileid
+
+  _stream_close: method = .int
+    arg name = .string, stmtno = .int
+    do i = 1 to stream_names[0]
+      if stream_names[i] = name then do
+        /* stdin/stdout/stderr remain owned by the VM. */
+        if name = "stdin" | name = "stdout" | name = "stderr" then return 1
+        rc = 0
+        assembler fclose rc,stream_ids[i]
+        stream_names[i] = ""
+        stream_ids[i] = 0
+        stream_modes[i] = ""
+        stream_pending[i] = ""
+        stream_pending_present[i] = 0
+        if rc <> 0 then return _set_error("io_error", "could not close file: " || name, stmtno, 1)
+        return 1
+      end
+    end
+    return 1
+
+  _dispatch_linein: method = .int
+    arg args = .RexxValue[], exists = .int[], stmtno = .int
+    argc = args[0]
+    if argc > 1 then return _set_error("invalid_arguments", "LINEIN accepts at most one argument", stmtno, 1)
+    name = "stdin"
+    if argc = 1 & exists[1] <> 0 then name = args[1].asString()
+    if name = "" then name = "stdin"
+    fileid = _stream_open(name, "r", stmtno)
+    if fileid = 0 then return 0
+    line = ""
+    pending_slot = 0
+    do i = 1 to stream_names[0]
+      if stream_names[i] = name then pending_slot = i
+    end
+    if pending_slot > 0 & stream_pending_present[pending_slot] <> 0 then do
+      line = stream_pending[pending_slot]
+      stream_pending[pending_slot] = ""
+      stream_pending_present[pending_slot] = 0
+    end
+    else assembler freadline line,fileid
+    rc = 0
+    assembler ferror rc,fileid
+    if rc <> 0 then return _set_error("io_error", "could not read file: " || name, stmtno, 1)
+    eval_value = line
+    eval_type = "string"
+    return 1
+
+  _dispatch_lines: method = .int
+    arg args = .RexxValue[], exists = .int[], stmtno = .int
+    argc = args[0]
+    if argc > 1 then return _set_error("invalid_arguments", "LINES accepts at most one argument", stmtno, 1)
+    name = "stdin"
+    if argc = 1 & exists[1] <> 0 then name = args[1].asString()
+    if name = "" then name = "stdin"
+    fileid = _stream_open(name, "r", stmtno)
+    if fileid = 0 then return 0
+
+    pending_slot = 0
+    do i = 1 to stream_names[0]
+      if stream_names[i] = name then pending_slot = i
+    end
+    if pending_slot > 0 & stream_pending_present[pending_slot] <> 0 then do
+      eval_value = "1"
+      eval_type = "int"
+      return 1
+    end
+
+    eof = 0
+    assembler feof eof,fileid
+    if eof <> 0 then do
+      eval_value = "0"
+      eval_type = "int"
+      return 1
+    end
+    line = ""
+    assembler freadline line,fileid
+    rc = 0
+    assembler ferror rc,fileid
+    if rc <> 0 then return _set_error("io_error", "could not read file: " || name, stmtno, 1)
+    assembler feof eof,fileid
+    if eof <> 0 & length(line) = 0 then do
+      eval_value = "0"
+      eval_type = "int"
+      return 1
+    end
+    stream_pending[pending_slot] = line
+    stream_pending_present[pending_slot] = 1
+    eval_value = "1"
+    eval_type = "int"
+    return 1
+
+  _dispatch_erasefile: method = .int
+    arg args = .RexxValue[], exists = .int[], stmtno = .int
+    argc = args[0]
+    if argc <> 1 | exists[1] = 0 then return _set_error("invalid_arguments", "ERASEFILE requires one file name", stmtno, 1)
+    name = args[1].asString()
+    if name = "" | name = "stdin" | name = "stdout" | name = "stderr" then do
+      eval_value = "-1"
+      eval_type = "int"
+      return 1
+    end
+
+    /* Do not leave an evaluator-owned stream pointing at truncated data. */
+    if _stream_close(name, stmtno) = 0 then return 0
+    fileid = 0
+    mode = "w"
+    assembler fopen fileid,name,mode
+    if fileid = 0 then do
+      eval_value = "-1"
+      eval_type = "int"
+      return 1
+    end
+    rc = 0
+    assembler fclose rc,fileid
+    if rc <> 0 then do
+      eval_value = "-1"
+      eval_type = "int"
+      return 1
+    end
+    eval_value = "0"
+    eval_type = "int"
+    return 1
+
+  /** Dispatch the shared Level B DATE implementation with optional arguments. */
+  _dispatch_date: method = .int
+    arg args = .RexxValue[], exists = .int[], stmtno = .int
+    argc = args[0]
+    if argc > 5 then return _set_error("invalid_arguments", "DATE accepts at most five arguments", stmtno, 1)
+    oformat = ""
+    idate = ""
+    iformat = ""
+    osep = ""
+    isep = ""
+    if argc >= 1 & exists[1] <> 0 then oformat = args[1].asString()
+    if argc >= 2 & exists[2] <> 0 then idate = args[2].asString()
+    if argc >= 3 & exists[3] <> 0 then iformat = args[3].asString()
+    if argc >= 4 & exists[4] <> 0 then osep = args[4].asString()
+    if argc >= 5 & exists[5] <> 0 then isep = args[5].asString()
+    eval_value = date(oformat, idate, iformat, osep, isep)
+    eval_type = "string"
+    return 1
+
+  /** Dispatch the shared Level B TIME implementation with its optional option. */
+  _dispatch_time: method = .int
+    arg args = .RexxValue[], exists = .int[], stmtno = .int
+    argc = args[0]
+    if argc > 1 then return _set_error("invalid_arguments", "TIME accepts at most one argument", stmtno, 1)
+    option = ""
+    if argc = 1 & exists[1] <> 0 then option = args[1].asString()
+    eval_value = time(option)
+    eval_type = "string"
+    return 1
+
+  _dispatch_lineout: method = .int
+    arg args = .RexxValue[], exists = .int[], stmtno = .int
+    argc = args[0]
+    if argc > 2 then return _set_error("invalid_arguments", "LINEOUT accepts at most two arguments", stmtno, 1)
+    name = "stdout"
+    if argc >= 1 & exists[1] <> 0 then name = args[1].asString()
+    if name = "" then name = "stdout"
+
+    /* RexxScript captures stdout in the evaluator output buffer. */
+    if name = "stdout" then do
+      if argc >= 2 & exists[2] <> 0 then do
+        output_count = output_count + 1
+        output_lines[output_count] = args[2].asString()
+      end
+      eval_value = "0"
+      eval_type = "int"
+      return 1
+    end
+
+    /* Omitting the line argument closes the named stream. */
+    if argc < 2 | exists[2] = 0 then do
+      if _stream_close(name, stmtno) = 0 then return 0
+      eval_value = "0"
+      eval_type = "int"
+      return 1
+    end
+
+    fileid = _stream_open(name, "a", stmtno)
+    if fileid = 0 then return 0
+    line = args[2].asString()
+    nl = '0a'x
+    assembler fwrite fileid,line
+    assembler fwrite fileid,nl
+    assembler fflush rc,fileid
+    if rc <> 0 then return _set_error("io_error", "could not flush file: " || name, stmtno, 1)
+    assembler ferror rc,fileid
+    if rc <> 0 then return _set_error("io_error", "could not write file: " || name, stmtno, 1)
+    eval_value = "0"
+    eval_type = "int"
+    return 1
 
   _execute_statement: method = .int
     arg statement = .string, stmtno = .int, pc = .int
@@ -601,6 +879,14 @@ rexxscriptcoreevaluator: class
       rest = strip(substr(text, 7))
       if rest \== "" then return _set_error("unsupported_return", "return expression is not supported", stmtno, 1)
       forced_return = 1
+      return 1
+    end
+
+    /* Permit side-effecting intrinsic calls such as CALL LINEOUT(...). */
+    if _starts_keyword(text, "CALL") = 1 then do
+      expr = strip(substr(text, 5))
+      if expr == "" then return _set_error("missing_expression", "missing CALL expression", stmtno, 1)
+      if _eval_expression(expr, stmtno) = 0 then return 0
       return 1
     end
 
@@ -1181,13 +1467,21 @@ rexxscriptcoreevaluator: class
     select
       when name = "ABBREV" then return 1
       when name = "ABS" then return 1
+      when name = "CHANGESTR" then return 1
       when name = "COPIES" then return 1
+      when name = "COUNTSTR" then return 1
+      when name = "DATE" then return 1
       when name = "DATATYPE" then return 1
+      when name = "DELSTR" then return 1
+      when name = "DELWORD" then return 1
+      when name = "INSERT" then return 1
+      when name = "LASTPOS" then return 1
       when name = "LEFT" then return 1
       when name = "LENGTH" then return 1
       when name = "LOWER" then return 1
       when name = "MAX" then return 1
       when name = "MIN" then return 1
+      when name = "OVERLAY" then return 1
       when name = "POS" then return 1
       when name = "RANDOM" then return 1
       when name = "RIGHT" then return 1
@@ -1195,11 +1489,18 @@ rexxscriptcoreevaluator: class
       when name = "SPACE" then return 1
       when name = "STRIP" then return 1
       when name = "SUBSTR" then return 1
+      when name = "TIME" then return 1
+      when name = "TRANSLATE" then return 1
       when name = "UPPER" then return 1
       when name = "VERIFY" then return 1
       when name = "WORD" then return 1
       when name = "WORDS" then return 1
+      when name = "WORDPOS" then return 1
       when name = "SUBWORD" then return 1
+      when name = "LINEIN" then return 1
+      when name = "LINEOUT" then return 1
+      when name = "LINES" then return 1
+      when name = "ERASEFILE" then return 1
       when name = "QUOTE" then return 1
       when name = "UNQUOTE" then return 1
       otherwise return 0
@@ -1208,6 +1509,12 @@ rexxscriptcoreevaluator: class
 
   _dispatch_builtin: method = .int
     arg name = .string, bif_args = .RexxValue[], bif_exists = .int[], stmtno = .int
+    if name = "LINEIN" then return _dispatch_linein(bif_args, bif_exists, stmtno)
+    if name = "LINEOUT" then return _dispatch_lineout(bif_args, bif_exists, stmtno)
+    if name = "LINES" then return _dispatch_lines(bif_args, bif_exists, stmtno)
+    if name = "ERASEFILE" then return _dispatch_erasefile(bif_args, bif_exists, stmtno)
+    if name = "DATE" then return _dispatch_date(bif_args, bif_exists, stmtno)
+    if name = "TIME" then return _dispatch_time(bif_args, bif_exists, stmtno)
     context = .RexxBifCallContext(name)
     call context.setArguments(bif_args, bif_exists)
     call context.setCallerPool(reference script_pool)
@@ -1217,8 +1524,14 @@ rexxscriptcoreevaluator: class
     select
       when name = "ABBREV" then bif_result = rexxclassicbif_abbrev(reference context)
       when name = "ABS" then bif_result = rexxclassicbif_abs(reference context)
+      when name = "CHANGESTR" then bif_result = rexxclassicbif_changestr(reference context)
       when name = "COPIES" then bif_result = rexxclassicbif_copies(reference context)
+      when name = "COUNTSTR" then bif_result = rexxclassicbif_countstr(reference context)
       when name = "DATATYPE" then bif_result = .rexxclassicbifdatatype..rexxclassicbif_datatype(reference context)
+      when name = "DELSTR" then bif_result = rexxclassicbif_delstr(reference context)
+      when name = "DELWORD" then bif_result = rexxclassicbif_delword(reference context)
+      when name = "INSERT" then bif_result = rexxclassicbif_insert(reference context)
+      when name = "LASTPOS" then bif_result = rexxclassicbif_lastpos(reference context)
       when name = "LEFT" then bif_result = rexxclassicbif_left(reference context)
       when name = "LENGTH" then do
         call context.clearError()
@@ -1228,6 +1541,7 @@ rexxscriptcoreevaluator: class
       when name = "LOWER" then bif_result = rexxclassicbif_lower(reference context)
       when name = "MAX" then bif_result = rexxclassicbif_max(reference context)
       when name = "MIN" then bif_result = rexxclassicbif_min(reference context)
+      when name = "OVERLAY" then bif_result = rexxclassicbif_overlay(reference context)
       when name = "POS" then bif_result = rexxclassicbif_pos(reference context)
       when name = "RANDOM" then bif_result = rexxclassicbif_random(reference context)
       when name = "RIGHT" then bif_result = rexxclassicbif_right(reference context)
@@ -1239,7 +1553,9 @@ rexxscriptcoreevaluator: class
       when name = "VERIFY" then bif_result = rexxclassicbif_verify(reference context)
       when name = "WORD" then bif_result = rexxclassicbif_word(reference context)
       when name = "WORDS" then bif_result = rexxclassicbif_words(reference context)
+      when name = "WORDPOS" then bif_result = rexxclassicbif_wordpos(reference context)
       when name = "SUBWORD" then bif_result = rexxclassicbif_subword(reference context)
+      when name = "TRANSLATE" then bif_result = rexxclassicbif_translate(reference context)
       otherwise return _set_error("undefined_function", "undefined function " || name, stmtno, 1)
     end
 
