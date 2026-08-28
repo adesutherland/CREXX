@@ -11,14 +11,9 @@
 
 #include "platform.h"
 #include "rxcpmain.h"
+#include "rxcp_import_publish.h"
 #include "rxcp_import_report.h"
 #include "rxsha256.h"
-
-/* windows.h defines ERROR, which is also a compiler AST node kind. Include it
- * only after the compiler headers have declared their identifiers. */
-#if defined(_WIN32)
-#include <windows.h>
-#endif
 
 typedef struct RxcpImportEvent {
     size_t sequence;
@@ -418,16 +413,6 @@ static void write_selected_candidate(FILE *file, const RxcpImportReport *report,
     free(path);
 }
 
-static int publish_report(const char *path, const char *temporary_path) {
-#if defined(_WIN32)
-    if (MoveFileExA(temporary_path, path,
-                    MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) return 0;
-    return -1;
-#else
-    return rename(temporary_path, path);
-#endif
-}
-
 int rxcp_import_report_write(Context *context) {
     Context *owner;
     RxcpImportReport *report;
@@ -499,7 +484,8 @@ int rxcp_import_report_write(Context *context) {
     free(primary_path);
     failed = ferror(file);
     if (fclose(file) != 0) failed = 1;
-    if (!failed && publish_report(owner->import_resolution_report_path, temporary_path) != 0) failed = 1;
+    if (!failed && rxcp_import_report_publish(owner->import_resolution_report_path,
+                                              temporary_path) != 0) failed = 1;
     if (failed) remove(temporary_path);
     free(temporary_path);
     return failed ? -1 : 0;
