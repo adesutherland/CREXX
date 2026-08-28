@@ -1,10 +1,11 @@
 # New Build System Vision and Migration Plan
 
-- **Status:** Vision retained; Phase 0 and Phase 1 complete; Phase 2 ready
-- **Baseline:** `origin/develop` at `dc44d92909e706adc575932ba9ae72f2d6f05b7d`
-- **Develop incorporated:** through `657b833d9f70e3f0e69536e6d76e4dd6a9e953aa`
+- **Status:** Vision retained; Phase 0 and Phase 1 complete; Phase 2 planned and
+  awaiting approval
+- **Baseline:** `origin/develop` at `b64f67a00b3585b130f909640a30d120095e64f6`
+- **Develop incorporated:** through `b64f67a00b3585b130f909640a30d120095e64f6`
 - **Planning branch:** `temp/newbuild`
-- **Date:** 2026-08-27
+- **Last updated:** 2026-08-28
 
 ## 1. Purpose
 
@@ -667,15 +668,18 @@ product, test-tier, and provisional wave review.
 
 ### Phase 2: make imports and metadata deterministic
 
-1. Add dependency/resolution reports to rxc, rxas and rxlink.
+1. Record actual import resolution at the `rxc` selection point; give `rxas`,
+   `rxlink` and `rxdas` artifact/metadata reports appropriate to their roles.
 2. Give bootstrap and ordinary library actions curated immutable import roots.
 3. Add sidecar action/artifact/metadata manifests.
 4. Add permanent source/RXAS/RXBIN route-parity tests.
 5. Add metadata preserve/strip and disassembler round-trip tests.
+6. Prove one bounded manifest-generated action family through CMake/Ninja.
 
 **Gate:** no build selection depends on timestamps, executable-directory
 contents or a previous build; all selected providers are recorded and match
-the manifest.
+the manifest. The detailed, approval-gated wave plan is
+`docs/planning/release-1/new-build-phase-2-plan-2026-08-28.md`.
 
 ### Phase 3: introduce the Level B runner
 
@@ -768,11 +772,13 @@ following should be approved separately before implementation:
 
 ## 18. Immediate next step
 
-Continue Phase 1 as bounded ownership and QA-preparation waves. The next slice
-removes the two remaining preprocessor self-rewrite actions, then introduces
-measured resource pools and reviews the provisional wave/test classifications.
-Re-export after every slice, reuse valid focused evidence, and reserve the
-broad Debug sweep for the Phase 1 checkpoint.
+Use
+`docs/planning/release-1/new-build-phase-2-plan-2026-08-28.md` as the bounded
+Phase 2 implementation plan. First requalify the resynchronised `develop`
+inputs, then approve the manifest/reproducibility/execution/audit contracts
+before changing code. The first implementation slice is schema validation plus
+an observe-only `rxc` resolution report and one precedence fixture; it must not
+change provider selection or introduce the Level B runner.
 
 ## References
 
@@ -781,6 +787,7 @@ broad Debug sweep for the Phase 1 checkpoint.
 - `docs/ai-context/RXAS_ASSEMBLER.md`
 - `docs/ai-context/RXLINK_LINKER.md`
 - `docs/ai-context/RXVM_INTERPRETER.md`
+- `docs/planning/release-1/new-build-phase-2-plan-2026-08-28.md`
 - `compiler/rxcpmain.c`
 - `lib/rxfnsb/rexx/CMakeLists.txt`
 - `lib/classlib/CMakeLists.txt`

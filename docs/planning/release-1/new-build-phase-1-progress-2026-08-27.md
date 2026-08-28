@@ -3,13 +3,22 @@
 ## Status
 
 Phase 1 is complete on `temp/newbuild`. Thirteen bounded ownership,
-preparation, classification and gate-repair waves incorporate `origin/develop`
-through `657b833d9f70e3f0e69536e6d76e4dd6a9e953aa`. Implementation commit
-`2a840950e268c790b138ea90e8976bfbac211099` passed the broad macOS Debug gate
-and exact-tree Linux ARM64 Debug and Release captures. CTest contains no build
-fixture and does not rebuild the active tree, the configured graph has no
-ownership, cleanup or wave finding, and named Ninja pools bound the evidenced
-high-pressure native work.
+preparation, classification and gate-repair waves originally incorporated
+`origin/develop` through `657b833d9f70e3f0e69536e6d76e4dd6a9e953aa`.
+Implementation commit `2a840950e268c790b138ea90e8976bfbac211099`
+passed the broad macOS Debug gate and exact-tree Linux ARM64 Debug and Release
+captures. Portability repairs then produced exact hosted acceptance commit
+`0a0c17d56f341692d4d735ee87238c06ef6757c0`; GitHub Actions run `33156840598`
+passed Linux x64, Windows x64, macOS ARM64 and macOS Intel. CTest contains no
+build fixture and does not rebuild the active tree, the configured graph has
+no ownership, cleanup or wave finding, and named Ninja pools bound the
+evidenced high-pressure native work.
+
+On 2026-08-28 the branch was resynchronised with `origin/develop` through
+`b64f67a00b3585b130f909640a30d120095e64f6`. The merge incorporates later
+RexxScript string-BIF and POSIX child-terminal work. The retained Phase 1
+hosted result qualifies `0a0c17d56`, not the later merge SHA; the Phase 2 plan
+therefore begins with focused and hosted resynchronisation qualification.
 
 No performance measurement was run. Host timings below are diagnostic only;
 other work was active on the machine.
@@ -584,12 +593,15 @@ test timing.
 
 ## Remaining gates and Phase 2 boundary
 
-1. Windows publication/rename behaviour remains a hosted gate because no local
-   Windows runner is available.
+1. Windows publication/rename behaviour passed in the exact Phase 1 hosted
+   workflow. There is still no local Windows runner, so later code changes must
+   retain Windows as an exact-SHA hosted gate.
 2. A deliberately reduced ASan scope remains separate work; Phase 1 does not
    claim sanitizer closure or redesign the maintained sanitizer runner.
-3. Phase 2 can now turn the reviewed catalogue into the declarative manifest
-   and begin the Level B post-bootstrap orchestrator without carrying hidden
-   active-tree build behavior forward.
+3. Phase 2 can now harden the reviewed catalogue into a declarative manifest,
+   record actual import and metadata decisions, and prove one bounded manifest
+   slice through CMake/Ninja without carrying hidden active-tree build behavior
+   forward. The Level B post-bootstrap orchestrator remains Phase 3.
 
-Phase 1 makes no Windows or sanitizer-clean claim.
+Phase 1 makes no sanitizer-clean claim. Its Windows claim is limited to the
+successful hosted workflow at exact commit `0a0c17d56`.
