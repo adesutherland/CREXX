@@ -16,9 +16,11 @@ evidenced high-pressure native work.
 
 On 2026-08-28 the branch was resynchronised with `origin/develop` through
 `b64f67a00b3585b130f909640a30d120095e64f6`. The merge incorporates later
-RexxScript string-BIF and POSIX child-terminal work. The retained Phase 1
-hosted result qualifies `0a0c17d56`, not the later merge SHA; the Phase 2 plan
-therefore begins with focused and hosted resynchronisation qualification.
+RexxScript string-BIF and POSIX child-terminal work. Phase 2 Wave P2.1 then
+qualified exact resynchronised commit `c8ce9ed4f42c976a5501ac7ac4e2bc3e48b0dcf1`
+on Linux x64, Windows x64, macOS ARM64 and macOS Intel in GitHub Actions run
+`33176811762`. That later result is a Phase 2 baseline gate; it does not rewrite
+the exact-SHA boundary of the original Phase 1 acceptance.
 
 No performance measurement was run. Host timings below are diagnostic only;
 other work was active on the machine.

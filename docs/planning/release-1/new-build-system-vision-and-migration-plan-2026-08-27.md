@@ -1,7 +1,7 @@
 # New Build System Vision and Migration Plan
 
-- **Status:** Vision retained; Phase 0 and Phase 1 complete; Phase 2 planned and
-  awaiting approval
+- **Status:** Vision retained; Phase 0 and Phase 1 complete; Phase 2 approved;
+  Wave P2.1 complete
 - **Baseline:** `origin/develop` at `b64f67a00b3585b130f909640a30d120095e64f6`
 - **Develop incorporated:** through `b64f67a00b3585b130f909640a30d120095e64f6`
 - **Planning branch:** `temp/newbuild`
@@ -774,11 +774,12 @@ following should be approved separately before implementation:
 
 Use
 `docs/planning/release-1/new-build-phase-2-plan-2026-08-28.md` as the bounded
-Phase 2 implementation plan. First requalify the resynchronised `develop`
-inputs, then approve the manifest/reproducibility/execution/audit contracts
-before changing code. The first implementation slice is schema validation plus
-an observe-only `rxc` resolution report and one precedence fixture; it must not
-change provider selection or introduce the Level B runner.
+Phase 2 implementation plan. The P2-0
+manifest/reproducibility/execution/audit contracts are approved and the
+resynchronised `develop` inputs passed the P2.1 four-platform hosted gate. The
+next implementation slice is schema validation plus an observe-only `rxc`
+resolution report and one precedence fixture; it must not change provider
+selection or introduce the Level B runner.
 
 ## References
 

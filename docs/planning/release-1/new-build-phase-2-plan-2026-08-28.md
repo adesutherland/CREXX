@@ -2,8 +2,8 @@
 
 ## Status and evidence boundary
 
-- **Status:** proposed implementation plan; approval required before Phase 2
-  code changes
+- **Status:** approved; Wave P2.1 complete; Wave P2.2 ready
+- **Architecture approval:** P2-0 approved by Adrian on 2026-08-28
 - **Planning branch:** `temp/newbuild`
 - **Resynchronised develop:** `origin/develop` through
   `b64f67a00b3585b130f909640a30d120095e64f6`
@@ -25,6 +25,34 @@ No performance measurement belongs to Phase 2 correctness work. Durations
 from a shared host or hosted runner are diagnostic build-cycle observations
 only. Performance tests remain excluded from parallel correctness and stress
 work and run later on an intentionally quiet worker.
+
+### P2.1 hosted resynchronisation evidence
+
+GitHub Actions run
+[`33176811762`](https://github.com/adesutherland/CREXX/actions/runs/33176811762)
+qualified exact commit
+`c8ce9ed4f42c976a5501ac7ac4e2bc3e48b0dcf1`. Every platform completed its
+clean MinSizeRel build, explicit `qa-prep`, correctness CTest and applicable
+workflow closeout successfully:
+
+| Platform | Correctness tests | CTest duration | Result |
+| --- | ---: | ---: | --- |
+| Linux x64 | 2,339 | 787.54 s | passed |
+| Windows x64 | 2,267 | 662.18 s | passed |
+| macOS ARM64 | 2,339 | 577.25 s | passed |
+| macOS Intel | 2,339 | 1,592.65 s | passed |
+
+The exact logs show
+`--label-exclude "^(stress|performance-measurement)$"`, so neither stress nor
+measurement ran in the correctness worker. The durations are diagnostic only:
+the hosted runners are shared and this was not a controlled performance
+experiment. The workflow-dispatch release and dev-snapshot jobs were correctly
+skipped.
+
+The incorporated `develop` changes add two platform-applicable CTest entries:
+the POSIX launch diagnostic and pseudo-terminal `linein` regression. Both are
+comprehensive correctness tests, not measurement tests. RexxScript string-BIF
+coverage extends its existing functional suites.
 
 ## 1. Outcome
 
@@ -119,6 +147,11 @@ test gate occurs only at the stated checkpoints or when a compiler, assembler,
 linker or shared build input invalidates the retained evidence.
 
 ### Wave P2.1 — refresh and freeze the accepted baseline
+
+**Progress (2026-08-28): complete.** The exact resynchronised SHA passed all
+four maintained hosted platforms in run `33176811762`. Correctness QA excluded
+stress and performance measurement. No local build, CTest, sanitizer,
+Minikube or timing workload was run for this gate.
 
 1. Catalogue the resynchronised graph and classify the new RexxScript and
    terminal tests without executing performance measurements.
