@@ -63,18 +63,61 @@ crexx_write_native_arg_file(
         ${CMAKE_BINARY_DIR}/bin/crexx_native_ldflags_argv
         ${CREXX_NATIVE_EXE_LINKER_FLAGS_ARGS})
 
+set(CREXX_DRIVER_IMPORT_ROOT "${CMAKE_CURRENT_BINARY_DIR}/imports")
+crexx_add_import_root(crexx_driver_imports
+        DIRECTORY "${CREXX_DRIVER_IMPORT_ROOT}"
+        OUTPUT_VARIABLE CREXX_DRIVER_IMPORT_FILES
+        FILES
+                "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/rxfs.rxplugin"
+        DEPENDS
+                library
+                classlib_native
+                rxfnsc
+                rexxscript
+                compiler_exit_bin
+                fs
+        COMMENT "Staging deterministic crexx driver imports ...")
+
+set(_crexx_driver_source_root "${CMAKE_CURRENT_BINARY_DIR}/sources/crexx")
+set(_crexx_driver_source "${_crexx_driver_source_root}/crexx.crexx")
 add_custom_command(
         BYPRODUCTS
                 ${CMAKE_CURRENT_BINARY_DIR}/crexx.rxbin
                 ${CMAKE_CURRENT_BINARY_DIR}/crexx_linked.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i "${CMAKE_BINARY_DIR}/bin" -o crexx ${CMAKE_CURRENT_SOURCE_DIR}/crexx
+                ${_crexx_driver_source}
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+                "${_crexx_driver_source_root}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CMAKE_CURRENT_SOURCE_DIR}/crexx.crexx"
+                "${_crexx_driver_source}"
+        COMMAND $<TARGET_FILE:rxc>
+                --no-exe-import
+                -i "${CREXX_DRIVER_IMPORT_ROOT}"
+                -o crexx
+                "${_crexx_driver_source}"
         COMMAND $<TARGET_FILE:rxas> crexx
         COMMAND $<TARGET_FILE:rxlink> -s -o crexx_linked crexx ${CMAKE_BINARY_DIR}/bin/library
         COMMAND $<TARGET_FILE:rxcpack> -o crexx crexx_linked
-        DEPENDS rxas rxc rxlink crexx.crexx library ${CMAKE_BINARY_DIR}/bin/library.rxbin classlib_native ${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin rxfnsc ${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin rexxscript ${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin rxcpack rxpa fs fs_static compiler_exit_bin
+        DEPENDS
+                rxas
+                rxc
+                rxlink
+                rxcpack
+                rxpa
+                fs
+                fs_static
+                crexx_driver_imports
+                ${CREXX_DRIVER_IMPORT_FILES}
+                crexx.crexx
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/crexx.c
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "cREXX compile, assemble, link and package crexx ..."
+        VERBATIM
 )
 
 add_executable(crexx ${CMAKE_CURRENT_BINARY_DIR}/crexx.c)

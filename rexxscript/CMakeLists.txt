@@ -53,6 +53,8 @@ set(REXXSCRIPT_DEPS_RexxScriptEvaluateCompat RexxScriptRuntime)
 foreach(_binfile IN LISTS REXXSCRIPT_BINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
   get_filename_component(_member_dir "${_binfile}" DIRECTORY)
+  set(_member_source_root "${_member_dir}/source")
+  set(_member_source "${_member_source_root}/${_basename}.crexx")
   set(_rexxscript_deps)
   set(_rexxscript_import_roots "${REXXSCRIPT_IMPORT_ROOT}")
   foreach(_dep IN LISTS REXXSCRIPT_DEPS_${_basename})
@@ -63,14 +65,21 @@ foreach(_binfile IN LISTS REXXSCRIPT_BINS)
   endforeach()
   add_custom_command(
     OUTPUT "${_binfile}"
-    BYPRODUCTS "${_member_dir}/${_basename}.rxas"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${_member_dir}"
+    BYPRODUCTS
+      "${_member_source}"
+      "${_member_dir}/${_basename}.rxas"
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+      "${_member_dir}"
+      "${_member_source_root}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+      "${_member_source}"
     COMMAND $<TARGET_FILE:rxc>
     -x
     --no-exe-import
     -i "${_rexxscript_import_roots}"
     -o "${_basename}"
-    "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+    "${_member_source}"
     COMMAND $<TARGET_FILE:rxas> "${_basename}"
     DEPENDS
       "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
@@ -136,18 +145,44 @@ add_custom_target(rexxscript ALL
 add_dependencies(rexxscript library rxfnsc)
 
 set(REXXSCRIPT_RUNNER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/RexxScriptRunner.crexx")
+set(REXXSCRIPT_RUNNER_SOURCE_ROOT
+  "${CMAKE_CURRENT_BINARY_DIR}/members/runner/source")
+set(REXXSCRIPT_RUNNER_STAGED_SOURCE
+  "${REXXSCRIPT_RUNNER_SOURCE_ROOT}/RexxScriptRunner.crexx")
 set(REXXSCRIPT_RUNNER_C "${CMAKE_CURRENT_BINARY_DIR}/RexxScriptRunner.c")
+set(REXXSCRIPT_RUNNER_IMPORT_ROOT
+  "${CMAKE_CURRENT_BINARY_DIR}/imports/runner")
+crexx_add_import_root(rexxscript_runner_imports
+  DIRECTORY "${REXXSCRIPT_RUNNER_IMPORT_ROOT}"
+  OUTPUT_VARIABLE REXXSCRIPT_RUNNER_IMPORT_FILES
+  FILES
+    "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin"
+  DEPENDS
+    library
+    classlib
+    rxfnsc
+    rexxscript
+  COMMENT "Staging deterministic RexxScript runner imports ...")
 add_custom_command(
   OUTPUT "${REXXSCRIPT_RUNNER_C}"
   BYPRODUCTS
+    "${REXXSCRIPT_RUNNER_STAGED_SOURCE}"
     "${CMAKE_CURRENT_BINARY_DIR}/RexxScriptRunner.rxbin"
     "${CMAKE_CURRENT_BINARY_DIR}/RexxScriptRunner_linked.rxbin"
+  COMMAND ${CMAKE_COMMAND} -E make_directory
+    "${REXXSCRIPT_RUNNER_SOURCE_ROOT}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${REXXSCRIPT_RUNNER_SOURCE}"
+    "${REXXSCRIPT_RUNNER_STAGED_SOURCE}"
   COMMAND $<TARGET_FILE:rxc>
     -x
     --no-exe-import
-    -i "${CMAKE_BINARY_DIR}/bin"
+    -i "${REXXSCRIPT_RUNNER_IMPORT_ROOT}"
     -o RexxScriptRunner
-    "${REXXSCRIPT_RUNNER_SOURCE}"
+    "${REXXSCRIPT_RUNNER_STAGED_SOURCE}"
   COMMAND $<TARGET_FILE:rxas> RexxScriptRunner
   COMMAND $<TARGET_FILE:rxlink> -s -o RexxScriptRunner_linked
     RexxScriptRunner
@@ -165,10 +200,8 @@ add_custom_command(
     classlib
     rxfnsc
     rexxscript
-    "${CMAKE_BINARY_DIR}/bin/library.rxbin"
-    "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
-    "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
-    "${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin"
+    rexxscript_runner_imports
+    ${REXXSCRIPT_RUNNER_IMPORT_FILES}
     "${REXXSCRIPT_RUNNER_SOURCE}"
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
   COMMENT "cREXX compile, assemble, link and package standalone RexxScript runner ..."

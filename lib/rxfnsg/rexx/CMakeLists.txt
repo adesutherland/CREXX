@@ -17,6 +17,31 @@ foreach(_module IN LISTS RXFNSG_REXX_MODULES)
   list(APPEND RXFNSG_REXX_BINS "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin")
 endforeach()
 
+set(_rxfnsg_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/base")
+crexx_add_import_root(rxfnsg_imports
+  DIRECTORY "${_rxfnsg_import_root}"
+  OUTPUT_VARIABLE _rxfnsg_import_files
+  FILES
+    "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+  DEPENDS
+    library
+    classlib
+  COMMENT "Staging deterministic Level G imports ...")
+
+# The public HTTP module consumes the two private HTTP modules. Keep that
+# dependency root exact so another partially built Level G member cannot become
+# an eligible provider.
+set(_rxfnsg_http_dependency_root
+  "${CMAKE_CURRENT_BINARY_DIR}/imports/http")
+crexx_add_import_root(rxfnsg_http_imports
+  DIRECTORY "${_rxfnsg_http_dependency_root}"
+  OUTPUT_VARIABLE _rxfnsg_http_import_files
+  FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/httpcodec.rxbin"
+    "${CMAKE_CURRENT_BINARY_DIR}/httpcore.rxbin"
+  COMMENT "Staging deterministic Level G HTTP imports ...")
+
 # `httpserver`, `llm` and `http` share the public `rxfnsg` namespace. During a
 # clean or parallel build the final consolidated image does not exist yet, so
 # publish the freshly compiled HTTP module under its namespace name in a
@@ -24,13 +49,21 @@ endforeach()
 # types against a stale installed/build-tree `rxfnsg.rxbin`.
 set(_rxfnsg_http_stage_dir "${CMAKE_CURRENT_BINARY_DIR}/http-stage")
 set(_rxfnsg_http_stage_image "${_rxfnsg_http_stage_dir}/rxfnsg.rxbin")
+set(_rxfnsg_http_stage_core "${_rxfnsg_http_stage_dir}/httpcore.rxbin")
 add_custom_command(
-  OUTPUT "${_rxfnsg_http_stage_image}"
+  OUTPUT
+    "${_rxfnsg_http_stage_image}"
+    "${_rxfnsg_http_stage_core}"
   COMMAND ${CMAKE_COMMAND} -E make_directory "${_rxfnsg_http_stage_dir}"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
           "${CMAKE_CURRENT_BINARY_DIR}/http.rxbin"
           "${_rxfnsg_http_stage_image}"
-  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/http.rxbin"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "${CMAKE_CURRENT_BINARY_DIR}/httpcore.rxbin"
+          "${_rxfnsg_http_stage_core}"
+  DEPENDS
+    "${CMAKE_CURRENT_BINARY_DIR}/http.rxbin"
+    "${CMAKE_CURRENT_BINARY_DIR}/httpcore.rxbin"
   COMMENT "Staging current HTTP metadata for the Level G LLM module ..."
   VERBATIM
 )
@@ -40,37 +73,42 @@ foreach(_binfile IN LISTS RXFNSG_REXX_BINS)
 
   set(_module_dependencies)
   set(_module_import_args)
-  if(_basename STREQUAL "httpcore")
-    list(APPEND _module_dependencies "${CMAKE_CURRENT_BINARY_DIR}/httpcodec.rxbin")
-  elseif(_basename STREQUAL "http")
-    list(APPEND _module_dependencies
-      "${CMAKE_CURRENT_BINARY_DIR}/httpcodec.rxbin"
-      "${CMAKE_CURRENT_BINARY_DIR}/httpcore.rxbin")
+  if(_basename STREQUAL "http")
+    list(APPEND _module_dependencies ${_rxfnsg_http_import_files})
+    list(APPEND _module_import_args -i "${_rxfnsg_http_dependency_root}")
   elseif(_basename STREQUAL "httpserver" OR _basename STREQUAL "llm")
     list(APPEND _module_dependencies
-      "${CMAKE_CURRENT_BINARY_DIR}/httpcore.rxbin"
-      "${_rxfnsg_http_stage_image}")
+      "${_rxfnsg_http_stage_image}"
+      "${_rxfnsg_http_stage_core}")
     list(APPEND _module_import_args -i "${_rxfnsg_http_stage_dir}")
   endif()
 
+  set(_module_source_root
+    "${CMAKE_CURRENT_BINARY_DIR}/sources/${_basename}")
+  set(_module_source "${_module_source_root}/${_basename}.crexx")
   add_custom_command(
     OUTPUT "${_binfile}"
+    BYPRODUCTS
+      "${_module_source}"
+      "${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rxas"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_module_source_root}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+            "${_module_source}"
     COMMAND $<TARGET_FILE:rxc>
             -x
+            --no-exe-import
             ${_module_import_args}
-            -i "${CMAKE_BINARY_DIR}/bin"
+            -i "${_rxfnsg_import_root}"
             -o "${_basename}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+            "${_module_source}"
     COMMAND $<TARGET_FILE:rxas> "${_basename}"
     DEPENDS
       "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
-      "${CMAKE_BINARY_DIR}/bin/library.rxbin"
-      "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+      rxfnsg_imports
+      ${_rxfnsg_import_files}
       rxc
       rxas
-      library
-      classlib
-      compiler_exit_bin
       ${_module_dependencies}
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     COMMENT "cREXX compile and assemble ${_basename} ..."

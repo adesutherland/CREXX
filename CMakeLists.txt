@@ -254,6 +254,7 @@ endif()
 
 include(CTest)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxQaTiers.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxImportRoots.cmake)
 
 # CREXX only uses re2c itself for scanner generation; do not build the
 # language alias binaries by default.

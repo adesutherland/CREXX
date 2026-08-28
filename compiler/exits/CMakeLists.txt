@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.24)
 # Keep the canonical exit bundle in /bin on the normal optimised path.
 # Opt/no-opt comparisons for exit consumers are emitted as suffixed test-only
 # artifacts in each exit subdirectory.
-set(CREXX_EXIT_IMPORT_PATH "\"${CMAKE_CURRENT_BINARY_DIR}\"")
+set(CREXX_EXIT_IMPORT_ROOT "${CMAKE_CURRENT_BINARY_DIR}/imports")
+set(CREXX_EXIT_IMPORT_PATH "${CREXX_EXIT_IMPORT_ROOT}")
 
 if(BUILD_TESTING)
     add_custom_target(qa-prep-compiler-exits)
@@ -63,26 +64,104 @@ function(crexx_add_compiler_exit_runtime_test TARGET_NAME SOURCE_FILE)
 
 endfunction()
 
-# Build token.rxbin
+# Build token.rxbin without admitting the sibling test-support source.
+set(_token_source_root "${CMAKE_CURRENT_BINARY_DIR}/sources/token")
+set(_token_source "${_token_source_root}/token.crexx")
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin
-    COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -o token ${CMAKE_CURRENT_SOURCE_DIR}/token.crexx
+    BYPRODUCTS
+        ${_token_source}
+        ${CMAKE_CURRENT_BINARY_DIR}/token.rxas
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_token_source_root}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/token.crexx"
+        "${_token_source}"
+    COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1
+        $<TARGET_FILE:rxc> -x --no-exe-import -o token "${_token_source}"
     COMMAND $<TARGET_FILE:rxas> -o token token
     DEPENDS rxc rxas ${CMAKE_CURRENT_SOURCE_DIR}/token.crexx
-    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/token.rxas
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building token.rxbin"
+    VERBATIM
 )
 add_custom_target(token_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin)
 
+crexx_add_import_root(compiler_exit_imports
+    DIRECTORY "${CREXX_EXIT_IMPORT_ROOT}"
+    OUTPUT_VARIABLE CREXX_EXIT_IMPORT_FILES
+    FILES
+        "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+        "${CMAKE_CURRENT_BINARY_DIR}/token.rxbin"
+    DEPENDS
+        library
+        token_bin
+    COMMENT "Staging deterministic compiler-exit imports ...")
+
+function(crexx_add_compiler_exit_component TARGET_NAME MODULE_NAME)
+    set(_source_root "${CMAKE_CURRENT_BINARY_DIR}/source")
+    set(_source "${_source_root}/${MODULE_NAME}.crexx")
+    set(_output "${CMAKE_CURRENT_BINARY_DIR}/${MODULE_NAME}.rxbin")
+
+    add_custom_command(
+        OUTPUT "${_output}"
+        BYPRODUCTS
+            "${_source}"
+            "${CMAKE_CURRENT_BINARY_DIR}/${MODULE_NAME}.rxas"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${_source_root}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}.crexx"
+            "${_source}"
+        COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1
+            $<TARGET_FILE:rxc>
+            -x
+            --no-exe-import
+            -i "${CREXX_EXIT_IMPORT_ROOT}"
+            -o "${MODULE_NAME}"
+            "${_source}"
+        COMMAND $<TARGET_FILE:rxas> -o "${MODULE_NAME}" "${MODULE_NAME}"
+        DEPENDS
+            rxc
+            rxas
+            compiler_exit_imports
+            ${CREXX_EXIT_IMPORT_FILES}
+            "${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_NAME}.crexx"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        COMMENT "Building ${MODULE_NAME}.rxbin"
+        VERBATIM)
+    add_custom_target(${TARGET_NAME} DEPENDS "${_output}")
+endfunction()
+
+set(_exit_test_support_source_root
+    "${CMAKE_CURRENT_BINARY_DIR}/sources/ExitTestSupport")
+set(_exit_test_support_source
+    "${_exit_test_support_source_root}/ExitTestSupport.crexx")
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/bin/exittestsupport.rxbin
-    COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -i ${CREXX_EXIT_IMPORT_PATH} -o exittestsupport ${CMAKE_CURRENT_SOURCE_DIR}/ExitTestSupport.crexx
+    BYPRODUCTS
+        ${_exit_test_support_source}
+        ${CMAKE_CURRENT_BINARY_DIR}/exittestsupport.rxas
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "${_exit_test_support_source_root}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/ExitTestSupport.crexx"
+        "${_exit_test_support_source}"
+    COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1
+        $<TARGET_FILE:rxc>
+        -x
+        --no-exe-import
+        -i "${CREXX_EXIT_IMPORT_PATH}"
+        -o exittestsupport
+        "${_exit_test_support_source}"
     COMMAND $<TARGET_FILE:rxas> -o ${CMAKE_BINARY_DIR}/bin/exittestsupport exittestsupport
-    DEPENDS rxc rxas library ${CMAKE_CURRENT_SOURCE_DIR}/ExitTestSupport.crexx ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin
-    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/exittestsupport.rxas
+    DEPENDS
+        rxc
+        rxas
+        compiler_exit_imports
+        ${CREXX_EXIT_IMPORT_FILES}
+        ${CMAKE_CURRENT_SOURCE_DIR}/ExitTestSupport.crexx
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building exittestsupport.rxbin"
+    VERBATIM
 )
 add_custom_target(exit_test_support_bin DEPENDS ${CMAKE_BINARY_DIR}/bin/exittestsupport.rxbin)
 

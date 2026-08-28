@@ -89,16 +89,19 @@ executable, which packages a file runner around an isolated
 `.rexxscriptevaluator()` instance.
 
 The CMake build gives each RexxScript source member a private work directory
-under `rexxscript/members/`. Compiler imports are copied into the curated
-`rexxscript/imports/` staging directory, and `rxc` is invoked with
+under `rexxscript/members/`. Each primary source is copied to an isolated
+source root there, so sibling RexxScript sources cannot take precedence over
+the member RXBIN dependencies declared by CMake. Compiler imports are copied
+into the curated `rexxscript/imports/` staging directory, and `rxc` is invoked with
 `--no-exe-import` so an older executable-directory `rexxscript.rxbin` cannot
 be selected while its replacement is being built. The members are linked to
 the private `rexxscript/linked/rexxscript.rxbin` image. One publication action
 then replaces `bin/rexxscript.rxbin`; member actions do not delete or rewrite
-that shared product. The standalone runner likewise imports only from `bin/`,
-not from member work directories. This separation is a build-graph ownership
-rule: generated RXAS/RXBIN metadata remains owned by the action that generated
-it until the consolidated image is published.
+that shared product. The standalone runner has its own isolated source and
+curated import root containing only the four linked libraries it packages.
+This separation is a build-graph ownership rule: generated RXAS/RXBIN metadata
+remains owned by the action that generated it until the consolidated image is
+published.
 
 The product master documentation is in `rexxscript/doc/`.
 
@@ -170,6 +173,16 @@ The older OpenSSL-backed dynamic socket plugin is deprecated and no longer
 builds by default. Developers who still need it can configure with
 `CREXX_BUILD_LEGACY_SOCKET_PLUGIN=ON`; otherwise source builds avoid that
 plugin's OpenSSL discovery and distribution burden.
+
+The Level G CMake build does not scan the shared product `bin/` directory.
+Each module compiles from a source root containing only its primary source,
+with `library.rxbin` and `classlib.rxbin` copied to a curated base import root.
+The HTTP members receive separate roots containing only their declared private
+HTTP prerequisites; the current public HTTP member is staged as
+`rxfnsg.rxbin` for the same-namespace server and LLM consumers. Every compile
+uses `--no-exe-import`, so an older consolidated `rxfnsg.rxbin`, a sibling
+source, or an unrelated plugin cannot supply build-time metadata. The Level L
+build follows the same rule with its narrower `library.rxbin`-only import root.
 
 `lib/rxfnsg/rexx/httpcore.crexx` is the private Level B `_rxhttpcore` backend
 for binary HTTP framing, parsing and codecs. It is shared by the Level G client,

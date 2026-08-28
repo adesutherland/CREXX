@@ -9,13 +9,25 @@ foreach (VEC ${VECS})
 	set(REXXSRC ${REXXSRC} ${VEC}.crexx)
 endforeach ()
 
+set(VECLIB_IMPORT_ROOT "${CMAKE_CURRENT_BINARY_DIR}/imports")
+crexx_add_import_root(veclib_imports
+	DIRECTORY "${VECLIB_IMPORT_ROOT}"
+	OUTPUT_VARIABLE VECLIB_IMPORT_FILES
+	FILES
+		"${CMAKE_BINARY_DIR}/bin/library.rxbin"
+		"${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+	DEPENDS
+		library
+		compiler_exit_bin
+	COMMENT "Staging deterministic vector-library imports ...")
+
 unset(_prev_target)
 foreach(_binfile ${VECBINS})
 	get_filename_component(_basename ${_binfile} NAME_WE)
 	add_custom_command(
-		  COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx
+		  COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${VECLIB_IMPORT_ROOT}" -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx
 		  COMMAND $<TARGET_FILE:rxas> ${_basename}
-		  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx rxc rxas library compiler_exit_bin
+		  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx rxc rxas veclib_imports ${VECLIB_IMPORT_FILES}
 		  OUTPUT ${_binfile}
 		  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		  COMMENT "cREXX compile and assemble ${_basename} ..."

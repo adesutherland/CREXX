@@ -9,6 +9,14 @@ foreach(_module IN LISTS RXFNSL_REXX_MODULES)
   list(APPEND RXFNSL_REXX_BINS "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin")
 endforeach()
 
+set(_rxfnsl_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports")
+crexx_add_import_root(rxfnsl_imports
+  DIRECTORY "${_rxfnsl_import_root}"
+  OUTPUT_VARIABLE _rxfnsl_import_files
+  FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+  DEPENDS library
+  COMMENT "Staging deterministic Level L imports ...")
+
 foreach(_binfile IN LISTS RXFNSL_REXX_BINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
 
@@ -16,17 +24,17 @@ foreach(_binfile IN LISTS RXFNSL_REXX_BINS)
     OUTPUT "${_binfile}"
     COMMAND $<TARGET_FILE:rxc>
             -x
-            -i "${CMAKE_BINARY_DIR}/bin"
+            --no-exe-import
+            -i "${_rxfnsl_import_root}"
             -o "${_basename}"
             "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
     COMMAND $<TARGET_FILE:rxas> "${_basename}"
     DEPENDS
       "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
-      "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+      rxfnsl_imports
+      ${_rxfnsl_import_files}
       rxc
       rxas
-      library
-      compiler_exit_bin
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     COMMENT "cREXX compile and assemble ${_basename} ..."
     VERBATIM

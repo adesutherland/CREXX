@@ -2,7 +2,7 @@
 
 ## Status and programme context
 
-- **Status:** P2A locally complete; P2B active
+- **Status:** P2A and P2B locally complete; P2C active
 - **Planning branch:** `temp/newbuild`
 - **Current `develop` incorporated:** `origin/develop` through
   `ee8e8f8fefbdc3ee9217f2ef4dd7edf0c8d288e6`
@@ -231,6 +231,32 @@ critical build migration path.
 **P2B gate:** each production build family has an unambiguous declared import
 root contract; seeding stale artifacts outside those roots cannot change the
 result; focused import regressions pass.
+
+**P2B result (2026-08-28):** complete locally. A single reusable CMake helper
+now publishes exact declared metadata files to family-private roots. Canonical
+compiler exits, the debugger, RexxScript members and runner, Level G, Level L,
+the vector library and the `crexx` driver all exclude the compiler executable
+directory. Actions whose source directory contains siblings compile an
+isolated copy of the primary source, so a source candidate cannot silently
+take precedence over the RXBIN route declared by CMake. The Level G HTTP
+members additionally receive only their declared private HTTP providers; an
+older public `rxfnsg.rxbin` is no longer eligible while its replacement is
+built.
+
+A fresh 30-job `stage-product` build completed all 634 actions. The
+1,713-node product graph passed `ninja -t missingdeps`; the observation
+catalogue found no production family in this closure still using either the
+shared `bin/` root or executable-directory discovery. The five focused import
+discovery, report, CLI and option tests passed, including simultaneous
+source/RXAS/RXBIN selection and the RXBIN-over-RXAS timestamp tie. As the
+stale-provider proof, `bin/rxfnsg.rxbin` was replaced in the scratch tree by
+the incompatible Level L image and `http.rxbin` was forced to rebuild. Its
+SHA-256 remained
+`a6681f0781931caf02fb1efd4927f5904b0532016f9448cb74d11c629e1fe337`,
+then the public image was restored from its declared inputs. No depfile was
+added because every selected production provider is now a direct CMake input.
+Elapsed build time is not evidence: the shared host was heavily loaded and
+another sanitizer build was active.
 
 ### P2C — incremental and hosted acceptance
 

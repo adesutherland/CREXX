@@ -153,6 +153,22 @@ On an unknown or smaller host, select `portable` and use five global jobs.
 Non-Ninja generators retain their own scheduling because CMake job pools are a
 Ninja facility.
 
+Production self-builds do not use the compiler's normal broad discovery
+defaults. CMake copies each action's declared RXBIN and RXPA metadata providers
+to a private import root and invokes `rxc --no-exe-import`. Where a source
+directory contains sibling modules or test fixtures, the primary source is
+also copied to an action-private source root. This is necessary because `rxc`
+normally considers sibling source before RXAS/RXBIN metadata and also appends
+its executable directory to the binary roots. Those defaults remain useful for
+interactive compilation, but would allow an older linked library or an
+unrelated test plugin to affect a clean or incremental self-build.
+
+The build declarations, rather than filesystem timestamps, therefore select
+the metadata route. When adding a production `rxc` action, name its exact
+provider files in `DEPENDS`, stage only those files with
+`crexx_add_import_root`, isolate the source when it has siblings, and keep the
+resolution report as an opt-in diagnostic rather than a routine side effect.
+
 After the product build, select a named QA target such as `qa-smoke` or
 `qa-comprehensive`. Each target first builds the generated artifacts for its
 own test tier and then starts CTest. CTest executes tests only; it does not
