@@ -153,9 +153,10 @@ On an unknown or smaller host, select `portable` and use five global jobs.
 Non-Ninja generators retain their own scheduling because CMake job pools are a
 Ninja facility.
 
-After the product build, prepare the generated test artifacts with the
-`qa-prep` target. The generated test suite is then run with the `ctest`
-command. CTest executes tests only; it does not start another build.
+After the product build, select a named QA target such as `qa-smoke` or
+`qa-comprehensive`. Each target first builds the generated artifacts for its
+own test tier and then starts CTest. CTest executes tests only; it does not
+start another build.
 This knows what to do, as the tests were defined in the Cmake recipes, and will show you successes and failures. If what
 you checked out if git is not a released version, there is a 
 change that some test cases fail, but generally these should indicate
@@ -178,10 +179,10 @@ cmake --build crexx-build --target crexx-examples --parallel 5
 cmake --build crexx-build --target crexx-demos --parallel 5
 ```
 
-Correctness QA still prepares the example, demonstration and benchmark-shaped
-artifacts that its tests consume through `qa-prep`; some source examples are
-therefore also visible as QA fixture inputs. This preparation does not execute
-performance measurements. Contributions and experiments are not currently
+Comprehensive QA still prepares the example and demonstration artifacts that
+its tests consume through `qa-prep-comprehensive`; some source examples are
+therefore also visible as QA fixture inputs. Measurement preparation is
+separate and does not execute a workload. Contributions and experiments are not currently
 configured as product targets. New ones should remain explicit opt-ins rather
 than joining the default product implicitly.
 
@@ -199,11 +200,15 @@ topical labels. The named targets make the intended barriers visible:
 | `qa-stress` | Explicit high-load and race-oriented workloads |
 | `qa-measurement` | Performance measurement only, serially on a quiescent host |
 
-All correctness targets depend on `qa-prep`, so their artifacts are complete
-before CTest starts. The measurement target instead uses a narrow
-`qa-prep-measurement` dependency and always selects one CTest worker. Do not
-combine performance measurement with a busy correctness or stress worker
-pool; timings from an active host are only indicative.
+Each target depends on its matching `qa-prep-*` closure. Comprehensive
+preparation includes smoke and essential; qualification and stress remain
+independent. The compatibility `qa-prep` target combines all non-measurement
+closures for older scripts. `qa-measurement` uses `qa-prep-measurement` and
+always selects one CTest worker. Tests carrying the topical `performance`
+label default to this serial measurement tier unless they explicitly declare
+qualification or stress. Do not combine performance measurement with a busy
+correctness or stress worker pool; timings from an active host are only
+indicative.
 
 The named correctness targets use 30 CTest workers by default on Apple ARM64
 and five elsewhere. Override that independently of build parallelism with
@@ -217,12 +222,13 @@ cmake --build cmake-build-debug --parallel 5
 cmake --build cmake-build-debug --target qa-comprehensive --parallel 5
 ```
 
-For a direct CTest invocation, prepare first and use the same normal exclusion:
+For a direct CTest invocation, prepare the same tier first and use its exact
+labels:
 
 ```sh
-cmake --build cmake-build-debug --target qa-prep --parallel 5
+cmake --build cmake-build-debug --target qa-prep-comprehensive --parallel 5
 ctest --test-dir cmake-build-debug \
-  --label-exclude '^(stress|performance-measurement)$' \
+  --label-regex '^(essential|smoke|comprehensive)$' \
   --output-on-failure --parallel 5
 ```
 

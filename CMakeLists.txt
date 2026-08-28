@@ -384,9 +384,8 @@ if(BUILD_TESTING)
     add_custom_target(qa-prep-stress)
     add_custom_target(qa-prep-measurement)
     add_dependencies(qa-prep-smoke qa-prep-essential)
+    add_dependencies(qa-prep-comprehensive qa-prep-smoke)
     add_dependencies(qa-prep
-            qa-prep-essential
-            qa-prep-smoke
             qa-prep-comprehensive
             qa-prep-qualification
             qa-prep-stress)
@@ -412,15 +411,212 @@ add_subdirectory(examples)
 add_subdirectory(tests)
 add_subdirectory(bin crexx_driver)
 
-# Test directories register their exact generated-artifact requirements while
-# assigning tiers.  Attach those dependencies only after all producers exist.
-if(BUILD_TESTING)
-    crexx_finalize_qa_prep_targets()
-endif()
-
 # These non-owning aggregate targets expose the product stages without
 # replacing or duplicating the direct dependencies declared by their members.
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxBuildStages.cmake)
+
+# Test directories register their exact generated-artifact requirements while
+# assigning tiers. Attach those dependencies only after all producers and the
+# non-owning stage aggregates exist.
+if(BUILD_TESTING)
+    crexx_finalize_qa_prep_targets()
+
+    # Legacy hand-written tests share these explicit family closures. Generated
+    # opt/noopt fixtures are already attached test-by-test by CrexxTestModes;
+    # this list covers the direct harnesses and interpreter fixture families.
+    crexx_add_qa_prep_dependencies(comprehensive
+            REQUIRED_TARGETS
+                stage-product
+                crexx_test_driver
+            OPTIONAL_TARGETS
+                crexxsaa
+                cri17_attached_provider_control-rxbvml
+                cri17_attached_provider_control-rxvml
+                db_decimal_tests
+                decnumber_test
+                address_llm_fixture_bin
+                dynamic_interface_fixture_bin
+                linein_stdin_harness
+                linein_tty_harness
+                mc_decimal_dyn_test_harness
+                mc_decimal_full_tests
+                mc_decimal_manual_test_harness
+                mc_decimal_test_harness
+                module_initializers-rxbvml
+                module_initializers-rxtvml
+                module_initializers-rxvml
+                native_kv_address_demo
+                platform_terminal_harness
+                persistent_worker_executor-rxbvml
+                persistent_worker_executor-rxtvml
+                persistent_worker_executor-rxvml
+                program_generation_control-rxbvml
+                program_generation_control-rxtvml
+                program_generation_control-rxvml
+                rxbvm_instrumented
+                rxc_classdecl_static
+                rxc_staticlink
+                signal_tester
+                test_bridge
+                test_e2_active_context
+                test_float_pool_format
+                test_highlight_cache
+                test_highlight_editor_diagnostics
+                test_import_discovery_snapshot
+                test_import_resolution_report
+                test_jtable_policy
+                test_rxas_flow_graph
+                test_rxcp_super_combiner
+                test_rxcrexxcmd_flush
+                test_rxgraph
+                test_rxinteger_contract
+                test_rxop_metadata
+                test_rxpa_concurrency
+                test_rxpa_odbc
+                test_rxpa_odbc_old_host
+                test_rxseqfile
+                test_rxspawn_diagnostics
+                test_rxvmactive
+                test_rxvmbyteendpoint
+                test_rxvmchannel_byte
+                test_rxvmchannel_process
+                test_rxvmchannel_registry
+                test_rxvml_utf_boundaries
+                test_rxvmmemory
+                test_rxvmplugin_context
+                test_rxvmstem
+                test_rxvmstem_allocator_family
+                test_rxvmworker
+                test_signal_mask
+                test_trace_env_bin
+                test_trace_env_ignored_bin
+                test_trace_env_invalid_bin
+                test_trace_event_batch_bin
+                test_trace_file_bin
+                test_trace_normal_command_bin
+                test_trace_normal_quiet_bin
+                test_trace_source_jump_bin
+                test_trace_stderr_bin
+                tests_linked_srcfproc_artifact
+                tests_linked_srcmethod_artifact
+                rxdas_roundtrip_basic_artifact
+                rxdas_roundtrip_binary_artifact
+                rxdas_roundtrip_compact_format_artifact
+                rxdas_roundtrip_float_pool_artifact
+                rxdas_roundtrip_imported_artifact
+                rxdas_roundtrip_int64_contract_artifact
+                rxdas_roundtrip_interfaces_artifact
+                rxdas_roundtrip_jtable_hash_artifact
+                rxdas_roundtrip_jtable_linear_artifact
+                rxdas_roundtrip_jtable_rexx_strings_artifact
+                rxdas_roundtrip_metadata_artifact
+                rxdas_roundtrip_wide_operands_artifact
+                ts_linein_stdin_artifact
+                odbc_mock_prepared_runtime
+                _rxpa_bad_signatures
+                _rxpa_classdecl
+                _rxpa_invalid_manifest
+                run_rxasjtablecorruptacphslot
+                run_rxasjtablecorruptacphtarget
+                run_rxasjtablecorruptalgorithm
+                run_rxasjtablecorruptheader
+                run_rxasjtablecorruptlinearkey
+                run_rxasjtablecorruptlineartarget
+                run_rxasjtablecorruptopenslot
+                run_tests_attributes
+                run_tests_basic
+                run_tests_binary
+                run_tests_binary_memory
+                run_tests_breakpoint_address
+                run_tests_compact_format
+                run_tests_conversion
+                run_tests_decimal
+                run_tests_float_math
+                run_tests_float_pool
+                run_tests_instruction_gaps
+                run_tests_int_contract
+                run_tests_int_math
+                run_tests_interfaces
+                run_tests_jump_table
+                run_tests_jump_table_acph_sources
+                run_tests_jump_table_auto_edges
+                run_tests_jump_table_auto_sources
+                run_tests_jump_table_boundaries
+                run_tests_jump_table_hash_edges
+                run_tests_jump_table_linear_sources
+                run_tests_jump_table_openhash_sources
+                run_tests_jump_table_rexx_strings
+                run_tests_logic_flow
+                run_tests_nr09_superinstructions
+                run_tests_object_initialization
+                run_tests_objects
+                run_tests_panic_source
+                run_tests_perf2_exact_relink
+                run_tests_perf2_partial_reference_materialization
+                run_tests_perf2_reference_guards
+                run_tests_references
+                run_tests_reflection
+                run_tests_register_flags
+                run_tests_selector_descriptors
+                run_tests_signal_actions
+                run_tests_signal_branch_value
+                run_tests_signal_call_attrs
+                run_tests_signal_call_unwind
+                run_tests_signal_frame_scope
+                run_tests_signal_handler_modes
+                run_tests_signal_mask_bounds
+                run_tests_signal_nested_pending
+                run_tests_signal_pushpop
+                run_tests_signal_retry_retired
+                run_tests_signal_silent_halt
+                run_tests_signals
+                run_tests_socket
+                run_tests_string
+                run_tests_system_io
+                run_tests_utf_flags
+                run_tests_wide_operands
+                test_db_decimal_archive_link_bin
+                test_gate_f_channel_local_bin
+                test_gate_f_channel_process_bin
+                test_module_initializer_bins
+                test_program_generation_control_bins
+                test_reentrancy_bin
+                test_retired_process_opcode_bin
+                test_persistent_worker_executor_bin
+                test_persistent_worker_sparse_bin)
+
+    crexx_add_qa_prep_dependencies(qualification
+            REQUIRED_TARGETS stage-product performance_decimal_gate1)
+    crexx_add_qa_prep_dependencies(stress
+            REQUIRED_TARGETS rxvm run_tests_stress
+            OPTIONAL_TARGETS
+                persistent_worker_executor-rxvml
+                persistent_worker_executor-rxbvml
+                persistent_worker_executor-rxtvml
+                test_persistent_worker_executor_bin
+                test_persistent_worker_sparse_bin)
+    crexx_add_qa_prep_dependencies(measurement
+            OPTIONAL_TARGETS
+                performance_binary_byvalue
+                performance_binary_fastpath
+                performance_binary_packed_float
+                performance_classlib_iterator
+                performance_classlib_treemap
+                performance_inline
+                performance_jump_dispatch
+                performance_nr15_stem_access
+                performance_nr15_stem_semantics
+                performance_nr16_17_stable_state
+                performance_packed_numeric_class
+                performance_postperf04_scalar_access
+                performance_rcc5f_rxstats
+                performance_reference_iterator
+                performance_runtime_lookup
+                performance_rxjson_numeric
+                performance_rxjson_parser
+                performance_rxvector01
+                performance_tinyexpr_dispatch)
+endif()
 
 if(BUILD_TESTING)
     # Build preparation is an explicit graph phase. CTest executes tests only;
@@ -532,12 +728,11 @@ if(TARGET linked_opt_runtime_artifacts)
 
     add_custom_target(qa-prep-linked-opt-runtime)
     add_dependencies(qa-prep-linked-opt-runtime linked_opt_runtime_artifacts)
-    add_dependencies(qa-prep qa-prep-linked-opt-runtime)
     if(TARGET qa-prep-compiler-exits)
-        add_dependencies(qa-prep qa-prep-compiler-exits)
+        add_dependencies(qa-prep-comprehensive qa-prep-compiler-exits)
     endif()
     if(TARGET qa-prep-examples)
-        add_dependencies(qa-prep qa-prep-examples)
+        add_dependencies(qa-prep-comprehensive qa-prep-examples)
     endif()
 
     if(TARGET linked_opt_sweep)
@@ -552,7 +747,8 @@ if(BUILD_TESTING)
     add_custom_target(qa-prep-compiler-import-regressions)
     add_dependencies(qa-prep-compiler-import-regressions
             classlib_native)
-    add_dependencies(qa-prep qa-prep-compiler-import-regressions)
+    add_dependencies(qa-prep-comprehensive
+            qa-prep-compiler-import-regressions)
 endif()
 
 if(BUILD_TESTING)
@@ -610,8 +806,8 @@ if(BUILD_TESTING)
                     ${_crexx_qa_ctest_configuration}
                     --parallel "${CREXX_QA_CTEST_JOBS}"
                     --output-on-failure
-                    --label-exclude "^(stress|performance-measurement)$"
-            DEPENDS qa-prep
+                    --label-regex "^(essential|smoke|comprehensive)$"
+            DEPENDS qa-prep-comprehensive
             USES_TERMINAL
             VERBATIM
             COMMENT "Running comprehensive correctness QA without stress or measurement")
@@ -622,7 +818,7 @@ if(BUILD_TESTING)
                     --parallel "${CREXX_QA_CTEST_JOBS}"
                     --output-on-failure
                     --label-regex "^qualification$"
-            DEPENDS qa-prep
+            DEPENDS qa-prep-qualification
             USES_TERMINAL
             VERBATIM
             COMMENT "Running qualification QA")
@@ -633,7 +829,7 @@ if(BUILD_TESTING)
                     --parallel "${CREXX_QA_CTEST_JOBS}"
                     --output-on-failure
                     --label-regex "^stress$"
-            DEPENDS qa-prep
+            DEPENDS qa-prep-stress
             USES_TERMINAL
             VERBATIM
             COMMENT "Running explicit stress QA")

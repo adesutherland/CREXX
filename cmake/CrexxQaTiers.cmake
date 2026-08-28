@@ -19,6 +19,47 @@ function(crexx_register_test_prep_targets)
     endforeach()
 endfunction()
 
+# Some older hand-written test families share one small, well-defined build
+# closure rather than declaring a producer for every individual add_test().
+# Keep those family dependencies explicit without manufacturing per-test build
+# commands or a second build graph.
+function(crexx_add_qa_prep_dependencies TIER)
+    cmake_parse_arguments(CREXX "" "" "REQUIRED_TARGETS;OPTIONAL_TARGETS" ${ARGN})
+    if(CREXX_UNPARSED_ARGUMENTS OR
+       (NOT CREXX_REQUIRED_TARGETS AND NOT CREXX_OPTIONAL_TARGETS))
+        message(FATAL_ERROR
+                "crexx_add_qa_prep_dependencies requires REQUIRED_TARGETS and/or OPTIONAL_TARGETS")
+    endif()
+
+    if(TIER STREQUAL "performance-measurement")
+        set(_crexx_prep_tier measurement)
+    else()
+        set(_crexx_prep_tier "${TIER}")
+    endif()
+    if(NOT _crexx_prep_tier MATCHES
+       "^(essential|smoke|comprehensive|qualification|stress|measurement)$")
+        message(FATAL_ERROR "Unknown QA preparation tier: ${TIER}")
+    endif()
+
+    set(_crexx_prep_aggregate "qa-prep-${_crexx_prep_tier}")
+    if(NOT TARGET "${_crexx_prep_aggregate}")
+        message(FATAL_ERROR
+                "Missing QA preparation aggregate: ${_crexx_prep_aggregate}")
+    endif()
+    foreach(_crexx_prep_target IN LISTS CREXX_REQUIRED_TARGETS)
+        if(NOT TARGET "${_crexx_prep_target}")
+            message(FATAL_ERROR
+                    "QA tier ${TIER} requires missing preparation target: ${_crexx_prep_target}")
+        endif()
+        add_dependencies("${_crexx_prep_aggregate}" "${_crexx_prep_target}")
+    endforeach()
+    foreach(_crexx_prep_target IN LISTS CREXX_OPTIONAL_TARGETS)
+        if(TARGET "${_crexx_prep_target}")
+            add_dependencies("${_crexx_prep_aggregate}" "${_crexx_prep_target}")
+        endif()
+    endforeach()
+endfunction()
+
 # Shared test helpers use this to request one final pass after the caller's
 # CMakeLists has declared all of its direct and generated tests.
 function(crexx_schedule_directory_qa_tier_finalization)
@@ -74,6 +115,14 @@ function(crexx_finalize_directory_qa_tiers)
                 set(_crexx_tier stress)
             elseif("smoke" IN_LIST _crexx_labels)
                 set(_crexx_tier smoke)
+            elseif("performance" IN_LIST _crexx_labels)
+                # Timing-oriented comparisons must not share the broad
+                # parallel correctness worker pool. Existing tests with the
+                # topical performance label therefore default to the isolated
+                # serial measurement tier unless they explicitly declare a
+                # qualification or stress tier above.
+                set(_crexx_tier performance-measurement)
+                set_property(TEST "${_crexx_test}" PROPERTY RUN_SERIAL TRUE)
             elseif("qualification" IN_LIST _crexx_labels OR
                    "install" IN_LIST _crexx_labels OR
                    "package" IN_LIST _crexx_labels OR

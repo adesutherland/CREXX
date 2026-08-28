@@ -2,7 +2,7 @@
 
 ## Status and programme context
 
-- **Status:** revised plan approved; P2A started
+- **Status:** P2A locally complete; P2B active
 - **Planning branch:** `temp/newbuild`
 - **Current `develop` incorporated:** `origin/develop` through
   `ee8e8f8fefbdc3ee9217f2ef4dd7edf0c8d288e6`
@@ -179,48 +179,33 @@ clean tree; essential and smoke preparation do not pull unrelated comprehensive
 or qualification-only artifacts; CTest performs no build and leaves the active
 Ninja log byte-identical.
 
-**Progress P2A.2a (2026-08-28): essential closure locally complete; P2A.2
-remains active.** Test-generating helpers can now register their exact artifact,
-runner and linker prerequisites while each directory assigns final QA tiers;
-the complete tree attaches those names only after all producer targets exist.
-The first dependency review found that eight Level G integer/decimal runtime
-contracts and their source-surface check were classified as essential merely
-because they carried the topical `contract` label. They are now explicitly
-smoke tests. The essential tier is consequently three short toolchain checks
-with four preparation targets: `rxc`, `rxas`, `crexx-contract` and
-`test_rxsha256`. All three tests pass, the preparation target immediately
-repeats with `ninja: no work to do`, and the Ninja log is byte-identical before
-and after CTest. Smoke preparation mapping is the next P2A.2 slice. No smoke,
-broad CTest, stress, sanitizer, performance measurement or hosted workflow was
-run for P2A.2a.
+**P2A result (2026-08-28): locally complete; hosted acceptance remains in
+P2C.** The ten product-stage targets and all six QA preparation targets now
+select real CMake dependencies without owning outputs or starting nested
+builds. Essential and smoke remain cumulative and narrow; comprehensive adds
+normal correctness only; qualification and stress are independent. The old
+`qa-prep` name remains a compatibility aggregate for all non-measurement
+closures.
 
-**Progress P2A.2b (2026-08-28): smoke closure locally complete; P2A.2 remains
-active.** `qa-smoke` now depends on `qa-prep-smoke`, which includes the three
-essential tests and prepares the exact executable, runner and generated-image
-closure for 147 smoke tests. Common prerequisites are declared with the
-existing smoke list, so the test inventory is not duplicated. The one smoke
-test without a preparation target is a source-only contract-surface check.
+The clean-tree proof exposed and closed three classes of warm-tree assumption:
+false `_prev_target` chains between independent generated fixtures, undeclared
+default-provider inputs of the `crexx` driver, and hand-written tests whose
+runtime command named a generated image or harness without a preparation edge.
+The final fresh comprehensive preparation completed 1,788 actions at 30 jobs.
+The correctness selection passed as 2,124 original passes plus a 54-test rerun
+after the newly exposed fixtures were declared. Qualification passed 85/85.
+Direct CTest left `.ninja_log` byte-identical.
 
-The first preparation proof exposed historical `_prev_target` chains across
-otherwise independent classlib, Level B, Level C, Level G, Level L and
-RexxScript test fixtures. Selecting a late smoke fixture consequently generated
-many earlier comprehensive fixtures and suppressed useful compiler/assembler
-parallelism. Those false ordering edges have been removed; real test-specific
-dependencies remain. The reachable `qa-smoke` graph fell from 3,296 to 2,135
-nodes and still passes `ninja -t missingdeps`.
-
-A fresh Debug scratch tree at 30 jobs then exposed a second warm-tree
-dependency: the `crexx` driver names the treemap, linked-list and key-access
-provider images in every default runtime composition but did not depend on
-their dynamic and static producer targets. The direct `crexx` dependency now
-matches that runtime composition. In the same initially empty scratch tree,
-the 835-action preparation completed, the 10 newly declared provider actions
-completed, and an immediate repeat reported `ninja: no work to do` in 0.07
-seconds. The final essential-plus-smoke selection passed all 150 tests at 30
-jobs and left `.ninja_log` byte-identical. The observed preparation and test
-times are indicative only because other activity was running on the host. No
-stress, sanitizer, performance-measurement or hosted workflow was run for
-P2A.2b.
+Timing-oriented tests carrying the topical `performance` label now default to
+the serial measurement tier unless they explicitly declare qualification or
+stress. The current inventory is 3 essential, 147 smoke, 2,030 comprehensive,
+85 qualification, 7 stress and 103 measurement tests. Stress and measurement
+preparation both completed and immediately repeated with no work; their
+workloads were deliberately not executed on the active host. Every tier and
+the full 5,790-node graph pass `ninja -t missingdeps`. The catalogue reports no
+nested active-tree build, and its manifest projection is schema-valid and
+graph-clean. Elapsed times remain indicative only because the host was shared;
+no sanitizer, performance measurement or hosted workflow was run in P2A.
 
 ### P2B — minimum deterministic import closure
 
