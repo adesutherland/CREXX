@@ -4093,6 +4093,8 @@ static importable_file* importable_file_f(char* name, file_type type, char *loca
     file->mtime = read_importable_mtime(location, name);
     file->namespace_name = 0;
     file->header_scanned = 0;
+    file->root_kind = RXCP_IMPORT_ROOT_BINARY;
+    file->root_index = 0;
     file->type = type;
     return file;
 }
@@ -4278,7 +4280,8 @@ static char **snapshot_directory_names(const char *directory, char *prefix, char
 
 /* Get a list of files of a type in a directory (can be null), skipping skip_name (can be null) */
 static void list_files_in_dir(char *directory, file_type type, char* skip_name, char *skip_module,
-                              importable_file ***list, size_t *number, int debug_mode, char source_root) {
+                              importable_file ***list, size_t *number, int debug_mode, char source_root,
+                              RxcpImportRootKind root_kind, size_t root_index) {
 
     char **names;
     size_t name_count;
@@ -4315,6 +4318,8 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
             file = importable_file_f(name, type, directory);
             if (file) {
                 file->source_root = source_root;
+                file->root_kind = root_kind;
+                file->root_index = root_index;
                 add_file_to_list(file, number, list);
             }
         }
@@ -4324,7 +4329,8 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
 
 static void list_source_files_in_dir(char *directory, const char *extension, RexxLevel default_level,
                                      char* skip_name, char *skip_module,
-                                     importable_file ***list, size_t *number, int debug_mode, char source_root) {
+                                     importable_file ***list, size_t *number, int debug_mode, char source_root,
+                                     RxcpImportRootKind root_kind, size_t root_index) {
 
     void *dir_ptr;
     char* name;
@@ -4341,6 +4347,8 @@ static void list_source_files_in_dir(char *directory, const char *extension, Rex
             if (file) {
                 file->source_root = source_root;
                 file->source_default_level = default_level;
+                file->root_kind = root_kind;
+                file->root_index = root_index;
                 add_file_to_list(file, number, list);
             }
         }
@@ -4360,20 +4368,29 @@ static importable_file *find_stage_module(importable_file **list, int stage, con
     return 0;
 }
 
-static void add_unique_stage_file(importable_file ***list, size_t *number, importable_file *file) {
+static void add_unique_stage_file(Context *context, importable_file ***list, size_t *number, importable_file *file) {
     int stage;
+    importable_file *existing;
 
     if (!list || !number || !file) return;
     stage = importable_file_stage(file);
-    if (find_stage_module(*list, stage, file->name)) {
+    existing = find_stage_module(*list, stage, file->name);
+    if (existing) {
+        const char *reason;
+
+        reason = existing->root_kind == file->root_kind && existing->root_index == file->root_index ?
+                 "earlier-same-stage-candidate" : "earlier-ordered-root";
+        rxcp_import_report_record(context, file, "rejected", reason, 0);
         free_importable_file(file);
         return;
     }
     add_file_to_list(file, number, list);
+    rxcp_import_report_record(context, file, "admitted", "first-candidate-for-stage", 0);
 }
 
-static void collect_root_files(char *directory, file_type type, char *skip_name, char *skip_module,
-                               importable_file ***list, size_t *number, int debug_mode, char source_root) {
+static void collect_root_files(Context *context, char *directory, file_type type, char *skip_name, char *skip_module,
+                               importable_file ***list, size_t *number, int debug_mode, char source_root,
+                               RxcpImportRootKind root_kind, size_t root_index) {
     importable_file **root_list;
     size_t root_count;
     size_t i;
@@ -4383,16 +4400,18 @@ static void collect_root_files(char *directory, file_type type, char *skip_name,
     root_list[0] = 0;
     root_count = 0;
 
-    list_files_in_dir(directory, type, skip_name, skip_module, &root_list, &root_count, debug_mode, source_root);
+    list_files_in_dir(directory, type, skip_name, skip_module, &root_list, &root_count,
+                      debug_mode, source_root, root_kind, root_index);
     for (i = 0; i < root_count; i++) {
-        add_unique_stage_file(list, number, root_list[i]);
+        add_unique_stage_file(context, list, number, root_list[i]);
     }
     free(root_list);
 }
 
-static void collect_source_root_files(char *directory, const RxcpSourceExtension *extension,
+static void collect_source_root_files(Context *context, char *directory, const RxcpSourceExtension *extension,
                                       char *skip_name, char *skip_module,
-                                      importable_file ***list, size_t *number, int debug_mode, char source_root) {
+                                      importable_file ***list, size_t *number, int debug_mode, char source_root,
+                                      RxcpImportRootKind root_kind, size_t root_index) {
     importable_file **root_list;
     size_t root_count;
     size_t i;
@@ -4405,15 +4424,18 @@ static void collect_source_root_files(char *directory, const RxcpSourceExtension
     root_count = 0;
 
     list_source_files_in_dir(directory, extension->extension, extension->default_level,
-                             skip_name, skip_module, &root_list, &root_count, debug_mode, source_root);
+                             skip_name, skip_module, &root_list, &root_count, debug_mode, source_root,
+                             root_kind, root_index);
     for (i = 0; i < root_count; i++) {
-        add_unique_stage_file(list, number, root_list[i]);
+        add_unique_stage_file(context, list, number, root_list[i]);
     }
     free(root_list);
 }
 
-static void collect_binary_root_files(char *directory, char *skip_module, importable_file ***list,
-                                      size_t *number, int debug_mode, int auto_import_rxas) {
+static void collect_binary_root_files(Context *context, char *directory, char *skip_module,
+                                      importable_file ***list, size_t *number, int debug_mode,
+                                      int auto_import_rxas, RxcpImportRootKind root_kind,
+                                      size_t root_index) {
     importable_file **root_list;
     size_t root_count;
     size_t i;
@@ -4423,7 +4445,8 @@ static void collect_binary_root_files(char *directory, char *skip_module, import
     root_list[0] = 0;
     root_count = 0;
 
-    list_files_in_dir(directory, RXBIN_FILE, 0, skip_module, &root_list, &root_count, debug_mode, 0);
+    list_files_in_dir(directory, RXBIN_FILE, 0, skip_module, &root_list, &root_count,
+                      debug_mode, 0, root_kind, root_index);
     if (auto_import_rxas) {
         importable_file **rxas_list;
         size_t rxas_count;
@@ -4436,13 +4459,16 @@ static void collect_binary_root_files(char *directory, char *skip_module, import
         }
         rxas_list[0] = 0;
         rxas_count = 0;
-        list_files_in_dir(directory, RXAS_FILE, 0, skip_module, &rxas_list, &rxas_count, debug_mode, 0);
+        list_files_in_dir(directory, RXAS_FILE, 0, skip_module, &rxas_list, &rxas_count,
+                          debug_mode, 0, root_kind, root_index);
 
         for (i = 0; i < rxas_count; i++) {
             importable_file *existing = find_stage_module(root_list, 2, rxas_list[i]->name);
             if (existing) {
                 if (should_replace_importable_candidate(existing, rxas_list[i])) {
                     size_t j;
+                    rxcp_import_report_record(context, existing, "rejected", "replaced-by-newer-mtime", 0);
+                    rxcp_import_report_record(context, rxas_list[i], "replaced", "newer-mtime", existing);
                     for (j = 0; root_list[j]; j++) {
                         if (root_list[j] == existing) {
                             root_list[j] = rxas_list[i];
@@ -4451,6 +4477,10 @@ static void collect_binary_root_files(char *directory, char *skip_module, import
                         }
                     }
                 } else {
+                    const char *reason;
+                    reason = rxas_list[i]->mtime == existing->mtime ?
+                             "kind-tiebreak-rxbin" : "older-mtime";
+                    rxcp_import_report_record(context, rxas_list[i], "rejected", reason, 0);
                     free_importable_file(rxas_list[i]);
                 }
             } else {
@@ -4461,7 +4491,7 @@ static void collect_binary_root_files(char *directory, char *skip_module, import
     }
 
     for (i = 0; i < root_count; i++) {
-        add_unique_stage_file(list, number, root_list[i]);
+        add_unique_stage_file(context, list, number, root_list[i]);
     }
     free(root_list);
 }
@@ -4488,29 +4518,52 @@ importable_file **rxfl_lst(Context *context) {
     }
 
     for (e = 0; e < source_extension_count; e++) {
-        collect_source_root_files(context->location, &source_extensions[e], context->file_name, skip_module,
-                                  &list, &number, context->debug_mode, 1);
+        collect_source_root_files(context, context->location, &source_extensions[e], context->file_name, skip_module,
+                                  &list, &number, context->debug_mode, 1,
+                                  RXCP_IMPORT_ROOT_PRIMARY_SOURCE, 0);
     }
     if (context->source_import_locations) {
         for (d = 0; context->source_import_locations[d]; d++) {
             if (context->debug_mode >= 2) fprintf(stderr, "Scanning source import root: %s\n", context->source_import_locations[d]);
             for (e = 0; e < source_extension_count; e++) {
-                collect_source_root_files(context->source_import_locations[d], &source_extensions[e], 0, skip_module,
-                                          &list, &number, context->debug_mode, 1);
+                collect_source_root_files(context, context->source_import_locations[d], &source_extensions[e], 0, skip_module,
+                                          &list, &number, context->debug_mode, 1,
+                                          RXCP_IMPORT_ROOT_SOURCE, d);
             }
         }
     }
 
     if (context->import_locations) {
         for (d = 0; context->import_locations[d]; d++) {
+            RxcpImportRootKind root_kind;
+            size_t root_index;
+
             if (context->debug_mode >= 2) fprintf(stderr, "Scanning binary import root: %s\n", context->import_locations[d]);
-            collect_binary_root_files(context->import_locations[d], skip_module, &list, &number, context->debug_mode, context->auto_import_rxas);
+            root_kind = RXCP_IMPORT_ROOT_BINARY;
+            root_index = d;
+            if (context->executable_import_included && d == context->executable_import_root_index) {
+                root_kind = RXCP_IMPORT_ROOT_EXECUTABLE;
+                root_index = 0;
+            }
+            collect_binary_root_files(context, context->import_locations[d], skip_module, &list, &number,
+                                      context->debug_mode, context->auto_import_rxas,
+                                      root_kind, root_index);
         }
     }
 
     if (context->import_locations) {
         for (d = 0; context->import_locations[d]; d++) {
-            collect_root_files(context->import_locations[d], NATIVE_FILE, 0, skip_module, &list, &number, context->debug_mode, 0);
+            RxcpImportRootKind root_kind;
+            size_t root_index;
+
+            root_kind = RXCP_IMPORT_ROOT_BINARY;
+            root_index = d;
+            if (context->executable_import_included && d == context->executable_import_root_index) {
+                root_kind = RXCP_IMPORT_ROOT_EXECUTABLE;
+                root_index = 0;
+            }
+            collect_root_files(context, context->import_locations[d], NATIVE_FILE, 0, skip_module,
+                               &list, &number, context->debug_mode, 0, root_kind, root_index);
         }
     }
 

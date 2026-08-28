@@ -35,11 +35,18 @@ its resolution report and content-digested providers. `--strict` also makes
 current graph findings fail the command.
 
 `import-resolution-report.schema.json` defines the canonical observe/enforce
-evidence that `rxc` will emit in the next bounded slice. Candidate discovery
-events are separate from final provider bindings: recording that a source,
-RXAS, RXBIN or native candidate was admitted or replaced is not by itself a
-claim that it supplied a requested symbol. The initial schema does not change
-the compiler's current search or precedence behaviour.
+evidence. `rxc --import-resolution-report path` now emits the first
+observe-only slice atomically. It records candidate admission, rejection and
+same-root replacement at the resolver decision point, followed by the
+post-collapse candidate set. Search roots and candidate paths use logical root
+identifiers such as `@source/0`, `@binary/0`, and `@executable/0`, so reports
+remain comparable across checkout locations; the paired action manifest owns
+the physical root mapping. Candidate discovery events are separate from final
+provider bindings: recording that a source, RXAS, RXBIN or native candidate
+was admitted or replaced is not by itself a claim that it supplied a requested
+symbol. Accordingly, `provider_bindings` remains empty in this first slice.
+The report does not change the compiler's current search or precedence
+behaviour.
 
 Example after a trace-enabled configure:
 

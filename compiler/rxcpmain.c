@@ -160,6 +160,7 @@ static void help() {
             "  --import ns     Inject a file-level IMPORT namespace (repeatable)\n"
             "  --import-rxas   Enable auto-import scanning of .rxas in binary roots\n"
             "  --no-exe-import Do not add the executable directory to binary roots\n"
+            "  --import-resolution-report path  Write observe-only import selection JSON\n"
             "  --diagnostics mode  Diagnostic rendering: localized or raw\n"
             "  --diagnostic-locale locale  Diagnostic locale such as en_GB or en_US\n"
             "  --no-localisation  Use raw diagnostic code/parameter rendering\n"
@@ -252,6 +253,9 @@ void fre_cntx(Context *context)  {
         free(context->source_import_locations);
     }
 
+    rxcp_import_report_free(context);
+    if (context->import_resolution_report_path) free(context->import_resolution_report_path);
+
     source_tree_free(context);
 
     /* The flow overlay points at AST/symbol objects but does not own them. */
@@ -340,11 +344,13 @@ int rxcmain(int argc, char *argv[]) {
     char *source_import_locations = 0;
     char *exe_path = 0;
     char *combined_import_locations = 0;
+    char *import_resolution_report_path = 0;
     char c;
     int do_optimise = 1;
     int disable_exits = 0;
     int auto_import_rxas = 0;
     int add_executable_import = 1;
+    size_t executable_import_root_index = 0;
     char *file_directory = 0;
     char *input_source_extension = 0;
     char *srcmap_cleaned = 0;
@@ -426,6 +432,15 @@ int rxcmain(int argc, char *argv[]) {
 
         if (strcmp(argv[i], "--no-exe-import") == 0) {
             add_executable_import = 0;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--import-resolution-report") == 0) {
+            i++;
+            if (i >= argc) {
+                error_and_exit(2, "Missing path after --import-resolution-report");
+            }
+            import_resolution_report_path = argv[i];
             continue;
         }
 
@@ -560,6 +575,15 @@ int rxcmain(int argc, char *argv[]) {
      * library self-builds can suppress that implicit root so an older product
      * image cannot compete with the current source/interface set. */
     if (add_executable_import) {
+        const char *root_cursor;
+
+        executable_import_root_index = 0;
+        if (import_locations && import_locations[0]) {
+            executable_import_root_index = 1;
+            for (root_cursor = import_locations; *root_cursor; root_cursor++) {
+                if (*root_cursor == ';') executable_import_root_index++;
+            }
+        }
         exe_path = exepath();
         if (import_locations) {
             char *user_import_locations = import_locations;
@@ -675,6 +699,16 @@ int rxcmain(int argc, char *argv[]) {
     context->optimise = do_optimise;
     context->disable_exits = disable_exits || (getenv("RXCP_DISABLE_EXIT") != NULL);
     context->auto_import_rxas = (char) auto_import_rxas;
+    context->executable_import_included = (char)add_executable_import;
+    context->executable_import_root_index = executable_import_root_index;
+    if (import_resolution_report_path) {
+        context->import_resolution_report_path = strdup(import_resolution_report_path);
+        if (!context->import_resolution_report_path) {
+            RX_PANIC_OOM("strdup import resolution report path",
+                         strlen(import_resolution_report_path) + 1,
+                         import_resolution_report_path);
+        }
+    }
     if (file_directory) context->location = strdup(file_directory);
     else context->location = location ? strdup(location) : 0;
 
@@ -931,6 +965,12 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Close outfile */
     if (outFile) fclose(outFile);
+
+    if (rxcp_import_report_write(context) != 0) {
+        fprintf(stderr, "Can't write import resolution report %s\n",
+                context->import_resolution_report_path ? context->import_resolution_report_path : "");
+        errors = 1;
+    }
 
     /* Free context */
     if (context->file_name) free(context->file_name);

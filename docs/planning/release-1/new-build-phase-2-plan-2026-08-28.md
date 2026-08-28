@@ -212,6 +212,26 @@ validator rule.
 
 ### Wave P2.3 — record `rxc` import resolution at the decision point
 
+**Progress (2026-08-28): first observe-only resolver slice complete.** `rxc`
+now accepts `--import-resolution-report <path>` and atomically emits canonical
+v1 JSON from the existing resolver. Candidate events distinguish admission,
+ordered-root rejection, same-root replacement, older-mtime rejection and the
+RXBIN-on-equal-mtime tie-break. The post-collapse candidate set is recorded
+with SHA-256 digest status, while logical root identifiers keep the report
+independent of the checkout path and preserve executable-directory provenance.
+The focused fixture captures a newer RXAS replacing RXBIN in one root, an
+earlier ordered root defeating a newer executable-root artifact, and an exact
+mtime tie retaining RXBIN. A CLI fixture separately proves atomic publication,
+`--no-exe-import`, schema identity and the observe-only empty
+`provider_bindings` boundary. Five focused import/report tests pass, including
+the existing concurrent directory-snapshot test. No broad build, sanitizer,
+performance measurement or timing comparison was run locally.
+
+This slice does not yet record final namespace/symbol-to-provider bindings,
+emit a compiler depfile, enforce expected providers, or replace the current
+timestamp-sensitive policy. Those remain the next reviewed P2.3 work; the
+wave gate below is therefore not yet complete.
+
 **Implementation note (2026-08-28):** read-only source inspection confirms
 that discovery currently scans the primary/source roots before binary roots,
 keeps the first same-stage module found across ordered roots, and, when

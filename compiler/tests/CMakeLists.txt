@@ -133,6 +133,65 @@ set_tests_properties(rxc_help_no_exe_import PROPERTIES
         PASS_REGULAR_EXPRESSION "--no-exe-import"
         LABELS "compiler;imports")
 
+add_test(NAME rxc_help_import_resolution_report COMMAND $<TARGET_FILE:rxc> -h)
+set_tests_properties(rxc_help_import_resolution_report PROPERTIES
+        PASS_REGULAR_EXPRESSION "--import-resolution-report"
+        LABELS "compiler;imports;newbuild")
+
+add_executable(test_import_resolution_report test_import_resolution_report.c)
+target_link_libraries(test_import_resolution_report PRIVATE rxclib)
+target_include_directories(test_import_resolution_report PRIVATE ${CMAKE_SOURCE_DIR}/compiler)
+add_test(NAME import_resolution_report COMMAND test_import_resolution_report)
+set_tests_properties(import_resolution_report PROPERTIES LABELS "compiler;imports;newbuild;stage0")
+
+set(RXC_IMPORT_RESOLUTION_REPORT_CLI_SCRIPT
+        "${CMAKE_CURRENT_BINARY_DIR}/rxc_import_resolution_report_cli.cmake")
+file(GENERATE OUTPUT "${RXC_IMPORT_RESOLUTION_REPORT_CLI_SCRIPT}" CONTENT
+"set(report \"${CMAKE_CURRENT_BINARY_DIR}/rxc-import-resolution-report-cli.json\")
+file(REMOVE \"\${report}\" \"\${report}.tmp\")
+execute_process(
+    COMMAND \"$<TARGET_FILE:rxc>\"
+            -x
+            --no-exe-import
+            --import-resolution-report \"\${report}\"
+            -o \"${CMAKE_CURRENT_BINARY_DIR}/rxc-import-resolution-report-cli\"
+            \"${CMAKE_CURRENT_SOURCE_DIR}/import_resolution_fixture/consumer.crexx\"
+    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
+    OUTPUT_VARIABLE out
+    ERROR_VARIABLE err
+    RESULT_VARIABLE res
+)
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"rxc report fixture failed with exit code \${res}.\\nSTDOUT:\\n\${out}\\nSTDERR:\\n\${err}\")
+endif()
+file(READ \"\${report}\" json)
+string(JSON schema_version GET \"\${json}\" schema_version)
+string(JSON report_status GET \"\${json}\" status)
+string(JSON executable_directory GET \"\${json}\" options executable_directory)
+string(JSON provider_count LENGTH \"\${json}\" provider_bindings)
+if(NOT schema_version STREQUAL \"crexx.import-resolution-report/v1\")
+  message(FATAL_ERROR \"Unexpected import report schema: \${schema_version}\")
+endif()
+if(NOT report_status STREQUAL \"observed\")
+  message(FATAL_ERROR \"Unexpected import report status: \${report_status}\")
+endif()
+if(NOT executable_directory STREQUAL \"excluded\")
+  message(FATAL_ERROR \"--no-exe-import was not represented in the report\")
+endif()
+if(NOT provider_count EQUAL 0)
+  message(FATAL_ERROR \"Observe-only fixture unexpectedly emitted final provider bindings\")
+endif()
+if(EXISTS \"\${report}.tmp\")
+  message(FATAL_ERROR \"Import report temporary sibling remained after publication\")
+endif()
+file(REMOVE \"\${report}\" \"\${report}.tmp\"
+            \"${CMAKE_CURRENT_BINARY_DIR}/rxc-import-resolution-report-cli.rxas\")
+")
+add_test(NAME rxc_import_resolution_report_cli
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_IMPORT_RESOLUTION_REPORT_CLI_SCRIPT}")
+set_tests_properties(rxc_import_resolution_report_cli PROPERTIES
+        LABELS "compiler;imports;newbuild;stage0")
+
 add_executable(test_rxcp_super_combiner test_rxcp_super_combiner.c)
 target_link_libraries(test_rxcp_super_combiner PRIVATE rxclib)
 target_include_directories(test_rxcp_super_combiner PRIVATE ${CMAKE_SOURCE_DIR}/compiler)

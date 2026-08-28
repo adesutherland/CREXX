@@ -33,6 +33,7 @@
 #include "rxcp_token.h"
 #include "rxcp_ast.h"
 #include "rxcp_sym.h"
+#include "rxcp_import_report.h"
 #include <stdint.h>
 #include <time.h>
 
@@ -58,6 +59,10 @@ struct Context {
     char import_locations_owns_buffer;
     char** source_import_locations;
     char source_import_locations_owns_buffer;
+    char *import_resolution_report_path;
+    RxcpImportReport *import_resolution_report;
+    char executable_import_included;
+    size_t executable_import_root_index;
     importable_file **importable_file_list;
     FILE *file_pointer;
     FILE *traceFile;
@@ -214,6 +219,8 @@ struct importable_file {
     time_t mtime;
     char *namespace_name;
     char header_scanned;
+    RxcpImportRootKind root_kind;
+    size_t root_index;
 };
 
 /* RXC Main Function */

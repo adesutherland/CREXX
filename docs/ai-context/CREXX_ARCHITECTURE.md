@@ -406,6 +406,19 @@ native filesystem enumeration order or concurrent generated-library
 publication from silently changing the imported contract set without letting
 continuous unrelated activity block compilation.
 
+`rxc --import-resolution-report <path>` writes an observe-only JSON record of
+those discovery decisions. The v1 report records ordered logical roots,
+candidate kinds and mtimes, admission/rejection/replacement reasons, content
+digests, executable-directory visibility, and the post-collapse candidate
+set. Logical identifiers (`@primary-source/0`, `@source/N`, `@binary/N`, and
+`@executable/0`) keep reports independent of the checkout path; the build
+manifest maps them to physical roots. Publication uses a temporary sibling and
+an atomic replacement. This initial report deliberately leaves
+`provider_bindings` empty: candidate admission is not proof that a namespace
+or symbol was ultimately supplied by that file. It is evidence of current
+selection behaviour only and does not enforce an expected provider or alter
+the timestamp/tie-break policy.
+
 Compiler-generated consumer `.rxas` treats imported declaration blocks as a
 runtime dependency snapshot, not as a copy of the provider's full public
 surface. The provider artifact's exports and metadata remain definitive. When
