@@ -133,7 +133,6 @@ foreach(_packed_numeric_runner IN LISTS _math_numeric_runners)
     FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
 endforeach()
 
-unset(_prev_target)
 foreach(_binfile IN LISTS REXXBINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
 
@@ -147,10 +146,9 @@ foreach(_binfile IN LISTS REXXBINS)
     TARGET_GROUP "${_basename}"
     IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
     RXC_FLAGS -x
-    DEPENDS library classlib rxfnsg "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin" "${_rexx_file}" ${_prev_target}
+    DEPENDS library classlib rxfnsg "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin" "${_rexx_file}"
     RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib ${RXFNSG_RPATH}
   )
-  set(_prev_target "${_basename}_noopt_artifact" "${_basename}_opt_artifact")
 endforeach()
 
 set_tests_properties(ts_llm_ollama_noopt ts_llm_ollama_opt

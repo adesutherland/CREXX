@@ -600,7 +600,7 @@ if(BUILD_TESTING)
                     --parallel "${CREXX_QA_CTEST_JOBS}"
                     --output-on-failure
                     --label-regex "^(essential|smoke)$"
-            DEPENDS qa-prep
+            DEPENDS qa-prep-smoke
             USES_TERMINAL
             VERBATIM
             COMMENT "Running essential and smoke QA")

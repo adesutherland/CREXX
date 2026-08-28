@@ -194,6 +194,34 @@ and after CTest. Smoke preparation mapping is the next P2A.2 slice. No smoke,
 broad CTest, stress, sanitizer, performance measurement or hosted workflow was
 run for P2A.2a.
 
+**Progress P2A.2b (2026-08-28): smoke closure locally complete; P2A.2 remains
+active.** `qa-smoke` now depends on `qa-prep-smoke`, which includes the three
+essential tests and prepares the exact executable, runner and generated-image
+closure for 147 smoke tests. Common prerequisites are declared with the
+existing smoke list, so the test inventory is not duplicated. The one smoke
+test without a preparation target is a source-only contract-surface check.
+
+The first preparation proof exposed historical `_prev_target` chains across
+otherwise independent classlib, Level B, Level C, Level G, Level L and
+RexxScript test fixtures. Selecting a late smoke fixture consequently generated
+many earlier comprehensive fixtures and suppressed useful compiler/assembler
+parallelism. Those false ordering edges have been removed; real test-specific
+dependencies remain. The reachable `qa-smoke` graph fell from 3,296 to 2,135
+nodes and still passes `ninja -t missingdeps`.
+
+A fresh Debug scratch tree at 30 jobs then exposed a second warm-tree
+dependency: the `crexx` driver names the treemap, linked-list and key-access
+provider images in every default runtime composition but did not depend on
+their dynamic and static producer targets. The direct `crexx` dependency now
+matches that runtime composition. In the same initially empty scratch tree,
+the 835-action preparation completed, the 10 newly declared provider actions
+completed, and an immediate repeat reported `ninja: no work to do` in 0.07
+seconds. The final essential-plus-smoke selection passed all 150 tests at 30
+jobs and left `.ninja_log` byte-identical. The observed preparation and test
+times are indicative only because other activity was running on the host. No
+stress, sanitizer, performance-measurement or hosted workflow was run for
+P2A.2b.
+
 ### P2B — minimum deterministic import closure
 
 **Programme purpose:** ensure that the CMake reference/bootstrap build does not

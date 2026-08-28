@@ -84,6 +84,9 @@ configure_linker_for_static_lib(crexx fs)
 target_link_libraries(crexx rxvml rxpashim)
 
 add_dependencies(crexx rxvme rxvml rxpa avl_tree rxbin platform
-        fs fs_static _hash _hash_static float float_static)
+        fs fs_static _hash _hash_static float float_static
+        _treemap _treemap_static
+        _llist _llist_static
+        _keyaccess _keyaccess_static)
 
 add_subdirectory(tests)

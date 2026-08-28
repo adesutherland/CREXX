@@ -240,7 +240,6 @@ add_custom_command(
 add_custom_target(ts_loadmodule_provider_artifact DEPENDS ${_loadmodule_provider})
 add_dependencies(testbifs ts_loadmodule_provider_artifact)
 
-unset(_prev_target)
 foreach(_binfile ${REXXBINS})
     get_filename_component(_basename ${_binfile} NAME_WE)
 
@@ -301,13 +300,12 @@ foreach(_binfile ${REXXBINS})
             TARGET_GROUP ${_basename}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
             RXC_FLAGS ${_rxc_flags}
-            DEPENDS library ${_rexx_dep} ${_prev_target} ${_extra_depends}
+            DEPENDS library ${_rexx_dep} ${_extra_depends}
             RUNTIME_ARGS ${_runtime_args}
             EXPECTED_EXIT_CODE "${_expected_exit_code}"
             EXPECTED_FAILURE_DESCRIPTION "${_expected_failure_description}"
             ${_pass_test_name_argument}
     )
-    set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
 
 # CRI-09 is an integration-boundary contract, so retain the same optimized and

@@ -66,6 +66,7 @@ crexx_label_smoke_tests(
         test_rxas_04_errors
         rxas_reject_non_source_mnemonics
         rxas_constant_aliases
+        PREP_TARGETS parser_tester rxas
 )
 
 crexx_finalize_directory_qa_tiers()

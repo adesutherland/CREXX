@@ -486,6 +486,7 @@ crexx_label_smoke_tests(
         crexx_native_explicit_header_smoke
         crexx_native_rx_hash_provider
         crexx_native_default_link_strip
+        PREP_TARGETS crexx rxdas
 )
 
 function(crexx_isolate_bin_test_environment)

@@ -16,7 +16,6 @@ set(RXFNSL_RPATH ${CMAKE_BINARY_DIR}/bin/rxfnsl)
 
 add_custom_target(testrxfnsl ALL)
 
-unset(_prev_target)
 foreach(_binfile IN LISTS REXXBINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
 
@@ -30,10 +29,9 @@ foreach(_binfile IN LISTS REXXBINS)
     TARGET_GROUP "${_basename}"
     IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
     RXC_FLAGS -x
-    DEPENDS library rxfnsl "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin" "${_rexx_file}" ${_prev_target}
+    DEPENDS library rxfnsl "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin" "${_rexx_file}"
     RUNTIME_ARGS ${LIBRPATH} ${RXFNSL_RPATH}
   )
-  set(_prev_target "${_basename}_noopt_artifact" "${_basename}_opt_artifact")
 endforeach()
 
 set_tests_properties(ts_tinyexpr_noopt ts_tinyexpr_opt

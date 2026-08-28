@@ -2459,6 +2459,21 @@ crexx_label_smoke_tests(
         compact_format_check
         reentrancy_check
         db_decimal_archive_link
+        PREP_TARGETS
+            crexxsaa_tool
+            test_rxpa_utf_validation
+            ts_regvalue_tester
+            run_tests_signals
+            run_tests_register_flags
+            run_tests_utf_flags
+            run_tests_references
+            run_tests_basic
+            run_tests_string
+            run_tests_decimal
+            run_tests_interfaces
+            test_compact_format
+            test_reentrancy
+            test_db_decimal_archive_link_bin
 )
 
 crexx_finalize_directory_qa_tiers()

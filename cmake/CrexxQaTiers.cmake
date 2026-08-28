@@ -1,5 +1,24 @@
 include_guard(GLOBAL)
 
+# Hand-written tests do not pass through the runtime-matrix helpers that can
+# infer their generated artifact and runner prerequisites. Let their owning
+# directory declare those producer targets explicitly while the test and the
+# producer are still easy to understand together.
+function(crexx_register_test_prep_targets)
+    cmake_parse_arguments(CREXX "" "" "TESTS;TARGETS" ${ARGN})
+    if(CREXX_UNPARSED_ARGUMENTS OR NOT CREXX_TESTS OR NOT CREXX_TARGETS)
+        message(FATAL_ERROR
+                "crexx_register_test_prep_targets requires TESTS and TARGETS")
+    endif()
+
+    foreach(_crexx_test IN LISTS CREXX_TESTS)
+        if(TEST "${_crexx_test}")
+            set_property(TEST "${_crexx_test}" APPEND PROPERTY
+                    CREXX_PREP_TARGETS ${CREXX_TARGETS})
+        endif()
+    endforeach()
+endfunction()
+
 # Shared test helpers use this to request one final pass after the caller's
 # CMakeLists has declared all of its direct and generated tests.
 function(crexx_schedule_directory_qa_tier_finalization)

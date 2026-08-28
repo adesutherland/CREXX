@@ -66,7 +66,6 @@ set(CLASSLIB_NATIVE_RUNTIMES
 
 add_custom_target(testclasses ALL)
 
-unset(_prev_target)
 foreach(_binfile ${REXXBINS})
     get_filename_component(_basename ${_binfile} NAME_WE)
 
@@ -83,10 +82,9 @@ foreach(_binfile ${REXXBINS})
             TARGET_GROUP ${_basename}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
             RXC_FLAGS ${_rxc_flags}
-            DEPENDS library classlib ${LIBRPATH_RXBIN} ${CLASSLIB_RXBIN} ${_rexx_dep} ${_prev_target}
+            DEPENDS library classlib ${LIBRPATH_RXBIN} ${CLASSLIB_RXBIN} ${_rexx_dep}
             RUNTIME_ARGS ${CLASSLIB_RUNTIMES}
     )
-    set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
 
 crexx_label_concurrency_tests(SP03

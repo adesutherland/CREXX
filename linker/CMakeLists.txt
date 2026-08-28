@@ -297,6 +297,16 @@ crexx_label_smoke_tests(
         rxlink_format_check
         rxlink_signature_mismatch_error
         rxlink_rxdas_inline_preserve_smoke
+        PREP_TARGETS
+            tests_linked_success_artifact
+            tests_linked_omit_artifact
+            tests_linked_interface_artifact
+            test_linked_format
+            tests_link_signature_bad_impl_fixture
+            tests_linked_inline_artifact
+            rxdas
+            rxvm
+            rxlink
 )
 
 crexx_finalize_directory_qa_tiers()

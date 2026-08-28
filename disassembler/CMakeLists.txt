@@ -195,6 +195,11 @@ crexx_label_smoke_tests(
         rxdas_roundtrip_interfaces
         rxdas_graph_error
         rxdas_dump_support
+        PREP_TARGETS
+            rxdas_roundtrip_basic_artifact
+            rxdas_roundtrip_interfaces_artifact
+            rxdas_graph_error_artifact
+            test_disassembler_dump
 )
 
 crexx_finalize_directory_qa_tiers()

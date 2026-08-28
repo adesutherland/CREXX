@@ -1,7 +1,12 @@
 function(crexx_label_smoke_tests)
-    foreach(_crexx_smoke_test IN LISTS ARGN)
+    cmake_parse_arguments(CREXX "" "" "PREP_TARGETS" ${ARGN})
+    foreach(_crexx_smoke_test IN LISTS CREXX_UNPARSED_ARGUMENTS)
         if(TEST "${_crexx_smoke_test}")
             set_property(TEST "${_crexx_smoke_test}" APPEND PROPERTY LABELS smoke)
+            if(CREXX_PREP_TARGETS)
+                set_property(TEST "${_crexx_smoke_test}" APPEND PROPERTY
+                        CREXX_PREP_TARGETS ${CREXX_PREP_TARGETS})
+            endif()
         else()
             message(STATUS "Smoke test '${_crexx_smoke_test}' is not present in this configuration; skipping")
         endif()

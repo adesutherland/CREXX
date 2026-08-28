@@ -295,7 +295,9 @@ foreach(_k05_runner IN ITEMS rxvm)
     endforeach()
 endforeach()
 
-crexx_label_smoke_tests(rxas_optimizer_copy_acopy_opt)
+crexx_label_smoke_tests(
+        rxas_optimizer_copy_acopy_opt
+        PREP_TARGETS rxas_optimizer_test_prereqs)
 
 add_custom_target(linked_opt_sweep
         COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure

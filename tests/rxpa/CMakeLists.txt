@@ -404,6 +404,7 @@ crexx_label_smoke_tests(
         rxpa_dynlink_run_noopt
         rxpa_staticlink_run_noopt
         rxpa_classdecl_static_compile_opt
+        PREP_TARGETS rxc_classdecl_static
 )
 
 # Function Tests

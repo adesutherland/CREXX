@@ -57,6 +57,6 @@ set_tests_properties(${_native_signal_tests} PROPERTIES
         TIMEOUT 15
 )
 
-crexx_label_smoke_tests(QUIT INT)
+crexx_label_smoke_tests(QUIT INT PREP_TARGETS intr_test)
 
 crexx_finalize_directory_qa_tiers()

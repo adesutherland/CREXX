@@ -103,6 +103,15 @@ crexx_label_smoke_tests(
         rxpp_srcmap
         rxpp_sh_tokens
         rxpp_diagnostics
+        PREP_TARGETS rxpp
 )
+crexx_register_test_prep_targets(
+        TESTS rxpp_smoke rxpp_srcmap
+        TARGETS rxc)
+if(ENABLE_PARSER_MODE)
+    crexx_register_test_prep_targets(
+            TESTS rxpp_sh_tokens
+            TARGETS rxpp_sh parser_tester)
+endif()
 
 crexx_finalize_directory_qa_tiers()

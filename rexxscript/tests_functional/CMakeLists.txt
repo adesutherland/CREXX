@@ -27,7 +27,6 @@ set(REXXSCRIPT_RUNTIMES
 add_custom_target(testrexxscript ALL)
 add_dependencies(testrexxscript rexxscript_cli)
 
-unset(_prev_target)
 foreach(_binfile ${REXXBINS})
     get_filename_component(_basename ${_binfile} NAME_WE)
 
@@ -42,10 +41,9 @@ foreach(_binfile ${REXXBINS})
             TARGET_GROUP ${_basename}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
             RXC_FLAGS -x
-            DEPENDS library classlib rxfnsc rexxscript ${LIBRPATH_RXBIN} ${CLASSLIB_RXBIN} ${RXFNSC_RXBIN} ${REXXSCRIPT_RXBIN} ${_rexx_dep} ${_prev_target}
+            DEPENDS library classlib rxfnsc rexxscript ${LIBRPATH_RXBIN} ${CLASSLIB_RXBIN} ${RXFNSC_RXBIN} ${REXXSCRIPT_RXBIN} ${_rexx_dep}
             RUNTIME_ARGS ${REXXSCRIPT_RUNTIMES}
     )
-    set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
 
 set_tests_properties(testRexxScriptRuntime_noopt testRexxScriptRuntime_opt
@@ -75,6 +73,7 @@ crexx_label_smoke_tests(
         testRexxScriptRuntime_noopt
         testRexxScriptCompat_noopt
         rexxscript_cli_smoke
+        PREP_TARGETS rexxscript_cli
 )
 
 crexx_finalize_directory_qa_tiers()

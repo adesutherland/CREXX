@@ -5991,7 +5991,35 @@ crexx_label_smoke_tests(
         trace_stem_sugar
         source_semantics
         rxc_diagnostic_catalogs
+        PREP_TARGETS crexx_test_driver rxc rxas rxvm library classlib rxfnsc
 )
+
+# The selected compiler smoke cases exercise the golden driver, compiler and
+# assembler scripts, runtime execution, and the two Level C library surfaces.
+# Their direct native harnesses own any additional generated fixtures.
+crexx_register_test_prep_targets(
+        TESTS
+            address_bridge
+            address_callback_host
+            dynamic_load
+            crexxsaa_variables
+            crexxsaa_status
+            source_provenance
+        TARGETS
+            test_address_bridge
+            test_address_callback_host
+            test_dynamic_load
+            test_crexxsaa_variables
+            test_crexxsaa_status
+            test_source_provenance)
+if(ENABLE_PARSER_MODE)
+    crexx_register_test_prep_targets(
+            TESTS rxc_help_syntaxhighlight syntaxhighlight_trace_keywords
+            TARGETS parser_tester)
+    crexx_register_test_prep_targets(
+            TESTS source_semantics
+            TARGETS test_source_semantics)
+endif()
 
 function(crexx_force_raw_diagnostics_for_directory_tests)
     get_property(_crexx_tests DIRECTORY PROPERTY TESTS)
