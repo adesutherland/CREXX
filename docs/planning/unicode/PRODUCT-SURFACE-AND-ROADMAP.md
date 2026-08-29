@@ -2,7 +2,8 @@
 
 Status: normalization design and evidence checkpoint captured;
 `UNICODE-CERT-01` implemented with an informal Release screen green; compiler
-constant lowering and public Level G extraction remain pending.
+constant lowering and the production Level G case-fold family are implemented.
+Public normalization extraction remains pending.
 
 Branch: `unicode`
 
@@ -222,7 +223,9 @@ The selected closure sequence is:
 2. make `rxc` emit one module-local named binary constant for a source-level
    constant, remove the Unicode RXAS sealing pass, and close normalization
    product extraction;
-3. productize default full case folding, with Turkic and simple modes explicit;
+3. completed on this branch: productize default full case folding as
+   `toCasefold`, with `toSimpleCasefold`, `toTurkicCasefold`,
+   `toTurkicSimpleCasefold` and reusable `.casefolder` factories explicit;
 4. productize UAX #29 extended-grapheme boundaries, then build explicitly named
    count, slicing and iteration operations on that one boundary engine; and
 5. complete final cross-family user, AI, packaging and qualification material.
@@ -239,6 +242,18 @@ repeated alias operands; the complete dual-VM Unicode harness passes with the
 11,237,664-byte generated source constant. Moving the runtime and data into the
 product tree and extracting the private/public class boundary remain the next
 normalization-product work, not an implication of this compiler change.
+
+Step 3 is implemented as a pure Level G `rxunicode` facade over a private Level
+B `_rxunicode` executor. The executor reads one 4,501,380-byte product-owned
+Unicode 17.0.0 case-fold constant directly and iterates `.string` inputs with
+RXVM codepoint operations. It has no table attribute, binary input conversion,
+re2c decoder or UTF-32 materialization. Deterministic generation verifies the
+pinned source checksum and prepared counts. Complete four-mode listed-record
+and unlisted-scalar identity tests pass optimized and no-opt under both VM
+families; an RXAS test locks the direct constant/codepoint shape. Folding does
+not normalize implicitly. The later normalization product extraction may
+converge separately prepared sections into a common product data module only if
+that preserves these public and constant-ownership contracts.
 
 The detailed normalization steps are:
 

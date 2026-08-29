@@ -36,12 +36,33 @@ Unicode version. U+180E is not whitespace in that version.
 ## Level G
 
 Level G owns general-purpose Unicode behavior above the Level B codepoint
-foundation. Its string-facing APIs are expected to be grapheme aware where a
-user-perceived character is intended and to provide explicit normalization,
-full case folding, Unicode property, collation, and segmentation algorithms.
+foundation. The production `rxunicode` namespace provides explicit Unicode
+17.0.0 ordinary case folding:
+
+- `toCasefold(text)` for default full folding;
+- `toSimpleCasefold(text)` for default simple folding;
+- `toTurkicCasefold(text)` for full folding with Turkic I mappings; and
+- `toTurkicSimpleCasefold(text)` for simple folding with Turkic I mappings.
+
+The shortest name is Unicode Default Case Folding and is compatible with the
+useful TUTOR vocabulary. Full folding may expand a string, while simple folding
+does not. The immutable `.casefolder` class offers `full`, `simple`, `turkic`
+and `turkicSimple` factories for repeated calls; its `version()` method reports
+the Unicode data version.
+
+Case folding is for caseless matching. It is not locale-sensitive case
+conversion, does not preserve or apply normalization, and does not retain a
+source-to-result index map. The Turkic forms are explicit operations rather
+than process or task locale state. `.binary` is not accepted.
+
+Level G will also provide explicit normalization, Unicode property, collation,
+and segmentation algorithms. String-facing APIs are expected to be grapheme
+aware where a user-perceived character is intended.
 
 These algorithms are explicit services. Level B does not silently acquire
 grapheme or normalization semantics when Level G is implemented.
+
+See `lib/rxfnsg/rexx/unicode.md` for the case-fold API and examples.
 
 ## Level C
 

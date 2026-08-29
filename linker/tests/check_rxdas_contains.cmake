@@ -21,6 +21,15 @@ if(NOT _rc EQUAL 0)
             "stderr:\n${_err}")
 endif()
 
+if(DEFINED MAX_OUTPUT_BYTES AND NOT "${MAX_OUTPUT_BYTES}" STREQUAL "")
+    file(SIZE "${OUTPUT_RXAS}" _output_size)
+    if(_output_size GREATER MAX_OUTPUT_BYTES)
+        message(FATAL_ERROR
+                "rxdas output is unexpectedly large: ${_output_size} bytes "
+                "(maximum ${MAX_OUTPUT_BYTES})")
+    endif()
+endif()
+
 file(READ "${OUTPUT_RXAS}" _text)
 
 foreach(_text_index RANGE 1 8)

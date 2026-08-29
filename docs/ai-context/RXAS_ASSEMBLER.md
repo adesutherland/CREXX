@@ -191,7 +191,16 @@ ownership contract is in [RXBIN_JUMP_TABLES.md](RXBIN_JUMP_TABLES.md).
 RXAS binary literals are written as byte-paired hex with a `0x` or `0X`
 prefix. `0x00ff` stores two bytes (`00 ff`) in a `BINARY_CONST`, and `0x`
 stores an empty binary constant. `rxdas` emits the canonical lowercase
-`0x...` spelling.
+`0x...` spelling. Operand rendering is dynamically sized: a binary constant
+may be much larger than the disassembler's ordinary stack line buffer and must
+still round-trip in full. For an oversized binary used directly by one or more
+instructions, ordinary `rxdas` output emits the value once as a private
+`§rxdas.const.<pool-offset>` `.const` alias and uses that alias at each operand;
+valid jump-table binaries retain their procedure-local `.jtable` form. The
+explicit `-p` constant-pool dump still prints each complete value.
+`encode_binary_to_hex()` is a bounded
+`snprintf`-style formatter; do not reintroduce pointer or remaining-length
+arithmetic that advances beyond the supplied buffer.
 
 `load rDst,0x...` uses `LOAD_REG_BINARY` and loads the VM register's binary
 slot, not its string slot. Binary-memory VM instructions exposed at RXAS are:

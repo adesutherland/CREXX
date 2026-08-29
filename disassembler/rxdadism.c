@@ -137,22 +137,32 @@ static size_t encode_print(char* buffer, size_t buffer_len, char* string, size_t
 
 /* Encodes a binary array to a hex string buffer. Like snprintf() it returns the number of characters
  * that would have been written */
-static size_t encode_binary_to_hex(char* buffer, size_t buffer_len, char* binary, size_t length) {
+static size_t encode_binary_to_hex(char* buffer, size_t buffer_len, const char* binary, size_t length) {
+    static const char hex_digits[] = "0123456789abcdef";
     size_t out_len = 0;
 
-    out_len++; if (buffer_len) { *(buffer++) = '0'; buffer_len--; }
-    out_len++; if (buffer_len) { *(buffer++) = 'x'; buffer_len--; }
+#define ADD_HEX_CHAR_TO_BUFFER(ch) \
+    do { \
+        out_len++; \
+        if (buffer_len > 1u) { \
+            *(buffer++) = (ch); \
+            buffer_len--; \
+        } \
+    } while (0)
+
+    ADD_HEX_CHAR_TO_BUFFER('0');
+    ADD_HEX_CHAR_TO_BUFFER('x');
 
     while (length) {
-        snprintf(buffer, buffer_len, "%02x", (unsigned int)(unsigned char)*binary);
-        buffer += 2;
+        unsigned char byte = (unsigned char)*binary;
+        ADD_HEX_CHAR_TO_BUFFER(hex_digits[byte >> 4u]);
+        ADD_HEX_CHAR_TO_BUFFER(hex_digits[byte & 0x0fu]);
         binary++;
         length--;
-        out_len += 2;
-        buffer_len -= 2;
     }
     if (buffer_len) *buffer = 0;
     return out_len;
+#undef ADD_HEX_CHAR_TO_BUFFER
 }
 
 /* Get the constant string
@@ -484,6 +494,20 @@ static size_t format_float_literal(char *buffer, size_t buffer_len, double value
     return snprintf(buffer, buffer_len, "%s", temp);
 }
 
+typedef struct rxda_binary_alias {
+    size_t pool_index;
+    struct rxda_binary_alias *next;
+} rxda_binary_alias;
+
+static const rxda_binary_alias *rxda_find_binary_alias(
+        const rxda_binary_alias *aliases, size_t pool_index) {
+    while (aliases) {
+        if (aliases->pool_index == pool_index) return aliases;
+        aliases = aliases->next;
+    }
+    return NULL;
+}
+
 /* Disassemble an operand
  *
  * Returns the number of characters that would have been written assuming the
@@ -496,6 +520,7 @@ static size_t disassemble_operand(bin_space *pgm,
                                   size_t buffer_len,
                                   OperandType type,
                                   size_t index,
+                                  const rxda_binary_alias *binary_aliases,
                                   int globals,
                                   int locals) {
 
@@ -574,9 +599,16 @@ static size_t disassemble_operand(bin_space *pgm,
             break;
         case OP_BINARY:
             ix = pgm->binary[index].index;
-            c = ((string_constant *)(pgm->const_pool + ix))->string;
-            sz = ((string_constant *)(pgm->const_pool + ix))->string_len;
-            out_len = encode_binary_to_hex(buffer, buffer_len, c, sz);
+            if (rxda_find_binary_alias(binary_aliases, ix)) {
+                out_len = snprintf(buffer, buffer_len,
+                                   "\xC2\xA7" "rxdas.const.%lx",
+                                   (unsigned long)ix);
+            }
+            else {
+                c = ((string_constant *)(pgm->const_pool + ix))->string;
+                sz = ((string_constant *)(pgm->const_pool + ix))->string_len;
+                out_len = encode_binary_to_hex(buffer, buffer_len, c, sz);
+            }
             break;
         default:
             out_len = snprintf(buffer, buffer_len, "*INTERNAL_ERROR*");
@@ -889,6 +921,102 @@ static rxda_jtable *rxda_collect_jtables(bin_space *pgm, code_line *source) {
         i = instruction + 1u + (size_t)operand_count;
     }
     return tables;
+}
+
+static int rxda_binary_needs_alias(bin_space *pgm, size_t pool_index) {
+    string_constant *constant;
+    size_t header_size = offsetof(string_constant, string);
+    size_t encoded_length;
+
+    if (pool_index > pgm->const_size ||
+        header_size > pgm->const_size - pool_index) return 0;
+    constant = (string_constant *)(pgm->const_pool + pool_index);
+    if (constant->base.type != BINARY_CONST ||
+        constant->base.size_in_pool < header_size ||
+        constant->base.size_in_pool > pgm->const_size - pool_index ||
+        constant->string_len > constant->base.size_in_pool - header_size) return 0;
+    if (constant->string_len > (SIZE_MAX - 2u) / 2u) return 1;
+    encoded_length = 2u + constant->string_len * 2u;
+    return encoded_length >= MAX_LINE_SIZE;
+}
+
+/* Oversized binary operands are emitted once as private .const aliases. This
+ * keeps ordinary rxdas output proportional to the constant-pool size while
+ * preserving exact assembler round-tripping. Valid jump tables already have
+ * their own symbolic .jtable representation and do not need another alias. */
+static rxda_binary_alias *rxda_collect_binary_aliases(bin_space *pgm,
+                                                      code_line *source,
+                                                      rxda_jtable *jump_tables) {
+    rxda_binary_alias *aliases = NULL;
+    rxda_binary_alias *tail = NULL;
+    size_t i = 0;
+
+    while (i < pgm->inst_size) {
+        size_t instruction = i;
+        const OpInfo *op = source[instruction].op;
+        size_t operand_count = rxop_format_operand_count(op->format);
+        enum rxda_jtable_mode jump_mode;
+        int table_operand = -1;
+        size_t k;
+
+        (void)rxda_jump_info(op, &jump_mode, &table_operand);
+        i++;
+        for (k = 0; k < operand_count; k++, i++) {
+            size_t pool_index;
+            rxda_jtable *table;
+
+            if (rxop_format_operand_type(op->format, k) != OP_BINARY) continue;
+            pool_index = pgm->binary[i].index;
+            table = k == (size_t)table_operand
+                    ? rxda_find_jtable(jump_tables, pool_index) : NULL;
+            if ((table && table->valid) ||
+                !rxda_binary_needs_alias(pgm, pool_index) ||
+                rxda_find_binary_alias(aliases, pool_index)) continue;
+            {
+                rxda_binary_alias *alias = calloc(1u, sizeof(*alias));
+                if (!alias) return aliases;
+                alias->pool_index = pool_index;
+                if (tail) tail->next = alias;
+                else aliases = alias;
+                tail = alias;
+            }
+        }
+    }
+    return aliases;
+}
+
+static void rxda_output_binary_hex(FILE *stream, const char *binary, size_t length) {
+    static const char hex_digits[] = "0123456789abcdef";
+
+    fputs("0x", stream);
+    while (length) {
+        unsigned char byte = (unsigned char)*binary++;
+        fputc(hex_digits[byte >> 4u], stream);
+        fputc(hex_digits[byte & 0x0fu], stream);
+        length--;
+    }
+}
+
+static void rxda_output_binary_aliases(FILE *stream, bin_space *pgm,
+                                       const rxda_binary_alias *aliases) {
+    while (aliases) {
+        size_t pool_index = aliases->pool_index;
+        string_constant *constant =
+                (string_constant *)(pgm->const_pool + pool_index);
+        fprintf(stream, ".const \xC2\xA7" "rxdas.const.%lx binary ",
+                (unsigned long)pool_index);
+        rxda_output_binary_hex(stream, constant->string, constant->string_len);
+        fputc('\n', stream);
+        aliases = aliases->next;
+    }
+}
+
+static void rxda_free_binary_aliases(rxda_binary_alias *aliases) {
+    while (aliases) {
+        rxda_binary_alias *next = aliases->next;
+        free(aliases);
+        aliases = next;
+    }
 }
 
 static const char *rxda_jtable_algorithm(unsigned char algorithm) {
@@ -1533,6 +1661,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
     char line_buffer[MAX_LINE_SIZE];
     size_t displayed_mnemonic_length;
     rxda_jtable *jump_tables;
+    rxda_binary_alias *binary_aliases;
 
     /* Prepare to Print Code */
     i = 0;
@@ -1570,6 +1699,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
 
     mark_module_procedure_sources(module, pgm, source);
     jump_tables = rxda_collect_jtables(pgm, source);
+    binary_aliases = rxda_collect_binary_aliases(pgm, source, jump_tables);
 
     /* Pass 1b - Print Constant Pool and add Proc entry flags to the code listing */
     fprintf(stream, "* CONSTANT POOL - Size 0x%lx.  ", pgm->const_size);
@@ -1597,8 +1727,20 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                 {
                     char* c = ((string_constant *)(pgm->const_pool + i))->string;
                     size_t sz = ((string_constant *)(pgm->const_pool + i))->string_len;
-                    encode_binary_to_hex(line_buffer, MAX_LINE_SIZE, c, sz);
-                    fprintf(stream, "* 0x%.6lx BINARY %s\n", i, line_buffer);
+                    size_t encoded_length = encode_binary_to_hex(
+                            line_buffer, MAX_LINE_SIZE, c, sz);
+                    char *encoded = line_buffer;
+                    if (encoded_length >= MAX_LINE_SIZE && encoded_length < SIZE_MAX) {
+                        encoded = malloc(encoded_length + 1u);
+                        if (encoded) {
+                            encode_binary_to_hex(encoded, encoded_length + 1u, c, sz);
+                        }
+                        else {
+                            encoded = line_buffer;
+                        }
+                    }
+                    fprintf(stream, "* 0x%.6lx BINARY %s\n", i, encoded);
+                    if (encoded != line_buffer) free(encoded);
                 }
                     break;
                 case PROC_CONST:
@@ -1905,6 +2047,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
     int locals = 0;
     fprintf(stream, "\n* CODE SEGMENT - Size 0x%lx\n", pgm->inst_size);
     fprintf(stream, "\n.globals=%d\n", globals);
+    rxda_output_binary_aliases(stream, pgm, binary_aliases);
 
     /* Pass 2b - Exposed Registers and procedures exposed from external modules
      * Note that the compiler does not put all these at the top - but hey this is the easiest way for us */
@@ -1992,6 +2135,9 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
             size_t k;
             (void)rxda_jump_info(source[j].op, &jump_mode, &table_operand);
             for (k = 0; k < num_ops; k++) {
+                size_t operand_cell;
+                size_t operand_length;
+                char *operand_text;
                 if (k > 0) {
                     fputc(',', stream);
                     instruction_width++;
@@ -2008,12 +2154,29 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                         continue;
                     }
                 }
-                instruction_width += disassemble_operand(
+                operand_cell = i++;
+                operand_length = disassemble_operand(
                         pgm, module, source[j].op->opcode, (unsigned int)k,
                         line_buffer, MAX_LINE_SIZE,
                         rxop_format_operand_type(source[j].op->format, k),
-                        i++, globals, locals);
-                fputs(line_buffer, stream);
+                        operand_cell, binary_aliases, globals, locals);
+                instruction_width += operand_length;
+                operand_text = line_buffer;
+                if (operand_length >= MAX_LINE_SIZE && operand_length < SIZE_MAX) {
+                    operand_text = malloc(operand_length + 1u);
+                    if (operand_text) {
+                        disassemble_operand(
+                                pgm, module, source[j].op->opcode, (unsigned int)k,
+                                operand_text, operand_length + 1u,
+                                rxop_format_operand_type(source[j].op->format, k),
+                                operand_cell, binary_aliases, globals, locals);
+                    }
+                    else {
+                        operand_text = line_buffer;
+                    }
+                }
+                fputs(operand_text, stream);
+                if (operand_text != line_buffer) free(operand_text);
             }
             while (instruction_width++ < 45) fputc(' ', stream);
         }
@@ -2026,6 +2189,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
     fprintf(stream, "*******************************************************************************\n\n");
 
     /* Free memory */
+    rxda_free_binary_aliases(binary_aliases);
     rxda_free_jtables(jump_tables);
     free(source);
 }

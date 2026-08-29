@@ -1,0 +1,109 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Pure Level G facade for explicit Unicode case folding.
+ */
+
+/**
+ * Explicit Unicode case-folding services over valid UTF-8 `.string` values.
+ *
+ * Case folding is intended for caseless matching. It is not locale-sensitive
+ * case conversion and it does not preserve or apply normalization.
+ *
+ * @docType runtime-module
+ */
+options levelg
+
+namespace rxunicode expose toCasefold toSimpleCasefold toTurkicCasefold toTurkicSimpleCasefold casefolder
+import _rxunicode
+
+/**
+ * Apply Unicode Default Case Folding using the full mapping.
+ *
+ * This is the TUTOR-compatible convenience name. Full folding may expand the
+ * result, for example `ß` folds to `ss`.
+ *
+ * @param text valid UTF-8 text
+ * @return fully case-folded text using the default non-Turkic mapping
+ */
+toCasefold: procedure = .string
+  arg text = .string
+  return _rxunicode..casefold(text, 2)
+
+/**
+ * Apply the non-expanding Unicode simple case-fold mapping.
+ *
+ * @param text valid UTF-8 text
+ * @return simply case-folded text using the default non-Turkic mapping
+ */
+toSimpleCasefold: procedure = .string
+  arg text = .string
+  return _rxunicode..casefold(text, 1)
+
+/**
+ * Apply full Unicode case folding with the Turkic I mappings.
+ *
+ * Use this only when Turkish or Azerbaijani caseless matching semantics are
+ * explicitly required. It is not a general locale selector.
+ *
+ * @param text valid UTF-8 text
+ * @return fully case-folded text using the Turkic mapping
+ */
+toTurkicCasefold: procedure = .string
+  arg text = .string
+  return _rxunicode..casefold(text, 4)
+
+/**
+ * Apply simple Unicode case folding with the Turkic I mappings.
+ *
+ * @param text valid UTF-8 text
+ * @return simply case-folded text using the Turkic mapping
+ */
+toTurkicSimpleCasefold: procedure = .string
+  arg text = .string
+  return _rxunicode..casefold(text, 3)
+
+/** Immutable reusable selector for one Unicode case-fold mode. */
+casefolder: class
+  _mode = .int
+
+  /** @return a full default case folder */
+  full: factory
+    _mode = 2
+    return
+
+  /** @return a simple default case folder */
+  simple: factory
+    _mode = 1
+    return
+
+  /** @return a full case folder using the Turkic I mappings */
+  turkic: factory
+    _mode = 4
+    return
+
+  /** @return a simple case folder using the Turkic I mappings */
+  turkicSimple: factory
+    _mode = 3
+    return
+
+  /**
+   * Fold text using this object's fixed mode.
+   *
+   * @param text valid UTF-8 text
+   * @return case-folded text
+   */
+  fold: method = .string
+    arg text = .string
+    return _rxunicode..casefold(text, _mode)
+
+  /** @return `FULL`, `SIMPLE`, `TURKIC_FULL`, or `TURKIC_SIMPLE` */
+  mode: method = .string
+    if _mode = 1 then return "SIMPLE"
+    if _mode = 2 then return "FULL"
+    if _mode = 3 then return "TURKIC_SIMPLE"
+    return "TURKIC_FULL"
+
+  /** @return Unicode data version used by this folder */
+  version: method = .string
+    return "17.0.0"

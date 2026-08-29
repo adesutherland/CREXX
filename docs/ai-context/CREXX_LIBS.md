@@ -842,6 +842,7 @@ delivery route:
 | `rxid` | `rxid.uuid4`, `uuid7`, `ulid`, `nanoid`, `snowflake`, `base58` | Bundled optional Level G identifier strings, callable from B when installed; random forms use platform cryptographic randomness and generation failures signal. |
 | `rxfs` | `rxfs.cwd`, `loadpath`, `chdir`, `isdir`, `mkdir`, `rmdir`, `delete`, `rename`, `isfile`, `listdir`, `append` | Narrow filesystem and directory operations. Return/status contracts are documented in the library reference. |
 | `rxplatform` | `rxplatform.uptime`, `user`, `host`, `osname`, `sleep` | Bundled optional Level G host/platform information and millisecond sleep, callable from B when installed. Clipboard, beep, process-global and developer functions from the old draft `system` surface were retired. |
+| `rxunicode` | `toCasefold`, `toSimpleCasefold`, `toTurkicCasefold`, `toTurkicSimpleCasefold`, `.casefolder` | Level G Unicode 17.0.0 ordinary case folding over `.string`. Default full folding uses the TUTOR-compatible name; simple and Turkic modes are explicit. The pure Level G facade delegates to one private Level B codepoint executor and one generated immutable table. |
 
 The source CMake target for `rxplatform` is named `_platform` to avoid a target
 collision, but `PROVIDER_ID rxplatform` makes its manifest, artifact stem,

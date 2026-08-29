@@ -133,6 +133,46 @@ foreach(_packed_numeric_runner IN LISTS _math_numeric_runners)
     FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
 endforeach()
 
+add_custom_target(ts_unicode_casefold)
+add_dependencies(testrxfnsg ts_unicode_casefold)
+
+foreach(_unicode_casefold_runner IN LISTS _math_numeric_runners)
+  crexx_add_rexx_opt_matrix(
+    LINKED_ALL_MODES
+    NAME "ts_unicode_casefold_${_unicode_casefold_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_unicode_casefold.crexx"
+    TARGET_GROUP ts_unicode_casefold
+    RUNNER "${_unicode_casefold_runner}"
+    IMPORT_PATHS
+      "${CMAKE_BINARY_DIR}/bin"
+      "${RXUNICODE_CASEFOLD_TOOL_DIR}"
+    RXC_FLAGS -x
+    DEPENDS
+      library
+      classlib
+      rxfnsg
+      rxunicode_casefold_source
+      "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+      "${RXUNICODE_CASEFOLD_TABLE_RXBIN}"
+      "${RXUNICODE_CASEFOLD_DATA}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/ts_unicode_casefold.crexx"
+    RUNTIME_ARGS
+      ${LIBRPATH}
+      ${CMAKE_BINARY_DIR}/bin/classlib
+      ${RXFNSG_RPATH}
+      ${RXUNICODE_CASEFOLD_TABLE_RXBIN}
+      -a ${RXUNICODE_CASEFOLD_DATA}
+    TEST_LABELS
+      "library;unicode;casefold;levelg;${_unicode_casefold_runner}"
+    REQUIRED_OUTPUT_REGEX
+      "PASS: rxunicode default full simple and Turkic case folding"
+    FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+  set_tests_properties(
+    "ts_unicode_casefold_${_unicode_casefold_runner}_noopt"
+    "ts_unicode_casefold_${_unicode_casefold_runner}_opt"
+    PROPERTIES TIMEOUT 600)
+endforeach()
+
 unset(_prev_target)
 foreach(_binfile IN LISTS REXXBINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
