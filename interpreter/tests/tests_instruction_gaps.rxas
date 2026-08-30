@@ -116,7 +116,8 @@ test_data_movement() .locals=20
 
     loadsettp r1,7,256
     erase r1
-    gettp r2,r1
+    /* ERASE leaves the empty string's protected normalization facts known. */
+    getandtp r2,r1,2147418880
     ieq r0,r2,0
     brf data_fail, r0
     ieq r0,r1,0

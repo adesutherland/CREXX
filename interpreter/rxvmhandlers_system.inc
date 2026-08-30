@@ -39,10 +39,10 @@ RXVM_HANDLER(FREADCDPT_REG_REG, VM_ADVANCE(2);
             first_byte = fgetc((FILE *)op2R->int_value);
             if (first_byte == EOF) {
                 op1R->int_value = -1;
-                op1R->string_length = 0;
+                rxvm_value_set_string_length_known(op1R, 0u);
                 op1R->string_chars = 0;
                 string_cache_reset(op1R);
-                mark_utf8_valid_count(op1R);
+                mark_ascii_string_valid_count(op1R);
             } else {
                 op1R->string_value[0] = (char)first_byte;
 
@@ -80,7 +80,9 @@ RXVM_HANDLER(FREADCDPT_REG_REG, VM_ADVANCE(2);
                     op1R->int_value = codepoint;
                     rxvm_value_set_string_chars_known(op1R, chars);
                     string_cache_reset(op1R);
-                    mark_utf8_valid_count(op1R);
+                    if (chars == op1R->string_length)
+                        mark_ascii_string_valid_count(op1R);
+                    else mark_utf8_valid_count(op1R);
                 }
             }
             )

@@ -1,0 +1,12 @@
+Unicode version: 17.0.0
+NFD table format: crexx-nfd-portable-at-v1
+NFD table bytes: 1186472
+NFD table SHA-256: dd7e03a88172dd451bf4c353771c565d07ade91f64ec8cbab81b9e6b33362944
+gennorm2 ccc records/code points: 403/968
+gennorm2 two-way/one-way mappings: 961/1120
+gennorm2 mapping values: 3127
+NormalizationTest rows by Part 0..5: 45/17086/1936/194/735/38
+NFD corpus invariant checks: 100170
+Unlisted scalar identity checks: 1094978
+Focused NFD fixtures: PASS
+Result: PASS

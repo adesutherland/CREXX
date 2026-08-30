@@ -91,9 +91,9 @@ Read all nonreserved status flags from a value.
 
 ### Operands And Semantics
 
-The result includes readable VM-private bits plus compiler, library, and user
-bands, but excludes the reserved sign bit. Only `rFlags`' integer payload is
-written.
+The result includes readable VM-private bits plus compiler-ABI, protected
+language, library, and user bands, but excludes the reserved sign bit. Only
+`rFlags`' integer payload is written.
 
 ### Signals
 
@@ -666,19 +666,21 @@ main() .locals=3
 
 ## `setortp`
 
-OR selected public writable status flags into a value.
+OR selected trusted-RXAS-writable status flags into a value.
 
 ### Forms
 
 | Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0209` | `setortp rValue,flags` | Add compiler, library, or user-band bits. |
+| `0x0209` | `setortp rValue,flags` | Add compiler-ABI, protected-language, library, or user-band bits. |
 
 ### Operands And Semantics
 
 The literal is masked by `RXFLAG_PUBLIC_WRITABLE_MASK` before OR. Existing
 flags remain set. VM-private and reserved bits in the literal are ignored;
-payloads remain unchanged.
+payloads remain unchanged. The protected language band is intended for trusted
+generated algorithms asserting proved content facts, such as normalization
+certificates. Level B flag-view assignment cannot write it.
 
 ### Signals
 
@@ -701,20 +703,23 @@ main() .locals=1
 
 ## `settp`
 
-Update public writable status-flag bands while preserving VM-private state.
+Update trusted-RXAS-writable status-flag bands while preserving VM-private
+state.
 
 ### Forms
 
 | Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0205` | `settp rValue,flags` | Apply requested compiler, library, and user bands. |
+| `0x0205` | `settp rValue,flags` | Apply requested compiler-ABI, protected-language, library, and user bands. |
 
 ### Operands And Semantics
 
-The literal cannot write VM-private or reserved bits. If it requests no public
-bit, all public bands are cleared. Otherwise each nonzero requested band
-replaces that band while a zero band preserves its current bits. Payloads are
-unchanged.
+The literal cannot write VM-private or reserved bits. If it requests no
+writable bit, compiler-ABI, library, and user bands are cleared while protected
+language facts are preserved. Otherwise each nonzero requested band replaces
+that band while a zero band preserves its current bits. Payloads are unchanged.
+Trusted generated RXAS may set a proved protected-language fact; ordinary
+source flag views cannot.
 
 ### Signals
 
@@ -749,8 +754,8 @@ Replace selected source-writable status bits from an integer register.
 
 Only bits selected by both the literal mask and
 `RXFLAG_SOURCE_WRITABLE_MASK` (library plus user bands) change. Selected bits
-take values from `rRequested`'s integer payload. Compiler, VM-private,
-reserved, and unselected bits are preserved.
+take values from `rRequested`'s integer payload. Compiler-ABI, protected
+language, VM-private, reserved, and unselected bits are preserved.
 
 ### Signals
 

@@ -540,8 +540,18 @@ string(APPEND RXC_BINARY_MEMORY_SOURCE_CONTENT
        "    message(FATAL_ERROR \"Binary memory source did not emit ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "  endif()\n"
        "endforeach()\n"
-       "if(NOT rxas_out MATCHES [=[bgetu32 [^\\n]*,0x78563412fe7f0000000000000000f03f4f4b]=])\n"
-       "  message(FATAL_ERROR \"Binary memory source did not read a fixed-width field directly from a binary constant.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "string(REGEX MATCH [=[\\.const ([^ ]+) binary 0x78563412fe7f0000000000000000f03f4f4b]=] header_alias_decl \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "set(header_alias \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+       "if(header_alias STREQUAL \"\")\n"
+       "  message(FATAL_ERROR \"Binary memory source did not emit one named HEADER constant.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "string(REGEX MATCHALL [=[0x78563412fe7f0000000000000000f03f4f4b]=] header_payloads \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "list(LENGTH header_payloads header_payload_count)\n"
+       "if(NOT header_payload_count EQUAL 1)\n"
+       "  message(FATAL_ERROR \"Binary memory HEADER payload was not emitted exactly once; count=${RXAS_DIAG_DOLLAR}{header_payload_count}.\")\n"
+       "endif()\n"
+       "if(NOT rxas_out MATCHES \"bgetu32 [^\\n]*,${RXAS_DIAG_DOLLAR}{header_alias},\")\n"
+       "  message(FATAL_ERROR \"Binary memory source did not read a fixed-width field through its named constant.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "endif()\n"
        "foreach(_opcode bcheckrange bslice)\n"
        "  if(rxas_out MATCHES \"${RXAS_DIAG_DOLLAR}{_opcode}\")\n"
@@ -558,6 +568,53 @@ file(GENERATE OUTPUT "${RXC_BINARY_MEMORY_SOURCE_SCRIPT}" CONTENT "${RXC_BINARY_
 
 add_test(NAME rxc_binary_memory_source
          COMMAND ${CMAKE_COMMAND} -P "${RXC_BINARY_MEMORY_SOURCE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(RXC_BINARY_CONSTANT_ALIAS_OPT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_binary_constant_alias_opt.cmake")
+file(GENERATE OUTPUT "${RXC_BINARY_CONSTANT_ALIAS_OPT_SCRIPT}" CONTENT
+"execute_process(
+  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"binary_constant_alias_opt\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_memory_source.crexx\"
+  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
+  OUTPUT_VARIABLE rxc_out
+  ERROR_VARIABLE rxc_err
+  RESULT_VARIABLE rxc_res
+)
+if(NOT rxc_res EQUAL 0)
+  message(FATAL_ERROR \"optimized rxc failed for named binary constant check.\\nOutput:\\n\${rxc_out}\${rxc_err}\")
+endif()
+file(READ \"${CMAKE_CURRENT_BINARY_DIR}/binary_constant_alias_opt.rxas\" rxas_out)
+string(REGEX MATCH [=[\\.const ([^ ]+) binary 0x78563412fe7f0000000000000000f03f4f4b]=] header_alias_decl \"\${rxas_out}\")
+set(header_alias \"\${CMAKE_MATCH_1}\")
+if(header_alias STREQUAL \"\")
+  message(FATAL_ERROR \"optimized rxc did not emit one named HEADER constant.\")
+endif()
+string(REGEX MATCHALL [=[0x78563412fe7f0000000000000000f03f4f4b]=] header_payloads \"\${rxas_out}\")
+list(LENGTH header_payloads header_payload_count)
+if(NOT header_payload_count EQUAL 1)
+  message(FATAL_ERROR \"optimized HEADER payload was not emitted exactly once; count=\${header_payload_count}.\")
+endif()
+if(NOT rxas_out MATCHES \"load r[0-9]+,\${header_alias}\")
+  message(FATAL_ERROR \"optimized named binary constant load is missing.\")
+endif()
+if(NOT rxas_out MATCHES \"blen r[0-9]+,\${header_alias}\")
+  message(FATAL_ERROR \"optimized named binary constant length read is missing.\")
+endif()
+if(NOT rxas_out MATCHES \"bgetu32 [^\\n]*,\${header_alias},\")
+  message(FATAL_ERROR \"optimized named binary constant field read is missing.\")
+endif()
+execute_process(
+  COMMAND \"$<TARGET_FILE:rxas>\" -o \"binary_constant_alias_opt\" \"binary_constant_alias_opt\"
+  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
+  OUTPUT_VARIABLE rxas_diag
+  ERROR_VARIABLE rxas_diag
+  RESULT_VARIABLE rxas_res
+)
+if(NOT rxas_res EQUAL 0 OR NOT rxas_diag STREQUAL \"\")
+  message(FATAL_ERROR \"optimized named binary constant RXAS did not assemble cleanly.\\nOutput:\\n\${rxas_diag}\")
+endif()
+")
+add_test(NAME rxc_binary_constant_alias_opt
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_BINARY_CONSTANT_ALIAS_OPT_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 set(RXC_PACKED_NUMERIC_SOURCE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_packed_numeric_source.cmake")
@@ -580,8 +637,13 @@ string(APPEND RXC_PACKED_NUMERIC_SOURCE_CONTENT
        "    message(FATAL_ERROR \"Packed numeric source did not emit ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "  endif()\n"
        "endforeach()\n"
-       "if(NOT rxas_out MATCHES [=[load r[0-9]+,0x0000000000000000]=])\n"
-       "  message(FATAL_ERROR \"Packed constant source was not materialized into aligned runtime binary storage.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "string(REGEX MATCH [=[\\.const ([^ ]+) binary 0x0000000000000000]=] zero_alias_decl \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "set(zero_alias \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+       "if(zero_alias STREQUAL \"\")\n"
+       "  message(FATAL_ERROR \"Packed constant source was not emitted as aligned shared binary storage.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "if(NOT rxas_out MATCHES \"load r[0-9]+,${RXAS_DIAG_DOLLAR}{zero_alias}\")\n"
+       "  message(FATAL_ERROR \"Packed constant source was not materialized in a register from its shared binary constant.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "endif()\n"
        "if(rxas_out MATCHES [=[pget[if] [^\\n]*,0x]=])\n"
        "  message(FATAL_ERROR \"Packed access bypassed runtime-aligned binary storage.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
@@ -684,8 +746,11 @@ foreach(_mode IN ITEMS noopt opt)
            "endif()\n"
            "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/register_flag_views_${_mode}.rxas\" rxas_${_mode}_out)\n"
            "string(REPLACE \"\\r\\n\" \"\\n\" rxas_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
-           "if(NOT rxas_${_mode}_out MATCHES [=[getandtp r[0-9]+,a1,65280]=])\n"
+           "if(NOT rxas_${_mode}_out MATCHES [=[getandtp r[0-9]+,a1,768]=])\n"
            "  message(FATAL_ERROR \"Compiler flag view did not lower to masked getandtp in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "if(NOT rxas_${_mode}_out MATCHES [=[getandtp r[0-9]+,a1,64512]=])\n"
+           "  message(FATAL_ERROR \"Language flag view did not lower to masked getandtp in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
            "endif()\n"
            "if(NOT rxas_${_mode}_out MATCHES [=[bcopy r[0-9]+,(a1|r[0-9]+)]=])\n"
            "  message(FATAL_ERROR \"Binary register view did not lower through bcopy in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
@@ -1070,6 +1135,7 @@ add_crexx_compiler_fail_test(err_select_no_when rexx_src/err_select_no_when.crex
 add_crexx_compiler_fail_test(err_select_c_no_when rexx_src/err_select_c_no_when.crexx err_select_c_no_when.txt)
 add_crexx_compiler_fail_test(err_class_assign rexx_src/err_class_assign.crexx err_class_assign.txt)
 add_crexx_compiler_fail_test(err_register_flag_compiler_write rexx_src/err_register_flag_compiler_write.crexx err_register_flag_compiler_write.txt)
+add_crexx_compiler_fail_test(err_register_flag_language_write rexx_src/err_register_flag_language_write.crexx err_register_flag_language_write.txt)
 add_crexx_compiler_fail_test(err_register_flag_unknown rexx_src/err_register_flag_unknown.crexx err_register_flag_unknown.txt)
 add_crexx_compiler_fail_test(err_register_flag_type rexx_src/err_register_flag_type.crexx err_register_flag_type.txt)
 add_crexx_compiler_fail_test(err_address_commandless_sandbox rexx_src/err_address_commandless_sandbox.crexx err_address_commandless_sandbox.txt)
@@ -2134,6 +2200,8 @@ add_crexx_run_test(literal_continuation rexx_src/literal_continuation.crexx)
 add_crexx_isolated_run_test(qualified_bif_direct_namespace rexx_src/qualified_bif_direct_namespace.crexx)
 add_crexx_dual_import_run_test(qualified_namespace_import_source rexx_src/qualified_namespace_main.crexx rexx_src/qualified_namespace_dep_a.crexx rexx_src/qualified_namespace_dep_b.crexx source)
 add_crexx_dual_import_run_test(qualified_namespace_import_binary rexx_src/qualified_namespace_main.crexx rexx_src/qualified_namespace_dep_a.crexx rexx_src/qualified_namespace_dep_b.crexx binary)
+add_crexx_interface_import_run_test(optional_binary_import_source rexx_src/optional_binary_import_main.crexx rexx_src/optional_binary_import_dep.crexx source)
+add_crexx_interface_import_run_test(optional_binary_import_binary rexx_src/optional_binary_import_main.crexx rexx_src/optional_binary_import_dep.crexx binary)
 add_crexx_isolated_run_test(interface_tracer rexx_src/interface_tracer.crexx)
 add_crexx_isolated_run_test(interface_runtime_dispatch_multi rexx_src/interface_runtime_dispatch_multi.crexx)
 add_crexx_isolated_run_test(interface_method_arg_same_module rexx_src/interface_method_arg_same_module.crexx)

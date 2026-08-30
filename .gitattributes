@@ -1,0 +1,2 @@
+# Pinned upstream Unicode and legacy mapping inputs are retained byte-for-byte.
+lib/rxfnsg/unicode/data/**/*.txt -whitespace

@@ -1,0 +1,6 @@
+Warning in unicode_grapheme_compare.crexx @ 59:13 - #NOT_IN_SAME_SCOPE: Symbol is not in the same scope., "iteration"
+Warning in unicode_grapheme_compare.crexx @ 66:33 - #NOT_IN_SAME_SCOPE: Symbol is not in the same scope., "iteration"
+Warning in unicode_grapheme_compare.crexx @ 70:11 - #NOT_IN_SAME_SCOPE: Symbol is not in the same scope., "iteration"
+Warning in unicode_grapheme_compare.crexx @ 71:5 - #NOT_IN_SAME_SCOPE: Symbol is not in the same scope., "view"
+Warning in unicode_grapheme_compare.crexx @ 72:5 - #NOT_IN_SAME_SCOPE: Symbol is not in the same scope., "piece"
+5 warning(s) in source file

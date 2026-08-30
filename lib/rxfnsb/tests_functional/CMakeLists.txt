@@ -33,6 +33,7 @@ set(REXXBINS
         ts_date_core.rxbin
         ts_delstr.rxbin
         ts_delword.rxbin
+        ts_fileio_binary.rxbin
         ts_fileio_chars.rxbin
         ts_format.rxbin
         ts_fnv.rxbin
@@ -271,7 +272,8 @@ foreach(_binfile ${REXXBINS})
         set(_rxc_flags)
     endif()
     set(_pass_test_name_argument)
-    if("${_basename}" STREQUAL "ts_fileio_chars" OR
+    if("${_basename}" STREQUAL "ts_fileio_binary" OR
+            "${_basename}" STREQUAL "ts_fileio_chars" OR
             "${_basename}" STREQUAL "ts_rxsystem" OR
             "${_basename}" STREQUAL "ts_signal")
         set(_pass_test_name_argument PASS_TEST_NAME_ARGUMENT)
@@ -308,6 +310,26 @@ foreach(_binfile ${REXXBINS})
             ${_pass_test_name_argument}
     )
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
+endforeach()
+
+# Whole-file binary I/O is a VM byte-path contract.  Exercise the same
+# optimized and unoptimized images on each concrete product interpreter as
+# well as through the normal compiler-selected rxvm runner above.
+set(_fileio_binary_concrete_runners rxbvm)
+if(CREXX_THREADED_VM_SUPPORTED)
+    list(APPEND _fileio_binary_concrete_runners rxtvm)
+endif()
+foreach(_runner IN LISTS _fileio_binary_concrete_runners)
+    foreach(_mode IN ITEMS noopt opt)
+        _crexx_register_runtime_test(
+                NAME ts_fileio_binary_${_runner}_${_mode}
+                RUNNER ${_runner}
+                PROGRAM ts_fileio_binary_${_mode}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                RUNTIME_ARGS ${LIBRPATH} -a ts_fileio_binary_${_runner}_${_mode}
+                TEST_LABELS "classlib;binary-io;${_runner}"
+        )
+    endforeach()
 endforeach()
 
 # CRI-09 is an integration-boundary contract, so retain the same optimized and
@@ -506,6 +528,8 @@ set_tests_properties(ts_binary_noopt ts_binary_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: binary helpers")
 set_tests_properties(ts_fileio_chars_noopt ts_fileio_chars_opt
         PROPERTIES RUN_SERIAL TRUE)
+set_tests_properties(ts_fileio_binary_noopt ts_fileio_binary_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: Level B whole-file binary I/O")
 set_tests_properties(ts_arraydelete_noopt ts_arraydelete_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: array helpers")
 set_tests_properties(ts_parse_noopt ts_parse_opt

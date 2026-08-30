@@ -881,32 +881,41 @@ clearing an externally linked register when a logical attribute slot is deleted.
 compiler-emitted RXAS and VM code agree:
 
 - `0x000000FF`: VM-private/read-only outside the VM
-- `0x0000FF00`: compiler call ABI flags
+- `0x00000300`: compiler call ABI flags
+- `0x0000FC00`: protected language metadata (`0x00003C00` is the four
+  normalization certificates and `0x0000C000` is reserved)
 - `0x00FF0000`: stable library/runtime ABI flags
 - `0x7F000000`: user/experimental flags
 - `0x80000000`: reserved
 
-The first VM-private allocations are reserved for UTF-8 validity,
-codepoint-count validity, and known Unicode normalization forms. `SETTP`,
-`SETORTP`, and `LOADSETTP` mask external writes; they cannot set or clear the
-VM-private band except through VM-owned content setters. `SETTP` replaces only
-the non-zero public flag bands present in the requested value, with
-`SETTP reg,0` retaining the explicit "clear all public flags" behavior. This
-keeps compiler call-ABI flag writes from clearing library/runtime cache flags
-on one-register values. `GETTP` and `GETANDTP` return readable flags, while
-unmasked `BRTPT` only tests public flag bands so private cache bits do not
-change legacy branch behavior.
+The VM-private allocations cover UTF-8 validity, codepoint-count validity and
+object lifecycle. `SETTP`, `SETORTP`, and `LOADSETTP` cannot write that band.
+Trusted RXAS can explicitly assert language-owned normalization certificates;
+compiler ABI writes preserve them, and `SETTP reg,0` clears ordinary public
+flags while retaining protected language facts. `GETTP` and `GETANDTP` return
+readable flags. Unmasked `BRTPT` excludes VM-private and language metadata so
+neither cache changes legacy branch behavior.
 Status flag instructions still take normal `rxinteger` operands in RXAS/RXBIN;
 the VM applies only the low 32 bits when reading a flag mask.
 
 Level B register flag views expose masked status-word partitions for
-system-programmer classes. VM-private, compiler call-ABI, and all-readable views
-are read-only at source level. Library and user views are writable; a public
+system-programmer classes. VM-private, compiler call-ABI, protected-language,
+and all-readable views are read-only at source level. Library and user views are writable; a public
 write view covers library and user flags only, not compiler flags. Source-level
 flag-view writes replace only the selected masked band and must preserve all
 other status bits. The compiler emits `settpmask target,value,mask` for these
 writes; the VM applies `(old & ~mask) | (value & mask)` after restricting the
-mask to source-writable library/user bands.
+mask to source-writable library/user bands. `.flags.language` observes the
+protected language band without granting ordinary source writes.
+
+Normalization certificates are independent positive bits for NFC, NFD, NFKC
+and NFKD. Shared logical string-length publication clears them, as do the
+same-length in-place writers. Exact string/value/stem copies and owner-local
+moves preserve them. Empty and known-ASCII strings set all four. NFKD implies
+NFD and NFKC implies NFC when a normalization algorithm publishes a result or
+a successful predicate certifies its exposed source. RXPA validation clears
+opaque non-ASCII native state before revalidating, and non-ASCII channel
+materialization starts unknown.
 
 In normal UTF builds, `RXFLAG_VM_UTF8_VALID` and
 `RXFLAG_VM_UTF8_COUNT_VALID` mean the string byte span is known well-formed

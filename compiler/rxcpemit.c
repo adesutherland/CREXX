@@ -398,6 +398,7 @@ static int class_attribute_is_flag_view(Symbol *symbol) {
 static unsigned int class_attribute_flag_mask(Symbol *symbol) {
     if (class_attribute_view_equals(symbol, "flags.vm")) return RXFLAG_VM_PRIVATE_MASK;
     if (class_attribute_view_equals(symbol, "flags.compiler")) return RXFLAG_COMPILER_MASK;
+    if (class_attribute_view_equals(symbol, "flags.language")) return RXFLAG_LANGUAGE_MASK;
     if (class_attribute_view_equals(symbol, "flags.library")) return RXFLAG_LIBRARY_MASK;
     if (class_attribute_view_equals(symbol, "flags.user")) return RXFLAG_USER_MASK;
     if (class_attribute_view_equals(symbol, "flags.public")) return RXFLAG_SOURCE_WRITABLE_MASK;
@@ -1921,6 +1922,23 @@ static walker_result emit_walker(walker_direction direction,
     return result_normal;
 }
 
+static void reset_constant_alias(Symbol *symbol, void *payload) {
+    (void)payload;
+    if (!symbol || !symbol->constant_alias) return;
+    symbol->constant_alias->used = 0;
+    symbol->constant_alias->emitted = 0;
+}
+
+static void reset_constant_aliases(Scope *scope) {
+    size_t i;
+
+    if (!scope) return;
+    scp_4all(scope, reset_constant_alias, 0);
+    for (i = 0; i < scp_noch(scope); i++) {
+        reset_constant_aliases(scp_chd(scope, i));
+    }
+}
+
 void emit(Context *context, FILE *output) {
     walker_payload payload;
 
@@ -1928,6 +1946,9 @@ void emit(Context *context, FILE *output) {
     payload.file = output;
     payload.globals = 0;
 
+    if (context->ast && context->ast->scope) {
+        reset_constant_aliases(context->ast->scope);
+    }
     ast_wlkr(context->ast, register_walker, (void *) &payload);
 
     reset_metaline_source_file(context->file_name);

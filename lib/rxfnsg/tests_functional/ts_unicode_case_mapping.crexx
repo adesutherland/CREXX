@@ -1,0 +1,226 @@
+/* Complete Unicode 17 default full uppercase/lowercase product contract. */
+options levelb
+
+import rxfnsb
+import rxunicode
+import _rxunicodebuild
+
+arg argv = .string[]
+if argv[0] \= 3 then do
+  say "usage: ts_unicode_case_mapping UnicodeData SpecialCasing DerivedCoreProperties"
+  return 2
+end
+
+tables = case_mapping_compile(argv[1],argv[2],argv[3],"17.0.0")
+if tables.status() \= 0 then do
+  say "FAIL: Unicode case mapping line" tables.error_line() || ":" || tables.error()
+  return 1
+end
+if tables.byte_length() \= 4590140 | tables.record_count() \= 3037 |,
+   tables.cased_count() \= 4632 | tables.ignorable_count() \= 2794 |,
+   tables.special_unconditional_count() \= 103 | tables.max_mapping() \= 3 then do
+  say "FAIL: Unicode 17 case-mapping prepared-image audit"
+  return 1
+end
+
+failures = 0
+failures = failures + expect_equal("TUTOR uppercase sharp s",toUppercase("Stra" || "c39f"x || "e"),"0053 0054 0052 0041 0053 0053 0045")
+failures = failures + expect_equal("default lowercase dotted I",toLowercase("c4b0"x),"0069 0307")
+failures = failures + expect_equal("Greek final sigma",toLowercase(hex_sequence_to_string("039F 03A3")),"03BF 03C2")
+failures = failures + expect_equal("Greek medial sigma",toLowercase(hex_sequence_to_string("039F 03A3 0391")),"03BF 03C3 03B1")
+failures = failures + expect_equal("non-BMP uppercase",toUppercase(hex_sequence_to_string("10428")),"10400")
+failures = failures + expect_equal("identity emoji",toLowercase(hex_sequence_to_string("01F600")),"01F600")
+failures = failures + expect_equal("sigma without preceding cased",toLowercase(hex_sequence_to_string("03A3")),"03C3")
+failures = failures + expect_equal("sigma after cased",toLowercase(hex_sequence_to_string("0041 03A3")),"0061 03C2")
+failures = failures + expect_equal("sigma after cased through ignorable",toLowercase(hex_sequence_to_string("0041 0301 03A3")),"0061 0301 03C2")
+failures = failures + expect_equal("sigma before trailing ignorable",toLowercase(hex_sequence_to_string("0041 03A3 0301")),"0061 03C2 0301")
+failures = failures + expect_equal("sigma before cased through ignorable",toLowercase(hex_sequence_to_string("0041 03A3 0301 0042")),"0061 03C3 0301 0062")
+failures = failures + expect_equal("sigma after uncased",toLowercase(hex_sequence_to_string("0031 03A3")),"0031 03C3")
+failures = failures + expect_equal("non-ignorable breaks preceding context",toLowercase(hex_sequence_to_string("0041 0031 03A3")),"0061 0031 03C3")
+failures = failures + expect_equal("non-ignorable breaks following context",toLowercase(hex_sequence_to_string("0041 03A3 0031 0042")),"0061 03C2 0031 0062")
+line_number = .int
+line = .string
+fields = .string[]
+source_hex = .string
+source_codepoint = .int
+source = .string
+upper_hex = .string
+lower_hex = .string
+
+/* Build an independent oracle from the pinned source files. The product table
+ * compiler remains under test, rather than supplying its own expected values. */
+special_seen = .binary
+call binresize special_seen,0x110000
+call binfill special_seen,0
+special_lines = readlines(argv[2])
+special_records = 0
+special_checks = 0
+do line_number = 1 to special_lines[0]
+  line = special_lines[line_number]
+  comment = pos("#",line)
+  if comment > 0 then line = left(line,comment - 1)
+  line = strip(line)
+  if line = "" then iterate
+  fields = qsplit(line,";")
+  if fields[0] < 4 then do
+    say "FAIL: malformed raw SpecialCasing record at line" line_number
+    failures = failures + 1
+    iterate
+  end
+  condition = ""
+  if fields[0] >= 5 then condition = strip(fields[5])
+  if condition \= "" then iterate
+  source_hex = strip(fields[1])
+  source_codepoint = x2d(source_hex)
+  if <at..u8>(source_codepoint) special_seen \= 0 then do
+    say "FAIL: duplicate unconditional SpecialCasing source at line" line_number
+    failures = failures + 1
+    iterate
+  end
+  <at..u8>(source_codepoint) special_seen = 1
+  source = hex_sequence_to_string(source_hex)
+  lower_hex = strip(fields[2])
+  upper_hex = strip(fields[4])
+  if lower_hex = "" then lower_hex = source_hex
+  if upper_hex = "" then upper_hex = source_hex
+  if toLowercase(source) \== hex_sequence_to_string(lower_hex) |,
+     toUppercase(source) \== hex_sequence_to_string(upper_hex) then do
+    say "FAIL: raw unconditional SpecialCasing relation at line" line_number
+    failures = failures + 1
+  end
+  special_records = special_records + 1
+  special_checks = special_checks + 2
+end
+if special_records \= 103 | special_checks \= 206 then do
+  say "FAIL: raw unconditional SpecialCasing count audit"
+  failures = failures + 1
+end
+
+ucd_lines = readlines(argv[1])
+ucd_records = 0
+ucd_non_scalars = 0
+ucd_checks = 0
+do line_number = 1 to ucd_lines[0]
+  line = strip(ucd_lines[line_number])
+  if line = "" | left(line,1) = "#" then iterate
+  fields = qsplit(line,";")
+  if fields[0] < 14 then do
+    say "FAIL: malformed raw UnicodeData record at line" line_number
+    failures = failures + 1
+    iterate
+  end
+  source_hex = strip(fields[1])
+  source_codepoint = x2d(source_hex)
+  ucd_records = ucd_records + 1
+  /* Surrogate range markers are UnicodeData records but cannot inhabit a
+   * cREXX .string, and have no case mapping. Audit and exclude those six
+   * non-scalars explicitly rather than constructing invalid text. */
+  if source_codepoint >= 0xD800 & source_codepoint <= 0xDFFF then do
+    ucd_non_scalars = ucd_non_scalars + 1
+    iterate
+  end
+  if <at..u8>(source_codepoint) special_seen \= 0 then iterate
+  source = hex_sequence_to_string(source_hex)
+  upper_hex = strip(fields[13])
+  lower_hex = strip(fields[14])
+  if upper_hex = "" then upper_hex = source_hex
+  if lower_hex = "" then lower_hex = source_hex
+  if toUppercase(source) \== hex_sequence_to_string(upper_hex) |,
+     toLowercase(source) \== hex_sequence_to_string(lower_hex) then do
+    say "FAIL: raw UnicodeData case relation at line" line_number
+    failures = failures + 1
+  end
+  ucd_checks = ucd_checks + 2
+end
+if ucd_records \= 40575 | ucd_non_scalars \= 6 | ucd_checks \= 80932 then do
+  say "FAIL: raw UnicodeData row/non-scalar/check audit" ucd_records ucd_non_scalars ucd_checks
+  failures = failures + 1
+end
+
+record_checks = 0
+do record_index = 0 to tables.record_count() - 1
+  source_codepoint = tables.record_source(record_index)
+  source = ""
+  assembler appendchar source,source_codepoint
+  expected = tables.expected_upper(record_index)
+  if toUppercase(source) \== expected then do
+    say "FAIL: uppercase mapping record" record_index "U+" || d2x(source_codepoint)
+    failures = failures + 1
+  end
+  expected = tables.expected_lower(record_index)
+  if toLowercase(source) \== expected then do
+    say "FAIL: lowercase mapping record" record_index "U+" || d2x(source_codepoint)
+    failures = failures + 1
+  end
+  record_checks = record_checks + 2
+end
+
+identity_checks = 0
+batch_count = 0
+batch = ""
+do codepoint = 0 to 0x10FFFF
+  if codepoint >= 0xD800 & codepoint <= 0xDFFF then iterate
+  if tables.has_record(codepoint) then iterate
+  assembler appendchar batch,codepoint
+  batch_count = batch_count + 1
+  identity_checks = identity_checks + 1
+  if batch_count = 4096 then do
+    failures = failures + expect_identity(batch,codepoint)
+    batch = ""
+    batch_count = 0
+  end
+end
+if batch_count > 0 then failures = failures + expect_identity(batch,0x10FFFF)
+if identity_checks \= 1109027 then do
+  say "FAIL: unexpected unlisted default case-mapping scalar count" identity_checks
+  failures = failures + 1
+end
+
+if failures > 0 then return 1
+say "Default case-mapping records checked in two modes:" record_checks
+independent_checks = ucd_checks + special_checks
+say "Independent UnicodeData and SpecialCasing relations:" independent_checks
+say "Unlisted default case-mapping scalar identity checks per mode:" identity_checks
+say "PASS: rxunicode Unicode 17 default full upper and lower"
+return 0
+
+expect_equal: procedure = .int
+  arg label = .string, actual = .string, expected_hex = .string
+  expected = hex_sequence_to_string(expected_hex)
+  if actual \== expected then do
+    say "FAIL:" label "expected" expected_hex "got" string_to_hex_sequence(actual)
+    return 1
+  end
+  return 0
+
+expect_identity: procedure = .int
+  arg expose batch = .string, codepoint = .int
+  if toUppercase(batch) \== batch | toLowercase(batch) \== batch then do
+    say "FAIL: unlisted case-mapping identity batch near U+" || right(d2x(codepoint),6,"0")
+    return 1
+  end
+  return 0
+
+hex_sequence_to_string: procedure = .string
+  arg sequence = .string
+  result = ""
+  do component_index = 1 to words(sequence)
+    codepoint = x2d(word(sequence,component_index))
+    assembler appendchar result,codepoint
+  end
+  return result
+
+string_to_hex_sequence: procedure = .string
+  arg value = .string
+  result = ""
+  value_length = 0
+  assembler strlen value_length,value
+  do character_index = 0 to value_length - 1
+    codepoint = 0
+    assembler strchar codepoint,value,character_index
+    if result \= "" then result = result || " "
+    width = 4
+    if codepoint > 0xFFFF then width = 6
+    result = result || right(d2x(codepoint),width,"0")
+  end
+  return result

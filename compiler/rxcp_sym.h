@@ -105,6 +105,23 @@ struct SymbolNode {
     unsigned int writeUsage : 1;
 };
 
+/*
+ * Shared emitter representation for an explicit binary language constant.
+ *
+ * Constant propagation can attach the same large payload to many AST uses.
+ * Keeping one reference-counted copy here lets those nodes borrow the value
+ * and lets the RXAS emitter name it once with a module-scoped `.const` alias.
+ */
+typedef struct ConstantAlias {
+    char *name;
+    ValueType type;
+    char *value;
+    size_t value_length;
+    size_t reference_count;
+    char used;
+    char emitted;
+} ConstantAlias;
+
 struct Symbol {
     char *name;
     void *ast_node_array;
@@ -151,6 +168,7 @@ struct Symbol {
     InlineCallableSummary *inline_summary; /* PERF2-03: versioned immutable callable facts */
     char is_inlinable;  /* Set if this procedure is inlinable */
     ASTNode *ast_template; /* AST template for inlining */
+    ConstantAlias *constant_alias; /* Shared explicit binary constant payload */
     int creation_ordinal; /* Ordinal value when the symbol was first created */
     ASTNode *creation_node; /* The node that first created this symbol */
 };
@@ -168,6 +186,10 @@ void sym_set_reference_type(Symbol *symbol, ValueType type, size_t dims,
 void sym_copy_reference_type(Symbol *dest, const Symbol *src);
 void sym_clear_inline_summary(Symbol *symbol);
 int sym_copy_inline_summary(Symbol *dest, const InlineCallableSummary *summary);
+void sym_clear_constant_alias(Symbol *symbol);
+int sym_set_constant_alias(Symbol *symbol, const char *name, ValueType type,
+                           const char *value, size_t value_length);
+void sym_copy_constant_alias(Symbol *dest, const Symbol *src);
 
 /* Scope Factory */
 Scope *scp_f(Context *context, Scope *parent, ASTNode *node, Symbol* symbol, ScopeType type);

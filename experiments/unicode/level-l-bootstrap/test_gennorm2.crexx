@@ -1,0 +1,76 @@
+/* Whole-file lexer proof for the retained ICU gennorm2 input language. */
+options levelb
+
+import rxfnsb
+import level_l_gennorm2
+
+arg argv = .string[]
+if argv[0] \= 1 then do
+  say "usage: test_gennorm2 nfc.txt"
+  return 2
+end
+
+failures = 0
+source = loadtext(argv[1], "0a"x)
+tokens = level_l_gennorm2_lex(source)
+failures = failures + check_int("whole-file status", level_l_gennorm2_status(), 0)
+failures = failures + check_int("range operators", count_token(tokens, "range"), 163)
+failures = failures + check_int("colon operators", count_token(tokens, "colon"), 403)
+failures = failures + check_int("equals operators", count_token(tokens, "equals"), 961)
+failures = failures + check_int("greater operators", count_token(tokens, "greater"), 1120)
+failures = failures + check_int("version marker", count_token(tokens, "star"), 1)
+failures = failures + check_int("Unicode keyword", count_token(tokens, "unicode_keyword"), 1)
+failures = failures + check_int("version value", count_token(tokens, "version"), 1)
+failures = failures + check_int("line endings", count_token(tokens, "newline"), 2500)
+failures = failures + check_int("EOF tokens", count_token(tokens, "eof"), 1)
+
+count = level_l_gennorm2_token_count(tokens)
+if count < 10000 then do
+  say "FAIL: implausibly small whole-file token count" count
+  failures = failures + 1
+end
+last = count - 1
+failures = failures + check_str("last token", level_l_gennorm2_token_name(level_l_gennorm2_token_kind(tokens, last)), "eof")
+failures = failures + check_int("EOF start", level_l_gennorm2_token_start(tokens, last), <blen>(source as .binary))
+failures = failures + check_int("EOF length", level_l_gennorm2_token_length(tokens, last), 0)
+
+unicode_comment = "# café" || "0a"x
+tokens = level_l_gennorm2_lex(unicode_comment)
+failures = failures + check_int("Unicode comment status", level_l_gennorm2_status(), 0)
+failures = failures + check_int("Unicode comment token count", level_l_gennorm2_token_count(tokens), 2)
+failures = failures + check_str("Unicode comment newline", level_l_gennorm2_token_name(level_l_gennorm2_token_kind(tokens, 0)), "newline")
+failures = failures + check_int("Unicode comment newline byte start", level_l_gennorm2_token_start(tokens, 0), 7)
+
+tokens = level_l_gennorm2_lex("0041@0042")
+failures = failures + check_int("invalid status", level_l_gennorm2_status(), 2)
+failures = failures + check_int("invalid offset", level_l_gennorm2_error_offset(), 4)
+failures = failures + check_str("invalid message", level_l_gennorm2_error_message(), "invalid gennorm2 input character")
+
+if failures \= 0 then do
+  say "Level L gennorm2 failures:" failures
+  return 1
+end
+
+say "PASS: authored Level L lexer accepts ICU gennorm2 nfc.txt"
+return 0
+
+count_token: procedure = .int
+  arg tokens = .binary, wanted = .string
+  matches = 0
+  do i = 0 to level_l_gennorm2_token_count(tokens) - 1
+    name = level_l_gennorm2_token_name(level_l_gennorm2_token_kind(tokens, i))
+    if name = wanted then matches = matches + 1
+  end
+  return matches
+
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual = expected then return 0
+  say "FAIL:" label "expected" expected "got" actual
+  return 1
+
+check_str: procedure = .int
+  arg label = .string, actual = .string, expected = .string
+  if actual == expected then return 0
+  say "FAIL:" label "expected" expected "got" actual
+  return 1

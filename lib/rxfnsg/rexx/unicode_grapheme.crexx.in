@@ -1,0 +1,344 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Private Level B Unicode 17.0.0 UAX #29 revision 47 extended-grapheme
+ * executor. The build injects one compiler-owned read-only prepared constant.
+ */
+
+options levelb
+
+namespace _rxunicode expose grapheme_count grapheme_boundaries grapheme_boundary_count grapheme_at grapheme_codepoint_start grapheme_codepoint_length grapheme_substr grapheme_substr_indexed grapheme_pos grapheme_pos_indexed grapheme_reverse grapheme_reverse_indexed grapheme_iterator_exhausted
+import rxfnsb
+
+unicode_grapheme_constants: procedure expose UNICODE_GRAPHEME_DATA
+  /* rxc emits this source constant once and reuses its module-scoped alias. */
+  /* @RXUNICODE_GRAPHEME_DATA@ */
+  return
+
+_grapheme_boot: initialiser
+  data_length = <blen>(UNICODE_GRAPHEME_DATA)
+  if data_length \= 1114176 |,
+     <at..u8>(0) UNICODE_GRAPHEME_DATA \= 67 |,
+     <at..u8>(1) UNICODE_GRAPHEME_DATA \= 85 |,
+     <at..u8>(2) UNICODE_GRAPHEME_DATA \= 67 |,
+     <at..u8>(3) UNICODE_GRAPHEME_DATA \= 71 |,
+     <at..u16>(4) UNICODE_GRAPHEME_DATA \= 1 |,
+     <at..u16>(6) UNICODE_GRAPHEME_DATA \= 64 |,
+     <at..u16>(8) UNICODE_GRAPHEME_DATA \= 17 |,
+     <at..u16>(10) UNICODE_GRAPHEME_DATA \= 0 |,
+     <at..u16>(12) UNICODE_GRAPHEME_DATA \= 0 |,
+     <at..u16>(14) UNICODE_GRAPHEME_DATA \= 47 |,
+     <at..u32>(16) UNICODE_GRAPHEME_DATA \= 64 |,
+     <at..u32>(20) UNICODE_GRAPHEME_DATA \= 0x110000 |,
+     <at..u32>(24) UNICODE_GRAPHEME_DATA \= 18101 |,
+     <at..u32>(28) UNICODE_GRAPHEME_DATA \= 2848 |,
+     <at..u32>(32) UNICODE_GRAPHEME_DATA \= 911 |,
+     <at..u32>(36) UNICODE_GRAPHEME_DATA \= 2217 |,
+     <at..u32>(40) UNICODE_GRAPHEME_DATA \= 20 |,
+     <at..u32>(44) UNICODE_GRAPHEME_DATA \= data_length then,
+    signal failure "rxunicode grapheme data is corrupt or unsupported"
+  return
+
+/** One UAX #29 scan. Mode 1 counts, mode 2 indexes, and mode 3 selects. */
+_graphemescan: class
+  _count = .int
+  _offsets = .binary
+  _slice_start = .int
+  _slice_end = .int
+  _selected_count = .int
+  _source_length = .int
+
+  *: factory
+    arg source = .string, mode = .int, wanted_start = .int, wanted_length = .int, length_supplied = .int
+    _count = 0
+    _slice_start = 0
+    _slice_end = 0
+    _selected_count = 0
+    _source_length = 0
+    source_length = 0
+    assembler strlen source_length,source
+    _source_length = source_length
+
+    if mode = 2 then do
+      call binresize _offsets, (_source_length + 1) * 4
+      <at..u32>(0) _offsets = 0
+    end
+    if _source_length = 0 then do
+      if mode = 2 then call binresize _offsets, 4
+      return
+    end
+
+    properties_offset = <at..u32>(16) UNICODE_GRAPHEME_DATA
+    previous_class = -1
+    regional_run = 0
+    emoji_state = 0
+    incb_state = 0
+    cluster_start = 0
+    stopped = 0
+
+    do source_index = 0 to _source_length - 1 while stopped = 0
+      codepoint = 0
+      assembler strchar codepoint,source,source_index
+      property = <at..u8>(properties_offset + codepoint) UNICODE_GRAPHEME_DATA
+      current_class = property <and> 0x0F
+      extended_pictographic = (property <and> 0x10) \= 0
+      incb = (property <shr> 5) <and> 3
+
+      is_break = source_index > 0
+      if source_index > 0 then do
+        if previous_class = 1 & current_class = 2 then is_break = 0
+        else if previous_class = 1 | previous_class = 2 | previous_class = 3 then is_break = 1
+        else if current_class = 1 | current_class = 2 | current_class = 3 then is_break = 1
+        else if previous_class = 5 &,
+                (current_class = 5 | current_class = 6 | current_class = 8 | current_class = 9) then is_break = 0
+        else if (previous_class = 8 | previous_class = 6) &,
+                (current_class = 6 | current_class = 7) then is_break = 0
+        else if (previous_class = 9 | previous_class = 7) & current_class = 7 then is_break = 0
+        else if current_class = 4 | current_class = 13 then is_break = 0
+        else if current_class = 12 then is_break = 0
+        else if previous_class = 11 then is_break = 0
+        else if incb = 1 & incb_state = 2 then is_break = 0
+        else if extended_pictographic & emoji_state = 2 then is_break = 0
+        else if previous_class = 10 & current_class = 10 & (regional_run <mod> 2) = 1 then is_break = 0
+      end
+
+      if is_break then do
+        _count = _count + 1
+        if mode = 2 then <at..u32>(_count * 4) _offsets = source_index
+        if mode = 3 & _count >= wanted_start &,
+           (length_supplied = 0 | _selected_count < wanted_length) then do
+          if _selected_count = 0 then _slice_start = cluster_start
+          _slice_end = source_index
+          _selected_count = _selected_count + 1
+          if length_supplied & _selected_count = wanted_length then stopped = 1
+        end
+        cluster_start = source_index
+        regional_run = 0
+        emoji_state = 0
+        incb_state = 0
+      end
+
+      if stopped = 0 then do
+        if current_class = 10 then regional_run = regional_run + 1
+        else regional_run = 0
+
+        if extended_pictographic then emoji_state = 1
+        else if current_class = 4 & emoji_state = 1 then emoji_state = 1
+        else if current_class = 13 & emoji_state = 1 then emoji_state = 2
+        else emoji_state = 0
+
+        if incb = 1 then incb_state = 1
+        else if incb = 2 then do
+          if incb_state \= 1 & incb_state \= 2 then incb_state = 0
+        end
+        else if incb = 3 then do
+          if incb_state = 1 | incb_state = 2 then incb_state = 2
+          else incb_state = 0
+        end
+        else incb_state = 0
+
+        previous_class = current_class
+      end
+    end
+
+    if stopped = 0 then do
+      _count = _count + 1
+      if mode = 2 then <at..u32>(_count * 4) _offsets = _source_length
+      if mode = 3 & _count >= wanted_start &,
+         (length_supplied = 0 | _selected_count < wanted_length) then do
+        if _selected_count = 0 then _slice_start = cluster_start
+        _slice_end = _source_length
+        _selected_count = _selected_count + 1
+      end
+    end
+
+    if mode = 2 then call binresize _offsets, (_count + 1) * 4
+    if mode = 3 & _selected_count = 0 then do
+      _slice_start = _source_length
+      _slice_end = _source_length
+    end
+    return
+
+  count: method = .int
+    return _count
+
+  offsets: method = .binary
+    return _offsets
+
+  slice_start: method = .int
+    return _slice_start
+
+  slice_end: method = .int
+    return _slice_end
+
+  selected_count: method = .int
+    return _selected_count
+
+grapheme_count: procedure = .int
+  arg text = .string
+  scan = ._graphemescan(text, 1, 0, 0, 0)
+  return scan.count()
+
+grapheme_boundaries: procedure = .binary
+  arg text = .string
+  scan = ._graphemescan(text, 2, 0, 0, 0)
+  return scan.offsets()
+
+grapheme_boundary_count: procedure = .int
+  arg offsets = .binary
+  length = <blen>(offsets)
+  if length < 4 | (length <mod> 4) \= 0 then,
+    signal failure "rxunicode grapheme boundary index is invalid"
+  return (length <idiv> 4) - 1
+
+grapheme_at: procedure = .string
+  arg text = .string, offsets = .binary, position = .int
+  count = grapheme_boundary_count(offsets)
+  if position < 1 | position > count then,
+    signal out_of_range "rxunicode grapheme position is outside the source"
+  start = <at..u32>((position - 1) * 4) offsets
+  finish = <at..u32>(position * 4) offsets
+  length = finish - start
+  result = ""
+  assembler substring result,text,start,length
+  return result
+
+grapheme_codepoint_start: procedure = .int
+  arg offsets = .binary, position = .int
+  count = grapheme_boundary_count(offsets)
+  if position < 1 | position > count then,
+    signal out_of_range "rxunicode grapheme position is outside the source"
+  return <at..u32>((position - 1) * 4) offsets + 1
+
+grapheme_codepoint_length: procedure = .int
+  arg offsets = .binary, position = .int
+  count = grapheme_boundary_count(offsets)
+  if position < 1 | position > count then,
+    signal out_of_range "rxunicode grapheme position is outside the source"
+  start = <at..u32>((position - 1) * 4) offsets
+  finish = <at..u32>(position * 4) offsets
+  return finish - start
+
+grapheme_substr: procedure = .string
+  arg text = .string, start = .int, requested_length = .int, pad = .string, length_supplied = .int
+  if start < 1 then,
+    signal invalid_arguments "GRAPHEMESUBSTR start must be positive"
+  if length_supplied & requested_length < 0 then,
+    signal invalid_arguments "GRAPHEMESUBSTR length must be non-negative"
+  if length_supplied & grapheme_count(pad) \= 1 then,
+    signal invalid_arguments "GRAPHEMESUBSTR pad must contain exactly one grapheme"
+  if length_supplied & requested_length = 0 then return ""
+
+  scan = ._graphemescan(text, 3, start, requested_length, length_supplied)
+  result = ""
+  slice_start = scan.slice_start()
+  slice_end = scan.slice_end()
+  selected_length = slice_end - slice_start
+  if selected_length > 0 then,
+    assembler substring result,text,slice_start,selected_length
+  if length_supplied then do
+    do padding = scan.selected_count() + 1 to requested_length
+      assembler append result,pad
+    end
+  end
+  return result
+
+grapheme_substr_indexed: procedure = .string
+  arg text = .string, offsets = .binary, start = .int, requested_length = .int, pad = .string, length_supplied = .int
+  if start < 1 then,
+    signal invalid_arguments "GRAPHEMESUBSTR start must be positive"
+  if length_supplied & requested_length < 0 then,
+    signal invalid_arguments "GRAPHEMESUBSTR length must be non-negative"
+  if length_supplied & grapheme_count(pad) \= 1 then,
+    signal invalid_arguments "GRAPHEMESUBSTR pad must contain exactly one grapheme"
+  if length_supplied & requested_length = 0 then return ""
+
+  count = grapheme_boundary_count(offsets)
+  selected_count = 0
+  result = ""
+  if start <= count then do
+    first_boundary = start - 1
+    if length_supplied then do
+      selected_count = count - first_boundary
+      if selected_count > requested_length then selected_count = requested_length
+    end
+    else selected_count = count - first_boundary
+    slice_start = <at..u32>(first_boundary * 4) offsets
+    slice_end = <at..u32>((first_boundary + selected_count) * 4) offsets
+    selected_length = slice_end - slice_start
+    if selected_length > 0 then,
+      assembler substring result,text,slice_start,selected_length
+  end
+  if length_supplied then do
+    do padding = selected_count + 1 to requested_length
+      assembler append result,pad
+    end
+  end
+  return result
+
+grapheme_pos: procedure = .int
+  arg needle = .string, haystack = .string, start = .int
+  offsets = grapheme_boundaries(haystack)
+  return grapheme_pos_indexed(needle, haystack, offsets, start)
+
+grapheme_pos_indexed: procedure = .int
+  arg needle = .string, haystack = .string, offsets = .binary, start = .int
+  if start < 1 then,
+    signal invalid_arguments "GRAPHEMEPOS start must be positive"
+  if needle = "" | haystack = "" then return 0
+
+  count = grapheme_boundary_count(offsets)
+  if start > count then return 0
+  needle_length = 0
+  assembler strlen needle_length,needle
+  source_length = 0
+  assembler strlen source_length,haystack
+
+  do position = start to count
+    source_start = <at..u32>((position - 1) * 4) offsets
+    source_end = source_start + needle_length
+    if source_end > source_length then leave
+
+    low = position
+    high = count
+    is_boundary = 0
+    do while low <= high
+      middle = low + ((high - low) <idiv> 2)
+      boundary = <at..u32>(middle * 4) offsets
+      if boundary = source_end then do
+        is_boundary = 1
+        leave
+      end
+      if boundary < source_end then low = middle + 1
+      else high = middle - 1
+    end
+    if is_boundary then do
+      candidate = ""
+      assembler substring candidate,haystack,source_start,needle_length
+      if candidate == needle then return position
+    end
+  end
+  return 0
+
+grapheme_reverse: procedure = .string
+  arg text = .string
+  offsets = grapheme_boundaries(text)
+  return grapheme_reverse_indexed(text, offsets)
+
+grapheme_reverse_indexed: procedure = .string
+  arg text = .string, offsets = .binary
+  count = grapheme_boundary_count(offsets)
+  result = ""
+  do position = count to 1 by -1
+    start = <at..u32>((position - 1) * 4) offsets
+    finish = <at..u32>(position * 4) offsets
+    length = finish - start
+    piece = ""
+    assembler substring piece,text,start,length
+    assembler append result,piece
+  end
+  return result
+
+grapheme_iterator_exhausted: procedure = .void
+  signal out_of_range "rxunicode grapheme iterator is exhausted"
+  return

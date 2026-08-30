@@ -1,0 +1,48 @@
+/* Write deterministic typed-record and semantic dumps for one rule source. */
+options levelb
+
+import rxfnsb
+import level_l_gennorm2
+import unicode_gennorm2
+
+arg argv = .string[]
+if argv[0] \= 3 then do
+  say "usage: unicode_gennorm2_generate source.txt records.dump semantic.dump"
+  return 2
+end
+
+source = loadtext(argv[1], "0a"x)
+tokens = level_l_gennorm2_lex(source)
+if level_l_gennorm2_status() \= 0 then do
+  say "Unicode lexer panic at byte" level_l_gennorm2_error_offset() || ":" level_l_gennorm2_error_message()
+  return 1
+end
+
+result = unicode_gennorm2_parse(source, tokens)
+if result.status() \= 0 then do
+  say "Unicode rules panic at byte" result.error_start() "length" result.error_length() "token" result.error_token() "line" result.error_line() || ":" result.error()
+  return 1
+end
+
+ast = result.ast()
+if ast.version() \= "17.0.0" | ast.record_count() \= 2485 | ast.ccc_records() \= 403 |,
+   ast.ccc_codepoints() \= 968 | ast.two_way_mappings() \= 961 |,
+   ast.one_way_mappings() \= 1120 | ast.mapping_values() \= 3127 then do
+  say "Unicode rule AST has unexpected complete-corpus counts"
+  return 1
+end
+
+if erasefile(argv[2]) \= 0 then return 1
+if erasefile(argv[3]) \= 0 then return 1
+if charout(argv[2], unicode_gennorm2_record_dump(result)) \= 0 then return 1
+if charout(argv[2]) \= 0 then return 1
+if charout(argv[3], unicode_gennorm2_semantic_dump(result)) \= 0 then return 1
+if charout(argv[3]) \= 0 then return 1
+
+say "Unicode version:" ast.version()
+say "typed records:" ast.record_count()
+say "ccc records/code points:" ast.ccc_records() || "/" || ast.ccc_codepoints()
+say "two-way/one-way mappings:" ast.two_way_mappings() || "/" || ast.one_way_mappings()
+say "mapping values:" ast.mapping_values()
+say "PASS: tokenized gennorm2 parsed into typed Unicode records"
+return 0

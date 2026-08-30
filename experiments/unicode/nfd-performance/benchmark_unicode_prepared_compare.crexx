@@ -1,0 +1,541 @@
+/* Rough correctness-gated comparison of scalar and prepared normalization. */
+options levelb
+
+import rxfnsb
+import level_l_gennorm2
+import unicode_gennorm2
+import unicode_nfd
+import unicode_data
+import unicode_normprops
+import unicode_d
+import level_l_unicode_nfd
+
+arg argv = .string[]
+if argv[0] \= 10 then do
+  say "usage: benchmark_unicode_prepared_compare variant vm nfc.txt UnicodeData.txt DerivedNormalizationProps.txt NormalizationTest.txt warmups samples rows|buffer repetitions"
+  return 2
+end
+
+variant = argv[1]
+vm_label = argv[2]
+nfc_path = argv[3]
+unicode_data_path = argv[4]
+normalization_properties_path = argv[5]
+normalization_test_path = argv[6]
+warmups = argv[7] as .int
+sample_count = argv[8] as .int
+workload = argv[9]
+repetitions = argv[10] as .int
+
+if variant \= "original-nfd" & variant \= "generated-nfd" &,
+   variant \= "prepared-nfd" & variant \= "prepared-nfc" then,
+  return fail("variant must be original-nfd, generated-nfd, prepared-nfd, or prepared-nfc")
+if warmups < 0 then return fail("warmups must be non-negative")
+if sample_count < 1 then return fail("samples must be positive")
+if workload \= "rows" & workload \= "buffer" then,
+  return fail("workload must be rows or buffer")
+if workload = "rows" & repetitions \= 0 then,
+  return fail("row workload repetitions must be zero")
+if workload = "buffer" & repetitions < 1 then,
+  return fail("buffer repetitions must be positive")
+
+sources = .string[]
+expected = .string[]
+lines = readlines(normalization_test_path)
+do line_number = 1 to lines[0]
+  line = strip(lines[line_number])
+  if line = "" | left(line, 1) = "#" | left(line, 1) = "@" then iterate
+  fields = qsplit(line, ";")
+  if fields[0] < 3 then return fail("invalid normalization row at line " || line_number)
+  expected_field = 3
+  if variant = "prepared-nfc" then expected_field = 2
+  source_hex = strip(fields[1])
+  expected_hex = strip(fields[expected_field])
+  if source_hex = "" | expected_hex = "" then,
+    return fail("empty normalization field at line " || line_number)
+  row = sources[0] + 1
+  sources[row] = hex_sequence_to_string(source_hex)
+  expected[row] = hex_sequence_to_string(expected_hex)
+end
+if sources[0] \= 20034 | expected[0] \= 20034 then,
+  return fail("unexpected normalization row count")
+
+if variant = "original-nfd" then do
+  rules_source = loadtext(nfc_path, "0a"x)
+  tokens = level_l_gennorm2_lex(rules_source)
+  if level_l_gennorm2_status() \= 0 then,
+    return fail("gennorm2 lexer: " || level_l_gennorm2_error_message())
+  parse_result = unicode_gennorm2_parse(rules_source, tokens)
+  if parse_result.status() \= 0 then,
+    return fail("gennorm2 parser: " || parse_result.error())
+  if workload = "rows" then,
+    return benchmark_original_rows(parse_result.ast(), reference sources, reference expected, vm_label, warmups, sample_count)
+  source_buffer = .string
+  expected_buffer = .string
+  call build_large_buffers reference sources, reference expected, repetitions, source_buffer, expected_buffer
+  return benchmark_original_buffer(parse_result.ast(), reference source_buffer, reference expected_buffer, vm_label, warmups, sample_count, repetitions)
+end
+
+ucd = unicode_data_parse(unicode_data_path, "17.0.0")
+if ucd.status() \= 0 then,
+  return fail("UnicodeData parser line " || ucd.error_line() || ": " || ucd.error())
+properties = unicode_normprops_parse(normalization_properties_path, "17.0.0")
+if properties.status() \= 0 then,
+  return fail("normalization-property parser line " || properties.error_line() || ": " || properties.error())
+form = "NFD"
+if variant = "prepared-nfc" then form = "NFC"
+if variant = "generated-nfd" then do
+  started = time("us")
+  tables = unicode_norm_compile(ucd, properties)
+  if tables.status() \= 0 then return fail("generated table compiler: " || tables.error())
+  normalizer = level_l_unicode_nfd_new(tables)
+  prepare_us = elapsed_us(started)
+  if workload = "rows" then,
+    return benchmark_generated_rows(reference normalizer, reference sources, reference expected, vm_label, warmups, sample_count, prepare_us, tables.byte_length())
+  source_buffer = .string
+  expected_buffer = .string
+  call build_large_buffers reference sources, reference expected, repetitions, source_buffer, expected_buffer
+  return benchmark_generated_buffer(reference normalizer, reference source_buffer, reference expected_buffer, vm_label, warmups, sample_count, repetitions, prepare_us, tables.byte_length())
+end
+if workload = "rows" then,
+  return benchmark_prepared_rows(ucd, properties, reference sources, reference expected, variant, form, vm_label, warmups, sample_count)
+source_buffer = .string
+expected_buffer = .string
+call build_large_buffers reference sources, reference expected, repetitions, source_buffer, expected_buffer
+return benchmark_prepared_buffer(ucd, properties, reference source_buffer, reference expected_buffer, variant, form, vm_label, warmups, sample_count, repetitions)
+
+benchmark_original_rows: procedure = .int
+  arg ast = .unicodegennorm2ast, sources_ref = reference .string[], expected_ref = reference .string[], vm_label = .string, warmups = .int, sample_count = .int
+  actual_checksum = .int
+  sources = dereference sources_ref
+  expected = dereference expected_ref
+  started = time("us")
+  tables = unicode_nfd_compile(ast)
+  if tables.status() \= 0 then return fail("original table compiler: " || tables.error())
+  normalizer = unicode_nfd_new(tables)
+  if normalizer.status() \= 0 then return fail("original table validation: " || normalizer.error())
+  prepare_us = elapsed_us(started)
+  checksum = original_rows_correctness(reference normalizer, reference sources, reference expected)
+  if checksum < 0 then return 1
+  say "benchmark=unicode_prepared_compare phase=prepare variant=original-nfd vm=" || vm_label,
+      "workload=rows rows=" || sources[0] "elapsed_us=" || prepare_us,
+      "table_bytes=" || tables.byte_length()
+  do warmup = 1 to warmups
+    actual_checksum = original_rows_pass(reference normalizer, reference sources)
+    if actual_checksum \= checksum then return fail("original NFD warmup checksum")
+  end
+  samples = .int[]
+  do sample = 1 to sample_count
+    started = time("us")
+    actual_checksum = original_rows_pass(reference normalizer, reference sources)
+    elapsed = elapsed_us(started)
+    if actual_checksum \= checksum then return fail("original NFD sample checksum")
+    samples[sample] = elapsed
+    say "benchmark=unicode_prepared_compare phase=normalize variant=original-nfd vm=" || vm_label,
+        "workload=rows sample=" || sample "rows=" || sources[0],
+        "elapsed_us=" || elapsed "checksum_scalars=" || actual_checksum
+  end
+  median = median_us(reference samples)
+  say "benchmark=unicode_prepared_compare phase=summary variant=original-nfd vm=" || vm_label,
+      "workload=rows warmups=" || warmups "samples=" || sample_count,
+      "rows=" || sources[0] "median_us=" || median,
+      "checksum_scalars=" || checksum
+  say "PASS: original scalar NFD rough performance cell"
+  return 0
+
+benchmark_prepared_rows: procedure = .int
+  arg ucd = .unicode_data..unicodeucdresult, properties = .unicode_normprops..unicodenormpropsresult, sources_ref = reference .string[], expected_ref = reference .string[], variant = .string, form = .string, vm_label = .string, warmups = .int, sample_count = .int
+  actual_checksum = .int
+  sources = dereference sources_ref
+  expected = dereference expected_ref
+  started = time("us")
+  tables = unicode_norm_compile(ucd, properties)
+  if tables.status() \= 0 then return fail("prepared table compiler: " || tables.error())
+  normalizer = unicode_d_new(tables, form)
+  if normalizer.status() \= 0 then return fail("prepared table validation: " || normalizer.error())
+  prepare_us = elapsed_us(started)
+  checksum = prepared_rows_correctness(reference normalizer, reference sources, reference expected, variant)
+  if checksum < 0 then return 1
+  say "benchmark=unicode_prepared_compare phase=prepare variant=" || variant "vm=" || vm_label,
+      "workload=rows rows=" || sources[0] "elapsed_us=" || prepare_us,
+      "table_bytes=" || tables.byte_length()
+  do warmup = 1 to warmups
+    actual_checksum = prepared_rows_pass(reference normalizer, reference sources)
+    if actual_checksum \= checksum then return fail(variant || " warmup checksum")
+  end
+  samples = .int[]
+  do sample = 1 to sample_count
+    started = time("us")
+    actual_checksum = prepared_rows_pass(reference normalizer, reference sources)
+    elapsed = elapsed_us(started)
+    if actual_checksum \= checksum then return fail(variant || " sample checksum")
+    samples[sample] = elapsed
+    say "benchmark=unicode_prepared_compare phase=normalize variant=" || variant "vm=" || vm_label,
+        "workload=rows sample=" || sample "rows=" || sources[0],
+        "elapsed_us=" || elapsed "checksum_scalars=" || actual_checksum
+  end
+  median = median_us(reference samples)
+  say "benchmark=unicode_prepared_compare phase=summary variant=" || variant "vm=" || vm_label,
+      "workload=rows warmups=" || warmups "samples=" || sample_count,
+      "rows=" || sources[0] "median_us=" || median,
+      "checksum_scalars=" || checksum
+  say "PASS: " || variant " rough performance cell"
+  return 0
+
+benchmark_generated_rows: procedure = .int
+  arg normalizer_ref = reference .level_l_unicode_nfd..levellunicodenfdnormalizer, sources_ref = reference .string[], expected_ref = reference .string[], vm_label = .string, warmups = .int, sample_count = .int, prepare_us = .int, table_bytes = .int
+  actual_checksum = .int
+  normalizer = dereference normalizer_ref
+  sources = dereference sources_ref
+  expected = dereference expected_ref
+  checksum = generated_rows_correctness(reference normalizer, reference sources, reference expected)
+  if checksum < 0 then return 1
+  say "benchmark=unicode_prepared_compare phase=prepare variant=generated-nfd vm=" || vm_label,
+      "workload=rows rows=" || sources[0] "elapsed_us=" || prepare_us,
+      "table_bytes=" || table_bytes
+  do warmup = 1 to warmups
+    actual_checksum = generated_rows_pass(reference normalizer, reference sources)
+    if actual_checksum \= checksum then return fail("generated-nfd warmup checksum")
+  end
+  samples = .int[]
+  do sample = 1 to sample_count
+    started = time("us")
+    actual_checksum = generated_rows_pass(reference normalizer, reference sources)
+    elapsed = elapsed_us(started)
+    if actual_checksum \= checksum then return fail("generated-nfd sample checksum")
+    samples[sample] = elapsed
+    say "benchmark=unicode_prepared_compare phase=normalize variant=generated-nfd vm=" || vm_label,
+        "workload=rows sample=" || sample "rows=" || sources[0],
+        "elapsed_us=" || elapsed "checksum_scalars=" || actual_checksum
+  end
+  median = median_us(reference samples)
+  say "benchmark=unicode_prepared_compare phase=summary variant=generated-nfd vm=" || vm_label,
+      "workload=rows warmups=" || warmups "samples=" || sample_count,
+      "rows=" || sources[0] "median_us=" || median,
+      "checksum_scalars=" || checksum
+  say "PASS: generated prepared NFD rough performance cell"
+  return 0
+
+benchmark_original_buffer: procedure = .int
+  arg ast = .unicodegennorm2ast, source_ref = reference .string, expected_ref = reference .string, vm_label = .string, warmups = .int, sample_count = .int, repetitions = .int
+  actual_checksum = .int
+  source = dereference source_ref
+  expected = dereference expected_ref
+  started = time("us")
+  tables = unicode_nfd_compile(ast)
+  if tables.status() \= 0 then return fail("original table compiler: " || tables.error())
+  normalizer = unicode_nfd_new(tables)
+  if normalizer.status() \= 0 then return fail("original table validation: " || normalizer.error())
+  prepare_us = elapsed_us(started)
+  checksum = original_buffer_correctness(reference normalizer, reference source, reference expected)
+  if checksum < 0 then return 1
+  input_bytes = binlength(source as .binary)
+  say "benchmark=unicode_prepared_compare phase=prepare variant=original-nfd vm=" || vm_label,
+      "workload=buffer repetitions=" || repetitions "input_utf8_bytes=" || input_bytes,
+      "output_utf8_bytes=" || checksum "elapsed_us=" || prepare_us,
+      "table_bytes=" || tables.byte_length()
+  do warmup = 1 to warmups
+    actual_checksum = original_buffer_pass(reference normalizer, reference source)
+    if actual_checksum \= checksum then return fail("original NFD buffer warmup checksum")
+  end
+  samples = .int[]
+  do sample = 1 to sample_count
+    started = time("us")
+    actual_checksum = original_buffer_pass(reference normalizer, reference source)
+    elapsed = elapsed_us(started)
+    if actual_checksum \= checksum then return fail("original NFD buffer sample checksum")
+    samples[sample] = elapsed
+    say "benchmark=unicode_prepared_compare phase=normalize variant=original-nfd vm=" || vm_label,
+        "workload=buffer repetitions=" || repetitions "sample=" || sample,
+        "input_utf8_bytes=" || input_bytes "elapsed_us=" || elapsed,
+        "checksum_utf8_bytes=" || actual_checksum
+  end
+  median = median_us(reference samples)
+  throughput = input_bytes * 1000000 <idiv> median
+  say "benchmark=unicode_prepared_compare phase=summary variant=original-nfd vm=" || vm_label,
+      "workload=buffer repetitions=" || repetitions "warmups=" || warmups,
+      "samples=" || sample_count "input_utf8_bytes=" || input_bytes,
+      "output_utf8_bytes=" || checksum "median_us=" || median,
+      "input_utf8_bytes_per_second=" || throughput
+  say "PASS: original scalar NFD rough buffer cell"
+  return 0
+
+benchmark_prepared_buffer: procedure = .int
+  arg ucd = .unicode_data..unicodeucdresult, properties = .unicode_normprops..unicodenormpropsresult, source_ref = reference .string, expected_ref = reference .string, variant = .string, form = .string, vm_label = .string, warmups = .int, sample_count = .int, repetitions = .int
+  actual_checksum = .int
+  source = dereference source_ref
+  expected = dereference expected_ref
+  started = time("us")
+  tables = unicode_norm_compile(ucd, properties)
+  if tables.status() \= 0 then return fail("prepared table compiler: " || tables.error())
+  normalizer = unicode_d_new(tables, form)
+  if normalizer.status() \= 0 then return fail("prepared table validation: " || normalizer.error())
+  prepare_us = elapsed_us(started)
+  checksum = prepared_buffer_correctness(reference normalizer, reference source, reference expected, variant)
+  if checksum < 0 then return 1
+  input_bytes = binlength(source as .binary)
+  say "benchmark=unicode_prepared_compare phase=prepare variant=" || variant "vm=" || vm_label,
+      "workload=buffer repetitions=" || repetitions "input_utf8_bytes=" || input_bytes,
+      "output_utf8_bytes=" || checksum "elapsed_us=" || prepare_us,
+      "table_bytes=" || tables.byte_length()
+  do warmup = 1 to warmups
+    actual_checksum = prepared_buffer_pass(reference normalizer, reference source)
+    if actual_checksum \= checksum then return fail(variant || " buffer warmup checksum")
+  end
+  samples = .int[]
+  do sample = 1 to sample_count
+    started = time("us")
+    actual_checksum = prepared_buffer_pass(reference normalizer, reference source)
+    elapsed = elapsed_us(started)
+    if actual_checksum \= checksum then return fail(variant || " buffer sample checksum")
+    samples[sample] = elapsed
+    say "benchmark=unicode_prepared_compare phase=normalize variant=" || variant "vm=" || vm_label,
+        "workload=buffer repetitions=" || repetitions "sample=" || sample,
+        "input_utf8_bytes=" || input_bytes "elapsed_us=" || elapsed,
+        "checksum_utf8_bytes=" || actual_checksum
+  end
+  median = median_us(reference samples)
+  throughput = input_bytes * 1000000 <idiv> median
+  say "benchmark=unicode_prepared_compare phase=summary variant=" || variant "vm=" || vm_label,
+      "workload=buffer repetitions=" || repetitions "warmups=" || warmups,
+      "samples=" || sample_count "input_utf8_bytes=" || input_bytes,
+      "output_utf8_bytes=" || checksum "median_us=" || median,
+      "input_utf8_bytes_per_second=" || throughput
+  say "PASS: " || variant " rough buffer cell"
+  return 0
+
+benchmark_generated_buffer: procedure = .int
+  arg normalizer_ref = reference .level_l_unicode_nfd..levellunicodenfdnormalizer, source_ref = reference .string, expected_ref = reference .string, vm_label = .string, warmups = .int, sample_count = .int, repetitions = .int, prepare_us = .int, table_bytes = .int
+  actual_checksum = .int
+  normalizer = dereference normalizer_ref
+  source = dereference source_ref
+  expected = dereference expected_ref
+  checksum = generated_buffer_correctness(reference normalizer, reference source, reference expected)
+  if checksum < 0 then return 1
+  input_bytes = binlength(source as .binary)
+  say "benchmark=unicode_prepared_compare phase=prepare variant=generated-nfd vm=" || vm_label,
+      "workload=buffer repetitions=" || repetitions "input_utf8_bytes=" || input_bytes,
+      "output_utf8_bytes=" || checksum "elapsed_us=" || prepare_us,
+      "table_bytes=" || table_bytes
+  do warmup = 1 to warmups
+    actual_checksum = generated_buffer_pass(reference normalizer, reference source)
+    if actual_checksum \= checksum then return fail("generated-nfd buffer warmup checksum")
+  end
+  samples = .int[]
+  do sample = 1 to sample_count
+    started = time("us")
+    actual_checksum = generated_buffer_pass(reference normalizer, reference source)
+    elapsed = elapsed_us(started)
+    if actual_checksum \= checksum then return fail("generated-nfd buffer sample checksum")
+    samples[sample] = elapsed
+    say "benchmark=unicode_prepared_compare phase=normalize variant=generated-nfd vm=" || vm_label,
+        "workload=buffer repetitions=" || repetitions "sample=" || sample,
+        "input_utf8_bytes=" || input_bytes "elapsed_us=" || elapsed,
+        "checksum_utf8_bytes=" || actual_checksum
+  end
+  median = median_us(reference samples)
+  throughput = input_bytes * 1000000 <idiv> median
+  say "benchmark=unicode_prepared_compare phase=summary variant=generated-nfd vm=" || vm_label,
+      "workload=buffer repetitions=" || repetitions "warmups=" || warmups,
+      "samples=" || sample_count "input_utf8_bytes=" || input_bytes,
+      "output_utf8_bytes=" || checksum "median_us=" || median,
+      "input_utf8_bytes_per_second=" || throughput
+  say "PASS: generated prepared NFD rough buffer cell"
+  return 0
+
+original_rows_correctness: procedure = .int
+  arg normalizer_ref = reference .unicode_nfd..unicodenfdnormalizer, sources_ref = reference .string[], expected_ref = reference .string[]
+  normalizer = dereference normalizer_ref
+  sources = dereference sources_ref
+  expected = dereference expected_ref
+  checksum = 0
+  do i = 1 to sources[0]
+    actual = normalizer.normalize(sources[i])
+    if normalizer.status() \= 0 then return fail_row("original-nfd", i, normalizer.error())
+    if actual \== expected[i] then return fail_row("original-nfd", i, "result mismatch")
+    checksum = checksum + string_scalars(actual)
+  end
+  return checksum
+
+prepared_rows_correctness: procedure = .int
+  arg normalizer_ref = reference .unicode_d..unicodednormalizer, sources_ref = reference .string[], expected_ref = reference .string[], variant = .string
+  normalizer = dereference normalizer_ref
+  sources = dereference sources_ref
+  expected = dereference expected_ref
+  checksum = 0
+  do i = 1 to sources[0]
+    actual = normalizer.normalize(sources[i])
+    if normalizer.status() \= 0 then return fail_row(variant, i, normalizer.error())
+    if actual \== expected[i] then return fail_row(variant, i, "result mismatch")
+    checksum = checksum + string_scalars(actual)
+  end
+  return checksum
+
+generated_rows_correctness: procedure = .int
+  arg normalizer_ref = reference .level_l_unicode_nfd..levellunicodenfdnormalizer, sources_ref = reference .string[], expected_ref = reference .string[]
+  normalizer = dereference normalizer_ref
+  sources = dereference sources_ref
+  expected = dereference expected_ref
+  checksum = 0
+  do i = 1 to sources[0]
+    actual = normalizer.normalize(sources[i])
+    if actual \== expected[i] then return fail_row("generated-nfd", i, "result mismatch")
+    checksum = checksum + string_scalars(actual)
+  end
+  return checksum
+
+original_rows_pass: procedure = .int
+  arg normalizer_ref = reference .unicode_nfd..unicodenfdnormalizer, sources_ref = reference .string[]
+  normalizer = dereference normalizer_ref
+  sources = dereference sources_ref
+  checksum = 0
+  do i = 1 to sources[0]
+    actual = normalizer.normalize(sources[i])
+    checksum = checksum + string_scalars(actual)
+  end
+  return checksum
+
+prepared_rows_pass: procedure = .int
+  arg normalizer_ref = reference .unicode_d..unicodednormalizer, sources_ref = reference .string[]
+  normalizer = dereference normalizer_ref
+  sources = dereference sources_ref
+  checksum = 0
+  do i = 1 to sources[0]
+    actual = normalizer.normalize(sources[i])
+    checksum = checksum + string_scalars(actual)
+  end
+  return checksum
+
+generated_rows_pass: procedure = .int
+  arg normalizer_ref = reference .level_l_unicode_nfd..levellunicodenfdnormalizer, sources_ref = reference .string[]
+  normalizer = dereference normalizer_ref
+  sources = dereference sources_ref
+  checksum = 0
+  do i = 1 to sources[0]
+    actual = normalizer.normalize(sources[i])
+    checksum = checksum + string_scalars(actual)
+  end
+  return checksum
+
+original_buffer_correctness: procedure = .int
+  arg normalizer_ref = reference .unicode_nfd..unicodenfdnormalizer, source_ref = reference .string, expected_ref = reference .string
+  normalizer = dereference normalizer_ref
+  source = dereference source_ref
+  expected = dereference expected_ref
+  actual = normalizer.normalize(source)
+  if normalizer.status() \= 0 then do
+    say "FAIL: original-nfd buffer:" normalizer.error()
+    return -1
+  end
+  if actual \== expected then do
+    say "FAIL: original-nfd buffer result mismatch"
+    return -1
+  end
+  return binlength(actual as .binary)
+
+prepared_buffer_correctness: procedure = .int
+  arg normalizer_ref = reference .unicode_d..unicodednormalizer, source_ref = reference .string, expected_ref = reference .string, variant = .string
+  normalizer = dereference normalizer_ref
+  source = dereference source_ref
+  expected = dereference expected_ref
+  actual = normalizer.normalize(source)
+  if normalizer.status() \= 0 then do
+    say "FAIL: " || variant " buffer:" normalizer.error()
+    return -1
+  end
+  if actual \== expected then do
+    say "FAIL: " || variant " buffer result mismatch"
+    return -1
+  end
+  return binlength(actual as .binary)
+
+generated_buffer_correctness: procedure = .int
+  arg normalizer_ref = reference .level_l_unicode_nfd..levellunicodenfdnormalizer, source_ref = reference .string, expected_ref = reference .string
+  normalizer = dereference normalizer_ref
+  source = dereference source_ref
+  expected = dereference expected_ref
+  actual = normalizer.normalize(source)
+  if actual \== expected then do
+    say "FAIL: generated-nfd buffer result mismatch"
+    return -1
+  end
+  return binlength(actual as .binary)
+
+original_buffer_pass: procedure = .int
+  arg normalizer_ref = reference .unicode_nfd..unicodenfdnormalizer, source_ref = reference .string
+  normalizer = dereference normalizer_ref
+  source = dereference source_ref
+  actual = normalizer.normalize(source)
+  return binlength(actual as .binary)
+
+prepared_buffer_pass: procedure = .int
+  arg normalizer_ref = reference .unicode_d..unicodednormalizer, source_ref = reference .string
+  normalizer = dereference normalizer_ref
+  source = dereference source_ref
+  actual = normalizer.normalize(source)
+  return binlength(actual as .binary)
+
+generated_buffer_pass: procedure = .int
+  arg normalizer_ref = reference .level_l_unicode_nfd..levellunicodenfdnormalizer, source_ref = reference .string
+  normalizer = dereference normalizer_ref
+  source = dereference source_ref
+  actual = normalizer.normalize(source)
+  return binlength(actual as .binary)
+
+median_us: procedure = .int
+  arg values_ref = reference .int[]
+  values = snapshot values_ref
+  do i = 2 to values[0]
+    current = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > current
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = current
+  end
+  middle = values[0] <idiv> 2
+  if values[0] <mod> 2 = 1 then return values[middle + 1]
+  return (values[middle] + values[middle + 1]) <idiv> 2
+
+elapsed_us: procedure = .int
+  arg started = .int
+  elapsed = time("us") - started
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+build_large_buffers: procedure = .void
+  arg sources_ref = reference .string[], expected_ref = reference .string[], repetitions = .int, expose source_buffer = .string, expose expected_buffer = .string
+  sources = dereference sources_ref
+  expected = dereference expected_ref
+  /* U+0020 closes every normalization segment and is stable in all forms. */
+  source_block = arrayjoin(sources, " ") || " "
+  expected_block = arrayjoin(expected, " ") || " "
+  source_buffer = copies(source_block, repetitions)
+  expected_buffer = copies(expected_block, repetitions)
+  return
+
+string_scalars: procedure = .int
+  arg value = .string
+  length = 0
+  assembler strlen length,value
+  return length
+
+hex_sequence_to_string: procedure = .string
+  arg sequence = .string
+  result = ""
+  do i = 1 to words(sequence)
+    codepoint = x2d(word(sequence, i))
+    assembler appendchar result,codepoint
+  end
+  return result
+
+fail_row: procedure = .int
+  arg variant = .string, row = .int, message = .string
+  say "FAIL: " || variant " correctness row" row || ":" message
+  return -1
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

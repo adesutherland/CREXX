@@ -1,0 +1,11 @@
+options levelb
+
+namespace optional_binary_consumer
+import rxfnsb
+import optional_binary_provider
+
+main: procedure
+  say bin2x(.optional_binary_provider..choose("41"x as .binary))
+  say bin2x(.optional_binary_provider..choose("41"x as .binary,"42"x as .binary))
+  say bin2x(optional_binary_provider..choose("41"x as .binary))
+  return

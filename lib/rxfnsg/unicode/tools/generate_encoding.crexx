@@ -1,0 +1,53 @@
+/* Generate the constant-backed legacy single-byte codec module. */
+options levelb
+
+import rxfnsb
+import _rxunicodebuild
+
+arg argv = .string[]
+if argv[0] \= 6 then do
+  say "usage: generate_encoding CP1252 CP437 CP850 IBM1047 template output"
+  return 2
+end
+
+tables = encoding_compile(argv[1],argv[2],argv[3],argv[4])
+if tables.status() \= 0 then do
+  say "FAIL: legacy encoding table line" tables.error_line() || ":" || tables.error()
+  return 1
+end
+if tables.encoding_count() \= 4 | tables.mapping_count() \= 1024 |,
+   tables.byte_length() \= 14536 then do
+  say "FAIL: legacy encoding prepared-image audit"
+  return 1
+end
+
+template = readlines(argv[5])
+if template[0] <= 0 then do
+  say "FAIL: rxunicode codec template is empty or unreadable"
+  return 1
+end
+
+path = argv[6]
+if erasefile(path) \= 0 then return 1
+marker_count = 0
+do line_number = 1 to template[0]
+  line = template[line_number]
+  if strip(line) = "/* @RXUNICODE_ENCODING_DATA@ */" then do
+    marker_count = marker_count + 1
+    if charout(path,"  constant UNICODE_ENCODING_DATA = '") \= 0 then return 1
+    if charout(path,bin2x(tables.image())) \= 0 then return 1
+    if charout(path,"'x as .binary" || "0a"x) \= 0 then return 1
+  end
+  else if charout(path,line || "0a"x) \= 0 then return 1
+end
+if charout(path) \= 0 then return 1
+if marker_count \= 1 then do
+  ignored = erasefile(path)
+  say "FAIL: rxunicode codec template must contain exactly one data marker"
+  return 1
+end
+
+say "Legacy encoding image bytes:" tables.byte_length()
+say "Legacy encoding mappings:" tables.mapping_count()
+say "Legacy encoding source: PASS"
+return 0

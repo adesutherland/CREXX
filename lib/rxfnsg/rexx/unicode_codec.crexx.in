@@ -1,0 +1,519 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Private strict-by-default Unicode and legacy byte/text codecs for rxunicode.
+ */
+
+options levelb
+
+namespace _rxunicode expose unicode_encode unicode_encode_replacing unicode_decode unicode_decode_replacing unicode_is_decodable unicode_is_encoding_supported
+import rxfnsb
+
+unicode_encoding_constants: procedure expose UNICODE_ENCODING_DATA
+  /* @RXUNICODE_ENCODING_DATA@ */
+  return
+
+_unicode_encoding_boot: initialiser
+  data_length = <blen>(UNICODE_ENCODING_DATA)
+  if data_length \= 14536 |,
+     <at..u8>(0) UNICODE_ENCODING_DATA \= 67 |,
+     <at..u8>(1) UNICODE_ENCODING_DATA \= 85 |,
+     <at..u8>(2) UNICODE_ENCODING_DATA \= 69 |,
+     <at..u8>(3) UNICODE_ENCODING_DATA \= 77 |,
+     <at..u16>(4) UNICODE_ENCODING_DATA \= 1 |,
+     <at..u16>(6) UNICODE_ENCODING_DATA \= 64 |,
+     <at..u16>(8) UNICODE_ENCODING_DATA \= 4 |,
+     <at..u16>(10) UNICODE_ENCODING_DATA \= 32 |,
+     <at..u32>(12) UNICODE_ENCODING_DATA \= 64 |,
+     <at..u32>(16) UNICODE_ENCODING_DATA \= data_length |,
+     <at..u32>(20) UNICODE_ENCODING_DATA \= 1024 |,
+     <at..u32>(24) UNICODE_ENCODING_DATA \= 256 |,
+     <at..u32>(28) UNICODE_ENCODING_DATA \= 257 then,
+    signal failure "rxunicode legacy encoding data is corrupt or unsupported"
+  do descriptor_index = 0 to 3
+    descriptor = 64 + descriptor_index * 32
+    decode_offset = <at..u32>(descriptor + 8) UNICODE_ENCODING_DATA
+    page_offset = <at..u32>(descriptor + 12) UNICODE_ENCODING_DATA
+    records_offset = <at..u32>(descriptor + 16) UNICODE_ENCODING_DATA
+    record_count = <at..u32>(descriptor + 20) UNICODE_ENCODING_DATA
+    if <at..u32>(descriptor) UNICODE_ENCODING_DATA \= 8 + descriptor_index |,
+       <at..u32>(descriptor + 4) UNICODE_ENCODING_DATA \= 1 |,
+       <at..u32>(descriptor + 24) UNICODE_ENCODING_DATA \= 8 |,
+       <at..u32>(descriptor + 28) UNICODE_ENCODING_DATA \= 256 |,
+       decode_offset < 64 + 4 * 32 | decode_offset + 1024 > data_length |,
+       page_offset < decode_offset + 1024 | page_offset + 514 > data_length |,
+       records_offset < page_offset + 514 |,
+       record_count > 256 | records_offset + record_count * 8 > data_length then,
+      signal failure "rxunicode legacy encoding descriptor is corrupt"
+  end
+  return
+
+/** Encode valid cREXX text without adding a byte-order mark. */
+unicode_encode: procedure = .binary
+  arg source = .string, encoding = .string
+  replacement = .binary
+  call binresize replacement,0
+  return _unicode_encode_core(source,encoding,replacement,0)
+
+/** Encode text and substitute exact, valid target bytes when needed. */
+unicode_encode_replacing: procedure = .binary
+  arg source = .string, encoding = .string, replacement = .binary
+  return _unicode_encode_core(source,encoding,replacement,1)
+
+_unicode_encode_core: procedure = .binary
+  arg source = .string, encoding = .string, replacement = .binary, replacement_supplied = .int
+  code = _unicode_encoding_code(encoding)
+  if code = 0 then signal invalid_arguments "rxunicode unsupported encoding: " || encoding
+  if replacement_supplied then do
+    if <blen>(replacement) = 0 then,
+      signal invalid_arguments "rxunicode encode replacement must not be empty"
+    if _unicode_codec_valid(replacement,code) = 0 then,
+      signal invalid_arguments "rxunicode encode replacement is not valid " || _unicode_encoding_name(code)
+  end
+  if code = 1 then return source as .binary
+  if code >= 6 then,
+    return _unicode_single_byte_encode(source,code,replacement,replacement_supplied)
+
+  source_length = 0
+  output_length = 0
+  source_index = .int
+  codepoint = .int
+  assembler strlen source_length,source
+  if code = 4 | code = 5 then output_length = source_length * 4
+  else do source_index = 0 to source_length - 1
+    codepoint = 0
+    assembler strchar codepoint,source,source_index
+    if codepoint <= 0xFFFF then output_length = output_length + 2
+    else output_length = output_length + 4
+  end
+
+  result = .binary
+  call binresize result,output_length
+  output_offset = 0
+  do source_index = 0 to source_length - 1
+    codepoint = 0
+    assembler strchar codepoint,source,source_index
+    if code = 2 | code = 3 then do
+      if codepoint <= 0xFFFF then do
+        call _unicode_put_u16 result,output_offset,codepoint,code = 2
+        output_offset = output_offset + 2
+      end
+      else do
+        value = codepoint - 0x10000
+        high = 0xD800 + (value <shr> 10)
+        low = 0xDC00 + (value <and> 0x3FF)
+        call _unicode_put_u16 result,output_offset,high,code = 2
+        call _unicode_put_u16 result,output_offset + 2,low,code = 2
+        output_offset = output_offset + 4
+      end
+    end
+    else do
+      call _unicode_put_u32 result,output_offset,codepoint,code = 4
+      output_offset = output_offset + 4
+    end
+  end
+  return result
+
+_unicode_single_byte_encode: procedure = .binary
+  arg source = .string, code = .int, replacement = .binary, replacement_supplied = .int
+  source_length = 0
+  assembler strlen source_length,source
+  replacement_length = <blen>(replacement)
+  width = 1
+  if replacement_supplied & replacement_length > 1 then width = replacement_length
+  result = .binary
+  call binresize result,source_length * width
+  output_offset = 0
+  do source_index = 0 to source_length - 1
+    codepoint = 0
+    assembler strchar codepoint,source,source_index
+    byte = _unicode_single_byte_lookup(code,codepoint)
+    if byte >= 0 then do
+      <at..u8>(output_offset) result = byte
+      output_offset = output_offset + 1
+    end
+    else if replacement_supplied then do
+      call bincopy result,output_offset,replacement,0,replacement_length
+      output_offset = output_offset + replacement_length
+    end
+    else signal unicode_error "rxunicode cannot encode U+" || _unicode_codepoint_hex(codepoint) || " as " || _unicode_encoding_name(code)
+  end
+  if output_offset \= <blen>(result) then call binresize result,output_offset
+  return result
+
+/** Decode a complete strict byte sequence without consuming a BOM. */
+unicode_decode: procedure = .string
+  arg source = .binary, encoding = .string
+  code = _unicode_encoding_code(encoding)
+  if code = 0 then signal invalid_arguments "rxunicode unsupported encoding: " || encoding
+  if _unicode_codec_valid(source,code) = 0 then,
+    signal unicode_error "rxunicode malformed " || _unicode_encoding_name(code) || " input"
+  if code = 1 then return source as .string
+  if code >= 6 then return _unicode_single_byte_decode(source,code,"",0)
+  return _unicode_decode_valid_utf(source,code)
+
+/** Decode bytes and substitute caller-selected text for malformed input. */
+unicode_decode_replacing: procedure = .string
+  arg source = .binary, encoding = .string, replacement = .string
+  code = _unicode_encoding_code(encoding)
+  if code = 0 then signal invalid_arguments "rxunicode unsupported encoding: " || encoding
+  if replacement = "" then,
+    signal invalid_arguments "rxunicode decode replacement must not be empty"
+  if code = 1 then return _unicode_utf8_decode_replacing(source,replacement)
+  if code = 2 | code = 3 then,
+    return _unicode_utf16_decode_replacing(source,code = 2,replacement)
+  if code = 4 | code = 5 then,
+    return _unicode_utf32_decode_replacing(source,code = 4,replacement)
+  return _unicode_single_byte_decode(source,code,replacement,1)
+
+_unicode_decode_valid_utf: procedure = .string
+  arg expose source = .binary, code = .int
+  result = ""
+  source_length = <blen>(source)
+  offset = 0
+  first = .int
+  second = .int
+  codepoint = .int
+  do while offset < source_length
+    if code = 2 | code = 3 then do
+      first = _unicode_get_u16(source,offset,code = 2)
+      offset = offset + 2
+      if first >= 0xD800 & first <= 0xDBFF then do
+        second = _unicode_get_u16(source,offset,code = 2)
+        offset = offset + 2
+        codepoint = 0x10000 + ((first - 0xD800) <shl> 10) + second - 0xDC00
+      end
+      else codepoint = first
+    end
+    else do
+      codepoint = _unicode_get_u32(source,offset,code = 4)
+      offset = offset + 4
+    end
+    assembler appendchar result,codepoint
+  end
+  return result
+
+_unicode_single_byte_decode: procedure = .string
+  arg expose source = .binary, code = .int, replacement = .string, replacement_supplied = .int
+  result = ""
+  source_length = <blen>(source)
+  do offset = 0 to source_length - 1
+    byte = <at..u8>(offset) source
+    codepoint = _unicode_single_byte_decode_lookup(code,byte)
+    if codepoint >= 0 then assembler appendchar result,codepoint
+    else if replacement_supplied then result = result || replacement
+    else signal unicode_error "rxunicode malformed " || _unicode_encoding_name(code) || " input"
+  end
+  return result
+
+_unicode_utf8_decode_replacing: procedure = .string
+  arg expose source = .binary, replacement = .string
+  result = ""
+  source_length = <blen>(source)
+  offset = 0
+  codepoint = .int
+  consumed = .int
+  do while offset < source_length
+    if _unicode_utf8_next(source,offset,codepoint,consumed) then,
+      assembler appendchar result,codepoint
+    else result = result || replacement
+    offset = offset + consumed
+  end
+  return result
+
+_unicode_utf16_decode_replacing: procedure = .string
+  arg expose source = .binary, little_endian = .int, replacement = .string
+  result = ""
+  source_length = <blen>(source)
+  offset = 0
+  do while offset < source_length
+    if source_length - offset < 2 then do
+      result = result || replacement
+      leave
+    end
+    first = _unicode_get_u16(source,offset,little_endian)
+    if first >= 0xD800 & first <= 0xDBFF then do
+      if source_length - offset < 4 then do
+        result = result || replacement
+        offset = offset + 2
+        iterate
+      end
+      second = _unicode_get_u16(source,offset + 2,little_endian)
+      if second < 0xDC00 | second > 0xDFFF then do
+        result = result || replacement
+        offset = offset + 2
+        iterate
+      end
+      codepoint = 0x10000 + ((first - 0xD800) <shl> 10) + second - 0xDC00
+      assembler appendchar result,codepoint
+      offset = offset + 4
+    end
+    else if first >= 0xDC00 & first <= 0xDFFF then do
+      result = result || replacement
+      offset = offset + 2
+    end
+    else do
+      assembler appendchar result,first
+      offset = offset + 2
+    end
+  end
+  return result
+
+_unicode_utf32_decode_replacing: procedure = .string
+  arg expose source = .binary, little_endian = .int, replacement = .string
+  result = ""
+  source_length = <blen>(source)
+  offset = 0
+  do while offset < source_length
+    if source_length - offset < 4 then do
+      result = result || replacement
+      leave
+    end
+    codepoint = _unicode_get_u32(source,offset,little_endian)
+    if codepoint > 0x10FFFF |,
+       (codepoint >= 0xD800 & codepoint <= 0xDFFF) then,
+      result = result || replacement
+    else assembler appendchar result,codepoint
+    offset = offset + 4
+  end
+  return result
+
+/** Return one only when the complete byte value is a valid encoding instance. */
+unicode_is_decodable: procedure = .boolean
+  arg source = .binary, encoding = .string
+  code = _unicode_encoding_code(encoding)
+  if code = 0 then signal invalid_arguments "rxunicode unsupported encoding: " || encoding
+  return _unicode_codec_valid(source,code) \= 0
+
+/** Report whether a spelling names one supported explicit codec. */
+unicode_is_encoding_supported: procedure = .boolean
+  arg encoding = .string
+  return _unicode_encoding_code(encoding) \= 0
+
+_unicode_encoding_code: procedure = .int
+  arg encoding = .string
+  compact = changestr("-",upper(strip(encoding)),"")
+  compact = changestr("_",compact,"")
+  if compact = "UTF8" then return 1
+  if compact = "UTF16LE" then return 2
+  if compact = "UTF16BE" then return 3
+  if compact = "UTF32LE" then return 4
+  if compact = "UTF32BE" then return 5
+  if compact = "ASCII" | compact = "USASCII" | compact = "ISO646US" then return 6
+  if compact = "ISO88591" | compact = "LATIN1" | compact = "ISOLATIN1" |,
+     compact = "IBM819" | compact = "CP819" | compact = "819" then return 7
+  if compact = "WINDOWS1252" | compact = "CP1252" | compact = "1252" then return 8
+  if compact = "IBM437" | compact = "CP437" | compact = "437" then return 9
+  if compact = "IBM850" | compact = "CP850" | compact = "850" then return 10
+  if compact = "IBM1047" | compact = "CP1047" | compact = "1047" then return 11
+  return 0
+
+_unicode_encoding_name: procedure = .string
+  arg code = .int
+  if code = 1 then return "UTF-8"
+  if code = 2 then return "UTF-16LE"
+  if code = 3 then return "UTF-16BE"
+  if code = 4 then return "UTF-32LE"
+  if code = 5 then return "UTF-32BE"
+  if code = 6 then return "US-ASCII"
+  if code = 7 then return "ISO-8859-1"
+  if code = 8 then return "Windows-1252"
+  if code = 9 then return "IBM437"
+  if code = 10 then return "IBM850"
+  return "IBM1047"
+
+_unicode_codec_valid: procedure = .int
+  arg expose source = .binary, code = .int
+  if code = 1 then return _unicode_utf8_valid(source)
+  if code = 2 | code = 3 then return _unicode_utf16_valid(source,code = 2)
+  if code = 4 | code = 5 then return _unicode_utf32_valid(source,code = 4)
+  source_length = <blen>(source)
+  do offset = 0 to source_length - 1
+    if _unicode_single_byte_decode_lookup(code,<at..u8>(offset) source) < 0 then return 0
+  end
+  return 1
+
+_unicode_single_byte_decode_lookup: procedure = .int
+  arg code = .int, byte = .int
+  if code = 6 then do
+    if byte <= 0x7F then return byte
+    return -1
+  end
+  if code = 7 then return byte
+  descriptor = 64 + (code - 8) * 32
+  decode_offset = <at..u32>(descriptor + 8) UNICODE_ENCODING_DATA
+  codepoint = <at..u32>(decode_offset + byte * 4) UNICODE_ENCODING_DATA
+  if codepoint = 0xFFFFFFFF then return -1
+  return codepoint
+
+_unicode_single_byte_lookup: procedure = .int
+  arg code = .int, codepoint = .int
+  if code = 6 then do
+    if codepoint <= 0x7F then return codepoint
+    return -1
+  end
+  if code = 7 then do
+    if codepoint <= 0xFF then return codepoint
+    return -1
+  end
+  if codepoint > 0xFFFF then return -1
+  descriptor = 64 + (code - 8) * 32
+  page_offset = <at..u32>(descriptor + 12) UNICODE_ENCODING_DATA
+  records_offset = <at..u32>(descriptor + 16) UNICODE_ENCODING_DATA
+  page = codepoint <shr> 8
+  low = <at..u16>(page_offset + page * 2) UNICODE_ENCODING_DATA
+  high = <at..u16>(page_offset + (page + 1) * 2) UNICODE_ENCODING_DATA - 1
+  do while low <= high
+    middle = (low + high) <shr> 1
+    record_offset = records_offset + middle * 8
+    candidate = <at..u32>(record_offset) UNICODE_ENCODING_DATA
+    if candidate = codepoint then return <at..u8>(record_offset + 4) UNICODE_ENCODING_DATA
+    if candidate < codepoint then low = middle + 1
+    else high = middle - 1
+  end
+  return -1
+
+_unicode_utf8_valid: procedure = .int
+  arg expose source = .binary
+  source_length = <blen>(source)
+  offset = 0
+  codepoint = .int
+  consumed = .int
+  do while offset < source_length
+    if _unicode_utf8_next(source,offset,codepoint,consumed) = 0 then return 0
+    offset = offset + consumed
+  end
+  return 1
+
+_unicode_utf8_next: procedure = .int
+  arg expose source = .binary, offset = .int, expose codepoint = .int, expose consumed = .int
+  source_length = <blen>(source)
+  first = <at..u8>(offset) source
+  consumed = 1
+  if first <= 0x7F then do
+    codepoint = first
+    return 1
+  end
+  expected = 0
+  second_low = 0x80
+  second_high = 0xBF
+  if first >= 0xC2 & first <= 0xDF then expected = 2
+  else if first >= 0xE0 & first <= 0xEF then do
+    expected = 3
+    if first = 0xE0 then second_low = 0xA0
+    else if first = 0xED then second_high = 0x9F
+  end
+  else if first >= 0xF0 & first <= 0xF4 then do
+    expected = 4
+    if first = 0xF0 then second_low = 0x90
+    else if first = 0xF4 then second_high = 0x8F
+  end
+  else return 0
+  if offset + 1 >= source_length then return 0
+  second = <at..u8>(offset + 1) source
+  if second < second_low | second > second_high then return 0
+  consumed = 2
+  if expected = 2 then do
+    codepoint = ((first <and> 0x1F) <shl> 6) <or> (second <and> 0x3F)
+    return 1
+  end
+  if offset + 2 >= source_length then return 0
+  third = <at..u8>(offset + 2) source
+  if third < 0x80 | third > 0xBF then return 0
+  consumed = 3
+  if expected = 3 then do
+    codepoint = ((first <and> 0x0F) <shl> 12) <or>,
+                ((second <and> 0x3F) <shl> 6) <or> (third <and> 0x3F)
+    return 1
+  end
+  if offset + 3 >= source_length then return 0
+  fourth = <at..u8>(offset + 3) source
+  if fourth < 0x80 | fourth > 0xBF then return 0
+  consumed = 4
+  codepoint = ((first <and> 0x07) <shl> 18) <or>,
+              ((second <and> 0x3F) <shl> 12) <or>,
+              ((third <and> 0x3F) <shl> 6) <or> (fourth <and> 0x3F)
+  return 1
+
+_unicode_utf16_valid: procedure = .int
+  arg expose source = .binary, little_endian = .int
+  source_length = <blen>(source)
+  if (source_length <mod> 2) \= 0 then return 0
+  offset = 0
+  do while offset < source_length
+    first = _unicode_get_u16(source,offset,little_endian)
+    offset = offset + 2
+    if first >= 0xD800 & first <= 0xDBFF then do
+      if offset >= source_length then return 0
+      second = _unicode_get_u16(source,offset,little_endian)
+      if second < 0xDC00 | second > 0xDFFF then return 0
+      offset = offset + 2
+    end
+    else if first >= 0xDC00 & first <= 0xDFFF then return 0
+  end
+  return 1
+
+_unicode_utf32_valid: procedure = .int
+  arg expose source = .binary, little_endian = .int
+  source_length = <blen>(source)
+  if (source_length <mod> 4) \= 0 then return 0
+  offset = 0
+  do while offset < source_length
+    codepoint = _unicode_get_u32(source,offset,little_endian)
+    if codepoint > 0x10FFFF |,
+       (codepoint >= 0xD800 & codepoint <= 0xDFFF) then return 0
+    offset = offset + 4
+  end
+  return 1
+
+_unicode_get_u16: procedure = .int
+  arg expose source = .binary, offset = .int, little_endian = .int
+  first = <at..u8>(offset) source
+  second = <at..u8>(offset + 1) source
+  if little_endian then return first <or> (second <shl> 8)
+  return (first <shl> 8) <or> second
+
+_unicode_get_u32: procedure = .int
+  arg expose source = .binary, offset = .int, little_endian = .int
+  first = <at..u8>(offset) source
+  second = <at..u8>(offset + 1) source
+  third = <at..u8>(offset + 2) source
+  fourth = <at..u8>(offset + 3) source
+  if little_endian then return first <or> (second <shl> 8) <or>,
+                               (third <shl> 16) <or> (fourth <shl> 24)
+  return (first <shl> 24) <or> (second <shl> 16) <or>,
+         (third <shl> 8) <or> fourth
+
+_unicode_put_u16: procedure = .void
+  arg expose target = .binary, offset = .int, value = .int, little_endian = .int
+  if little_endian then do
+    <at..u8>(offset) target = value <and> 0xFF
+    <at..u8>(offset + 1) target = (value <shr> 8) <and> 0xFF
+  end
+  else do
+    <at..u8>(offset) target = (value <shr> 8) <and> 0xFF
+    <at..u8>(offset + 1) target = value <and> 0xFF
+  end
+  return
+
+_unicode_put_u32: procedure = .void
+  arg expose target = .binary, offset = .int, value = .int, little_endian = .int
+  if little_endian then do
+    <at..u8>(offset) target = value <and> 0xFF
+    <at..u8>(offset + 1) target = (value <shr> 8) <and> 0xFF
+    <at..u8>(offset + 2) target = (value <shr> 16) <and> 0xFF
+    <at..u8>(offset + 3) target = (value <shr> 24) <and> 0xFF
+  end
+  else do
+    <at..u8>(offset) target = (value <shr> 24) <and> 0xFF
+    <at..u8>(offset + 1) target = (value <shr> 16) <and> 0xFF
+    <at..u8>(offset + 2) target = (value <shr> 8) <and> 0xFF
+    <at..u8>(offset + 3) target = value <and> 0xFF
+  end
+  return
+
+_unicode_codepoint_hex: procedure = .string
+  arg codepoint = .int
+  width = 4
+  if codepoint > 0xFFFF then width = 6
+  return right(d2x(codepoint),width,"0")

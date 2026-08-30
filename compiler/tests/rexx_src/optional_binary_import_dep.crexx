@@ -1,0 +1,8 @@
+options levelb
+
+namespace optional_binary_provider expose choose
+
+choose: procedure = .binary
+  arg value = .binary, fallback = ""x as .binary
+  if ?fallback then return fallback
+  return value

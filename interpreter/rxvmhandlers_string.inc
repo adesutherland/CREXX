@@ -537,6 +537,7 @@ RXVM_HANDLER(STRLOWER_REG_REG, VM_ADVANCE(2);
             DEBUG("TRACE - STRLOWER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 set_value_string(op1R, op2R);
+                clear_string_normalization_certificates(op1R);
                 RXVM_BYTE_ONLY(
                 size_t i;
                 for (i = 0; i < op1R->string_length; ++i) {
@@ -563,6 +564,8 @@ RXVM_HANDLER(STRLOWER_REG_REG, VM_ADVANCE(2);
                     }
                     current = next;
                 }
+                if (op1R->string_chars == op1R->string_length)
+                    mark_ascii_string_valid_count(op1R);
                 )
             }
             DISPATCH;
@@ -579,6 +582,7 @@ RXVM_HANDLER(STRUPPER_REG_REG, VM_ADVANCE(2);
             DEBUG("TRACE - STRUPPER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 set_value_string(op1R, op2R);
+                clear_string_normalization_certificates(op1R);
                 RXVM_BYTE_ONLY(
                 size_t i;
                 for (i = 0; i < op1R->string_length; ++i) {
@@ -604,6 +608,8 @@ RXVM_HANDLER(STRUPPER_REG_REG, VM_ADVANCE(2);
                     }
                     current = next;
                 }
+                if (op1R->string_chars == op1R->string_length)
+                    mark_ascii_string_valid_count(op1R);
                 )
             }
             DISPATCH;
@@ -2774,7 +2780,9 @@ RXVM_HANDLER(LOADSETTP_REG_INT_INT, VM_ADVANCE(3);
         DEBUG("TRACE - LOADSETTP R%d %d %d\n", (int)REG_IDX(1),(int)op2I,(int)op3I);
 
             op1R->int_value = op2I;
-            op1R->status.all_type_flags = RXFLAGS_PUBLIC_REPLACE((uint32_t)op3I);
+            op1R->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(op1R->status.all_type_flags,
+                                         (uint32_t)op3I);
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -2803,7 +2811,9 @@ RXVM_HANDLER(LOADSETTP_REG_STRING_INT, VM_ADVANCE(3);
 RXVM_HANDLER(LOADSETTP_REG_FLOAT_INT, VM_ADVANCE(3);
             DEBUG("TRACE - LOADSETTP R%d %.15g %d\n", (int)REG_IDX(1), op2F,(int) op3I);
             op1R->float_value = op2F;
-            op1R->status.all_type_flags = RXFLAGS_PUBLIC_REPLACE((uint32_t)op3I);
+            op1R->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(op1R->status.all_type_flags,
+                                         (uint32_t)op3I);
             DISPATCH;
 
 /*
@@ -3070,7 +3080,7 @@ RXVM_HANDLER(FREADLINE_REG_REG, VM_ADVANCE(2);
         int ch;
         FILE *stream = (FILE*)op2R->int_value;
 
-        op1R->string_length = 0;
+        rxvm_value_set_string_length_known(op1R, 0u);
         string_cache_reset(op1R);
 
         if (op2R->int_value == 0) {
@@ -3129,7 +3139,9 @@ RXVM_HANDLER(FREADLINE_REG_REG, VM_ADVANCE(2);
             } else {
                 rxvm_value_set_string_chars_known(op1R, chars);
                 string_cache_reset(op1R);
-                mark_utf8_valid_count(op1R);
+                if (chars == op1R->string_length)
+                    mark_ascii_string_valid_count(op1R);
+                else mark_utf8_valid_count(op1R);
             }
         }
         )

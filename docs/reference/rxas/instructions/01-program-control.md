@@ -580,7 +580,7 @@ matched:
 
 ## `brtpt`
 
-Branch when a value has any public writable status-flag bit set.
+Branch when a value has any legacy public-test status-flag bit set.
 
 ### Forms
 
@@ -590,8 +590,10 @@ Branch when a value has any public writable status-flag bit set.
 
 ### Operands And Semantics
 
-The test uses `RXFLAG_PUBLIC_TEST_MASK`, excluding VM-private and reserved bits.
-It does not alter the value or flags.
+The test uses `RXFLAG_PUBLIC_TEST_MASK`: compiler-ABI, library, and user bands.
+It deliberately excludes VM-private state, protected language metadata, and
+the reserved sign bit so cache/certificate changes cannot alter legacy branch
+behavior. It does not alter the value or flags.
 
 ### Signals
 

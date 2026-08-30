@@ -1,0 +1,523 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Host-native packed-int control for the experimental Unicode 17.0.0 NFD
+ * table and normalizer. This is an execution representation, not a portable
+ * file or committed binary format.
+ */
+
+options levelb
+
+namespace unicode_nfd_packed expose unicodenfdpackedtables unicodenfdpackednormalizer unicode_nfd_packed_compile unicode_nfd_packed_new
+import rxfnsb
+import unicode_gennorm2
+
+/** Compile the typed gennorm2 AST into host-native packed-int tables. */
+unicode_nfd_packed_compile: procedure = .unicodenfdpackedtables
+  arg ast = .unicodegennorm2ast
+  tables = .unicodenfdpackedtables()
+  call tables.compile(ast)
+  return tables
+
+/** Construct the packed-table NFD normalizer. */
+unicode_nfd_packed_new: procedure = .unicodenfdpackednormalizer
+  arg tables = .unicodenfdpackedtables
+  normalizer = .unicodenfdpackednormalizer()
+  call normalizer.initialize(tables)
+  return normalizer
+
+unicode_nfd_packed_is_scalar: procedure = .int
+  arg codepoint = .int
+  if codepoint < 0 | codepoint > 0x10FFFF then return 0
+  if codepoint >= 0xD800 & codepoint <= 0xDFFF then return 0
+  return 1
+
+/** Host-native packed-int NFD execution tables. */
+unicodenfdpackedtables: class
+  _ccc = .binary
+  _pages = .binary
+  _mappings = .binary
+  _values = .binary
+  _status = .int
+  _error = .string
+  _version = .string
+  _mapping_count = .int
+  _mapping_value_count = .int
+  _ccc_record_count = .int
+  _ccc_codepoint_count = .int
+  _two_way_count = .int
+  _one_way_count = .int
+
+  *: factory
+    _status = 0
+    _error = ""
+    _version = ""
+    _mapping_count = 0
+    _mapping_value_count = 0
+    _ccc_record_count = 0
+    _ccc_codepoint_count = 0
+    _two_way_count = 0
+    _one_way_count = 0
+    return
+
+  compile: method = .void
+    arg ast = .unicodegennorm2ast
+    call binclear _ccc
+    call binclear _pages
+    call binclear _mappings
+    call binclear _values
+    _status = 0
+    _error = ""
+    _version = ast.version()
+    _mapping_count = ast.two_way_mappings() + ast.one_way_mappings()
+    _mapping_value_count = ast.mapping_values()
+    _ccc_record_count = ast.ccc_records()
+    _ccc_codepoint_count = ast.ccc_codepoints()
+    _two_way_count = ast.two_way_mappings()
+    _one_way_count = ast.one_way_mappings()
+    call _compile ast
+    return
+
+  status: method = .int
+    return _status
+
+  error: method = .string
+    return _error
+
+  version: method = .string
+    return _version
+
+  byte_length: method = .int
+    return <blen>(_ccc) + <blen>(_pages) + <blen>(_mappings) + <blen>(_values)
+
+  int_size: method = .int
+    return <sizeof..int>
+
+  mapping_count: method = .int
+    return _mapping_count
+
+  mapping_value_count: method = .int
+    return _mapping_value_count
+
+  ccc_record_count: method = .int
+    return _ccc_record_count
+
+  ccc_codepoint_count: method = .int
+    return _ccc_codepoint_count
+
+  two_way_count: method = .int
+    return _two_way_count
+
+  one_way_count: method = .int
+    return _one_way_count
+
+  ccc_data: method = .binary
+    return _ccc
+
+  page_data: method = .binary
+    return _pages
+
+  mapping_data: method = .binary
+    return _mappings
+
+  value_data: method = .binary
+    return _values
+
+  _fail: method = .void
+    arg message = .string
+    if _status \= 0 then return
+    _status = 1
+    _error = message
+    return
+
+  _compile: method = .void
+    arg ast = .unicodegennorm2ast
+    if _version \= "17.0.0" then do
+      call _fail "packed NFD tables require Unicode version 17.0.0"
+      return
+    end
+    if _ccc_record_count <= 0 | _mapping_count <= 0 | _mapping_value_count <= 0 then do
+      call _fail "incomplete packed NFD table AST"
+      return
+    end
+
+    int_size = <sizeof..int>
+    call binresize _ccc, 0x110000 * int_size
+    call binresize _pages, 0x1100 * 2 * int_size
+    call binresize _mappings, _mapping_count * 4 * int_size
+    call binresize _values, _mapping_value_count * int_size
+
+    map_index = 0
+    value_index = 0
+    last_mapping_source = -1
+    seen_ccc_records = 0
+    seen_ccc_codepoints = 0
+    seen_two_way = 0
+    seen_one_way = 0
+
+    do record_index = 0 to ast.record_count() - 1 while _status = 0
+      record = ast.record_at(record_index)
+      kind = record.kind()
+      select kind
+        when "version" then nop
+        when "ccc_single" then do
+          call _add_ccc record
+          seen_ccc_records = seen_ccc_records + 1
+          seen_ccc_codepoints = seen_ccc_codepoints + 1
+        end
+        when "ccc_range" then do
+          call _add_ccc record
+          seen_ccc_records = seen_ccc_records + 1
+          seen_ccc_codepoints = seen_ccc_codepoints + record.last() - record.first() + 1
+        end
+        when "mapping_two_way" then do
+          call _add_mapping record, map_index, value_index, last_mapping_source, 1
+          seen_two_way = seen_two_way + 1
+        end
+        when "mapping_one_way" then do
+          call _add_mapping record, map_index, value_index, last_mapping_source, 0
+          seen_one_way = seen_one_way + 1
+        end
+        otherwise call _fail "unsupported record in packed NFD table AST"
+      end
+    end
+
+    if _status \= 0 then return
+    if map_index \= _mapping_count | value_index \= _mapping_value_count then,
+      call _fail "packed mapping table count mismatch"
+    else if seen_ccc_records \= _ccc_record_count | seen_ccc_codepoints \= _ccc_codepoint_count then,
+      call _fail "packed CCC table count mismatch"
+    else if seen_two_way \= _two_way_count | seen_one_way \= _one_way_count then,
+      call _fail "packed mapping-kind count mismatch"
+    return
+
+  _add_ccc: method = .void
+    arg record = .unicodegennorm2record
+    first = record.first()
+    last = record.last()
+    ccc = record.number()
+    if unicode_nfd_packed_is_scalar(first) = 0 |,
+       unicode_nfd_packed_is_scalar(last) = 0 | last < first then do
+      call _fail "invalid CCC range while compiling packed NFD tables"
+      return
+    end
+    if first <= 0xDFFF & last >= 0xD800 then do
+      call _fail "CCC range contains a surrogate while compiling packed NFD tables"
+      return
+    end
+    if ccc < 1 | ccc > 255 then do
+      call _fail "invalid CCC value while compiling packed NFD tables"
+      return
+    end
+    do codepoint = first to last
+      if <packed..int>(codepoint) _ccc \= 0 then do
+        call _fail "overlapping CCC range while compiling packed NFD tables"
+        return
+      end
+      <packed..int>(codepoint) _ccc = ccc
+    end
+    return
+
+  _add_mapping: method = .void
+    arg record = .unicodegennorm2record, expose map_index = .int, expose value_index = .int, expose last_mapping_source = .int, two_way = .int
+    source = record.first()
+    if unicode_nfd_packed_is_scalar(source) = 0 then do
+      call _fail "invalid mapping source while compiling packed NFD tables"
+      return
+    end
+    if source <= last_mapping_source then do
+      call _fail "packed decomposition mappings are not in strict code-point order"
+      return
+    end
+    if record.value_count() <= 0 then do
+      call _fail "empty decomposition mapping while compiling packed NFD tables"
+      return
+    end
+    if two_way & record.value_count() \= 2 then do
+      call _fail "two-way decomposition has invalid arity while compiling packed NFD tables"
+      return
+    end
+
+    page = source <idiv> 256
+    page_item = page * 2
+    page_mappings = <packed..int>(page_item + 1) _pages
+    if page_mappings = 0 then <packed..int>(page_item) _pages = map_index
+    <packed..int>(page_item + 1) _pages = page_mappings + 1
+
+    item = map_index * 4
+    <packed..int>(item) _mappings = source
+    <packed..int>(item + 1) _mappings = value_index
+    <packed..int>(item + 2) _mappings = record.value_count()
+    <packed..int>(item + 3) _mappings = two_way
+
+    do i = 0 to record.value_count() - 1
+      value = record.value_at(i)
+      if unicode_nfd_packed_is_scalar(value) = 0 then do
+        call _fail "invalid mapping value while compiling packed NFD tables"
+        return
+      end
+      <packed..int>(value_index) _values = value
+      value_index = value_index + 1
+    end
+    last_mapping_source = source
+    map_index = map_index + 1
+    return
+
+/** Explicit NFD operation over host-native packed-int execution tables. */
+unicodenfdpackednormalizer: class
+  _ccc = .binary
+  _pages = .binary
+  _mappings = .binary
+  _values = .binary
+  _ready = .int
+  _status = .int
+  _error = .string
+  _map_count = .int
+  _value_count = .int
+  _work = .binary
+  _work_capacity = .int
+  _work_count = .int
+  _path = .binary
+
+  *: factory
+    _ready = 0
+    _status = 0
+    _error = ""
+    _map_count = 0
+    _value_count = 0
+    _work_capacity = 64
+    _work_count = 0
+    call binresize _work, _work_capacity * 4
+    call binresize _path, 64 * 4
+    return
+
+  initialize: method = .void
+    arg tables = .unicodenfdpackedtables
+    _ready = 0
+    _status = 0
+    _error = ""
+    if tables.status() \= 0 then do
+      call _fail tables.error()
+      return
+    end
+    _ccc = tables.ccc_data()
+    _pages = tables.page_data()
+    _mappings = tables.mapping_data()
+    _values = tables.value_data()
+    _map_count = tables.mapping_count()
+    _value_count = tables.mapping_value_count()
+    call _validate
+    if _status = 0 then _ready = 1
+    return
+
+  status: method = .int
+    return _status
+
+  error: method = .string
+    return _error
+
+  ready: method = .int
+    return _ready
+
+  normalize: method = .string
+    arg source = .string
+    codepoint = .int
+    if _ready = 0 then return ""
+    _status = 0
+    _error = ""
+    _work_count = 0
+
+    source_length = 0
+    assembler strlen source_length,source
+    do source_index = 0 to source_length - 1 while _status = 0
+      codepoint = 0
+      assembler strchar codepoint,source,source_index
+      call _decompose codepoint, 0
+    end
+    if _status \= 0 then return ""
+
+    call _canonical_order
+    if _status \= 0 then return ""
+
+    result = ""
+    do i = 0 to _work_count - 1
+      codepoint = <at..u32>(i * 4) _work
+      assembler appendchar result,codepoint
+    end
+    return result
+
+  combining_class: method = .int
+    arg codepoint = .int
+    if _ready = 0 then return -1
+    if unicode_nfd_packed_is_scalar(codepoint) = 0 then return -1
+    return _ccc_value(codepoint)
+
+  _fail: method = .void
+    arg message = .string
+    if _status \= 0 then return
+    _status = 1
+    _error = message
+    return
+
+  _validate: method = .void
+    source = .int
+    int_size = <sizeof..int>
+    if <blen>(_ccc) \= 0x110000 * int_size then do
+      call _fail "invalid packed CCC table size"
+      return
+    end
+    if <blen>(_pages) \= 0x1100 * 2 * int_size then do
+      call _fail "invalid packed mapping-page table size"
+      return
+    end
+    if <blen>(_mappings) \= _map_count * 4 * int_size then do
+      call _fail "invalid packed mapping table size"
+      return
+    end
+    if <blen>(_values) \= _value_count * int_size then do
+      call _fail "invalid packed mapping-value table size"
+      return
+    end
+
+    previous_source = -1
+    expected_value_start = 0
+    do map_index = 0 to _map_count - 1 while _status = 0
+      item = map_index * 4
+      source = <packed..int>(item) _mappings
+      value_start = <packed..int>(item + 1) _mappings
+      value_length = <packed..int>(item + 2) _mappings
+      two_way = <packed..int>(item + 3) _mappings
+      if unicode_nfd_packed_is_scalar(source) = 0 | source <= previous_source then,
+        call _fail "invalid mapping order in packed NFD tables"
+      else if value_length <= 0 | value_start \= expected_value_start |,
+              value_start + value_length > _value_count then,
+        call _fail "invalid mapping span in packed NFD tables"
+      else if two_way < 0 | two_way > 1 then,
+        call _fail "invalid mapping kind in packed NFD tables"
+      previous_source = source
+      expected_value_start = value_start + value_length
+    end
+    if _status = 0 & expected_value_start \= _value_count then,
+      call _fail "packed mapping values are not completely covered"
+
+    expected_map_index = 0
+    do page = 0 to 0x10FF while _status = 0
+      page_item = page * 2
+      first = <packed..int>(page_item) _pages
+      count = <packed..int>(page_item + 1) _pages
+      if count < 0 then call _fail "negative packed mapping-page count"
+      else if count > 0 then do
+        if first \= expected_map_index | first + count > _map_count then,
+          call _fail "invalid packed mapping-page span"
+        else do i = first to first + count - 1 while _status = 0
+          source = <packed..int>(i * 4) _mappings
+          if source <idiv> 256 \= page then,
+            call _fail "packed mapping page does not match its source"
+        end
+        expected_map_index = expected_map_index + count
+      end
+    end
+    if _status = 0 & expected_map_index \= _map_count then,
+      call _fail "packed mapping pages do not cover every mapping"
+
+    do value_index = 0 to _value_count - 1 while _status = 0
+      value = <packed..int>(value_index) _values
+      if unicode_nfd_packed_is_scalar(value) = 0 then,
+        call _fail "non-scalar mapping value in packed NFD tables"
+    end
+    return
+
+  _decompose: method = .void
+    arg codepoint = .int, depth = .int
+    i = .int
+    if _status \= 0 then return
+    if unicode_nfd_packed_is_scalar(codepoint) = 0 then do
+      call _fail "normalization input is not a scalar value"
+      return
+    end
+
+    if codepoint >= 0xAC00 & codepoint < 0xAC00 + 11172 then do
+      s_index = codepoint - 0xAC00
+      l_index = s_index <idiv> 588
+      remainder = s_index <mod> 588
+      v_index = remainder <idiv> 28
+      t_index = s_index <mod> 28
+      call _append 0x1100 + l_index
+      call _append 0x1161 + v_index
+      if t_index \= 0 then call _append 0x11A7 + t_index
+      return
+    end
+
+    mapping = _find_mapping(codepoint)
+    if mapping < 0 then do
+      call _append codepoint
+      return
+    end
+    if depth >= 64 then do
+      call _fail "cyclic or excessively deep decomposition mapping"
+      return
+    end
+    do i = 0 to depth - 1
+      if <at..u32>(i * 4) _path = codepoint then do
+        call _fail "cyclic or excessively deep decomposition mapping"
+        return
+      end
+    end
+    <at..u32>(depth * 4) _path = codepoint
+
+    item = mapping * 4
+    value_start = <packed..int>(item + 1) _mappings
+    value_length = <packed..int>(item + 2) _mappings
+    do i = 0 to value_length - 1 while _status = 0
+      value = <packed..int>(value_start + i) _values
+      call _decompose value, depth + 1
+    end
+    return
+
+  _append: method = .void
+    arg codepoint = .int
+    if _work_count >= _work_capacity then do
+      _work_capacity = _work_capacity * 2
+      call binresize _work, _work_capacity * 4
+    end
+    <at..u32>(_work_count * 4) _work = codepoint
+    _work_count = _work_count + 1
+    return
+
+  _find_mapping: method = .int
+    arg codepoint = .int
+    page = codepoint <idiv> 256
+    page_item = page * 2
+    first = <packed..int>(page_item) _pages
+    count = <packed..int>(page_item + 1) _pages
+    low = first
+    high = first + count - 1
+    do while low <= high
+      middle = (low + high) <idiv> 2
+      source = <packed..int>(middle * 4) _mappings
+      if source = codepoint then return middle
+      if source < codepoint then low = middle + 1
+      else high = middle - 1
+    end
+    return -1
+
+  _ccc_value: method = .int
+    arg codepoint = .int
+    return <packed..int>(codepoint) _ccc
+
+  _canonical_order: method = .void
+    do i = 1 to _work_count - 1
+      current = <at..u32>(i * 4) _work
+      current_ccc = _ccc_value(current)
+      if current_ccc = 0 then iterate
+      j = i
+      do while j > 0
+        previous = <at..u32>((j - 1) * 4) _work
+        previous_ccc = _ccc_value(previous)
+        if previous_ccc = 0 | previous_ccc <= current_ccc then leave
+        <at..u32>(j * 4) _work = previous
+        <at..u32>((j - 1) * 4) _work = current
+        j = j - 1
+      end
+    end
+    return

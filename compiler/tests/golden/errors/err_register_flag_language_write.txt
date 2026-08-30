@@ -1,0 +1,2 @@
+Error in err_register_flag_language_write.crexx @ 15:5 - #READ_ONLY_REGISTER_FLAG_VIEW, "language_flags"
+1 error(s) in source file

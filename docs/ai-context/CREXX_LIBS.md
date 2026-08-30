@@ -284,10 +284,17 @@ read; it does not probe for a following byte. A trailing line terminator at
 physical EOF does not create a synthetic empty `linein` record; physical blank
 lines are still preserved.
 `lines(name)` returns `-1` when the named stream cannot be opened so callers can
-distinguish missing/unreadable input from an empty file. Future binary file
-BIFs should take and return `.binary` and use
-the VM byte instructions (`freadb`, `fwriteb`, `freadbyte`, or `fwritebyte`)
-rather than weakening the Level B `.string` UTF contract.
+distinguish missing/unreadable input from an empty file.
+
+The same module exposes the deliberately small whole-file binary surface
+`readbinary(path) -> .binary` and
+`writebinary(path, data = .binary) -> .int`. `readbinary` accumulates exact
+bytes in 32 KiB chunks; `writebinary` replaces the target and returns the byte
+count. Both use binary file modes and the VM `freadb`/`fwriteb` path, so
+embedded NUL and bytes that are not valid UTF-8 are preserved without newline
+translation. I/O failure raises `NOTREADY`. These are whole-value operations,
+not an incremental `rxio` stream abstraction, so callers remain responsible
+for choosing files that sensibly fit in memory.
 
 ### Build And Debugging Rules
 
@@ -842,6 +849,7 @@ delivery route:
 | `rxid` | `rxid.uuid4`, `uuid7`, `ulid`, `nanoid`, `snowflake`, `base58` | Bundled optional Level G identifier strings, callable from B when installed; random forms use platform cryptographic randomness and generation failures signal. |
 | `rxfs` | `rxfs.cwd`, `loadpath`, `chdir`, `isdir`, `mkdir`, `rmdir`, `delete`, `rename`, `isfile`, `listdir`, `append` | Narrow filesystem and directory operations. Return/status contracts are documented in the library reference. |
 | `rxplatform` | `rxplatform.uptime`, `user`, `host`, `osname`, `sleep` | Bundled optional Level G host/platform information and millisecond sleep, callable from B when installed. Clipboard, beep, process-global and developer functions from the old draft `system` surface were retired. |
+| `rxunicode` | `version`; four normalization transforms and predicates; `toUppercase`, `toLowercase`; full/simple/Turkic folding; typed `encode`, `decode`, and codec predicates; grapheme count, substring, position, reverse, and `.graphemes` | Level G Unicode 17.0.0 services over `.string` plus explicit `.binary` codec boundaries. The pure Level G facade delegates to private Level B codepoint executors and generated immutable tables. See the [Unicode library reference](../books/crexx_library_reference/unicode.md) and [implementation context](CREXX_UNICODE.md). |
 
 The source CMake target for `rxplatform` is named `_platform` to avoid a target
 collision, but `PROVIDER_ID rxplatform` makes its manifest, artifact stem,

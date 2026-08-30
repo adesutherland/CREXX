@@ -58,6 +58,7 @@ static int register_attr_is_flag_view(ASTNode *attr) {
 static int register_flag_partition_is_valid(ASTNode *attr) {
     return node_text_equals_ci(attr, "flags.vm") ||
            node_text_equals_ci(attr, "flags.compiler") ||
+           node_text_equals_ci(attr, "flags.language") ||
            node_text_equals_ci(attr, "flags.library") ||
            node_text_equals_ci(attr, "flags.user") ||
            node_text_equals_ci(attr, "flags.public") ||

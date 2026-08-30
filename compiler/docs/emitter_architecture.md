@@ -39,6 +39,23 @@ The emitter avoids most global variables by storing state directly in the `ASTNo
 | `node->deferred_register_mark` | `ASTNode` | The deferred-register boundary captured before a statement's descendants are allocated. |
 | `payload->file` | `walker_payload` | The output `FILE` pointer. |
 | `payload->globals` | `walker_payload` | Counter for global variables. |
+| `symbol->constant_alias` | `Symbol` | Reference-counted payload and compiler-private RXAS name for an explicit named binary constant. Exact propagated uses borrow this one value. |
+
+### Named binary constants
+
+Explicit named `.binary` constants are captured during language constant
+propagation. The owning `ConstantAlias` holds one payload; exact-type AST uses
+borrow it rather than allocating a copy per use. Cloned symbols retain the same
+reference-counted alias. Converted uses receive ordinary private folded values.
+
+During operand formatting, a surviving exact use marks the alias live and emits
+the compiler-private `§rxc.const.<ordinal>.<name>` identifier. `PROGRAM_FILE`
+then writes each live alias once, immediately after `.globals`, before any
+function body. Repeated emission resets the live/emitted state first. Constant
+metadata records the short alias name rather than duplicating the payload.
+RXAS resolves every alias operand directly to the assembler's deduplicated
+binary constant-pool entry; no runtime register, initialization instruction, or
+table copy is introduced.
 
 ## 3. Logic Categorization (Modular Structure)
 
@@ -108,7 +125,7 @@ Current rules:
 - Plain by-value formals must preserve caller-visible state if the callee writes to the formal.
 - `mark_const_args()` in [`compiler/rxcp_opt.c`](/Users/adrian/CLionProjects/CREXX/compiler/rxcp_opt.c) marks by-value formals as `is_const_arg` when the formal symbol is provably read-only inside the callee. Those formals may safely share the incoming register in both `-n` and optimised builds.
 - Writable by-value formals still require an isolated local register. The emitter materialises that copy in the `ARG` case in [`compiler/rxcpemit.c`](/Users/adrian/CLionProjects/CREXX/compiler/rxcpemit.c).
-- Call ABI flags are centralized in [`binutils/include/rxflags.h`](/Users/adrian/CLionProjects/CREXX/binutils/include/rxflags.h). `REGTP_VAL` is `0x00000100`, and `REGTP_NOTSYM` is `0x00000200`; the low byte is reserved for VM-private readable status.
+- Status partitions are centralized in [`binutils/include/rxflags.h`](/Users/adrian/CLionProjects/CREXX/binutils/include/rxflags.h). `REGTP_VAL` is `0x00000100`, and `REGTP_NOTSYM` is `0x00000200`; the low byte is VM-private, while the remainder of that former compiler byte is a separate protected language band. Compiler call setup must preserve it.
 - For large values (strings, arrays, objects, binaries), `REGTP_NOTSYM` means the actual argument is not backed by a caller-visible symbol. In that case the callee may reuse or swap the incoming register instead of copying, because there is no caller binding to preserve.
 - For small values (`.int`, `.float`, booleans), the emitter always copies writable by-value formals. That is an intentional cost tradeoff: copying is cheaper than propagating and checking a "non-symbol temporary" flag for those types.
 

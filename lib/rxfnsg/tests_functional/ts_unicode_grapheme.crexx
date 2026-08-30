@@ -1,0 +1,270 @@
+/* Complete Unicode 17 default extended-grapheme conformance and API contract. */
+options levelb
+
+import rxfnsb
+import rxunicode
+
+arg argv = .string[]
+if argv[0] \= 1 then do
+  say "usage: ts_unicode_grapheme GraphemeBreakTest.txt"
+  return 2
+end
+
+lines = readlines(argv[1])
+if lines[0] <= 0 then do
+  say "FAIL: GraphemeBreakTest input is empty or unreadable"
+  return 1
+end
+
+cases = 0
+boundary_checks = 0
+do line_number = 1 to lines[0]
+  line = lines[line_number]
+  comment = pos("#", line)
+  if comment > 0 then line = left(line, comment - 1)
+  line = strip(line)
+  if line = "" then iterate
+
+  token_count = words(line)
+  if token_count < 3 | (token_count <mod> 2) = 0 | word(line, 1) \= "÷" then do
+    say "FAIL: malformed GraphemeBreakTest record at line" line_number
+    return 1
+  end
+
+  expected = .string[]
+  expected_start = .int[]
+  expected_length = .int[]
+  text = ""
+  cluster = ""
+  cluster_count = 0
+  cluster_start = 1
+  codepoint_position = 0
+  do token_index = 2 to token_count - 1 by 2
+    codepoint = x2d(word(line, token_index))
+    assembler appendchar text,codepoint
+    assembler appendchar cluster,codepoint
+    codepoint_position = codepoint_position + 1
+    marker = word(line, token_index + 1)
+    if marker = "÷" then do
+      cluster_count = cluster_count + 1
+      expected[cluster_count] = cluster
+      expected_start[cluster_count] = cluster_start
+      expected_length[cluster_count] = codepoint_position - cluster_start + 1
+      cluster = ""
+      cluster_start = codepoint_position + 1
+    end
+    else if marker \= "×" then do
+      say "FAIL: unknown GraphemeBreakTest marker at line" line_number
+      return 1
+    end
+  end
+  if cluster \= "" then do
+    say "FAIL: missing terminal GraphemeBreakTest boundary at line" line_number
+    return 1
+  end
+
+  direct_count = graphemeCount(text)
+  view = .rxunicode..graphemes(text)
+  if direct_count \= cluster_count | view.count() \= cluster_count then do
+    say "FAIL: GraphemeBreakTest count at line" line_number,
+        "expected" cluster_count "direct" direct_count "view" view.count()
+    return 1
+  end
+  if view.text() \== text | view.version() \= "17.0.0" |,
+     view.profile() \= "UAX29-C1-1" then do
+    say "FAIL: grapheme snapshot metadata at line" line_number
+    return 1
+  end
+
+  iterator = view.iterator()
+  reverse_expected = ""
+  do cluster_index = 1 to cluster_count
+    if view.at(cluster_index) \== expected[cluster_index] |,
+       graphemeSubstr(text, cluster_index, 1) \== expected[cluster_index] |,
+       view.substr(cluster_index, 1) \== expected[cluster_index] |,
+       view.codepointStart(cluster_index) \= expected_start[cluster_index] |,
+       view.codepointLength(cluster_index) \= expected_length[cluster_index] then do
+      say "FAIL: GraphemeBreakTest boundary at line" line_number,
+          "cluster" cluster_index
+      return 1
+    end
+    if \iterator.hasNext() | iterator.next() \== expected[cluster_index] |,
+       iterator.index() \= cluster_index |,
+       iterator.codepointStart() \= expected_start[cluster_index] |,
+       iterator.codepointLength() \= expected_length[cluster_index] then do
+      say "FAIL: GraphemeBreakTest iterator at line" line_number,
+          "cluster" cluster_index
+      return 1
+    end
+    reverse_expected = expected[cluster_index] || reverse_expected
+    boundary_checks = boundary_checks + 1
+  end
+  if iterator.hasNext() | graphemeSubstr(text, 1) \== text |,
+     view.substr(1) \== text |,
+     view.reverse() \== reverse_expected |,
+     graphemeReverse(text) \== reverse_expected then do
+    say "FAIL: GraphemeBreakTest whole-string operation at line" line_number
+    return 1
+  end
+  call iterator.reset()
+  if iterator.index() \= 0 then do
+    say "FAIL: GraphemeBreakTest iterator reset at line" line_number
+    return 1
+  end
+  if cluster_count > 0 & iterator.hasNext() = 0 then do
+    say "FAIL: GraphemeBreakTest iterator hasNext after reset at line" line_number
+    return 1
+  end
+  cases = cases + 1
+end
+
+if cases \= 766 then do
+  say "FAIL: expected 766 Unicode 17 GraphemeBreakTest records, got" cases
+  return 1
+end
+
+failures = contract_checks()
+if failures > 0 then return 1
+say "GraphemeBreakTest records checked:" cases
+say "Grapheme boundaries checked:" boundary_checks
+say "PASS: rxunicode Unicode 17 default extended graphemes"
+return 0
+
+contract_checks: procedure = .int
+  failures = 0
+  empty = .rxunicode..graphemes("")
+  failures = failures + check(graphemeCount("") = 0 & empty.count() = 0,,
+    "empty string")
+
+  flags = hex_sequence_to_string("1F1E6 1F1E7 1F1E8")
+  failures = failures + check(graphemeCount(flags) = 2,,
+    "regional-indicator parity resets at a boundary")
+
+  family = hex_sequence_to_string("1F469 200D 1F469 200D 1F467 200D 1F466")
+  failures = failures + check(graphemeCount(family) = 1,,
+    "extended-pictographic ZWJ sequence")
+
+  combining = hex_sequence_to_string("0065 0301")
+  haystack = "a" || combining || family || "b"
+  view = .rxunicode..graphemes(haystack)
+  failures = failures + check(view.count() = 4 &,
+    graphemePos(family, haystack) = 3 & view.pos(family) = 3,,
+    "grapheme-aligned position")
+  failures = failures + check(graphemePos(hex_sequence_to_string("0301"), haystack) = 0,,
+    "position rejects a match inside a grapheme")
+  padded_expected = combining || family || "b*"
+  padded_actual = graphemeSubstr(haystack, 2, 4, "*")
+  failures = failures + check_equal(padded_actual, padded_expected,,
+    "substring padding")
+  failures = failures + check_equal(view.substr(2, 4, "*"), padded_expected,,
+    "indexed substring padding")
+
+  pad = hex_sequence_to_string("1F1E6 1F1E7")
+  padded_expected = pad || pad
+  padded_actual = graphemeSubstr("", 1, 2, pad)
+  failures = failures + check_equal(padded_actual, padded_expected,,
+    "one multi-codepoint grapheme is a valid pad")
+
+  iterator = view.iterator()
+  failures = failures + catches_out_of_range_iterator_position(iterator)
+  do while iterator.hasNext()
+    ignored = iterator.next()
+  end
+  failures = failures + catches_out_of_range_iterator_next(iterator)
+  failures = failures + catches_out_of_range_at(view)
+  failures = failures + catches_invalid_start(haystack)
+  failures = failures + catches_invalid_pad(haystack)
+  return failures
+
+catches_out_of_range_iterator_position: procedure = .int
+  arg iterator = .rxunicode..graphemeiterator
+  do
+    ignored = iterator.codepointStart()
+  on signal out_of_range as problem
+    if problem.name() = "OUT_OF_RANGE" &,
+       problem.message() = "rxunicode grapheme position is outside the source" then return 0
+  end
+  say "FAIL: iterator position before first signal identity"
+  return 1
+
+catches_out_of_range_iterator_next: procedure = .int
+  arg iterator = .rxunicode..graphemeiterator
+  do
+    ignored = iterator.next()
+  on signal out_of_range as problem
+    if problem.name() = "OUT_OF_RANGE" &,
+       problem.message() = "rxunicode grapheme iterator is exhausted" then return 0
+  end
+  say "FAIL: exhausted iterator signal identity"
+  return 1
+
+catches_out_of_range_at: procedure = .int
+  arg view = .rxunicode..graphemes
+  do
+    ignored = view.at(0)
+  on signal out_of_range as problem
+    if problem.name() = "OUT_OF_RANGE" &,
+       problem.message() = "rxunicode grapheme position is outside the source" then return 0
+  end
+  say "FAIL: grapheme at zero signal identity"
+  return 1
+
+catches_invalid_start: procedure = .int
+  arg text = .string
+  do
+    ignored = graphemeSubstr(text, 0)
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" &,
+       problem.message() = "GRAPHEMESUBSTR start must be positive" then return 0
+  end
+  say "FAIL: non-positive grapheme substring start signal identity"
+  return 1
+
+catches_invalid_pad: procedure = .int
+  arg text = .string
+  do
+    ignored = graphemeSubstr(text, 1, 8, "ab")
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" &,
+       problem.message() = "GRAPHEMESUBSTR pad must contain exactly one grapheme" then return 0
+  end
+  say "FAIL: multi-grapheme pad signal identity"
+  return 1
+
+hex_sequence_to_string: procedure = .string
+  arg sequence = .string
+  result = ""
+  do i = 1 to words(sequence)
+    codepoint = x2d(word(sequence, i))
+    assembler appendchar result,codepoint
+  end
+  return result
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: rxunicode grapheme" label
+  return 1
+
+check_equal: procedure = .int
+  arg actual = .string, expected = .string, label = .string
+  if actual == expected then return 0
+  say "FAIL: rxunicode grapheme" label,
+      "expected" string_to_hex_sequence(expected),
+      "actual" string_to_hex_sequence(actual)
+  return 1
+
+string_to_hex_sequence: procedure = .string
+  arg value = .string
+  result = ""
+  value_length = 0
+  assembler strlen value_length,value
+  do i = 0 to value_length - 1
+    codepoint = 0
+    assembler strchar codepoint,value,i
+    if result \= "" then result = result || " "
+    width = 4
+    if codepoint > 0xFFFF then width = 6
+    result = result || right(d2x(codepoint), width, "0")
+  end
+  return result

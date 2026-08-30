@@ -1,0 +1,2485 @@
+version|17.0.0
+ccc_range|0300|0314|230
+ccc_single|0315|232
+ccc_range|0316|0319|220
+ccc_single|031A|232
+ccc_single|031B|216
+ccc_range|031C|0320|220
+ccc_range|0321|0322|202
+ccc_range|0323|0326|220
+ccc_range|0327|0328|202
+ccc_range|0329|0333|220
+ccc_range|0334|0338|1
+ccc_range|0339|033C|220
+ccc_range|033D|0344|230
+ccc_single|0345|240
+ccc_single|0346|230
+ccc_range|0347|0349|220
+ccc_range|034A|034C|230
+ccc_range|034D|034E|220
+ccc_range|0350|0352|230
+ccc_range|0353|0356|220
+ccc_single|0357|230
+ccc_single|0358|232
+ccc_range|0359|035A|220
+ccc_single|035B|230
+ccc_single|035C|233
+ccc_range|035D|035E|234
+ccc_single|035F|233
+ccc_range|0360|0361|234
+ccc_single|0362|233
+ccc_range|0363|036F|230
+ccc_range|0483|0487|230
+ccc_single|0591|220
+ccc_range|0592|0595|230
+ccc_single|0596|220
+ccc_range|0597|0599|230
+ccc_single|059A|222
+ccc_single|059B|220
+ccc_range|059C|05A1|230
+ccc_range|05A2|05A7|220
+ccc_range|05A8|05A9|230
+ccc_single|05AA|220
+ccc_range|05AB|05AC|230
+ccc_single|05AD|222
+ccc_single|05AE|228
+ccc_single|05AF|230
+ccc_single|05B0|10
+ccc_single|05B1|11
+ccc_single|05B2|12
+ccc_single|05B3|13
+ccc_single|05B4|14
+ccc_single|05B5|15
+ccc_single|05B6|16
+ccc_single|05B7|17
+ccc_single|05B8|18
+ccc_range|05B9|05BA|19
+ccc_single|05BB|20
+ccc_single|05BC|21
+ccc_single|05BD|22
+ccc_single|05BF|23
+ccc_single|05C1|24
+ccc_single|05C2|25
+ccc_single|05C4|230
+ccc_single|05C5|220
+ccc_single|05C7|18
+ccc_range|0610|0617|230
+ccc_single|0618|30
+ccc_single|0619|31
+ccc_single|061A|32
+ccc_single|064B|27
+ccc_single|064C|28
+ccc_single|064D|29
+ccc_single|064E|30
+ccc_single|064F|31
+ccc_single|0650|32
+ccc_single|0651|33
+ccc_single|0652|34
+ccc_range|0653|0654|230
+ccc_range|0655|0656|220
+ccc_range|0657|065B|230
+ccc_single|065C|220
+ccc_range|065D|065E|230
+ccc_single|065F|220
+ccc_single|0670|35
+ccc_range|06D6|06DC|230
+ccc_range|06DF|06E2|230
+ccc_single|06E3|220
+ccc_single|06E4|230
+ccc_range|06E7|06E8|230
+ccc_single|06EA|220
+ccc_range|06EB|06EC|230
+ccc_single|06ED|220
+ccc_single|0711|36
+ccc_single|0730|230
+ccc_single|0731|220
+ccc_range|0732|0733|230
+ccc_single|0734|220
+ccc_range|0735|0736|230
+ccc_range|0737|0739|220
+ccc_single|073A|230
+ccc_range|073B|073C|220
+ccc_single|073D|230
+ccc_single|073E|220
+ccc_range|073F|0741|230
+ccc_single|0742|220
+ccc_single|0743|230
+ccc_single|0744|220
+ccc_single|0745|230
+ccc_single|0746|220
+ccc_single|0747|230
+ccc_single|0748|220
+ccc_range|0749|074A|230
+ccc_range|07EB|07F1|230
+ccc_single|07F2|220
+ccc_single|07F3|230
+ccc_single|07FD|220
+ccc_range|0816|0819|230
+ccc_range|081B|0823|230
+ccc_range|0825|0827|230
+ccc_range|0829|082D|230
+ccc_range|0859|085B|220
+ccc_range|0897|0898|230
+ccc_range|0899|089B|220
+ccc_range|089C|089F|230
+ccc_range|08CA|08CE|230
+ccc_range|08CF|08D3|220
+ccc_range|08D4|08E1|230
+ccc_single|08E3|220
+ccc_range|08E4|08E5|230
+ccc_single|08E6|220
+ccc_range|08E7|08E8|230
+ccc_single|08E9|220
+ccc_range|08EA|08EC|230
+ccc_range|08ED|08EF|220
+ccc_single|08F0|27
+ccc_single|08F1|28
+ccc_single|08F2|29
+ccc_range|08F3|08F5|230
+ccc_single|08F6|220
+ccc_range|08F7|08F8|230
+ccc_range|08F9|08FA|220
+ccc_range|08FB|08FF|230
+ccc_single|093C|7
+ccc_single|094D|9
+ccc_single|0951|230
+ccc_single|0952|220
+ccc_range|0953|0954|230
+ccc_single|09BC|7
+ccc_single|09CD|9
+ccc_single|09FE|230
+ccc_single|0A3C|7
+ccc_single|0A4D|9
+ccc_single|0ABC|7
+ccc_single|0ACD|9
+ccc_single|0B3C|7
+ccc_single|0B4D|9
+ccc_single|0BCD|9
+ccc_single|0C3C|7
+ccc_single|0C4D|9
+ccc_single|0C55|84
+ccc_single|0C56|91
+ccc_single|0CBC|7
+ccc_single|0CCD|9
+ccc_range|0D3B|0D3C|9
+ccc_single|0D4D|9
+ccc_single|0DCA|9
+ccc_range|0E38|0E39|103
+ccc_single|0E3A|9
+ccc_range|0E48|0E4B|107
+ccc_range|0EB8|0EB9|118
+ccc_single|0EBA|9
+ccc_range|0EC8|0ECB|122
+ccc_range|0F18|0F19|220
+ccc_single|0F35|220
+ccc_single|0F37|220
+ccc_single|0F39|216
+ccc_single|0F71|129
+ccc_single|0F72|130
+ccc_single|0F74|132
+ccc_range|0F7A|0F7D|130
+ccc_single|0F80|130
+ccc_range|0F82|0F83|230
+ccc_single|0F84|9
+ccc_range|0F86|0F87|230
+ccc_single|0FC6|220
+ccc_single|1037|7
+ccc_range|1039|103A|9
+ccc_single|108D|220
+ccc_range|135D|135F|230
+ccc_range|1714|1715|9
+ccc_single|1734|9
+ccc_single|17D2|9
+ccc_single|17DD|230
+ccc_single|18A9|228
+ccc_single|1939|222
+ccc_single|193A|230
+ccc_single|193B|220
+ccc_single|1A17|230
+ccc_single|1A18|220
+ccc_single|1A60|9
+ccc_range|1A75|1A7C|230
+ccc_single|1A7F|220
+ccc_range|1AB0|1AB4|230
+ccc_range|1AB5|1ABA|220
+ccc_range|1ABB|1ABC|230
+ccc_single|1ABD|220
+ccc_range|1ABF|1AC0|220
+ccc_range|1AC1|1AC2|230
+ccc_range|1AC3|1AC4|220
+ccc_range|1AC5|1AC9|230
+ccc_single|1ACA|220
+ccc_range|1ACB|1ADC|230
+ccc_single|1ADD|220
+ccc_range|1AE0|1AE5|230
+ccc_single|1AE6|220
+ccc_range|1AE7|1AEA|230
+ccc_single|1AEB|234
+ccc_single|1B34|7
+ccc_single|1B44|9
+ccc_single|1B6B|230
+ccc_single|1B6C|220
+ccc_range|1B6D|1B73|230
+ccc_range|1BAA|1BAB|9
+ccc_single|1BE6|7
+ccc_range|1BF2|1BF3|9
+ccc_single|1C37|7
+ccc_range|1CD0|1CD2|230
+ccc_single|1CD4|1
+ccc_range|1CD5|1CD9|220
+ccc_range|1CDA|1CDB|230
+ccc_range|1CDC|1CDF|220
+ccc_single|1CE0|230
+ccc_range|1CE2|1CE8|1
+ccc_single|1CED|220
+ccc_single|1CF4|230
+ccc_range|1CF8|1CF9|230
+ccc_range|1DC0|1DC1|230
+ccc_single|1DC2|220
+ccc_range|1DC3|1DC9|230
+ccc_single|1DCA|220
+ccc_range|1DCB|1DCC|230
+ccc_single|1DCD|234
+ccc_single|1DCE|214
+ccc_single|1DCF|220
+ccc_single|1DD0|202
+ccc_range|1DD1|1DF5|230
+ccc_single|1DF6|232
+ccc_range|1DF7|1DF8|228
+ccc_single|1DF9|220
+ccc_single|1DFA|218
+ccc_single|1DFB|230
+ccc_single|1DFC|233
+ccc_single|1DFD|220
+ccc_single|1DFE|230
+ccc_single|1DFF|220
+ccc_range|20D0|20D1|230
+ccc_range|20D2|20D3|1
+ccc_range|20D4|20D7|230
+ccc_range|20D8|20DA|1
+ccc_range|20DB|20DC|230
+ccc_single|20E1|230
+ccc_range|20E5|20E6|1
+ccc_single|20E7|230
+ccc_single|20E8|220
+ccc_single|20E9|230
+ccc_range|20EA|20EB|1
+ccc_range|20EC|20EF|220
+ccc_single|20F0|230
+ccc_range|2CEF|2CF1|230
+ccc_single|2D7F|9
+ccc_range|2DE0|2DFF|230
+ccc_single|302A|218
+ccc_single|302B|228
+ccc_single|302C|232
+ccc_single|302D|222
+ccc_range|302E|302F|224
+ccc_range|3099|309A|8
+ccc_single|A66F|230
+ccc_range|A674|A67D|230
+ccc_range|A69E|A69F|230
+ccc_range|A6F0|A6F1|230
+ccc_single|A806|9
+ccc_single|A82C|9
+ccc_single|A8C4|9
+ccc_range|A8E0|A8F1|230
+ccc_range|A92B|A92D|220
+ccc_single|A953|9
+ccc_single|A9B3|7
+ccc_single|A9C0|9
+ccc_single|AAB0|230
+ccc_range|AAB2|AAB3|230
+ccc_single|AAB4|220
+ccc_range|AAB7|AAB8|230
+ccc_range|AABE|AABF|230
+ccc_single|AAC1|230
+ccc_single|AAF6|9
+ccc_single|ABED|9
+ccc_single|FB1E|26
+ccc_range|FE20|FE26|230
+ccc_range|FE27|FE2D|220
+ccc_range|FE2E|FE2F|230
+ccc_single|0101FD|220
+ccc_single|0102E0|220
+ccc_range|010376|01037A|230
+ccc_single|010A0D|220
+ccc_single|010A0F|230
+ccc_single|010A38|230
+ccc_single|010A39|1
+ccc_single|010A3A|220
+ccc_single|010A3F|9
+ccc_single|010AE5|230
+ccc_single|010AE6|220
+ccc_range|010D24|010D27|230
+ccc_range|010D69|010D6D|230
+ccc_range|010EAB|010EAC|230
+ccc_range|010EFA|010EFB|220
+ccc_range|010EFD|010EFF|220
+ccc_range|010F46|010F47|220
+ccc_range|010F48|010F4A|230
+ccc_single|010F4B|220
+ccc_single|010F4C|230
+ccc_range|010F4D|010F50|220
+ccc_single|010F82|230
+ccc_single|010F83|220
+ccc_single|010F84|230
+ccc_single|010F85|220
+ccc_single|011046|9
+ccc_single|011070|9
+ccc_single|01107F|9
+ccc_single|0110B9|9
+ccc_single|0110BA|7
+ccc_range|011100|011102|230
+ccc_range|011133|011134|9
+ccc_single|011173|7
+ccc_single|0111C0|9
+ccc_single|0111CA|7
+ccc_single|011235|9
+ccc_single|011236|7
+ccc_single|0112E9|7
+ccc_single|0112EA|9
+ccc_range|01133B|01133C|7
+ccc_single|01134D|9
+ccc_range|011366|01136C|230
+ccc_range|011370|011374|230
+ccc_range|0113CE|0113D0|9
+ccc_single|011442|9
+ccc_single|011446|7
+ccc_single|01145E|230
+ccc_single|0114C2|9
+ccc_single|0114C3|7
+ccc_single|0115BF|9
+ccc_single|0115C0|7
+ccc_single|01163F|9
+ccc_single|0116B6|9
+ccc_single|0116B7|7
+ccc_single|01172B|9
+ccc_single|011839|9
+ccc_single|01183A|7
+ccc_range|01193D|01193E|9
+ccc_single|011943|7
+ccc_single|0119E0|9
+ccc_single|011A34|9
+ccc_single|011A47|9
+ccc_single|011A99|9
+ccc_single|011C3F|9
+ccc_single|011D42|7
+ccc_range|011D44|011D45|9
+ccc_single|011D97|9
+ccc_range|011F41|011F42|9
+ccc_single|01612F|9
+ccc_range|016AF0|016AF4|1
+ccc_range|016B30|016B36|230
+ccc_range|016FF0|016FF1|6
+ccc_single|01BC9E|1
+ccc_range|01D165|01D166|216
+ccc_range|01D167|01D169|1
+ccc_single|01D16D|226
+ccc_range|01D16E|01D172|216
+ccc_range|01D17B|01D182|220
+ccc_range|01D185|01D189|230
+ccc_range|01D18A|01D18B|220
+ccc_range|01D1AA|01D1AD|230
+ccc_range|01D242|01D244|230
+ccc_range|01E000|01E006|230
+ccc_range|01E008|01E018|230
+ccc_range|01E01B|01E021|230
+ccc_range|01E023|01E024|230
+ccc_range|01E026|01E02A|230
+ccc_single|01E08F|230
+ccc_range|01E130|01E136|230
+ccc_single|01E2AE|230
+ccc_range|01E2EC|01E2EF|230
+ccc_range|01E4EC|01E4ED|232
+ccc_single|01E4EE|220
+ccc_single|01E4EF|230
+ccc_single|01E5EE|230
+ccc_single|01E5EF|220
+ccc_single|01E6E3|230
+ccc_single|01E6E6|230
+ccc_range|01E6EE|01E6EF|230
+ccc_single|01E6F5|230
+ccc_range|01E8D0|01E8D6|220
+ccc_range|01E944|01E949|230
+ccc_single|01E94A|7
+mapping_two_way|00C0|0041 0300
+mapping_two_way|00C1|0041 0301
+mapping_two_way|00C2|0041 0302
+mapping_two_way|00C3|0041 0303
+mapping_two_way|00C4|0041 0308
+mapping_two_way|00C5|0041 030A
+mapping_two_way|00C7|0043 0327
+mapping_two_way|00C8|0045 0300
+mapping_two_way|00C9|0045 0301
+mapping_two_way|00CA|0045 0302
+mapping_two_way|00CB|0045 0308
+mapping_two_way|00CC|0049 0300
+mapping_two_way|00CD|0049 0301
+mapping_two_way|00CE|0049 0302
+mapping_two_way|00CF|0049 0308
+mapping_two_way|00D1|004E 0303
+mapping_two_way|00D2|004F 0300
+mapping_two_way|00D3|004F 0301
+mapping_two_way|00D4|004F 0302
+mapping_two_way|00D5|004F 0303
+mapping_two_way|00D6|004F 0308
+mapping_two_way|00D9|0055 0300
+mapping_two_way|00DA|0055 0301
+mapping_two_way|00DB|0055 0302
+mapping_two_way|00DC|0055 0308
+mapping_two_way|00DD|0059 0301
+mapping_two_way|00E0|0061 0300
+mapping_two_way|00E1|0061 0301
+mapping_two_way|00E2|0061 0302
+mapping_two_way|00E3|0061 0303
+mapping_two_way|00E4|0061 0308
+mapping_two_way|00E5|0061 030A
+mapping_two_way|00E7|0063 0327
+mapping_two_way|00E8|0065 0300
+mapping_two_way|00E9|0065 0301
+mapping_two_way|00EA|0065 0302
+mapping_two_way|00EB|0065 0308
+mapping_two_way|00EC|0069 0300
+mapping_two_way|00ED|0069 0301
+mapping_two_way|00EE|0069 0302
+mapping_two_way|00EF|0069 0308
+mapping_two_way|00F1|006E 0303
+mapping_two_way|00F2|006F 0300
+mapping_two_way|00F3|006F 0301
+mapping_two_way|00F4|006F 0302
+mapping_two_way|00F5|006F 0303
+mapping_two_way|00F6|006F 0308
+mapping_two_way|00F9|0075 0300
+mapping_two_way|00FA|0075 0301
+mapping_two_way|00FB|0075 0302
+mapping_two_way|00FC|0075 0308
+mapping_two_way|00FD|0079 0301
+mapping_two_way|00FF|0079 0308
+mapping_two_way|0100|0041 0304
+mapping_two_way|0101|0061 0304
+mapping_two_way|0102|0041 0306
+mapping_two_way|0103|0061 0306
+mapping_two_way|0104|0041 0328
+mapping_two_way|0105|0061 0328
+mapping_two_way|0106|0043 0301
+mapping_two_way|0107|0063 0301
+mapping_two_way|0108|0043 0302
+mapping_two_way|0109|0063 0302
+mapping_two_way|010A|0043 0307
+mapping_two_way|010B|0063 0307
+mapping_two_way|010C|0043 030C
+mapping_two_way|010D|0063 030C
+mapping_two_way|010E|0044 030C
+mapping_two_way|010F|0064 030C
+mapping_two_way|0112|0045 0304
+mapping_two_way|0113|0065 0304
+mapping_two_way|0114|0045 0306
+mapping_two_way|0115|0065 0306
+mapping_two_way|0116|0045 0307
+mapping_two_way|0117|0065 0307
+mapping_two_way|0118|0045 0328
+mapping_two_way|0119|0065 0328
+mapping_two_way|011A|0045 030C
+mapping_two_way|011B|0065 030C
+mapping_two_way|011C|0047 0302
+mapping_two_way|011D|0067 0302
+mapping_two_way|011E|0047 0306
+mapping_two_way|011F|0067 0306
+mapping_two_way|0120|0047 0307
+mapping_two_way|0121|0067 0307
+mapping_two_way|0122|0047 0327
+mapping_two_way|0123|0067 0327
+mapping_two_way|0124|0048 0302
+mapping_two_way|0125|0068 0302
+mapping_two_way|0128|0049 0303
+mapping_two_way|0129|0069 0303
+mapping_two_way|012A|0049 0304
+mapping_two_way|012B|0069 0304
+mapping_two_way|012C|0049 0306
+mapping_two_way|012D|0069 0306
+mapping_two_way|012E|0049 0328
+mapping_two_way|012F|0069 0328
+mapping_two_way|0130|0049 0307
+mapping_two_way|0134|004A 0302
+mapping_two_way|0135|006A 0302
+mapping_two_way|0136|004B 0327
+mapping_two_way|0137|006B 0327
+mapping_two_way|0139|004C 0301
+mapping_two_way|013A|006C 0301
+mapping_two_way|013B|004C 0327
+mapping_two_way|013C|006C 0327
+mapping_two_way|013D|004C 030C
+mapping_two_way|013E|006C 030C
+mapping_two_way|0143|004E 0301
+mapping_two_way|0144|006E 0301
+mapping_two_way|0145|004E 0327
+mapping_two_way|0146|006E 0327
+mapping_two_way|0147|004E 030C
+mapping_two_way|0148|006E 030C
+mapping_two_way|014C|004F 0304
+mapping_two_way|014D|006F 0304
+mapping_two_way|014E|004F 0306
+mapping_two_way|014F|006F 0306
+mapping_two_way|0150|004F 030B
+mapping_two_way|0151|006F 030B
+mapping_two_way|0154|0052 0301
+mapping_two_way|0155|0072 0301
+mapping_two_way|0156|0052 0327
+mapping_two_way|0157|0072 0327
+mapping_two_way|0158|0052 030C
+mapping_two_way|0159|0072 030C
+mapping_two_way|015A|0053 0301
+mapping_two_way|015B|0073 0301
+mapping_two_way|015C|0053 0302
+mapping_two_way|015D|0073 0302
+mapping_two_way|015E|0053 0327
+mapping_two_way|015F|0073 0327
+mapping_two_way|0160|0053 030C
+mapping_two_way|0161|0073 030C
+mapping_two_way|0162|0054 0327
+mapping_two_way|0163|0074 0327
+mapping_two_way|0164|0054 030C
+mapping_two_way|0165|0074 030C
+mapping_two_way|0168|0055 0303
+mapping_two_way|0169|0075 0303
+mapping_two_way|016A|0055 0304
+mapping_two_way|016B|0075 0304
+mapping_two_way|016C|0055 0306
+mapping_two_way|016D|0075 0306
+mapping_two_way|016E|0055 030A
+mapping_two_way|016F|0075 030A
+mapping_two_way|0170|0055 030B
+mapping_two_way|0171|0075 030B
+mapping_two_way|0172|0055 0328
+mapping_two_way|0173|0075 0328
+mapping_two_way|0174|0057 0302
+mapping_two_way|0175|0077 0302
+mapping_two_way|0176|0059 0302
+mapping_two_way|0177|0079 0302
+mapping_two_way|0178|0059 0308
+mapping_two_way|0179|005A 0301
+mapping_two_way|017A|007A 0301
+mapping_two_way|017B|005A 0307
+mapping_two_way|017C|007A 0307
+mapping_two_way|017D|005A 030C
+mapping_two_way|017E|007A 030C
+mapping_two_way|01A0|004F 031B
+mapping_two_way|01A1|006F 031B
+mapping_two_way|01AF|0055 031B
+mapping_two_way|01B0|0075 031B
+mapping_two_way|01CD|0041 030C
+mapping_two_way|01CE|0061 030C
+mapping_two_way|01CF|0049 030C
+mapping_two_way|01D0|0069 030C
+mapping_two_way|01D1|004F 030C
+mapping_two_way|01D2|006F 030C
+mapping_two_way|01D3|0055 030C
+mapping_two_way|01D4|0075 030C
+mapping_two_way|01D5|00DC 0304
+mapping_two_way|01D6|00FC 0304
+mapping_two_way|01D7|00DC 0301
+mapping_two_way|01D8|00FC 0301
+mapping_two_way|01D9|00DC 030C
+mapping_two_way|01DA|00FC 030C
+mapping_two_way|01DB|00DC 0300
+mapping_two_way|01DC|00FC 0300
+mapping_two_way|01DE|00C4 0304
+mapping_two_way|01DF|00E4 0304
+mapping_two_way|01E0|0226 0304
+mapping_two_way|01E1|0227 0304
+mapping_two_way|01E2|00C6 0304
+mapping_two_way|01E3|00E6 0304
+mapping_two_way|01E6|0047 030C
+mapping_two_way|01E7|0067 030C
+mapping_two_way|01E8|004B 030C
+mapping_two_way|01E9|006B 030C
+mapping_two_way|01EA|004F 0328
+mapping_two_way|01EB|006F 0328
+mapping_two_way|01EC|01EA 0304
+mapping_two_way|01ED|01EB 0304
+mapping_two_way|01EE|01B7 030C
+mapping_two_way|01EF|0292 030C
+mapping_two_way|01F0|006A 030C
+mapping_two_way|01F4|0047 0301
+mapping_two_way|01F5|0067 0301
+mapping_two_way|01F8|004E 0300
+mapping_two_way|01F9|006E 0300
+mapping_two_way|01FA|00C5 0301
+mapping_two_way|01FB|00E5 0301
+mapping_two_way|01FC|00C6 0301
+mapping_two_way|01FD|00E6 0301
+mapping_two_way|01FE|00D8 0301
+mapping_two_way|01FF|00F8 0301
+mapping_two_way|0200|0041 030F
+mapping_two_way|0201|0061 030F
+mapping_two_way|0202|0041 0311
+mapping_two_way|0203|0061 0311
+mapping_two_way|0204|0045 030F
+mapping_two_way|0205|0065 030F
+mapping_two_way|0206|0045 0311
+mapping_two_way|0207|0065 0311
+mapping_two_way|0208|0049 030F
+mapping_two_way|0209|0069 030F
+mapping_two_way|020A|0049 0311
+mapping_two_way|020B|0069 0311
+mapping_two_way|020C|004F 030F
+mapping_two_way|020D|006F 030F
+mapping_two_way|020E|004F 0311
+mapping_two_way|020F|006F 0311
+mapping_two_way|0210|0052 030F
+mapping_two_way|0211|0072 030F
+mapping_two_way|0212|0052 0311
+mapping_two_way|0213|0072 0311
+mapping_two_way|0214|0055 030F
+mapping_two_way|0215|0075 030F
+mapping_two_way|0216|0055 0311
+mapping_two_way|0217|0075 0311
+mapping_two_way|0218|0053 0326
+mapping_two_way|0219|0073 0326
+mapping_two_way|021A|0054 0326
+mapping_two_way|021B|0074 0326
+mapping_two_way|021E|0048 030C
+mapping_two_way|021F|0068 030C
+mapping_two_way|0226|0041 0307
+mapping_two_way|0227|0061 0307
+mapping_two_way|0228|0045 0327
+mapping_two_way|0229|0065 0327
+mapping_two_way|022A|00D6 0304
+mapping_two_way|022B|00F6 0304
+mapping_two_way|022C|00D5 0304
+mapping_two_way|022D|00F5 0304
+mapping_two_way|022E|004F 0307
+mapping_two_way|022F|006F 0307
+mapping_two_way|0230|022E 0304
+mapping_two_way|0231|022F 0304
+mapping_two_way|0232|0059 0304
+mapping_two_way|0233|0079 0304
+mapping_one_way|0340|0300
+mapping_one_way|0341|0301
+mapping_one_way|0343|0313
+mapping_one_way|0344|0308 0301
+mapping_one_way|0374|02B9
+mapping_one_way|037E|003B
+mapping_two_way|0385|00A8 0301
+mapping_two_way|0386|0391 0301
+mapping_one_way|0387|00B7
+mapping_two_way|0388|0395 0301
+mapping_two_way|0389|0397 0301
+mapping_two_way|038A|0399 0301
+mapping_two_way|038C|039F 0301
+mapping_two_way|038E|03A5 0301
+mapping_two_way|038F|03A9 0301
+mapping_two_way|0390|03CA 0301
+mapping_two_way|03AA|0399 0308
+mapping_two_way|03AB|03A5 0308
+mapping_two_way|03AC|03B1 0301
+mapping_two_way|03AD|03B5 0301
+mapping_two_way|03AE|03B7 0301
+mapping_two_way|03AF|03B9 0301
+mapping_two_way|03B0|03CB 0301
+mapping_two_way|03CA|03B9 0308
+mapping_two_way|03CB|03C5 0308
+mapping_two_way|03CC|03BF 0301
+mapping_two_way|03CD|03C5 0301
+mapping_two_way|03CE|03C9 0301
+mapping_two_way|03D3|03D2 0301
+mapping_two_way|03D4|03D2 0308
+mapping_two_way|0400|0415 0300
+mapping_two_way|0401|0415 0308
+mapping_two_way|0403|0413 0301
+mapping_two_way|0407|0406 0308
+mapping_two_way|040C|041A 0301
+mapping_two_way|040D|0418 0300
+mapping_two_way|040E|0423 0306
+mapping_two_way|0419|0418 0306
+mapping_two_way|0439|0438 0306
+mapping_two_way|0450|0435 0300
+mapping_two_way|0451|0435 0308
+mapping_two_way|0453|0433 0301
+mapping_two_way|0457|0456 0308
+mapping_two_way|045C|043A 0301
+mapping_two_way|045D|0438 0300
+mapping_two_way|045E|0443 0306
+mapping_two_way|0476|0474 030F
+mapping_two_way|0477|0475 030F
+mapping_two_way|04C1|0416 0306
+mapping_two_way|04C2|0436 0306
+mapping_two_way|04D0|0410 0306
+mapping_two_way|04D1|0430 0306
+mapping_two_way|04D2|0410 0308
+mapping_two_way|04D3|0430 0308
+mapping_two_way|04D6|0415 0306
+mapping_two_way|04D7|0435 0306
+mapping_two_way|04DA|04D8 0308
+mapping_two_way|04DB|04D9 0308
+mapping_two_way|04DC|0416 0308
+mapping_two_way|04DD|0436 0308
+mapping_two_way|04DE|0417 0308
+mapping_two_way|04DF|0437 0308
+mapping_two_way|04E2|0418 0304
+mapping_two_way|04E3|0438 0304
+mapping_two_way|04E4|0418 0308
+mapping_two_way|04E5|0438 0308
+mapping_two_way|04E6|041E 0308
+mapping_two_way|04E7|043E 0308
+mapping_two_way|04EA|04E8 0308
+mapping_two_way|04EB|04E9 0308
+mapping_two_way|04EC|042D 0308
+mapping_two_way|04ED|044D 0308
+mapping_two_way|04EE|0423 0304
+mapping_two_way|04EF|0443 0304
+mapping_two_way|04F0|0423 0308
+mapping_two_way|04F1|0443 0308
+mapping_two_way|04F2|0423 030B
+mapping_two_way|04F3|0443 030B
+mapping_two_way|04F4|0427 0308
+mapping_two_way|04F5|0447 0308
+mapping_two_way|04F8|042B 0308
+mapping_two_way|04F9|044B 0308
+mapping_two_way|0622|0627 0653
+mapping_two_way|0623|0627 0654
+mapping_two_way|0624|0648 0654
+mapping_two_way|0625|0627 0655
+mapping_two_way|0626|064A 0654
+mapping_two_way|06C0|06D5 0654
+mapping_two_way|06C2|06C1 0654
+mapping_two_way|06D3|06D2 0654
+mapping_two_way|0929|0928 093C
+mapping_two_way|0931|0930 093C
+mapping_two_way|0934|0933 093C
+mapping_one_way|0958|0915 093C
+mapping_one_way|0959|0916 093C
+mapping_one_way|095A|0917 093C
+mapping_one_way|095B|091C 093C
+mapping_one_way|095C|0921 093C
+mapping_one_way|095D|0922 093C
+mapping_one_way|095E|092B 093C
+mapping_one_way|095F|092F 093C
+mapping_two_way|09CB|09C7 09BE
+mapping_two_way|09CC|09C7 09D7
+mapping_one_way|09DC|09A1 09BC
+mapping_one_way|09DD|09A2 09BC
+mapping_one_way|09DF|09AF 09BC
+mapping_one_way|0A33|0A32 0A3C
+mapping_one_way|0A36|0A38 0A3C
+mapping_one_way|0A59|0A16 0A3C
+mapping_one_way|0A5A|0A17 0A3C
+mapping_one_way|0A5B|0A1C 0A3C
+mapping_one_way|0A5E|0A2B 0A3C
+mapping_two_way|0B48|0B47 0B56
+mapping_two_way|0B4B|0B47 0B3E
+mapping_two_way|0B4C|0B47 0B57
+mapping_one_way|0B5C|0B21 0B3C
+mapping_one_way|0B5D|0B22 0B3C
+mapping_two_way|0B94|0B92 0BD7
+mapping_two_way|0BCA|0BC6 0BBE
+mapping_two_way|0BCB|0BC7 0BBE
+mapping_two_way|0BCC|0BC6 0BD7
+mapping_two_way|0C48|0C46 0C56
+mapping_two_way|0CC0|0CBF 0CD5
+mapping_two_way|0CC7|0CC6 0CD5
+mapping_two_way|0CC8|0CC6 0CD6
+mapping_two_way|0CCA|0CC6 0CC2
+mapping_two_way|0CCB|0CCA 0CD5
+mapping_two_way|0D4A|0D46 0D3E
+mapping_two_way|0D4B|0D47 0D3E
+mapping_two_way|0D4C|0D46 0D57
+mapping_two_way|0DDA|0DD9 0DCA
+mapping_two_way|0DDC|0DD9 0DCF
+mapping_two_way|0DDD|0DDC 0DCA
+mapping_two_way|0DDE|0DD9 0DDF
+mapping_one_way|0F43|0F42 0FB7
+mapping_one_way|0F4D|0F4C 0FB7
+mapping_one_way|0F52|0F51 0FB7
+mapping_one_way|0F57|0F56 0FB7
+mapping_one_way|0F5C|0F5B 0FB7
+mapping_one_way|0F69|0F40 0FB5
+mapping_one_way|0F73|0F71 0F72
+mapping_one_way|0F75|0F71 0F74
+mapping_one_way|0F76|0FB2 0F80
+mapping_one_way|0F78|0FB3 0F80
+mapping_one_way|0F81|0F71 0F80
+mapping_one_way|0F93|0F92 0FB7
+mapping_one_way|0F9D|0F9C 0FB7
+mapping_one_way|0FA2|0FA1 0FB7
+mapping_one_way|0FA7|0FA6 0FB7
+mapping_one_way|0FAC|0FAB 0FB7
+mapping_one_way|0FB9|0F90 0FB5
+mapping_two_way|1026|1025 102E
+mapping_two_way|1B06|1B05 1B35
+mapping_two_way|1B08|1B07 1B35
+mapping_two_way|1B0A|1B09 1B35
+mapping_two_way|1B0C|1B0B 1B35
+mapping_two_way|1B0E|1B0D 1B35
+mapping_two_way|1B12|1B11 1B35
+mapping_two_way|1B3B|1B3A 1B35
+mapping_two_way|1B3D|1B3C 1B35
+mapping_two_way|1B40|1B3E 1B35
+mapping_two_way|1B41|1B3F 1B35
+mapping_two_way|1B43|1B42 1B35
+mapping_two_way|1E00|0041 0325
+mapping_two_way|1E01|0061 0325
+mapping_two_way|1E02|0042 0307
+mapping_two_way|1E03|0062 0307
+mapping_two_way|1E04|0042 0323
+mapping_two_way|1E05|0062 0323
+mapping_two_way|1E06|0042 0331
+mapping_two_way|1E07|0062 0331
+mapping_two_way|1E08|00C7 0301
+mapping_two_way|1E09|00E7 0301
+mapping_two_way|1E0A|0044 0307
+mapping_two_way|1E0B|0064 0307
+mapping_two_way|1E0C|0044 0323
+mapping_two_way|1E0D|0064 0323
+mapping_two_way|1E0E|0044 0331
+mapping_two_way|1E0F|0064 0331
+mapping_two_way|1E10|0044 0327
+mapping_two_way|1E11|0064 0327
+mapping_two_way|1E12|0044 032D
+mapping_two_way|1E13|0064 032D
+mapping_two_way|1E14|0112 0300
+mapping_two_way|1E15|0113 0300
+mapping_two_way|1E16|0112 0301
+mapping_two_way|1E17|0113 0301
+mapping_two_way|1E18|0045 032D
+mapping_two_way|1E19|0065 032D
+mapping_two_way|1E1A|0045 0330
+mapping_two_way|1E1B|0065 0330
+mapping_two_way|1E1C|0228 0306
+mapping_two_way|1E1D|0229 0306
+mapping_two_way|1E1E|0046 0307
+mapping_two_way|1E1F|0066 0307
+mapping_two_way|1E20|0047 0304
+mapping_two_way|1E21|0067 0304
+mapping_two_way|1E22|0048 0307
+mapping_two_way|1E23|0068 0307
+mapping_two_way|1E24|0048 0323
+mapping_two_way|1E25|0068 0323
+mapping_two_way|1E26|0048 0308
+mapping_two_way|1E27|0068 0308
+mapping_two_way|1E28|0048 0327
+mapping_two_way|1E29|0068 0327
+mapping_two_way|1E2A|0048 032E
+mapping_two_way|1E2B|0068 032E
+mapping_two_way|1E2C|0049 0330
+mapping_two_way|1E2D|0069 0330
+mapping_two_way|1E2E|00CF 0301
+mapping_two_way|1E2F|00EF 0301
+mapping_two_way|1E30|004B 0301
+mapping_two_way|1E31|006B 0301
+mapping_two_way|1E32|004B 0323
+mapping_two_way|1E33|006B 0323
+mapping_two_way|1E34|004B 0331
+mapping_two_way|1E35|006B 0331
+mapping_two_way|1E36|004C 0323
+mapping_two_way|1E37|006C 0323
+mapping_two_way|1E38|1E36 0304
+mapping_two_way|1E39|1E37 0304
+mapping_two_way|1E3A|004C 0331
+mapping_two_way|1E3B|006C 0331
+mapping_two_way|1E3C|004C 032D
+mapping_two_way|1E3D|006C 032D
+mapping_two_way|1E3E|004D 0301
+mapping_two_way|1E3F|006D 0301
+mapping_two_way|1E40|004D 0307
+mapping_two_way|1E41|006D 0307
+mapping_two_way|1E42|004D 0323
+mapping_two_way|1E43|006D 0323
+mapping_two_way|1E44|004E 0307
+mapping_two_way|1E45|006E 0307
+mapping_two_way|1E46|004E 0323
+mapping_two_way|1E47|006E 0323
+mapping_two_way|1E48|004E 0331
+mapping_two_way|1E49|006E 0331
+mapping_two_way|1E4A|004E 032D
+mapping_two_way|1E4B|006E 032D
+mapping_two_way|1E4C|00D5 0301
+mapping_two_way|1E4D|00F5 0301
+mapping_two_way|1E4E|00D5 0308
+mapping_two_way|1E4F|00F5 0308
+mapping_two_way|1E50|014C 0300
+mapping_two_way|1E51|014D 0300
+mapping_two_way|1E52|014C 0301
+mapping_two_way|1E53|014D 0301
+mapping_two_way|1E54|0050 0301
+mapping_two_way|1E55|0070 0301
+mapping_two_way|1E56|0050 0307
+mapping_two_way|1E57|0070 0307
+mapping_two_way|1E58|0052 0307
+mapping_two_way|1E59|0072 0307
+mapping_two_way|1E5A|0052 0323
+mapping_two_way|1E5B|0072 0323
+mapping_two_way|1E5C|1E5A 0304
+mapping_two_way|1E5D|1E5B 0304
+mapping_two_way|1E5E|0052 0331
+mapping_two_way|1E5F|0072 0331
+mapping_two_way|1E60|0053 0307
+mapping_two_way|1E61|0073 0307
+mapping_two_way|1E62|0053 0323
+mapping_two_way|1E63|0073 0323
+mapping_two_way|1E64|015A 0307
+mapping_two_way|1E65|015B 0307
+mapping_two_way|1E66|0160 0307
+mapping_two_way|1E67|0161 0307
+mapping_two_way|1E68|1E62 0307
+mapping_two_way|1E69|1E63 0307
+mapping_two_way|1E6A|0054 0307
+mapping_two_way|1E6B|0074 0307
+mapping_two_way|1E6C|0054 0323
+mapping_two_way|1E6D|0074 0323
+mapping_two_way|1E6E|0054 0331
+mapping_two_way|1E6F|0074 0331
+mapping_two_way|1E70|0054 032D
+mapping_two_way|1E71|0074 032D
+mapping_two_way|1E72|0055 0324
+mapping_two_way|1E73|0075 0324
+mapping_two_way|1E74|0055 0330
+mapping_two_way|1E75|0075 0330
+mapping_two_way|1E76|0055 032D
+mapping_two_way|1E77|0075 032D
+mapping_two_way|1E78|0168 0301
+mapping_two_way|1E79|0169 0301
+mapping_two_way|1E7A|016A 0308
+mapping_two_way|1E7B|016B 0308
+mapping_two_way|1E7C|0056 0303
+mapping_two_way|1E7D|0076 0303
+mapping_two_way|1E7E|0056 0323
+mapping_two_way|1E7F|0076 0323
+mapping_two_way|1E80|0057 0300
+mapping_two_way|1E81|0077 0300
+mapping_two_way|1E82|0057 0301
+mapping_two_way|1E83|0077 0301
+mapping_two_way|1E84|0057 0308
+mapping_two_way|1E85|0077 0308
+mapping_two_way|1E86|0057 0307
+mapping_two_way|1E87|0077 0307
+mapping_two_way|1E88|0057 0323
+mapping_two_way|1E89|0077 0323
+mapping_two_way|1E8A|0058 0307
+mapping_two_way|1E8B|0078 0307
+mapping_two_way|1E8C|0058 0308
+mapping_two_way|1E8D|0078 0308
+mapping_two_way|1E8E|0059 0307
+mapping_two_way|1E8F|0079 0307
+mapping_two_way|1E90|005A 0302
+mapping_two_way|1E91|007A 0302
+mapping_two_way|1E92|005A 0323
+mapping_two_way|1E93|007A 0323
+mapping_two_way|1E94|005A 0331
+mapping_two_way|1E95|007A 0331
+mapping_two_way|1E96|0068 0331
+mapping_two_way|1E97|0074 0308
+mapping_two_way|1E98|0077 030A
+mapping_two_way|1E99|0079 030A
+mapping_two_way|1E9B|017F 0307
+mapping_two_way|1EA0|0041 0323
+mapping_two_way|1EA1|0061 0323
+mapping_two_way|1EA2|0041 0309
+mapping_two_way|1EA3|0061 0309
+mapping_two_way|1EA4|00C2 0301
+mapping_two_way|1EA5|00E2 0301
+mapping_two_way|1EA6|00C2 0300
+mapping_two_way|1EA7|00E2 0300
+mapping_two_way|1EA8|00C2 0309
+mapping_two_way|1EA9|00E2 0309
+mapping_two_way|1EAA|00C2 0303
+mapping_two_way|1EAB|00E2 0303
+mapping_two_way|1EAC|1EA0 0302
+mapping_two_way|1EAD|1EA1 0302
+mapping_two_way|1EAE|0102 0301
+mapping_two_way|1EAF|0103 0301
+mapping_two_way|1EB0|0102 0300
+mapping_two_way|1EB1|0103 0300
+mapping_two_way|1EB2|0102 0309
+mapping_two_way|1EB3|0103 0309
+mapping_two_way|1EB4|0102 0303
+mapping_two_way|1EB5|0103 0303
+mapping_two_way|1EB6|1EA0 0306
+mapping_two_way|1EB7|1EA1 0306
+mapping_two_way|1EB8|0045 0323
+mapping_two_way|1EB9|0065 0323
+mapping_two_way|1EBA|0045 0309
+mapping_two_way|1EBB|0065 0309
+mapping_two_way|1EBC|0045 0303
+mapping_two_way|1EBD|0065 0303
+mapping_two_way|1EBE|00CA 0301
+mapping_two_way|1EBF|00EA 0301
+mapping_two_way|1EC0|00CA 0300
+mapping_two_way|1EC1|00EA 0300
+mapping_two_way|1EC2|00CA 0309
+mapping_two_way|1EC3|00EA 0309
+mapping_two_way|1EC4|00CA 0303
+mapping_two_way|1EC5|00EA 0303
+mapping_two_way|1EC6|1EB8 0302
+mapping_two_way|1EC7|1EB9 0302
+mapping_two_way|1EC8|0049 0309
+mapping_two_way|1EC9|0069 0309
+mapping_two_way|1ECA|0049 0323
+mapping_two_way|1ECB|0069 0323
+mapping_two_way|1ECC|004F 0323
+mapping_two_way|1ECD|006F 0323
+mapping_two_way|1ECE|004F 0309
+mapping_two_way|1ECF|006F 0309
+mapping_two_way|1ED0|00D4 0301
+mapping_two_way|1ED1|00F4 0301
+mapping_two_way|1ED2|00D4 0300
+mapping_two_way|1ED3|00F4 0300
+mapping_two_way|1ED4|00D4 0309
+mapping_two_way|1ED5|00F4 0309
+mapping_two_way|1ED6|00D4 0303
+mapping_two_way|1ED7|00F4 0303
+mapping_two_way|1ED8|1ECC 0302
+mapping_two_way|1ED9|1ECD 0302
+mapping_two_way|1EDA|01A0 0301
+mapping_two_way|1EDB|01A1 0301
+mapping_two_way|1EDC|01A0 0300
+mapping_two_way|1EDD|01A1 0300
+mapping_two_way|1EDE|01A0 0309
+mapping_two_way|1EDF|01A1 0309
+mapping_two_way|1EE0|01A0 0303
+mapping_two_way|1EE1|01A1 0303
+mapping_two_way|1EE2|01A0 0323
+mapping_two_way|1EE3|01A1 0323
+mapping_two_way|1EE4|0055 0323
+mapping_two_way|1EE5|0075 0323
+mapping_two_way|1EE6|0055 0309
+mapping_two_way|1EE7|0075 0309
+mapping_two_way|1EE8|01AF 0301
+mapping_two_way|1EE9|01B0 0301
+mapping_two_way|1EEA|01AF 0300
+mapping_two_way|1EEB|01B0 0300
+mapping_two_way|1EEC|01AF 0309
+mapping_two_way|1EED|01B0 0309
+mapping_two_way|1EEE|01AF 0303
+mapping_two_way|1EEF|01B0 0303
+mapping_two_way|1EF0|01AF 0323
+mapping_two_way|1EF1|01B0 0323
+mapping_two_way|1EF2|0059 0300
+mapping_two_way|1EF3|0079 0300
+mapping_two_way|1EF4|0059 0323
+mapping_two_way|1EF5|0079 0323
+mapping_two_way|1EF6|0059 0309
+mapping_two_way|1EF7|0079 0309
+mapping_two_way|1EF8|0059 0303
+mapping_two_way|1EF9|0079 0303
+mapping_two_way|1F00|03B1 0313
+mapping_two_way|1F01|03B1 0314
+mapping_two_way|1F02|1F00 0300
+mapping_two_way|1F03|1F01 0300
+mapping_two_way|1F04|1F00 0301
+mapping_two_way|1F05|1F01 0301
+mapping_two_way|1F06|1F00 0342
+mapping_two_way|1F07|1F01 0342
+mapping_two_way|1F08|0391 0313
+mapping_two_way|1F09|0391 0314
+mapping_two_way|1F0A|1F08 0300
+mapping_two_way|1F0B|1F09 0300
+mapping_two_way|1F0C|1F08 0301
+mapping_two_way|1F0D|1F09 0301
+mapping_two_way|1F0E|1F08 0342
+mapping_two_way|1F0F|1F09 0342
+mapping_two_way|1F10|03B5 0313
+mapping_two_way|1F11|03B5 0314
+mapping_two_way|1F12|1F10 0300
+mapping_two_way|1F13|1F11 0300
+mapping_two_way|1F14|1F10 0301
+mapping_two_way|1F15|1F11 0301
+mapping_two_way|1F18|0395 0313
+mapping_two_way|1F19|0395 0314
+mapping_two_way|1F1A|1F18 0300
+mapping_two_way|1F1B|1F19 0300
+mapping_two_way|1F1C|1F18 0301
+mapping_two_way|1F1D|1F19 0301
+mapping_two_way|1F20|03B7 0313
+mapping_two_way|1F21|03B7 0314
+mapping_two_way|1F22|1F20 0300
+mapping_two_way|1F23|1F21 0300
+mapping_two_way|1F24|1F20 0301
+mapping_two_way|1F25|1F21 0301
+mapping_two_way|1F26|1F20 0342
+mapping_two_way|1F27|1F21 0342
+mapping_two_way|1F28|0397 0313
+mapping_two_way|1F29|0397 0314
+mapping_two_way|1F2A|1F28 0300
+mapping_two_way|1F2B|1F29 0300
+mapping_two_way|1F2C|1F28 0301
+mapping_two_way|1F2D|1F29 0301
+mapping_two_way|1F2E|1F28 0342
+mapping_two_way|1F2F|1F29 0342
+mapping_two_way|1F30|03B9 0313
+mapping_two_way|1F31|03B9 0314
+mapping_two_way|1F32|1F30 0300
+mapping_two_way|1F33|1F31 0300
+mapping_two_way|1F34|1F30 0301
+mapping_two_way|1F35|1F31 0301
+mapping_two_way|1F36|1F30 0342
+mapping_two_way|1F37|1F31 0342
+mapping_two_way|1F38|0399 0313
+mapping_two_way|1F39|0399 0314
+mapping_two_way|1F3A|1F38 0300
+mapping_two_way|1F3B|1F39 0300
+mapping_two_way|1F3C|1F38 0301
+mapping_two_way|1F3D|1F39 0301
+mapping_two_way|1F3E|1F38 0342
+mapping_two_way|1F3F|1F39 0342
+mapping_two_way|1F40|03BF 0313
+mapping_two_way|1F41|03BF 0314
+mapping_two_way|1F42|1F40 0300
+mapping_two_way|1F43|1F41 0300
+mapping_two_way|1F44|1F40 0301
+mapping_two_way|1F45|1F41 0301
+mapping_two_way|1F48|039F 0313
+mapping_two_way|1F49|039F 0314
+mapping_two_way|1F4A|1F48 0300
+mapping_two_way|1F4B|1F49 0300
+mapping_two_way|1F4C|1F48 0301
+mapping_two_way|1F4D|1F49 0301
+mapping_two_way|1F50|03C5 0313
+mapping_two_way|1F51|03C5 0314
+mapping_two_way|1F52|1F50 0300
+mapping_two_way|1F53|1F51 0300
+mapping_two_way|1F54|1F50 0301
+mapping_two_way|1F55|1F51 0301
+mapping_two_way|1F56|1F50 0342
+mapping_two_way|1F57|1F51 0342
+mapping_two_way|1F59|03A5 0314
+mapping_two_way|1F5B|1F59 0300
+mapping_two_way|1F5D|1F59 0301
+mapping_two_way|1F5F|1F59 0342
+mapping_two_way|1F60|03C9 0313
+mapping_two_way|1F61|03C9 0314
+mapping_two_way|1F62|1F60 0300
+mapping_two_way|1F63|1F61 0300
+mapping_two_way|1F64|1F60 0301
+mapping_two_way|1F65|1F61 0301
+mapping_two_way|1F66|1F60 0342
+mapping_two_way|1F67|1F61 0342
+mapping_two_way|1F68|03A9 0313
+mapping_two_way|1F69|03A9 0314
+mapping_two_way|1F6A|1F68 0300
+mapping_two_way|1F6B|1F69 0300
+mapping_two_way|1F6C|1F68 0301
+mapping_two_way|1F6D|1F69 0301
+mapping_two_way|1F6E|1F68 0342
+mapping_two_way|1F6F|1F69 0342
+mapping_two_way|1F70|03B1 0300
+mapping_one_way|1F71|03AC
+mapping_two_way|1F72|03B5 0300
+mapping_one_way|1F73|03AD
+mapping_two_way|1F74|03B7 0300
+mapping_one_way|1F75|03AE
+mapping_two_way|1F76|03B9 0300
+mapping_one_way|1F77|03AF
+mapping_two_way|1F78|03BF 0300
+mapping_one_way|1F79|03CC
+mapping_two_way|1F7A|03C5 0300
+mapping_one_way|1F7B|03CD
+mapping_two_way|1F7C|03C9 0300
+mapping_one_way|1F7D|03CE
+mapping_two_way|1F80|1F00 0345
+mapping_two_way|1F81|1F01 0345
+mapping_two_way|1F82|1F02 0345
+mapping_two_way|1F83|1F03 0345
+mapping_two_way|1F84|1F04 0345
+mapping_two_way|1F85|1F05 0345
+mapping_two_way|1F86|1F06 0345
+mapping_two_way|1F87|1F07 0345
+mapping_two_way|1F88|1F08 0345
+mapping_two_way|1F89|1F09 0345
+mapping_two_way|1F8A|1F0A 0345
+mapping_two_way|1F8B|1F0B 0345
+mapping_two_way|1F8C|1F0C 0345
+mapping_two_way|1F8D|1F0D 0345
+mapping_two_way|1F8E|1F0E 0345
+mapping_two_way|1F8F|1F0F 0345
+mapping_two_way|1F90|1F20 0345
+mapping_two_way|1F91|1F21 0345
+mapping_two_way|1F92|1F22 0345
+mapping_two_way|1F93|1F23 0345
+mapping_two_way|1F94|1F24 0345
+mapping_two_way|1F95|1F25 0345
+mapping_two_way|1F96|1F26 0345
+mapping_two_way|1F97|1F27 0345
+mapping_two_way|1F98|1F28 0345
+mapping_two_way|1F99|1F29 0345
+mapping_two_way|1F9A|1F2A 0345
+mapping_two_way|1F9B|1F2B 0345
+mapping_two_way|1F9C|1F2C 0345
+mapping_two_way|1F9D|1F2D 0345
+mapping_two_way|1F9E|1F2E 0345
+mapping_two_way|1F9F|1F2F 0345
+mapping_two_way|1FA0|1F60 0345
+mapping_two_way|1FA1|1F61 0345
+mapping_two_way|1FA2|1F62 0345
+mapping_two_way|1FA3|1F63 0345
+mapping_two_way|1FA4|1F64 0345
+mapping_two_way|1FA5|1F65 0345
+mapping_two_way|1FA6|1F66 0345
+mapping_two_way|1FA7|1F67 0345
+mapping_two_way|1FA8|1F68 0345
+mapping_two_way|1FA9|1F69 0345
+mapping_two_way|1FAA|1F6A 0345
+mapping_two_way|1FAB|1F6B 0345
+mapping_two_way|1FAC|1F6C 0345
+mapping_two_way|1FAD|1F6D 0345
+mapping_two_way|1FAE|1F6E 0345
+mapping_two_way|1FAF|1F6F 0345
+mapping_two_way|1FB0|03B1 0306
+mapping_two_way|1FB1|03B1 0304
+mapping_two_way|1FB2|1F70 0345
+mapping_two_way|1FB3|03B1 0345
+mapping_two_way|1FB4|03AC 0345
+mapping_two_way|1FB6|03B1 0342
+mapping_two_way|1FB7|1FB6 0345
+mapping_two_way|1FB8|0391 0306
+mapping_two_way|1FB9|0391 0304
+mapping_two_way|1FBA|0391 0300
+mapping_one_way|1FBB|0386
+mapping_two_way|1FBC|0391 0345
+mapping_one_way|1FBE|03B9
+mapping_two_way|1FC1|00A8 0342
+mapping_two_way|1FC2|1F74 0345
+mapping_two_way|1FC3|03B7 0345
+mapping_two_way|1FC4|03AE 0345
+mapping_two_way|1FC6|03B7 0342
+mapping_two_way|1FC7|1FC6 0345
+mapping_two_way|1FC8|0395 0300
+mapping_one_way|1FC9|0388
+mapping_two_way|1FCA|0397 0300
+mapping_one_way|1FCB|0389
+mapping_two_way|1FCC|0397 0345
+mapping_two_way|1FCD|1FBF 0300
+mapping_two_way|1FCE|1FBF 0301
+mapping_two_way|1FCF|1FBF 0342
+mapping_two_way|1FD0|03B9 0306
+mapping_two_way|1FD1|03B9 0304
+mapping_two_way|1FD2|03CA 0300
+mapping_one_way|1FD3|0390
+mapping_two_way|1FD6|03B9 0342
+mapping_two_way|1FD7|03CA 0342
+mapping_two_way|1FD8|0399 0306
+mapping_two_way|1FD9|0399 0304
+mapping_two_way|1FDA|0399 0300
+mapping_one_way|1FDB|038A
+mapping_two_way|1FDD|1FFE 0300
+mapping_two_way|1FDE|1FFE 0301
+mapping_two_way|1FDF|1FFE 0342
+mapping_two_way|1FE0|03C5 0306
+mapping_two_way|1FE1|03C5 0304
+mapping_two_way|1FE2|03CB 0300
+mapping_one_way|1FE3|03B0
+mapping_two_way|1FE4|03C1 0313
+mapping_two_way|1FE5|03C1 0314
+mapping_two_way|1FE6|03C5 0342
+mapping_two_way|1FE7|03CB 0342
+mapping_two_way|1FE8|03A5 0306
+mapping_two_way|1FE9|03A5 0304
+mapping_two_way|1FEA|03A5 0300
+mapping_one_way|1FEB|038E
+mapping_two_way|1FEC|03A1 0314
+mapping_two_way|1FED|00A8 0300
+mapping_one_way|1FEE|0385
+mapping_one_way|1FEF|0060
+mapping_two_way|1FF2|1F7C 0345
+mapping_two_way|1FF3|03C9 0345
+mapping_two_way|1FF4|03CE 0345
+mapping_two_way|1FF6|03C9 0342
+mapping_two_way|1FF7|1FF6 0345
+mapping_two_way|1FF8|039F 0300
+mapping_one_way|1FF9|038C
+mapping_two_way|1FFA|03A9 0300
+mapping_one_way|1FFB|038F
+mapping_two_way|1FFC|03A9 0345
+mapping_one_way|1FFD|00B4
+mapping_one_way|2000|2002
+mapping_one_way|2001|2003
+mapping_one_way|2126|03A9
+mapping_one_way|212A|004B
+mapping_one_way|212B|00C5
+mapping_two_way|219A|2190 0338
+mapping_two_way|219B|2192 0338
+mapping_two_way|21AE|2194 0338
+mapping_two_way|21CD|21D0 0338
+mapping_two_way|21CE|21D4 0338
+mapping_two_way|21CF|21D2 0338
+mapping_two_way|2204|2203 0338
+mapping_two_way|2209|2208 0338
+mapping_two_way|220C|220B 0338
+mapping_two_way|2224|2223 0338
+mapping_two_way|2226|2225 0338
+mapping_two_way|2241|223C 0338
+mapping_two_way|2244|2243 0338
+mapping_two_way|2247|2245 0338
+mapping_two_way|2249|2248 0338
+mapping_two_way|2260|003D 0338
+mapping_two_way|2262|2261 0338
+mapping_two_way|226D|224D 0338
+mapping_two_way|226E|003C 0338
+mapping_two_way|226F|003E 0338
+mapping_two_way|2270|2264 0338
+mapping_two_way|2271|2265 0338
+mapping_two_way|2274|2272 0338
+mapping_two_way|2275|2273 0338
+mapping_two_way|2278|2276 0338
+mapping_two_way|2279|2277 0338
+mapping_two_way|2280|227A 0338
+mapping_two_way|2281|227B 0338
+mapping_two_way|2284|2282 0338
+mapping_two_way|2285|2283 0338
+mapping_two_way|2288|2286 0338
+mapping_two_way|2289|2287 0338
+mapping_two_way|22AC|22A2 0338
+mapping_two_way|22AD|22A8 0338
+mapping_two_way|22AE|22A9 0338
+mapping_two_way|22AF|22AB 0338
+mapping_two_way|22E0|227C 0338
+mapping_two_way|22E1|227D 0338
+mapping_two_way|22E2|2291 0338
+mapping_two_way|22E3|2292 0338
+mapping_two_way|22EA|22B2 0338
+mapping_two_way|22EB|22B3 0338
+mapping_two_way|22EC|22B4 0338
+mapping_two_way|22ED|22B5 0338
+mapping_one_way|2329|3008
+mapping_one_way|232A|3009
+mapping_one_way|2ADC|2ADD 0338
+mapping_two_way|304C|304B 3099
+mapping_two_way|304E|304D 3099
+mapping_two_way|3050|304F 3099
+mapping_two_way|3052|3051 3099
+mapping_two_way|3054|3053 3099
+mapping_two_way|3056|3055 3099
+mapping_two_way|3058|3057 3099
+mapping_two_way|305A|3059 3099
+mapping_two_way|305C|305B 3099
+mapping_two_way|305E|305D 3099
+mapping_two_way|3060|305F 3099
+mapping_two_way|3062|3061 3099
+mapping_two_way|3065|3064 3099
+mapping_two_way|3067|3066 3099
+mapping_two_way|3069|3068 3099
+mapping_two_way|3070|306F 3099
+mapping_two_way|3071|306F 309A
+mapping_two_way|3073|3072 3099
+mapping_two_way|3074|3072 309A
+mapping_two_way|3076|3075 3099
+mapping_two_way|3077|3075 309A
+mapping_two_way|3079|3078 3099
+mapping_two_way|307A|3078 309A
+mapping_two_way|307C|307B 3099
+mapping_two_way|307D|307B 309A
+mapping_two_way|3094|3046 3099
+mapping_two_way|309E|309D 3099
+mapping_two_way|30AC|30AB 3099
+mapping_two_way|30AE|30AD 3099
+mapping_two_way|30B0|30AF 3099
+mapping_two_way|30B2|30B1 3099
+mapping_two_way|30B4|30B3 3099
+mapping_two_way|30B6|30B5 3099
+mapping_two_way|30B8|30B7 3099
+mapping_two_way|30BA|30B9 3099
+mapping_two_way|30BC|30BB 3099
+mapping_two_way|30BE|30BD 3099
+mapping_two_way|30C0|30BF 3099
+mapping_two_way|30C2|30C1 3099
+mapping_two_way|30C5|30C4 3099
+mapping_two_way|30C7|30C6 3099
+mapping_two_way|30C9|30C8 3099
+mapping_two_way|30D0|30CF 3099
+mapping_two_way|30D1|30CF 309A
+mapping_two_way|30D3|30D2 3099
+mapping_two_way|30D4|30D2 309A
+mapping_two_way|30D6|30D5 3099
+mapping_two_way|30D7|30D5 309A
+mapping_two_way|30D9|30D8 3099
+mapping_two_way|30DA|30D8 309A
+mapping_two_way|30DC|30DB 3099
+mapping_two_way|30DD|30DB 309A
+mapping_two_way|30F4|30A6 3099
+mapping_two_way|30F7|30EF 3099
+mapping_two_way|30F8|30F0 3099
+mapping_two_way|30F9|30F1 3099
+mapping_two_way|30FA|30F2 3099
+mapping_two_way|30FE|30FD 3099
+mapping_one_way|F900|8C48
+mapping_one_way|F901|66F4
+mapping_one_way|F902|8ECA
+mapping_one_way|F903|8CC8
+mapping_one_way|F904|6ED1
+mapping_one_way|F905|4E32
+mapping_one_way|F906|53E5
+mapping_one_way|F907|9F9C
+mapping_one_way|F908|9F9C
+mapping_one_way|F909|5951
+mapping_one_way|F90A|91D1
+mapping_one_way|F90B|5587
+mapping_one_way|F90C|5948
+mapping_one_way|F90D|61F6
+mapping_one_way|F90E|7669
+mapping_one_way|F90F|7F85
+mapping_one_way|F910|863F
+mapping_one_way|F911|87BA
+mapping_one_way|F912|88F8
+mapping_one_way|F913|908F
+mapping_one_way|F914|6A02
+mapping_one_way|F915|6D1B
+mapping_one_way|F916|70D9
+mapping_one_way|F917|73DE
+mapping_one_way|F918|843D
+mapping_one_way|F919|916A
+mapping_one_way|F91A|99F1
+mapping_one_way|F91B|4E82
+mapping_one_way|F91C|5375
+mapping_one_way|F91D|6B04
+mapping_one_way|F91E|721B
+mapping_one_way|F91F|862D
+mapping_one_way|F920|9E1E
+mapping_one_way|F921|5D50
+mapping_one_way|F922|6FEB
+mapping_one_way|F923|85CD
+mapping_one_way|F924|8964
+mapping_one_way|F925|62C9
+mapping_one_way|F926|81D8
+mapping_one_way|F927|881F
+mapping_one_way|F928|5ECA
+mapping_one_way|F929|6717
+mapping_one_way|F92A|6D6A
+mapping_one_way|F92B|72FC
+mapping_one_way|F92C|90CE
+mapping_one_way|F92D|4F86
+mapping_one_way|F92E|51B7
+mapping_one_way|F92F|52DE
+mapping_one_way|F930|64C4
+mapping_one_way|F931|6AD3
+mapping_one_way|F932|7210
+mapping_one_way|F933|76E7
+mapping_one_way|F934|8001
+mapping_one_way|F935|8606
+mapping_one_way|F936|865C
+mapping_one_way|F937|8DEF
+mapping_one_way|F938|9732
+mapping_one_way|F939|9B6F
+mapping_one_way|F93A|9DFA
+mapping_one_way|F93B|788C
+mapping_one_way|F93C|797F
+mapping_one_way|F93D|7DA0
+mapping_one_way|F93E|83C9
+mapping_one_way|F93F|9304
+mapping_one_way|F940|9E7F
+mapping_one_way|F941|8AD6
+mapping_one_way|F942|58DF
+mapping_one_way|F943|5F04
+mapping_one_way|F944|7C60
+mapping_one_way|F945|807E
+mapping_one_way|F946|7262
+mapping_one_way|F947|78CA
+mapping_one_way|F948|8CC2
+mapping_one_way|F949|96F7
+mapping_one_way|F94A|58D8
+mapping_one_way|F94B|5C62
+mapping_one_way|F94C|6A13
+mapping_one_way|F94D|6DDA
+mapping_one_way|F94E|6F0F
+mapping_one_way|F94F|7D2F
+mapping_one_way|F950|7E37
+mapping_one_way|F951|964B
+mapping_one_way|F952|52D2
+mapping_one_way|F953|808B
+mapping_one_way|F954|51DC
+mapping_one_way|F955|51CC
+mapping_one_way|F956|7A1C
+mapping_one_way|F957|7DBE
+mapping_one_way|F958|83F1
+mapping_one_way|F959|9675
+mapping_one_way|F95A|8B80
+mapping_one_way|F95B|62CF
+mapping_one_way|F95C|6A02
+mapping_one_way|F95D|8AFE
+mapping_one_way|F95E|4E39
+mapping_one_way|F95F|5BE7
+mapping_one_way|F960|6012
+mapping_one_way|F961|7387
+mapping_one_way|F962|7570
+mapping_one_way|F963|5317
+mapping_one_way|F964|78FB
+mapping_one_way|F965|4FBF
+mapping_one_way|F966|5FA9
+mapping_one_way|F967|4E0D
+mapping_one_way|F968|6CCC
+mapping_one_way|F969|6578
+mapping_one_way|F96A|7D22
+mapping_one_way|F96B|53C3
+mapping_one_way|F96C|585E
+mapping_one_way|F96D|7701
+mapping_one_way|F96E|8449
+mapping_one_way|F96F|8AAA
+mapping_one_way|F970|6BBA
+mapping_one_way|F971|8FB0
+mapping_one_way|F972|6C88
+mapping_one_way|F973|62FE
+mapping_one_way|F974|82E5
+mapping_one_way|F975|63A0
+mapping_one_way|F976|7565
+mapping_one_way|F977|4EAE
+mapping_one_way|F978|5169
+mapping_one_way|F979|51C9
+mapping_one_way|F97A|6881
+mapping_one_way|F97B|7CE7
+mapping_one_way|F97C|826F
+mapping_one_way|F97D|8AD2
+mapping_one_way|F97E|91CF
+mapping_one_way|F97F|52F5
+mapping_one_way|F980|5442
+mapping_one_way|F981|5973
+mapping_one_way|F982|5EEC
+mapping_one_way|F983|65C5
+mapping_one_way|F984|6FFE
+mapping_one_way|F985|792A
+mapping_one_way|F986|95AD
+mapping_one_way|F987|9A6A
+mapping_one_way|F988|9E97
+mapping_one_way|F989|9ECE
+mapping_one_way|F98A|529B
+mapping_one_way|F98B|66C6
+mapping_one_way|F98C|6B77
+mapping_one_way|F98D|8F62
+mapping_one_way|F98E|5E74
+mapping_one_way|F98F|6190
+mapping_one_way|F990|6200
+mapping_one_way|F991|649A
+mapping_one_way|F992|6F23
+mapping_one_way|F993|7149
+mapping_one_way|F994|7489
+mapping_one_way|F995|79CA
+mapping_one_way|F996|7DF4
+mapping_one_way|F997|806F
+mapping_one_way|F998|8F26
+mapping_one_way|F999|84EE
+mapping_one_way|F99A|9023
+mapping_one_way|F99B|934A
+mapping_one_way|F99C|5217
+mapping_one_way|F99D|52A3
+mapping_one_way|F99E|54BD
+mapping_one_way|F99F|70C8
+mapping_one_way|F9A0|88C2
+mapping_one_way|F9A1|8AAA
+mapping_one_way|F9A2|5EC9
+mapping_one_way|F9A3|5FF5
+mapping_one_way|F9A4|637B
+mapping_one_way|F9A5|6BAE
+mapping_one_way|F9A6|7C3E
+mapping_one_way|F9A7|7375
+mapping_one_way|F9A8|4EE4
+mapping_one_way|F9A9|56F9
+mapping_one_way|F9AA|5BE7
+mapping_one_way|F9AB|5DBA
+mapping_one_way|F9AC|601C
+mapping_one_way|F9AD|73B2
+mapping_one_way|F9AE|7469
+mapping_one_way|F9AF|7F9A
+mapping_one_way|F9B0|8046
+mapping_one_way|F9B1|9234
+mapping_one_way|F9B2|96F6
+mapping_one_way|F9B3|9748
+mapping_one_way|F9B4|9818
+mapping_one_way|F9B5|4F8B
+mapping_one_way|F9B6|79AE
+mapping_one_way|F9B7|91B4
+mapping_one_way|F9B8|96B8
+mapping_one_way|F9B9|60E1
+mapping_one_way|F9BA|4E86
+mapping_one_way|F9BB|50DA
+mapping_one_way|F9BC|5BEE
+mapping_one_way|F9BD|5C3F
+mapping_one_way|F9BE|6599
+mapping_one_way|F9BF|6A02
+mapping_one_way|F9C0|71CE
+mapping_one_way|F9C1|7642
+mapping_one_way|F9C2|84FC
+mapping_one_way|F9C3|907C
+mapping_one_way|F9C4|9F8D
+mapping_one_way|F9C5|6688
+mapping_one_way|F9C6|962E
+mapping_one_way|F9C7|5289
+mapping_one_way|F9C8|677B
+mapping_one_way|F9C9|67F3
+mapping_one_way|F9CA|6D41
+mapping_one_way|F9CB|6E9C
+mapping_one_way|F9CC|7409
+mapping_one_way|F9CD|7559
+mapping_one_way|F9CE|786B
+mapping_one_way|F9CF|7D10
+mapping_one_way|F9D0|985E
+mapping_one_way|F9D1|516D
+mapping_one_way|F9D2|622E
+mapping_one_way|F9D3|9678
+mapping_one_way|F9D4|502B
+mapping_one_way|F9D5|5D19
+mapping_one_way|F9D6|6DEA
+mapping_one_way|F9D7|8F2A
+mapping_one_way|F9D8|5F8B
+mapping_one_way|F9D9|6144
+mapping_one_way|F9DA|6817
+mapping_one_way|F9DB|7387
+mapping_one_way|F9DC|9686
+mapping_one_way|F9DD|5229
+mapping_one_way|F9DE|540F
+mapping_one_way|F9DF|5C65
+mapping_one_way|F9E0|6613
+mapping_one_way|F9E1|674E
+mapping_one_way|F9E2|68A8
+mapping_one_way|F9E3|6CE5
+mapping_one_way|F9E4|7406
+mapping_one_way|F9E5|75E2
+mapping_one_way|F9E6|7F79
+mapping_one_way|F9E7|88CF
+mapping_one_way|F9E8|88E1
+mapping_one_way|F9E9|91CC
+mapping_one_way|F9EA|96E2
+mapping_one_way|F9EB|533F
+mapping_one_way|F9EC|6EBA
+mapping_one_way|F9ED|541D
+mapping_one_way|F9EE|71D0
+mapping_one_way|F9EF|7498
+mapping_one_way|F9F0|85FA
+mapping_one_way|F9F1|96A3
+mapping_one_way|F9F2|9C57
+mapping_one_way|F9F3|9E9F
+mapping_one_way|F9F4|6797
+mapping_one_way|F9F5|6DCB
+mapping_one_way|F9F6|81E8
+mapping_one_way|F9F7|7ACB
+mapping_one_way|F9F8|7B20
+mapping_one_way|F9F9|7C92
+mapping_one_way|F9FA|72C0
+mapping_one_way|F9FB|7099
+mapping_one_way|F9FC|8B58
+mapping_one_way|F9FD|4EC0
+mapping_one_way|F9FE|8336
+mapping_one_way|F9FF|523A
+mapping_one_way|FA00|5207
+mapping_one_way|FA01|5EA6
+mapping_one_way|FA02|62D3
+mapping_one_way|FA03|7CD6
+mapping_one_way|FA04|5B85
+mapping_one_way|FA05|6D1E
+mapping_one_way|FA06|66B4
+mapping_one_way|FA07|8F3B
+mapping_one_way|FA08|884C
+mapping_one_way|FA09|964D
+mapping_one_way|FA0A|898B
+mapping_one_way|FA0B|5ED3
+mapping_one_way|FA0C|5140
+mapping_one_way|FA0D|55C0
+mapping_one_way|FA10|585A
+mapping_one_way|FA12|6674
+mapping_one_way|FA15|51DE
+mapping_one_way|FA16|732A
+mapping_one_way|FA17|76CA
+mapping_one_way|FA18|793C
+mapping_one_way|FA19|795E
+mapping_one_way|FA1A|7965
+mapping_one_way|FA1B|798F
+mapping_one_way|FA1C|9756
+mapping_one_way|FA1D|7CBE
+mapping_one_way|FA1E|7FBD
+mapping_one_way|FA20|8612
+mapping_one_way|FA22|8AF8
+mapping_one_way|FA25|9038
+mapping_one_way|FA26|90FD
+mapping_one_way|FA2A|98EF
+mapping_one_way|FA2B|98FC
+mapping_one_way|FA2C|9928
+mapping_one_way|FA2D|9DB4
+mapping_one_way|FA2E|90DE
+mapping_one_way|FA2F|96B7
+mapping_one_way|FA30|4FAE
+mapping_one_way|FA31|50E7
+mapping_one_way|FA32|514D
+mapping_one_way|FA33|52C9
+mapping_one_way|FA34|52E4
+mapping_one_way|FA35|5351
+mapping_one_way|FA36|559D
+mapping_one_way|FA37|5606
+mapping_one_way|FA38|5668
+mapping_one_way|FA39|5840
+mapping_one_way|FA3A|58A8
+mapping_one_way|FA3B|5C64
+mapping_one_way|FA3C|5C6E
+mapping_one_way|FA3D|6094
+mapping_one_way|FA3E|6168
+mapping_one_way|FA3F|618E
+mapping_one_way|FA40|61F2
+mapping_one_way|FA41|654F
+mapping_one_way|FA42|65E2
+mapping_one_way|FA43|6691
+mapping_one_way|FA44|6885
+mapping_one_way|FA45|6D77
+mapping_one_way|FA46|6E1A
+mapping_one_way|FA47|6F22
+mapping_one_way|FA48|716E
+mapping_one_way|FA49|722B
+mapping_one_way|FA4A|7422
+mapping_one_way|FA4B|7891
+mapping_one_way|FA4C|793E
+mapping_one_way|FA4D|7949
+mapping_one_way|FA4E|7948
+mapping_one_way|FA4F|7950
+mapping_one_way|FA50|7956
+mapping_one_way|FA51|795D
+mapping_one_way|FA52|798D
+mapping_one_way|FA53|798E
+mapping_one_way|FA54|7A40
+mapping_one_way|FA55|7A81
+mapping_one_way|FA56|7BC0
+mapping_one_way|FA57|7DF4
+mapping_one_way|FA58|7E09
+mapping_one_way|FA59|7E41
+mapping_one_way|FA5A|7F72
+mapping_one_way|FA5B|8005
+mapping_one_way|FA5C|81ED
+mapping_one_way|FA5D|8279
+mapping_one_way|FA5E|8279
+mapping_one_way|FA5F|8457
+mapping_one_way|FA60|8910
+mapping_one_way|FA61|8996
+mapping_one_way|FA62|8B01
+mapping_one_way|FA63|8B39
+mapping_one_way|FA64|8CD3
+mapping_one_way|FA65|8D08
+mapping_one_way|FA66|8FB6
+mapping_one_way|FA67|9038
+mapping_one_way|FA68|96E3
+mapping_one_way|FA69|97FF
+mapping_one_way|FA6A|983B
+mapping_one_way|FA6B|6075
+mapping_one_way|FA6C|0242EE
+mapping_one_way|FA6D|8218
+mapping_one_way|FA70|4E26
+mapping_one_way|FA71|51B5
+mapping_one_way|FA72|5168
+mapping_one_way|FA73|4F80
+mapping_one_way|FA74|5145
+mapping_one_way|FA75|5180
+mapping_one_way|FA76|52C7
+mapping_one_way|FA77|52FA
+mapping_one_way|FA78|559D
+mapping_one_way|FA79|5555
+mapping_one_way|FA7A|5599
+mapping_one_way|FA7B|55E2
+mapping_one_way|FA7C|585A
+mapping_one_way|FA7D|58B3
+mapping_one_way|FA7E|5944
+mapping_one_way|FA7F|5954
+mapping_one_way|FA80|5A62
+mapping_one_way|FA81|5B28
+mapping_one_way|FA82|5ED2
+mapping_one_way|FA83|5ED9
+mapping_one_way|FA84|5F69
+mapping_one_way|FA85|5FAD
+mapping_one_way|FA86|60D8
+mapping_one_way|FA87|614E
+mapping_one_way|FA88|6108
+mapping_one_way|FA89|618E
+mapping_one_way|FA8A|6160
+mapping_one_way|FA8B|61F2
+mapping_one_way|FA8C|6234
+mapping_one_way|FA8D|63C4
+mapping_one_way|FA8E|641C
+mapping_one_way|FA8F|6452
+mapping_one_way|FA90|6556
+mapping_one_way|FA91|6674
+mapping_one_way|FA92|6717
+mapping_one_way|FA93|671B
+mapping_one_way|FA94|6756
+mapping_one_way|FA95|6B79
+mapping_one_way|FA96|6BBA
+mapping_one_way|FA97|6D41
+mapping_one_way|FA98|6EDB
+mapping_one_way|FA99|6ECB
+mapping_one_way|FA9A|6F22
+mapping_one_way|FA9B|701E
+mapping_one_way|FA9C|716E
+mapping_one_way|FA9D|77A7
+mapping_one_way|FA9E|7235
+mapping_one_way|FA9F|72AF
+mapping_one_way|FAA0|732A
+mapping_one_way|FAA1|7471
+mapping_one_way|FAA2|7506
+mapping_one_way|FAA3|753B
+mapping_one_way|FAA4|761D
+mapping_one_way|FAA5|761F
+mapping_one_way|FAA6|76CA
+mapping_one_way|FAA7|76DB
+mapping_one_way|FAA8|76F4
+mapping_one_way|FAA9|774A
+mapping_one_way|FAAA|7740
+mapping_one_way|FAAB|78CC
+mapping_one_way|FAAC|7AB1
+mapping_one_way|FAAD|7BC0
+mapping_one_way|FAAE|7C7B
+mapping_one_way|FAAF|7D5B
+mapping_one_way|FAB0|7DF4
+mapping_one_way|FAB1|7F3E
+mapping_one_way|FAB2|8005
+mapping_one_way|FAB3|8352
+mapping_one_way|FAB4|83EF
+mapping_one_way|FAB5|8779
+mapping_one_way|FAB6|8941
+mapping_one_way|FAB7|8986
+mapping_one_way|FAB8|8996
+mapping_one_way|FAB9|8ABF
+mapping_one_way|FABA|8AF8
+mapping_one_way|FABB|8ACB
+mapping_one_way|FABC|8B01
+mapping_one_way|FABD|8AFE
+mapping_one_way|FABE|8AED
+mapping_one_way|FABF|8B39
+mapping_one_way|FAC0|8B8A
+mapping_one_way|FAC1|8D08
+mapping_one_way|FAC2|8F38
+mapping_one_way|FAC3|9072
+mapping_one_way|FAC4|9199
+mapping_one_way|FAC5|9276
+mapping_one_way|FAC6|967C
+mapping_one_way|FAC7|96E3
+mapping_one_way|FAC8|9756
+mapping_one_way|FAC9|97DB
+mapping_one_way|FACA|97FF
+mapping_one_way|FACB|980B
+mapping_one_way|FACC|983B
+mapping_one_way|FACD|9B12
+mapping_one_way|FACE|9F9C
+mapping_one_way|FACF|02284A
+mapping_one_way|FAD0|022844
+mapping_one_way|FAD1|0233D5
+mapping_one_way|FAD2|3B9D
+mapping_one_way|FAD3|4018
+mapping_one_way|FAD4|4039
+mapping_one_way|FAD5|025249
+mapping_one_way|FAD6|025CD0
+mapping_one_way|FAD7|027ED3
+mapping_one_way|FAD8|9F43
+mapping_one_way|FAD9|9F8E
+mapping_one_way|FB1D|05D9 05B4
+mapping_one_way|FB1F|05F2 05B7
+mapping_one_way|FB2A|05E9 05C1
+mapping_one_way|FB2B|05E9 05C2
+mapping_one_way|FB2C|FB49 05C1
+mapping_one_way|FB2D|FB49 05C2
+mapping_one_way|FB2E|05D0 05B7
+mapping_one_way|FB2F|05D0 05B8
+mapping_one_way|FB30|05D0 05BC
+mapping_one_way|FB31|05D1 05BC
+mapping_one_way|FB32|05D2 05BC
+mapping_one_way|FB33|05D3 05BC
+mapping_one_way|FB34|05D4 05BC
+mapping_one_way|FB35|05D5 05BC
+mapping_one_way|FB36|05D6 05BC
+mapping_one_way|FB38|05D8 05BC
+mapping_one_way|FB39|05D9 05BC
+mapping_one_way|FB3A|05DA 05BC
+mapping_one_way|FB3B|05DB 05BC
+mapping_one_way|FB3C|05DC 05BC
+mapping_one_way|FB3E|05DE 05BC
+mapping_one_way|FB40|05E0 05BC
+mapping_one_way|FB41|05E1 05BC
+mapping_one_way|FB43|05E3 05BC
+mapping_one_way|FB44|05E4 05BC
+mapping_one_way|FB46|05E6 05BC
+mapping_one_way|FB47|05E7 05BC
+mapping_one_way|FB48|05E8 05BC
+mapping_one_way|FB49|05E9 05BC
+mapping_one_way|FB4A|05EA 05BC
+mapping_one_way|FB4B|05D5 05B9
+mapping_one_way|FB4C|05D1 05BF
+mapping_one_way|FB4D|05DB 05BF
+mapping_one_way|FB4E|05E4 05BF
+mapping_two_way|0105C9|0105D2 0307
+mapping_two_way|0105E4|0105DA 0307
+mapping_two_way|01109A|011099 0110BA
+mapping_two_way|01109C|01109B 0110BA
+mapping_two_way|0110AB|0110A5 0110BA
+mapping_two_way|01112E|011131 011127
+mapping_two_way|01112F|011132 011127
+mapping_two_way|01134B|011347 01133E
+mapping_two_way|01134C|011347 011357
+mapping_two_way|011383|011382 0113C9
+mapping_two_way|011385|011384 0113BB
+mapping_two_way|01138E|01138B 0113C2
+mapping_two_way|011391|011390 0113C9
+mapping_two_way|0113C5|0113C2 0113C2
+mapping_two_way|0113C7|0113C2 0113B8
+mapping_two_way|0113C8|0113C2 0113C9
+mapping_two_way|0114BB|0114B9 0114BA
+mapping_two_way|0114BC|0114B9 0114B0
+mapping_two_way|0114BE|0114B9 0114BD
+mapping_two_way|0115BA|0115B8 0115AF
+mapping_two_way|0115BB|0115B9 0115AF
+mapping_two_way|011938|011935 011930
+mapping_two_way|016121|01611E 01611E
+mapping_two_way|016122|01611E 016129
+mapping_two_way|016123|01611E 01611F
+mapping_two_way|016124|016129 01611F
+mapping_two_way|016125|01611E 016120
+mapping_two_way|016126|016121 01611F
+mapping_two_way|016127|016122 01611F
+mapping_two_way|016128|016121 016120
+mapping_two_way|016D68|016D67 016D67
+mapping_two_way|016D69|016D63 016D67
+mapping_two_way|016D6A|016D69 016D67
+mapping_one_way|01D15E|01D157 01D165
+mapping_one_way|01D15F|01D158 01D165
+mapping_one_way|01D160|01D15F 01D16E
+mapping_one_way|01D161|01D15F 01D16F
+mapping_one_way|01D162|01D15F 01D170
+mapping_one_way|01D163|01D15F 01D171
+mapping_one_way|01D164|01D15F 01D172
+mapping_one_way|01D1BB|01D1B9 01D165
+mapping_one_way|01D1BC|01D1BA 01D165
+mapping_one_way|01D1BD|01D1BB 01D16E
+mapping_one_way|01D1BE|01D1BC 01D16E
+mapping_one_way|01D1BF|01D1BB 01D16F
+mapping_one_way|01D1C0|01D1BC 01D16F
+mapping_one_way|02F800|4E3D
+mapping_one_way|02F801|4E38
+mapping_one_way|02F802|4E41
+mapping_one_way|02F803|020122
+mapping_one_way|02F804|4F60
+mapping_one_way|02F805|4FAE
+mapping_one_way|02F806|4FBB
+mapping_one_way|02F807|5002
+mapping_one_way|02F808|507A
+mapping_one_way|02F809|5099
+mapping_one_way|02F80A|50E7
+mapping_one_way|02F80B|50CF
+mapping_one_way|02F80C|349E
+mapping_one_way|02F80D|02063A
+mapping_one_way|02F80E|514D
+mapping_one_way|02F80F|5154
+mapping_one_way|02F810|5164
+mapping_one_way|02F811|5177
+mapping_one_way|02F812|02051C
+mapping_one_way|02F813|34B9
+mapping_one_way|02F814|5167
+mapping_one_way|02F815|518D
+mapping_one_way|02F816|02054B
+mapping_one_way|02F817|5197
+mapping_one_way|02F818|51A4
+mapping_one_way|02F819|4ECC
+mapping_one_way|02F81A|51AC
+mapping_one_way|02F81B|51B5
+mapping_one_way|02F81C|0291DF
+mapping_one_way|02F81D|51F5
+mapping_one_way|02F81E|5203
+mapping_one_way|02F81F|34DF
+mapping_one_way|02F820|523B
+mapping_one_way|02F821|5246
+mapping_one_way|02F822|5272
+mapping_one_way|02F823|5277
+mapping_one_way|02F824|3515
+mapping_one_way|02F825|52C7
+mapping_one_way|02F826|52C9
+mapping_one_way|02F827|52E4
+mapping_one_way|02F828|52FA
+mapping_one_way|02F829|5305
+mapping_one_way|02F82A|5306
+mapping_one_way|02F82B|5317
+mapping_one_way|02F82C|5349
+mapping_one_way|02F82D|5351
+mapping_one_way|02F82E|535A
+mapping_one_way|02F82F|5373
+mapping_one_way|02F830|537D
+mapping_one_way|02F831|537F
+mapping_one_way|02F832|537F
+mapping_one_way|02F833|537F
+mapping_one_way|02F834|020A2C
+mapping_one_way|02F835|7070
+mapping_one_way|02F836|53CA
+mapping_one_way|02F837|53DF
+mapping_one_way|02F838|020B63
+mapping_one_way|02F839|53EB
+mapping_one_way|02F83A|53F1
+mapping_one_way|02F83B|5406
+mapping_one_way|02F83C|549E
+mapping_one_way|02F83D|5438
+mapping_one_way|02F83E|5448
+mapping_one_way|02F83F|5468
+mapping_one_way|02F840|54A2
+mapping_one_way|02F841|54F6
+mapping_one_way|02F842|5510
+mapping_one_way|02F843|5553
+mapping_one_way|02F844|5563
+mapping_one_way|02F845|5584
+mapping_one_way|02F846|5584
+mapping_one_way|02F847|5599
+mapping_one_way|02F848|55AB
+mapping_one_way|02F849|55B3
+mapping_one_way|02F84A|55C2
+mapping_one_way|02F84B|5716
+mapping_one_way|02F84C|5606
+mapping_one_way|02F84D|5717
+mapping_one_way|02F84E|5651
+mapping_one_way|02F84F|5674
+mapping_one_way|02F850|5207
+mapping_one_way|02F851|58EE
+mapping_one_way|02F852|57CE
+mapping_one_way|02F853|57F4
+mapping_one_way|02F854|580D
+mapping_one_way|02F855|578B
+mapping_one_way|02F856|5832
+mapping_one_way|02F857|5831
+mapping_one_way|02F858|58AC
+mapping_one_way|02F859|0214E4
+mapping_one_way|02F85A|58F2
+mapping_one_way|02F85B|58F7
+mapping_one_way|02F85C|5906
+mapping_one_way|02F85D|591A
+mapping_one_way|02F85E|5922
+mapping_one_way|02F85F|5962
+mapping_one_way|02F860|0216A8
+mapping_one_way|02F861|0216EA
+mapping_one_way|02F862|59EC
+mapping_one_way|02F863|5A1B
+mapping_one_way|02F864|5A27
+mapping_one_way|02F865|59D8
+mapping_one_way|02F866|5A66
+mapping_one_way|02F867|36EE
+mapping_one_way|02F868|36FC
+mapping_one_way|02F869|5B08
+mapping_one_way|02F86A|5B3E
+mapping_one_way|02F86B|5B3E
+mapping_one_way|02F86C|0219C8
+mapping_one_way|02F86D|5BC3
+mapping_one_way|02F86E|5BD8
+mapping_one_way|02F86F|5BE7
+mapping_one_way|02F870|5BF3
+mapping_one_way|02F871|021B18
+mapping_one_way|02F872|5BFF
+mapping_one_way|02F873|5C06
+mapping_one_way|02F874|5F53
+mapping_one_way|02F875|5C22
+mapping_one_way|02F876|3781
+mapping_one_way|02F877|5C60
+mapping_one_way|02F878|5C6E
+mapping_one_way|02F879|5CC0
+mapping_one_way|02F87A|5C8D
+mapping_one_way|02F87B|021DE4
+mapping_one_way|02F87C|5D43
+mapping_one_way|02F87D|021DE6
+mapping_one_way|02F87E|5D6E
+mapping_one_way|02F87F|5D6B
+mapping_one_way|02F880|5D7C
+mapping_one_way|02F881|5DE1
+mapping_one_way|02F882|5DE2
+mapping_one_way|02F883|382F
+mapping_one_way|02F884|5DFD
+mapping_one_way|02F885|5E28
+mapping_one_way|02F886|5E3D
+mapping_one_way|02F887|5E69
+mapping_one_way|02F888|3862
+mapping_one_way|02F889|022183
+mapping_one_way|02F88A|387C
+mapping_one_way|02F88B|5EB0
+mapping_one_way|02F88C|5EB3
+mapping_one_way|02F88D|5EB6
+mapping_one_way|02F88E|5ECA
+mapping_one_way|02F88F|02A392
+mapping_one_way|02F890|5EFE
+mapping_one_way|02F891|022331
+mapping_one_way|02F892|022331
+mapping_one_way|02F893|8201
+mapping_one_way|02F894|5F22
+mapping_one_way|02F895|5F22
+mapping_one_way|02F896|38C7
+mapping_one_way|02F897|0232B8
+mapping_one_way|02F898|0261DA
+mapping_one_way|02F899|5F62
+mapping_one_way|02F89A|5F6B
+mapping_one_way|02F89B|38E3
+mapping_one_way|02F89C|5F9A
+mapping_one_way|02F89D|5FCD
+mapping_one_way|02F89E|5FD7
+mapping_one_way|02F89F|5FF9
+mapping_one_way|02F8A0|6081
+mapping_one_way|02F8A1|393A
+mapping_one_way|02F8A2|391C
+mapping_one_way|02F8A3|6094
+mapping_one_way|02F8A4|0226D4
+mapping_one_way|02F8A5|60C7
+mapping_one_way|02F8A6|6148
+mapping_one_way|02F8A7|614C
+mapping_one_way|02F8A8|614E
+mapping_one_way|02F8A9|614C
+mapping_one_way|02F8AA|617A
+mapping_one_way|02F8AB|618E
+mapping_one_way|02F8AC|61B2
+mapping_one_way|02F8AD|61A4
+mapping_one_way|02F8AE|61AF
+mapping_one_way|02F8AF|61DE
+mapping_one_way|02F8B0|61F2
+mapping_one_way|02F8B1|61F6
+mapping_one_way|02F8B2|6210
+mapping_one_way|02F8B3|621B
+mapping_one_way|02F8B4|625D
+mapping_one_way|02F8B5|62B1
+mapping_one_way|02F8B6|62D4
+mapping_one_way|02F8B7|6350
+mapping_one_way|02F8B8|022B0C
+mapping_one_way|02F8B9|633D
+mapping_one_way|02F8BA|62FC
+mapping_one_way|02F8BB|6368
+mapping_one_way|02F8BC|6383
+mapping_one_way|02F8BD|63E4
+mapping_one_way|02F8BE|022BF1
+mapping_one_way|02F8BF|6422
+mapping_one_way|02F8C0|63C5
+mapping_one_way|02F8C1|63A9
+mapping_one_way|02F8C2|3A2E
+mapping_one_way|02F8C3|6469
+mapping_one_way|02F8C4|647E
+mapping_one_way|02F8C5|649D
+mapping_one_way|02F8C6|6477
+mapping_one_way|02F8C7|3A6C
+mapping_one_way|02F8C8|654F
+mapping_one_way|02F8C9|656C
+mapping_one_way|02F8CA|02300A
+mapping_one_way|02F8CB|65E3
+mapping_one_way|02F8CC|66F8
+mapping_one_way|02F8CD|6649
+mapping_one_way|02F8CE|3B19
+mapping_one_way|02F8CF|6691
+mapping_one_way|02F8D0|3B08
+mapping_one_way|02F8D1|3AE4
+mapping_one_way|02F8D2|5192
+mapping_one_way|02F8D3|5195
+mapping_one_way|02F8D4|6700
+mapping_one_way|02F8D5|669C
+mapping_one_way|02F8D6|80AD
+mapping_one_way|02F8D7|43D9
+mapping_one_way|02F8D8|6717
+mapping_one_way|02F8D9|671B
+mapping_one_way|02F8DA|6721
+mapping_one_way|02F8DB|675E
+mapping_one_way|02F8DC|6753
+mapping_one_way|02F8DD|0233C3
+mapping_one_way|02F8DE|3B49
+mapping_one_way|02F8DF|67FA
+mapping_one_way|02F8E0|6785
+mapping_one_way|02F8E1|6852
+mapping_one_way|02F8E2|6885
+mapping_one_way|02F8E3|02346D
+mapping_one_way|02F8E4|688E
+mapping_one_way|02F8E5|681F
+mapping_one_way|02F8E6|6914
+mapping_one_way|02F8E7|3B9D
+mapping_one_way|02F8E8|6942
+mapping_one_way|02F8E9|69A3
+mapping_one_way|02F8EA|69EA
+mapping_one_way|02F8EB|6AA8
+mapping_one_way|02F8EC|0236A3
+mapping_one_way|02F8ED|6ADB
+mapping_one_way|02F8EE|3C18
+mapping_one_way|02F8EF|6B21
+mapping_one_way|02F8F0|0238A7
+mapping_one_way|02F8F1|6B54
+mapping_one_way|02F8F2|3C4E
+mapping_one_way|02F8F3|6B72
+mapping_one_way|02F8F4|6B9F
+mapping_one_way|02F8F5|6BBA
+mapping_one_way|02F8F6|6BBB
+mapping_one_way|02F8F7|023A8D
+mapping_one_way|02F8F8|021D0B
+mapping_one_way|02F8F9|023AFA
+mapping_one_way|02F8FA|6C4E
+mapping_one_way|02F8FB|023CBC
+mapping_one_way|02F8FC|6CBF
+mapping_one_way|02F8FD|6CCD
+mapping_one_way|02F8FE|6C67
+mapping_one_way|02F8FF|6D16
+mapping_one_way|02F900|6D3E
+mapping_one_way|02F901|6D77
+mapping_one_way|02F902|6D41
+mapping_one_way|02F903|6D69
+mapping_one_way|02F904|6D78
+mapping_one_way|02F905|6D85
+mapping_one_way|02F906|023D1E
+mapping_one_way|02F907|6D34
+mapping_one_way|02F908|6E2F
+mapping_one_way|02F909|6E6E
+mapping_one_way|02F90A|3D33
+mapping_one_way|02F90B|6ECB
+mapping_one_way|02F90C|6EC7
+mapping_one_way|02F90D|023ED1
+mapping_one_way|02F90E|6DF9
+mapping_one_way|02F90F|6F6E
+mapping_one_way|02F910|023F5E
+mapping_one_way|02F911|023F8E
+mapping_one_way|02F912|6FC6
+mapping_one_way|02F913|7039
+mapping_one_way|02F914|701E
+mapping_one_way|02F915|701B
+mapping_one_way|02F916|3D96
+mapping_one_way|02F917|704A
+mapping_one_way|02F918|707D
+mapping_one_way|02F919|7077
+mapping_one_way|02F91A|70AD
+mapping_one_way|02F91B|020525
+mapping_one_way|02F91C|7145
+mapping_one_way|02F91D|024263
+mapping_one_way|02F91E|719C
+mapping_one_way|02F91F|0243AB
+mapping_one_way|02F920|7228
+mapping_one_way|02F921|7235
+mapping_one_way|02F922|7250
+mapping_one_way|02F923|024608
+mapping_one_way|02F924|7280
+mapping_one_way|02F925|7295
+mapping_one_way|02F926|024735
+mapping_one_way|02F927|024814
+mapping_one_way|02F928|737A
+mapping_one_way|02F929|738B
+mapping_one_way|02F92A|3EAC
+mapping_one_way|02F92B|73A5
+mapping_one_way|02F92C|3EB8
+mapping_one_way|02F92D|3EB8
+mapping_one_way|02F92E|7447
+mapping_one_way|02F92F|745C
+mapping_one_way|02F930|7471
+mapping_one_way|02F931|7485
+mapping_one_way|02F932|74CA
+mapping_one_way|02F933|3F1B
+mapping_one_way|02F934|7524
+mapping_one_way|02F935|024C36
+mapping_one_way|02F936|753E
+mapping_one_way|02F937|024C92
+mapping_one_way|02F938|7570
+mapping_one_way|02F939|02219F
+mapping_one_way|02F93A|7610
+mapping_one_way|02F93B|024FA1
+mapping_one_way|02F93C|024FB8
+mapping_one_way|02F93D|025044
+mapping_one_way|02F93E|3FFC
+mapping_one_way|02F93F|4008
+mapping_one_way|02F940|76F4
+mapping_one_way|02F941|0250F3
+mapping_one_way|02F942|0250F2
+mapping_one_way|02F943|025119
+mapping_one_way|02F944|025133
+mapping_one_way|02F945|771E
+mapping_one_way|02F946|771F
+mapping_one_way|02F947|771F
+mapping_one_way|02F948|774A
+mapping_one_way|02F949|4039
+mapping_one_way|02F94A|778B
+mapping_one_way|02F94B|4046
+mapping_one_way|02F94C|4096
+mapping_one_way|02F94D|02541D
+mapping_one_way|02F94E|784E
+mapping_one_way|02F94F|788C
+mapping_one_way|02F950|78CC
+mapping_one_way|02F951|40E3
+mapping_one_way|02F952|025626
+mapping_one_way|02F953|7956
+mapping_one_way|02F954|02569A
+mapping_one_way|02F955|0256C5
+mapping_one_way|02F956|798F
+mapping_one_way|02F957|79EB
+mapping_one_way|02F958|412F
+mapping_one_way|02F959|7A40
+mapping_one_way|02F95A|7A4A
+mapping_one_way|02F95B|7A4F
+mapping_one_way|02F95C|02597C
+mapping_one_way|02F95D|025AA7
+mapping_one_way|02F95E|025AA7
+mapping_one_way|02F95F|7AEE
+mapping_one_way|02F960|4202
+mapping_one_way|02F961|025BAB
+mapping_one_way|02F962|7BC6
+mapping_one_way|02F963|7BC9
+mapping_one_way|02F964|4227
+mapping_one_way|02F965|025C80
+mapping_one_way|02F966|7CD2
+mapping_one_way|02F967|42A0
+mapping_one_way|02F968|7CE8
+mapping_one_way|02F969|7CE3
+mapping_one_way|02F96A|7D00
+mapping_one_way|02F96B|025F86
+mapping_one_way|02F96C|7D63
+mapping_one_way|02F96D|4301
+mapping_one_way|02F96E|7DC7
+mapping_one_way|02F96F|7E02
+mapping_one_way|02F970|7E45
+mapping_one_way|02F971|4334
+mapping_one_way|02F972|026228
+mapping_one_way|02F973|026247
+mapping_one_way|02F974|4359
+mapping_one_way|02F975|0262D9
+mapping_one_way|02F976|7F7A
+mapping_one_way|02F977|02633E
+mapping_one_way|02F978|7F95
+mapping_one_way|02F979|7FFA
+mapping_one_way|02F97A|8005
+mapping_one_way|02F97B|0264DA
+mapping_one_way|02F97C|026523
+mapping_one_way|02F97D|8060
+mapping_one_way|02F97E|0265A8
+mapping_one_way|02F97F|8070
+mapping_one_way|02F980|02335F
+mapping_one_way|02F981|43D5
+mapping_one_way|02F982|80B2
+mapping_one_way|02F983|8103
+mapping_one_way|02F984|440B
+mapping_one_way|02F985|813E
+mapping_one_way|02F986|5AB5
+mapping_one_way|02F987|0267A7
+mapping_one_way|02F988|0267B5
+mapping_one_way|02F989|023393
+mapping_one_way|02F98A|02339C
+mapping_one_way|02F98B|8201
+mapping_one_way|02F98C|8204
+mapping_one_way|02F98D|8F9E
+mapping_one_way|02F98E|446B
+mapping_one_way|02F98F|8291
+mapping_one_way|02F990|828B
+mapping_one_way|02F991|829D
+mapping_one_way|02F992|52B3
+mapping_one_way|02F993|82B1
+mapping_one_way|02F994|82B3
+mapping_one_way|02F995|82BD
+mapping_one_way|02F996|82E6
+mapping_one_way|02F997|026B3C
+mapping_one_way|02F998|82E5
+mapping_one_way|02F999|831D
+mapping_one_way|02F99A|8363
+mapping_one_way|02F99B|83AD
+mapping_one_way|02F99C|8323
+mapping_one_way|02F99D|83BD
+mapping_one_way|02F99E|83E7
+mapping_one_way|02F99F|8457
+mapping_one_way|02F9A0|8353
+mapping_one_way|02F9A1|83CA
+mapping_one_way|02F9A2|83CC
+mapping_one_way|02F9A3|83DC
+mapping_one_way|02F9A4|026C36
+mapping_one_way|02F9A5|026D6B
+mapping_one_way|02F9A6|026CD5
+mapping_one_way|02F9A7|452B
+mapping_one_way|02F9A8|84F1
+mapping_one_way|02F9A9|84F3
+mapping_one_way|02F9AA|8516
+mapping_one_way|02F9AB|0273CA
+mapping_one_way|02F9AC|8564
+mapping_one_way|02F9AD|026F2C
+mapping_one_way|02F9AE|455D
+mapping_one_way|02F9AF|4561
+mapping_one_way|02F9B0|026FB1
+mapping_one_way|02F9B1|0270D2
+mapping_one_way|02F9B2|456B
+mapping_one_way|02F9B3|8650
+mapping_one_way|02F9B4|865C
+mapping_one_way|02F9B5|8667
+mapping_one_way|02F9B6|8669
+mapping_one_way|02F9B7|86A9
+mapping_one_way|02F9B8|8688
+mapping_one_way|02F9B9|870E
+mapping_one_way|02F9BA|86E2
+mapping_one_way|02F9BB|8779
+mapping_one_way|02F9BC|8728
+mapping_one_way|02F9BD|876B
+mapping_one_way|02F9BE|8786
+mapping_one_way|02F9BF|45D7
+mapping_one_way|02F9C0|87E1
+mapping_one_way|02F9C1|8801
+mapping_one_way|02F9C2|45F9
+mapping_one_way|02F9C3|8860
+mapping_one_way|02F9C4|8863
+mapping_one_way|02F9C5|027667
+mapping_one_way|02F9C6|88D7
+mapping_one_way|02F9C7|88DE
+mapping_one_way|02F9C8|4635
+mapping_one_way|02F9C9|88FA
+mapping_one_way|02F9CA|34BB
+mapping_one_way|02F9CB|0278AE
+mapping_one_way|02F9CC|027966
+mapping_one_way|02F9CD|46BE
+mapping_one_way|02F9CE|46C7
+mapping_one_way|02F9CF|8AA0
+mapping_one_way|02F9D0|8AED
+mapping_one_way|02F9D1|8B8A
+mapping_one_way|02F9D2|8C55
+mapping_one_way|02F9D3|027CA8
+mapping_one_way|02F9D4|8CAB
+mapping_one_way|02F9D5|8CC1
+mapping_one_way|02F9D6|8D1B
+mapping_one_way|02F9D7|8D77
+mapping_one_way|02F9D8|027F2F
+mapping_one_way|02F9D9|020804
+mapping_one_way|02F9DA|8DCB
+mapping_one_way|02F9DB|8DBC
+mapping_one_way|02F9DC|8DF0
+mapping_one_way|02F9DD|0208DE
+mapping_one_way|02F9DE|8ED4
+mapping_one_way|02F9DF|8F38
+mapping_one_way|02F9E0|0285D2
+mapping_one_way|02F9E1|0285ED
+mapping_one_way|02F9E2|9094
+mapping_one_way|02F9E3|90F1
+mapping_one_way|02F9E4|9111
+mapping_one_way|02F9E5|02872E
+mapping_one_way|02F9E6|911B
+mapping_one_way|02F9E7|9238
+mapping_one_way|02F9E8|92D7
+mapping_one_way|02F9E9|92D8
+mapping_one_way|02F9EA|927C
+mapping_one_way|02F9EB|93F9
+mapping_one_way|02F9EC|9415
+mapping_one_way|02F9ED|028BFA
+mapping_one_way|02F9EE|958B
+mapping_one_way|02F9EF|4995
+mapping_one_way|02F9F0|95B7
+mapping_one_way|02F9F1|028D77
+mapping_one_way|02F9F2|49E6
+mapping_one_way|02F9F3|96C3
+mapping_one_way|02F9F4|5DB2
+mapping_one_way|02F9F5|9723
+mapping_one_way|02F9F6|029145
+mapping_one_way|02F9F7|02921A
+mapping_one_way|02F9F8|4A6E
+mapping_one_way|02F9F9|4A76
+mapping_one_way|02F9FA|97E0
+mapping_one_way|02F9FB|02940A
+mapping_one_way|02F9FC|4AB2
+mapping_one_way|02F9FD|029496
+mapping_one_way|02F9FE|980B
+mapping_one_way|02F9FF|980B
+mapping_one_way|02FA00|9829
+mapping_one_way|02FA01|0295B6
+mapping_one_way|02FA02|98E2
+mapping_one_way|02FA03|4B33
+mapping_one_way|02FA04|9929
+mapping_one_way|02FA05|99A7
+mapping_one_way|02FA06|99C2
+mapping_one_way|02FA07|99FE
+mapping_one_way|02FA08|4BCE
+mapping_one_way|02FA09|029B30
+mapping_one_way|02FA0A|9B12
+mapping_one_way|02FA0B|9C40
+mapping_one_way|02FA0C|9CFD
+mapping_one_way|02FA0D|4CCE
+mapping_one_way|02FA0E|4CED
+mapping_one_way|02FA0F|9D67
+mapping_one_way|02FA10|02A0CE
+mapping_one_way|02FA11|4CF8
+mapping_one_way|02FA12|02A105
+mapping_one_way|02FA13|02A20E
+mapping_one_way|02FA14|02A291
+mapping_one_way|02FA15|9EBB
+mapping_one_way|02FA16|4D56
+mapping_one_way|02FA17|9EF9
+mapping_one_way|02FA18|9EFE
+mapping_one_way|02FA19|9F05
+mapping_one_way|02FA1A|9F0F
+mapping_one_way|02FA1B|9F16
+mapping_one_way|02FA1C|9F3B
+mapping_one_way|02FA1D|02A600
