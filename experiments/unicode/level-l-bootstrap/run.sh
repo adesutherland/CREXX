@@ -55,19 +55,42 @@ nfc_input="$repo_dir/experiments/unicode/inputs/icu-78.3/nfc.txt"
 normalization_input="$repo_dir/experiments/unicode/inputs/unicode-17.0.0/ucd/NormalizationTest.txt"
 unicode_data_input="$repo_dir/experiments/unicode/inputs/unicode-17.0.0/ucd/UnicodeData.txt"
 normalization_properties_input="$repo_dir/experiments/unicode/inputs/unicode-17.0.0/ucd/DerivedNormalizationProps.txt"
+casefold_input="$repo_dir/experiments/unicode/inputs/unicode-17.0.0/ucd/CaseFolding.txt"
 poc_dir="$repo_dir/experiments/unicode/poc"
+
+for unicode_signal_source in \
+        "$script_dir/unicode_d.crexx" \
+        "$script_dir/unicode_casefold.crexx" \
+        "$script_dir/unicode_nfd_lexer_generate.crexx"; do
+    if grep -E 'assembler[[:space:]]+signal|call[[:space:]]+raise' \
+            "$unicode_signal_source" > /dev/null; then
+        echo "Unicode source bypasses the Level B SIGNAL surface: $unicode_signal_source" >&2
+        exit 1
+    fi
+done
 
 if [ "$("$re2c_bin" --vernum)" != "040501" ]; then
     echo "expected vendored re2c 4.5.1 (040501)" >&2
     exit 1
 fi
 
+run_rxc() {
+    use_exits=$1
+    shift
+    if [ "$use_exits" -eq 1 ]; then
+        "$rxc_bin" "$@"
+    else
+        "$rxc_bin" -x "$@"
+    fi
+}
+
 compile_source() {
     source_file=$1
     output_base=$2
     import_dir=$3
     log_file=$4
-    if ! "$rxc_bin" -x -i "$product_build_dir/bin" -i "$import_dir" \
+    use_exits=${5:-0}
+    if ! run_rxc "$use_exits" -i "$product_build_dir/bin" -i "$import_dir" \
             -o "$output_base" "$source_file" > "$log_file" 2>&1 || \
        ! "$rxas_bin" "$output_base" >> "$log_file" 2>&1; then
         echo "Level L build failed; contents of $log_file:" >&2
@@ -86,7 +109,8 @@ compile_source_noopt() {
     output_base=$2
     import_dir=$3
     log_file=$4
-    if ! "$rxc_bin" -n -x -i "$product_build_dir/bin" -i "$import_dir" \
+    use_exits=${5:-0}
+    if ! run_rxc "$use_exits" -n -i "$product_build_dir/bin" -i "$import_dir" \
             -o "$output_base" "$source_file" > "$log_file" 2>&1 || \
        ! "$rxas_bin" -n -o "$output_base" "$output_base" >> "$log_file" 2>&1; then
         echo "Noopt Level L build failed; contents of $log_file:" >&2
@@ -95,6 +119,44 @@ compile_source_noopt() {
     fi
     if [ -s "$log_file" ]; then
         echo "Noopt Level L build emitted unexpected diagnostics; contents of $log_file:" >&2
+        cat "$log_file" >&2
+        exit 1
+    fi
+}
+
+compile_source_to_rxas() {
+    source_file=$1
+    output_base=$2
+    import_dir=$3
+    log_file=$4
+    use_exits=${5:-0}
+    if ! run_rxc "$use_exits" -i "$product_build_dir/bin" -i "$import_dir" \
+            -o "$output_base" "$source_file" > "$log_file" 2>&1; then
+        echo "Level L RXAS generation failed; contents of $log_file:" >&2
+        cat "$log_file" >&2
+        exit 1
+    fi
+    if [ -s "$log_file" ]; then
+        echo "Level L RXAS generation emitted unexpected diagnostics; contents of $log_file:" >&2
+        cat "$log_file" >&2
+        exit 1
+    fi
+}
+
+compile_source_to_rxas_noopt() {
+    source_file=$1
+    output_base=$2
+    import_dir=$3
+    log_file=$4
+    use_exits=${5:-0}
+    if ! run_rxc "$use_exits" -n -i "$product_build_dir/bin" -i "$import_dir" \
+            -o "$output_base" "$source_file" > "$log_file" 2>&1; then
+        echo "Noopt Level L RXAS generation failed; contents of $log_file:" >&2
+        cat "$log_file" >&2
+        exit 1
+    fi
+    if [ -s "$log_file" ]; then
+        echo "Noopt Level L RXAS generation emitted unexpected diagnostics; contents of $log_file:" >&2
         cat "$log_file" >&2
         exit 1
     fi
@@ -182,7 +244,76 @@ compile_source "$script_dir/unicode_normprops.crexx" \
     "$work_dir/unicode-normprops-build.log"
 compile_source "$script_dir/unicode_d.crexx" \
     "$work_dir/unicode_d" "$work_dir" \
-    "$work_dir/unicode-d-build.log"
+    "$work_dir/unicode-d-build.log" 1
+compile_source "$script_dir/unicode_casefold.crexx" \
+    "$work_dir/unicode_casefold" "$work_dir" \
+    "$work_dir/unicode-casefold-build.log"
+compile_source "$script_dir/unicode_normalization_generate.crexx" \
+    "$work_dir/unicode_normalization_generate" "$work_dir" \
+    "$work_dir/unicode-normalization-generate-build.log"
+(cd "$work_dir" && "$rxlink_bin" -c "$script_dir/unicode_normalization_generate.ctl")
+
+generate_normalization_runtime() {
+    vm_bin=$1
+    vm_name=$2
+    output_dir="$work_dir/$vm_name"
+    (cd "$work_dir" && "$vm_bin" unicode_normalization_generate \
+        "$product_build_dir/bin/library" \
+        "$product_build_dir/bin/rxfnsl" \
+        unicode_normalization_generate_linked \
+        -a "$unicode_data_input" "$normalization_properties_input" \
+        "$casefold_input" "$script_dir/unicode_d.crexx" \
+        "$script_dir/unicode_casefold.crexx" \
+        "$output_dir/unicode_normalization.crexx") \
+        > "$output_dir/unicode-normalization-generate.txt"
+}
+
+generate_normalization_runtime "$rxtvm_bin" rxtvm
+generate_normalization_runtime "$rxbvm_bin" rxbvm
+cmp "$work_dir/rxtvm/unicode_normalization.crexx" "$work_dir/rxbvm/unicode_normalization.crexx"
+cmp "$work_dir/rxtvm/unicode-normalization-generate.txt" "$work_dir/rxbvm/unicode-normalization-generate.txt"
+if grep -E 'assembler[[:space:]]+signal|call[[:space:]]+raise' \
+        "$work_dir/rxtvm/unicode_normalization.crexx" > /dev/null; then
+    echo "generated normalization source bypasses the Level B SIGNAL surface" >&2
+    exit 1
+fi
+grep -F 'signal unicode_error' \
+    "$work_dir/rxtvm/unicode_normalization.crexx" > /dev/null
+
+compile_source_to_rxas "$work_dir/rxtvm/unicode_normalization.crexx" \
+    "$work_dir/rxtvm/unicode_normalization" "$work_dir" \
+    "$work_dir/unicode-normalization-runtime-build.log" 1
+
+if [ "$(grep -c '^\.const §rxc\.const\.[0-9][0-9]*\.unicode_data binary 0x' \
+        "$work_dir/rxtvm/unicode_normalization.rxas")" -ne 1 ]; then
+    echo "compiler-generated normalization RXAS does not contain exactly one binary constant alias" >&2
+    exit 1
+fi
+normalization_alias=$(sed -n 's/^\.const \(§rxc\.const\.[0-9][0-9]*\.unicode_data\) binary 0x.*/\1/p' \
+    "$work_dir/rxtvm/unicode_normalization.rxas")
+if [ -z "$normalization_alias" ]; then
+    echo "compiler-generated normalization RXAS constant alias is missing" >&2
+    exit 1
+fi
+grep -E "^[[:space:]]*bgetu32 [^,]+,$normalization_alias," \
+    "$work_dir/rxtvm/unicode_normalization.rxas" > /dev/null
+if grep -F '.unicodednormalizer._image' \
+        "$work_dir/rxtvm/unicode_normalization.rxas" > /dev/null; then
+    echo "constant-backed normalizer unexpectedly owns an image attribute" >&2
+    exit 1
+fi
+if ! "$rxas_bin" -o "$work_dir/unicode_normalization" \
+        "$work_dir/rxtvm/unicode_normalization" \
+        > "$work_dir/unicode-normalization-runtime-assemble.log" 2>&1; then
+    echo "constant-backed normalization assembly failed:" >&2
+    cat "$work_dir/unicode-normalization-runtime-assemble.log" >&2
+    exit 1
+fi
+if [ -s "$work_dir/unicode-normalization-runtime-assemble.log" ]; then
+    echo "constant-backed normalization assembly emitted unexpected diagnostics:" >&2
+    cat "$work_dir/unicode-normalization-runtime-assemble.log" >&2
+    exit 1
+fi
 compile_source "$script_dir/unicode_nfd_lexer_generate.crexx" \
     "$work_dir/unicode_nfd_lexer_generate" "$work_dir" \
     "$work_dir/unicode-nfd-lexer-generate-build.log"
@@ -211,13 +342,25 @@ cmp "$work_dir/rxtvm/unicode-nfd-lexer-generate.txt" "$work_dir/rxbvm/unicode-nf
     -o "$work_dir/level_l_unicode_nfd.crexx" \
     "$work_dir/rxtvm/level_l_unicode_nfd.re")
 perl -pi -e 's/[ \t]+$//' "$work_dir/level_l_unicode_nfd.crexx"
+if grep -E 'assembler[[:space:]]+signal|call[[:space:]]+raise' \
+        "$work_dir/level_l_unicode_nfd.crexx" > /dev/null; then
+    echo "generated NFD wrapper bypasses the Level B SIGNAL surface" >&2
+    exit 1
+fi
+grep -F 'signal invalid_arguments construction_error' \
+    "$work_dir/level_l_unicode_nfd.crexx" > /dev/null
 compile_source "$work_dir/level_l_unicode_nfd.crexx" \
     "$work_dir/level_l_unicode_nfd" "$work_dir" \
-    "$work_dir/level-l-unicode-nfd-build.log"
+    "$work_dir/level-l-unicode-nfd-build.log" 1
 (cd "$work_dir" && "$rxlink_bin" -c "$script_dir/unicode_d.ctl")
 
 normalize_rxas_audit="$work_dir/unicode-d-normalize.rxas"
 normalize_binary_rxas_audit="$work_dir/unicode-d-normalize-binary.rxas"
+is_normalized_rxas_audit="$work_dir/unicode-d-is-normalized.rxas"
+lookup_string_rxas_audit="$work_dir/unicode-d-lookup-string.rxas"
+mapping_string_rxas_audit="$work_dir/unicode-d-mapping-string.rxas"
+check_composed_rxas_audit="$work_dir/unicode-d-check-composed.rxas"
+check_emit_rxas_audit="$work_dir/unicode-d-check-emit.rxas"
 compose_pair_rxas_audit="$work_dir/unicode-normalization-compose-pair.rxas"
 awk '/^§unicode_d\.unicodednormalizer\.normalize\(\)/ { active = 1 }
      /^§unicode_d\.unicodednormalizer\.normalize_binary\(\)/ { if (active) exit }
@@ -225,6 +368,21 @@ awk '/^§unicode_d\.unicodednormalizer\.normalize\(\)/ { active = 1 }
 awk '/^§unicode_d\.unicodednormalizer\.normalize_binary\(\)/ { active = 1 }
      /^§unicode_d\.unicodednormalizer\.is_normalized\(\)/ { if (active) exit }
      active { print }' "$work_dir/unicode_d.rxas" > "$normalize_binary_rxas_audit"
+awk '/^§unicode_d\.unicodednormalizer\.is_normalized\(\)/ { active = 1 }
+     /^§unicode_d\.unicodednormalizer\.is_normalized_binary\(\)/ { if (active) exit }
+     active { print }' "$work_dir/unicode_d.rxas" > "$is_normalized_rxas_audit"
+awk '/^§unicode_d\.unicodednormalizer\._process_lookup_scalar_string\(\)/ { active = 1 }
+     active && seen && /^§/ { exit }
+     active { print; seen = 1 }' "$work_dir/unicode_d.rxas" > "$lookup_string_rxas_audit"
+awk '/^§unicode_d\.unicodednormalizer\._process_mapping_string\(\)/ { active = 1 }
+     active && seen && /^§/ { exit }
+     active { print; seen = 1 }' "$work_dir/unicode_d.rxas" > "$mapping_string_rxas_audit"
+awk '/^§unicode_d\.unicodednormalizer\._check_composed_string\(\)/ { active = 1 }
+     active && seen && /^§/ { exit }
+     active { print; seen = 1 }' "$work_dir/unicode_d.rxas" > "$check_composed_rxas_audit"
+awk '/^§unicode_d\.unicodednormalizer\._check_emit\(\)/ { active = 1 }
+     active && seen && /^§/ { exit }
+     active { print; seen = 1 }' "$work_dir/unicode_d.rxas" > "$check_emit_rxas_audit"
 awk '/^§unicode_d\.unicodednormalizer\._compose_pair\(\)/ { active = 1 }
      active && seen && /^§/ { exit }
      active { print; seen = 1 }' "$work_dir/unicode_d.rxas" > "$compose_pair_rxas_audit"
@@ -238,6 +396,45 @@ grep -E '^[[:space:]]*bgetu32 ' "$normalize_rxas_audit" > /dev/null
 grep -F ".jtable " "$normalize_rxas_audit" > /dev/null
 grep -E '^[[:space:]]*jumpi ' "$normalize_rxas_audit" > /dev/null
 grep -E '^[[:space:]]*appendchar ' "$normalize_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*getandtp ' "$normalize_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*setortp ' "$normalize_rxas_audit" > /dev/null
+grep -F 'unicodednormalizer._process_lookup_scalar_string()' "$normalize_rxas_audit" > /dev/null
+if grep -E '^[[:space:]]*(bcopy|stobin|bintos|bresize) ' "$normalize_rxas_audit" > /dev/null; then
+    echo "optimized string normalizer unexpectedly copies, converts, or resizes binary data" >&2
+    exit 1
+fi
+is_normalized_locals=$(sed -n '1s/.*\.locals=\([0-9][0-9]*\).*/\1/p' "$is_normalized_rxas_audit")
+if [ -z "$is_normalized_locals" ] || [ "$is_normalized_locals" -gt 64 ]; then
+    echo "optimized normalization predicate has an unexpected local count: $is_normalized_locals" >&2
+    exit 1
+fi
+grep -E '^[[:space:]]*strchar ' "$is_normalized_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*bgetu32 ' "$is_normalized_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*bgetu8 ' "$is_normalized_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*getandtp ' "$is_normalized_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*setortp ' "$is_normalized_rxas_audit" > /dev/null
+grep -F 'unicodednormalizer._check_composed_string()' "$is_normalized_rxas_audit" > /dev/null
+if grep -E '^[[:space:]]*(appendchar|bcopy|stobin|bintos|bresize) ' "$is_normalized_rxas_audit" > /dev/null || \
+   grep -F 'unicodednormalizer.normalize()' "$is_normalized_rxas_audit" > /dev/null || \
+   grep -F 'unicodednormalizer._quick_check()' "$is_normalized_rxas_audit" > /dev/null; then
+    echo "optimized normalization predicate constructs output or enters a byte path" >&2
+    exit 1
+fi
+grep -E '^[[:space:]]*bgetu8 ' "$lookup_string_rxas_audit" > /dev/null
+grep -F 'unicodednormalizer._find_mapping()' "$lookup_string_rxas_audit" > /dev/null
+grep -F 'unicodednormalizer._process_mapping_string()' "$lookup_string_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*bgetu32 ' "$mapping_string_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*bgetu8 ' "$mapping_string_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*appendchar ' "$mapping_string_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*strchar ' "$check_composed_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*bgetu32 ' "$check_composed_rxas_audit" > /dev/null
+grep -F 'unicodednormalizer._check_lookup_scalar()' "$check_composed_rxas_audit" > /dev/null
+grep -E '^[[:space:]]*strchar ' "$check_emit_rxas_audit" > /dev/null
+if grep -E '^[[:space:]]*(appendchar|bcopy|stobin|bintos|bresize) ' \
+        "$check_composed_rxas_audit" "$check_emit_rxas_audit" > /dev/null; then
+    echo "optimized C-form predicate unexpectedly constructs or converts output" >&2
+    exit 1
+fi
 if grep -E '^[[:space:]]*(scopy|bcopy|stobin|bintos) ' "$normalize_binary_rxas_audit" > /dev/null; then
     echo "optimized binary normalizer unexpectedly copies or converts its input/result" >&2
     exit 1
@@ -252,22 +449,52 @@ fi
 compile_source "$script_dir/test_unicode_d.crexx" \
     "$work_dir/test_unicode_d" "$work_dir" \
     "$work_dir/test-unicode-d-build.log"
+compile_source "$script_dir/test_unicode_casefold.crexx" \
+    "$work_dir/test_unicode_casefold" "$work_dir" \
+    "$work_dir/test-unicode-casefold-build.log"
+(cd "$work_dir" && "$rxlink_bin" -c "$script_dir/unicode_casefold.ctl")
 
 compile_source_noopt "$work_dir/gennorm2.crexx" \
     "$noopt_dir/gennorm2" "$product_build_dir/bin" \
     "$noopt_dir/gennorm2-build.log"
-for module in unicode_gennorm2 unicode_data unicode_normprops unicode_d; do
+for module in unicode_gennorm2 unicode_data unicode_normprops unicode_d unicode_casefold; do
+    module_uses_exits=0
+    if [ "$module" = "unicode_d" ]; then module_uses_exits=1; fi
     compile_source_noopt "$script_dir/$module.crexx" \
         "$noopt_dir/$module" "$noopt_dir" \
-        "$noopt_dir/$module-build.log"
+        "$noopt_dir/$module-build.log" "$module_uses_exits"
 done
+compile_source_to_rxas_noopt "$work_dir/rxtvm/unicode_normalization.crexx" \
+    "$noopt_dir/unicode_normalization" "$noopt_dir" \
+    "$noopt_dir/unicode-normalization-build.log" 1
+if [ "$(grep -c '^\.const §rxc\.const\.[0-9][0-9]*\.unicode_data binary 0x' \
+        "$noopt_dir/unicode_normalization.rxas")" -ne 1 ]; then
+    echo "noopt compiler-generated normalization RXAS does not contain exactly one binary constant alias" >&2
+    exit 1
+fi
+if ! "$rxas_bin" -n -o "$noopt_dir/unicode_normalization" \
+        "$noopt_dir/unicode_normalization" \
+        > "$noopt_dir/unicode-normalization-assemble.log" 2>&1; then
+    echo "noopt constant-backed normalization assembly failed:" >&2
+    cat "$noopt_dir/unicode-normalization-assemble.log" >&2
+    exit 1
+fi
+if [ -s "$noopt_dir/unicode-normalization-assemble.log" ]; then
+    echo "noopt constant-backed normalization assembly emitted unexpected diagnostics:" >&2
+    cat "$noopt_dir/unicode-normalization-assemble.log" >&2
+    exit 1
+fi
 compile_source_noopt "$work_dir/level_l_unicode_nfd.crexx" \
     "$noopt_dir/level_l_unicode_nfd" "$noopt_dir" \
-    "$noopt_dir/level-l-unicode-nfd-build.log"
+    "$noopt_dir/level-l-unicode-nfd-build.log" 1
 compile_source_noopt "$script_dir/test_unicode_d.crexx" \
     "$noopt_dir/test_unicode_d" "$noopt_dir" \
     "$noopt_dir/test_unicode_d-build.log"
 (cd "$noopt_dir" && "$rxlink_bin" -c "$script_dir/unicode_d.ctl")
+compile_source_noopt "$script_dir/test_unicode_casefold.crexx" \
+    "$noopt_dir/test_unicode_casefold" "$noopt_dir" \
+    "$noopt_dir/test_unicode_casefold-build.log"
+(cd "$noopt_dir" && "$rxlink_bin" -c "$script_dir/unicode_casefold.ctl")
 
 reference_cpp="$work_dir/nfd_reference.cpp"
 reference_bin="$work_dir/nfd_reference"
@@ -353,8 +580,20 @@ run_unicode_normalization_test() {
     (cd "$execution_dir" && "$vm_bin" test_unicode_d \
         "$product_build_dir/bin/library" \
         "$product_build_dir/bin/rxfnsl" \
-        unicode_d_linked -a "$unicode_data_input" "$normalization_properties_input" "$normalization_input") \
+        unicode_d_linked unicode_normalization \
+        -a "$unicode_data_input" "$normalization_properties_input" "$normalization_input") \
         > "$output_file"
+}
+
+run_unicode_casefold_test() {
+    vm_bin=$1
+    execution_dir=$2
+    output_file=$3
+    (cd "$execution_dir" && "$vm_bin" test_unicode_casefold \
+        "$product_build_dir/bin/library" \
+        "$product_build_dir/bin/rxfnsl" \
+        unicode_casefold_linked unicode_normalization \
+        -a "$casefold_input") > "$output_file"
 }
 
 run_frontend_test "$rxtvm_bin" "$work_dir/rxtvm-frontend.txt"
@@ -373,6 +612,10 @@ run_unicode_normalization_test "$rxtvm_bin" "$work_dir" "$work_dir/rxtvm-unicode
 run_unicode_normalization_test "$rxbvm_bin" "$work_dir" "$work_dir/rxbvm-unicode-normalization.txt"
 run_unicode_normalization_test "$rxtvm_bin" "$noopt_dir" "$work_dir/rxtvm-unicode-normalization-noopt.txt"
 run_unicode_normalization_test "$rxbvm_bin" "$noopt_dir" "$work_dir/rxbvm-unicode-normalization-noopt.txt"
+run_unicode_casefold_test "$rxtvm_bin" "$work_dir" "$work_dir/rxtvm-unicode-casefold.txt"
+run_unicode_casefold_test "$rxbvm_bin" "$work_dir" "$work_dir/rxbvm-unicode-casefold.txt"
+run_unicode_casefold_test "$rxtvm_bin" "$noopt_dir" "$work_dir/rxtvm-unicode-casefold-noopt.txt"
+run_unicode_casefold_test "$rxbvm_bin" "$noopt_dir" "$work_dir/rxbvm-unicode-casefold-noopt.txt"
 
 "$reference_bin" --dump-rules "$nfc_input" > "$work_dir/reference-gennorm2.semantic"
 "$reference_bin" "$nfc_input" "$normalization_input" > "$work_dir/reference-nfd.txt"
@@ -392,6 +635,10 @@ cmp "$work_dir/rxtvm-unicode-normalization.txt" "$work_dir/rxbvm-unicode-normali
 cmp "$work_dir/rxtvm-unicode-normalization.txt" "$work_dir/rxtvm-unicode-normalization-noopt.txt"
 cmp "$work_dir/rxtvm-unicode-normalization.txt" "$work_dir/rxbvm-unicode-normalization-noopt.txt"
 cmp "$script_dir/evidence/unicode-normalization-result.txt" "$work_dir/rxtvm-unicode-normalization.txt"
+cmp "$work_dir/rxtvm-unicode-casefold.txt" "$work_dir/rxbvm-unicode-casefold.txt"
+cmp "$work_dir/rxtvm-unicode-casefold.txt" "$work_dir/rxtvm-unicode-casefold-noopt.txt"
+cmp "$work_dir/rxtvm-unicode-casefold.txt" "$work_dir/rxbvm-unicode-casefold-noopt.txt"
+cmp "$script_dir/evidence/unicode-casefold-result.txt" "$work_dir/rxtvm-unicode-casefold.txt"
 cmp "$poc_dir/evidence/nfd-conformance.txt" "$work_dir/reference-nfd.txt"
 grep -Fx "PASS: Level L bootstrap frontend" "$work_dir/rxtvm-frontend.txt" > /dev/null
 grep -Fx "PASS: authored Level L TinyExpr matches rxfnsl" "$work_dir/rxtvm-tinyexpr.txt" > /dev/null
@@ -403,7 +650,11 @@ grep -Fx "Result: PASS" "$work_dir/rxtvm-unicode-nfd.txt" > /dev/null
 grep -Fx "Focused prepared normalization fixtures: PASS" "$work_dir/rxtvm-unicode-normalization.txt" > /dev/null
 grep -Fx "Prepared normalization tables: PASS" "$work_dir/rxtvm-unicode-normalization.txt" > /dev/null
 grep -Fx "Generated prepared NFD wrapper: PASS" "$work_dir/rxtvm-unicode-normalization.txt" > /dev/null
+grep -Fx "NFD/NFKD/NFC/NFKC normalization predicate checks: 400680" \
+    "$work_dir/rxtvm-unicode-normalization.txt" > /dev/null
 grep -Fx "Result: PASS" "$work_dir/rxtvm-unicode-normalization.txt" > /dev/null
+grep -Fx "Prepared simple/full/default/Turkic case folding: PASS" "$work_dir/rxtvm-unicode-casefold.txt" > /dev/null
+grep -Fx "Result: PASS" "$work_dir/rxtvm-unicode-casefold.txt" > /dev/null
 
 summary_actual="$work_dir/result.txt"
 {
@@ -418,14 +669,20 @@ summary_actual="$work_dir/result.txt"
     echo "Unicode 17.0.0 NFD conformance: PASS (100170 corpus relations)"
     echo "unlisted scalar NFD identity: PASS (1094978 scalars)"
     echo "C++/re2c NFD oracle: retained conformance evidence reproduced"
-    echo "portable prepared four-form image: PASS (format 3; 4456448-byte NFD prepared-symbol section)"
+    echo "portable prepared four-form image: PASS (format 4; 4456448-byte NFD prepared-symbol section; packed NFC/NFKC Quick_Check)"
+    echo "constant-backed Unicode runtime: PASS (one shared 11237664-byte portable image)"
+    echo "normalizer instances: PASS (no owning image attribute and no per-instance image copy)"
+    echo "RXAS Unicode payload: PASS (one named constant alias with direct indexed operands)"
     echo "Unicode 17.0.0 NFD/NFKD/NFC/NFKC conformance: PASS (400680 corpus relations)"
+    echo "Unicode 17.0.0 normalization predicates: PASS (400680 exact codepoint checks)"
     echo "generated prepared NFD wrapper: PASS (2081 mapping symbols, 964 identity-mark symbols)"
     echo "generated prepared NFD conformance: PASS (100170 corpus relations)"
     echo "unlisted scalar four-form identity: PASS (1094978 scalars per form)"
     echo "primary composition: PASS (961 pairs, 391 starters, 1120 exclusions)"
+    echo "ordinary case folding: PASS (simple/full/default/Turkic; 1585 records)"
+    echo "unlisted scalar case-fold identity: PASS (1110479 scalars per mode)"
     echo "optimized/noopt linked images: byte-identical conformance summaries"
-    echo "NFD string path: strchar codepoint scan; no string/binary conversion on prepared fast path"
+    echo "four-form string path: strchar codepoint scan; no string/binary conversion"
     echo "binary path: strict UTF-8 decode"
     echo "prepared dispatch: dense at-u32 symbol lookup, .jtable and jumpi"
     echo "binary scan/stores: bgetu8, bsetu16, bsetu32"

@@ -334,6 +334,7 @@ RX_INLINE int rxstem_set_value_string(value *dest, const value *source) {
 #ifndef NUTF8
     dest->string_chars = source->string_chars;
     copy_vm_private_flags(dest, source);
+    copy_string_normalization_certificates(dest, source);
 #else
     clear_vm_private_flags(dest);
 #endif

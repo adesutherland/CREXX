@@ -1,0 +1,16 @@
+options levelb
+namespace err_register_flag_language_write
+
+box = .FlagBox()
+call box.bad()
+exit 0
+
+FlagBox: class
+  language_flags = .int with register.0.flags.language
+
+  *: factory
+    return
+
+  bad: method = .void
+    language_flags = 0
+    return

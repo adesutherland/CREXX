@@ -249,12 +249,19 @@ families reproduce `evidence/unicode-normalization-result.txt` byte for byte.
 - The Unicode rule parser and NFD table compiler cover the retained `gennorm2`
   canonical data only. They are not a general UCD/property compiler.
 - The scalar baseline implements NFD. The shared general engine implements all
-  four normalization forms over strict UTF-8, while the prepared-symbol
-  codepoint fast path currently accelerates NFD `.string` input only. Neither
+  four normalization forms over `.string` codepoints: NFD/NFC use the dense
+  prepared canonical classification, NFKD/NFKC use the prepared compatibility
+  bit/page/record index, and C forms feed decomposed scalars into the shared
+  primary-composition index. D-form `is_normalized` is an exact one-pass quick
+  check. C-form predicates read the official Unicode 17 NFC_QC/NFKC_QC value
+  for each codepoint from a packed shared-constant section, reject `No`, check
+  canonical-order boundaries, and return immediately when every value is
+  `Yes`; a `Maybe` value alone invokes the existing exact streamed
+  decomposition/composition comparison without constructing normalized
+  output. The binary surface remains a separate experimental UTF-8 path.
+  Neither surface
   implements chunked input, case folding, segmentation, or a public Level G
-  API. C-form `is_normalized` currently normalizes and compares; the proved
-  Quick_Check/stable-region allocation fast path remains a performance
-  follow-on rather than a correctness dependency.
+  API.
 - Exposed source arguments are read-only by convention but Level B cannot yet
   express a const borrow. A future public API must decide whether to retain
   that convention, add a read-only borrowing surface, or accept an input copy.

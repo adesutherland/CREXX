@@ -2,12 +2,14 @@
 
 Status: normalization design and evidence checkpoint captured;
 `UNICODE-CERT-01` implemented with an informal Release screen green; compiler
-constant lowering and the production Level G case-fold family are implemented.
-Public normalization extraction remains pending.
+constant lowering and the production Level G case-fold family are implemented;
+the approved UAX #29 grapheme family has completed local qualification and is
+ready for the final branch commit. Public normalization extraction remains
+pending.
 
 Branch: `unicode`
 
-Date: 2026-08-28
+Date: 2026-08-30
 
 ## Purpose
 
@@ -255,6 +257,49 @@ not normalize implicitly. The later normalization product extraction may
 converge separately prepared sections into a common product data module only if
 that preserves these public and constant-ownership contracts.
 
+Step 4 selects Unicode 17.0.0 UAX #29 revision 47 default extended grapheme
+clusters (`UAX29-C1-1`) without tailoring. The public direct surface is
+`graphemeCount`, `graphemeSubstr`, `graphemePos`, and `graphemeReverse`.
+`.rxunicode..graphemes(text)` is an immutable indexed snapshot with `text`,
+`count`, `at`, `substr`, `pos`, `reverse`, `codepointStart`,
+`codepointLength`, `iterator`, `version`, and `profile`; its iterator adds
+`hasNext`, `next`, `index`, `reset`, `codepointStart`, and `codepointLength`.
+
+One private scanner implements GB3 through GB999. Direct count and bounded
+substring stream without a complete boundary vector. The explicit view alone
+builds and retains a packed codepoint-boundary index, which its indexed
+operations, including substring, reuse. The 1,114,176-byte prepared property
+image packs GCB, Extended_Pictographic, and InCB in one compiler-owned constant
+and is read with RXVM `STRCHAR`/`BGETU8`. There is no re2c UTF-8 decoder or
+UTF-32 materialization, no `.string`/`.binary` conversion, runtime table copy,
+implicit normalization or folding, ordinary-BIF change, new runtime string
+type, or VM grapheme flag.
+Per-call full indexing for direct operations and mutable/shared grapheme caches
+are rejected for this stage. The mandatory first Release performance verdict
+used a 49,152-byte/7,168-grapheme buffer and twelve balanced/interleaved
+observations per cell. Per-call indexing was 1.802% to 2.953% slower than the
+streaming direct path across count, bounded substring, and both VMs. Adrian's
+direction to proceed accepts that verdict: direct operations retain streaming,
+while the explicit reusable view retains its index. Raw samples, host state,
+and artifact provenance are retained in
+`performance/evidence/2026-08-29-unicode-grapheme-first-release-verdict/`.
+
+Local closeout is green: a clean Debug Ninja build has no missing generated
+dependencies; the full Debug and profiling-off Release suites each pass
+2,412/2,412; and the maintained Apple-ASan suite passes 2,412/2,412 with leak
+detection disabled for the documented platform limitation. The complete
+normalization bootstrap/conformance harness also remains green across optimized
+and no-opt builds on both VMs. These results qualify the branch locally; they
+do not claim Linux LeakSanitizer or hosted-platform qualification.
+
+Private case-fold and grapheme runtime failures use the certified Level B
+`SIGNAL` instruction directly. The generated runtime builds enable the
+standard compiler-exit pipeline for those modules, which lowers the source
+instruction to the VM signal opcode. Source-level `assembler signal`, a
+forwarding `raise` wrapper, and dynamic-name signalling are unnecessary for
+these fixed product conditions. Normalization qualification applies the same
+rule to its generated and hand-authored experimental runtime sources.
+
 The detailed normalization steps are:
 
 1. Preserve the current dirty experimental worktree in recoverable focused
@@ -285,9 +330,6 @@ The detailed normalization steps are:
 
 ## Approval Gates Still Open
 
-- exact public spelling of the reusable class factories after source-level
-  compilation proof;
-- canonical production location of pinned UCD inputs;
-- compiler constant lowering versus a separately governed build-time fallback;
 - any size-based normalization precheck heuristic; and
-- every post-normalization Level G Unicode family.
+- later Unicode properties, codecs, security profiles, collation, and any
+  tailored grapheme profile.

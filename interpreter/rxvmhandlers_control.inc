@@ -1005,7 +1005,7 @@ RXVM_HANDLER(READLINE_REG, VM_ADVANCE(1);
             {
                 size_t pos = 0;
                 int ch;
-                op1R->string_length = 0;
+                rxvm_value_set_string_length_known(op1R, 0u);
                 while ((ch = getchar()) != EOF) {
                     if (ch == '\n') break;
                     extend_string_buffer_metric(

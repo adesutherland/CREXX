@@ -1,0 +1,89 @@
+/* Directional first-Release comparison for the selected grapheme architecture. */
+options levelb
+
+import rxfnsb
+import rxunicode
+
+arg argv = .string[]
+if argv[0] \= 5 then do
+  say "usage: unicode_grapheme_compare operation variant vm-label blocks iterations"
+  return 2
+end
+
+operation = argv[1]
+variant = argv[2]
+vm_label = argv[3]
+blocks = argv[4] as .int
+iterations = argv[5] as .int
+if operation \= "count" & operation \= "substr" then return fail("operation must be count or substr")
+if variant \= "stream" & variant \= "index-e2e" then return fail("variant must be stream or index-e2e")
+if blocks < 1 | iterations < 1 then return fail("blocks and iterations must be positive")
+
+base = hex_sequence_to_string("0061 0062 0065 0301 1F469 200D 1F469 200D 1F467 200D 1F466 1F1E6 1F1E7 0915 094D 0937 0063")
+text = ""
+do block = 1 to blocks
+  assembler append text,base
+end
+expected_count = graphemeCount(text)
+if expected_count \= graphemeCount(base) * blocks then return fail("repeated corpus boundary checksum")
+substr_start = expected_count - 15
+expected_substr = graphemeSubstr(text, substr_start, 8)
+
+warmup = run_pass(operation, variant, text, substr_start, iterations)
+expected_checksum = expected_count * iterations
+if operation = "substr" then expected_checksum = length(expected_substr) * iterations
+if warmup \= expected_checksum then return fail("warmup checksum")
+
+started = time("us")
+checksum = run_pass(operation, variant, text, substr_start, iterations)
+elapsed = time("us") - started
+if elapsed < 0 then elapsed = elapsed + 86400000000
+if checksum \= expected_checksum then return fail("sample checksum")
+
+input_bytes = binlength(text as .binary)
+say "benchmark=unicode_grapheme_compare operation=" || operation,
+    "variant=" || variant "vm=" || vm_label,
+    "blocks=" || blocks "iterations=" || iterations,
+    "input_utf8_bytes=" || input_bytes,
+    "graphemes=" || expected_count,
+    "elapsed_us=" || elapsed "checksum=" || checksum
+return 0
+
+run_pass: procedure = .int
+  arg operation = .string, variant = .string, text = .string, substr_start = .int, iterations = .int
+  checksum = 0
+  if operation = "count" then do
+    if variant = "stream" then do iteration = 1 to iterations
+      checksum = checksum + graphemeCount(text)
+    end
+    else do iteration = 1 to iterations
+      view = .rxunicode..graphemes(text)
+      checksum = checksum + view.count()
+    end
+    return checksum
+  end
+
+  if variant = "stream" then do iteration = 1 to iterations
+    piece = graphemeSubstr(text, substr_start, 8)
+    checksum = checksum + length(piece)
+  end
+  else do iteration = 1 to iterations
+    view = .rxunicode..graphemes(text)
+    piece = view.substr(substr_start, 8)
+    checksum = checksum + length(piece)
+  end
+  return checksum
+
+hex_sequence_to_string: procedure = .string
+  arg sequence = .string
+  result = ""
+  do i = 1 to words(sequence)
+    codepoint = x2d(word(sequence, i))
+    assembler appendchar result,codepoint
+  end
+  return result
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL: unicode grapheme comparison" message
+  return 1

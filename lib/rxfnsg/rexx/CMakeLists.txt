@@ -6,6 +6,7 @@ set(RXFNSG_REXX_MODULES
         packednumeric
         statsvalue
         unicode_casefold
+        unicode_grapheme
         unicode
         httpcodec
   httpcore
@@ -25,6 +26,33 @@ if(NOT "${_rxunicode_actual_casefold_sha256}" STREQUAL
     "got ${_rxunicode_actual_casefold_sha256}")
 endif()
 
+set(_rxunicode_expected_grapheme_property_sha256
+  "d6b51d1d2ae5c33b451b7ed994b48f1f4dc62b2272a5831e7fd418514a6bae89")
+set(_rxunicode_expected_grapheme_test_sha256
+  "e2d134d2c52919bace503ebb6a551c1855fe1a1faec18478c78fff254a1793ec")
+set(_rxunicode_expected_emoji_sha256
+  "2cb2bb9455cda83e8481541ecf5b6dfda66a3bb89efa3fa7c5297eccf607b72b")
+set(_rxunicode_expected_derived_core_sha256
+  "24c7fed1195c482faaefd5c1e7eb821c5ee1fb6de07ecdbaa64b56a99da22c08")
+foreach(_rxunicode_checksum IN ITEMS
+    "${RXUNICODE_GRAPHEME_PROPERTY_DATA}|${_rxunicode_expected_grapheme_property_sha256}|GraphemeBreakProperty.txt"
+    "${RXUNICODE_GRAPHEME_TEST_DATA}|${_rxunicode_expected_grapheme_test_sha256}|GraphemeBreakTest.txt"
+    "${RXUNICODE_EMOJI_DATA}|${_rxunicode_expected_emoji_sha256}|emoji-data.txt"
+    "${RXUNICODE_DERIVED_CORE_DATA}|${_rxunicode_expected_derived_core_sha256}|DerivedCoreProperties.txt")
+  string(REPLACE "|" ";" _rxunicode_checksum_fields "${_rxunicode_checksum}")
+  list(GET _rxunicode_checksum_fields 0 _rxunicode_checksum_path)
+  list(GET _rxunicode_checksum_fields 1 _rxunicode_checksum_expected)
+  list(GET _rxunicode_checksum_fields 2 _rxunicode_checksum_name)
+  file(SHA256 "${_rxunicode_checksum_path}" _rxunicode_checksum_actual)
+  if(NOT "${_rxunicode_checksum_actual}" STREQUAL
+         "${_rxunicode_checksum_expected}")
+    message(FATAL_ERROR
+      "Pinned Unicode ${_rxunicode_checksum_name} checksum mismatch: "
+      "expected ${_rxunicode_checksum_expected}, "
+      "got ${_rxunicode_checksum_actual}")
+  endif()
+endforeach()
+
 set(_rxunicode_tools_source_dir
   "${CMAKE_CURRENT_SOURCE_DIR}/../unicode/tools")
 set(_rxunicode_casefold_table_source
@@ -39,6 +67,18 @@ set(_rxunicode_casefold_linked_generator_rxbin
   "${RXUNICODE_CASEFOLD_TOOL_DIR}/casefold_generator.rxbin")
 set(_rxunicode_generated_source
   "${CMAKE_CURRENT_BINARY_DIR}/unicode_casefold.crexx")
+set(_rxunicode_grapheme_table_source
+  "${_rxunicode_tools_source_dir}/grapheme_table.crexx")
+set(_rxunicode_grapheme_generator_source
+  "${_rxunicode_tools_source_dir}/generate_grapheme.crexx")
+set(_rxunicode_grapheme_template
+  "${CMAKE_CURRENT_SOURCE_DIR}/unicode_grapheme.crexx.in")
+set(_rxunicode_grapheme_generator_rxbin
+  "${RXUNICODE_CASEFOLD_TOOL_DIR}/generate_grapheme.rxbin")
+set(_rxunicode_grapheme_linked_generator_rxbin
+  "${RXUNICODE_CASEFOLD_TOOL_DIR}/grapheme_generator.rxbin")
+set(_rxunicode_generated_grapheme_source
+  "${CMAKE_CURRENT_BINARY_DIR}/unicode_grapheme.crexx")
 file(MAKE_DIRECTORY "${RXUNICODE_CASEFOLD_TOOL_DIR}")
 
 add_custom_command(
@@ -127,6 +167,96 @@ add_custom_command(
 add_custom_target(rxunicode_casefold_source
   DEPENDS "${_rxunicode_generated_source}")
 
+add_custom_command(
+  OUTPUT "${RXUNICODE_GRAPHEME_TABLE_RXBIN}"
+  BYPRODUCTS "${RXUNICODE_CASEFOLD_TOOL_DIR}/grapheme_table.rxas"
+  COMMAND ${CMAKE_COMMAND} -E make_directory
+          "${RXUNICODE_CASEFOLD_TOOL_DIR}"
+  COMMAND $<TARGET_FILE:rxc>
+          -x
+          -i "${CMAKE_BINARY_DIR}/bin"
+          -o grapheme_table
+          "${_rxunicode_grapheme_table_source}"
+  COMMAND $<TARGET_FILE:rxas> grapheme_table
+  DEPENDS
+    "${_rxunicode_grapheme_table_source}"
+    "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+    rxc
+    rxas
+    library
+    compiler_exit_bin
+  WORKING_DIRECTORY "${RXUNICODE_CASEFOLD_TOOL_DIR}"
+  COMMENT "Compiling the Unicode grapheme property-table builder ..."
+  VERBATIM
+)
+
+add_custom_command(
+  OUTPUT "${_rxunicode_grapheme_generator_rxbin}"
+  BYPRODUCTS "${RXUNICODE_CASEFOLD_TOOL_DIR}/generate_grapheme.rxas"
+  COMMAND $<TARGET_FILE:rxc>
+          -x
+          -i "${CMAKE_BINARY_DIR}/bin"
+          -i "${RXUNICODE_CASEFOLD_TOOL_DIR}"
+          -o generate_grapheme
+          "${_rxunicode_grapheme_generator_source}"
+  COMMAND $<TARGET_FILE:rxas> generate_grapheme
+  DEPENDS
+    "${_rxunicode_grapheme_generator_source}"
+    "${RXUNICODE_GRAPHEME_TABLE_RXBIN}"
+    "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+    rxc
+    rxas
+    library
+    compiler_exit_bin
+  WORKING_DIRECTORY "${RXUNICODE_CASEFOLD_TOOL_DIR}"
+  COMMENT "Compiling the Unicode grapheme source generator ..."
+  VERBATIM
+)
+
+add_custom_command(
+  OUTPUT "${_rxunicode_grapheme_linked_generator_rxbin}"
+  COMMAND $<TARGET_FILE:rxlink>
+          -s
+          -o grapheme_generator
+          generate_grapheme
+          grapheme_table
+  DEPENDS
+    "${_rxunicode_grapheme_generator_rxbin}"
+    "${RXUNICODE_GRAPHEME_TABLE_RXBIN}"
+    rxlink
+  WORKING_DIRECTORY "${RXUNICODE_CASEFOLD_TOOL_DIR}"
+  COMMENT "Linking the Unicode grapheme source generator ..."
+  VERBATIM
+)
+
+add_custom_command(
+  OUTPUT "${_rxunicode_generated_grapheme_source}"
+  COMMAND $<TARGET_FILE:rxbvm>
+          grapheme_generator
+          "${CMAKE_BINARY_DIR}/bin/library"
+          -a
+          "${RXUNICODE_GRAPHEME_PROPERTY_DATA}"
+          "${RXUNICODE_EMOJI_DATA}"
+          "${RXUNICODE_DERIVED_CORE_DATA}"
+          "${_rxunicode_grapheme_template}"
+          "${_rxunicode_generated_grapheme_source}"
+  DEPENDS
+    "${_rxunicode_grapheme_linked_generator_rxbin}"
+    "${RXUNICODE_GRAPHEME_PROPERTY_DATA}"
+    "${RXUNICODE_EMOJI_DATA}"
+    "${RXUNICODE_DERIVED_CORE_DATA}"
+    "${_rxunicode_grapheme_template}"
+    "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+    rxbvm
+    library
+  WORKING_DIRECTORY "${RXUNICODE_CASEFOLD_TOOL_DIR}"
+  COMMENT "Generating the constant-backed Level G rxunicode grapheme module ..."
+  VERBATIM
+)
+
+add_custom_target(rxunicode_grapheme_source
+  DEPENDS "${_rxunicode_generated_grapheme_source}")
+
 set(RXFNSG_REXX_BINS)
 foreach(_module IN LISTS RXFNSG_REXX_MODULES)
   list(APPEND RXFNSG_REXX_BINS "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin")
@@ -156,14 +286,23 @@ foreach(_binfile IN LISTS RXFNSG_REXX_BINS)
   set(_module_source "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx")
   if(_basename STREQUAL "unicode_casefold")
     set(_module_source "${_rxunicode_generated_source}")
+  elseif(_basename STREQUAL "unicode_grapheme")
+    set(_module_source "${_rxunicode_generated_grapheme_source}")
   endif()
 
   set(_module_dependencies)
   set(_module_import_args)
+  set(_module_exit_args -x)
   if(_basename STREQUAL "unicode")
     list(APPEND _module_dependencies
-      "${CMAKE_CURRENT_BINARY_DIR}/unicode_casefold.rxbin")
+      "${CMAKE_CURRENT_BINARY_DIR}/unicode_casefold.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/unicode_grapheme.rxbin")
     list(APPEND _module_import_args -i "${CMAKE_CURRENT_BINARY_DIR}")
+  elseif(_basename STREQUAL "unicode_casefold" OR
+         _basename STREQUAL "unicode_grapheme")
+    # These product runtimes use the source-level SIGNAL instruction. Their
+    # compiler-exit dependency is already explicit below, so do not disable it.
+    set(_module_exit_args)
   elseif(_basename STREQUAL "httpcore")
     list(APPEND _module_dependencies "${CMAKE_CURRENT_BINARY_DIR}/httpcodec.rxbin")
   elseif(_basename STREQUAL "http")
@@ -180,7 +319,7 @@ foreach(_binfile IN LISTS RXFNSG_REXX_BINS)
   add_custom_command(
     OUTPUT "${_binfile}"
     COMMAND $<TARGET_FILE:rxc>
-            -x
+            ${_module_exit_args}
             ${_module_import_args}
             -i "${CMAKE_BINARY_DIR}/bin"
             -o "${_basename}"
@@ -237,6 +376,7 @@ add_test(
   NAME rxunicode_casefold_rxas_shape
   COMMAND ${CMAKE_COMMAND}
     -DRXAS=${CMAKE_CURRENT_BINARY_DIR}/unicode_casefold.rxas
+    -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/unicode_casefold.crexx.in
     -P ${CMAKE_CURRENT_SOURCE_DIR}/../unicode/check_casefold_rxas.cmake
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -244,11 +384,23 @@ set_tests_properties(rxunicode_casefold_rxas_shape PROPERTIES
   LABELS "library;unicode;casefold;levelg;shape")
 
 add_test(
+  NAME rxunicode_grapheme_rxas_shape
+  COMMAND ${CMAKE_COMMAND}
+    -DRXAS=${CMAKE_CURRENT_BINARY_DIR}/unicode_grapheme.rxas
+    -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/unicode_grapheme.crexx.in
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/../unicode/check_grapheme_rxas.cmake
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+set_tests_properties(rxunicode_grapheme_rxas_shape PROPERTIES
+  LABELS "library;unicode;grapheme;levelg;shape")
+
+add_test(
   NAME rxunicode_casefold_contract_surface
   COMMAND ${CMAKE_COMMAND}
     -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/unicode.crexx
     -DDOC=${CMAKE_CURRENT_SOURCE_DIR}/unicode.md
     -DTEST=${CMAKE_CURRENT_SOURCE_DIR}/../tests_functional/ts_unicode_casefold.crexx
+    -DGRAPHEME_TEST=${CMAKE_CURRENT_SOURCE_DIR}/../tests_functional/ts_unicode_grapheme.crexx
     -P ${CMAKE_CURRENT_SOURCE_DIR}/../unicode/check_casefold_contract.cmake
 )
 set_tests_properties(rxunicode_casefold_contract_surface PROPERTIES

@@ -173,6 +173,42 @@ foreach(_unicode_casefold_runner IN LISTS _math_numeric_runners)
     PROPERTIES TIMEOUT 600)
 endforeach()
 
+add_custom_target(ts_unicode_grapheme)
+add_dependencies(testrxfnsg ts_unicode_grapheme)
+
+foreach(_unicode_grapheme_runner IN LISTS _math_numeric_runners)
+  crexx_add_rexx_opt_matrix(
+    LINKED_ALL_MODES
+    NAME "ts_unicode_grapheme_${_unicode_grapheme_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_unicode_grapheme.crexx"
+    TARGET_GROUP ts_unicode_grapheme
+    RUNNER "${_unicode_grapheme_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x
+    DEPENDS
+      library
+      classlib
+      rxfnsg
+      "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+      "${RXUNICODE_GRAPHEME_TEST_DATA}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/ts_unicode_grapheme.crexx"
+    RUNTIME_ARGS
+      ${LIBRPATH}
+      ${CMAKE_BINARY_DIR}/bin/classlib
+      ${RXFNSG_RPATH}
+      -a
+      ${RXUNICODE_GRAPHEME_TEST_DATA}
+    TEST_LABELS
+      "library;unicode;grapheme;levelg;${_unicode_grapheme_runner}"
+    REQUIRED_OUTPUT_REGEX
+      "PASS: rxunicode Unicode 17 default extended graphemes"
+    FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+  set_tests_properties(
+    "ts_unicode_grapheme_${_unicode_grapheme_runner}_noopt"
+    "ts_unicode_grapheme_${_unicode_grapheme_runner}_opt"
+    PROPERTIES TIMEOUT 600)
+endforeach()
+
 unset(_prev_target)
 foreach(_binfile IN LISTS REXXBINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)

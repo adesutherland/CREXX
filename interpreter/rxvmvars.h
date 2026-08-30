@@ -180,6 +180,7 @@ RX_INLINE rxvm_string_metric rxvm_value_narrow_string_metric_or_fail(
 /* Guard-free stores for values already bounded by an accepted byte length. */
 RX_INLINE void rxvm_value_set_string_length_known(
         value *v, rxvm_string_metric length) {
+    v->status.all_type_flags &= ~RXFLAG_LANG_NORMAL_FORM_MASK;
     v->string_length = length;
 }
 
@@ -192,6 +193,7 @@ RX_INLINE void rxvm_value_set_string_chars_known(
 
 RX_INLINE int rxvm_value_try_set_string_length(value *v, size_t length) {
     if (!rxvm_value_string_metric_fits(length)) return -1;
+    v->status.all_type_flags &= ~RXFLAG_LANG_NORMAL_FORM_MASK;
     v->string_length = (rxvm_string_metric)length;
     return 0;
 }
@@ -274,6 +276,29 @@ RX_INLINE void copy_vm_private_flags(value *dest, const value *source) {
     set_vm_private_flags(dest, source->status.all_type_flags);
 }
 
+RX_INLINE void clear_string_normalization_certificates(value *v) {
+    v->status.all_type_flags &= ~RXFLAG_LANG_NORMAL_FORM_MASK;
+}
+
+RX_INLINE void mark_string_normalization_certificates(value *v,
+                                                       uint32_t flags) {
+    v->status.all_type_flags |= flags & RXFLAG_LANG_NORMAL_FORM_MASK;
+}
+
+RX_INLINE void copy_string_normalization_certificates(
+        value *dest, const value *source) {
+    dest->status.all_type_flags =
+            (dest->status.all_type_flags & ~RXFLAG_LANG_NORMAL_FORM_MASK) |
+            (source->status.all_type_flags & RXFLAG_LANG_NORMAL_FORM_MASK);
+}
+
+RX_INLINE int has_string_normalization_certificate(const value *v,
+                                                    uint32_t flag) {
+    uint32_t requested = flag & RXFLAG_LANG_NORMAL_FORM_MASK;
+    return requested &&
+           (v->status.all_type_flags & requested) == requested;
+}
+
 RX_INLINE int value_is_uninitialized_object(const value *v) {
     return v &&
            (v->status.all_type_flags & RXFLAG_VM_OBJECT_UNINITIALIZED) != 0;
@@ -312,13 +337,16 @@ RX_INLINE void mark_ascii_string_valid_count(value *v) {
     v->string_chars = v->string_length;
     string_cache_reset(v);
     mark_utf8_valid_count(v);
+    mark_string_normalization_certificates(v,
+                                           RXFLAG_LANG_NORMAL_FORM_MASK);
 }
 
 RX_INLINE void refresh_utf8_flags(value *v) {
     size_t chars = 0;
     if (!utf8nvalid_count(v->string_value, v->string_length, &chars)) {
         rxvm_value_set_string_chars_known(v, chars);
-        mark_utf8_valid_count(v);
+        if (chars == v->string_length) mark_ascii_string_valid_count(v);
+        else mark_utf8_valid_count(v);
     } else {
         rxvm_value_set_string_chars_known(
                 v, utf8nlen(v->string_value, v->string_length));
@@ -327,7 +355,11 @@ RX_INLINE void refresh_utf8_flags(value *v) {
 }
 
 RX_INLINE void set_utf8_known_concat_flags(value *dest, int left_known, int right_known) {
-    if (left_known && right_known) mark_utf8_valid_count(dest);
+    if (left_known && right_known) {
+        if (dest->string_chars == dest->string_length)
+            mark_ascii_string_valid_count(dest);
+        else mark_utf8_valid_count(dest);
+    }
     else clear_vm_private_flags(dest);
 }
 
@@ -429,6 +461,8 @@ RX_INLINE void value_zero(value *v) {
     string_cache_reset(v);
 #ifndef NUTF8
     v->string_chars = 0;
+    mark_string_normalization_certificates(v,
+                                           RXFLAG_LANG_NORMAL_FORM_MASK);
 #endif
     v->num_attributes = 0;
 
@@ -1293,7 +1327,8 @@ RX_INLINE int set_string_validated(value *v, const char *from, size_t length) {
 #ifndef NUTF8
     rxvm_value_set_string_chars_known(v, chars);
     string_cache_reset(v);
-    mark_utf8_valid_count(v);
+    if (chars == length) mark_ascii_string_valid_count(v);
+    else mark_utf8_valid_count(v);
 #endif
     return 0;
 }
@@ -1313,7 +1348,9 @@ RX_INLINE void set_const_string(value *v, string_constant *from) {
     string_cache_reset(v);
 #ifndef NUTF8
     rxvm_value_set_string_chars_known(v, (rxvm_string_metric)from->string_chars);
-    mark_utf8_valid_count(v);
+    if (from->string_chars == from->string_len)
+        mark_ascii_string_valid_count(v);
+    else mark_utf8_valid_count(v);
 #else
     clear_vm_private_flags(v);
 #endif
@@ -1329,6 +1366,7 @@ RX_INLINE void set_value_string(value *v, value *from) {
 #ifndef NUTF8
     v->string_chars = from->string_chars;
     copy_vm_private_flags(v, from);
+    copy_string_normalization_certificates(v, from);
 #else
     clear_vm_private_flags(v);
 #endif
@@ -1437,6 +1475,7 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
 #endif
     }
     copy_vm_private_flags(dest, source);
+    copy_string_normalization_certificates(dest, source);
 
     /* Copy Binary */
     if (rxvm_value_native_ops(source) &&
@@ -1698,6 +1737,7 @@ RX_INLINE void copy_string_value(value *dest, value *source) {
 #endif
     }
     copy_vm_private_flags(dest, source);
+    copy_string_normalization_certificates(dest, source);
 }
 
 /* Copy binary payload only. Public/compiler/library status flags are not copied. */
@@ -1763,7 +1803,7 @@ RX_INLINE int string_slice_at(value *dest, value *source,
         if (RXVM_VALUE_STRING_CAPACITY(dest) > 0)
             dest->string_value[0] = '\0';
         string_set_ascii_length(dest, 0);
-        mark_utf8_valid_count(dest);
+        mark_ascii_string_valid_count(dest);
         return 0;
     }
 
@@ -1807,7 +1847,11 @@ RX_INLINE int string_slice_at(value *dest, value *source,
 
     string_set_lengths(dest, byte_length, actual_chars);
     null_terminate_string_buffer(dest);
-    if (has_utf8_valid_count(source)) mark_utf8_valid_count(dest);
+    if (has_utf8_valid_count(source)) {
+        if (dest->string_chars == dest->string_length)
+            mark_ascii_string_valid_count(dest);
+        else mark_utf8_valid_count(dest);
+    }
     else clear_vm_private_flags(dest);
     return 0;
 }
@@ -1822,7 +1866,11 @@ RX_INLINE void string_truncate_chars(value *v, size_t char_count) {
     actual_chars = v->string_cache_char_pos;
     string_set_lengths(v, byte_length, actual_chars);
     null_terminate_string_buffer(v);
-    if (was_valid || v->string_length == 0) mark_utf8_valid_count(v);
+    if (was_valid || v->string_length == 0) {
+        if (v->string_chars == v->string_length)
+            mark_ascii_string_valid_count(v);
+        else mark_utf8_valid_count(v);
+    }
     else clear_vm_private_flags(v);
 }
 #else
@@ -1956,7 +2004,11 @@ RX_INLINE void string_append_chars(value *v1, char *value, size_t length) {
         if (!utf8nvalid_count(value, length, &chars)) {
             rxvm_value_set_string_chars_known(
                     v1, v1->string_chars + (rxvm_string_metric)chars);
-            if (had_valid) mark_utf8_valid_count(v1);
+            if (had_valid) {
+                if (v1->string_chars == v1->string_length)
+                    mark_ascii_string_valid_count(v1);
+                else mark_utf8_valid_count(v1);
+            }
             else clear_vm_private_flags(v1);
         } else {
             rxvm_value_set_string_chars_known(

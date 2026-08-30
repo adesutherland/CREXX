@@ -64,7 +64,7 @@ call emit_line path, "    arg tables = .unicode_d..unicodedtables"
 call emit_line path, '    _normalizer = unicode_d_new(tables, "NFD")'
 call emit_line path, '    if _normalizer.status() \= 0 then do'
 call emit_line path, '      construction_error = _normalizer.error()'
-call emit_line path, '      assembler signal "INVALID_ARGUMENTS",construction_error'
+call emit_line path, '      signal invalid_arguments construction_error'
 call emit_line path, "    end"
 call emit_line path, "    return"
 call emit_line path, ""

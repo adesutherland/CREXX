@@ -37,6 +37,7 @@ say "flags-user=" || slot.asUserFlags()
 call slot.clearLibraryFlags()
 say "flags-after-clear-library=" || slot.asPublicFlags()
 say "flags-public-keeps-compiler=" || slot.publicKeepsCompiler()
+say "flags-language=" || slot.asLanguageFlags()
 
 return 0
 
@@ -50,6 +51,7 @@ MappedSlot: class
   library_flags = .int with register.0.flags.library
   user_flags = .int with register.0.flags.user
   compiler_flags = .int with register.0.flags.compiler
+  language_flags = .int with register.0.flags.language
 
   *: factory
     text = ""
@@ -127,6 +129,9 @@ MappedSlot: class
 
   asLibraryFlags: method = .string
     return library_flags as .string
+
+  asLanguageFlags: method = .string
+    return language_flags as .string
 
   asUserFlags: method = .string
     return user_flags as .string

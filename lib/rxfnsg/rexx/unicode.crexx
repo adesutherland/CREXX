@@ -1,7 +1,7 @@
 /*
  * cREXX License (MIT)
  *
- * Pure Level G facade for explicit Unicode case folding.
+ * Pure Level G facade for explicit Unicode text services.
  */
 
 /**
@@ -14,8 +14,9 @@
  */
 options levelg
 
-namespace rxunicode expose toCasefold toSimpleCasefold toTurkicCasefold toTurkicSimpleCasefold casefolder
+namespace rxunicode expose toCasefold toSimpleCasefold toTurkicCasefold toTurkicSimpleCasefold graphemeCount graphemeSubstr graphemePos graphemeReverse casefolder graphemes graphemeiterator
 import _rxunicode
+import data
 
 /**
  * Apply Unicode Default Case Folding using the full mapping.
@@ -63,6 +64,61 @@ toTurkicSimpleCasefold: procedure = .string
   arg text = .string
   return _rxunicode..casefold(text, 3)
 
+/**
+ * Count Unicode default extended grapheme clusters in text.
+ *
+ * @param text valid UTF-8 text
+ * @return number of user-perceived characters under UAX29-C1-1
+ */
+graphemeCount: procedure = .int
+  arg text = .string
+  return _rxunicode..grapheme_count(text)
+
+/**
+ * Return a grapheme-indexed substring using Rexx `SUBSTR` padding semantics.
+ *
+ * Positions and lengths count Unicode default extended grapheme clusters.
+ * The optional pad must itself be exactly one grapheme cluster.
+ *
+ * @param text valid UTF-8 text
+ * @param start one-based grapheme position
+ * @param length optional requested grapheme length
+ * @param pad optional one-grapheme pad, default blank
+ * @return selected and, when necessary, padded text
+ * @signal INVALID_ARGUMENTS start, length, or pad is invalid
+ */
+graphemeSubstr: procedure = .string
+  arg text = .string, start = .int, length = 0, pad = " "
+  length_supplied = ?length
+  return _rxunicode..grapheme_substr(text, start, length, pad, length_supplied)
+
+/**
+ * Find an exact grapheme-aligned string occurrence.
+ *
+ * This operation performs no normalization or case folding. A match must both
+ * start and end on default extended-grapheme boundaries.
+ *
+ * @param needle exact text to find
+ * @param haystack text to search
+ * @param start optional one-based grapheme start, default 1
+ * @return one-based grapheme position, or zero when not found
+ * @signal INVALID_ARGUMENTS start is not positive
+ */
+graphemePos: procedure = .int
+  arg needle = .string, haystack = .string, start = 1
+  return _rxunicode..grapheme_pos(needle, haystack, start)
+
+/**
+ * Reverse text by grapheme cluster while preserving codepoint order inside
+ * each cluster.
+ *
+ * @param text valid UTF-8 text
+ * @return grapheme-reversed text
+ */
+graphemeReverse: procedure = .string
+  arg text = .string
+  return _rxunicode..grapheme_reverse(text)
+
 /** Immutable reusable selector for one Unicode case-fold mode. */
 casefolder: class
   _mode = .int
@@ -107,3 +163,120 @@ casefolder: class
   /** @return Unicode data version used by this folder */
   version: method = .string
     return "17.0.0"
+
+/** Immutable indexed snapshot of one string's grapheme boundaries. */
+graphemes: class
+  _text = .string
+  _offsets = .binary
+  _count = .int
+
+  /**
+   * Prepare and retain one packed boundary index for repeated operations.
+   *
+   * @param text valid UTF-8 text
+   */
+  *: factory
+    arg text = .string
+    _text = text
+    _offsets = _rxunicode..grapheme_boundaries(text)
+    _count = _rxunicode..grapheme_boundary_count(_offsets)
+    return
+
+  /** @return the text captured by this immutable snapshot */
+  text: method = .string
+    return _text
+
+  /** @return number of default extended grapheme clusters */
+  count: method = .int
+    return _count
+
+  /** @return the grapheme cluster at a one-based position */
+  at: method = .string
+    arg position = .int
+    return _rxunicode..grapheme_at(_text, _offsets, position)
+
+  /** @return a grapheme-indexed substring */
+  substr: method = .string
+    arg start = .int, length = 0, pad = " "
+    length_supplied = ?length
+    return _rxunicode..grapheme_substr_indexed(_text, _offsets, start, length, pad, length_supplied)
+
+  /** @return an exact grapheme-aligned match position, or zero */
+  pos: method = .int
+    arg needle = .string, start = 1
+    return _rxunicode..grapheme_pos_indexed(needle, _text, _offsets, start)
+
+  /** @return snapshot text reversed by grapheme cluster */
+  reverse: method = .string
+    return _rxunicode..grapheme_reverse_indexed(_text, _offsets)
+
+  /** @return one-based codepoint start of a grapheme */
+  codepointStart: method = .int
+    arg position = .int
+    return _rxunicode..grapheme_codepoint_start(_offsets, position)
+
+  /** @return codepoint length of a grapheme */
+  codepointLength: method = .int
+    arg position = .int
+    return _rxunicode..grapheme_codepoint_length(_offsets, position)
+
+  /** @return a fresh iterator over this immutable boundary snapshot */
+  iterator: method = .graphemeiterator
+    return .graphemeiterator(_text, _offsets, _count)
+
+  /** @return pinned Unicode data version */
+  version: method = .string
+    return "17.0.0"
+
+  /** @return selected UAX #29 conformance profile */
+  profile: method = .string
+    return "UAX29-C1-1"
+
+/** Forward iterator over an immutable grapheme snapshot. */
+graphemeiterator: class implements .StringIterator
+  _text = .string
+  _offsets = .binary
+  _count = .int
+  _index = .int
+
+  *: factory
+    arg text = .string, offsets = .binary, count = .int
+    _text = text
+    _offsets = offsets
+    _count = count
+    _index = 0
+    return
+
+  /** @return one when another grapheme is available */
+  hasNext: method = .int
+    return _index < _count
+
+  /**
+   * Advance and return the next grapheme.
+   *
+   * @signal OUT_OF_RANGE the iterator is exhausted
+   */
+  next: method = .string
+    if _index >= _count then do
+      call _rxunicode..grapheme_iterator_exhausted
+      return ""
+    end
+    _index = _index + 1
+    return _rxunicode..grapheme_at(_text, _offsets, _index)
+
+  /** @return current one-based position, or zero before the first item */
+  index: method = .int
+    return _index
+
+  /** Reset this iterator to before the first grapheme. */
+  reset: method = .void
+    _index = 0
+    return
+
+  /** @return one-based codepoint start of the current grapheme */
+  codepointStart: method = .int
+    return _rxunicode..grapheme_codepoint_start(_offsets, _index)
+
+  /** @return codepoint length of the current grapheme */
+  codepointLength: method = .int
+    return _rxunicode..grapheme_codepoint_length(_offsets, _index)

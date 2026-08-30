@@ -278,23 +278,37 @@ The VM register/value status word is a `uint32_t` field partitioned in
 `binutils/include/rxflags.h` instead of adding a second flag field:
 
 - `0x000000FF`: VM-private, externally readable but not writable through RXAS
-  flag instructions. This band is reserved first for UTF-8 validity/count and
-  Unicode normalization-form cache bits.
-- `0x0000FF00`: compiler call ABI flags. The current bits are `REGTP_VAL`
+  flag instructions. This band currently carries UTF-8 validity/count and
+  object-lifecycle state.
+- `0x00000300`: compiler call ABI flags. The current bits are `REGTP_VAL`
   (`0x00000100`) and `REGTP_NOTSYM` (`0x00000200`).
+- `0x0000FC00`: protected language metadata. `0x00003C00` currently carries
+  independent positive NFC, NFD, NFKC and NFKD certificates; `0x0000C000`
+  remains reserved.
 - `0x00FF0000`: stable library/runtime ABI flags.
 - `0x7F000000`: user/experimental flags.
 - `0x80000000`: reserved to avoid signed integer ambiguity.
 
 `SETTP`, `SETORTP`, and `LOADSETTP` mask external writes so VM-private bits are
-preserved or cleared only by VM internals. `SETTP` is partition-aware for the
-public bands: a non-zero compiler-band write replaces only compiler flags, a
-non-zero library-band write replaces only library flags, and `SETTP reg,0`
-clears all public flags. This lets compiler call-ABI setup update `REGTP_*`
-without destroying runtime/library cache flags stored on the same value.
+preserved or cleared only by VM internals. Trusted RXAS may explicitly assert
+language certificates, but compiler ABI writes preserve that separate band and
+`SETTP reg,0` does not clear it. Level B exposes `.flags.language` as read-only.
+Non-zero writes replace only the requested public bands. This lets compiler
+call-ABI setup update `REGTP_*` without destroying protected language facts or
+runtime/library flags stored on the same value.
 `GETTP`, `GETANDTP`, and explicit `BRTPANDT` masks may observe readable
-VM-private bits; unmasked `BRTPT` only tests public/external flag bands so VM
-cache bits do not change old branch semantics.
+VM-private and language bits; unmasked `BRTPT` excludes both bands so cached
+facts do not change old branch semantics.
+
+The four normalization bits are positive certificates about the current whole
+`.string` byte span: absence means unknown, not false. Exact whole-string copy
+and owner-local move preserve them. Logical string mutation clears all four;
+empty and known-ASCII production sets all four. A successful normalization
+predicate certifies its source, and normalization certifies its result. NFKD
+also certifies NFD, while NFKC also certifies NFC. Native post-call validation
+conservatively drops non-ASCII certificates because an RXPA plugin may have
+mutated bytes directly. Cross-worker non-ASCII materialization starts unknown;
+the channel format does not carry certificates.
 
 RXAS/RXBIN integer operands remain `rxinteger`. The canonical definition is
 `platform/rxinteger.h`, and Release 1 fixes it to signed 64-bit across the
@@ -302,9 +316,9 @@ compiler, assembler, VM, and RXPA ABI. Host pointer width is not the language
 integer width. Status instructions cast masks to the 32-bit flag word before
 applying the partition.
 Level B flag-view assignments use `SETTPMASK`, a masked replacement operation
-restricted to the source-writable library/user bands, so `.flags.compiler`
-remains read-only to source code while generated call setup can still maintain
-the compiler ABI flags.
+restricted to the source-writable library/user bands, so `.flags.compiler` and
+`.flags.language` remain read-only to source code while generated call setup
+and trusted language algorithms maintain their respective bands.
 
 Regression coverage for the partition and UTF cache contract lives in
 

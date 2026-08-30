@@ -123,12 +123,17 @@ static rxpa_utf8_validation_result rxpa_validate_value_tree(
 #ifndef NUTF8
     {
         size_t chars = 0;
+        /* Native code may have written the payload directly without passing
+         * through an RXVM string setter.  Validate the bytes, but never retain
+         * a non-ASCII certificate supplied before that opaque mutation. */
+        clear_string_normalization_certificates(v);
         if (validate_utf8_bytes(v->string_value, v->string_length, &chars) != 0) {
             return RXPA_UTF8_INVALID;
         }
         rxvm_value_set_string_chars_known(v, chars);
         string_cache_reset(v);
-        mark_utf8_valid_count(v);
+        if (chars == v->string_length) mark_ascii_string_valid_count(v);
+        else mark_utf8_valid_count(v);
     }
 #endif
 

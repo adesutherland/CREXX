@@ -8,16 +8,10 @@
 options levelb
 
 namespace _rxunicode expose casefold
-import _rxsysb
 
 unicode_casefold_constants: procedure expose UNICODE_CASEFOLD_DATA
   /* rxc emits this source constant once and reuses its module-scoped alias. */
   /* @RXUNICODE_CASEFOLD_DATA@ */
-  return
-
-_casefold_failure: procedure
-  arg message = .string
-  call raise "FAILURE", message, ""
   return
 
 _casefold_boot: initialiser
@@ -42,7 +36,7 @@ _casefold_boot: initialiser
      <at..u32>(52) UNICODE_CASEFOLD_DATA \= 2 |,
      <at..u32>(56) UNICODE_CASEFOLD_DATA \= 3 |,
      <at..u32>(60) UNICODE_CASEFOLD_DATA \= data_length then,
-    call _casefold_failure "rxunicode case-fold data is corrupt or unsupported"
+    signal failure "rxunicode case-fold data is corrupt or unsupported"
   return
 
 /**

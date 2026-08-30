@@ -339,9 +339,16 @@ views over the same physical `register.N` slot are complex attributes. The
 compiler copies only the selected typed payload view across the link boundary;
 library/user cache flags are explicit runtime code, not hidden compiler
 side effects. Flag views are direct status-word views: `.flags.vm`,
-`.flags.compiler`, and `.flags.readable` are read-only;
+`.flags.compiler`, `.flags.language`, and `.flags.readable` are read-only;
 `.flags.library`, `.flags.user`, and `.flags.public` are writable. Flag views
 must be `.int`.
+
+`.flags.language` contains protected, language-wide facts such as intrinsic
+`.string` normalization certificates. Ordinary Level B code may inspect this
+view but cannot assign it. A trusted low-level language implementation may use
+explicit RXAS `GETANDTP`/`SETORTP` operations to consume or publish a proven
+fact; doing so without proving the complete current string contents violates
+the runtime contract.
 
 ### Arrays are first-class Level B objects
 

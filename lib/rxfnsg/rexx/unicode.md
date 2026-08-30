@@ -1,8 +1,9 @@
-# `rxunicode` case folding
+# `rxunicode` text services
 
-`rxunicode` provides explicit Unicode 17.0.0 case folding for valid cREXX
-`.string` values. It does not change ordinary equality, Level B `upper` or
-`lower`, normalization, indexing, or `.binary` semantics.
+`rxunicode` provides explicit Unicode 17.0.0 case folding and default extended
+grapheme clusters for valid cREXX `.string` values. It does not change ordinary
+equality, Level B `upper` or `lower`, codepoint indexing, normalization, or
+`.binary` semantics.
 
 ```rexx
 options levelg
@@ -12,7 +13,7 @@ say rxunicode..toCasefold("Straße")       /* strasse */
 say rxunicode..toSimpleCasefold("ẞ")      /* ß */
 ```
 
-## Convenience procedures
+## Case-fold procedures
 
 | Procedure | Unicode mapping |
 | --- | --- |
@@ -63,3 +64,69 @@ say full.version()    /* 17.0.0 */
 The implementation reads one immutable prepared table and iterates with RXVM
 codepoint operations. It does not copy the input through `.binary`, use a
 separate UTF-8 decoder, or materialize UTF-32 input.
+
+## Default extended grapheme clusters
+
+The grapheme family implements UAX #29 revision 47 conformance profile
+`UAX29-C1-1`: the default extended grapheme-cluster rules with no tailoring.
+These boundaries approximate user-perceived characters and keep sequences such
+as a base plus combining marks, emoji ZWJ families, and paired regional
+indicators together.
+
+```rexx
+text = "A" || familyEmoji || "B"
+
+say rxunicode..graphemeCount(text)
+say rxunicode..graphemeSubstr(text, 2, 1)
+say rxunicode..graphemePos(familyEmoji, text)
+say rxunicode..graphemeReverse(text)
+```
+
+| Procedure | Contract |
+| --- | --- |
+| `graphemeCount(text)` | Count default extended grapheme clusters. |
+| `graphemeSubstr(text, start[, length[, pad]])` | Select by one-based grapheme position; with a length, pad on the right to the requested grapheme count. `pad` must be exactly one grapheme. |
+| `graphemePos(needle, haystack[, start])` | Find an exact match whose start and end are both grapheme boundaries; return its one-based grapheme position or zero. |
+| `graphemeReverse(text)` | Reverse cluster order without reversing codepoints inside a cluster. |
+
+None of these operations normalizes or case-folds. Exact codepoint content
+therefore remains significant to `graphemePos`.
+
+## Indexed grapheme snapshot
+
+Repeated indexed work should prepare one immutable view:
+
+```rexx
+view = .rxunicode..graphemes(text)
+
+say view.text()
+say view.count()
+say view.at(2)
+say view.substr(2, 3)
+say view.pos(needle)
+say view.reverse()
+say view.codepointStart(2)
+say view.codepointLength(2)
+say view.version()     /* 17.0.0 */
+say view.profile()     /* UAX29-C1-1 */
+
+iterator = view.iterator()
+do while iterator.hasNext()
+  cluster = iterator.next()
+  say iterator.index() iterator.codepointStart(),
+      iterator.codepointLength() cluster
+end
+```
+
+`codepointStart` is one-based and `codepointLength` is measured in cREXX
+`.string` codepoints, not UTF-8 bytes. The iterator starts at index zero;
+`codepointStart()` and `codepointLength()` require a current item. Calling
+`next()` after exhaustion signals `OUT_OF_RANGE`.
+
+Direct count and bounded substring operations stream codepoints and do not
+allocate a complete boundary vector. `.graphemes(text)` deliberately builds a
+private packed codepoint-boundary index once, then reuses it for access,
+substring, position, reverse, and iteration. The runtime reads one immutable prepared
+property constant using RXVM `STRCHAR` and `BGETU8`; it has no re2c decoder,
+UTF-32 input copy, string/binary conversion, runtime table copy, or VM grapheme
+cache flag.

@@ -398,6 +398,7 @@ static int class_attribute_is_flag_view(Symbol *symbol) {
 static unsigned int class_attribute_flag_mask(Symbol *symbol) {
     if (class_attribute_view_equals(symbol, "flags.vm")) return RXFLAG_VM_PRIVATE_MASK;
     if (class_attribute_view_equals(symbol, "flags.compiler")) return RXFLAG_COMPILER_MASK;
+    if (class_attribute_view_equals(symbol, "flags.language")) return RXFLAG_LANGUAGE_MASK;
     if (class_attribute_view_equals(symbol, "flags.library")) return RXFLAG_LIBRARY_MASK;
     if (class_attribute_view_equals(symbol, "flags.user")) return RXFLAG_USER_MASK;
     if (class_attribute_view_equals(symbol, "flags.public")) return RXFLAG_SOURCE_WRITABLE_MASK;
