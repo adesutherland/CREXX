@@ -197,21 +197,16 @@ uncertified cold values improved:
 
 The durable figures, comparison qualifications and raw build-tree evidence
 paths are recorded in
-`experiments/unicode/nfd-performance/evidence/2026-08-28-normalization-certificate-informal.txt`.
+`performance/evidence/2026-08-28-unicode-normalization-decisions/2026-08-28-normalization-certificate-informal.txt`.
 
 This screen is sufficient for the normalization documentation checkpoint. It
 does not replace a requested formal clean-host, dual-VM or cross-platform
 performance qualification.
 
-If a formal clean-host certificate panel is later requested, the prepared
-command remains:
-
-```sh
-CREXX_UNICODE_COMMON_COMPARE_PREPARED_DIR="$PWD/cmake-build-unicode-release/unicode-common-compare/prepared.k83Z3w" \
-CREXX_UNICODE_COMMON_COMPARE_VARIANT_MODE=certificates \
-CREXX_UNICODE_COMMON_COMPARE_OPERATIONS="nfd nfkd nfc nfkc is-nfd is-nfkd is-nfc is-nfkc" \
-experiments/unicode/nfd-performance/run_common_compare.sh
-```
+The research-only benchmark harness was retired when the product surface was
+integrated. Any future formal clean-host panel must use a retained production
+benchmark with fresh build provenance rather than an old prepared build-tree
+path.
 
 ## Stop Conditions
 

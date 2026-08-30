@@ -102,21 +102,6 @@ records, and direct RXAS binary-memory operations. That target shape should be
 proved by examples before deciding whether to port a generator such as re2c or
 adapt a generator backend to emit cRexx/RXAS directly.
 
-The `unicode` research branch now defines the authored direction in
-[Level L syntax](level_l_syntax.md), beginning with the lexer-maker subset.
-That design is experimental branch documentation, not a claim that the release
-compiler accepts the syntax.
-
-The same branch now retains a Level B-only bootstrap implementation. It
-provides foundational `Token` and AST classes without depending on Level G and
-a deliberately naive, deterministic, fail-fast hand-written scanner/parser for
-the lexer-maker subset. It does not backtrack; an invalid or unsupported
-construct causes a panic at the first offending token. The proof parses
-authored TinyExpr and Unicode-rule lexer specifications and emits deterministic
-cREXX through the retained re2c DFA adapter. Generated lexer/parser
-implementations may later replace the bootstrap after reproducing the same
-tokens, tree, source spans, and diagnostics deterministically.
-
 Levels E and N should be understood in that same tooling sense. They reserve
 clear names for Object Rexx and NetRexx editor support, but they are not cRexx
 runtime or source-compatibility commitments.

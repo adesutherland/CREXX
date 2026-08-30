@@ -1,8 +1,7 @@
 # Level G Unicode Product Surface and Roadmap
 
-Status: the approved Unicode 17.0.0 baseline is implemented on branch
-`unicode`; final branch qualification and commit preparation are recorded
-separately from this enduring design.
+Status: the approved Unicode 17.0.0 product baseline is implemented. Release
+status remains governed by the repository release notes and tags.
 
 Date: 2026-08-30
 
@@ -236,7 +235,7 @@ operations therefore stream, while the explicitly requested view retains its
 index.
 
 Raw evidence and host limitations are retained under
-`experiments/unicode/nfd-performance/evidence/` and
+`performance/evidence/2026-08-28-unicode-normalization-decisions/` and
 `performance/evidence/2026-08-29-unicode-grapheme-first-release-verdict/`.
 
 ## Rejected baseline shapes

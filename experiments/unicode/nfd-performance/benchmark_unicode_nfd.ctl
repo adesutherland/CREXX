@@ -1,8 +1,0 @@
-INPUT gennorm2.rxbin
-INPUT unicode_gennorm2.rxbin
-INPUT unicode_nfd.rxbin
-INPUT unicode_nfd_packed.rxbin
-INCLUDE unicode_nfd
-INCLUDE unicode_nfd_packed
-PRESERVE INLINE
-OUTPUT unicode_nfd_performance_linked

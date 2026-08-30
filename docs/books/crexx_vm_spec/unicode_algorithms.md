@@ -400,7 +400,7 @@ because every recycled activation relinked the very large declared-local
 frame. This showed that an enormous generated method was not a viable product
 shape; it did not show that Unicode classification itself was unsound. See the
 [generated NFD rough
-screen](../../../experiments/unicode/nfd-performance/evidence/2026-08-26-generated-nfd-rough.txt).
+screen](../../../performance/evidence/2026-08-28-unicode-normalization-decisions/2026-08-26-generated-nfd-rough.txt).
 
 The recovered prepared-symbol executor instead used the existing VM `.string`
 decoder, one dense descriptor lookup per scalar, bounded dispatch code, and
@@ -409,7 +409,7 @@ direct output. It returned to approximate parity for call-heavy rows and used
 812 KB and 6.50 MB buffers its median ratios were 0.45x to 0.55x. Host load made
 the exact percentages directional, but it could not explain the disappearance
 of the earlier order-of-magnitude loss. See the [prepared-symbol NFD recovery
-evidence](../../../experiments/unicode/nfd-performance/evidence/2026-08-27-prepared-symbol-nfd-recovery.txt).
+evidence](../../../performance/evidence/2026-08-28-unicode-normalization-decisions/2026-08-27-prepared-symbol-nfd-recovery.txt).
 
 The design conclusion is narrower than “re2c is slow.” re2c remains useful for
 generators that can produce bounded runtime state. Here, `.string` was already
@@ -442,7 +442,7 @@ old exact-only predicate. The selected rule is therefore:
 
 The full figures, host envelope, semantic limits of the Apple control, and raw
 artifact locations are in the [common normalization directional
-evidence](../../../experiments/unicode/nfd-performance/evidence/2026-08-28-common-normalization-directional.txt).
+evidence](../../../performance/evidence/2026-08-28-unicode-normalization-decisions/2026-08-28-common-normalization-directional.txt).
 
 The later informal certificate screen found no significant cold-path
 regression. A positive matching certificate made repeated normalization on the
@@ -450,7 +450,7 @@ unchanged large buffer 26.1x to 133.8x faster and repeated predicates 15.0x to
 166.1x faster. Those numbers validate the certificate mechanism's cost shape,
 not a formal clean-host performance guarantee. See the [normalization
 certificate
-screen](../../../experiments/unicode/nfd-performance/evidence/2026-08-28-normalization-certificate-informal.txt).
+screen](../../../performance/evidence/2026-08-28-unicode-normalization-decisions/2026-08-28-normalization-certificate-informal.txt).
 
 ### Grapheme streaming versus per-call indexing
 

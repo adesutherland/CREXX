@@ -1,6 +1,0 @@
-CaseFolding section bytes: 4501380
-CaseFolding section SHA-256: adcad7115bac03ab2a27737935147a64b67f79777df409ed4cd908e59e162224
-CaseFolding records checked in four modes: 6340
-Unlisted CaseFolding scalar identity checks per mode: 1110479
-Prepared simple/full/default/Turkic case folding: PASS
-Result: PASS

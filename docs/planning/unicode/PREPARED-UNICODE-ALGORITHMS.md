@@ -177,11 +177,10 @@ buffer is transient, up to three already consumed prefix bytes: one lead byte
 plus at most two continuations. A chunk boundary is never automatically a
 Unicode algorithm boundary.
 
-## Current CREXX NFD Execution Shape
+## Historical Scalar NFD Execution Shape
 
-The current proof in
-[`unicode_nfd.crexx`](../../../experiments/unicode/level-l-bootstrap/unicode_nfd.crexx)
-is a correct scalar-sequence baseline rather than a direct byte transducer. Its
+The first conformant scalar-sequence baseline was not a direct byte transducer.
+Its
 `normalize` method:
 
 1. gets the code-point length;
@@ -407,13 +406,16 @@ path need not retain runtime recursive decomposition as a fallback. The exact
 fallback is the general stable CCC accumulator. A corrupt or wrong-version
 prepared image should fail closed.
 
-### Experimental D-Form Implementation Result
+### D-Form Proof Result And Product Succession
 
-The Unicode branch now implements the proved D-form shape in
-[`unicode_data.crexx`](../../../experiments/unicode/level-l-bootstrap/unicode_data.crexx)
-and
-[`unicode_d.crexx`](../../../experiments/unicode/level-l-bootstrap/unicode_d.crexx).
-This is a correctness and operation-shape proof, not a production library.
+The research implementation established the proved D-form shape before the
+product generator and executor adopted its prepared-data conclusions. The
+maintained sources are now under
+[`lib/rxfnsg/unicode/tools`](../../../lib/rxfnsg/unicode/tools/) and the public
+surface is generated through
+[`lib/rxfnsg/rexx/CMakeLists.txt`](../../../lib/rxfnsg/rexx/CMakeLists.txt).
+The figures below describe the historical correctness and operation-shape
+proof, not a second production library.
 
 The generator parses pinned Unicode 17.0.0 `UnicodeData.txt`, constructs
 canonical and compatibility typed ASTs, calculates recursive closure, orders
@@ -443,11 +445,11 @@ an inversion. A long adversarial fixture proves that fallback is exercised.
 
 The first hand-written string path used an experimental raw string-byte RXAS
 surface. Its rough Release result was materially slower than the scalar NFD
-baseline, so that instruction experiment was rolled back. The retained oracle
-now uses the existing explicit string/binary conversions. The prepared NFD
-successor instead lowers these classifications to a generated re2c/Level L
-scanner; a future no-copy input view remains a separate decision that requires
-evidence from the generated algorithm.
+baseline, so that instruction experiment was rolled back. A later generated
+re2c/Level L route proved the prepared scalar partition but was rejected as the
+runtime shape. The production executor instead lets RXVM decode `.string`
+codepoints with `STRCHAR`, reads one compiler-shared prepared constant, and
+emits directly with `APPENDCHAR`; it makes no input `.binary` copy.
 
 That generated successor now passes the same Unicode 17 NFD relations and
 unlisted-scalar identity audit in optimized and noopt images on both VMs. Its
@@ -464,8 +466,9 @@ engine before another performance claim.
 Both optimized and non-optimized images pass identically on both VM families:
 20,034 `NormalizationTest.txt` rows, 200,340 NFD/NFKD relations, 1,094,978
 unlisted-scalar identity checks per form, focused boundary/Hangul/Quick_Check
-cases, and strict malformed UTF-8 rejection. This establishes conformance for
-the contiguous-buffer D-form PoC. Arbitrary chunk splitting remains open.
+cases, and strict malformed UTF-8 rejection. This established conformance for
+the contiguous-buffer D-form proof. Arbitrary chunk splitting remains a
+separate streaming roadmap item.
 
 ## NFC And NFKC
 
@@ -645,10 +648,10 @@ set is narrower; actual encounter frequency is workload-dependent. Its fast
 path is theoretically valid, and it should follow, not precede, a proved NFC
 composer.
 
-### Experimental C-Form Implementation Result
+### C-Form Proof Result And Product Succession
 
-The Unicode branch now implements the fused fallback in the same prepared
-engine as NFD/NFKD. `unicode_normprops.crexx` parses and audits all 1,120
+The prepared C-form proof implemented the fused fallback in the same engine as
+NFD/NFKD. `unicode_normprops.crexx` parses and audits all 1,120
 normative `Full_Composition_Exclusion` scalars. Generation selects exactly 961
 non-Hangul Primary Composite pairs, sorts them under 391 starters, and emits a
 portable starter directory plus second/composite pair arrays. The largest
@@ -671,10 +674,12 @@ Optimized and compiler/assembler-noopt images pass identically on `rxtvm` and
 Unicode 16/17 cross-source counterexample, exclusions, D117 blocking, chained
 composition, Hangul, malformed UTF-8, and binary-result parity.
 
-This closes the fused-composer correctness PoC. It does not yet implement the
-allocation-avoiding C-form Quick_Check/stable-region path described above;
-`is_normalized` currently normalizes and compares for NFC/NFKC. That remaining
-work is a performance optimization, not part of the equivalence proof.
+This closed the fused-composer correctness proof. The product path subsequently
+added official NFC/NFKC Quick_Check data: predicates reject `No`, accept an
+ordered all-`Yes` scan, and use the exact allocation-free streamer for `Maybe`.
+Transforming calls do not pay an unconditional preliminary scan. The current
+algorithm and its qualification boundary are described in the [Unicode
+algorithm appendix](../../books/crexx_vm_spec/unicode_algorithms.md).
 
 ## Case Folding
 

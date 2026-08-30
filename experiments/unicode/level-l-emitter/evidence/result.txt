@@ -1,7 +1,0 @@
-generated source: byte-identical
-state dispatch: .jtable and jumpi
-binary scan: bgetu8
-token stores: bsetu16, bsetu32, bseti64
-linked image: level_l_re2c_linked.rxbin
-rxtvm: PASS
-rxbvm: PASS
