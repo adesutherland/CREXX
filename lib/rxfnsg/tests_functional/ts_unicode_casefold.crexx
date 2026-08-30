@@ -24,24 +24,7 @@ if tables.byte_length() \= 4501380 | tables.record_count() \= 1585 |,
   return 1
 end
 
-full = .rxunicode..casefolder.full()
-simple = .rxunicode..casefolder.simple()
-turkic = .rxunicode..casefolder.turkic()
-turkic_simple = .rxunicode..casefolder.turkicSimple()
-
 failures = 0
-if full.mode() \= "FULL" | simple.mode() \= "SIMPLE" |,
-   turkic.mode() \= "TURKIC_FULL" |,
-   turkic_simple.mode() \= "TURKIC_SIMPLE" then do
-  say "FAIL: casefolder named factory mode contract"
-  failures = failures + 1
-end
-if full.version() \= "17.0.0" | simple.version() \= "17.0.0" |,
-   turkic.version() \= "17.0.0" | turkic_simple.version() \= "17.0.0" then do
-  say "FAIL: casefolder Unicode version contract"
-  failures = failures + 1
-end
-
 failures = failures + expect_default_full("TUTOR sharp s",,
   "0053 0074 0072 0061 00DF 0065", "0073 0074 0072 0061 0073 0073 0065")
 failures = failures + expect_simple("simple capital sharp s", "1E9E", "00DF")
@@ -53,13 +36,78 @@ failures = failures + expect_turkic_simple("Turkic simple I", "0049 0130", "0131
 failures = failures + expect_default_full("full Armenian expansion", "0587", "0565 0582")
 failures = failures + expect_default_full("non-BMP mapping", "10400", "10428")
 failures = failures + expect_default_full("identity emoji", "01F600", "01F600")
+source = .string
+expected = .string
 
-focused = hex_sequence_to_string("0053 0074 0072 0061 00DF 0065")
-if full.fold(focused) \== toCasefold(focused) |,
-   simple.fold(focused) \== toSimpleCasefold(focused) |,
-   turkic.fold(focused) \== toTurkicCasefold(focused) |,
-   turkic_simple.fold(focused) \== toTurkicSimpleCasefold(focused) then do
-  say "FAIL: reusable casefolder differs from convenience procedures"
+/* Read the normative file independently of the table compiler used at build
+ * time. This prevents a shared parser mistake from becoming its own oracle. */
+raw_lines = readlines(argv[1])
+raw_counts = .int[]
+do raw_index = 1 to 4
+  raw_counts[raw_index] = 0
+end
+raw_checks = 0
+do line_number = 1 to raw_lines[0]
+  raw_line = raw_lines[line_number]
+  comment = pos("#",raw_line)
+  if comment > 0 then raw_line = left(raw_line,comment - 1)
+  raw_line = strip(raw_line)
+  if raw_line = "" then iterate
+  fields = qsplit(raw_line,";")
+  if fields[0] < 3 then do
+    say "FAIL: malformed raw CaseFolding record at line" line_number
+    failures = failures + 1
+    iterate
+  end
+  source_hex = strip(fields[1])
+  status = strip(fields[2])
+  expected_hex = strip(fields[3])
+  source = hex_sequence_to_string(source_hex)
+  expected = hex_sequence_to_string(expected_hex)
+  select status
+    when "C" then do
+      raw_counts[1] = raw_counts[1] + 1
+      if toSimpleCasefold(source) \== expected |,
+         toCasefold(source) \== expected then do
+        say "FAIL: raw common CaseFolding relation at line" line_number
+        failures = failures + 1
+      end
+      raw_checks = raw_checks + 2
+    end
+    when "S" then do
+      raw_counts[2] = raw_counts[2] + 1
+      if toSimpleCasefold(source) \== expected then do
+        say "FAIL: raw simple CaseFolding relation at line" line_number
+        failures = failures + 1
+      end
+      raw_checks = raw_checks + 1
+    end
+    when "F" then do
+      raw_counts[3] = raw_counts[3] + 1
+      if toCasefold(source) \== expected then do
+        say "FAIL: raw full CaseFolding relation at line" line_number
+        failures = failures + 1
+      end
+      raw_checks = raw_checks + 1
+    end
+    when "T" then do
+      raw_counts[4] = raw_counts[4] + 1
+      if toTurkicSimpleCasefold(source) \== expected |,
+         toTurkicCasefold(source) \== expected then do
+        say "FAIL: raw Turkic CaseFolding relation at line" line_number
+        failures = failures + 1
+      end
+      raw_checks = raw_checks + 2
+    end
+    otherwise do
+      say "FAIL: unknown raw CaseFolding status at line" line_number
+      failures = failures + 1
+    end
+  end
+end
+if raw_counts[1] \= 1481 | raw_counts[2] \= 31 |,
+   raw_counts[3] \= 104 | raw_counts[4] \= 2 | raw_checks \= 3101 then do
+  say "FAIL: raw CaseFolding status/count audit"
   failures = failures + 1
 end
 
@@ -125,6 +173,7 @@ end
 
 if failures > 0 then return 1
 say "CaseFolding records checked in four modes:" record_checks
+say "Independent raw CaseFolding relations:" raw_checks
 say "Unlisted CaseFolding scalar identity checks per mode:" identity_checks
 say "PASS: rxunicode default full simple and Turkic case folding"
 return 0

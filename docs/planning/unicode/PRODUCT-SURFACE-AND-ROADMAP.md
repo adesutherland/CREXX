@@ -1,335 +1,315 @@
-# Level G Unicode Product Surface And Roadmap
+# Level G Unicode Product Surface and Roadmap
 
-Status: normalization design and evidence checkpoint captured;
-`UNICODE-CERT-01` implemented with an informal Release screen green; compiler
-constant lowering and the production Level G case-fold family are implemented;
-the approved UAX #29 grapheme family has completed local qualification and is
-ready for the final branch commit. Public normalization extraction remains
-pending.
-
-Branch: `unicode`
+Status: the approved Unicode 17.0.0 baseline is implemented on branch
+`unicode`; final branch qualification and commit preparation are recorded
+separately from this enduring design.
 
 Date: 2026-08-30
 
 ## Purpose
 
-This note preserves the product direction selected from the TUTOR compatibility
-review and the prepared-table Unicode proof. It separates the intended public
-Level G surface from the experimental generator, table compiler, benchmark and
-bootstrap classes so that later cache work cannot accidentally redefine the
-Unicode API.
+This document records the selected public boundary, ownership rules, execution
+architecture, TUTOR alignment, rejected alternatives, and follow-on roadmap for
+cREXX Unicode services. Public usage belongs in the [Unicode text services
+chapter](../../books/crexx_library_reference/unicode.md); implementation detail
+belongs in the [Unicode algorithm
+appendix](../../books/crexx_vm_spec/unicode_algorithms.md) and
+[`CREXX_UNICODE.md`](../../ai-context/CREXX_UNICODE.md).
 
-The first production slice is explicit Unicode normalization. It is not an
-implicit change to `.string`, comparison, assignment, identifiers, source
-parsing or I/O.
+The baseline is an explicit Level G service. It does not redefine `.string`,
+comparison, assignment, identifiers, source parsing, ordinary BIF indexes, or
+text I/O.
 
-## Normalization Documentation Checkpoint
-
-This checkpoint freezes the approved normalization boundary before compiler
-constant lowering and later Unicode families begin. It is a design and
-evidence checkpoint, not a claim that `rxunicode` is installed, released or
-available from a production library.
-
-The following decisions are closed for the normalization slice:
-
-- normalization is an explicit Level G `.string` service and never an implicit
-  `.string` conversion or equality rule;
-- the four TUTOR-compatible convenience names are `toNFD`, `toNFC`, `toNFKD`
-  and `toNFKC`, with corresponding `is*` predicates;
-- the reusable normalizer has one fixed form and serial, task-local scratch
-  ownership; exact factory spelling remains a source-compilation gate;
-- `.binary`, lexer, mapping, generator and mutable-table surfaces are not
-  public normalization APIs;
-- all four algorithms use RXVM codepoint operations and one immutable prepared
-  Unicode 17.0.0 image; and
-- the four language-owned certificates are positive whole-string facts whose
-  absence means unknown, whose exact-copy/mutation rules are fixed below.
-
-The frozen implementation passes the complete four-form Unicode 17.0.0
-normalization and predicate harness under both VMs, optimized and no-opt. Its
-optimized RXAS shape uses `STRCHAR`, direct prepared-table reads and
-`APPENDCHAR`, with no input `.string`/`.binary` conversion and no per-normalizer
-table image.
-
-The first deliberately informal certificate screen used the profiling-off
-Release product VM on battery with moderate desktop load. Every cell retained
-zero Unicode mismatches. Against the earlier pre-certificate directional run,
-large-buffer normalization was 2.33% to 5.83% faster and like-for-like cold
-large-buffer predicates ranged from 1.72% faster to 3.79% slower. Certified
-large-buffer hits were 26.1x to 133.8x faster for normalization and 15.0x to
-166.1x faster for predicates. This rejects an obvious material regression but
-is not a formal clean-host or dual-VM performance verdict. Exact figures and
-scope are retained in
-`experiments/unicode/nfd-performance/evidence/2026-08-28-normalization-certificate-informal.txt`.
-
-The compiler now owns named binary-constant reuse and the experimental sealer
-has been removed. The slice remains unclosed as a product until sources/data
-move out of `experiments/`, the private implementation and public facade are
-extracted, and proportional integration, packaging and sanitizer qualification
-pass.
-
-## Language Boundary
+## Product boundary
 
 - Level B `.string` remains valid UTF-8 with codepoint-based operations.
 - Level B `.binary` remains arbitrary bytes.
-- Level G owns explicit normalization, full case folding, Unicode properties,
-  collation and segmentation.
-- The first product slice covers NFC, NFD, NFKC and NFKD only.
-- Compatibility normalization must be documented as potentially removing
-  distinctions.
-- Case folding, codecs, grapheme boundaries, properties, security profiles and
-  collation are later independently approved surfaces under the same
-  `rxunicode` namespace.
-- No operation silently normalizes its input or changes ordinary string
-  equality.
+- Level G owns explicit normalization, full default case mapping, folding,
+  segmentation, and byte/text codecs.
+- Ordinary equality and hashing remain exact; no operation normalizes or folds
+  implicitly.
+- Versioned public Unicode algorithms advance together and are reported by
+  `rxunicode..version()`.
+- Generated tables and private numeric selectors are not public API.
+- A service may use immutable task-local working state internally, but only an
+  object with a distinct user-visible capability is public.
 
-## Proposed Public Surface
+## Approved baseline surface
 
-The TUTOR-compatible convenience procedures are:
+The namespace query is:
 
-```rexx
-import rxunicode
-
-nfd  = rxunicode..toNFD(text)
-nfc  = rxunicode..toNFC(text)
-nfkd = rxunicode..toNFKD(text)
-nfkc = rxunicode..toNFKC(text)
-
-if rxunicode..isNFD(text) then ...
-if rxunicode..isNFC(text) then ...
-if rxunicode..isNFKD(text) then ...
-if rxunicode..isNFKC(text) then ...
+```text
+version() = .string
 ```
 
-Each `to*` procedure accepts and returns `.string`. Each `is*` procedure
-accepts `.string` and returns `.boolean`.
+Normalization is eight direct procedures:
 
-A reusable public normalizer class complements the convenience procedures. A
-normalizer has one fixed form selected by a named `nfd`, `nfc`, `nfkd` or
-`nfkc` factory and provides:
+```text
+toNFD(text = .string) = .string
+toNFC(text = .string) = .string
+toNFKD(text = .string) = .string
+toNFKC(text = .string) = .string
+isNFD(text = .string) = .boolean
+isNFC(text = .string) = .boolean
+isNFKD(text = .string) = .boolean
+isNFKC(text = .string) = .boolean
+```
 
-- `normalize(.string) returns .string`;
-- `isNormalized(.string) returns .boolean`;
-- `form() returns .string`; and
-- `version() returns .string`.
+Default casing and folding are:
 
-One normalizer instance may reuse its scratch storage across serial calls by
-one task. It is not concurrently callable. The convenience procedures use
-isolated per-call state. A caller that needs parallel normalization creates one
-normalizer per task.
+```text
+toUppercase(text = .string) = .string
+toLowercase(text = .string) = .string
+toCasefold(text = .string) = .string
+toSimpleCasefold(text = .string) = .string
+toTurkicCasefold(text = .string) = .string
+toTurkicSimpleCasefold(text = .string) = .string
+```
 
-The product surface does not expose:
+There is no reusable case-folder or normalizer object because neither retains
+useful state between independent calls. Titlecase, simple upper/lower, and
+locale-tailored case conversion are not in the baseline.
 
-- `.binary` normalization overloads or implicit binary decoding;
-- the experimental `lexer_*` or mapping hooks;
-- table compiler, generator or sealing classes;
-- numeric form selectors such as `normalize(text, 2)`;
-- a stringly typed `normalize(text, "NFC")`; or
-- mutable access to the prepared data image.
+Default extended grapheme operations are:
 
-Malformed bytes do not enter through `.string`. Corrupt generated data or an
-internal invariant failure raises `FAILURE`; invalid public arguments raise the
-ordinary typed/argument signal selected by the final Level G API review.
+```text
+graphemeCount(text) = .int
+graphemeSubstr(text, start[, length[, pad]]) = .string
+graphemePos(needle, haystack[, start]) = .int
+graphemeReverse(text) = .string
+```
 
-## Algorithm Contract
+`.graphemes(text)` is an immutable indexed snapshot for repeated random access,
+search, reversal, and iteration. Direct count and bounded substring remain
+streaming.
 
-All four forms use the prepared Unicode 17.0.0 data and the RXVM `.string`
-codepoint path:
+The whole-value byte/text boundary is:
 
-- iterate the input with codepoint operations supplied by RXVM;
-- do not copy the input through `.binary`;
-- do not use a separate re2c UTF-8 decoder or materialize a UTF-32 input array;
-- read the shared prepared table directly;
-- emit the result as `.string`; and
-- retain one exact canonical algorithm as authority for every difficult case.
+```text
+encode(text = .string[, encoding = "UTF-8"[, replacement = .binary]]) = .binary
+decode(data = .binary[, encoding = "UTF-8"[, replacement = .string]]) = .string
+isDecodable(data = .binary[, encoding = "UTF-8"]) = .boolean
+isEncodingSupported(encoding = .string) = .boolean
+```
 
-NFD and NFKD use prepared recursive decomposition plus stable canonical
-combining-class ordering. NFC and NFKC feed the same decomposed/ordered stream
-directly into the canonical composer, including Hangul, composition exclusions
-and blocking.
+Supported families are UTF-8, explicit-endian UTF-16/UTF-32, US-ASCII,
+ISO-8859-1, Windows-1252, IBM437, IBM850, and IBM1047. Strict conversion is the
+default. An explicitly supplied, non-empty typed third argument opts into
+replacement. Codecs neither add nor consume a BOM as metadata.
 
-NFD/NFKD predicates use their exact decomposition/order checks. NFC/NFKC
-predicates use official Quick_Check data: `No` rejects immediately, an ordered
-all-`Yes` scan accepts, and the first `Maybe` transfers immediately to the
-exact allocation-free predicate. The product path must not scan the rest of a
-large buffer before taking an inevitable exact fallback.
+Level B `readbinary(path)` and `writebinary(path, data)` provide complete-file
+byte I/O so applications can compose file transport with codecs immediately.
+They do not imply an incremental stream codec.
 
-Transforming `to*` calls do not automatically run a separate predicate pass.
-They may first use a trustworthy content certificate, if the separately
-approved cache architecture provides one, and otherwise perform one prepared
-transformation. A size heuristic or precheck is admitted only by comparative
-Release evidence.
+## Execution architecture
 
-## Prepared Data And Build Boundary
+Normalization, default case mapping, folding, and grapheme segmentation use
+the RXVM `.string` codepoint path:
 
-- Unicode data is pinned to 17.0.0 with upstream URL, licence and checksum.
-- Generation is deterministic and fails closed on unexpected version or input
-  shape.
-- The generated normalization runtime reads one compiler-emitted,
-  module-scoped binary `.const` item. The current prepared image is 11,237,664
-  bytes.
-- No normalizer object owns or copies the image.
-- The generator and UCD parser are build tools, not public runtime classes.
-- Product sources must not depend permanently on an `experiments/` path.
-- `rxc` now retains one shared compiler-side payload, emits one named binary
-  constant and makes exact uses reference that pool item. The former textual
-  RXAS sealing program and sidecar format are removed from the build.
+- obtain the scalar count with `STRLEN`;
+- read sequential scalars with `STRCHAR`;
+- classify from one compiler-owned immutable prepared constant;
+- retain only the algorithm's bounded semantic state; and
+- emit through `APPENDCHAR` or record codepoint boundaries.
 
-The initial product retains the portable fixed-width table layout. The
-host-native packed and load/convert-once layouts remain measured alternatives;
-the existing directional evidence does not select their production use.
+This makes RXVM the single authority for decoding a valid `.string`. It avoids
+an input `.binary` copy, a second re2c UTF-8 decoder, and a complete UTF-32
+materialization.
 
-## Cache Boundary
+Normalization prepares recursive decomposition, canonical combining classes,
+composition data, and Quick_Check. NFD/NFKD stably merge combining marks across
+source-scalar boundaries. NFC/NFKC compose the ordered stream directly,
+including Hangul and blocking. Predicates use exact checks; NFC/NFKC may decide
+with Quick_Check and fall back exactly on the first `Maybe`.
 
-Normalization certificates describe `.string` contents. They are not
-VM-internal UTF-8 bookkeeping, compiler call flags or arbitrary class-local
-bits.
+Transform calls do not run an unconditional predicate first. A positive
+matching normalization certificate may return immediately; otherwise the
+transform performs one pass. This avoids making changed large buffers pay for
+two complete scans.
 
-The dormant `RXFLAG_VM_NORMAL_*` definitions are rejected as an ownership
-decision. The selected `UNICODE-CERT-01` design puts four positive certificates
-in a protected language sub-band beside, but logically separate from, the two
-compiler call-ABI bits. The class/library flag band remains free for each class
-to interpret independently.
+Default uppercase/lowercase uses full mappings; lowercase implements the
+Unicode `Final_Sigma` context using prepared `Cased` and `Case_Ignorable`
+properties. Case folding remains a scalar-to-sequence concatenation for its
+selected default/simple/Turkic mode. Grapheme segmentation applies UAX #29
+revision 47 GB3 through GB999.
 
-The exact selected layout and mutation/copy contract are controlled by
-`performance/UNICODE-CERT-01-WORKLIST.md`. Absence of a certificate means
-unknown, never false; the algorithms remain correct without cache state; and
-cached state is an optimization, not part of the visible result contract.
-Numeric conversion provenance/context caching remains separately controlled by
-`performance/VALUE-CACHE-01-WORKLIST.md` and is not selected.
+UTF codecs are algorithmic. ASCII and ISO-8859-1 use range mapping. Each
+table-backed single-byte encoding has a dense 256-entry decoder and a
+page-bounded sorted reverse index. The exact target-byte replacement contract
+avoids pretending that `?` has the same byte in ASCII and EBCDIC.
 
-Four independent bits are used because one string may satisfy several forms
-simultaneously. A separate `NORMAL_KNOWN` bit is unnecessary. Exact
-whole-string copies preserve certificates; content mutation clears them; known
-ASCII and empty-string production certifies all four forms without scanning.
+## Constant and cache ownership
 
-## User And AI Foundation
+Every prepared data image is a module-scoped source binary constant. `rxc`
+shares one source payload and emits one named RXAS constant; `rxas` and
+`rxlink` keep one constant-pool value. Runtime table reads name that value
+directly. No object or call copies the table.
 
-The product slice includes:
+Normalization certificates describe `.string` content. They are neither VM
+UTF-8 bookkeeping nor class-private application flags. The selected
+`UNICODE-CERT-01` layout uses four independent positive facts in a protected
+language-owned flag sub-band:
 
-- RexxDoc for every public procedure, factory and method, including `@param`,
-  `@return`, signals, compatibility warnings and examples;
-- a user guide explaining when each form is appropriate and when normalization
-  is intentionally absent;
-- `docs/ai-context/CREXX_UNICODE.md` with the source map, algorithm invariants,
-  data provenance, generation command, cache rules and failure modes;
-- executable examples using the exact public names;
-- a contract test that every public name is documented and exercised; and
-- a version query returning the Unicode data version used by the runtime.
+- known NFD;
+- known NFC;
+- known NFKD; and
+- known NFKC.
 
-## Production Roadmap
+Absence means unknown, never false. Exact whole-value copies preserve the
+facts; content mutation clears them; known ASCII and empty production may set
+all four. The VM participates in invalidation because it owns mutation, but
+applications cannot inspect or set certificates. Algorithms remain correct
+without cache state. The detailed contract is
+`performance/UNICODE-CERT-01-WORKLIST.md`.
 
-The selected closure sequence is:
+Numeric conversion caching remains separate under
+`performance/VALUE-CACHE-01-WORKLIST.md`. It requires numeric-context
+provenance and must not borrow Unicode certificate bits or semantics.
 
-1. capture this normalization documentation and evidence checkpoint;
-2. make `rxc` emit one module-local named binary constant for a source-level
-   constant, remove the Unicode RXAS sealing pass, and close normalization
-   product extraction;
-3. completed on this branch: productize default full case folding as
-   `toCasefold`, with `toSimpleCasefold`, `toTurkicCasefold`,
-   `toTurkicSimpleCasefold` and reusable `.casefolder` factories explicit;
-4. productize UAX #29 extended-grapheme boundaries, then build explicitly named
-   count, slicing and iteration operations on that one boundary engine; and
-5. complete final cross-family user, AI, packaging and qualification material.
+## Prepared data boundary
 
-The RXAS assembler already deduplicates final binary constant-pool values. Step
-2 fixes compiler output ownership and textual RXAS scaling: `rxc`, not a
-Unicode-specific postprocessor, must emit the existing module-scoped constant
-alias once and reference it at every use. It must not replace the direct
-read-only operand with a mutable global register or runtime table copy.
+Pinned UCD inputs, sources, terms, and checksums are under
+`lib/rxfnsg/unicode/data/unicode-17.0.0/`. TUTOR-compatible legacy mapping
+inputs and their provenance are under `lib/rxfnsg/unicode/data/legacy/`.
 
-The compiler-lowering and sealer-removal portion of step 2 is implemented on
-this branch. Optimized and no-opt compiler shape tests cover one payload and
-repeated alias operands; the complete dual-VM Unicode harness passes with the
-11,237,664-byte generated source constant. Moving the runtime and data into the
-product tree and extracting the private/public class boundary remain the next
-normalization-product work, not an implication of this compiler change.
+The deterministic build emits these checked images:
 
-Step 3 is implemented as a pure Level G `rxunicode` facade over a private Level
-B `_rxunicode` executor. The executor reads one 4,501,380-byte product-owned
-Unicode 17.0.0 case-fold constant directly and iterates `.string` inputs with
-RXVM codepoint operations. It has no table attribute, binary input conversion,
-re2c decoder or UTF-32 materialization. Deterministic generation verifies the
-pinned source checksum and prepared counts. Complete four-mode listed-record
-and unlisted-scalar identity tests pass optimized and no-opt under both VM
-families; an RXAS test locks the direct constant/codepoint shape. Folding does
-not normalize implicitly. The later normalization product extraction may
-converge separately prepared sections into a common product data module only if
-that preserves these public and constant-ownership contracts.
+| Family | Image size | Principal audit |
+| --- | ---: | --- |
+| normalization | 6,736,284 bytes | 2,081 NFD and 5,914 NFKD mappings, 55 CCC ranks |
+| default case mapping | 4,590,140 bytes | 3,037 mapping records, 4,632 cased scalars |
+| case folding | 4,501,380 bytes | 1,585 records, 1,707 components |
+| grapheme properties | 1,114,176 bytes | complete codepoint property byte plus header |
+| legacy encodings | 14,536 bytes | four encodings and 1,024 source mappings |
 
-Step 4 selects Unicode 17.0.0 UAX #29 revision 47 default extended grapheme
-clusters (`UAX29-C1-1`) without tailoring. The public direct surface is
-`graphemeCount`, `graphemeSubstr`, `graphemePos`, and `graphemeReverse`.
-`.rxunicode..graphemes(text)` is an immutable indexed snapshot with `text`,
-`count`, `at`, `substr`, `pos`, `reverse`, `codepointStart`,
-`codepointLength`, `iterator`, `version`, and `profile`; its iterator adds
-`hasNext`, `next`, `index`, `reset`, `codepointStart`, and `codepointLength`.
+Generation fails closed on an unexpected version, checksum, record count,
+scalar, duplicate, or layout. Private runtime initializers repeat exact magic,
+version, size, count, and bounds checks.
 
-One private scanner implements GB3 through GB999. Direct count and bounded
-substring stream without a complete boundary vector. The explicit view alone
-builds and retains a packed codepoint-boundary index, which its indexed
-operations, including substring, reuse. The 1,114,176-byte prepared property
-image packs GCB, Extended_Pictographic, and InCB in one compiler-owned constant
-and is read with RXVM `STRCHAR`/`BGETU8`. There is no re2c UTF-8 decoder or
-UTF-32 materialization, no `.string`/`.binary` conversion, runtime table copy,
-implicit normalization or folding, ordinary-BIF change, new runtime string
-type, or VM grapheme flag.
-Per-call full indexing for direct operations and mutable/shared grapheme caches
-are rejected for this stage. The mandatory first Release performance verdict
-used a 49,152-byte/7,168-grapheme buffer and twelve balanced/interleaved
-observations per cell. Per-call indexing was 1.802% to 2.953% slower than the
-streaming direct path across count, bounded substring, and both VMs. Adrian's
-direction to proceed accepts that verdict: direct operations retain streaming,
-while the explicit reusable view retains its index. Raw samples, host state,
-and artifact provenance are retained in
+## TUTOR alignment
+
+TUTOR is used as a catalogue of Unicode problems and Rexx-friendly names, not
+as a replacement for cREXX's type system.
+
+Selected common vocabulary includes `toNFD`, `toNFC`, compatibility
+normalization names, `is*` predicates, `toCasefold`, `encode`, `decode`, and
+familiar encoding aliases. The legacy table compiler accepts TUTOR Format A
+mapping inputs; cREXX then emits its own versioned immutable image.
+
+The deliberate differences are:
+
+- `.binary` and valid UTF-8 `.string` remain the fundamental byte/text types;
+- grapheme semantics are explicit procedures and a view, not a coercible string
+  kind;
+- normalization is never a property silently imposed on ordinary text;
+- strict conversion is default and replacement is typed and explicit;
+- no Y/P/G/T/U literal family or mutable global coercion policy is added; and
+- encoded streams wait for a typed incremental I/O design.
+
+This preserves useful common source vocabulary only where Unicode version,
+error policy, endian policy, and indexing unit also align.
+
+## Selected performance findings
+
+The retained measurements select architecture; they are not portable throughput
+promises.
+
+The generated NFD byte-DFA expanded to 3,440 states, 6,455 method locals, and
+172,334 optimized RXAS lines. It measured 84.0x to 101.1x slower on short-call
+rows and 8.8x to 9.0x slower on the retained 101,506-byte buffer. Returning to
+VM codepoints and prepared scalar descriptors removed that order-of-magnitude
+loss and restored approximate canonical parity or better large-buffer results.
+
+Across the common normalization family, final directional ratios ranged from
+0.940x to 1.103x. Quick_Check greatly improved mixed predicates but a large
+known-normalized `Maybe` buffer could pay for a full preliminary scan plus exact
+fallback. The selected split is therefore Quick_Check for predicates,
+certificates for known transform hits, and no unconditional transform precheck.
+
+The informal certificate screen found unchanged-large-buffer transform hits
+26.1x to 133.8x faster and predicate hits 15.0x to 166.1x faster, with no
+significant cold-path regression detected in that screen.
+
+For direct grapheme count and bounded substring on the retained 49,152-byte
+buffer, building a complete per-call index was 1.802% to 2.953% slower. Direct
+operations therefore stream, while the explicitly requested view retains its
+index.
+
+Raw evidence and host limitations are retained under
+`experiments/unicode/nfd-performance/evidence/` and
 `performance/evidence/2026-08-29-unicode-grapheme-first-release-verdict/`.
 
-Local closeout is green: a clean Debug Ninja build has no missing generated
-dependencies; the full Debug and profiling-off Release suites each pass
-2,412/2,412; and the maintained Apple-ASan suite passes 2,412/2,412 with leak
-detection disabled for the documented platform limitation. The complete
-normalization bootstrap/conformance harness also remains green across optimized
-and no-opt builds on both VMs. These results qualify the branch locally; they
-do not claim Linux LeakSanitizer or hosted-platform qualification.
+## Rejected baseline shapes
 
-Private case-fold and grapheme runtime failures use the certified Level B
-`SIGNAL` instruction directly. The generated runtime builds enable the
-standard compiler-exit pipeline for those modules, which lowers the source
-instruction to the VM signal opcode. Source-level `assembler signal`, a
-forwarding `raise` wrapper, and dynamic-name signalling are unnecessary for
-these fixed product conditions. Normalization qualification applies the same
-rule to its generated and hand-authored experimental runtime sources.
+- Implicit normalization, normalized equality, or normalized assignment.
+- `.binary` normalization overloads or implicit binary decoding.
+- Public numeric form selectors or stringly `normalize(text, "NFC")` dispatch.
+- A public reusable normalizer with no incremental user capability.
+- Per-object or per-call copies of multi-megabyte prepared images.
+- A generated re2c decoder for algorithms over already-valid `.string`.
+- A complete UTF-32 copy before Unicode work begins.
+- An unconditional precheck before every transform.
+- Per-call full grapheme indexing for count or bounded substring.
+- Hidden mutable/shared grapheme caches on ordinary strings.
+- Ambiguous `UTF-16`/`UTF-32` names or implicit BOM policy.
+- A string-valued replacement policy that obscures target bytes.
+- Titlecase and locale casing without a concrete consumer and locale contract.
 
-The detailed normalization steps are:
+## Qualification contract
 
-1. Preserve the current dirty experimental worktree in recoverable focused
-   commits without resetting or discarding any existing evidence.
-2. Implement and qualify the selected `UNICODE-CERT-01` four-bit certificate
-   contract. Numeric caching remains independent and must not delay the Unicode
-   product path.
-3. Freeze the eight convenience procedures, reusable normalizer class,
-   failure contract and serial-instance ownership.
-4. Move pinned inputs and deterministic generation to a product-owned data/tool
-   location.
-5. Completed on the Unicode branch: add optimized/no-opt named-binary-constant
-   coverage, repair one-constant compiler lowering, and remove the Unicode
-   sealer.
-6. Extract the four-form runtime into a private Level B implementation module
-   and remove binary, lexer and generator surfaces from the shipped API.
-7. Add the public Level G facade, RexxDoc, user guide and AI context.
-8. Pass deterministic generation, complete Unicode 17.0.0 normalization and
-   predicate conformance, unlisted-scalar identity, focused Hangul/CCC/Maybe
-   regressions, optimized/no-opt compilation and both VMs.
-9. Audit generated RXAS for one shared constant, direct codepoint/table access,
-   bounded live state and no predicate output construction.
-10. Prepare the ordinary profiling-off Release product and stop until the host
-    is explicitly clear. The smallest decisive canonical/Apple/current-product
-    performance comparison is reported before broad closeout.
-11. After an accepted first Release verdict, complete proportional Debug,
-    sanitizer, install/package, documentation and integration qualification.
+The baseline must retain:
 
-## Approval Gates Still Open
+- deterministic generation and checksum failure tests;
+- complete Unicode 17 normalization conformance and cross-form relations;
+- exact normalization predicate tests, including Quick_Check `Maybe`;
+- every prepared default case mapping plus every unlisted scalar identity;
+- every case-fold record in four modes plus unlisted identity;
+- every retained `GraphemeBreakTest.txt` record and focused public behaviour;
+- every codec family, alias, strict error, replacement path, and table-backed
+  all-byte round trip;
+- complete-file binary I/O including embedded NUL and invalid UTF-8;
+- optimized and no-opt builds under `rxbvm` and `rxtvm`; and
+- RXAS audits for shared constants, direct codepoint/table access, and absence
+  of input/table copies.
 
-- any size-based normalization precheck heuristic; and
-- later Unicode properties, codecs, security profiles, collation, and any
-  tailored grapheme profile.
+Compiler constant lowering and optional imported `.binary` defaults have
+focused permanent regressions because the Unicode surface exposed those
+toolchain requirements. Library work is expected to validate `rxc`, `rxas`,
+`rxlink`, and `rxvm`, not only the Rexx source.
+
+## Follow-on roadmap
+
+The baseline deliberately leaves the following as separate work:
+
+1. **Incremental codecs and encoded stream adapters.** Design a state object
+   only with explicit chunk remainder, finalization, strict/replacement policy,
+   BOM ownership, bounded output, cancellation, task transfer, and EOF rules.
+   Compose it with the future general `rxio.input`, `rxio.output`, and
+   `rxio.stream` interfaces rather than overloading Classic variable-width
+   positioning.
+2. **Typed properties and names.** Begin with General Category, White Space,
+   CCC, case properties, grapheme-break property, codepoint names, and aliases.
+   Prefer typed accessors over one heterogeneous string-dispatched lookup.
+3. **Caseless-normalized profiles.** Specify canonical caseless comparison,
+   `NFKC_Casefold`, and matching key/hash functions explicitly. Do not imply
+   them from `toCasefold` alone.
+4. **Security and identifiers.** Keep UAX #31 policy and confusable handling
+   separate from general text conversion.
+5. **Further segmentation.** Add word or sentence boundaries only for a real
+   consumer; preserve the explicit unit in every name.
+6. **Locale services and collation.** Treat locale casing, tailoring, display
+   width, and Unicode/CLDR collation as larger optional contracts, potentially
+   with a qualified provider.
+7. **Data-image convergence.** Combine prepared sections only if measurement
+   justifies it and shared-constant, update, and conformance boundaries remain
+   independently auditable.
+8. **Optional TUTOR compatibility facade.** Consider a thin portability layer
+   only for operations whose types, Unicode version, endian behavior, indexing
+   unit, and failure policy are identical to the typed surface. It must
+   delegate to `rxunicode`, must not reintroduce implicit normalization or
+   dynamic string kinds, and must not become a second semantic authority.
+
+Any performance edit to these paths follows `performance/AGENTS.md`: freeze
+after focused correctness, run the smallest decisive profiling-off Release
+comparison against retained evidence, report it, and stop for direction before
+broad closeout.

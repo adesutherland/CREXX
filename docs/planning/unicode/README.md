@@ -1,11 +1,15 @@
 # Level L Language Tooling And Level G Unicode Research Track
 
-Status: the Level L lexer syntax, Level B bootstrap frontend, authored
-TinyExpr/ICU lexer proofs, typed Unicode-rule parser, scalar NFD baseline, and
-prepared UTF-8 four-form normalization engine are complete. The reusable
-neutral IR, native automaton core, general Unicode property/data compiler,
-final binary layout/performance verdict, C-form Quick_Check region fast path,
-case folding, segmentation, and Level G library remain research work.
+Status: **historical research record, superseded for product Unicode status and
+surface decisions.** The implemented baseline is recorded in
+[`PRODUCT-SURFACE-AND-ROADMAP.md`](PRODUCT-SURFACE-AND-ROADMAP.md), the public
+API in the [Unicode text services
+chapter](../../books/crexx_library_reference/unicode.md), and the selected
+algorithms in the [Unicode algorithm
+appendix](../../books/crexx_vm_spec/unicode_algorithms.md). Statements below
+about Unicode product work still being open describe the 2026-08-25 research
+checkpoint and must not be read as current maturity claims. The Level L and
+discarded experimental paths remain here as historical design evidence.
 
 Branch: `unicode`, based on `origin/develop` at `7b78375bd` on 2026-08-25.
 The branch is intentionally kept separate from `develop` until its contracts,

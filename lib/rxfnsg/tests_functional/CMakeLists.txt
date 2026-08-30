@@ -173,6 +173,51 @@ foreach(_unicode_casefold_runner IN LISTS _math_numeric_runners)
     PROPERTIES TIMEOUT 600)
 endforeach()
 
+add_custom_target(ts_unicode_case_mapping)
+add_dependencies(testrxfnsg ts_unicode_case_mapping)
+
+foreach(_unicode_case_mapping_runner IN LISTS _math_numeric_runners)
+  crexx_add_rexx_opt_matrix(
+    LINKED_ALL_MODES
+    NAME "ts_unicode_case_mapping_${_unicode_case_mapping_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_unicode_case_mapping.crexx"
+    TARGET_GROUP ts_unicode_case_mapping
+    RUNNER "${_unicode_case_mapping_runner}"
+    IMPORT_PATHS
+      "${CMAKE_BINARY_DIR}/bin"
+      "${RXUNICODE_CASEFOLD_TOOL_DIR}"
+    RXC_FLAGS -x
+    DEPENDS
+      library
+      classlib
+      rxfnsg
+      rxunicode_case_mapping_source
+      "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+      "${RXUNICODE_CASE_MAPPING_TABLE_RXBIN}"
+      "${RXUNICODE_UNICODE_DATA}"
+      "${RXUNICODE_SPECIAL_CASING_DATA}"
+      "${RXUNICODE_DERIVED_CORE_DATA}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/ts_unicode_case_mapping.crexx"
+    RUNTIME_ARGS
+      ${LIBRPATH}
+      ${CMAKE_BINARY_DIR}/bin/classlib
+      ${RXFNSG_RPATH}
+      ${RXUNICODE_CASE_MAPPING_TABLE_RXBIN}
+      -a
+      ${RXUNICODE_UNICODE_DATA}
+      ${RXUNICODE_SPECIAL_CASING_DATA}
+      ${RXUNICODE_DERIVED_CORE_DATA}
+    TEST_LABELS
+      "library;unicode;case;levelg;${_unicode_case_mapping_runner}"
+    REQUIRED_OUTPUT_REGEX
+      "PASS: rxunicode Unicode 17 default full upper and lower"
+    FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+  set_tests_properties(
+    "ts_unicode_case_mapping_${_unicode_case_mapping_runner}_noopt"
+    "ts_unicode_case_mapping_${_unicode_case_mapping_runner}_opt"
+    PROPERTIES TIMEOUT 600)
+endforeach()
+
 add_custom_target(ts_unicode_grapheme)
 add_dependencies(testrxfnsg ts_unicode_grapheme)
 
@@ -207,6 +252,80 @@ foreach(_unicode_grapheme_runner IN LISTS _math_numeric_runners)
     "ts_unicode_grapheme_${_unicode_grapheme_runner}_noopt"
     "ts_unicode_grapheme_${_unicode_grapheme_runner}_opt"
     PROPERTIES TIMEOUT 600)
+endforeach()
+
+add_custom_target(ts_unicode_codec)
+add_dependencies(testrxfnsg ts_unicode_codec)
+
+foreach(_unicode_codec_runner IN LISTS _math_numeric_runners)
+  crexx_add_rexx_opt_matrix(
+    LINKED_ALL_MODES
+    NAME "ts_unicode_codec_${_unicode_codec_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_unicode_codec.crexx"
+    TARGET_GROUP ts_unicode_codec
+    RUNNER "${_unicode_codec_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x
+    DEPENDS
+      library
+      classlib
+      rxfnsg
+      "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+      "${RXUNICODE_WINDOWS1252_DATA}"
+      "${RXUNICODE_IBM437_DATA}"
+      "${RXUNICODE_IBM850_DATA}"
+      "${RXUNICODE_IBM1047_DATA}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/ts_unicode_codec.crexx"
+    RUNTIME_ARGS
+      ${LIBRPATH}
+      ${CMAKE_BINARY_DIR}/bin/classlib
+      ${RXFNSG_RPATH}
+      -a
+      ${RXUNICODE_WINDOWS1252_DATA}
+      ${RXUNICODE_IBM437_DATA}
+      ${RXUNICODE_IBM850_DATA}
+      ${RXUNICODE_IBM1047_DATA}
+    TEST_LABELS
+      "library;unicode;codec;levelg;${_unicode_codec_runner}"
+    REQUIRED_OUTPUT_REGEX
+      "PASS: rxunicode strict and replacement Unicode legacy codecs"
+    FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+endforeach()
+
+add_custom_target(ts_unicode_normalization)
+add_dependencies(testrxfnsg ts_unicode_normalization)
+
+foreach(_unicode_normalization_runner IN LISTS _math_numeric_runners)
+  crexx_add_rexx_opt_matrix(
+    LINKED_ALL_MODES
+    NAME "ts_unicode_normalization_${_unicode_normalization_runner}"
+    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_unicode_normalization.crexx"
+    TARGET_GROUP ts_unicode_normalization
+    RUNNER "${_unicode_normalization_runner}"
+    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
+    RXC_FLAGS -x
+    DEPENDS
+      library
+      classlib
+      rxfnsg
+      "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+      "${RXUNICODE_NORMALIZATION_TEST_DATA}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/ts_unicode_normalization.crexx"
+    RUNTIME_ARGS
+      ${LIBRPATH}
+      ${CMAKE_BINARY_DIR}/bin/classlib
+      ${RXFNSG_RPATH}
+      -a
+      ${RXUNICODE_NORMALIZATION_TEST_DATA}
+    TEST_LABELS
+      "library;unicode;normalization;levelg;${_unicode_normalization_runner}"
+    REQUIRED_OUTPUT_REGEX
+      "PASS: rxunicode Unicode 17 four-form normalization"
+    FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+  set_tests_properties(
+    "ts_unicode_normalization_${_unicode_normalization_runner}_noopt"
+    "ts_unicode_normalization_${_unicode_normalization_runner}_opt"
+    PROPERTIES TIMEOUT 1200)
 endforeach()
 
 unset(_prev_target)

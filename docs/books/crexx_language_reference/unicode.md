@@ -36,8 +36,27 @@ Unicode version. U+180E is not whitespace in that version.
 ## Level G
 
 Level G owns general-purpose Unicode behavior above the Level B codepoint
-foundation. The production `rxunicode` namespace provides explicit Unicode
-17.0.0 ordinary case folding:
+foundation. The `rxunicode` namespace provides explicit Unicode 17.0.0
+normalization, full default case mapping, case folding, default extended
+grapheme-cluster operations, and typed byte/text codecs. It is imported
+explicitly:
+
+```rexx
+options levelg
+import rxunicode
+```
+
+The normalization family is `toNFD`, `toNFC`, `toNFKD`, and `toNFKC` plus the
+matching `isNFD`, `isNFC`, `isNFKD`, and `isNFKC` predicates. Normalization is
+never implicit. Compatibility forms may remove distinctions and must be
+selected deliberately. There is no public normalizer object.
+
+`toUppercase` and `toLowercase` apply locale-neutral Unicode full default case
+mappings. They may expand and do not normalize. They are distinct from the
+existing Level B simple `upper`/`lower` contract. Titlecase and locale-tailored
+case mapping are not part of the baseline.
+
+The case-fold procedures are:
 
 - `toCasefold(text)` for default full folding;
 - `toSimpleCasefold(text)` for default simple folding;
@@ -46,23 +65,39 @@ foundation. The production `rxunicode` namespace provides explicit Unicode
 
 The shortest name is Unicode Default Case Folding and is compatible with the
 useful TUTOR vocabulary. Full folding may expand a string, while simple folding
-does not. The immutable `.casefolder` class offers `full`, `simple`, `turkic`
-and `turkicSimple` factories for repeated calls; its `version()` method reports
-the Unicode data version.
+does not. These direct procedures are the complete public case-fold surface;
+there is no reusable case-folder object because folding retains no useful
+state between calls.
 
 Case folding is for caseless matching. It is not locale-sensitive case
 conversion, does not preserve or apply normalization, and does not retain a
 source-to-result index map. The Turkic forms are explicit operations rather
 than process or task locale state. `.binary` is not accepted.
 
-Level G will also provide explicit normalization, Unicode property, collation,
-and segmentation algorithms. String-facing APIs are expected to be grapheme
-aware where a user-perceived character is intended.
+The direct grapheme procedures are `graphemeCount`, `graphemeSubstr`,
+`graphemePos`, and `graphemeReverse`. They implement the default extended
+grapheme-cluster profile `UAX29-C1-1` without tailoring. The immutable
+`.graphemes` class prepares one boundary index for repeated access, slicing,
+searching, reversal, and forward iteration. Grapheme operations neither
+normalize nor case-fold their input.
+
+`encode(.string[, encoding[, replacement]])` returns `.binary` and
+`decode(.binary[, encoding[, replacement]])` returns `.string`. UTF-8 is the
+default. The baseline also supports explicit-endian UTF-16/UTF-32, US-ASCII,
+ISO-8859-1, Windows-1252, IBM437, IBM850, and IBM1047. Conversion is strict by
+default; an explicitly supplied typed third argument opts into replacement.
+Codecs do not add or consume a BOM as metadata. `isDecodable` checks a complete
+byte value and `isEncodingSupported` checks a name. Whole-file `readbinary`
+and `writebinary` operations let callers compose binary I/O with these codecs.
 
 These algorithms are explicit services. Level B does not silently acquire
-grapheme or normalization semantics when Level G is implemented.
+grapheme, normalization, case-folding, or encoded-stream semantics when
+`rxunicode` is imported. Ordinary string comparison and indexing remain exact
+and codepoint based.
 
-See `lib/rxfnsg/rexx/unicode.md` for the case-fold API and examples.
+See the [Unicode text services](../crexx_library_reference/unicode.md) chapter
+for the complete API, codec/file examples, error boundaries, and TUTOR migration
+guide.
 
 ## Level C
 

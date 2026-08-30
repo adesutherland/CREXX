@@ -1,132 +1,81 @@
 # `rxunicode` text services
 
-`rxunicode` provides explicit Unicode 17.0.0 case folding and default extended
-grapheme clusters for valid cREXX `.string` values. It does not change ordinary
-equality, Level B `upper` or `lower`, codepoint indexing, normalization, or
-`.binary` semantics.
+`rxunicode` is the explicit Unicode 17.0.0 Level G module. The canonical user
+guide is [Unicode text
+services](../../../docs/books/crexx_library_reference/unicode.md); the
+[algorithm appendix](../../../docs/books/crexx_vm_spec/unicode_algorithms.md)
+describes the prepared tables and execution model. This source-adjacent summary
+is retained by the source/docs/tests contract check.
 
 ```rexx
 options levelg
 import rxunicode
 
-say rxunicode..toCasefold("Straße")       /* strasse */
-say rxunicode..toSimpleCasefold("ẞ")      /* ß */
+normal = rxunicode..toNFC(text)
+upper = rxunicode..toUppercase(normal)
+folded = rxunicode..toCasefold(upper)
+bytes = rxunicode..encode(folded, "UTF-8")
 ```
 
-## Case-fold procedures
+## Version and normalization
 
-| Procedure | Unicode mapping |
+`version()` returns the shared Unicode data version.
+
+| Transform | Predicate |
 | --- | --- |
-| `toCasefold(text)` | Default full folding (`C + F` records). This is the TUTOR-compatible name. |
-| `toSimpleCasefold(text)` | Default simple, non-expanding folding (`C + S`). |
-| `toTurkicCasefold(text)` | Full folding with the Unicode `T` mappings for `I` and dotted `İ`. |
-| `toTurkicSimpleCasefold(text)` | Simple folding with the Unicode `T` mappings. |
+| `toNFD(text)` | `isNFD(text)` |
+| `toNFC(text)` | `isNFC(text)` |
+| `toNFKD(text)` | `isNFKD(text)` |
+| `toNFKC(text)` | `isNFKC(text)` |
 
-Every procedure accepts and returns `.string`. Full folding can expand text;
-for example, German `ß` folds to `ss`. Simple folding is useful only when a
-one-codepoint result is required and is not a substitute for full caseless
-matching.
+Every call accepts `.string`; transforms return `.string` and predicates return
+`.boolean`. Compatibility forms may remove distinctions and must be selected
+explicitly. There is no public normalizer object and no implicit normalization.
 
-The Turkic operations implement the special Unicode case-fold mappings used
-for Turkish and Azerbaijani. They are explicit operations, not a locale switch.
-Default folding excludes those mappings.
+## Default case mapping and folding
 
-## Reusable folder
+`toUppercase(text)` and `toLowercase(text)` apply full, locale-neutral Unicode
+default mappings. They may expand; lowercase includes the default Greek final
+sigma context. They do not normalize or select locale tailoring.
 
-One immutable `.casefolder` fixes the mode for repeated calls:
+| Procedure | Unicode folding mode |
+| --- | --- |
+| `toCasefold(text)` | Default full (`C + F`) |
+| `toSimpleCasefold(text)` | Default simple (`C + S`) |
+| `toTurkicCasefold(text)` | Full with `T` override |
+| `toTurkicSimpleCasefold(text)` | Simple with `T` override |
 
-```rexx
-full = .rxunicode..casefolder.full()
-simple = .rxunicode..casefolder.simple()
-turkic = .rxunicode..casefolder.turkic()
-turkicSimple = .rxunicode..casefolder.turkicSimple()
+## Typed codecs
 
-folded = full.fold(text)
-say full.mode()       /* FULL */
-say full.version()    /* 17.0.0 */
+```text
+encode(text[, encoding[, replacement-bytes]]) = .binary
+decode(data[, encoding[, replacement-text]]) = .string
+isDecodable(data[, encoding]) = .boolean
+isEncodingSupported(encoding) = .boolean
 ```
 
-`mode()` returns `FULL`, `SIMPLE`, `TURKIC_FULL`, or `TURKIC_SIMPLE`.
-`version()` returns the pinned Unicode data version.
-
-## Important boundaries
-
-- Case folding supports caseless matching; it is not presentation-oriented
-  uppercasing or lowercasing.
-- Case folding does not preserve normalization in general. Normalize separately
-  when a comparison contract requires a particular normalization/folding order.
-- None of these calls normalizes implicitly.
-- `.binary` has no case-fold overload. Decode bytes to a validated `.string`
-  through a future codec boundary before applying Unicode text operations.
-- The result preserves no source-position mapping. Expansions mean result
-  indexes need not correspond to source indexes.
-
-The implementation reads one immutable prepared table and iterates with RXVM
-codepoint operations. It does not copy the input through `.binary`, use a
-separate UTF-8 decoder, or materialize UTF-32 input.
+UTF-8 is the default. Supported families are explicit-endian UTF-16 and UTF-32,
+US-ASCII, ISO-8859-1, Windows-1252, IBM437, IBM850, and IBM1047. Conversion is
+strict when the third argument is omitted. Supplying a non-empty typed third
+argument opts into replacement. A BOM is never added or consumed as metadata.
 
 ## Default extended grapheme clusters
 
-The grapheme family implements UAX #29 revision 47 conformance profile
-`UAX29-C1-1`: the default extended grapheme-cluster rules with no tailoring.
-These boundaries approximate user-perceived characters and keep sequences such
-as a base plus combining marks, emoji ZWJ families, and paired regional
-indicators together.
-
-```rexx
-text = "A" || familyEmoji || "B"
-
-say rxunicode..graphemeCount(text)
-say rxunicode..graphemeSubstr(text, 2, 1)
-say rxunicode..graphemePos(familyEmoji, text)
-say rxunicode..graphemeReverse(text)
-```
+The direct UAX #29 `UAX29-C1-1` procedures are:
 
 | Procedure | Contract |
 | --- | --- |
-| `graphemeCount(text)` | Count default extended grapheme clusters. |
-| `graphemeSubstr(text, start[, length[, pad]])` | Select by one-based grapheme position; with a length, pad on the right to the requested grapheme count. `pad` must be exactly one grapheme. |
-| `graphemePos(needle, haystack[, start])` | Find an exact match whose start and end are both grapheme boundaries; return its one-based grapheme position or zero. |
-| `graphemeReverse(text)` | Reverse cluster order without reversing codepoints inside a cluster. |
+| `graphemeCount(text)` | Count clusters. |
+| `graphemeSubstr(text, start[, length[, pad]])` | Select by one-based cluster position. |
+| `graphemePos(needle, haystack[, start])` | Find an exact boundary-aligned occurrence. |
+| `graphemeReverse(text)` | Reverse cluster order. |
 
-None of these operations normalizes or case-folds. Exact codepoint content
-therefore remains significant to `graphemePos`.
+`.rxunicode..graphemes(text)` creates an immutable indexed snapshot for
+repeated `text`, `count`, `at`, `substr`, `pos`, `reverse`, `codepointStart`,
+`codepointLength`, `iterator`, `version`, and `profile` calls. Its iterator
+supports `hasNext`, `next`, `index`, `reset`, `codepointStart`, and
+`codepointLength`.
 
-## Indexed grapheme snapshot
-
-Repeated indexed work should prepare one immutable view:
-
-```rexx
-view = .rxunicode..graphemes(text)
-
-say view.text()
-say view.count()
-say view.at(2)
-say view.substr(2, 3)
-say view.pos(needle)
-say view.reverse()
-say view.codepointStart(2)
-say view.codepointLength(2)
-say view.version()     /* 17.0.0 */
-say view.profile()     /* UAX29-C1-1 */
-
-iterator = view.iterator()
-do while iterator.hasNext()
-  cluster = iterator.next()
-  say iterator.index() iterator.codepointStart(),
-      iterator.codepointLength() cluster
-end
-```
-
-`codepointStart` is one-based and `codepointLength` is measured in cREXX
-`.string` codepoints, not UTF-8 bytes. The iterator starts at index zero;
-`codepointStart()` and `codepointLength()` require a current item. Calling
-`next()` after exhaustion signals `OUT_OF_RANGE`.
-
-Direct count and bounded substring operations stream codepoints and do not
-allocate a complete boundary vector. `.graphemes(text)` deliberately builds a
-private packed codepoint-boundary index once, then reuses it for access,
-substring, position, reverse, and iteration. The runtime reads one immutable prepared
-property constant using RXVM `STRCHAR` and `BGETU8`; it has no re2c decoder,
-UTF-32 input copy, string/binary conversion, runtime table copy, or VM grapheme
-cache flag.
+All operations keep `.string` text, `.binary` bytes, codepoint indexes, and
+grapheme indexes explicit. None changes ordinary equality or Level B string
+semantics.

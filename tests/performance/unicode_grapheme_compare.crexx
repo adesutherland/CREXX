@@ -51,6 +51,9 @@ return 0
 
 run_pass: procedure = .int
   arg operation = .string, variant = .string, text = .string, substr_start = .int, iterations = .int
+  iteration = .int
+  view = .rxunicode..graphemes
+  piece = .string
   checksum = 0
   if operation = "count" then do
     if variant = "stream" then do iteration = 1 to iterations

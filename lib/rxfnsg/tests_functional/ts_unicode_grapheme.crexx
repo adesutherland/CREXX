@@ -81,6 +81,7 @@ do line_number = 1 to lines[0]
   do cluster_index = 1 to cluster_count
     if view.at(cluster_index) \== expected[cluster_index] |,
        graphemeSubstr(text, cluster_index, 1) \== expected[cluster_index] |,
+       view.substr(cluster_index, 1) \== expected[cluster_index] |,
        view.codepointStart(cluster_index) \= expected_start[cluster_index] |,
        view.codepointLength(cluster_index) \= expected_length[cluster_index] then do
       say "FAIL: GraphemeBreakTest boundary at line" line_number,
@@ -99,6 +100,7 @@ do line_number = 1 to lines[0]
     boundary_checks = boundary_checks + 1
   end
   if iterator.hasNext() | graphemeSubstr(text, 1) \== text |,
+     view.substr(1) \== text |,
      view.reverse() \== reverse_expected |,
      graphemeReverse(text) \== reverse_expected then do
     say "FAIL: GraphemeBreakTest whole-string operation at line" line_number
@@ -154,6 +156,8 @@ contract_checks: procedure = .int
   padded_actual = graphemeSubstr(haystack, 2, 4, "*")
   failures = failures + check_equal(padded_actual, padded_expected,,
     "substring padding")
+  failures = failures + check_equal(view.substr(2, 4, "*"), padded_expected,,
+    "indexed substring padding")
 
   pad = hex_sequence_to_string("1F1E6 1F1E7")
   padded_expected = pad || pad

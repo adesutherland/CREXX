@@ -1,10 +1,12 @@
 # Prepared Unicode Algorithms: Mathematical Review And Design
 
-Status: mathematical design complete for the Unicode 17.0.0 research baseline;
-the experimental NFD/NFKD prepared path and fused NFC/NFKC canonical composer
-are implemented and conformant on the Unicode branch. No production
-integration, Release performance verdict, C-form Quick_Check fast-path result,
-or Level G API decision is claimed by this document.
+Status: **historical mathematical and research review.** Production integration
+and the Level G surface were selected after this 2026-08-26 checkpoint. Use
+[`PRODUCT-SURFACE-AND-ROADMAP.md`](PRODUCT-SURFACE-AND-ROADMAP.md) for current
+decisions and the [Unicode algorithm
+appendix](../../books/crexx_vm_spec/unicode_algorithms.md) for the implemented
+algorithms. The remainder is retained to explain the proof and rejected paths;
+its non-claims are historical, not the current product status.
 
 Branch: `unicode`
 

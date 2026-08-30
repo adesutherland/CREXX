@@ -40,7 +40,7 @@ _casefold_boot: initialiser
   return
 
 /**
- * Private scalar executor shared by the pure Level G facade and casefolder.
+ * Private scalar executor used by the pure Level G facade.
  * Mode 1 is simple, 2 full, 3 Turkic simple, and 4 Turkic full.
  */
 casefold: procedure = .string

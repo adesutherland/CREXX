@@ -228,10 +228,12 @@ Level B separates the intended surfaces as `.string` and `.binary`. Any Level C
 compatibility mode therefore has to choose where Classic byte-text semantics
 map: to UTF-8 `.string` semantics, to `.binary`, or to an explicit option such
 as `bytetext`. Classic Rexx BIFs will need to be audited against that decision.
-Level G and library work have a separate Unicode extension path for grapheme,
-word, and sentence boundaries, normalization, and case operations through the
-Unicode plugin hooks; those features sit above the core codepoint-level VM
-string contract.
+Level G and library work use the explicit `rxunicode` extension path above the
+core codepoint-level VM string contract. The current Unicode 17.0.0 baseline
+provides normalization, full default case mapping, case folding, default
+extended grapheme clusters, and typed byte/text codecs. Word/sentence
+boundaries, properties, locale services, and collation remain separate future
+contracts.
 
 ### Locked Direction
 
@@ -244,11 +246,10 @@ The architecture direction is:
 - Level C may provide Classic Rexx byte-text compatibility through an explicit
   compatibility mode such as `bytetext`, but that mode must not weaken the
   Level B/G `.string` contract.
-- Level G should build richer Unicode services through the existing Unicode
-  plugin hooks. `utf8proc` is the preferred first implementation candidate for
-  normalization, case folding, Unicode property checks, and grapheme/word/
-  sentence segmentation because it is a small C library under MIT expat plus
-  Unicode data license terms.
+- Level G's `rxunicode` module owns richer Unicode services. Its production
+  executors are Level B codepoint algorithms over pinned, generated Unicode
+  17.0.0 constants; they do not require an external Unicode provider or make
+  provider choice part of application semantics.
 
 Trust boundaries for `.string` validation are compiler/assembler string
 constants, RXVML string setters, CREXXSAA ADDRESS variable setters, RXPA native
@@ -368,17 +369,19 @@ The completed UTF baseline is:
    and socket text receive reports an invalid text status. Character-walking
    opcodes require valid UTF cache state before using codepoint iterators.
 
-The open work has moved to its owning levels:
+The remaining work has moved to its owning levels:
 
-- Level G owns normalization cache semantics and richer Unicode services. The
-  VM-private status band reserves space for normalization knowledge, but NFC,
-  NFD, NFKC, and NFKD bits should only become meaningful when Level G
-  normalization APIs set and consume them. The preferred first Unicode plugin
-  candidate is `utf8proc`, subject to vendoring/build work and carrying its MIT
-  expat plus Unicode data license notices. Initial coverage should target
-  normalization, case folding, Unicode property checks, and grapheme/word/
-  sentence segmentation. There is also room for a Level B cRexx proof of
-  concept of UTF helper libraries while Level G remains design work.
+- Level G's implemented `rxunicode` baseline owns explicit normalization,
+  default casing/folding, grapheme segmentation, and codecs. Four positive
+  normalization certificates are stored in the VM value/register status word
+  because the VM owns copy and mutation, but they occupy the protected
+  language-owned band (`0x00003C00`), not the VM-private low byte. Trusted
+  generated RXAS may assert a proved certificate; the VM preserves it on exact
+  whole-string copies and clears it on content mutation. Incremental encoded
+  streams, typed properties/names, caseless-normalized profiles, security,
+  further segmentation, locale services, and collation remain separately
+  designed follow-on work. See `CREXX_UNICODE.md` and
+  `performance/UNICODE-CERT-01-WORKLIST.md`.
 - Level C owns Classic Rexx migration and byte-text compatibility. Classic
   byte-text behavior should be isolated behind an explicit compatibility option
   such as `bytetext`; Classic BIFs then need auditing so users can choose UTF

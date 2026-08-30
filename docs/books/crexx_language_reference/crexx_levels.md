@@ -50,7 +50,7 @@ different:
 | Level C | Classic Rexx compatibility. | Not a release compiler language yet. A dedicated DSLSH syntax-highlighting / parser-mode front end now exists as the first concrete compatibility slice. |
 | Level D | A cRexx-compatible extension direction above Classic Rexx. | Direction only. Not a release language yet. |
 | Level E | Object Rexx / ooRexx relationship point. | Planned only as a DSLSH syntax-highlighting target. cRexx does not plan to compile or run ooRexx as Level E. |
-| Level G | General-purpose modern cRexx built on Level B. | Initial task declarations, ordinary-call task expressions, `DO PARALLEL`, concurrency classes and concurrent HTTP are implemented behind `OPTIONS LEVELG`; Level G is not the stable baseline language for this release. |
+| Level G | General-purpose modern cRexx built on Level B. | Task declarations, ordinary-call task expressions, `DO PARALLEL`, concurrency classes, concurrent HTTP, mathematics, and explicit Unicode text services are implemented behind `OPTIONS LEVELG`; Level G is not the stable baseline language for this release. |
 | Level L | Language-engineering cRexx direction for parser, grammar, AST, and symbol-table work. | Directional, with an initial `rxfnsl` generated-output proving demo; not a release language yet.|
 | Level N | NetRexx relationship point: Rexx-family syntax with Java/JVM integration. | Planned only as a DSLSH syntax-highlighting target. cRexx does not plan to compile or run NetRexx as Level N.|
 
@@ -83,16 +83,16 @@ public Level B concurrency classes. See
 for checked examples and [Tasks and parallel execution](concurrency.md)
 for the formal source rules.
 
-Level G also owns future grapheme-aware and richer Unicode services above the
-Level B codepoint contract. The
-VM reserves private status bits for normalization-form cache knowledge, but NFC,
-NFD, NFKC, and NFKD bits should only be assigned meaning when Level G APIs set
-and consume them. `utf8proc` is the preferred first implementation candidate for
-the Unicode plugin, subject to vendoring/build work and carrying its MIT expat
-and Unicode data license notices. Initial coverage should target normalization,
-case folding, Unicode property checks, and grapheme / word / sentence segmentation.
-There is also room for a Level B cRexx proof of concept of UTF helper libraries
-while the Level G design settles.
+Level G also owns explicit Unicode services above the Level B codepoint
+contract. `rxunicode` provides Unicode 17.0.0 normalization and predicates,
+full default case mapping, case folding, default extended grapheme clusters,
+and strict-by-default typed codecs between `.string` and `.binary`. The
+implementation uses private Level B executors and generated immutable data;
+normalization certificates are VM-carried in a protected language-owned
+register-flag sub-band and are invalidated by content mutation. Importing the
+module does not change ordinary equality, codepoint indexing, or text I/O. See
+[Unicode](unicode.md) and [Unicode text
+services](../crexx_library_reference/unicode.md).
 
 Level L currently uses the Level B-derived compiler pipeline plus
 `options levell` for library-shaped experiments. Its first concrete library,

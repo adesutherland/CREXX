@@ -1,0 +1,87 @@
+/* Private Unicode 17.0.0 default full uppercase/lowercase executor. */
+options levelb
+
+namespace _rxunicode expose unicode_case_convert
+
+unicode_case_mapping_constants: procedure expose UNICODE_CASE_MAPPING_DATA
+  /* @RXUNICODE_CASE_MAPPING_DATA@ */
+  return
+
+_case_mapping_boot: initialiser
+  data_length = <blen>(UNICODE_CASE_MAPPING_DATA)
+  if data_length \= 4590140 |,
+     <at..u8>(0) UNICODE_CASE_MAPPING_DATA \= 67 |,
+     <at..u8>(1) UNICODE_CASE_MAPPING_DATA \= 85 |,
+     <at..u8>(2) UNICODE_CASE_MAPPING_DATA \= 67 |,
+     <at..u8>(3) UNICODE_CASE_MAPPING_DATA \= 77 |,
+     <at..u16>(4) UNICODE_CASE_MAPPING_DATA \= 1 |,
+     <at..u16>(6) UNICODE_CASE_MAPPING_DATA \= 64 |,
+     <at..u16>(8) UNICODE_CASE_MAPPING_DATA \= 17 |,
+     <at..u32>(16) UNICODE_CASE_MAPPING_DATA \= 64 |,
+     <at..u32>(20) UNICODE_CASE_MAPPING_DATA \= 0x110000 |,
+     <at..u32>(28) UNICODE_CASE_MAPPING_DATA \= 3037 |,
+     <at..u32>(32) UNICODE_CASE_MAPPING_DATA \= 44 |,
+     <at..u32>(36) UNICODE_CASE_MAPPING_DATA \= 4632 |,
+     <at..u32>(40) UNICODE_CASE_MAPPING_DATA \= 2794 |,
+     <at..u32>(44) UNICODE_CASE_MAPPING_DATA \= 1505 |,
+     <at..u32>(48) UNICODE_CASE_MAPPING_DATA \= 1488 |,
+     <at..u32>(52) UNICODE_CASE_MAPPING_DATA \= 103 |,
+     <at..u32>(56) UNICODE_CASE_MAPPING_DATA \= data_length |,
+     <at..u32>(60) UNICODE_CASE_MAPPING_DATA \= 3 then,
+    signal failure "rxunicode case-mapping data is corrupt or unsupported"
+  return
+
+/** Mode 1 is default full uppercase; mode 2 is default full lowercase. */
+unicode_case_convert: procedure = .string
+  arg source = .string, mode = .int
+  if mode \= 1 & mode \= 2 then signal invalid_arguments "rxunicode case mode is invalid"
+  result = ""
+  source_length = 0
+  preceded_cased = 0
+  assembler strlen source_length,source
+  do source_index = 0 to source_length - 1
+    codepoint = 0
+    assembler strchar codepoint,source,source_index
+    descriptor = <at..u32>(64 + codepoint * 4) UNICODE_CASE_MAPPING_DATA
+    record_number = descriptor <and> 0x00FFFFFF
+    count = 0
+    mapping_offset = 0
+    if record_number \= 0 then do
+      record_offset = <at..u32>(24) UNICODE_CASE_MAPPING_DATA + (record_number - 1) * 44
+      if mode = 1 then do
+        mapping_offset = record_offset + 4
+        count = <at..u8>(record_offset + 40) UNICODE_CASE_MAPPING_DATA
+      end
+      else do
+        mapping_offset = record_offset + 16
+        count = <at..u8>(record_offset + 41) UNICODE_CASE_MAPPING_DATA
+        final_count = <at..u8>(record_offset + 42) UNICODE_CASE_MAPPING_DATA
+        if final_count > 0 & preceded_cased &,
+           _unicode_following_cased(source,source_index + 1,source_length) = 0 then do
+          mapping_offset = record_offset + 28
+          count = final_count
+        end
+      end
+    end
+
+    if count = 0 then assembler appendchar result,codepoint
+    else do component_index = 0 to count - 1
+      mapped = <at..u32>(mapping_offset + component_index * 4) UNICODE_CASE_MAPPING_DATA
+      assembler appendchar result,mapped
+    end
+
+    if (descriptor <and> 0x80000000) = 0 then,
+      preceded_cased = (descriptor <and> 0x40000000) \= 0
+  end
+  return result
+
+_unicode_following_cased: procedure = .int
+  arg source = .string, start = .int, source_length = .int
+  do source_index = start to source_length - 1
+    codepoint = 0
+    assembler strchar codepoint,source,source_index
+    descriptor = <at..u32>(64 + codepoint * 4) UNICODE_CASE_MAPPING_DATA
+    if (descriptor <and> 0x80000000) \= 0 then iterate
+    return (descriptor <and> 0x40000000) \= 0
+  end
+  return 0

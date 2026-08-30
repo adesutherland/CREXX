@@ -5,18 +5,183 @@
  */
 
 /**
- * Explicit Unicode case-folding services over valid UTF-8 `.string` values.
+ * Explicit Unicode 17.0.0 text services over valid UTF-8 `.string` values and
+ * encoded `.binary` values.
  *
- * Case folding is intended for caseless matching. It is not locale-sensitive
- * case conversion and it does not preserve or apply normalization.
+ * Normalization, full default casing, folding, grapheme segmentation, and
+ * codecs are independent operations. Importing the module does not change
+ * ordinary string equality or indexing.
  *
  * @docType runtime-module
  */
 options levelg
 
-namespace rxunicode expose toCasefold toSimpleCasefold toTurkicCasefold toTurkicSimpleCasefold graphemeCount graphemeSubstr graphemePos graphemeReverse casefolder graphemes graphemeiterator
+namespace rxunicode expose version toNFD toNFC toNFKD toNFKC isNFD isNFC isNFKD isNFKC toUppercase toLowercase toCasefold toSimpleCasefold toTurkicCasefold toTurkicSimpleCasefold encode decode isDecodable isEncodingSupported graphemeCount graphemeSubstr graphemePos graphemeReverse graphemes graphemeiterator
 import _rxunicode
 import data
+
+/** @return Unicode data version used by every versioned rxunicode algorithm */
+version: procedure = .string
+  return "17.0.0"
+
+/**
+ * @param text valid cREXX text
+ * @return canonical decomposition form (NFD) of the supplied text
+ */
+toNFD: procedure = .string
+  arg expose text = .string
+  return _rxunicode..unicode_normalize(text,1)
+
+/**
+ * @param text valid cREXX text
+ * @return canonical composition form (NFC) of the supplied text
+ */
+toNFC: procedure = .string
+  arg expose text = .string
+  return _rxunicode..unicode_normalize(text,3)
+
+/**
+ * Apply compatibility decomposition (NFKD).
+ *
+ * Compatibility normalization may remove distinctions that matter to the
+ * application and must therefore be selected explicitly.
+ *
+ * @param text valid cREXX text
+ * @return compatibility decomposition form (NFKD)
+ */
+toNFKD: procedure = .string
+  arg expose text = .string
+  return _rxunicode..unicode_normalize(text,2)
+
+/**
+ * Compatibility normalization may remove application-significant
+ * distinctions.
+ *
+ * @param text valid cREXX text
+ * @return compatibility composition form (NFKC)
+ */
+toNFKC: procedure = .string
+  arg expose text = .string
+  return _rxunicode..unicode_normalize(text,4)
+
+/**
+ * @param text valid cREXX text
+ * @return one when the text is already in canonical decomposition form
+ */
+isNFD: procedure = .boolean
+  arg expose text = .string
+  return _rxunicode..unicode_is_normalized(text,1)
+
+/**
+ * @param text valid cREXX text
+ * @return one when the text is already in canonical composition form
+ */
+isNFC: procedure = .boolean
+  arg expose text = .string
+  return _rxunicode..unicode_is_normalized(text,3)
+
+/**
+ * @param text valid cREXX text
+ * @return one when the text is already in compatibility decomposition form
+ */
+isNFKD: procedure = .boolean
+  arg expose text = .string
+  return _rxunicode..unicode_is_normalized(text,2)
+
+/**
+ * @param text valid cREXX text
+ * @return one when the text is already in compatibility composition form
+ */
+isNFKC: procedure = .boolean
+  arg expose text = .string
+  return _rxunicode..unicode_is_normalized(text,4)
+
+/**
+ * Apply Unicode default full uppercase mapping.
+ *
+ * The result is locale-neutral and may expand. No normalization is applied.
+ *
+ * @param text valid cREXX text
+ * @return Unicode default full uppercase mapping
+ */
+toUppercase: procedure = .string
+  arg text = .string
+  return _rxunicode..unicode_case_convert(text,1)
+
+/**
+ * Apply Unicode default full lowercase mapping.
+ *
+ * The context-sensitive Greek final sigma rule is included. Locale-tailored
+ * Turkic and Lithuanian rules are deliberately not selected.
+ *
+ * @param text valid cREXX text
+ * @return Unicode default full lowercase mapping
+ */
+toLowercase: procedure = .string
+  arg text = .string
+  return _rxunicode..unicode_case_convert(text,2)
+
+/**
+ * Encode valid text using an explicit supported byte encoding.
+ *
+ * Supported names are UTF-8, explicit-endian UTF-16/UTF-32, US-ASCII,
+ * ISO-8859-1, Windows-1252, IBM437, IBM850, and IBM1047. No byte-order mark
+ * is added. The strict two-argument form signals when text is not representable;
+ * an explicitly supplied non-empty `.binary` replacement is substituted for
+ * each unmappable scalar and must itself be valid in the target encoding.
+ *
+ * @param text valid cREXX text
+ * @param encoding explicit encoding name, default UTF-8
+ * @param replacement optional exact target bytes for an unmappable scalar
+ * @return encoded bytes
+ * @signal INVALID_ARGUMENTS the encoding is unsupported or replacement is empty or invalid for it
+ * @signal UNICODE_ERROR text is not representable and no replacement was supplied
+ * @signal FAILURE prepared codec data is corrupt or unsupported
+ */
+encode: procedure = .binary
+  arg text = .string, encoding = "UTF-8", replacement = ""x as .binary
+  if ?replacement then return _rxunicode..unicode_encode_replacing(text,encoding,replacement)
+  return _rxunicode..unicode_encode(text,encoding)
+
+/**
+ * Decode strict Unicode bytes into valid cREXX text.
+ *
+ * Endianness is always explicit for UTF-16 and UTF-32. A byte-order mark is
+ * decoded as U+FEFF rather than consumed as protocol metadata. The strict
+ * two-argument form signals on malformed input; an explicitly supplied
+ * non-empty `.string` replacement is inserted for every maximal malformed
+ * input subpart.
+ *
+ * @param data complete encoded byte value
+ * @param encoding explicit encoding name, default UTF-8
+ * @param replacement optional text substituted for malformed input
+ * @return decoded text
+ * @signal INVALID_ARGUMENTS the encoding is unsupported or replacement is empty
+ * @signal UNICODE_ERROR the byte value is malformed
+ * @signal FAILURE prepared codec data is corrupt or unsupported
+ */
+decode: procedure = .string
+  arg data = .binary, encoding = "UTF-8", replacement = ""
+  if ?replacement then return _rxunicode..unicode_decode_replacing(data,encoding,replacement)
+  return _rxunicode..unicode_decode(data,encoding)
+
+/**
+ * @param data complete encoded byte value
+ * @param encoding explicit encoding name, default UTF-8
+ * @return one when the complete byte value is valid in the named encoding
+ * @signal INVALID_ARGUMENTS the encoding is unsupported
+ */
+isDecodable: procedure = .boolean
+  arg data = .binary, encoding = "UTF-8"
+  return _rxunicode..unicode_is_decodable(data,encoding)
+
+/**
+ * @param encoding encoding spelling to query
+ * @return one when the encoding name is supported by encode and decode
+ */
+isEncodingSupported: procedure = .boolean
+  arg encoding = .string
+  return _rxunicode..unicode_is_encoding_supported(encoding)
 
 /**
  * Apply Unicode Default Case Folding using the full mapping.
@@ -119,51 +284,6 @@ graphemeReverse: procedure = .string
   arg text = .string
   return _rxunicode..grapheme_reverse(text)
 
-/** Immutable reusable selector for one Unicode case-fold mode. */
-casefolder: class
-  _mode = .int
-
-  /** @return a full default case folder */
-  full: factory
-    _mode = 2
-    return
-
-  /** @return a simple default case folder */
-  simple: factory
-    _mode = 1
-    return
-
-  /** @return a full case folder using the Turkic I mappings */
-  turkic: factory
-    _mode = 4
-    return
-
-  /** @return a simple case folder using the Turkic I mappings */
-  turkicSimple: factory
-    _mode = 3
-    return
-
-  /**
-   * Fold text using this object's fixed mode.
-   *
-   * @param text valid UTF-8 text
-   * @return case-folded text
-   */
-  fold: method = .string
-    arg text = .string
-    return _rxunicode..casefold(text, _mode)
-
-  /** @return `FULL`, `SIMPLE`, `TURKIC_FULL`, or `TURKIC_SIMPLE` */
-  mode: method = .string
-    if _mode = 1 then return "SIMPLE"
-    if _mode = 2 then return "FULL"
-    if _mode = 3 then return "TURKIC_SIMPLE"
-    return "TURKIC_FULL"
-
-  /** @return Unicode data version used by this folder */
-  version: method = .string
-    return "17.0.0"
-
 /** Immutable indexed snapshot of one string's grapheme boundaries. */
 graphemes: class
   _text = .string
@@ -190,18 +310,33 @@ graphemes: class
   count: method = .int
     return _count
 
-  /** @return the grapheme cluster at a one-based position */
+  /**
+   * @param position one-based grapheme position
+   * @return the grapheme cluster at that position
+   * @signal OUT_OF_RANGE position is outside the snapshot
+   */
   at: method = .string
     arg position = .int
     return _rxunicode..grapheme_at(_text, _offsets, position)
 
-  /** @return a grapheme-indexed substring */
+  /**
+   * @param start one-based grapheme position
+   * @param length optional requested grapheme length
+   * @param pad optional one-grapheme pad, default blank
+   * @return a grapheme-indexed substring
+   * @signal INVALID_ARGUMENTS start, length, or pad is invalid
+   */
   substr: method = .string
     arg start = .int, length = 0, pad = " "
     length_supplied = ?length
     return _rxunicode..grapheme_substr_indexed(_text, _offsets, start, length, pad, length_supplied)
 
-  /** @return an exact grapheme-aligned match position, or zero */
+  /**
+   * @param needle exact text to find
+   * @param start optional one-based grapheme start, default 1
+   * @return an exact grapheme-aligned match position, or zero
+   * @signal INVALID_ARGUMENTS start is not positive
+   */
   pos: method = .int
     arg needle = .string, start = 1
     return _rxunicode..grapheme_pos_indexed(needle, _text, _offsets, start)
@@ -210,12 +345,20 @@ graphemes: class
   reverse: method = .string
     return _rxunicode..grapheme_reverse_indexed(_text, _offsets)
 
-  /** @return one-based codepoint start of a grapheme */
+  /**
+   * @param position one-based grapheme position
+   * @return one-based codepoint start of that grapheme
+   * @signal OUT_OF_RANGE position is outside the snapshot
+   */
   codepointStart: method = .int
     arg position = .int
     return _rxunicode..grapheme_codepoint_start(_offsets, position)
 
-  /** @return codepoint length of a grapheme */
+  /**
+   * @param position one-based grapheme position
+   * @return codepoint length of that grapheme
+   * @signal OUT_OF_RANGE position is outside the snapshot
+   */
   codepointLength: method = .int
     arg position = .int
     return _rxunicode..grapheme_codepoint_length(_offsets, position)
@@ -273,10 +416,16 @@ graphemeiterator: class implements .StringIterator
     _index = 0
     return
 
-  /** @return one-based codepoint start of the current grapheme */
+  /**
+   * @return one-based codepoint start of the current grapheme
+   * @signal OUT_OF_RANGE the iterator has no current item
+   */
   codepointStart: method = .int
     return _rxunicode..grapheme_codepoint_start(_offsets, _index)
 
-  /** @return codepoint length of the current grapheme */
+  /**
+   * @return codepoint length of the current grapheme
+   * @signal OUT_OF_RANGE the iterator has no current item
+   */
   codepointLength: method = .int
     return _rxunicode..grapheme_codepoint_length(_offsets, _index)
