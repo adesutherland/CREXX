@@ -18,7 +18,8 @@ jobs:
   sanitizer:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+    # Full Linux ASan/LSan now needs about 102 minutes with Unicode conformance.
+    timeout-minutes: 120
 
     strategy:
       fail-fast: false
