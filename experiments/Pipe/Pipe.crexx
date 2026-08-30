@@ -1,0 +1,2301 @@
+options levelb
+
+import rxfnsb
+
+/*
+ * Pipe class demonstration.
+ *
+ * The examples use a small source-file inventory so that each PIPE
+ * operation represents something reasonably realistic rather than
+ * operating on arbitrary alpha/beta test strings.
+ */
+
+
+/* ------------------------------------------------------------------ */
+/* Basic pipeline                                                     */
+/* ------------------------------------------------------------------ */
+
+source = .string[]
+
+source[1] = "  src parser.c  "
+source[2] = "  src scanner.c "
+source[3] = "  test parser_test.c"
+source[4] = "  docs pipe.md  "
+source[5] = "  src runtime.c "
+source[6] = "  src compiler.c"
+
+p = .Pipe()
+
+
+say "=== SOURCE FILE INVENTORY ==="
+
+call p.fromArray(source)
+
+call showRecords(p)
+
+
+/*
+ * Select source files, clean up the records and convert the directory
+ * name to upper case.
+ */
+
+say
+say "=== SELECT SOURCE FILES ==="
+
+rc = p.pipe("SELECT", "src ")
+say "--- SELECT src --- rc:" rc
+call showRecords(p)
+
+
+say
+say "=== NORMALISE RECORDS ==="
+
+rc = p.pipe("TRIM")
+say "--- TRIM --- rc:" rc
+call showRecords(p)
+
+rc = p.pipe("REPLACE", "src ", "SOURCE ")
+say "--- REPLACE src -> SOURCE --- rc:" rc
+call showRecords(p)
+
+
+/*
+ * Count the resulting source files.
+ */
+
+say
+say "=== COUNT SOURCE FILES ==="
+
+rc = p.pipe("COUNT")
+say "--- COUNT --- rc:" rc
+call showRecords(p)
+
+
+/*
+ * SAY copies the current records to the Pipe output area and consumes
+ * the active pipeline.
+ */
+
+say
+say "=== PIPE OUTPUT ==="
+
+rc = p.pipe("SAY")
+
+say "rc     :" rc
+say "active :" p.active()
+say "records:" p.recordCount()
+say "output :" p.outputCount()
+
+do i = 1 to p.outputCount()
+  say "output[" || i || "] = '" || p.outputLine(i) || "'"
+end
+
+
+/* ------------------------------------------------------------------ */
+/* Ordering and selection                                             */
+/* ------------------------------------------------------------------ */
+
+say
+say "=== ORDERING AND SELECTION ==="
+
+call arraydrop source
+
+source[1] = "src scanner.c"
+source[2] = "src parser.c"
+source[3] = "src runtime.c"
+source[4] = "src parser.c"
+source[5] = "src compiler.c"
+source[6] = "src scanner.c"
+
+call p.fromArray(source)
+
+say
+say "--- INPUT ---"
+call showRecords(p)
+
+
+rc = p.pipe("SORT")
+
+say
+say "--- SORT --- rc:" rc
+call showRecords(p)
+
+
+rc = p.pipe("UNIQUE")
+
+say
+say "--- UNIQUE --- rc:" rc
+call showRecords(p)
+
+
+rc = p.pipe("SKIP", "1")
+
+say
+say "--- SKIP 1 --- rc:" rc
+call showRecords(p)
+
+
+rc = p.pipe("TAKE", "2")
+
+say
+say "--- TAKE 2 --- rc:" rc
+call showRecords(p)
+
+
+rc = p.pipe("PREFIX", "[")
+
+say
+say "--- PREFIX '[' --- rc:" rc
+call showRecords(p)
+
+
+rc = p.pipe("SUFFIX", "]")
+
+say
+say "--- SUFFIX ']' --- rc:" rc
+call showRecords(p)
+
+
+/* ------------------------------------------------------------------ */
+/* Positional and text stages                                         */
+/* ------------------------------------------------------------------ */
+
+say
+say "=== POSITIONAL AND TEXT STAGES ==="
+
+call arraydrop source
+
+source[1] = "src parser.c"
+source[2] = "src scanner.c"
+source[3] = "src runtime.c"
+source[4] = "docs pipe.md"
+
+
+call p.fromArray(source)
+
+rc = p.pipe("REVERSE")
+
+say
+say "--- REVERSE --- rc:" rc
+call showRecords(p)
+
+
+call p.fromArray(source)
+
+rc = p.pipe("FIRST")
+
+say
+say "--- FIRST --- rc:" rc
+call showRecords(p)
+
+
+call p.fromArray(source)
+
+rc = p.pipe("LAST")
+
+say
+say "--- LAST --- rc:" rc
+call showRecords(p)
+
+
+/*
+ * Extract the filename from each inventory record.
+ */
+
+call p.fromArray(source)
+
+rc = p.pipe("WORD", "2")
+
+say
+say "--- WORD 2 --- rc:" rc
+call showRecords(p)
+
+
+/*
+ * Determine the length of each complete inventory record.
+ */
+
+call p.fromArray(source)
+
+rc = p.pipe("LENGTH")
+
+say
+say "--- LENGTH --- rc:" rc
+call showRecords(p)
+
+
+/*
+ * Extract the three characters starting at position 5.
+ */
+
+call p.fromArray(source)
+
+rc = p.pipe("SUBSTR", "5", "3")
+
+say
+say "--- SUBSTR 5 3 --- rc:" rc
+call showRecords(p)
+
+
+/* ------------------------------------------------------------------ */
+/* Whitespace handling                                                */
+/* ------------------------------------------------------------------ */
+
+say
+say "=== WHITESPACE STAGES ==="
+
+call arraydrop source
+
+source[1] = "src     parser.c"
+source[2] = ""
+source[3] = " "
+source[4] = "docs       pipe.md"
+
+
+call p.fromArray(source)
+
+rc = p.pipe("WORDS")
+
+say
+say "--- WORDS --- rc:" rc
+call showRecords(p)
+
+
+call p.fromArray(source)
+
+rc = p.pipe("SPACE")
+
+say
+say "--- SPACE --- rc:" rc
+call showRecords(p)
+
+
+call p.fromArray(source)
+
+rc = p.pipe("EMPTY")
+
+say
+say "--- EMPTY --- rc:" rc
+call showRecords(p)
+
+
+call p.fromArray(source)
+
+rc = p.pipe("NONEMPTY")
+
+say
+say "--- NONEMPTY --- rc:" rc
+call showRecords(p)
+
+
+/* ------------------------------------------------------------------ */
+/* Prefix and suffix filtering                                        */
+/* ------------------------------------------------------------------ */
+
+say
+say "=== PREFIX AND SUFFIX FILTERING ==="
+
+call arraydrop source
+
+source[1] = "src parser.c"
+source[2] = "src scanner.c"
+source[3] = "docs pipe.md"
+source[4] = "test parser_test.c"
+source[5] = "src runtime.crexx"
+
+
+call p.fromArray(source)
+
+rc = p.pipe("STARTSWITH", "src ")
+
+say
+say "--- STARTSWITH src --- rc:" rc
+call showRecords(p)
+
+
+call p.fromArray(source)
+
+rc = p.pipe("ENDSWITH", ".c")
+
+say
+say "--- ENDSWITH .c --- rc:" rc
+call showRecords(p)
+
+
+/* ------------------------------------------------------------------ */
+/* SPLIT and JOIN                                                     */
+/* ------------------------------------------------------------------ */
+
+say
+say "=== SPLIT AND JOIN ==="
+
+/*
+ * A path-like list containing an empty entry deliberately exercises
+ * preservation of empty fields.
+ */
+
+call arraydrop source
+
+source[1] = "src|include||test"
+
+call p.fromArray(source)
+
+rc = p.pipe("SPLIT", "|")
+
+say
+say "--- SPLIT '|' --- rc:" rc
+call showRecords(p)
+
+
+rc = p.pipe("JOIN", ";")
+
+say
+say "--- JOIN ';' --- rc:" rc
+call showRecords(p)
+
+
+/* ------------------------------------------------------------------ */
+/* Array snapshot                                                     */
+/* ------------------------------------------------------------------ */
+
+say
+say "=== ARRAY SNAPSHOT ==="
+
+call arraydrop source
+
+source[1] = "src parser.c"
+source[2] = "src scanner.c"
+source[3] = "src runtime.c"
+
+call p.fromArray(source)
+
+
+/*
+ * toArray() returns a copy.  The Pipe remains active and its current
+ * records are unchanged.
+ */
+
+target = .string[]
+call arraydrop target
+
+target = p.toArray()
+
+say "--- TOARRAY ---"
+say "pipe active :" p.active()
+say "pipe records:" p.recordCount()
+say "array records:" target[0]
+
+do i = 1 to target[0]
+  say "target[" || i || "] = '" || target[i] || "'"
+end
+
+
+/*
+ * Change the current Pipe and then restore it from the saved array.
+ */
+
+rc = p.pipe("TAKE", "1")
+
+say
+say "--- PIPE AFTER TAKE 1 --- rc:" rc
+call showRecords(p)
+
+
+call p.fromArray(target)
+
+say
+say "--- RESTORED FROM ARRAY ---"
+call showRecords(p)
+
+
+/* ------------------------------------------------------------------ */
+/* File stages                                                        */
+/* ------------------------------------------------------------------ */
+
+say
+say "=== FILE STAGES ==="
+
+/*
+ * Include an empty record so that the file round trip also demonstrates
+ * preservation of blank lines.
+ */
+
+call arraydrop source
+
+source[1] = "src parser.c"
+source[2] = ""
+source[3] = "src runtime.c"
+
+call p.fromArray(source)
+
+filename = "cPipe_pipe_io_test.txt"
+
+
+rc = p.pipe("WRITE", filename)
+
+say
+say "--- WRITE ---"
+say "rc     :" rc
+say "active :" p.active()
+say "records:" p.recordCount()
+
+
+/*
+ * Remove the in-memory pipeline and reload it from the file.
+ */
+
+call p.reset()
+
+say
+say "--- RESET ---"
+say "active :" p.active()
+say "records:" p.recordCount()
+
+
+rc = p.pipe("READ", filename)
+
+say
+say "--- READ ---"
+say "rc     :" rc
+say "active :" p.active()
+say "records:" p.recordCount()
+
+call showRecords(p)
+
+
+/*
+ * Uncomment when the test file should be removed after the example.
+ */
+
+## call erasefile filename
+
+
+return
+
+
+
+/*
+ * Display all current records in a Pipe.
+ */
+showRecords: procedure
+
+  arg pipe = .Pipe
+
+  say "active :" pipe.active()
+  say "records:" pipe.recordCount()
+
+  do i = 1 to pipe.recordCount()
+    say "record[" || i || "] = '" || pipe.record(i) || "'"
+  end
+
+  return
+
+
+
+Pipe: class
+
+  records_ = .string[]
+  recordTotal_ = .int
+
+  outputLines_ = .string[]
+  outputTotal_ = .int
+
+  active_ = .int
+
+  errorCode_ = .string
+  errorMessage_ = .string
+  errorStage_ = .string
+  errorDetail_ = .string
+
+
+  /*
+   * Initialise a new Pipe instance.
+   *
+   * The new instance contains no active record stream, no output records
+   * and no error information.
+   */
+  *: factory
+    recordTotal_ = 0
+    outputTotal_ = 0
+    active_ = 0
+
+    errorCode_ = ""
+    errorMessage_ = ""
+    errorStage_ = ""
+    errorDetail_ = ""
+
+    return
+
+
+  /*
+   * Execute one PIPE stage against the current record stream.
+   *
+   * COMMAND is case-insensitive. Additional string arguments are interpreted
+   * according to the selected stage.
+   *
+   * @param command  PIPE stage name.
+   * @param ...      Stage-specific string arguments.
+   * @return         1 on success, 0 on error.
+   *
+   * Error information is available through errorCode(), errorMessage(),
+   * errorStage() and errorDetail().
+   */
+  pipe: method = .int
+    arg command = .string, ... = .string
+
+    call clearError()
+
+    cmd = translate(strip(command))
+
+    if cmd = "" then
+      return setError( ,
+          "missing_argument", ,
+          "missing command", ,
+          "", ,
+          "")
+
+    select
+      when cmd = "SELECT" then do
+        if arg[] < 2 then
+          return setError( ,
+              "missing_argument", ,
+              "missing select text", ,
+              cmd, ,
+              "")
+
+        if arg[] > 2 then
+          return setError( ,
+              "too_many_arguments", ,
+              "SELECT takes one argument", ,
+              cmd, ,
+              "")
+
+        text = arg[2]
+        return selectRecords(text)
+      end
+
+      when cmd = "DROP" then do
+        if arg[] < 2 then
+          return setError( ,
+              "missing_argument", ,
+              "missing drop text", ,
+              cmd, ,
+              "")
+
+        if arg[] > 2 then
+          return setError( ,
+              "too_many_arguments", ,
+              "DROP takes one argument", ,
+              cmd, ,
+              "")
+
+        text = arg[2]
+        return dropRecords(text)
+      end
+
+      when cmd = "UPPER" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "UPPER takes no arguments", ,
+              cmd, ,
+              "")
+
+        return upperRecords()
+      end
+
+      when cmd = "LOWER" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "LOWER takes no arguments", ,
+              cmd, ,
+              "")
+
+        return lowerRecords()
+      end
+
+      when cmd = "TRIM" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "TRIM takes no arguments", ,
+              cmd, ,
+              "")
+
+        return trimRecords()
+      end
+
+      when cmd = "REPLACE" then do
+        if arg[] < 3 then
+          return setError( ,
+              "missing_argument", ,
+              "missing replace arguments", ,
+              cmd, ,
+              "")
+
+        if arg[] > 3 then
+          return setError( ,
+              "too_many_arguments", ,
+              "REPLACE takes two arguments", ,
+              cmd, ,
+              "")
+
+        old = arg[2]
+        new = arg[3]
+
+        return replaceRecords(old, new)
+      end
+
+      when cmd = "SAY" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "SAY takes no arguments", ,
+              cmd, ,
+              "")
+
+        return sayRecords()
+      end
+
+      when cmd = "COUNT" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "COUNT takes no arguments", ,
+              cmd, ,
+              "")
+
+        return countRecords()
+      end
+
+      when cmd = "REVERSE" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "REVERSE takes no arguments", ,
+              cmd, ,
+              "")
+
+        return reverseRecords()
+      end
+
+      when cmd = "FIRST" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "FIRST takes no arguments", ,
+              cmd, ,
+              "")
+
+        return firstRecord()
+      end
+
+      when cmd = "LAST" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "LAST takes no arguments", ,
+              cmd, ,
+              "")
+
+        return lastRecord()
+      end
+
+      when cmd = "WORD" then do
+        if arg[] < 2 then
+          return setError( ,
+              "missing_argument", ,
+              "missing word number", ,
+              cmd, ,
+              "")
+
+        if arg[] > 2 then
+          return setError( ,
+              "too_many_arguments", ,
+              "WORD takes one argument", ,
+              cmd, ,
+              "")
+
+        wordNumber = arg[2]
+
+        if datatype(wordNumber, "W") = 0 | wordNumber <= 0 then
+          return setError( ,
+              "invalid_argument", ,
+              "WORD number must be a positive whole number", ,
+              cmd, ,
+              wordNumber)
+
+        return wordRecords(wordNumber)
+      end
+
+      when cmd = "SUBSTR" then do
+        if arg[] < 2 then
+          return setError( ,
+              "missing_argument", ,
+              "missing substring start", ,
+              cmd, ,
+              "")
+
+        if arg[] > 3 then
+          return setError( ,
+              "too_many_arguments", ,
+              "SUBSTR takes one or two arguments", ,
+              cmd, ,
+              "")
+
+        startText = arg[2]
+
+        if datatype(startText, "W") = 0 | startText <= 0 then
+          return setError( ,
+              "invalid_argument", ,
+              "SUBSTR start must be a positive whole number", ,
+              cmd, ,
+              startText)
+
+        if arg[] = 2 then
+          return substrRecordsToEnd(startText)
+
+        lengthText = arg[3]
+
+        if datatype(lengthText, "W") = 0 then
+          return setError( ,
+              "invalid_argument", ,
+              "SUBSTR length must be a non-negative whole number", ,
+              cmd, ,
+              lengthText)
+
+        return substrRecords(startText, lengthText)
+      end
+
+      when cmd = "LENGTH" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "LENGTH takes no arguments", ,
+              cmd, ,
+              "")
+
+        return lengthRecords()
+      end
+
+      when cmd = "WORDS" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "WORDS takes no arguments", ,
+              cmd, ,
+              "")
+
+        return wordsRecords()
+      end
+
+      when cmd = "SPACE" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "SPACE takes no arguments", ,
+              cmd, ,
+              "")
+
+        return spaceRecords()
+      end
+
+      when cmd = "EMPTY" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "EMPTY takes no arguments", ,
+              cmd, ,
+              "")
+
+        return emptyRecords()
+      end
+
+      when cmd = "NONEMPTY" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "NONEMPTY takes no arguments", ,
+              cmd, ,
+              "")
+
+        return nonemptyRecords()
+      end
+
+      when cmd = "STARTSWITH" then do
+        if arg[] < 2 then
+          return setError( ,
+              "missing_argument", ,
+              "missing starts-with text", ,
+              cmd, ,
+              "")
+
+        if arg[] > 2 then
+          return setError( ,
+              "too_many_arguments", ,
+              "STARTSWITH takes one argument", ,
+              cmd, ,
+              "")
+
+        text = arg[2]
+        return startsWithRecords(text)
+      end
+
+      when cmd = "ENDSWITH" then do
+        if arg[] < 2 then
+          return setError( ,
+              "missing_argument", ,
+              "missing ends-with text", ,
+              cmd, ,
+              "")
+
+        if arg[] > 2 then
+          return setError( ,
+              "too_many_arguments", ,
+              "ENDSWITH takes one argument", ,
+              cmd, ,
+              "")
+
+        text = arg[2]
+        return endsWithRecords(text)
+      end
+
+      when cmd = "JOIN" then do
+        if arg[] < 2 then
+          return setError( ,
+              "missing_argument", ,
+              "missing join separator", ,
+              cmd, ,
+              "")
+
+        if arg[] > 2 then
+          return setError( ,
+              "too_many_arguments", ,
+              "JOIN takes one argument", ,
+              cmd, ,
+              "")
+
+        separator = arg[2]
+        return joinRecords(separator)
+      end
+
+      when cmd = "SPLIT" then do
+        if arg[] < 2 then
+          return setError( ,
+              "missing_argument", ,
+              "missing split separator", ,
+              cmd, ,
+              "")
+
+        if arg[] > 2 then
+          return setError( ,
+              "too_many_arguments", ,
+              "SPLIT takes one argument", ,
+              cmd, ,
+              "")
+
+        separator = arg[2]
+
+        if separator = "" then
+          return setError( ,
+              "invalid_argument", ,
+              "SPLIT separator must not be empty", ,
+              cmd, ,
+              "")
+
+        return splitRecords(separator)
+      end
+
+      when cmd = "READ" then do
+        if arg[] < 2 then
+          return setError( ,
+              "missing_argument", ,
+              "missing input filename", ,
+              cmd, ,
+              "")
+
+        if arg[] > 2 then
+          return setError( ,
+              "too_many_arguments", ,
+              "READ takes one argument", ,
+              cmd, ,
+              "")
+
+        filename = arg[2]
+        return readRecords(filename)
+      end
+
+      when cmd = "WRITE" then do
+        if arg[] < 2 then
+          return setError( ,
+              "missing_argument", ,
+              "missing output filename", ,
+              cmd, ,
+              "")
+
+        if arg[] > 2 then
+          return setError( ,
+              "too_many_arguments", ,
+              "WRITE takes one argument", ,
+              cmd, ,
+              "")
+
+        filename = arg[2]
+        return writeRecords(filename)
+      end
+
+      when cmd = "TAKE" then do
+        if arg[] < 2 then
+          return setError( ,
+              "missing_argument", ,
+              "missing take count", ,
+              cmd, ,
+              "")
+
+        if arg[] > 2 then
+          return setError( ,
+              "too_many_arguments", ,
+              "TAKE takes one argument", ,
+              cmd, ,
+              "")
+
+        count = arg[2]
+        return takeRecords(count)
+      end
+
+      when cmd = "SKIP" then do
+        if arg[] < 2 then
+          return setError( ,
+              "missing_argument", ,
+              "missing skip count", ,
+              cmd, ,
+              "")
+
+        if arg[] > 2 then
+          return setError( ,
+              "too_many_arguments", ,
+              "SKIP takes one argument", ,
+              cmd, ,
+              "")
+
+        count = arg[2]
+        return skipRecords(count)
+      end
+
+      when cmd = "SORT" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "SORT takes no arguments", ,
+              cmd, ,
+              "")
+
+        return sortRecords()
+      end
+
+      when cmd = "UNIQUE" then do
+        if arg[] > 1 then
+          return setError( ,
+              "too_many_arguments", ,
+              "UNIQUE takes no arguments", ,
+              cmd, ,
+              "")
+
+        return uniqueRecords()
+      end
+
+      when cmd = "PREFIX" then do
+        if arg[] < 2 then
+          return setError( ,
+              "missing_argument", ,
+              "missing prefix text", ,
+              cmd, ,
+              "")
+
+        if arg[] > 2 then
+          return setError( ,
+              "too_many_arguments", ,
+              "PREFIX takes one argument", ,
+              cmd, ,
+              "")
+
+        text = arg[2]
+        return prefixRecords(text)
+      end
+
+      when cmd = "SUFFIX" then do
+        if arg[] < 2 then
+          return setError( ,
+              "missing_argument", ,
+              "missing suffix text", ,
+              cmd, ,
+              "")
+
+        if arg[] > 2 then
+          return setError( ,
+              "too_many_arguments", ,
+              "SUFFIX takes one argument", ,
+              cmd, ,
+              "")
+
+        text = arg[2]
+        return suffixRecords(text)
+      end
+
+      otherwise
+        return setError( ,
+            "unknown_command", ,
+            "unknown command " || cmd, ,
+            cmd, ,
+            "")
+    end
+
+    return 1
+
+
+  /*
+   * Replace the current pipeline records with a copy of SOURCE.
+   *
+   * The pipeline becomes active, including when SOURCE contains zero records.
+   * Existing pipeline records are replaced. Error information is cleared.
+   *
+   * @param source  String array whose element zero contains the record count.
+   */
+  fromArray: method = .void
+    arg source = .string[]
+
+    call clearError()
+
+    countText = source[0]
+
+    if datatype(countText, "W") = 0 then do
+      call setError( ,
+          "invalid_stem", ,
+          "invalid source count", ,
+          "FROMARRAY", ,
+          "")
+      return
+    end
+
+    if countText < 0 then do
+      call setError( ,
+          "invalid_stem", ,
+          "invalid source count", ,
+          "FROMARRAY", ,
+          "")
+      return
+    end
+
+    newCount = countText + 0
+    newRecords = .string[]
+
+    do i = 1 to newCount
+      newRecords[i] = source[i]
+    end
+
+    call clearPipeline()
+
+    records_ = newRecords
+    recordTotal_ = newCount
+    active_ = 1
+
+    return
+
+
+  /*
+   * Return a copy of the current pipeline records.
+   *
+   * The pipeline remains active and unchanged. The returned array is an
+   * independent snapshot and may subsequently be passed to fromArray().
+   *
+   * An inactive pipeline produces an empty array and sets
+   * pipeline_inactive error information.
+   *
+   * @return  Copy of the current pipeline records.
+   */
+  toArray: method = .string[]
+
+    call clearError()
+
+    result = .string[]
+
+    if active_ = 0 then do
+      call setError( ,
+          "pipeline_inactive", ,
+          "pipeline is not active", ,
+          "TOARRAY", ,
+          "")
+      return result
+    end
+
+    newCount = recordTotal_
+
+    do i = 1 to newCount
+      value = records_[i]
+      result[i] = value
+    end
+
+    return result
+
+
+  /*
+   * Reset the logical Pipe state.
+   *
+   * The pipeline becomes inactive, the current record and output counts
+   * become zero, and error information is cleared.
+   */
+  reset: method = .void
+    recordTotal_ = 0
+    outputTotal_ = 0
+    active_ = 0
+
+    call clearError()
+
+    return
+
+
+  /*
+   * Return the code for the most recent Pipe error.
+   *
+   * @return  Error code, or an empty string when no error is recorded.
+   */
+  errorCode: method = .string
+    return errorCode_
+
+
+  /*
+   * Return the message for the most recent Pipe error.
+   *
+   * @return  Error message, or an empty string when no error is recorded.
+   */
+  errorMessage: method = .string
+    return errorMessage_
+
+
+  /*
+   * Return the stage associated with the most recent Pipe error.
+   *
+   * @return  Stage name, or an empty string when unavailable.
+   */
+  errorStage: method = .string
+    return errorStage_
+
+
+  /*
+   * Return additional detail associated with the most recent Pipe error.
+   *
+   * @return  Error detail, or an empty string when unavailable.
+   */
+  errorDetail: method = .string
+    return errorDetail_
+
+
+  /*
+   * Return whether the pipeline currently contains an active record stream.
+   *
+   * An active pipeline may contain zero records.
+   *
+   * @return  1 when active, otherwise 0.
+   */
+  active: method = .int
+    return active_
+
+
+  /*
+   * Return the number of records in the current pipeline.
+   *
+   * @return  Current record count.
+   */
+  recordCount: method = .int
+    return recordTotal_
+
+
+  /*
+   * Return one record from the current pipeline.
+   *
+   * @param index  One-based record index.
+   * @return       Record text, or an empty string when INDEX is out of range.
+   */
+  record: method = .string
+    arg index = .int
+
+    if index < 1 | index > recordTotal_ then
+      return ""
+
+    return records_[index]
+
+
+  /*
+   * Return the number of records currently held in the output area.
+   *
+   * @return  Output record count.
+   */
+  outputCount: method = .int
+    return outputTotal_
+
+
+  /*
+   * Return one record from the output area.
+   *
+   * @param index  One-based output record index.
+   * @return       Output text, or an empty string when INDEX is out of range.
+   */
+  outputLine: method = .string
+    arg index = .int
+
+    if index < 1 | index > outputTotal_ then
+      return ""
+
+    return outputLines_[index]
+
+
+  /*
+   * Keep records containing TEXT.
+   *
+   * Matching is case-sensitive and does not alter retained records.
+   *
+   * @param text  Text to search for.
+   * @return      1 on success, 0 when the pipeline is inactive.
+   */
+  selectRecords: method = .int
+    arg text = .string
+
+    if requireActive("SELECT") = 0 then
+      return 0
+
+    newRecords = .string[]
+    newCount = 0
+
+    do i = 1 to recordTotal_
+      currentRecord = records_[i]
+
+      if pos(text, currentRecord) > 0 then do
+        newCount = newCount + 1
+        newRecords[newCount] = currentRecord
+      end
+    end
+
+    records_ = newRecords
+    recordTotal_ = newCount
+    active_ = 1
+
+    return 1
+
+
+  /*
+   * Remove records containing TEXT.
+   *
+   * Matching is case-sensitive.
+   *
+   * @param text  Text to search for.
+   * @return      1 on success, 0 when the pipeline is inactive.
+   */
+  dropRecords: method = .int
+    arg text = .string
+
+    if requireActive("DROP") = 0 then
+      return 0
+
+    newRecords = .string[]
+    newCount = 0
+
+    do i = 1 to recordTotal_
+      currentRecord = records_[i]
+
+      if pos(text, currentRecord) = 0 then do
+        newCount = newCount + 1
+        newRecords[newCount] = currentRecord
+      end
+    end
+
+    records_ = newRecords
+    recordTotal_ = newCount
+    active_ = 1
+
+    return 1
+
+
+  /*
+   * Convert every pipeline record to upper case.
+   *
+   * Record count and order are unchanged.
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  upperRecords: method = .int
+    if requireActive("UPPER") = 0 then
+      return 0
+
+    do i = 1 to recordTotal_
+      records_[i] = translate(records_[i])
+    end
+
+    return 1
+
+
+  /*
+   * Convert ASCII upper-case characters in every record to lower case.
+   *
+   * Record count and order are unchanged.
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  lowerRecords: method = .int
+    if requireActive("LOWER") = 0 then
+      return 0
+
+    do i = 1 to recordTotal_
+      records_[i] = lowerText(records_[i])
+    end
+
+    return 1
+
+
+  /*
+   * Remove leading and trailing whitespace from every record.
+   *
+   * Record count and order are unchanged.
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  trimRecords: method = .int
+    if requireActive("TRIM") = 0 then
+      return 0
+
+    do i = 1 to recordTotal_
+      records_[i] = strip(records_[i])
+    end
+
+    return 1
+
+
+  /*
+   * Replace every occurrence of OLD with NEW in every pipeline record.
+   *
+   * Record count and order are unchanged. OLD must not be empty.
+   *
+   * @param old  Search text.
+   * @param new  Replacement text.
+   * @return     1 on success, 0 on error.
+   */
+  replaceRecords: method = .int
+    arg old = .string, new = .string
+
+    if requireActive("REPLACE") = 0 then
+      return 0
+
+    if length(old) = 0 then
+      return setError( ,
+          "missing_argument", ,
+          "missing replace search text", ,
+          "REPLACE", ,
+          "")
+
+    newRecords = .string[]
+
+    do i = 1 to recordTotal_
+      newRecords[i] = replaceAll(records_[i], old, new)
+    end
+
+    records_ = newRecords
+
+    return 1
+
+
+  /*
+   * Copy all current records to the output area and consume the pipeline.
+   *
+   * Records are appended to the existing output area. On success the
+   * current pipeline becomes inactive and its record count becomes zero.
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  sayRecords: method = .int
+    if requireActive("SAY") = 0 then
+      return 0
+
+    do i = 1 to recordTotal_
+      outputTotal_ = outputTotal_ + 1
+      outputLines_[outputTotal_] = records_[i]
+    end
+
+    call clearPipeline()
+
+    return 1
+
+
+  /*
+   * Replace the current record stream with a single record containing its count.
+   *
+   * An active empty pipeline therefore becomes one record containing "0".
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  countRecords: method = .int
+    if requireActive("COUNT") = 0 then
+      return 0
+
+    currentCount = recordTotal_
+
+    recordTotal_ = 1
+    records_[1] = currentCount || ""
+    active_ = 1
+
+    return 1
+
+
+  /*
+   * Reverse the order of the current records in place.
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  reverseRecords: method = .int
+    if requireActive("REVERSE") = 0 then
+      return 0
+
+    left = 1
+    right = recordTotal_
+
+    do while left < right
+      temporary = records_[left]
+      records_[left] = records_[right]
+      records_[right] = temporary
+
+      left = left + 1
+      right = right - 1
+    end
+
+    return 1
+
+
+  /*
+   * Keep only the first pipeline record.
+   *
+   * An active empty pipeline remains active and empty.
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  firstRecord: method = .int
+    if requireActive("FIRST") = 0 then
+      return 0
+
+    if recordTotal_ = 0 then
+      return 1
+
+    first = records_[1]
+
+    call arraydrop(records_)
+
+    records_[1] = first
+    recordTotal_ = 1
+
+    return 1
+
+
+  /*
+   * Keep only the last pipeline record.
+   *
+   * An active empty pipeline remains active and empty.
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  lastRecord: method = .int
+    if requireActive("LAST") = 0 then
+      return 0
+
+    if recordTotal_ = 0 then
+      return 1
+
+    last = records_[recordTotal_]
+
+    call arraydrop(records_)
+
+    records_[1] = last
+    recordTotal_ = 1
+
+    return 1
+
+
+  /*
+   * Replace every record with its Nth whitespace-delimited word.
+   *
+   * N is one-based. A record containing fewer than N words becomes empty.
+   * Record count and order are unchanged.
+   *
+   * @param wordNumber  Positive one-based word number.
+   * @return            1 on success, 0 when the pipeline is inactive.
+   */
+  wordRecords: method = .int
+    arg wordNumber = .string
+
+    if requireActive("WORD") = 0 then
+      return 0
+
+    number = wordNumber + 0
+
+    do i = 1 to recordTotal_
+      records_[i] = word(records_[i], number)
+    end
+
+    return 1
+
+
+  /*
+   * Replace every record with a substring beginning at START and containing
+   * at most SIZE characters.
+   *
+   * START is one-based. Record count and order are unchanged.
+   *
+   * @param startText  One-based starting position.
+   * @param sizeText   Requested substring length.
+   * @return           1 on success, 0 when the pipeline is inactive.
+   */
+  substrRecords: method = .int
+    arg startText = .string, sizeText = .string
+
+    if requireActive("SUBSTR") = 0 then
+      return 0
+
+    start = startText + 0
+    requestedLength = sizeText + 0
+
+    do i = 1 to recordTotal_
+      records_[i] = substr(records_[i], start, requestedLength)
+    end
+
+    return 1
+
+
+  /*
+   * Replace every record with the suffix beginning at START.
+   *
+   * START is one-based. Record count and order are unchanged.
+   *
+   * @param startText  One-based starting position.
+   * @return           1 on success, 0 when the pipeline is inactive.
+   */
+  substrRecordsToEnd: method = .int
+    arg startText = .string
+
+    if requireActive("SUBSTR") = 0 then
+      return 0
+
+    start = startText + 0
+
+    do i = 1 to recordTotal_
+      records_[i] = substr(records_[i], start)
+    end
+
+    return 1
+
+
+  /*
+   * Replace every record with its character length.
+   *
+   * Record count and order are unchanged.
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  lengthRecords: method = .int
+    if requireActive("LENGTH") = 0 then
+      return 0
+
+    do i = 1 to recordTotal_
+      records_[i] = length(records_[i]) || ""
+    end
+
+    return 1
+
+
+  /*
+   * Replace every record with its whitespace-delimited word count.
+   *
+   * Record count and order are unchanged.
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  wordsRecords: method = .int
+    if requireActive("WORDS") = 0 then
+      return 0
+
+    do i = 1 to recordTotal_
+      records_[i] = words(records_[i]) || ""
+    end
+
+    return 1
+
+
+  /*
+   * Normalise whitespace in every pipeline record.
+   *
+   * Leading and trailing whitespace is removed and internal whitespace
+   * sequences are reduced according to the cREXX SPACE semantics.
+   *
+   * Record count and order are unchanged.
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  spaceRecords: method = .int
+    if requireActive("SPACE") = 0 then
+      return 0
+
+    do i = 1 to recordTotal_
+      records_[i] = space(records_[i])
+    end
+
+    return 1
+
+
+  /*
+   * Keep only zero-length records.
+   *
+   * Whitespace-only records are not considered empty.
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  emptyRecords: method = .int
+    if requireActive("EMPTY") = 0 then
+      return 0
+
+    newRecords = .string[]
+    newCount = 0
+
+    do i = 1 to recordTotal_
+      if length(records_[i]) = 0 then do
+        newCount = newCount + 1
+        newRecords[newCount] = records_[i]
+      end
+    end
+
+    records_ = newRecords
+    recordTotal_ = newCount
+    active_ = 1
+
+    return 1
+
+
+  /*
+   * Keep only records whose length is greater than zero.
+   *
+   * Whitespace-only records are retained.
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  nonemptyRecords: method = .int
+    if requireActive("NONEMPTY") = 0 then
+      return 0
+
+    newRecords = .string[]
+    newCount = 0
+
+    do i = 1 to recordTotal_
+      if length(records_[i]) > 0 then do
+        newCount = newCount + 1
+        newRecords[newCount] = records_[i]
+      end
+    end
+
+    records_ = newRecords
+    recordTotal_ = newCount
+    active_ = 1
+
+    return 1
+
+
+  /*
+   * Keep records beginning exactly with TEXT.
+   *
+   * Matching is case-sensitive and whitespace-significant.
+   *
+   * @param text  Required record prefix.
+   * @return      1 on success, 0 when the pipeline is inactive.
+   */
+  startsWithRecords: method = .int
+    arg text = .string
+
+    if requireActive("STARTSWITH") = 0 then
+      return 0
+
+    newRecords = .string[]
+    newCount = 0
+    textLength = length(text)
+
+    do i = 1 to recordTotal_
+      if left(records_[i], textLength) = text then do
+        newCount = newCount + 1
+        newRecords[newCount] = records_[i]
+      end
+    end
+
+    records_ = newRecords
+    recordTotal_ = newCount
+    active_ = 1
+
+    return 1
+
+
+  /*
+   * Keep records ending exactly with TEXT.
+   *
+   * Matching is case-sensitive and whitespace-significant.
+   *
+   * @param text  Required record suffix.
+   * @return      1 on success, 0 when the pipeline is inactive.
+   */
+  endsWithRecords: method = .int
+    arg text = .string
+
+    if requireActive("ENDSWITH") = 0 then
+      return 0
+
+    newRecords = .string[]
+    newCount = 0
+    textLength = length(text)
+
+    do i = 1 to recordTotal_
+      if right(records_[i], textLength) = text then do
+        newCount = newCount + 1
+        newRecords[newCount] = records_[i]
+      end
+    end
+
+    records_ = newRecords
+    recordTotal_ = newCount
+    active_ = 1
+
+    return 1
+
+
+  /*
+   * Combine all current records into one record separated by SEPARATOR.
+   *
+   * Empty records participate in the result. An active empty pipeline
+   * remains active and empty.
+   *
+   * @param separator  Text inserted between adjacent records.
+   * @return           1 on success, 0 when the pipeline is inactive.
+   */
+  joinRecords: method = .int
+    arg separator = .string
+
+    if requireActive("JOIN") = 0 then
+      return 0
+
+    if recordTotal_ = 0 then
+      return 1
+
+    combined = .string
+    total = .int
+    total = recordTotal_
+
+    index = .int
+    index = 1
+
+    recordText = .string
+
+    do while index <= total
+      if index > 1 then
+        combined = combined || separator
+
+      recordText = records_[index]
+      combined = combined || recordText
+
+      index = index + 1
+    end
+
+    call arraydrop records_
+
+    records_[1] = combined
+    recordTotal_ = 1
+    active_ = 1
+
+    return 1
+
+
+  /*
+   * Split every current record at each occurrence of SEPARATOR.
+   *
+   * SEPARATOR may contain multiple characters but must not be empty.
+   * Leading, trailing and adjacent separators preserve empty fields.
+   * Record order is preserved and record count may increase.
+   *
+   * @param separator  Non-empty field separator.
+   * @return           1 on success, 0 when the pipeline is inactive.
+   */
+  splitRecords: method = .int
+    arg separator = .string
+
+    if requireActive("SPLIT") = 0 then
+      return 0
+
+    separatorLength = length(separator)
+    newRecords = .string[]
+    newCount = 0
+
+    do i = 1 to recordTotal_
+      currentRecord = records_[i]
+      start = 1
+      found = pos(separator, currentRecord, start)
+
+      do while found > 0
+        newCount = newCount + 1
+        newRecords[newCount] = substr(currentRecord, start, found - start)
+
+        start = found + separatorLength
+        found = pos(separator, currentRecord, start)
+      end
+
+      newCount = newCount + 1
+      newRecords[newCount] = substr(currentRecord, start)
+    end
+
+    records_ = newRecords
+    recordTotal_ = newCount
+    active_ = 1
+
+    return 1
+
+
+  /*
+   * Replace the current pipeline with records read from a text file.
+   *
+   * Each input line becomes one pipeline record, including empty lines.
+   * On success the pipeline becomes active.
+   *
+   * @param filename  Input text-file name.
+   * @return          1 on success, 0 on file or argument error.
+   */
+  readRecords: method = .int
+    arg filename = .string
+
+    if filename = "" then
+      return setError( ,
+          "invalid_argument", ,
+          "READ filename must not be empty", ,
+          "READ", ,
+          filename)
+
+    available = lines(filename)
+
+    if available < 0 then
+      return setError( ,
+          "file_error", ,
+          "could not open input file", ,
+          "READ", ,
+          filename)
+
+    newRecords = .string[]
+    newCount = 0
+
+    do while available > 0
+      newCount = newCount + 1
+      newRecords[newCount] = linein(filename)
+
+      available = lines(filename)
+    end
+
+    call lineout filename
+
+    records_ = newRecords
+    recordTotal_ = newCount
+    active_ = 1
+
+    return 1
+
+
+  /*
+   * Write every current pipeline record to a text file.
+   *
+   * Each record is written as one output line. The pipeline is not
+   * consumed or otherwise modified.
+   *
+   * NOTE: The current implementation does not explicitly truncate an
+   * existing file before writing.
+   *
+   * @param filename  Output text-file name.
+   * @return          1 on success, 0 on file, argument or pipeline error.
+   */
+  writeRecords: method = .int
+    arg filename = .string
+
+    if requireActive("WRITE") = 0 then
+      return 0
+
+    if filename = "" then
+      return setError( ,
+          "invalid_argument", ,
+          "WRITE filename must not be empty", ,
+          "WRITE", ,
+          filename)
+
+    if recordTotal_ = 0 then do
+      rc = charout(filename, "")
+      call charout filename
+
+      if rc <> 0 then
+        return setError( ,
+            "file_error", ,
+            "could not open output file", ,
+            "WRITE", ,
+            filename)
+
+      return 1
+    end
+
+    rc = .int
+
+    do i = 1 to recordTotal_
+      rc = lineout(filename, records_[i])
+
+      if rc <> 0 then do
+        call lineout filename
+
+        return setError( ,
+            "file_error", ,
+            "could not write output file", ,
+            "WRITE", ,
+            filename)
+      end
+    end
+
+    rc = lineout(filename)
+
+    if rc <> 0 then
+      return setError( ,
+          "file_error", ,
+          "could not close output file", ,
+          "WRITE", ,
+          filename)
+
+    return 1
+
+
+  /*
+   * Remove the first COUNT records from the current pipeline.
+   *
+   * COUNT must be a non-negative whole number. A count greater than or
+   * equal to the current record count produces an active empty pipeline.
+   *
+   * @param countText  Number of records to remove.
+   * @return           1 on success, 0 on error.
+   */
+  skipRecords: method = .int
+    arg countText = .string
+
+    if requireActive("SKIP") = 0 then
+      return 0
+
+    if datatype(countText, "W") = 0 then
+      return setError( ,
+          "invalid_argument", ,
+          "SKIP count must be a whole number", ,
+          "SKIP", ,
+          countText)
+
+    count = countText + 0
+
+    if count < 0 then
+      return setError( ,
+          "invalid_argument", ,
+          "SKIP count must not be negative", ,
+          "SKIP", ,
+          countText)
+
+    if count = 0 then
+      return 1
+
+    newRecords = .string[]
+    newCount = 0
+
+    start = count + 1
+
+    if start <= recordTotal_ then do
+      do i = start to recordTotal_
+        newCount = newCount + 1
+        newRecords[newCount] = records_[i]
+      end
+    end
+
+    records_ = newRecords
+    recordTotal_ = newCount
+
+    return 1
+
+
+  /*
+   * Keep at most the first COUNT records of the current pipeline.
+   *
+   * COUNT must be a non-negative whole number. COUNT zero produces an
+   * active empty pipeline.
+   *
+   * @param countText  Maximum number of records to retain.
+   * @return           1 on success, 0 on error.
+   */
+  takeRecords: method = .int
+    arg countText = .string
+
+    if requireActive("TAKE") = 0 then
+      return 0
+
+    if datatype(countText, "W") = 0 then
+      return setError( ,
+          "invalid_argument", ,
+          "TAKE count must be a whole number", ,
+          "TAKE", ,
+          countText)
+
+    count = countText + 0
+
+    if count < 0 then
+      return setError( ,
+          "invalid_argument", ,
+          "TAKE count must not be negative", ,
+          "TAKE", ,
+          countText)
+
+    if count >= recordTotal_ then
+      return 1
+
+    newRecords = .string[]
+
+    do i = 1 to count
+      newRecords[i] = records_[i]
+    end
+
+    records_ = newRecords
+    recordTotal_ = count
+
+    return 1
+
+
+  /*
+   * Sort pipeline records into ascending lexical order.
+   *
+   * Record count is unchanged.
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  sortRecords: method = .int
+
+    if requireActive("SORT") = 0 then
+      return 0
+
+    if recordTotal_ < 2 then
+      return 1
+
+    do i = 2 to recordTotal_
+      value = records_[i]
+      j = i - 1
+
+      do while j >= 1
+        if records_[j] <= value then
+          leave
+
+        records_[j + 1] = records_[j]
+        j = j - 1
+      end
+
+      records_[j + 1] = value
+    end
+
+    return 1
+
+
+  /*
+   * Remove duplicate records while preserving the first occurrence.
+   *
+   * Original order of retained records is preserved.
+   *
+   * @return  1 on success, 0 when the pipeline is inactive.
+   */
+  uniqueRecords: method = .int
+
+    if requireActive("UNIQUE") = 0 then
+      return 0
+
+    newRecords = .string[]
+    newCount = 0
+
+    do i = 1 to recordTotal_
+      currentRecord = records_[i]
+      duplicate = 0
+
+      do j = 1 to newCount
+        if newRecords[j] = currentRecord then do
+          duplicate = 1
+          leave
+        end
+      end
+
+      if duplicate = 0 then do
+        newCount = newCount + 1
+        newRecords[newCount] = currentRecord
+      end
+    end
+
+    records_ = newRecords
+    recordTotal_ = newCount
+
+    return 1
+
+
+  /*
+   * Prepend TEXT to every pipeline record.
+   *
+   * Record count and order are unchanged.
+   *
+   * @param text  Text to prepend.
+   * @return      1 on success, 0 when the pipeline is inactive.
+   */
+  prefixRecords: method = .int
+    arg text = .string
+
+    if requireActive("PREFIX") = 0 then
+      return 0
+
+    do i = 1 to recordTotal_
+      records_[i] = text || records_[i]
+    end
+
+    return 1
+
+
+  /*
+   * Append TEXT to every pipeline record.
+   *
+   * Record count and order are unchanged.
+   *
+   * @param text  Text to append.
+   * @return      1 on success, 0 when the pipeline is inactive.
+   */
+  suffixRecords: method = .int
+    arg text = .string
+
+    if requireActive("SUFFIX") = 0 then
+      return 0
+
+    do i = 1 to recordTotal_
+      records_[i] = records_[i] || text
+    end
+
+    return 1
+
+
+  /*
+   * Require an active pipeline for STAGE.
+   *
+   * @param stage  Stage name to record if the pipeline is inactive.
+   * @return       1 when active, otherwise 0 with error information set.
+   */
+  requireActive: method = .int
+    arg stage = .string
+
+    if active_ = 0 then
+      return setError( ,
+          "pipeline_inactive", ,
+          "pipeline has not been loaded", ,
+          stage, ,
+          "")
+
+    return 1
+
+
+  /*
+   * Clear the current record stream and mark the pipeline inactive.
+   *
+   * Output and error state are unchanged.
+   */
+  clearPipeline: method = .void
+    recordTotal_ = 0
+    active_ = 0
+
+    return
+
+
+  /*
+   * Clear all recorded error information.
+   */
+  clearError: method = .void
+    errorCode_ = ""
+    errorMessage_ = ""
+    errorStage_ = ""
+    errorDetail_ = ""
+
+    return
+
+
+  /*
+   * Record Pipe error information.
+   *
+   * @param code     Machine-readable error code.
+   * @param message  Human-readable error message.
+   * @param stage    Stage associated with the error.
+   * @param detail   Optional additional error detail.
+   * @return         Always 0, allowing direct return from failing methods.
+   */
+  setError: method = .int
+    arg code = .string, ,
+        message = .string, ,
+        stage = .string, ,
+        detail = .string
+
+    errorCode_ = code
+    errorMessage_ = message
+    errorStage_ = stage
+    errorDetail_ = detail
+
+    return 0
+
+
+  /*
+   * Convert ASCII upper-case characters in TEXT to lower case.
+   *
+   * @param text  Source text.
+   * @return      Converted text.
+   */
+  lowerText: method = .string
+    arg text = .string
+
+    return translate( ,
+        text, ,
+        "abcdefghijklmnopqrstuvwxyz", ,
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+
+  /*
+   * Replace every occurrence of OLD in TEXT with NEW.
+   *
+   * An empty OLD value leaves TEXT unchanged.
+   *
+   * @param text  Source text.
+   * @param old   Search text.
+   * @param new   Replacement text.
+   * @return      Resulting text.
+   */
+  replaceAll: method = .string
+    arg text = .string, ,
+        old = .string, ,
+        new = .string
+
+    if old = "" then
+      return text
+
+    result = ""
+    start = 1
+    oldLength = length(old)
+
+    found = pos(old, text, start)
+
+    do while found > 0
+      result = result || ,
+          substr(text, start, found - start) || ,
+          new
+
+      start = found + oldLength
+      found = pos(old, text, start)
+    end
+
+    result = result || substr(text, start)
+
+    return result
