@@ -2,8 +2,8 @@
 
 ## Status and programme context
 
-- **Status:** Level G/Unicode lane locally cut over and accepted; broad and
-  hosted exact-SHA qualification pending
+- **Status:** Level G/Unicode lane locally cut over; broad ordinary Debug QA
+  complete; sanitizer and hosted exact-SHA qualification pending
 - **Branch:** `temp/newbuild`
 - **Phase 2 hosted checkpoint:**
   `c0ab085b5f28aa0dcbb669fe040fe8b0fd264cbb`
@@ -150,14 +150,24 @@ These are product correctness fixes, not build workarounds.
 - the two new focused signal/ADDRESS regressions pass optimized and
   non-optimized in ordinary Debug.
 
+### Broad ordinary Debug QA
+
+The comprehensive correctness selection prepared cleanly and ran 2,224 tests
+at jobs 30. Exactly one test failed: the diagnostic catalogue checker found
+that the new Level B-or-Level G signal-block diagnostic key had not replaced
+the former Level B-only key in the three maintained message catalogues. The
+catalogues were corrected, after which the catalogue, localization and driver
+diagnostic-plumbing slice passed 3/3. The other 2,223 comprehensive tests had
+already passed and their code/build inputs did not change, so they were not
+repeated.
+
 ## 7. Remaining Phase 3 work
 
-1. Run the broader correctness selection without stress or performance tests.
-2. Run the designed sanitizer scope through `tools/asan-run.sh`; any finding
+1. Run the designed sanitizer scope through `tools/asan-run.sh`; any finding
    remains subject to the repository SAN worklist rules.
-3. Commit and push the CMake ownership cutover, then require exact-SHA hosted
+2. Push the CMake ownership cutover, then require exact-SHA hosted
    Build, Sanitizer and CodeQL success.
-4. Use the same direct, single-owner pattern for the remaining Level L and
+3. Use the same direct, single-owner pattern for the remaining Level L and
    other approved post-bootstrap lanes; do not reintroduce a shadow CMake
    graph.
 
