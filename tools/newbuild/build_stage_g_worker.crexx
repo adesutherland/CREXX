@@ -1,0 +1,132 @@
+/* Compiler-sealed task adapter for the Level B Phase 3 builder. */
+options levelg comments_dash
+
+namespace crexx_stage_g_worker expose compile_target
+import rxfnsb
+import concurrency
+
+show_command_failure: procedure = .void
+  arg action = .string, command_rc = .int, captured = .string[], errors = .string[]
+  i = .int
+  say "FAILED:" action "rc=" || command_rc
+  do i = 1 to captured[0]
+    say captured[i]
+  end
+  do i = 1 to errors[0]
+    say errors[i]
+  end
+  return
+
+run_argv: procedure = .int
+  arg action = .string, argv = .string[]
+  captured = .string[]
+  errors = .string[]
+  address crexx "run :argv[]" output captured error errors
+  command_rc = rc
+  if command_rc <> 0 then call show_command_failure action, command_rc, captured, errors
+  return command_rc
+
+remove_tree: procedure = .int
+  arg cmake = .string, path = .string
+  command = .string[]
+  call arrayappend command, cmake
+  call arrayappend command, "-E"
+  call arrayappend command, "rm"
+  call arrayappend command, "-rf"
+  call arrayappend command, path
+  return run_argv("remove " || path, command)
+
+make_directory: procedure = .int
+  arg cmake = .string, path = .string
+  command = .string[]
+  call arrayappend command, cmake
+  call arrayappend command, "-E"
+  call arrayappend command, "make_directory"
+  call arrayappend command, path
+  return run_argv("make directory " || path, command)
+
+copy_file: procedure = .int
+  arg cmake = .string, source = .string, destination = .string
+  command = .string[]
+  call arrayappend command, cmake
+  call arrayappend command, "-E"
+  call arrayappend command, "copy"
+  call arrayappend command, source
+  call arrayappend command, destination
+  return run_argv("copy " || source, command)
+
+run_in_directory: procedure = .int
+  arg label = .string, cmake = .string, directory = .string, child = .string[]
+  i = .int
+  command = .string[]
+  call arrayappend command, cmake
+  call arrayappend command, "-E"
+  call arrayappend command, "chdir"
+  call arrayappend command, directory
+  do i = 1 to child[0]
+    call arrayappend command, child[i]
+  end
+  return run_argv(label, command)
+
+write_stamp: procedure = .int
+  arg cmake = .string, path = .string, key = .string
+  temporary = path || ".tmp"
+  written = writebinary(temporary, key as .binary)
+  if written <> length(key) then return 1
+  command = .string[]
+  call arrayappend command, cmake
+  call arrayappend command, "-E"
+  call arrayappend command, "rename"
+  call arrayappend command, temporary
+  call arrayappend command, path
+  return run_argv("publish stamp " || path, command)
+
+compilework: class implements .taskwork
+  *: factory
+    return
+
+  run: method = .channelvalue
+    arg request = .channelvalue, context = .taskcontext
+    if context.cancellation_requested() then return .channelvalue.integer_value(1)
+    if request.schema() <> "crexx.build.stage-g.compile" | request.version() <> 1 then return .channelvalue.integer_value(2)
+
+    name = request.field("name").as_string()
+    source = request.field("source").as_string()
+    work_dir = request.field("workDir").as_string()
+    import_roots = request.field("importRoots").as_string()
+    rxc = request.field("rxc").as_string()
+    rxas = request.field("rxas").as_string()
+    cmake = request.field("cmake").as_string()
+    key = request.field("key").as_string()
+    compiler_exits = request.field("compilerExits").as_integer()
+
+    if remove_tree(cmake, work_dir) <> 0 then return .channelvalue.integer_value(1)
+    source_dir = work_dir || "/source"
+    if make_directory(cmake, source_dir) <> 0 then return .channelvalue.integer_value(1)
+    private_source = source_dir || "/" || name || ".crexx"
+    if copy_file(cmake, source, private_source) <> 0 then return .channelvalue.integer_value(1)
+
+    say "START: G member" name
+    compile = .string[]
+    call arrayappend compile, rxc
+    if compiler_exits = 0 then call arrayappend compile, "-x"
+    call arrayappend compile, "--no-exe-import"
+    call arrayappend compile, "-i"
+    call arrayappend compile, import_roots
+    call arrayappend compile, "-o"
+    call arrayappend compile, name
+    call arrayappend compile, private_source
+    if run_in_directory("compile G member " || name, cmake, work_dir, compile) <> 0 then return .channelvalue.integer_value(1)
+
+    assemble = .string[]
+    call arrayappend assemble, rxas
+    call arrayappend assemble, name
+    if run_in_directory("assemble G member " || name, cmake, work_dir, assemble) <> 0 then return .channelvalue.integer_value(1)
+
+    stamp = work_dir || "/action.sha256"
+    if write_stamp(cmake, stamp, key) <> 0 then return .channelvalue.integer_value(1)
+    say "BUILT: G member" name
+    return .channelvalue.integer_value(0)
+
+compile_target: procedure = .tasktarget
+  return task .compilework()

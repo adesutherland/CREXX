@@ -1,0 +1,29 @@
+options levelb comments_dash
+
+main: procedure = .int
+  arg arguments = .string[]
+  if arguments[0] <> 2 then return 2
+
+  do
+    ignored = readbinary(arguments[2])
+    return 3
+  on signal
+    nop
+  end
+
+  command = .string[]
+  command[1] = arguments[1]
+  command[2] = "-h"
+  captured = .string[]
+  errors = .string[]
+  address crexx "run :command[]" output captured error errors
+  if rc <> 0 then do
+    say "FAIL: child command after signal block rc=" || rc
+    do i = 1 to errors[0]
+      say errors[i]
+    end
+    return 1
+  end
+
+  say "SUCCESS"
+  return 0

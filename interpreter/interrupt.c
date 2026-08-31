@@ -962,7 +962,11 @@ static int ignore_interrupt_unlocked(int vm_signal) {
 
     /* Set up our new action to ignore */
     memset(&sa_new, 0, sizeof(sa_new));
-    sa_new.sa_handler = SIG_IGN; /* Set to ignore */
+    /* SIG_IGN has special lifecycle semantics for SIGCHLD on POSIX: the
+     * kernel may reap children before their owning provider can waitpid().
+     * Rexx "ignore" means no Rexx notification, not abandonment of child
+     * ownership, so retain the default waitable-child disposition. */
+    sa_new.sa_handler = os_signal == SIGCHLD ? SIG_DFL : SIG_IGN;
     sigemptyset(&sa_new.sa_mask); /* Block no other signals during handler */
     sa_new.sa_flags = SA_RESTART;  /* Restart interrupted syscalls */
 

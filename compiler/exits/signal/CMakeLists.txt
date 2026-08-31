@@ -24,6 +24,12 @@ crexx_add_compiler_exit_runtime_test(
 )
 
 crexx_add_compiler_exit_runtime_test(
+        test_signal_block_levelg
+        test_signal_block_levelg.crexx
+        RUN_SUFFIX ${LIBRPATH}
+)
+
+crexx_add_compiler_exit_runtime_test(
         reference_source_invalid_signal
         reference_source_invalid_signal.crexx
         PASS_REGULAR_EXPRESSION "PASS: Reference Source Invalid Signal"

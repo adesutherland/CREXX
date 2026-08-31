@@ -1739,8 +1739,9 @@ walker_result syntax_validation_walker(walker_direction direction,
         }
 
         else if (node->node_type == SIGNAL_BLOCK) {
-            if (context->level != LEVELB && !node->is_compiler_added) {
-                mknd_err(node, "SIGNAL_BLOCK_ONLY_LEVELB");
+            if (context->level != LEVELB && context->level != LEVELG &&
+                !node->is_compiler_added) {
+                mknd_err(node, "SIGNAL_BLOCK_ONLY_LEVELB_OR_LEVELG");
             }
         }
 

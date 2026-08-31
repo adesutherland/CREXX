@@ -1,0 +1,16 @@
+options levelg comments_dash
+
+main: procedure
+  caught = 0
+  caught_name = ""
+
+  do
+    signal other "level g block payload"
+  on signal other as problem
+    caught = 1
+    caught_name = problem.name()
+  end
+
+  if caught = 1 & caught_name = "OTHER" then say "SUCCESS"
+  else say "FAIL"
+  return

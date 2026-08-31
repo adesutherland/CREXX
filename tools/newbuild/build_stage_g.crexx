@@ -1,0 +1,388 @@
+/*
+ * Phase 3 Level G builder.
+ *
+ * This Level B controller owns the explicit dependency waves, action keys and
+ * publication policy.  CMake owns the native and Level B bootstrap.  The
+ * imported worker adapter supplies only a compiler-sealed task target.
+ */
+options levelb comments_dash
+
+namespace crexx_stage_g_builder
+import rxfnsb
+import concurrency
+import rxhash
+import crexx_stage_g_worker
+
+show_command_failure: procedure = .void
+  arg action = .string, command_rc = .int, captured = .string[], errors = .string[]
+  i = .int
+  say "FAILED:" action "rc=" || command_rc
+  do i = 1 to captured[0]
+    say captured[i]
+  end
+  do i = 1 to errors[0]
+    say errors[i]
+  end
+  return
+
+run_argv: procedure = .int
+  arg action = .string, argv = .string[]
+  captured = .string[]
+  errors = .string[]
+  address crexx "run :argv[]" output captured error errors
+  command_rc = rc
+  if command_rc <> 0 then call show_command_failure action, command_rc, captured, errors
+  return command_rc
+
+remove_tree: procedure = .int
+  arg cmake = .string, path = .string
+  command = .string[]
+  call arrayappend command, cmake
+  call arrayappend command, "-E"
+  call arrayappend command, "rm"
+  call arrayappend command, "-rf"
+  call arrayappend command, path
+  return run_argv("remove " || path, command)
+
+make_directory: procedure = .int
+  arg cmake = .string, path = .string
+  command = .string[]
+  call arrayappend command, cmake
+  call arrayappend command, "-E"
+  call arrayappend command, "make_directory"
+  call arrayappend command, path
+  return run_argv("make directory " || path, command)
+
+copy_file: procedure = .int
+  arg cmake = .string, source = .string, destination = .string
+  command = .string[]
+  call arrayappend command, cmake
+  call arrayappend command, "-E"
+  call arrayappend command, "copy"
+  call arrayappend command, source
+  call arrayappend command, destination
+  return run_argv("copy " || source, command)
+
+read_stamp: procedure = .string
+  arg path = .string
+  do
+    return readbinary(path) as .string
+  on signal
+    return ""
+  end
+  return ""
+
+file_hash: procedure = .string
+  arg path = .string
+  do
+    return rxhash..sha256filehex(path)
+  on signal
+    return ""
+  end
+  return ""
+
+key_update_text: procedure = .binary
+  arg state = .binary, text = .string
+  state = rxhash..sha256update(state, text as .binary)
+  state = rxhash..sha256update(state, '00'x as .binary)
+  return state
+
+action_key: procedure = .string
+  arg seed = .string, path1 = "", path2 = "", path3 = "", path4 = "", path5 = "", path6 = "", path7 = "", path8 = "", path9 = "", path10 = ""
+  paths = .string[]
+  paths[1] = path1
+  paths[2] = path2
+  paths[3] = path3
+  paths[4] = path4
+  paths[5] = path5
+  paths[6] = path6
+  paths[7] = path7
+  paths[8] = path8
+  paths[9] = path9
+  paths[10] = path10
+
+  state = rxhash..sha256init()
+  state = key_update_text(state, "crexx-stage-g/v1")
+  state = key_update_text(state, seed)
+  do i = 1 to paths[0]
+    if paths[i] <> "" then state = key_update_text(state, rxhash..sha256filehex(paths[i]))
+  end
+  return rxhash..sha256finalhex(state)
+
+action_current: procedure = .int
+  arg output = .string, stamp = .string, key = .string
+  if file_hash(output) = "" then return 0
+  return read_stamp(stamp) = key
+
+compile_request: procedure = .channelvalue
+  arg name = .string, source = .string, work_dir = .string, import_roots = .string, rxc = .string, rxas = .string, cmake = .string, key = .string, compiler_exits = .int
+  names = .string[]
+  values = .channelvalue[]
+  names[1] = "cmake"
+  values[1] = .channelvalue.string_value(cmake)
+  names[2] = "compilerExits"
+  values[2] = .channelvalue.integer_value(compiler_exits)
+  names[3] = "importRoots"
+  values[3] = .channelvalue.string_value(import_roots)
+  names[4] = "key"
+  values[4] = .channelvalue.string_value(key)
+  names[5] = "name"
+  values[5] = .channelvalue.string_value(name)
+  names[6] = "rxas"
+  values[6] = .channelvalue.string_value(rxas)
+  names[7] = "rxc"
+  values[7] = .channelvalue.string_value(rxc)
+  names[8] = "source"
+  values[8] = .channelvalue.string_value(source)
+  names[9] = "workDir"
+  values[9] = .channelvalue.string_value(work_dir)
+  return .channelvalue.record_value("crexx.build.stage-g.compile", 1, names, values)
+
+queue_compile: procedure = .int
+  arg expose requests = .channelvalue[], name = .string, source = .string, work_dir = .string, import_roots = .string, rxc = .string, rxas = .string, cmake = .string, key = .string, compiler_exits = .int
+  output = work_dir || "/" || name || ".rxbin"
+  stamp = work_dir || "/action.sha256"
+  if action_current(output, stamp, key) then do
+    say "SKIP: G member" name
+    return 0
+  end
+  requests[requests[0] + 1] = compile_request(name, source, work_dir, import_roots, rxc, rxas, cmake, key, compiler_exits)
+  return 0
+
+run_compile_wave: procedure = .int
+  arg pool = .taskpool, target = .tasktarget, requests = .channelvalue[], label = .string
+  i = .int
+  if requests[0] = 0 then return 0
+
+  say "WAVE:" label "jobs=" || requests[0]
+  scope = .taskscope.collectall(pool, -1)
+  children = .task[]
+  do i = 1 to requests[0]
+    children[i] = scope.submit(target, requests[i])
+  end
+  completed = scope.join()
+  call scope.close()
+
+  failures = 0
+  do i = 1 to completed[0]
+    if completed[i].succeeded() = 0 then do
+      say "FAILED:" label "task" i "code=" || completed[i].error_code() completed[i].message()
+      failures = failures + 1
+    end
+    else if completed[i].value().as_integer() <> 0 then failures = failures + 1
+  end
+  return failures <> 0
+
+reset_import_root: procedure = .int
+  arg cmake = .string, root = .string
+  if remove_tree(cmake, root) <> 0 then return 1
+  return make_directory(cmake, root)
+
+stage_import: procedure = .int
+  arg cmake = .string, root = .string, source = .string, published_name = .string
+  return copy_file(cmake, source, root || "/" || published_name)
+
+write_link_control: procedure = .int
+  arg path = .string, output_base = .string, modules = .string[], selectors = .string[], configuration = .string
+  i = .int
+  newline = '0a'x as .string
+  content = "* Generated by the Phase 3 Level G builder" || newline
+  do i = 1 to modules[0]
+    content = content || "INPUT " || modules[i] || newline
+  end
+  do i = 1 to selectors[0]
+    content = content || "INCLUDE " || selectors[i] || newline
+  end
+  content = content || "PRESERVE INLINE" || newline
+  if upper(configuration) <> "DEBUG" then content = content || "STRIP SOURCE" || newline
+  content = content || "OUTPUT " || output_base || newline
+  return writebinary(path, content as .binary) <> length(content)
+
+link_library: procedure = .int
+  arg work_root = .string, bin_dir = .string, rxlink = .string, cmake = .string, configuration = .string, modules = .string[], selectors = .string[], key = .string
+
+  link_dir = work_root || "/linked"
+  linked_image = link_dir || "/rxfnsg.rxbin"
+  stamp = link_dir || "/action.sha256"
+  if action_current(linked_image, stamp, key) = 0 then do
+    if remove_tree(cmake, link_dir) <> 0 then return 1
+    if make_directory(cmake, link_dir) <> 0 then return 1
+    control = link_dir || "/rxfnsg.ctl"
+    if write_link_control(control, link_dir || "/rxfnsg", modules, selectors, configuration) <> 0 then return 1
+    command = .string[]
+    call arrayappend command, rxlink
+    call arrayappend command, "-c"
+    call arrayappend command, control
+    if run_argv("link Level G library", command) <> 0 then return 1
+    written = writebinary(stamp || ".tmp", key as .binary)
+    if written <> length(key) then return 1
+    rename_stamp = .string[]
+    call arrayappend rename_stamp, cmake
+    call arrayappend rename_stamp, "-E"
+    call arrayappend rename_stamp, "rename"
+    call arrayappend rename_stamp, stamp || ".tmp"
+    call arrayappend rename_stamp, stamp
+    if run_argv("publish Level G link stamp", rename_stamp) <> 0 then return 1
+    say "BUILT: Level G library"
+  end
+  else say "SKIP: Level G link"
+
+  published = bin_dir || "/rxfnsg.rxbin"
+  published_hash = file_hash(published)
+  linked_hash = file_hash(linked_image)
+  if published_hash <> "" & published_hash = linked_hash then do
+    say "SKIP: Level G publish"
+    return 0
+  end
+
+  temporary = published || ".tmp"
+  if copy_file(cmake, linked_image, temporary) <> 0 then return 1
+  rename_command = .string[]
+  call arrayappend rename_command, cmake
+  call arrayappend rename_command, "-E"
+  call arrayappend rename_command, "rename"
+  call arrayappend rename_command, temporary
+  call arrayappend rename_command, published
+  if run_argv("publish Level G library", rename_command) <> 0 then return 1
+  say "PUBLISHED: " || published
+  return 0
+
+main: procedure = .int
+  arg arguments = .string[]
+  i = .int
+  if arguments[0] <> 10 then do
+    say "usage: build_stage_g source-dir work-root bin-dir rxc rxas rxlink cmake configuration jobs scope"
+    return 2
+  end
+
+  source_dir = arguments[1]
+  work_root = arguments[2]
+  bin_dir = arguments[3]
+  rxc = arguments[4]
+  rxas = arguments[5]
+  rxlink = arguments[6]
+  cmake = arguments[7]
+  configuration = arguments[8]
+  jobs = arguments[9] as .int
+  scope_name = lower(arguments[10])
+  if jobs < 1 then return 2
+  if scope_name <> "base" & scope_name <> "all" then do
+    say "unsupported Level G scope:" scope_name
+    return 2
+  end
+
+  if make_directory(cmake, work_root) <> 0 then return 1
+  members_root = work_root || "/members"
+  imports_root = work_root || "/imports"
+  base_imports = imports_root || "/base"
+  library = bin_dir || "/library.rxbin"
+  classlib = bin_dir || "/classlib.rxbin"
+
+  if reset_import_root(cmake, base_imports) <> 0 then return 1
+  if stage_import(cmake, base_imports, library, "library.rxbin") <> 0 then return 1
+  if stage_import(cmake, base_imports, classlib, "classlib.rxbin") <> 0 then return 1
+
+  tool_identity = action_key("compile-tools", rxc, rxas)
+  integer_source = source_dir || "/integer.crexx"
+  decimal_source = source_dir || "/decimal.crexx"
+  packednumeric_source = source_dir || "/packednumeric.crexx"
+  statsvalue_source = source_dir || "/statsvalue.crexx"
+  httpcodec_source = source_dir || "/httpcodec.crexx"
+  httpcore_source = source_dir || "/httpcore.crexx"
+
+  integer_key = action_key(tool_identity || ":integer:-x", integer_source, library, classlib)
+  decimal_key = action_key(tool_identity || ":decimal:-x", decimal_source, library, classlib)
+  packednumeric_key = action_key(tool_identity || ":packednumeric:-x", packednumeric_source, library, classlib)
+  statsvalue_key = action_key(tool_identity || ":statsvalue:-x", statsvalue_source, library, classlib)
+  httpcodec_key = action_key(tool_identity || ":httpcodec:-x", httpcodec_source, library, classlib)
+  httpcore_key = action_key(tool_identity || ":httpcore:-x", httpcore_source, library, classlib)
+
+  -- rxhash is a native controller dependency, so this linked image is not
+  -- eligible for a process pool.  Workers never mutate the shared working
+  -- directory; each host command is wrapped in cmake -E chdir instead.
+  pool = .taskpool.local(jobs, jobs * 2 + 16)
+  worker_target = crexx_stage_g_worker..compile_target()
+
+  wave1 = .channelvalue[]
+  call queue_compile wave1, "integer", integer_source, members_root || "/integer", base_imports, rxc, rxas, cmake, integer_key, 0
+  call queue_compile wave1, "decimal", decimal_source, members_root || "/decimal", base_imports, rxc, rxas, cmake, decimal_key, 0
+  call queue_compile wave1, "packednumeric", packednumeric_source, members_root || "/packednumeric", base_imports, rxc, rxas, cmake, packednumeric_key, 0
+  call queue_compile wave1, "statsvalue", statsvalue_source, members_root || "/statsvalue", base_imports, rxc, rxas, cmake, statsvalue_key, 0
+  call queue_compile wave1, "httpcodec", httpcodec_source, members_root || "/httpcodec", base_imports, rxc, rxas, cmake, httpcodec_key, 0
+  call queue_compile wave1, "httpcore", httpcore_source, members_root || "/httpcore", base_imports, rxc, rxas, cmake, httpcore_key, 0
+  if run_compile_wave(pool, worker_target, wave1, "G1 independent base members") <> 0 then do
+    call pool.close()
+    return 1
+  end
+
+  http_private = imports_root || "/http-private"
+  httpcodec_bin = members_root || "/httpcodec/httpcodec.rxbin"
+  httpcore_bin = members_root || "/httpcore/httpcore.rxbin"
+  if reset_import_root(cmake, http_private) <> 0 then do
+    call pool.close()
+    return 1
+  end
+  if stage_import(cmake, http_private, httpcodec_bin, "httpcodec.rxbin") <> 0 then do
+    call pool.close()
+    return 1
+  end
+  if stage_import(cmake, http_private, httpcore_bin, "httpcore.rxbin") <> 0 then do
+    call pool.close()
+    return 1
+  end
+
+  http_source = source_dir || "/http.crexx"
+  http_key = action_key(tool_identity || ":http:-x", http_source, library, classlib, httpcodec_bin, httpcore_bin)
+  wave2 = .channelvalue[]
+  call queue_compile wave2, "http", http_source, members_root || "/http", base_imports || ";" || http_private, rxc, rxas, cmake, http_key, 0
+  if run_compile_wave(pool, worker_target, wave2, "G2 public HTTP") <> 0 then do
+    call pool.close()
+    return 1
+  end
+
+  http_public = imports_root || "/http-public"
+  http_bin = members_root || "/http/http.rxbin"
+  if reset_import_root(cmake, http_public) <> 0 then do
+    call pool.close()
+    return 1
+  end
+  if stage_import(cmake, http_public, http_bin, "rxfnsg.rxbin") <> 0 then do
+    call pool.close()
+    return 1
+  end
+  if stage_import(cmake, http_public, httpcore_bin, "httpcore.rxbin") <> 0 then do
+    call pool.close()
+    return 1
+  end
+
+  httpserver_source = source_dir || "/httpserver.crexx"
+  llm_source = source_dir || "/llm.crexx"
+  httpserver_key = action_key(tool_identity || ":httpserver:-x", httpserver_source, library, classlib, http_bin, httpcore_bin)
+  llm_key = action_key(tool_identity || ":llm:-x", llm_source, library, classlib, http_bin, httpcore_bin)
+  wave3 = .channelvalue[]
+  call queue_compile wave3, "httpserver", httpserver_source, members_root || "/httpserver", base_imports || ";" || http_public, rxc, rxas, cmake, httpserver_key, 0
+  call queue_compile wave3, "llm", llm_source, members_root || "/llm", base_imports || ";" || http_public, rxc, rxas, cmake, llm_key, 0
+  wave3_rc = run_compile_wave(pool, worker_target, wave3, "G3 HTTP consumers")
+  call pool.close()
+  if wave3_rc <> 0 then return 1
+
+  names = .string[]
+  names[1] = "integer"
+  names[2] = "decimal"
+  names[3] = "packednumeric"
+  names[4] = "statsvalue"
+  names[5] = "httpcodec"
+  names[6] = "httpcore"
+  names[7] = "http"
+  names[8] = "httpserver"
+  names[9] = "llm"
+  modules = .string[]
+  do i = 1 to names[0]
+    modules[i] = members_root || "/" || names[i] || "/" || names[i] || ".rxbin"
+  end
+
+  link_key = action_key("link-tool:" || configuration, rxlink)
+  do i = 1 to modules[0]
+    link_key = action_key(link_key || ":" || names[i], modules[i])
+  end
+  return link_library(work_root, bin_dir, rxlink, cmake, configuration, modules, names, link_key)
