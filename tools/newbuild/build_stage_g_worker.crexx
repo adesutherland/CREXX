@@ -1,7 +1,7 @@
 /* Compiler-sealed task adapter for the Level B Phase 3 builder. */
 options levelg comments_dash
 
-namespace crexx_stage_g_worker expose compile_target
+namespace crexx_stage_g_worker expose compile_target command_target
 import rxfnsb
 import concurrency
 
@@ -81,6 +81,19 @@ write_stamp: procedure = .int
   call arrayappend command, path
   return run_argv("publish stamp " || path, command)
 
+file_exists: procedure = .int
+  arg cmake = .string, path = .string
+  command = .string[]
+  call arrayappend command, cmake
+  call arrayappend command, "-E"
+  call arrayappend command, "compare_files"
+  call arrayappend command, path
+  call arrayappend command, path
+  captured = .string[]
+  errors = .string[]
+  address crexx "run :command[]" output captured error errors
+  return rc = 0
+
 compilework: class implements .taskwork
   *: factory
     return
@@ -123,10 +136,43 @@ compilework: class implements .taskwork
     call arrayappend assemble, name
     if run_in_directory("assemble G member " || name, cmake, work_dir, assemble) <> 0 then return .channelvalue.integer_value(1)
 
+    output = work_dir || "/" || name || ".rxbin"
+    if file_exists(cmake, output) = 0 then return .channelvalue.integer_value(1)
     stamp = work_dir || "/action.sha256"
     if write_stamp(cmake, stamp, key) <> 0 then return .channelvalue.integer_value(1)
     say "BUILT: G member" name
     return .channelvalue.integer_value(0)
 
+commandwork: class implements .taskwork
+  *: factory
+    return
+
+  run: method = .channelvalue
+    arg request = .channelvalue, context = .taskcontext
+    if context.cancellation_requested() then return .channelvalue.integer_value(1)
+    if request.schema() <> "crexx.build.stage-g.command" | request.version() <> 1 then return .channelvalue.integer_value(2)
+
+    label = request.field("label").as_string()
+    cmake = request.field("cmake").as_string()
+    work_dir = request.field("workDir").as_string()
+    output = request.field("output").as_string()
+    stamp = request.field("stamp").as_string()
+    key = request.field("key").as_string()
+    encoded_argv = request.field("argv")
+    argv = .string[]
+    do i = 1 to encoded_argv.count()
+      argv[i] = encoded_argv.item(i).as_string()
+    end
+
+    say "START:" label
+    if run_in_directory(label, cmake, work_dir, argv) <> 0 then return .channelvalue.integer_value(1)
+    if file_exists(cmake, output) = 0 then return .channelvalue.integer_value(1)
+    if write_stamp(cmake, stamp, key) <> 0 then return .channelvalue.integer_value(1)
+    say "BUILT:" label
+    return .channelvalue.integer_value(0)
+
 compile_target: procedure = .tasktarget
   return task .compilework()
+
+command_target: procedure = .tasktarget
+  return task .commandwork()
