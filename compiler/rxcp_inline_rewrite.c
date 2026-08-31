@@ -527,7 +527,8 @@ static int inline_expansion_cost_build_executable_reference(
     return reference->valid;
 }
 
-static void inline_expansion_plan_init(InlineExpansionPlan *plan,
+static void inline_expansion_plan_init(Context *context,
+                                       InlineExpansionPlan *plan,
                                        ASTNode *original_call,
                                        ASTNode *replacement_target,
                                        Scope *parent_scope,
@@ -541,6 +542,7 @@ static void inline_expansion_plan_init(InlineExpansionPlan *plan,
     plan->parent_scope = parent_scope;
     plan->callee_symbol = callee_symbol;
     plan->kind = kind;
+    plan->allocation_mark = context ? context->free_list : NULL;
     (void)inline_expansion_cost_collect(original_call, &plan->original_call_cost);
 }
 
@@ -829,11 +831,13 @@ static int inline_expansion_plan_commit(Context *context,
                                  plan ? plan->original_call : NULL,
                                  plan ? plan->callee_symbol : NULL,
                                  "invalid inline expansion transaction commit");
+        inline_expansion_plan_abort(context, plan);
         return 0;
     }
 
     if (!plan->reference_candidate_cost.valid &&
         !inline_expansion_plan_record_reference(context, plan, candidate_root, 0)) {
+        inline_expansion_plan_abort(context, plan);
         return 0;
     }
     if (!inline_expansion_cost_collect(candidate_root, &plan->final_candidate_cost)) {
@@ -841,6 +845,7 @@ static int inline_expansion_plan_commit(Context *context,
                                  plan->original_call,
                                  plan->callee_symbol,
                                  "failed to cost final inline candidate");
+        inline_expansion_plan_abort(context, plan);
         return 0;
     }
 
@@ -861,6 +866,7 @@ static int inline_expansion_plan_commit(Context *context,
                                      plan->original_call,
                                      plan->callee_symbol,
                                      "failed to build call-plus-body inline profitability reference");
+            inline_expansion_plan_abort(context, plan);
             return 0;
         }
         plan->reference_candidate_cost = executable_reference;
@@ -896,6 +902,7 @@ static int inline_expansion_plan_commit(Context *context,
                                  plan->reference_candidate_cost.calls,
                                  plan->final_candidate_cost.inline_temp_definitions,
                                  plan->reference_candidate_cost.inline_temp_definitions);
+        inline_expansion_plan_abort(context, plan);
         return 0;
     }
 
@@ -903,8 +910,16 @@ static int inline_expansion_plan_commit(Context *context,
         candidate_root->is_inline_pruned = 1;
     }
     plan->candidate_root = candidate_root;
-    rxcp_remap_replace_node(plan->replacement_target, candidate_root);
+    if (!rxcp_remap_replace_node(plan->replacement_target, candidate_root)) {
+        inline_debug_fail_closed(context,
+                                 plan->original_call,
+                                 plan->callee_symbol,
+                                 "failed to install inline candidate");
+        inline_expansion_plan_abort(context, plan);
+        return 0;
+    }
     plan->committed = 1;
+    inline_expansion_plan_release_tracking(plan);
     return 1;
 }
 
@@ -936,11 +951,12 @@ static ASTNode *inline_create_receiver_copyback_leave_wrapper(Context *context,
     leave_expr = leave_node->child;
     if (!leave_expr) return NULL;
 
-    temp_symbol = rxcp_remap_create_temp_symbol(context,
+    temp_symbol = inline_create_temp_symbol(context,
                                             inline_scope,
                                             leave_expr,
                                             "__inline_leave",
-                                            (size_t)leave_node->node_number);
+                                            (size_t)leave_node->node_number,
+                                            clone_state);
     if (!temp_symbol) return NULL;
 
     assign_node = rxcp_remap_create_assignment_node(context,
@@ -1250,6 +1266,11 @@ static ASTNode *inline_build_block_expr(Context *context,
         inline_debug_fail_closed(context, call_node, proc_sym, "failed to create BLOCK_EXPR inline scaffold");
         return NULL;
     }
+    if (!inline_expansion_plan_own_candidate(expansion_plan, block_expr, inline_scope)) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to register BLOCK_EXPR inline transaction");
+        inline_expansion_plan_abort(context, expansion_plan);
+        return NULL;
+    }
 
     if (allow_dummy_return && proc_sym->type == TP_VOID) {
         ast_set_value_type(0, block_expr, TP_INTEGER, 0, 0, 0, 0);
@@ -1257,24 +1278,22 @@ static ASTNode *inline_build_block_expr(Context *context,
     }
 
     memset(&clone_state, 0, sizeof(clone_state));
+    clone_state.expansion_plan = expansion_plan;
 
     if (!inline_build_symbol_map(proc_def->scope, inline_scope, &clone_state)) {
         inline_debug_fail_closed(context, call_node, proc_sym, "failed to build inline symbol/scope map");
-        inline_free_symbol_map(&clone_state);
-        return NULL;
+        goto fail;
     }
 
     if (!inline_bind_call_arguments(context, instr_list, inline_scope, proc_def, call_node, proc_sym, &clone_state)) {
         inline_debug_fail_closed(context, call_node, proc_sym, "failed to bind inline call arguments");
-        inline_free_symbol_map(&clone_state);
-        return NULL;
+        goto fail;
     }
 
     proc_instrs = ast_chld(proc_def, INSTRUCTIONS, 0);
     if (!proc_instrs) {
         inline_debug_fail_closed(context, call_node, proc_sym, "callee has no instruction list");
-        inline_free_symbol_map(&clone_state);
-        return NULL;
+        goto fail;
     }
 
     proc_instr = proc_instrs->child;
@@ -1291,8 +1310,7 @@ static ASTNode *inline_build_block_expr(Context *context,
         }
         if (!cloned_instr) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to clone callee instruction subtree");
-            inline_free_symbol_map(&clone_state);
-            return NULL;
+            goto fail;
         }
         if (!inline_rewrite_return_nodes(context,
                                          &cloned_instr,
@@ -1302,8 +1320,7 @@ static ASTNode *inline_build_block_expr(Context *context,
                                          proc_sym->type,
                                          &clone_state)) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to rewrite return nodes for BLOCK_EXPR inline");
-            inline_free_symbol_map(&clone_state);
-            return NULL;
+            goto fail;
         }
         add_ast(instr_list, cloned_instr);
 
@@ -1317,8 +1334,7 @@ static ASTNode *inline_build_block_expr(Context *context,
                                  call_node,
                                  proc_sym,
                                  "detached receiver-guard clone failed post-rewrite validation");
-        inline_free_symbol_map(&clone_state);
-        return NULL;
+        goto fail;
     }
 
     if (allow_dummy_return && proc_sym->type == TP_VOID &&
@@ -1330,8 +1346,7 @@ static ASTNode *inline_build_block_expr(Context *context,
         leave_expr = rxcp_remap_create_integer_constant(context, call_node, 0, TP_INTEGER);
         if (!leave_expr) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to create dummy LEAVE_WITH expression");
-            inline_free_symbol_map(&clone_state);
-            return NULL;
+            goto fail;
         }
         leave_expr->scope = inline_scope;
 
@@ -1343,8 +1358,7 @@ static ASTNode *inline_build_block_expr(Context *context,
                                                   leave_expr);
         if (!leave_with) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to create dummy LEAVE_WITH node");
-            inline_free_symbol_map(&clone_state);
-            return NULL;
+            goto fail;
         }
     }
 
@@ -1352,11 +1366,15 @@ static ASTNode *inline_build_block_expr(Context *context,
                                               expansion_plan,
                                               block_expr,
                                               &clone_state)) {
-        inline_free_symbol_map(&clone_state);
-        return NULL;
+        goto fail;
     }
     inline_free_symbol_map(&clone_state);
     return block_expr;
+
+fail:
+    inline_free_symbol_map(&clone_state);
+    inline_expansion_plan_abort(context, expansion_plan);
+    return NULL;
 }
 
 static int ast_inline_statement(Context *context,
@@ -1376,7 +1394,8 @@ static int ast_inline_statement(Context *context,
 
     if (!context || !statement_node || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
 
-    inline_expansion_plan_init(&expansion_plan,
+    inline_expansion_plan_init(context,
+                               &expansion_plan,
                                call_node,
                                statement_node,
                                statement_node->scope,
@@ -1402,27 +1421,31 @@ static int ast_inline_statement(Context *context,
         inline_debug_fail_closed(context, call_node, proc_sym, "failed to create compiler-generated statement block");
         return 0;
     }
+    if (!inline_expansion_plan_own_candidate(&expansion_plan, block, inline_scope)) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to register statement inline transaction");
+        inline_expansion_plan_abort(context, &expansion_plan);
+        return 0;
+    }
     instr_list = block;
 
     memset(&clone_state, 0, sizeof(clone_state));
+    clone_state.expansion_plan = &expansion_plan;
     receiver_copyback_appended = 0;
 
     if (!inline_build_symbol_map(proc_def->scope, inline_scope, &clone_state)) {
         inline_debug_fail_closed(context, call_node, proc_sym, "failed to build inline symbol/scope map");
-        return 0;
+        goto fail;
     }
 
     if (!inline_bind_call_arguments(context, instr_list, inline_scope, proc_def, call_node, proc_sym, &clone_state)) {
         inline_debug_fail_closed(context, call_node, proc_sym, "failed to bind inline call arguments");
-        inline_free_symbol_map(&clone_state);
-        return 0;
+        goto fail;
     }
 
     proc_instrs = ast_chld(proc_def, INSTRUCTIONS, 0);
     if (!proc_instrs) {
         inline_debug_fail_closed(context, call_node, proc_sym, "callee has no instruction list");
-        inline_free_symbol_map(&clone_state);
-        return 0;
+        goto fail;
     }
 
     proc_instr = proc_instrs->child;
@@ -1462,14 +1485,12 @@ static int ast_inline_statement(Context *context,
                                                         "__inline_unused");
             } else {
                 inline_debug_fail_closed(context, call_node, proc_sym, "missing return target/sink during statement inline");
-                inline_free_symbol_map(&clone_state);
-                return 0;
+                goto fail;
             }
 
             if (!ret_lhs) {
                 inline_debug_fail_closed(context, call_node, proc_sym, "failed to build return assignment target");
-                inline_free_symbol_map(&clone_state);
-                return 0;
+                goto fail;
             }
 
             if (clone_state.method_receiver_needs_copyback) {
@@ -1482,8 +1503,7 @@ static int ast_inline_statement(Context *context,
                                                        (size_t)proc_instr->node_number);
                 if (!ret_rhs) {
                     inline_debug_fail_closed(context, call_node, proc_sym, "failed to capture return value before receiver copyback");
-                    inline_free_symbol_map(&clone_state);
-                    return 0;
+                    goto fail;
                 }
 
                 if (!inline_append_method_receiver_copyback(context,
@@ -1492,8 +1512,7 @@ static int ast_inline_statement(Context *context,
                                                             call_node,
                                                             &clone_state)) {
                     inline_debug_fail_closed(context, call_node, proc_sym, "failed to append method receiver copyback before return assignment");
-                    inline_free_symbol_map(&clone_state);
-                    return 0;
+                    goto fail;
                 }
                 receiver_copyback_appended = 1;
             } else if (inline_node_has_array_shape(ret_expr) ||
@@ -1502,8 +1521,7 @@ static int ast_inline_statement(Context *context,
                 ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
                 if (!ret_rhs) {
                     inline_debug_fail_closed(context, call_node, proc_sym, "failed to clone aggregate return expression");
-                    inline_free_symbol_map(&clone_state);
-                    return 0;
+                    goto fail;
                 }
 
                 if (!inline_is_direct_symbol_actual(ret_expr)) {
@@ -1518,15 +1536,13 @@ static int ast_inline_statement(Context *context,
 
                 if (!ret_rhs) {
                     inline_debug_fail_closed(context, call_node, proc_sym, "failed to materialise aggregate return temp");
-                    inline_free_symbol_map(&clone_state);
-                    return 0;
+                    goto fail;
                 }
             } else {
                 ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
                 if (!ret_rhs) {
                     inline_debug_fail_closed(context, call_node, proc_sym, "failed to clone scalar return expression");
-                    inline_free_symbol_map(&clone_state);
-                    return 0;
+                    goto fail;
                 }
             }
 
@@ -1545,8 +1561,7 @@ static int ast_inline_statement(Context *context,
                 ret_copy = rxcp_remap_create_register_copy_instr(context, inline_scope, "copy", ret_lhs, ret_rhs);
                 if (!ret_copy) {
                     inline_debug_fail_closed(context, call_node, proc_sym, "failed to create return copy instructions");
-                    inline_free_symbol_map(&clone_state);
-                    return 0;
+                    goto fail;
                 }
                 add_ast(instr_list, ret_copy);
             } else {
@@ -1558,8 +1573,7 @@ static int ast_inline_statement(Context *context,
             cloned_instr = inline_clone_body_instruction(context, proc_instr, &clone_state);
             if (!cloned_instr) {
                 inline_debug_fail_closed(context, call_node, proc_sym, "failed to clone statement instruction subtree");
-                inline_free_symbol_map(&clone_state);
-                return 0;
+                goto fail;
             }
             add_ast(instr_list, cloned_instr);
         }
@@ -1574,8 +1588,7 @@ static int ast_inline_statement(Context *context,
                                                     call_node,
                                                     &clone_state)) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to append method receiver copyback");
-            inline_free_symbol_map(&clone_state);
-            return 0;
+            goto fail;
         }
     }
 
@@ -1583,8 +1596,7 @@ static int ast_inline_statement(Context *context,
                                               &expansion_plan,
                                               block,
                                               &clone_state)) {
-        inline_free_symbol_map(&clone_state);
-        return 0;
+        goto fail;
     }
     if (!inline_expansion_plan_commit(context, &expansion_plan, block)) {
         inline_free_symbol_map(&clone_state);
@@ -1593,6 +1605,11 @@ static int ast_inline_statement(Context *context,
     inline_free_symbol_map(&clone_state);
 
     return 1;
+
+fail:
+    inline_free_symbol_map(&clone_state);
+    inline_expansion_plan_abort(context, &expansion_plan);
+    return 0;
 }
 
 int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_node, Symbol *proc_sym) {
@@ -1606,7 +1623,8 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
 
     if (!assign_node || !call_node) return 0;
 
-    inline_expansion_plan_init(&expansion_plan,
+    inline_expansion_plan_init(context,
+                               &expansion_plan,
                                call_node,
                                call_node,
                                assign_node->scope,
@@ -1688,7 +1706,8 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
     InlineExpansionPlan expansion_plan;
     int method_needs_receiver_copyback;
 
-    inline_expansion_plan_init(&expansion_plan,
+    inline_expansion_plan_init(context,
+                               &expansion_plan,
                                call_node,
                                call_stmt,
                                call_stmt ? call_stmt->scope : NULL,
@@ -1738,6 +1757,11 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to create compiler-generated sink block");
             return 0;
         }
+        if (!inline_expansion_plan_own_candidate(&expansion_plan, block, block_scope)) {
+            inline_debug_fail_closed(context, call_node, proc_sym, "failed to register sink-block inline transaction");
+            inline_expansion_plan_abort(context, &expansion_plan);
+            return 0;
+        }
 
         block_expr = inline_build_block_expr(context,
                                              call_node,
@@ -1753,6 +1777,7 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
                                                         block_expr);
         if (!sink_assign) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to create sink assignment");
+            inline_expansion_plan_abort(context, &expansion_plan);
             return 0;
         }
 
@@ -1763,6 +1788,7 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
                                                  "__inline_unused");
         if (!sink_lhs) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to create unused return sink target");
+            inline_expansion_plan_abort(context, &expansion_plan);
             return 0;
         }
 
@@ -1785,7 +1811,8 @@ int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym
 
     if (!context || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
 
-    inline_expansion_plan_init(&expansion_plan,
+    inline_expansion_plan_init(context,
+                               &expansion_plan,
                                call_node,
                                call_node,
                                call_node->scope,
@@ -1869,7 +1896,8 @@ int ast_inline_rhs_eager_operator(Context *context,
         return 0;
     }
 
-    inline_expansion_plan_init(&expansion_plan,
+    inline_expansion_plan_init(context,
+                               &expansion_plan,
                                rhs_call,
                                op_node,
                                parent_scope,
@@ -1887,35 +1915,40 @@ int ast_inline_rhs_eager_operator(Context *context,
                                  "failed to create RHS eager-operator BLOCK_EXPR");
         return 0;
     }
-
-    left_symbol = rxcp_remap_create_temp_symbol(context,
-                                            inline_scope,
-                                            left,
-                                            "__inline_lhs",
-                                            (size_t)op_node->node_number);
-    if (!left_symbol) {
-        inline_debug_fail_closed(context, rhs_call, proc_sym,
-                                 "failed to create RHS eager-operator left temp");
+    if (!inline_expansion_plan_own_candidate(&expansion_plan, block_expr, inline_scope)) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym, "failed to register eager-operator inline transaction");
+        inline_expansion_plan_abort(context, &expansion_plan);
         return 0;
     }
 
     memset(&clone_state, 0, sizeof(clone_state));
     clone_state.inline_scope = inline_scope;
+    clone_state.expansion_plan = &expansion_plan;
+
+    left_symbol = inline_create_temp_symbol(context,
+                                            inline_scope,
+                                            left,
+                                            "__inline_lhs",
+                                            (size_t)op_node->node_number,
+                                            &clone_state);
+    if (!left_symbol) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "failed to create RHS eager-operator left temp");
+        goto fail;
+    }
 
     assign_rhs = inline_clone_subtree_in_scope(context, left, &clone_state, inline_scope);
     if (!assign_rhs) {
         inline_debug_fail_closed(context, rhs_call, proc_sym,
                                  "failed to clone RHS eager-operator left operand");
-        inline_free_symbol_map(&clone_state);
-        return 0;
+        goto fail;
     }
 
     rhs_expr = inline_clone_subtree_in_scope(context, rhs_call, &clone_state, inline_scope);
     if (!rhs_expr) {
         inline_debug_fail_closed(context, rhs_call, proc_sym,
                                  "failed to clone RHS eager-operator right operand");
-        inline_free_symbol_map(&clone_state);
-        return 0;
+        goto fail;
     }
 
     assign_node = rxcp_remap_create_assignment_node(context,
@@ -1923,8 +1956,7 @@ int ast_inline_rhs_eager_operator(Context *context,
                                                     left,
                                                     assign_rhs);
     if (!assign_node) {
-        inline_free_symbol_map(&clone_state);
-        return 0;
+        goto fail;
     }
 
     assign_lhs = rxcp_remap_create_symbol_node(context,
@@ -1935,16 +1967,14 @@ int ast_inline_rhs_eager_operator(Context *context,
                                            0,
                                            1);
     if (!assign_lhs) {
-        inline_free_symbol_map(&clone_state);
-        return 0;
+        goto fail;
     }
 
     rxcp_remap_append_assignment_node(instr_list, assign_node, assign_lhs, assign_rhs);
 
     op_expr = ast_dup(context, op_node);
     if (!op_expr) {
-        inline_free_symbol_map(&clone_state);
-        return 0;
+        goto fail;
     }
     op_expr->scope = inline_scope;
 
@@ -1956,8 +1986,7 @@ int ast_inline_rhs_eager_operator(Context *context,
                                          1,
                                          0);
     if (!temp_ref) {
-        inline_free_symbol_map(&clone_state);
-        return 0;
+        goto fail;
     }
 
     add_ast(op_expr, temp_ref);
@@ -1970,12 +1999,16 @@ int ast_inline_rhs_eager_operator(Context *context,
                                               block_expr,
                                               op_expr);
     if (!leave_node) {
-        inline_free_symbol_map(&clone_state);
-        return 0;
+        goto fail;
     }
 
     inline_free_symbol_map(&clone_state);
     return inline_expansion_plan_commit(context, &expansion_plan, block_expr);
+
+fail:
+    inline_free_symbol_map(&clone_state);
+    inline_expansion_plan_abort(context, &expansion_plan);
+    return 0;
 }
 
 static walker_result inlinable_check_walker(walker_direction direction, ASTNode *node, void *payload) {

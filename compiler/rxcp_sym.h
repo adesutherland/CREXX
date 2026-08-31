@@ -194,6 +194,7 @@ void sym_copy_constant_alias(Symbol *dest, const Symbol *src);
 /* Scope Factory */
 Scope *scp_f(Context *context, Scope *parent, ASTNode *node, Symbol* symbol, ScopeType type);
 int scp_track_detached(Context *context, Scope *scope);
+int scp_abandon(Context *context, Scope *scope);
 void scp_free_detached(Context *context);
 
 /* Calls the handler for each symbol in scope */

@@ -157,6 +157,32 @@ int scp_track_detached(Context *context, Scope *scope) {
     return 1;
 }
 
+/* Remove a speculative scope tree from normal traversal and retain it for
+ * context teardown.  AST nodes are arena-owned by the Context; callers must
+ * disconnect any speculative symbol connectors before abandoning the scope. */
+int scp_abandon(Context *context, Scope *scope) {
+    Scope *parent;
+    dpa *children;
+    size_t i;
+
+    if (!context || !scope || !scope->parent) return 0;
+
+    parent = scope->parent;
+    children = (dpa *)parent->child_array;
+    if (!children) return 0;
+
+    for (i = 0; i < children->size; i++) {
+        if (children->pointers[i] == scope) {
+            dpa_del(children, i);
+            scope->parent = 0;
+            scope->reg_scope = scope;
+            return scp_track_detached(context, scope);
+        }
+    }
+
+    return 0;
+}
+
 /* Calls the handler for each symbol in scope */
 void scp_4all(Scope *scope, symbol_worker worker, void *payload) {
     struct symbol_wrapper *i;

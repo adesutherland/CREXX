@@ -3860,6 +3860,11 @@ add_crexx_run_test(inline_test_vararg rexx_src/inline_test_vararg.crexx)
 add_crexx_run_test(inline_test_vararg_dynamic rexx_src/inline_test_vararg_dynamic.crexx)
 add_crexx_run_test(inline_test_vararg_dynamic_loop rexx_src/inline_test_vararg_dynamic_loop.crexx)
 add_crexx_run_test(inline_test_vararg_negative rexx_src/inline_test_vararg_negative.crexx)
+add_crexx_run_test(issue_680_vararg_call_argument
+        rexx_src/issue_680_vararg_call_argument.crexx)
+set_tests_properties(issue_680_vararg_call_argument_run_noopt
+        issue_680_vararg_call_argument_run_opt PROPERTIES
+        LABELS "compiler;inlining;vararg;regression;issue-680")
 add_crexx_run_test(inline_test_exposed_nested_call rexx_src/inline_test_exposed_nested_call.crexx)
 add_crexx_run_test(inline_test_nested_scope_do rexx_src/inline_test_nested_scope_do.crexx)
 add_crexx_run_test(inline_test_nested_scope_if_do rexx_src/inline_test_nested_scope_if_do.crexx)
