@@ -14,7 +14,7 @@ An explicit design goal was to keep the standard library structure relatively fl
 
 The top level of the library is:  
 
-- OS
+- System
 - Data
 - Time
 - GUI

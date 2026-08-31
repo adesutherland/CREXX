@@ -1,285 +1,205 @@
 # Date and Time
 
-The `time` package provides classes for representing dates and times and for
-reading and writing ISO 8601 representations. The package separates a local
-date and time from a date and time that has an explicit offset from UTC.
+Programs have several different reasons for working with dates and times. A
+program may need to record a calendar date, calculate the number of days
+between two events, determine the ISO week containing a date, or identify an
+instant that can be compared with an event recorded in another part of the
+world. Although these requirements are related, they do not all require the
+same representation.
 
-The principal classes are:
+The cRexx `time` package therefore distinguishes between a date and time as it
+appears on a clock and a date and time that also carries an offset from UTC.
+It also provides support for converting these values to and from ISO 8601
+representations.
 
-* `DateTime`, representing a calendar date and a time of day;
-* `OffsetDateTime`, representing a `DateTime` together with a UTC offset; and
-* `ISO8601`, providing ISO 8601 parsing and formatting.
+The package is built around three classes:
 
-A `DateTime` does not imply a time zone. For example:
+* `DateTime` represents a calendar date and a time of day;
+* `OffsetDateTime` adds an offset from UTC to a `DateTime`; and
+* `ISO8601` converts these values to and from ISO 8601 text.
 
-    2026-08-24T20:00:00
+This separation is useful even in programs that never deal with different
+time zones. It makes explicit whether a value such as 20:00 means simply
+"eight o'clock" or identifies an instant relative to UTC.
 
-describes a local date and time, but does not identify where in the world that
-time occurs.
+## Representing a Date and Time
 
-An `OffsetDateTime` adds an offset from UTC:
+A `DateTime` combines a Gregorian calendar date with a time of day. It has
+microsecond precision but contains no UTC offset.
 
-    2026-08-24T20:00:00Z
-    2026-08-24T22:00:00+02:00
-
-These two values represent the same instant. The first is expressed in UTC and
-the second at an offset of two hours ahead of UTC.
-
-The package deliberately distinguishes UTC offsets from time zones. An offset
-such as `+02:00` is sufficient to identify an instant, but it does not identify
-a geographical time zone or describe daylight-saving rules.
-
-## DateTime
-
-`DateTime` represents a calendar date together with a time of day. Time is
-represented with microsecond precision.
-
-The class uses the Rexx base date internally for the calendar component. The
-time component is the number of microseconds elapsed since midnight.
-
-A `DateTime` can be created without arguments:
+The simplest way to create one is:
 
     now = .DateTime()
 
-This creates a value containing the current local date and time.
+which represents the current local date and time.
 
-The constructor can also be supplied with a Rexx base date and the number of
-microseconds since midnight:
+Internally, `DateTime` builds on the date facilities already present in Rexx.
+The calendar part is stored as a Rexx base date: the number of days from the
+Rexx base date. The time is represented independently as the number of
+microseconds since midnight.
+
+This representation has a useful property. Calendar arithmetic can be
+performed on the base date while arithmetic within a day can be performed on
+a single integer. Crossing midnight then consists of carrying whole days
+between the two values.
+
+A particular date and time can consequently be constructed directly when
+these values are known:
 
     base = date("BASE", "2026-08-24", "INTERNATIONAL") as .int
-    value = .DateTime(base, 43200000000)
+    noon = .DateTime(base, 43200000000)
 
-This represents noon on 24 August 2026.
+The resulting object represents noon on 24 August 2026.
 
-The two components can be obtained with:
-
-    baseDate()
-    dayMicroseconds()
-
-`daySeconds()` returns the number of complete seconds elapsed since midnight.
-
-### Calendar Fields
-
-The individual calendar fields are available through:
-
-    year()
-    month()
-    day()
-
-The time fields are available through:
-
-    hour()
-    minute()
-    second()
-    microsecond()
+Normally an application does not need to work with these internal values.
+`DateTime` provides access to the familiar year, month, day, hour, minute,
+second and microsecond fields, as well as useful calendar properties such as
+the ordinal day within the year.
 
 For example:
 
-    value.year()
-    value.month()
-    value.day()
-    value.hour()
+    say noon.year()
+    say noon.month()
+    say noon.day()
+    say noon.hour()
 
-return the corresponding fields as integers.
+produces the calendar and clock components of the value.
 
-The ordinal day within the year is returned by:
+The underlying base-date representation nevertheless remains available. This
+is particularly useful when interfacing with existing Rexx programs and
+functions that already use `DATE("BASE")`.
 
-    yearDay()
+## Calendar Arithmetic
 
-January 1 has ordinal day 1. December 31 therefore has ordinal day 365 in an
-ordinary year and 366 in a leap year.
+Date and time arithmetic contains a number of boundary cases that are easy to
+miss when dates are represented merely as formatted strings. `DateTime`
+performs arithmetic on its internal date and time representation instead.
 
-The textual names of the weekday and month are available through:
+For example, adding a microsecond to:
 
-    dayName()
-    monthName()
+    2026-08-24T23:59:59.999999
 
-These methods use the underlying Rexx `DATE()` facilities.
+produces:
 
-### Calendar Properties
+    2026-08-25T00:00:00.000000
 
-`isLeapYear()` tests whether the year containing the `DateTime` is a Gregorian
-leap year:
+The reverse operation crosses the boundary in the other direction. This same
+mechanism allows seconds, minutes and hours to cross one or several calendar
+days without special treatment by the application.
 
-    if value.isLeapYear() then
-        say "leap year"
-
-`daysInYear()` consequently returns either 365 or 366.
-
-`daysInMonth()` returns the number of days in the month containing the value.
-The calculation takes both the month and leap years into account.
-
-For example, a `DateTime` in February 2024 reports 29 days, while one in
-February 2025 reports 28.
-
-### Date Representations
-
-The methods:
-
-    standardDate()
-    internationalDate()
-
-return representations produced using the corresponding Rexx `DATE()` formats.
-
-`internationalDate()` is particularly useful when working with ISO 8601
-calendar dates.
-
-### Arithmetic
-
-A `DateTime` can be changed by adding units of time:
-
-    addMicroseconds(n)
-    addSeconds(n)
-    addMinutes(n)
-    addHours(n)
-    addDays(n)
-    addWeeks(n)
-    addYears(n)
-
-The arithmetic methods modify the `DateTime`.
-
-Negative arguments subtract time. Thus:
+Arithmetic can be performed in units ranging from microseconds to weeks. A
+negative amount moves backwards in time:
 
     value.addHours(-3)
 
-moves the value three hours earlier.
+Calendar arithmetic requires slightly different rules. A year is not a fixed
+number of days, and a month is not a fixed number of seconds. Leap years in
+particular make an operation such as "one year later" different from adding
+365 days.
 
-Time arithmetic automatically crosses calendar-day boundaries. Adding one
-microsecond to:
+`addYears()` therefore performs calendar arithmetic. If a date is 29 February
+and the destination year is not a leap year, the resulting date is 28
+February.
 
-    23:59:59.999999
+The class also exposes the calendar properties needed for this sort of work.
+It can determine whether its year is a leap year, the number of days in its
+month or year, and its position within the year.
 
-produces midnight on the following day. Subtracting one microsecond from
-midnight produces:
+## Comparing DateTime Values
 
-    23:59:59.999999
+Two `DateTime` objects can be ordered chronologically because their calendar
+and clock components form a single local timeline.
 
-on the preceding day.
+For example:
 
-`addYears()` performs calendar arithmetic rather than simply adding a fixed
-number of days. In particular, adding one year to February 29 in a leap year
-produces February 28 if the resulting year is not a leap year.
+    if first.isBefore(second) then
+        say "first comes before second"
 
-### Comparison
+Values can also be compared for equality or using a three-way comparison.
+Equality requires both the date and the time of day to be equal.
 
-Two `DateTime` values can be compared with:
+These operations compare `DateTime` values as represented. When an
+application needs to compare values carrying UTC offsets, `OffsetDateTime`
+provides the necessary additional information.
 
-    compareTo(other)
-    isBefore(other)
-    isAfter(other)
-    equals(other)
+## ISO Week Dates
 
-`compareTo()` returns a negative value, zero, or a positive value according to
-whether the receiver is earlier than, equal to, or later than the supplied
-value.
+The ordinary calendar year is not the only useful way of locating a day in a
+year. Business and administrative applications often use ISO week dates.
 
-`equals()` tests both the calendar date and the time of day.
+ISO weeks begin on Monday. Week 1 is the week containing 4 January, which is
+equivalent to saying that it is the week containing the first Thursday of the
+year.
 
-Because `DateTime` has no UTC offset, these comparisons compare local date and
-time values. They should not be used to decide whether two values expressed
-with different UTC offsets identify the same instant.
+An important consequence is that the ISO week-numbering year does not always
+start on 1 January.
 
-### ISO Week Dates
-
-`DateTime` provides the ISO week calendar independently of the ordinary
-calendar year.
-
-The ISO weekday is returned by:
-
-    weekDay()
-
-Monday is weekday 1 and Sunday is weekday 7.
-
-The ISO week number and ISO week-numbering year are returned by:
-
-    weekNumber()
-    weekNumberYear()
-
-These values are deliberately separate. The ISO week year can differ from the
-calendar year near New Year.
-
-For example, 1 January 2016 belongs to ISO week 53 of 2015:
-
-    Calendar date:    2016-01-01
-    ISO week year:    2015
-    ISO week number:  53
-
-Similarly, 31 December 2018 belongs to ISO week 1 of 2019.
-
-`weekNumberDate()` returns the complete ISO week-date representation, such as:
+For example, 1 January 2016 was a Friday and belongs to:
 
     2015-W53-5
 
-`weeksInYear()` returns either 52 or 53 according to the number of ISO weeks in
-the applicable ISO week year.
+It is calendar year 2016, but ISO week 53 of week-numbering year 2015.
 
-### String Representation
+The reverse can also occur. 31 December 2018 was a Monday and belongs to:
 
-`toString()` returns the date and time in the form:
+    2019-W01-1
 
-    YYYY-MM-DDThh:mm:ss.ffffff
+`DateTime` provides the ISO weekday, week number and week-numbering year, and
+can produce the complete ISO week-date representation. It can also determine
+whether an ISO week year contains 52 or 53 weeks.
 
-For example:
+Keeping the calendar year and week-numbering year as separate concepts avoids
+a common source of errors around New Year.
+
+## Textual Representation
+
+The normal string representation of a `DateTime` is deliberately predictable:
 
     2026-08-24T20:57:57.123456
 
-All six microsecond digits are included. This gives `DateTime` a predictable
-string representation independent of choices made by more specialized ISO
-8601 formatting.
+The fractional part always contains six digits, corresponding to the
+microsecond precision of the class.
 
-## OffsetDateTime
+This is a useful representation for display and diagnostics, but parsing and
+formatting ISO 8601 is kept in a separate class. This prevents the basic
+`DateTime` class from accumulating rules concerned only with textual
+representations.
 
-`OffsetDateTime` combines a local `DateTime` with an explicit offset from UTC.
+## Adding a UTC Offset
 
-It is constructed from these two components:
+A local date and time is sufficient for many applications. In other cases the
+value must identify an instant relative to UTC.
 
-    value = .OffsetDateTime(datetime, offset)
+`OffsetDateTime` adds this information without changing the meaning or
+implementation of `DateTime`. It consists simply of a `DateTime` and an offset
+from UTC expressed in minutes.
 
-The offset is expressed in minutes. For example:
+For example, suppose `dt` represents 22:00 on 24 August 2026:
 
-    .OffsetDateTime(datetime, 120)
+    value = .OffsetDateTime(dt, 120)
 
-represents the supplied local date and time at UTC+02:00, while:
-
-    .OffsetDateTime(datetime, -330)
-
-uses UTC-05:30.
-
-The components are returned by:
-
-    dateTime()
-    offsetMinutes()
-
-An offset of zero denotes UTC.
-
-An `OffsetDateTime` stores the local representation as supplied. Parsing:
+The offset of 120 minutes means that the local value is two hours ahead of
+UTC. The complete value can therefore be written as:
 
     2026-08-24T22:00:00+02:00
 
-therefore stores 22:00 as its `DateTime` and 120 as its offset. It is not
-silently converted to UTC during parsing.
+Negative offsets work in the same way. An offset of -330 represents
+UTC-05:30.
 
-### Conversion to UTC
+The local representation is retained. Constructing or parsing the value above
+does not silently turn 22:00 into 20:00. This is useful because the object
+continues to represent exactly the date, time and offset supplied by the
+application.
 
-`toUTC()` returns an equivalent `OffsetDateTime` with an offset of zero.
+When UTC is required, the conversion is explicit:
 
-For example:
+    utc = value.toUTC()
 
-    2026-08-24T22:00:00+02:00
-
-is converted to:
-
-    2026-08-24T20:00:00Z
-
-Similarly:
-
-    2026-08-24T14:30:00-05:30
-
-also converts to:
+For the preceding example this produces the equivalent value:
 
     2026-08-24T20:00:00Z
 
-UTC conversion can cross a calendar-day boundary. For example:
+UTC conversion also handles changes of calendar day. Thus:
 
     2026-08-24T01:00:00+02:00
 
@@ -287,179 +207,128 @@ becomes:
 
     2026-08-23T23:00:00Z
 
-The original `OffsetDateTime` is not modified by `toUTC()`.
+The original value is left unchanged.
 
-## ISO8601
+This gives applications two useful views of the same information: the local
+date and time at the specified offset, and the corresponding UTC value.
 
-`ISO8601` provides parsing and formatting of ISO 8601 representations.
+## ISO 8601
 
-There are separate parsing operations for values without an offset and values
-with an explicit UTC offset. This distinction prevents offset information from
-being silently discarded.
+ISO 8601 provides a standard textual notation for dates and times. The
+`ISO8601` class performs the conversion between those representations and the
+date and time classes.
 
-### Parsing Local Date and Time Values
+The distinction between `DateTime` and `OffsetDateTime` is reflected in the
+parser. A representation without an offset is parsed as a `DateTime`; a
+representation containing `Z` or a numeric UTC offset is parsed as an
+`OffsetDateTime`.
 
-`parse()` returns a `DateTime`.
+### Local Date and Time
 
-Supported representations include:
-
-    YYYY-MM-DD
-    YYYY-MM-DDThh:mm:ss
-    YYYY-MM-DDThh:mm:ss.f
-    YYYY-MM-DDThh:mm:ss.ff
-    ...
-    YYYY-MM-DDThh:mm:ss.ffffff
-
-A date without a time is interpreted as midnight:
+A calendar date can be parsed on its own:
 
     iso = .ISO8601()
     value = iso.parse("2026-08-24")
 
-The resulting `DateTime` represents:
+Because no time was specified, the result represents midnight:
 
     2026-08-24T00:00:00.000000
 
-Fractional seconds are converted to microseconds by padding on the right. Thus:
+A complete local date and time can be written as:
 
-    .1       -> 100000 microseconds
-    .123     -> 123000 microseconds
-    .123456  -> 123456 microseconds
+    2026-08-24T12:34:56
 
-The current implementation supports at most six fractional digits, matching
-the precision of `DateTime`.
+Fractional seconds are optional:
 
-Malformed input raises the `INVALID_ARGUMENTS` signal. This includes malformed
-separators, incomplete times, values outside the supported clock ranges, and
-fractional seconds exceeding the supported precision.
+    2026-08-24T12:34:56.1
+    2026-08-24T12:34:56.123
+    2026-08-24T12:34:56.123456
 
-### Validating Input
+`DateTime` has microsecond precision, so fractional values are normalized to
+six digits. The examples above consequently represent 100000, 123000 and
+123456 microseconds respectively.
 
-`isValid()` tests whether a string can be parsed as a supported local ISO 8601
-value.
+Input is checked while it is parsed. Invalid separators, incomplete times,
+clock fields outside their permitted ranges and fractions beyond the
+supported precision cause the `INVALID_ARGUMENTS` signal.
 
-For example:
+Applications that merely need to test input can use `isValid()`. It uses the
+same parser and handles `INVALID_ARGUMENTS` internally, so validation and
+parsing cannot gradually acquire different interpretations of the accepted
+syntax.
 
-    iso.isValid("2026-08-24")
-    iso.isValid("2026-08-24T12:34:56")
-    iso.isValid("2026-08-24T25:00:00")
+### UTC and Numeric Offsets
 
-return 1, 1, and 0 respectively.
-
-`isValid()` uses the same parser as `parse()`. It catches the
-`INVALID_ARGUMENTS` signal locally rather than maintaining a separate set of
-validation rules.
-
-### Parsing Values with UTC Offsets
-
-`parseOffset()` parses ISO 8601 values that contain an explicit UTC offset and
-returns an `OffsetDateTime`.
-
-UTC can be written using `Z`:
+An ISO 8601 date and time can identify UTC directly with `Z`:
 
     2026-08-24T20:00:00Z
 
-or using a numeric offset:
+or specify a numeric offset:
 
     2026-08-24T22:00:00+02:00
     2026-08-24T14:30:00-05:30
 
-Fractional seconds can also be used:
+These forms are parsed with `parseOffset()` and produce an
+`OffsetDateTime`.
+
+The numeric representation is converted internally to an offset in minutes,
+so the examples correspond to offsets of 120 and -330 minutes. `Z` corresponds
+to an offset of zero.
+
+Fractional seconds and offsets can be combined:
 
     2026-08-24T22:00:00.123456+02:00
 
-The numeric offset is converted to minutes. Thus:
+The parser preserves both the local time and the offset. Conversion to UTC,
+when wanted, remains an explicit operation on the resulting
+`OffsetDateTime`.
 
-    Z       ->    0
-    +02:00  ->  120
-    -05:30  -> -330
+### Formatting and Round Trips
 
-The local date and time are preserved in the returned `OffsetDateTime`. The
-offset is not applied until an explicit operation such as `toUTC()` requests
-conversion.
+The formatter performs the reverse conversion. A `DateTime` can be formatted
+as a calendar date, a date and time to second precision, or a date and time
+including microseconds.
 
-This separation is important. An ISO 8601 value without an offset:
-
-    2026-08-24T20:00:00
-
-does not contain enough information to identify an instant in UTC. The library
-therefore does not invent an offset for such a value.
-
-Conversely, an explicit offset is never silently discarded.
-
-### Formatting
-
-`format()` formats a `DateTime` with microsecond precision:
-
-    YYYY-MM-DDThh:mm:ss.ffffff
-
-`formatDate()` formats only the calendar date:
-
-    YYYY-MM-DD
-
-`formatSeconds()` formats a date and time without fractional seconds:
-
-    YYYY-MM-DDThh:mm:ss
-
-`formatOffset()` formats an `OffsetDateTime`, including its UTC offset.
-
-For example:
-
-    2026-08-24T22:00:00.123456+02:00
-
-An offset of zero is canonically formatted using `Z`:
+An `OffsetDateTime` additionally includes its UTC offset. Zero is written in
+the conventional `Z` form, while other offsets are written numerically:
 
     2026-08-24T20:00:00.000000Z
+    2026-08-24T22:00:00.123456+02:00
 
-Non-zero offsets use signed hours and minutes:
+This allows parsed values to make a straightforward round trip:
 
-    +02:00
-    -05:30
+    text = "2026-08-24T22:00:00.123456+02:00"
 
-Parsing and formatting can therefore be used for round trips:
+    value = iso.parseOffset(text)
+    result = iso.formatOffset(value)
 
-    value = iso.parseOffset(
-        "2026-08-24T22:00:00.123456+02:00")
-
-    text = iso.formatOffset(value)
-
-The resulting text is:
+`result` contains:
 
     2026-08-24T22:00:00.123456+02:00
 
-## DateTime and OffsetDateTime
+The parser and formatter therefore form the boundary between the textual
+ISO 8601 representation used for interchange and the `DateTime` and
+`OffsetDateTime` objects used by an application.
 
-The distinction between `DateTime` and `OffsetDateTime` is fundamental to the
-package.
+## Choosing a Representation
 
-A `DateTime` answers the question:
+The choice between the two date-time classes follows from the information
+available to the application.
 
-    What calendar date and clock time is this?
-
-An `OffsetDateTime` additionally answers:
-
-    What is its offset from UTC?
-
-Consequently:
+Use a `DateTime` when the value consists of a calendar date and clock time:
 
     2026-08-24T20:00:00
 
-is a valid `DateTime`, but does not by itself identify a unique instant.
-
-By contrast:
-
-    2026-08-24T20:00:00Z
-
-does identify an instant.
-
-Different `OffsetDateTime` representations can identify that same instant:
+Use an `OffsetDateTime` when an explicit relationship with UTC is part of the
+value:
 
     2026-08-24T20:00:00Z
     2026-08-24T22:00:00+02:00
-    2026-08-24T14:30:00-05:30
 
-Converting each to UTC produces the same value.
+The `ISO8601` class preserves this distinction when values cross a textual
+interface. It does not invent an offset when none was supplied, and it does
+not discard one that was present.
 
-A UTC offset is not the same as a geographical time zone. The offset
-`+02:00`, for example, contains no information about daylight-saving rules or
-the geographical region in which it applies. Time-zone databases and named
-time zones are therefore outside the responsibilities of these classes.
+This separation keeps the individual classes small while providing the
+building blocks needed for calendar calculations, ISO week dates, interchange
+formats and UTC-based comparisons.
