@@ -56,6 +56,7 @@ rexxscriptexit: class
         script_start = .int
         script_end = .int
         output_name = .string
+        values_name = .string
         result_name = .string
         debug_flag  = .string
         expose_names = .string[]
@@ -70,6 +71,7 @@ rexxscriptexit: class
         script_start = 2
         script_end = tokens.0
         output_name = ""
+        values_name = ""
         result_name = ""
         debug_flag  = 0
         expose_names = .string[]
@@ -89,7 +91,7 @@ rexxscriptexit: class
 
         do while i <= tokens.0
             keyword = upper(strip(tokens[i].get_text()))
-            if isClauseKeyword(keyword) <> 1 then return error_result(i, "REXXSCRIPT expected EXPOSE, OUTPUT, or RESULT clause")
+            if isClauseKeyword(keyword) <> 1 then return error_result(i, "REXXSCRIPT expected EXPOSE, OUTPUT, VALUES, or RESULT clause")
             if keyword = "DEBUG" then do
                if debug_flag = 1 then return error_result(i, "REXXSCRIPT DEBUG clause repeated")
                debug_flag = 1
@@ -125,6 +127,10 @@ rexxscriptexit: class
                 if output_name <> "" then return error_result(i, "REXXSCRIPT OUTPUT clause repeated")
                 output_name = strip(tokens[i + 1].get_text())
             end
+            else if keyword = "VALUES" then do
+                if values_name <> "" then return error_result(i, "REXXSCRIPT VALUES clause repeated")
+                values_name = strip(tokens[i + 1].get_text())
+            end
             else if keyword = "RESULT" then do
                 if result_name <> "" then return error_result(i, "REXXSCRIPT RESULT clause repeated")
                 result_name = strip(tokens[i + 1].get_text())
@@ -154,13 +160,36 @@ rexxscriptexit: class
         end
         else call result.add_replacement_line("__rexxscript_result = rexxscript_evaluate(" || script_expr || ", "debug_flag")")
         if output_name <> "" then call result.add_replacement_line(output_name || " = rexxscript_output()")
+        if values_name <> "" then do
+            /* Preserve the old raw layout and locate only the appended marker. */
+            /* Reset the caller-owned array without introducing a shadow variable. */
+            call result.add_replacement_line("assembler SETATTRS " || values_name || ",0")
+            call result.add_replacement_line("__rexxscript_collect_base = " || (expose_names[0] * 2 + 2))
+            call result.add_replacement_line("__rexxscript_collect_marker = 0")
+            call result.add_replacement_line("if __rexxscript_result[0] >= __rexxscript_collect_base then do")
+            call result.add_replacement_line("  if __rexxscript_result[__rexxscript_collect_base] = '__REXXSCRIPT_COLLECT__' then __rexxscript_collect_marker = __rexxscript_collect_base")
+            call result.add_replacement_line("  else do")
+            call result.add_replacement_line("    __rexxscript_output_count = __rexxscript_result[__rexxscript_collect_base] + 0")
+            call result.add_replacement_line("    __rexxscript_candidate = __rexxscript_collect_base + __rexxscript_output_count + 1")
+            call result.add_replacement_line("    if __rexxscript_result[0] >= __rexxscript_candidate then do")
+            call result.add_replacement_line("      if __rexxscript_result[__rexxscript_candidate] = '__REXXSCRIPT_COLLECT__' then __rexxscript_collect_marker = __rexxscript_candidate")
+            call result.add_replacement_line("    end")
+            call result.add_replacement_line("  end")
+            call result.add_replacement_line("end")
+            call result.add_replacement_line("if __rexxscript_collect_marker > 0 then do")
+            call result.add_replacement_line("  __rexxscript_collect_count = __rexxscript_result[__rexxscript_collect_marker + 1] + 0")
+            call result.add_replacement_line("  do __rexxscript_collect_index = 1 to __rexxscript_collect_count")
+            call result.add_replacement_line("    " || values_name || "[__rexxscript_collect_index] = __rexxscript_result[__rexxscript_collect_marker + 1 + __rexxscript_collect_index]")
+            call result.add_replacement_line("  end")
+            call result.add_replacement_line("end")
+        end
         if result_name <> "" then call result.add_replacement_line(result_name || " = __rexxscript_result")
         call result.add_replacement_line("script_status=__rexxscript_result[1]")
       return result
 
 isClauseKeyword: procedure = .int
     arg text = .string
-    if text = "EXPOSE" | text = "OUTPUT" | text = "RESULT" | text = "DEBUG" then return 1
+    if text = "EXPOSE" | text = "OUTPUT" | text = "VALUES" | text = "RESULT" | text = "DEBUG" then return 1
     return 0
 
 emitTokenRange: procedure = .string

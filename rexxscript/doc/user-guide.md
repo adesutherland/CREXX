@@ -103,6 +103,8 @@ RexxScript runs in a sandbox variable pool.
   or `-1` when it cannot perform the operation.
 - `DATE()` and `TIME()` use the shared Level B date/time implementations,
   including their documented optional format arguments.
+- `COLLECT expression` appends one scalar application value without affecting
+  `SAY` output; embedded callers receive these values through `VALUES`.
 - The host CREXX variable pool is not exposed directly.
 - Host variables cross the boundary only through `EXPOSE`.
 - RexxScript does not provide `ADDRESS`, shell command execution, external
@@ -126,6 +128,7 @@ ITERATE
 label:
 SIGNAL label
 GOTO label
+COLLECT expression
 RETURN
 CALL intrinsic(...)
 ```
@@ -199,6 +202,12 @@ ERASEFILE
 Function names are matched case-insensitively. RexxScript owns the sandbox-safe
 name controller, which routes each allowed intrinsic to its specific shared
 `rxfnsc` `RexxClassicBifs` implementation.
+
+The embedded `REXXSCRIPT` statement supports `VALUES array` for collecting
+values produced by `COLLECT expression`. The target is a `.string[]`, and values
+are stored in execution order. `SAY` remains available through `OUTPUT`; the
+two streams are independent. The raw `RESULT` vector keeps its existing
+layout for scripts that do not execute `COLLECT`.
 
 Examples:
 
