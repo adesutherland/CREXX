@@ -2,19 +2,24 @@
 
 ## Status and programme context
 
-- **Status:** P2A and P2B complete; P2C local gate complete, hosted gate pending
+- **Status:** Phase 2 complete and previously hosted-green; the 2026-08-31
+  `develop` resynchronisation is locally qualified and awaiting exact-SHA
+  hosted integration
 - **Planning branch:** `temp/newbuild`
 - **Current `develop` incorporated:** `origin/develop` through
-  `ee8e8f8fefbdc3ee9217f2ef4dd7edf0c8d288e6`
+  `9513e20a2af0a7177a487ce21e0f312902b7768b`
 - **Resynchronisation merge:**
-  `07229d6c3e036ee515839ef99431ee2c6df5ee05`
+  `5831bc919773a27ce757fc8879a0c201f2726f5f`
 - **Phase 1 hosted acceptance:**
   `0a0c17d56f341692d4d735ee87238c06ef6757c0`, GitHub Actions run
   `33156840598`
 - **Phase 2 resolver-report qualification:**
   `f4c17459a273d7c1684f3428c7a81784560901a0`, GitHub Actions run
   `33186425039`
-- **Date:** 2026-08-28
+- **Phase 2 hosted acceptance:**
+  `c0ab085b5f28aa0dcbb669fe040fe8b0fd264cbb`, GitHub Actions run
+  `33209387151`
+- **Date:** 2026-08-31
 
 The remaining programme has three phases:
 
@@ -317,6 +322,49 @@ correctness and scheduling results only; shared-host elapsed times are not
 performance evidence. The remaining P2C gate is the ordinary exact-SHA hosted
 workflow on Linux x64, Windows x64, macOS ARM64 and macOS Intel.
 
+**P2C hosted result (2026-08-28): complete.** Build CREXX run
+`33209387151` passed Linux x64, Windows x64, macOS ARM64 and macOS Intel on
+exact revision `c0ab085b5f28aa0dcbb669fe040fe8b0fd264cbb`.
+
+**Develop resynchronisation result (2026-08-31): locally complete; hosted
+integration pending.** The merge at `5831bc919` incorporates `develop` through
+`9513e20a2`, including the Unicode 17 product, compiler and runtime changes.
+The new Unicode build tools now compile isolated source copies against exact
+private RXBIN roots with executable-directory discovery disabled. Only real
+tool imports create edges, so independent case-fold, case-mapping, codec,
+grapheme and normalization work remains parallel. Generated product modules
+receive an exact compiler-exit root, and the public Unicode facade receives
+only its five declared private providers.
+
+The merged product completed 682 clean Ninja actions at jobs 30 and immediately
+repeated with no work. `stage-product` passed `ninja -t missingdeps` across
+1,849 nodes; the complete configured graph passed across 6,120 nodes. All 20
+focused Unicode Level G tests passed across both concrete VMs and both
+optimization modes. The observation catalogue contains 2,417 tests and 4,404
+actions; its manifest projection is schema-valid and graph-clean with no graph
+findings.
+
+The resync also closed clean-tree assumptions exposed by qualification:
+
+- focused test-family targets now own the runners and linker their tests
+  execute;
+- private classlib, Level C and RexxScript member directories are created by
+  the configured graph, so Unix Makefiles and Ninja have the same clean-build
+  contract;
+- smoke preparation owns the generated large-binary disassembler fixture;
+- the short multi-process ADDRESS smoke is an explicit serial correctness
+  boundary rather than a load-sensitive performance assertion; and
+- the three interactive `linein(stdin)` conversations have a narrow resource
+  lock and instrumented-startup watchdogs, recorded as `SAN-QA-009` pending
+  hosted closure.
+
+The essential-plus-smoke preparation completed and immediately repeated with
+no work. All 152 selected tests passed at jobs 30 and CTest left `.ninja_log`
+byte-identical. The `linein(stdin)` fixture and all three tests passed through
+the maintained runner in normal Debug and Apple ASan. No stress or performance
+measurement workload was run; elapsed times are not evidence on this shared
+host.
+
 ## 4. Work removed or deferred from Phase 2
 
 | Former work | Disposition |
@@ -333,7 +381,7 @@ workflow on Linux x64, Windows x64, macOS ARM64 and macOS Intel.
 The existing catalogue, schemas and resolver report remain useful diagnostic
 evidence. Their presence does not require completing the former architecture.
 
-## 5. Phase 3 handoff
+## 5. Phase 3 handoff and adoption decision
 
 Phase 2 hands Phase 3:
 
@@ -347,6 +395,37 @@ Phase 3 then implements only the smallest Level B runner needed for ordered
 stages, parallel jobs within a stage, declared inputs/outputs, content-keyed
 incremental skipping, fail-fast execution, private work paths and atomic
 publication.
+
+### Decision at the 2026-08-31 resynchronisation
+
+Phase 3 is **not** a prerequisite for adopting the Phase 2 build. Once Build
+CREXX and Sanitizer QA are green on the exact resynchronisation revision, the
+named Phase 2 stage and QA-preparation targets should replace the legacy broad
+entry points in normal CI/developer use. Waiting for the Level B takeover would
+leave the known slower and more fragile entry path in service for no safety
+benefit.
+
+Phase 3 should start immediately after that adoption and remain one bounded
+implementation phase, not a sequence of small approval slices:
+
+1. CMake retains exclusive ownership of native foundations, the C toolchain,
+   the Level B bootstrap, exits and the qualified Level B substrate.
+2. One Level B builder owns the post-bootstrap Level C, G, L, product and
+   optional stages. A small human-readable table names each stage, its real
+   inputs/outputs and its jobs; jobs within a stage run in parallel and the next
+   stage waits for completion.
+3. The builder provides fail-fast execution, private action work directories,
+   atomic publication and declared-input incremental skipping. It consumes the
+   deterministic RXBIN/import contract proved in Phase 2 rather than inventing
+   a second metadata model.
+4. One acceptance pass proves clean, immediate no-op, Level L leaf change and
+   shared Level B provider change at jobs 5 and 30, then runs the maintained
+   hosted platforms. Stress and performance measurement remain separate.
+
+The Phase 3 exit is the direct ownership handover for those post-bootstrap
+stages. Phase 4 then removes the superseded post-bootstrap CMake rules and
+performs final build/QA/install/package qualification; neither phase reopens a
+general manifest compiler or a permanent dual-build architecture.
 
 ## 6. Stop points
 
