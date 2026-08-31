@@ -3369,6 +3369,21 @@ static int rxspawn_terminate_posix_child(SHELLDATA *data, int signal_number) {
     return result;
 }
 
+static int rxspawn_terminate_posix_group_after_reap(
+        const SHELLDATA *data, int signal_number) {
+    int result;
+
+    if (!data || data->ChildProcessPID <= 0 ||
+        !data->ChildProcessGroupOwned) return 0;
+
+    /* The direct child has already been reaped.  Its numeric PID may now be
+     * reused, so descendant cleanup must address only the owned process group;
+     * unlike pre-reap termination, falling back to +PID is no longer safe. */
+    result = kill(-(pid_t)data->ChildProcessPID, signal_number);
+    if (result == -1 && errno == ESRCH) return 0;
+    return result;
+}
+
 static int rxspawn_posix_child_needs_process_group(const SHELLDATA *data) {
     int bounded_child;
 
@@ -3750,7 +3765,8 @@ void WaitForProcess(SHELLDATA* data)
          * completes, a controlled process group must not leave descendants
          * holding redirect handles open. */
         if (data->ChildProcessGroupOwned &&
-                rxspawn_terminate_posix_child(data, SIGKILL) != 0) {
+                rxspawn_terminate_posix_group_after_reap(
+                        data, SIGKILL) != 0) {
             data->waitThreadRC = 1;
             Error("Failure terminating controlled child descendants",
                   &data->waitThreadErrorText);

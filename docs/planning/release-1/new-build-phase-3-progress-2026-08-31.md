@@ -189,8 +189,14 @@ relationships; no correctness or sanitizer regression is excluded.
 The parallel controlled-spawn regression is a `stress` test and is `RUN_SERIAL`:
 it remains in sanitizer qualification, but never shares the worker pool with
 Unicode or another stress variant. Ordinary Apple Debug uses 4,096 launches
-per variant; ASan uses 1,024 through the same eight-worker task shape so
+per variant; ASan uses 256 through the same eight-worker task shape so
 instrumentation does not turn the correctness watchdog into a timing failure.
+The child byte-provider conformance test remains parallel. Its saturated
+redirect fixture verifies typed timeout publication under normal CTest load;
+on failure it now retains the provider's bounded diagnostic message as well as
+the typed state and error code. Post-reap POSIX descendant cleanup addresses
+only the owned process group, avoiding an unsafe fallback to a potentially
+reused direct-child PID.
 
 The final local candidate passed the focused spawn pair 2/2 under Apple ASan
 in `cmake-build-debugasan/asan-logs/20260831-204902-ctest/ctest.log`, then passed
@@ -198,6 +204,20 @@ the complete designed slice 33/33 with five CTest workers in
 `cmake-build-debugasan/asan-logs/20260831-205106-ctest/ctest.log`. No sanitizer
 diagnostic was reported. Exact-SHA hosted Build and Sanitizer QA remain the
 publication gates.
+
+Hosted candidate `b6080025d0248b5b70f5eaed624ae167c78a45c1` passed Build on
+all four platforms, but macOS ASan failed the two spawn variants at their
+60-second internal deadline and returned provider error 17 from
+`rxvmchannel_byte_provider`; no AddressSanitizer memory diagnostic was present.
+The stress tests ran near the end of the suite, while the provider failure ran
+much earlier alongside short interpreter/RXPA tests, so these are separate
+findings. The next hosted run uses the smaller sanitizer-only stress sample and
+retains the provider's actual failure message if its parallel run recurs.
+The resulting focused controls pass 3/3 in ordinary Debug, including both
+4,096-launch variants, and 3/3 under Apple ASan, including both 256-launch
+variants. The retained sanitizer log is
+`cmake-build-debugasan/asan-logs/20260831-223610-ctest/ctest.log`; it contains no
+AddressSanitizer diagnostic.
 
 ## 8. Remaining Phase 3 work
 

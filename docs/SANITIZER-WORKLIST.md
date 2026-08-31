@@ -28,7 +28,12 @@ at `a697c4939310ec5df172a1e37608ef891bd01127`. The retained artifact contains
 no ASan memory diagnostic. A concurrent Level B builder workload then exposed
 a Darwin parent/child `setpgid()` race. The repair candidate gives the child
 sole process-group setup ownership and retains a parallel cREXX spawn
-regression; exact-SHA hosted qualification is pending.
+regression. GitHub run
+[33433382690](https://github.com/adesutherland/CREXX/actions/runs/33433382690)
+then passed Linux ASan/LSan but reproduced the provider failure on macOS ASan;
+the retained completion was again `state=2`, `errorCode=17` and contained no
+memory-safety report. The provider remains parallel and now prints its bounded
+failure message so another recurrence identifies the failing launch stage.
 
 A later production process-channel repair in `c87809d2b` is not a sanitizer
 finding. Its exact three-test process panel passes ordinary Debug at
@@ -194,8 +199,8 @@ marks SAN-006 closed without weakening any sanitizer closure requirement.
 - GitHub Build CREXX supplies the final-head MinSizeRel build, CTest and package
   coverage across Linux, macOS and Windows. GitHub Sanitizer QA supplies the
   final-head Linux x64 ASan/LSan and macOS arm64 ASan gates.
-- SAN-006 and SAN-007 are the currently registered closure candidates pending
-  exact-SHA hosted proof.
+- SAN-006, SAN-007, SAN-QA-008 and SAN-QA-010 are the currently registered
+  closure candidates pending exact-SHA hosted proof.
 
 ## Qualification infrastructure repairs
 
@@ -223,7 +228,7 @@ cancellation behavior is weakened.
   10.5 seconds on the same tree.
 - Repair candidate: retain the assertions, internal deadline and outer timeout,
   but mark the two stress variants `RUN_SERIAL`. Ordinary Apple Debug retains
-  4,096 launches per variant; sanitizer builds use 1,024 launches per variant
+  4,096 launches per variant; sanitizer builds use 256 launches per variant
   through the same eight-worker ownership path because instrumentation makes
   the full stress exceed the correctness watchdog even in isolation. This
   keeps maximum race pressure in the stress lane and memory-safety coverage in
@@ -233,7 +238,13 @@ cancellation behavior is weakened.
   designed Phase 3 slice then passed 33/33 with five CTest workers in
   `cmake-build-debugasan/asan-logs/20260831-205106-ctest/ctest.log`; the spawn
   variants waited for the concurrent Unicode work and then ran one at a time.
-  Neither retained run contains an AddressSanitizer diagnostic.
+  Neither retained run contains an AddressSanitizer diagnostic. Exact-SHA run
+  [33433382690](https://github.com/adesutherland/CREXX/actions/runs/33433382690)
+  proved that 1,024 instrumented launches still lacked enough hosted headroom:
+  both variants reached the unchanged 60-second internal deadline after about
+  64 seconds. The 256-launch focused Apple-ASan pair subsequently passed in
+  12.88 and 15.15 seconds, retaining the eight-worker race shape with ample
+  correctness-watchdog margin.
 - Owner/acceptance: new-build Phase 3D. Final exact-SHA GitHub Build and both
   Sanitizer QA lanes remain required. Linux ASan/LSan remains the leak-closure
   authority.
@@ -289,9 +300,9 @@ waiver is authorized.
 
 ### SAN-QA-008 — saturated child redirect loses typed timeout completion
 
-Status: reopened and release-blocking. The original failure recurred in a
-maintained macOS arm64 lane; focused ordinary-Debug, Apple-ASan and exact-SHA
-hosted qualification of the process-group repair are pending.
+Status: reopened and release-blocking. The original failure recurred in two
+maintained macOS arm64 lanes. The provider remains parallel; exact-SHA hosted
+qualification with the strengthened diagnostic is pending.
 
 - Scope: the byte-channel child-process provider's deadline and saturated
   output-redirect completion path, exercised by `rxvmchannel_byte_provider`.
@@ -311,8 +322,9 @@ hosted qualification of the process-group repair are pending.
   `tools/asan-run.sh --phase ctest --regex '^rxvmchannel_byte_provider$'
   --leaks off --test-jobs 1` after building the focused target through the
   runner. The case now reports both the returned completion state and error
-  code if it fails, so a future lane failure is diagnostic rather than another
-  one-bit assertion.
+  code and the provider's bounded message if it fails, so a future lane failure
+  identifies the failing launch or redirect stage rather than another one-bit
+  assertion.
 - Local evidence: 200 serial ordinary Debug repetitions, 200 serial macOS
   arm64 ASan repetitions and 400 macOS arm64 ASan repetitions across eight
   concurrent runner-managed CTest processes all passed on the synchronized
@@ -342,6 +354,18 @@ hosted qualification of the process-group repair are pending.
   creator and uses the close-on-exec launch-status pipe as the parent's proof
   of setup. The permanent cREXX regression is
   `test_address_parallel_spawn_{noopt,opt}`.
+- Later recurrence: exact-SHA run
+  [33433382690](https://github.com/adesutherland/CREXX/actions/runs/33433382690)
+  passed Linux ASan/LSan, but macOS ASan again returned `state=2`,
+  `errorCode=17` in 0.96 seconds. It ran much earlier than the serial spawn
+  stress tests and overlapped only short interpreter/RXPA tests, so it is not
+  classified as the stress watchdog issue in SAN-QA-010. The old diagnostic
+  did not retain the provider message, so the exact failing stage cannot be
+  recovered from that artifact. The test remains parallel and its assertion
+  and 100-millisecond semantic deadline are unchanged. An adjacent lifecycle
+  audit also removed post-`waitpid` fallback from process-group signalling to
+  a potentially reused positive PID; that verified safety defect is not
+  claimed as the cause of this recurrence.
 - Acceptance: retain a focused regression that fails for the original reason,
   pass the same focused shape in ordinary Debug and maintained sanitizer
   builds, rerun the original broad trigger cleanly, and pass both GitHub

@@ -410,6 +410,24 @@ static int64_t completion_integer_field(
     return value;
 }
 
+static const unsigned char *completion_string_field(
+        const rxvm_channel_binary *completion,
+        const char *name,
+        size_t *length_out) {
+    const unsigned char *node = 0;
+    size_t length = 0u;
+    if (length_out) *length_out = 0u;
+    if (!completion || !name || !length_out ||
+        !record_field_node(completion->data, completion->length,
+                           name, &node, &length) ||
+        length < 12u || node[0] != 6u ||
+        get_u64(node + 4u) != (uint64_t)(length - 12u)) {
+        return 0;
+    }
+    *length_out = length - 12u;
+    return node + 12u;
+}
+
 static bytes reference_configuration(const unsigned char *reference,
                                      size_t reference_length) {
     field fields[] = {{"reference", reference, reference_length}};
@@ -975,6 +993,8 @@ int main(void) {
         int valid = 0;
         int64_t error_code;
         int64_t state;
+        const unsigned char *message;
+        size_t message_length = 0u;
         bytes saturated_request = child_start_request(
                 executable, 0, arguments, argument_count, 0, 0,
                 &saturated_output_reference, 0);
@@ -990,12 +1010,18 @@ int main(void) {
         state = completion_integer_field(&completion, "state", &valid);
         error_code = completion_integer_field(
                 &completion, "errorCode", &error_valid);
+        message = completion_string_field(
+                &completion, "message", &message_length);
         if (!valid || state != 4) {
+            int printed_message_length = (int)(
+                    message_length > 512u ? 512u : message_length);
             fprintf(stderr,
                     "saturated timeout completion: valid=%d state=%lld "
-                    "errorValid=%d errorCode=%lld\n",
+                    "errorValid=%d errorCode=%lld message=%.*s\n",
                     valid, (long long)state,
-                    error_valid, (long long)error_code);
+                    error_valid, (long long)error_code,
+                    printed_message_length,
+                    message ? (const char *)message : "");
         }
         CHECK(valid && state == 4,
               "saturated redirect preserves typed timeout completion");
