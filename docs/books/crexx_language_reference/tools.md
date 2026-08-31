@@ -120,9 +120,8 @@ The VM executables include:
 - `rxbvm`: portable switch-dispatch interpreter
 - `rxtvm`: explicit direct-threaded interpreter on GNU/Clang-family compilers;
   not built by MSVC
-- `rxvme`: compiler-selected interpreter with the standard library image
-- `rxbvme`: explicit switch-dispatch interpreter with the standard library
-  image
+- `rxvme`: compiler-selected interpreter with the shipped core bytecode library images
+- `rxbvme`: explicit switch-dispatch interpreter with the shipped core bytecode library images
 
 On Unix-like systems `rxvm` is a relative link to the selected concrete VM. On
 Windows it is a copied executable so ordinary callers always use the same

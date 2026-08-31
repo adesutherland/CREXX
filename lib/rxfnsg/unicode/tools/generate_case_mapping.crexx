@@ -48,7 +48,4 @@ if marker_count \= 1 then do
   return 1
 end
 
-say "Unicode case-mapping section bytes:" tables.byte_length()
-say "Unicode case-mapping records:" tables.record_count()
-say "Unicode case-mapping source: PASS"
 return 0

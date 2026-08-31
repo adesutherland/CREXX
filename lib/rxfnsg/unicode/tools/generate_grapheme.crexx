@@ -56,7 +56,4 @@ if marker_count \= 1 then do
   return 1
 end
 
-say "Unicode grapheme section bytes:" tables.byte_length()
-say "Unicode grapheme assigned GCB scalars:" tables.gcb_assigned()
-say "Unicode grapheme source: PASS"
 return 0

@@ -55,7 +55,4 @@ if marker_count \= 1 then do
   return 1
 end
 
-say "Unicode case-fold section bytes:" tables.byte_length()
-say "Unicode case-fold records:" tables.record_count()
-say "Unicode case-fold source: PASS"
 return 0

@@ -253,8 +253,6 @@ call emit_line path, '  if verifier.ready() = 0 then signal failure "rxunicode N
 call emit_line path, "  return"
 if charout(path) \= 0 then return 1
 
-say "Unicode normalization section bytes:" tables.byte_length()
-say "Unicode normalization source: PASS"
 return 0
 
 emit_line: procedure = .void

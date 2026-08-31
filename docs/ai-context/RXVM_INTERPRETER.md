@@ -61,6 +61,13 @@ generic native-library directory sweep. A declared native callable is
 different: `META_PROVIDER` causes provider-stem resolution before procedure
 linking.
 
+The extended `rxvme` and `rxbvme` products embed the shipped core bytecode
+images: the Level B library, class library and native-provider declarations,
+the Level C compatibility library, the Level G library, and RexxScript. This
+embedded bundle is independent of metadata-driven native-provider discovery.
+Application bytecode libraries remain explicit runtime inputs; they are not
+found by sweeping compiler import roots or user-controlled directories.
+
 The static catalogue is checked first. Dynamic fallback opens only
 `<provider-id>.rxplugin` in, in order, the application-local `providers`
 directory, `--provider-path`, `CREXX_PROVIDER_PATH`, and the installed

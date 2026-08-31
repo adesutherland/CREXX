@@ -10,7 +10,7 @@ left in RXAS instruction forms.
 `rxbvm` under Clang/AppleClang and MSVC, and the direct-threaded `rxtvm` under
 GCC. GNU/Clang-family builds provide both concrete engines; MSVC provides only
 `rxbvm`. `rxvme` and `rxbvme` are extended interpreters that include the
-standard library image used by common Level B programs.
+shipped core Level B, Level C, and Level G bytecode library images.
 
 ## Machine Interface
 

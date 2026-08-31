@@ -47,7 +47,4 @@ if marker_count \= 1 then do
   return 1
 end
 
-say "Legacy encoding image bytes:" tables.byte_length()
-say "Legacy encoding mappings:" tables.mapping_count()
-say "Legacy encoding source: PASS"
 return 0
