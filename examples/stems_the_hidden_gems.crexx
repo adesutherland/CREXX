@@ -122,7 +122,6 @@ main: procedure = .int
 
     s["order-123.status"] = "open"
     s["my-key"] = "my-value"
-
     say 's["order-123.status"] =' s["order-123.status"]
     say 's["my-key"]           =' s["my-key"]
 
@@ -432,47 +431,87 @@ main: procedure = .int
     /* 16. Snapshot iterator                                  */
     /*--------------------------------------------------------*/
 
-    say "16. Snapshot iterator"
-    say "---------------------"
+  say "16. Snapshot iterator"
+  say "---------------------"
+  
+  /*
+   * A live iterator keeps a reference to the original stem and therefore
+   * sees the stem as it exists while the iteration is taking place.
+   *
+   * A snapshot iterator is different. Calling snapshotIterator() takes
+   * a copy of the stem's current keys and values and creates an iterator
+   * over that copy.
+   *
+   * The snapshot belongs to that iterator. Each call to
+   * snapshotIterator() creates a new, independent snapshot.
+   *
+   * Changes made to the original stem after the snapshot was created
+   * are therefore not visible through the snapshot iterator.
+   *
+   * There is no separate snapshot object to manage. The snapshot exists
+   * as part of the iterator and follows the iterator's normal lifetime.
+   */
+  
+  stem_demo = .stem()
+  
+  stem_demo.name = "Peter"
+  stem_demo.city = "Munich"
+  
+  /*
+   * iterator() does NOT make a copy. The iterator continues to access
+   * stem_demo directly.
+   */
+  live_it = stem_demo.iterator()
+  say "Live iterator reports isLive():" live_it.isLive()
+  
+  /*
+   * The snapshot is taken HERE.
+   *
+   * At this point snap_it contains its own view of:
+   *
+   *   name = Peter
+   *   city = Munich
+   *
+   * Calling snapshotIterator() again would create another independent
+   * snapshot; it would not replace or modify this one.
+   *
+   * This is useful when processing the stem may itself modify the
+   * original stem. The snapshot lets the complete iteration work
+   * with the values that existed when the loop was started.
+   */
 
-    /*
-     * A live iterator keeps a reference to the original stem.
-     *
-     * A snapshot iterator creates an internal copy of the stem's
-     * contents at the moment the iterator is created.
-     *
-     * Later modifications to the original stem do not affect the
-     * snapshot.
-     */
+  snap_it = stem_demo.snapshotIterator()
+  say "Snapshot iterator reports isLive():" snap_it.isLive()
+  
+  /*
+   * Modify the original stem AFTER the snapshot has been taken.
+   *
+   * A live iterator can see these new values.
+   * snap_it cannot: its copied values remain Peter and Munich.
+   */
 
-    snapshot_demo = .stem()
 
-    snapshot_demo.name = "Peter"
-    snapshot_demo.city = "Munich"
-
-    live_it = snapshot_demo.iterator()
-    say "Live iterator reports isLive():" live_it.isLive()
-
-    snap_it = snapshot_demo.snapshotIterator()
-    say "Snapshot iterator reports isLive():" snap_it.isLive()
-
-    snapshot_demo.name = "Martha"
-    snapshot_demo.city = "Berlin"
-
-    say
-    say "Current stem values:"
-    say "  name =" snapshot_demo.name
-    say "  city =" snapshot_demo.city
-
-    say
-    say "Values retained by snapshot:"
-
-    do while snap_it.hasNext()
-        tail = snap_it.next()
-        say "  " tail "=" snap_it.value()
-    end
-
-    say
+  stem_demo.name = "Martha"
+  stem_demo.city = "Berlin"
+  
+  say
+  say "Current stem values:"
+  say "  name =" stem_demo.name
+  say "  city =" stem_demo.city
+  
+  say
+  say "Values retained by snapshot:"
+  
+  /*
+   * We are iterating over the copied contents, not over stem_demo
+   * in its current state.
+   */
+  do while snap_it.hasNext()
+      tail = snap_it.next()
+      say "  " tail "=" snap_it.value()
+  end
+  
+  say
 
     /*--------------------------------------------------------*/
     /* 17. Independent tails()/values() arrays                */

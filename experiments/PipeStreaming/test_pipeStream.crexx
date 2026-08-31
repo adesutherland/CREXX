@@ -1,0 +1,1213 @@
+options levelb
+import rxfnsb
+
+
+/* ================================================================== */
+/* Sample                                                             */
+/*                                                                    */
+/* The examples below demonstrate the different ways in which stages  */
+/* participate in a streaming pipeline.                               */
+/*                                                                    */
+/*   Test 1  Immediate streaming                                      */
+/*   Test 2  One input record -> many output records                  */
+/*   Test 3  Aggregation at end-of-stream                             */
+/*   Test 4  Buffered processing at end-of-stream                     */
+/*   Test 5  Stateful immediate stages                                */
+/*   Test 6  End-of-stream stages                                     */
+/*   Test 7  Output and returned result                               */
+/*                                                                    */
+/* The intention is to demonstrate execution behaviour rather than    */
+/* merely enumerate the available stage commands.                     */
+/* ================================================================== */
+
+
+input  = "PipeStreaming_sample_input.txt"
+output = "PipeStreaming_sample_output.txt"
+
+
+/* ================================================================== */
+/* Build common sample input.                                         */
+/* ================================================================== */
+
+call closeFile input, 1
+call eraseFile input
+
+call lineout input, "alpha one"
+call lineout input, "beta two"
+call lineout input, "alpha three"
+call lineout input, "gamma four"
+call lineout input, "alpha five"
+
+call closeFile input, 1
+
+
+/* ================================================================== */
+/* TEST 1                                                             */
+/*                                                                    */
+/* Immediate record-at-a-time processing.                             */
+/*                                                                    */
+/* SELECT either passes or discards each record.                      */
+/* UPPER transforms records which pass SELECT.                        */
+/* WRITE receives each resulting record immediately.                  */
+/*                                                                    */
+/*   READ -> SELECT "alpha" -> UPPER -> WRITE                         */
+/*                                                                    */
+/* Expected result:                                                   */
+/*                                                                    */
+/*   ALPHA ONE                                                        */
+/*   ALPHA THREE                                                      */
+/*   ALPHA FIVE                                                       */
+/* ================================================================== */
+
+say
+say "============================================================"
+say "TEST 1: Immediate streaming"
+say "READ -> SELECT alpha -> UPPER -> WRITE"
+say "============================================================"
+
+call closeFile input, 1
+call closeFile output, 1
+call eraseFile output
+
+pipe = .StreamingPipe()
+call pipe.logging(1)
+
+call pipe.add("READ", input)
+call pipe.add("SELECT", "alpha")
+call pipe.add("UPPER", "")
+call pipe.add("WRITE", output)
+
+result = pipe.run()
+
+say
+say "RESULT:"
+call show(result)
+
+
+/* ================================================================== */
+/* TEST 2                                                             */
+/*                                                                    */
+/* One input record may produce several output records.               */
+/*                                                                    */
+/* SPLIT emits each resulting field immediately to the following      */
+/* stage.                                                             */
+/*                                                                    */
+/*   READ -> SPLIT " " -> WRITE                                       */
+/*                                                                    */
+/* Five input records containing two words each therefore produce     */
+/* ten output records.                                                */
+/* ================================================================== */
+
+say
+say "============================================================"
+say "TEST 2: One record -> many records"
+say "READ -> SPLIT -> WRITE"
+say "============================================================"
+
+call closeFile input, 1
+call closeFile output, 1
+call eraseFile output
+
+pipe = .StreamingPipe()
+call pipe.logging(1)
+
+call pipe.add("READ", input)
+call pipe.add("SPLIT", " ")
+call pipe.add("WRITE", output)
+
+result = pipe.run()
+
+say
+say "RESULT:"
+call show(result)
+
+
+/* ================================================================== */
+/* TEST 3                                                             */
+/*                                                                    */
+/* Aggregation at end-of-stream.                                      */
+/*                                                                    */
+/* COUNT consumes records as they arrive but cannot emit its result   */
+/* until the complete input stream has ended.                         */
+/*                                                                    */
+/*   READ -> SELECT "alpha" -> COUNT -> WRITE                         */
+/*                                                                    */
+/* Three records contain "alpha", therefore COUNT emits one record    */
+/* containing "3".                                                    */
+/* ================================================================== */
+
+say
+say "============================================================"
+say "TEST 3: Aggregation at end-of-stream"
+say "READ -> SELECT alpha -> COUNT -> WRITE"
+say "============================================================"
+
+call closeFile input, 1
+call closeFile output, 1
+call eraseFile output
+
+pipe = .StreamingPipe()
+call pipe.logging(1)
+
+call pipe.add("READ", input)
+call pipe.add("SELECT", "alpha")
+call pipe.add("COUNT", "")
+call pipe.add("WRITE", output)
+
+result = pipe.run()
+
+say
+say "RESULT:"
+call show(result)
+
+
+/* ================================================================== */
+/* TEST 4                                                             */
+/*                                                                    */
+/* Buffered processing.                                               */
+/*                                                                    */
+/* SORT receives records one at a time, but sorting requires the      */
+/* complete input stream.  SORT therefore holds its records until     */
+/* end-of-stream and then emits them in lexical order.                */
+/*                                                                    */
+/*   READ -> SORT -> WRITE                                            */
+/* ================================================================== */
+
+sortInput  = "PipeStreaming_sort_input.txt"
+sortOutput = "PipeStreaming_sort_output.txt"
+
+call closeFile sortInput, 1
+call closeFile sortOutput, 1
+call eraseFile sortInput
+call eraseFile sortOutput
+
+/*
+ * Deliberately unsorted input.
+ */
+call lineout sortInput, "zulu"
+call lineout sortInput, "alpha"
+call lineout sortInput, "hotel"
+call lineout sortInput, "charlie"
+call lineout sortInput, "mike"
+call lineout sortInput, "bravo"
+call lineout sortInput, "yankee"
+call lineout sortInput, "delta"
+call lineout sortInput, "echo"
+call lineout sortInput, "golf"
+
+call closeFile sortInput, 1
+
+say
+say "============================================================"
+say "TEST 4: Buffered processing"
+say "READ -> SORT -> WRITE"
+say "============================================================"
+
+pipe = .StreamingPipe()
+call pipe.logging(1)
+
+call pipe.add("READ", sortInput)
+call pipe.add("SORT", "")
+call pipe.add("WRITE", sortOutput)
+
+result = pipe.run()
+
+say
+say "RESULT:"
+call show(result)
+
+call closeFile sortInput, 1
+call closeFile sortOutput, 1
+
+
+/* ================================================================== */
+/* TEST 5                                                             */
+/*                                                                    */
+/* Stateful immediate stages.                                        */
+/*                                                                    */
+/* These stages can make their decision while records are arriving.   */
+/* Some retain a small amount of state while processing the stream.   */
+/*                                                                    */
+/* FIRST   - emit only the first record                               */
+/* TAKE n  - emit the first n records                                 */
+/* SKIP n  - discard the first n records                              */
+/* UNIQUE  - emit only the first occurrence of each value             */
+/* ================================================================== */
+
+say
+say "============================================================"
+say "TEST 5: Stateful immediate stages"
+say "============================================================"
+
+
+/* ------------------------------------------------------------------ */
+/* FIRST                                                              */
+/* ------------------------------------------------------------------ */
+
+call closeFile input, 1
+call closeFile output, 1
+call eraseFile output
+
+pipe = .StreamingPipe()
+call pipe.logging(0)
+
+call pipe.add("READ", input)
+call pipe.add("FIRST", "")
+call pipe.add("WRITE", output)
+
+result = pipe.run()
+
+say
+say "FIRST"
+call show(result)
+
+
+/* ------------------------------------------------------------------ */
+/* TAKE 2                                                             */
+/* ------------------------------------------------------------------ */
+
+call closeFile input, 1
+call closeFile output, 1
+call eraseFile output
+
+pipe = .StreamingPipe()
+call pipe.logging(0)
+
+call pipe.add("READ", input)
+call pipe.add("TAKE", "2")
+call pipe.add("WRITE", output)
+
+result = pipe.run()
+
+say
+say "TAKE 2"
+call show(result)
+
+
+/* ------------------------------------------------------------------ */
+/* SKIP 2                                                             */
+/* ------------------------------------------------------------------ */
+
+call closeFile input, 1
+call closeFile output, 1
+call eraseFile output
+
+pipe = .StreamingPipe()
+call pipe.logging(0)
+
+call pipe.add("READ", input)
+call pipe.add("SKIP", "2")
+call pipe.add("WRITE", output)
+
+result = pipe.run()
+
+say
+say "SKIP 2"
+call show(result)
+
+
+/* ------------------------------------------------------------------ */
+/* UNIQUE                                                             */
+/*                                                                    */
+/* Use separate input containing duplicates so that UNIQUE visibly    */
+/* demonstrates suppression of later occurrences.                     */
+/* ------------------------------------------------------------------ */
+
+uniqueInput = "PipeStreaming_unique_input.txt"
+
+call closeFile uniqueInput, 1
+call eraseFile uniqueInput
+
+call lineout uniqueInput, "alpha"
+call lineout uniqueInput, "beta"
+call lineout uniqueInput, "alpha"
+call lineout uniqueInput, "gamma"
+call lineout uniqueInput, "beta"
+call lineout uniqueInput, "delta"
+call lineout uniqueInput, "gamma"
+call lineout uniqueInput, "alpha"
+
+call closeFile uniqueInput, 1
+
+call closeFile output, 1
+call eraseFile output
+
+pipe = .StreamingPipe()
+call pipe.logging(0)
+
+call pipe.add("READ", uniqueInput)
+call pipe.add("UNIQUE", "")
+call pipe.add("WRITE", output)
+
+result = pipe.run()
+
+say
+say "UNIQUE"
+call show(result)
+
+call closeFile uniqueInput, 1
+
+
+/* ================================================================== */
+/* TEST 6                                                             */
+/*                                                                    */
+/* End-of-stream stages.                                              */
+/*                                                                    */
+/* These stages cannot produce their final result until EOF arrives.  */
+/*                                                                    */
+/* LAST     - retain the most recently received record                */
+/* JOIN     - combine all records into one record                     */
+/* REVERSE  - retain all records and emit them in reverse order       */
+/* ================================================================== */
+
+say
+say "============================================================"
+say "TEST 6: End-of-stream stages"
+say "============================================================"
+
+
+/* ------------------------------------------------------------------ */
+/* LAST                                                               */
+/* ------------------------------------------------------------------ */
+
+call closeFile input, 1
+call closeFile output, 1
+call eraseFile output
+
+pipe = .StreamingPipe()
+call pipe.logging(0)
+
+call pipe.add("READ", input)
+call pipe.add("LAST", "")
+call pipe.add("WRITE", output)
+
+result = pipe.run()
+
+say
+say "LAST"
+call show(result)
+
+
+/* ------------------------------------------------------------------ */
+/* JOIN                                                               */
+/* ------------------------------------------------------------------ */
+
+call closeFile input, 1
+call closeFile output, 1
+call eraseFile output
+
+pipe = .StreamingPipe()
+call pipe.logging(0)
+
+call pipe.add("READ", input)
+call pipe.add("JOIN", ",")
+call pipe.add("WRITE", output)
+
+result = pipe.run()
+
+say
+say "JOIN comma"
+call show(result)
+
+
+/* ------------------------------------------------------------------ */
+/* REVERSE                                                            */
+/* ------------------------------------------------------------------ */
+
+call closeFile input, 1
+call closeFile output, 1
+call eraseFile output
+
+pipe = .StreamingPipe()
+call pipe.logging(0)
+
+call pipe.add("READ", input)
+call pipe.add("REVERSE", "")
+call pipe.add("WRITE", output)
+
+result = pipe.run()
+
+say
+say "REVERSE"
+call show(result)
+
+
+/* ================================================================== */
+/* TEST 7                                                             */
+/*                                                                    */
+/* Output and returned result.                                        */
+/*                                                                    */
+/* SAY consumes records by writing them immediately.                  */
+/*                                                                    */
+/* The second example has no explicit sink.  The value returned from  */
+/* run() therefore demonstrates the runner's materialized result.     */
+/* ================================================================== */
+
+say
+say "============================================================"
+say "TEST 7: Output and returned result"
+say "============================================================"
+
+
+/* ------------------------------------------------------------------ */
+/* SAY                                                                */
+/* ------------------------------------------------------------------ */
+
+call closeFile input, 1
+
+pipe = .StreamingPipe()
+call pipe.logging(0)
+
+call pipe.add("READ", input)
+call pipe.add("SAY", "")
+
+result = pipe.run()
+
+say
+say "SAY"
+say "(records above were written immediately)"
+say "returned result:"
+call show(result)
+
+
+/* ------------------------------------------------------------------ */
+/* Returned array                                                     */
+/*                                                                    */
+/* No consuming output stage is present.  run() returns the records   */
+/* reaching the end of the pipeline.                                  */
+/* ------------------------------------------------------------------ */
+
+call closeFile input, 1
+
+pipe = .StreamingPipe()
+call pipe.logging(0)
+
+call pipe.add("READ", input)
+
+result = pipe.run()
+
+say
+say "TOARRAY / runner return value"
+call show(result)
+
+
+/* ================================================================== */
+/* End                                                                */
+/* ================================================================== */
+
+/* ================================================================== */
+/* TEST 7                                                             */
+/*                                                                    */
+/* DISPLAY buffers all records like SORT and displays them only at    */
+/* end-of-stream, preserving input order.                             */
+/* ================================================================== */
+
+say
+say "============================================================"
+say "TEST 7: DISPLAY at end-of-stream"
+say "READ -> SELECT -> DISPLAY -> WRITE"
+say "============================================================"
+
+call closeFile input, 1
+call closeFile output, 1
+call eraseFile output
+
+pipe = .StreamingPipe()
+call pipe.logging(1)
+call pipe.add("READ", input)
+call pipe.add("SELECT", "alpha")
+call pipe.add("DISPLAY", "")
+call pipe.add("WRITE", output)
+result = pipe.run()
+
+say
+say "RESULT after DISPLAY:"
+call show(result)
+
+call closeFile input, 1
+call closeFile output, 1
+
+/* ================================================================== */
+/* End                                                                */
+/* ================================================================== */
+
+say
+say "============================================================"
+say "END OF PipeStreaming SAMPLE"
+say "============================================================"
+
+return 0
+
+
+/* ================================================================== */
+/* Display returned records                                           */
+/* ================================================================== */
+
+show: procedure
+  arg values = .string[]
+
+  say "record count =" values[0]
+
+  do i = 1 to values[0]
+    say "record[" || i || "] = '" || values[i] || "'"
+  end
+
+  return
+/* ================================================================== */
+/* StreamingPipe                                                      */
+/*                                                                    */
+/* All mutable pipeline state is deliberately kept in one object.     */
+/*                                                                    */
+/* Stages are represented by indexed arrays rather than linked        */
+/* PipeStep objects.                                                  */
+/*                                                                    */
+/* A record moves synchronously through the stages:                   */
+/*                                                                    */
+/*     processRecord(stage, record)                                   */
+/*                |                                                   */
+/*                v                                                   */
+/*     processRecord(stage + 1, record)                               */
+/*                                                                    */
+/* There are no tasks, threads, queues or copied PipeStep objects.    */
+/* ================================================================== */
+StreamingPipe: class
+  /*
+   * Pipeline definition.
+   */
+  commands_ = .string[]
+  arguments_ = .string[]
+  stepCount_ = .int
+
+  /*
+   * COUNT state.
+   *
+   * Indexed by stage number.
+   */
+  counts_ = .int[]
+
+  /*
+   * SORT state.
+   *
+   * cREXX arrays are one-dimensional, therefore each SORT stage
+   * receives a private .string[] held by the pipeline.
+   *
+   * For this initial POC we support one SORT stage.
+   */
+  sortValues_ = .string[]
+  sortCount_ = .int
+  sortStage_ = .int
+
+  reverseValues_ = .string[]
+  reverseCount_ = .int
+  reverseStage_ = .int
+  lastValue_ = .string
+  lastSeen_ = .int
+  firstSeen_ = .int
+  takeCount_ = .int
+  skipCount_ = .int
+  uniqueValues_ = .string[]
+  uniqueCount_ = .int
+  joinValue_ = .string
+  joinCount_ = .int
+  displayValues_ = .string[]
+  displayCount_ = .int
+
+  /*
+   * Final result collection.
+   */
+  output_ = .string[]
+  outputCount_ = .int
+
+  /*
+   * Logging.
+   */
+  logging_ = .int
+
+  *: factory
+
+    stepCount_ = 0
+    sortCount_ = 0
+    sortStage_ = 0
+    reverseCount_ = 0
+    reverseStage_ = 0
+    lastSeen_ = 0
+    firstSeen_ = 0
+    takeCount_ = 0
+    skipCount_ = 0
+    uniqueCount_ = 0
+    joinCount_ = 0
+    joinValue_ = ""
+    displayCount_ = 0
+    outputCount_ = 0
+    logging_ = 1
+  return
+
+/* ================================================================== */
+/* Enable/disable diagnostic logging                                  */
+/* ================================================================== */
+  logging: method = .void
+    arg enabled = .int
+
+    logging_ = enabled
+
+    return
+
+/* ================================================================== */
+/* Add one stage                                                      */
+/* ================================================================== */
+
+  add: method = .int
+    arg command = .string, argument = .string
+
+    stepCount_ = stepCount_ + 1
+
+    commands_[stepCount_] = translate(strip(command))
+    arguments_[stepCount_] = argument
+
+    /*
+     * Initialise stage-specific state.
+     */
+    counts_[stepCount_] = 0
+
+    if commands_[stepCount_] = "SORT" then do
+      /*
+       * Initial POC supports one SORT stage.
+       */
+      sortStage_ = stepCount_
+      sortCount_ = 0
+    end
+    if commands_[stepCount_] = "REVERSE" then do
+      reverseStage_ = stepCount_
+      reverseCount_ = 0
+    end
+    if commands_[stepCount_] = "UNIQUE" then uniqueCount_ = 0
+    if commands_[stepCount_] = "JOIN" then do
+      joinCount_ = 0
+      joinValue_ = ""
+    end
+    if commands_[stepCount_] = "DISPLAY" then displayCount_ = 0
+    if logging_ = 1 then do
+      say "[BUILD] stage" stepCount_              ,
+          commands_[stepCount_]                  ,
+          "'" || arguments_[stepCount_] || "'"
+    end
+    return 1
+
+/* ================================================================== */
+/* Execute pipeline                                                   */
+/* ================================================================== */
+run: method = .string[]
+  result = .string[]
+
+  outputCount_ = 0
+  if stepCount_ = 0 then
+    return result
+
+  /*
+   * The first implementation requires READ as the source stage.
+   */
+  if commands_[1] <> "READ" then do
+
+    if logging_ = 1 then
+      say "[ERROR] first stage must be READ"
+
+    return result
+  end
+
+  filename = arguments_[1]
+
+  if logging_ = 1 then do
+    say "[RUN  ] starting pipeline"
+    say "[READ ] file = '" || filename || "'"
+  end
+
+  /*
+   * READ drives the pipeline.
+   *
+   * lines(filename) is used as an availability indicator.
+   * Each record is passed through the complete downstream
+   * pipeline before the next input record is read.
+   */
+  available = lines(filename)
+  if available < 0 then do
+    if logging_ = 1 then
+      say "[ERROR] could not open input file '" || filename || "'"
+    return result
+  end
+
+  inputNumber = 0
+
+  do while available > 0
+    inputNumber = inputNumber + 1
+    record = linein(filename)
+
+    if logging_ = 1 then
+      say "[READ ] record" inputNumber "'" || record || "'"
+
+    /*
+     * Stage 1 is READ itself.
+     * Processing therefore begins with stage 2.
+     */
+    rc = processRecord(2, record)
+
+    if rc = 0 then do
+
+      rc = linein(filename)
+
+      if logging_ = 1 then
+        say "[RUN  ] pipeline stopped"
+
+      return result
+    end
+
+    available = lines(filename)
+  end
+
+  /*
+   * Close input stream.
+   */
+  ## rc = linein(filename)
+
+  if logging_ = 1 then
+    say "[EOF  ] READ"
+
+  /*
+   * Propagate end-of-stream through the remaining stages.
+   *
+   * This is where COUNT, SORT and other stages that require
+   * complete-input knowledge can emit their results.
+   */
+  rc = processEnd(2)
+
+  if rc = 0 then do
+    if logging_ = 1 then
+      say "[RUN  ] end processing failed"
+    return result
+  end
+
+  /*
+   * Return a copy of the final collected output.
+   */
+  do i = 1 to outputCount_
+    result[i] = output_[i]
+  end
+
+  if logging_ = 1 then
+    say "[RUN  ] complete, output records =" outputCount_
+
+  return result
+
+/* ================================================================== */
+/* Process one record at one stage                                    */
+/* ================================================================== */
+
+  processRecord: method = .int
+    arg stage = .int, record = .string
+
+    /*
+     * Passing beyond the final configured stage means that the
+     * record has successfully left the pipeline.
+     */
+    if stage > stepCount_ then do
+
+      outputCount_ = outputCount_ + 1
+      output_[outputCount_] = record
+
+      if logging_ = 1 then
+        say "[OUT  ] '" || record || "'"
+
+      return 1
+    end
+
+    command = commands_[stage]
+    argument = arguments_[stage]
+
+    if logging_ = 1 then
+      say "[STEP ]" stage command "'" || record || "'"
+
+    select
+
+      /*
+       * SELECT
+       *
+       * 1 input -> 0 or 1 output
+       */
+      when command = "SELECT" then do
+        if pos(argument, record) > 0 then do
+          if logging_ = 1 then
+            say "[PASS ]" stage "SELECT"
+          return processRecord(stage + 1, record)
+        end
+
+        if logging_ = 1 then
+          say "[DROP ]" stage "SELECT"
+        return 1
+      end
+
+      when command = "DROP" then do
+        if pos(argument, record) = 0 then
+          return processRecord(stage + 1, record)
+        return 1
+      end
+
+      /*
+       * UPPER
+       *
+       * 1 input -> 1 output
+       */
+      when command = "UPPER" then do
+        value = upper(record)
+        if logging_ = 1 then
+          say "[EMIT ]" stage "'" || value || "'"
+        return processRecord(stage + 1, value)
+      end
+
+      when command = "LOWER" then do
+        value = translate(record, "abcdefghijklmnopqrstuvwxyz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+        return processRecord(stage + 1, value)
+      end
+
+      when command = "TRIM" then
+        return processRecord(stage + 1, strip(record))
+
+      when command = "REPLACE" then do
+        old = word(argument, 1)
+        new = word(argument, 2)
+        value = replaceText(record, old, new)
+        return processRecord(stage + 1, value)
+      end
+
+      when command = "WORD" then do
+        number = word(argument, 1) + 0
+        return processRecord(stage + 1, word(record, number))
+      end
+
+      when command = "SUBSTR" then do
+        start = word(argument, 1) + 0
+        if words(argument) > 1 then do
+          size = word(argument, 2) + 0
+          value = substr(record, start, size)
+        end
+        else
+          value = substr(record, start)
+        return processRecord(stage + 1, value)
+      end
+
+      when command = "LENGTH" then
+        return processRecord(stage + 1, length(record) || "")
+
+      when command = "WORDS" then
+        return processRecord(stage + 1, words(record) || "")
+
+      when command = "SPACE" then
+        return processRecord(stage + 1, space(record))
+
+      when command = "EMPTY" then do
+        if length(record) = 0 then
+          return processRecord(stage + 1, record)
+        return 1
+      end
+
+      when command = "NONEMPTY" then do
+        if length(record) > 0 then
+          return processRecord(stage + 1, record)
+        return 1
+      end
+
+      when command = "STARTSWITH" then do
+        prefix = argument
+        if prefix = "" | left(record, length(prefix)) = prefix then
+          return processRecord(stage + 1, record)
+        return 1
+      end
+
+      when command = "ENDSWITH" then do
+        suffix = argument
+        if suffix = "" | right(record, length(suffix)) = suffix then
+          return processRecord(stage + 1, record)
+        return 1
+      end
+
+      when command = "PREFIX" then
+        return processRecord(stage + 1, argument || record)
+
+      when command = "SUFFIX" then
+        return processRecord(stage + 1, record || argument)
+
+      when command = "FIRST" then do
+        if firstSeen_ = 0 then do
+          firstSeen_ = 1
+          return processRecord(stage + 1, record)
+        end
+        return 1
+      end
+
+      when command = "LAST" then do
+        lastValue_ = record
+        lastSeen_ = 1
+        return 1
+      end
+
+      when command = "TAKE" then do
+        limit = argument + 0
+        if takeCount_ < limit then do
+          takeCount_ = takeCount_ + 1
+          return processRecord(stage + 1, record)
+        end
+        return 1
+      end
+
+      when command = "SKIP" then do
+        limit = argument + 0
+        if skipCount_ < limit then do
+          skipCount_ = skipCount_ + 1
+          return 1
+        end
+        return processRecord(stage + 1, record)
+      end
+
+      when command = "UNIQUE" then do
+        do i = 1 to uniqueCount_
+          if uniqueValues_[i] = record then return 1
+        end
+        uniqueCount_ = uniqueCount_ + 1
+        uniqueValues_[uniqueCount_] = record
+        return processRecord(stage + 1, record)
+      end
+
+      when command = "JOIN" then do
+        if joinCount_ = 0 then
+          joinValue_ = record
+        else
+          joinValue_ = joinValue_ || argument || record
+        joinCount_ = joinCount_ + 1
+        return 1
+      end
+
+      when command = "REVERSE" then do
+        reverseCount_ = reverseCount_ + 1
+        reverseValues_[reverseCount_] = record
+        return 1
+      end
+
+      /*
+       * SPLIT
+       *
+       * 1 input -> zero/one/many output records.
+       */
+      when command = "SPLIT" then
+        return processSplit(stage, record, argument)
+
+      /*
+       * COUNT
+       *
+       * Consume the record now.
+       * Produce one result when EOF is received.
+       */
+      when command = "COUNT" then do
+        counts_[stage] = counts_[stage] + 1
+        if logging_ = 1 then
+          say "[HOLD ]" stage "COUNT =" counts_[stage]
+        return 1
+      end
+
+      /*
+       * SORT
+       *
+       * Consume and retain records.
+       * Sorted records are emitted when EOF is received.
+       */
+      when command = "SORT" then do
+        sortCount_ = sortCount_ + 1
+        sortValues_[sortCount_] = record
+        if logging_ = 1 then
+          say "[HOLD ]" stage "SORT record" sortCount_
+        return 1
+      end
+
+      /*
+       * WRITE
+       *
+       * Streaming sink: write the record immediately.
+       *
+       * The record is then passed beyond the final stage so that the
+       * sample can collect and display the resulting stream.
+       */
+      when command = "WRITE" then do
+        call lineout argument, record
+        if logging_ = 1 then
+          say "[WRITE]" stage "'" || record || "'"
+        return processRecord(stage + 1, record)
+      end
+
+      when command = "SAY" then do
+        say record
+        return 1
+      end
+
+      when command = "TOARRAY" then
+        return processRecord(stage + 1, record)
+
+      when command = "DISPLAY" then do
+        displayCount_ = displayCount_ + 1
+        displayValues_[displayCount_] = record
+        return 1
+      end
+
+      /*
+       * READ should only be stage 1 and is driven by run().
+       */
+      when command = "READ" then do
+        if logging_ = 1 then
+          say "[ERROR] READ encountered as processing stage" stage
+        return 0
+      end
+
+      otherwise do
+        if logging_ = 1 then
+          say "[ERROR] unknown command" command
+        return 0
+      end
+    end
+    return 0
+
+  replaceText: method = .string
+    arg text = .string, old = .string, new = .string
+    if old = "" then return text
+    result = ""
+    start = 1
+    found = pos(old, text, start)
+    oldLength = length(old)
+    do while found > 0
+      result = result || substr(text, start, found - start) || new
+      start = found + oldLength
+      found = pos(old, text, start)
+    end
+    return result || substr(text, start)
+
+/* ================================================================== */
+/* SPLIT processing                                                   */
+/* ================================================================== */
+
+  processSplit: method = .int
+    arg stage = .int, record = .string, separator = .string
+
+    separatorLength = length(separator)
+    if separatorLength = 0 then do
+      if logging_ = 1 then
+        say "[ERROR] SPLIT separator is empty"
+      return 0
+    end
+
+    start = 1
+    found = pos(separator, record, start)
+
+    do while found > 0
+      part = substr(record, start, found - start)
+      if logging_ = 1 then
+        say "[EMIT ]" stage "SPLIT '" || part || "'"
+      rc = processRecord(stage + 1, part)
+      if rc = 0 then
+        return 0
+      start = found + separatorLength
+      found = pos(separator, record, start)
+    end
+
+    /*
+     * Emit the final field.
+     *
+     * This intentionally preserves a trailing empty field.
+     */
+    part = substr(record, start)
+    if logging_ = 1 then
+      say "[EMIT ]" stage "SPLIT '" || part || "'"
+    return processRecord(stage + 1, part)
+
+/* ================================================================== */
+/* End-of-stream processing                                           */
+/* ================================================================== */
+  processEnd: method = .int
+    arg stage = .int
+
+    if stage > stepCount_ then do
+      if logging_ = 1 then
+        say "[EOF  ] pipeline"
+      return 1
+    end
+    command = commands_[stage]
+    if logging_ = 1 then
+      say "[EOF  ] stage" stage command
+
+    /* LAST, JOIN and REVERSE complete only at end-of-stream. */
+    if command = "LAST" then do
+      if lastSeen_ = 1 then do
+        rc = processRecord(stage + 1, lastValue_)
+        if rc = 0 then return 0
+      end
+    end
+    else if command = "JOIN" then do
+      if joinCount_ > 0 then do
+        rc = processRecord(stage + 1, joinValue_)
+        if rc = 0 then return 0
+      end
+    end
+    else if command = "REVERSE" then do
+      do i = reverseCount_ to 1 by -1
+        rc = processRecord(stage + 1, reverseValues_[i])
+        if rc = 0 then return 0
+      end
+    end
+    else if command = "DISPLAY" then do
+      do i = 1 to displayCount_
+        say displayValues_[i]
+        rc = processRecord(stage + 1, displayValues_[i])
+        if rc = 0 then return 0
+      end
+    end
+    /* COUNT emits exactly one record at EOF. */
+    else if command = "COUNT" then do
+      value = counts_[stage]
+      if logging_ = 1 then
+        say "[EMIT ]" stage "COUNT '" || value || "'"
+      rc = processRecord(stage + 1, value)
+      if rc = 0 then
+        return 0
+    end
+    /*
+     * SORT sorts and emits all retained records at EOF.
+     */
+    else if command = "SORT" then do
+      call sortPending()
+      if logging_ = 1 then
+        say "[SORT ]" stage "emitting" sortCount_ "records"
+      do i = 1 to sortCount_
+        if logging_ = 1 then
+          say "[EMIT ]" stage "SORT '" || sortValues_[i] || "'"
+        rc = processRecord(stage + 1, sortValues_[i])
+        if rc = 0 then
+          return 0
+      end
+    end
+
+    /*
+     * WRITE has already written each incoming record.
+     * EOF only closes the file.
+     */
+    else if command = "WRITE" then do
+       call closeFile arguments_[stage]
+    if logging_ = 1 then
+        say "[CLOSE]" stage "WRITE"
+    end
+
+    /*
+     * Propagate EOF to the next stage.
+     */
+    return processEnd(stage + 1)
+
+/* ================================================================== */
+/* Sort retained SORT records                                         */
+/* ================================================================== */
+  sortPending: method = .void
+    /* arraysort(expose array=.string[] [,offset=.int [,order=.string [,debug=.int]]]) = .int */
+    call arraysort(sortValues_, 1, "ASC",1)
+  return

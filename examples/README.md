@@ -16,6 +16,10 @@ Reusable component demonstrations are grouped separately:
 The KeyDB examples include `keydb_traversal.crexx` for active-key traversal and
 `keydb_lookup_benchmark.crexx` for comparing cold and cached lookups.
 
+The task examples include `ts_subtask_prime_count.crexx`, which splits a
+CPU-bound prime-counting calculation across four subtasks and reduces their
+scalar results in the controller.
+
 These categories describe demonstration ownership, not a language level. A
 source may use `options levelb` without becoming part of the supported Level B
 or Level G library. Built demonstration artifacts are deployed under the same

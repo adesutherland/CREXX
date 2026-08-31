@@ -26,7 +26,7 @@
  * CREXX LEVEL B - FILE IO Functions
  */
 options levelb
-namespace rxfnsb expose lineout linein lines charin charout _execio readlines loadtext readbinary writebinary erasefile
+namespace rxfnsb expose lineout linein lines charin charout _execio readlines loadtext readbinary writebinary erasefile closefile
 import _rxsysb
 
 /* Level B UTF text lineout BIF. Writes one line and appends a newline. */
@@ -441,6 +441,32 @@ eraseFile: procedure = .int
   /* Close immediately - truncation has already occurred */
   assembler fclose fileid, fileid
 return 0
+
+/* --------------------------------------------------------------------
+ * CloseFile
+ *
+ * Close any cached/open instance of the specified file.
+ *
+ * cREXX file I/O may retain an open file instance and its current
+ * stream position after normal LINEIN/LINEOUT processing.  This
+ * helper explicitly closes that instance so that a subsequent access
+ * to the same filename starts with a newly opened stream.
+ * In case the file is not currently open, no diagnostic is issued.
+ *
+ * Arguments:
+ *   fname  - Name of the file to close.
+ *   nomsg  - Suppress diagnostics when the file is not currently
+ *            open. Defaults to 1 (diagnostics suppressed).
+ *
+ * Returns:
+ *   0
+ * --------------------------------------------------------------------
+ */
+CloseFile: procedure = .int
+  arg fname = .string, nomsg = 1
+  call _close fname, nomsg
+return 0
+
 
 write_stderr: procedure = .void
   arg message = .string

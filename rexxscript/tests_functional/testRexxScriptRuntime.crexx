@@ -182,6 +182,12 @@ if result[1] <> "OK" | rexxscript_value("x") <> "3:6:bXnXnX:1:123:adef:abXc:aXYd
   say "REXXSCRIPT string BIF status/value failed:" result[1] rexxscript_value("x")
 end
 
+result = rexxscript_evaluate("collect 'one'; say 'finished'; collect 2", 0)
+if result[1] <> "OK" | result[2] <> "1" | result[3] <> "finished" | result[4] <> "__REXXSCRIPT_COLLECT__" | result[5] <> "2" | result[6] <> "one" | result[7] <> "2" then do
+  errors = errors + 1
+  say "REXXSCRIPT COLLECT/raw result failed:" result[1] result[2] result[3] result[4] result[5] result[6] result[7]
+end
+
 result = rexxscript_evaluate("d = date(); t = time(); u = time('UTC')", 0)
 if result[1] <> "OK" | rexxscript_value("d") = "" | rexxscript_value("t") = "" | rexxscript_value("u") = "" then do
   errors = errors + 1

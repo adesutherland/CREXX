@@ -62,6 +62,8 @@ rexxscriptcoreevaluator: class
   classic_config = .RexxClassicConfig
   output_lines = .string[]
   output_count = .int
+  collect_values = .string[]
+  collect_count = .int
   export_variables = .string[]
   export_contents = .string[]
   export_count = .int
@@ -105,6 +107,7 @@ rexxscriptcoreevaluator: class
     script_pool = .RexxVariablePool()
     classic_config = .RexxClassicConfig()
     output_count = 0
+    collect_count = 0
     export_count = 0
     error_code = ""
     error_message = ""
@@ -126,6 +129,7 @@ rexxscriptcoreevaluator: class
     assembler SETATTRS stream_modes,0
     assembler SETATTRS stream_pending,0
     assembler SETATTRS stream_pending_present,0
+    assembler SETATTRS collect_values,0
     return
 
   evaluate: method = .string[]
@@ -239,6 +243,7 @@ rexxscriptcoreevaluator: class
 
   _build_result: method = .string[]
     arg status = .string
+    base = .int
     result = .string[]
     result[1] = status
     do i = 1 to export_count
@@ -253,6 +258,15 @@ rexxscriptcoreevaluator: class
         result[base + i] = output_lines[i]
       end
     end
+    if collect_count > 0 then do
+      base = export_count * 2 + 2
+      if output_count > 0 then base = base + output_count + 1
+      result[base] = "__REXXSCRIPT_COLLECT__"
+      result[base + 1] = collect_count
+      do i = 1 to collect_count
+        result[base + 1 + i] = collect_values[i]
+      end
+    end
     return result
 
   _reset: method = .void
@@ -260,6 +274,7 @@ rexxscriptcoreevaluator: class
     env_count = 0
     script_pool = .RexxVariablePool()
     output_count = 0
+    collect_count = 0
     export_count = 0
     error_code = ""
     error_message = ""
@@ -292,6 +307,7 @@ rexxscriptcoreevaluator: class
     assembler SETATTRS stream_modes,0
     assembler SETATTRS stream_pending,0
     assembler SETATTRS stream_pending_present,0
+    assembler SETATTRS collect_values,0
     return
 
   _stream_open: method = .int
@@ -586,6 +602,14 @@ rexxscriptcoreevaluator: class
       if _eval_expression(expr, stmtno) = 0 then return 0
       output_count = output_count + 1
       output_lines[output_count] = eval_value
+      return 1
+    end
+    if _starts_keyword(text, "COLLECT") = 1 then do
+      expr = strip(substr(text, 8))
+      if expr == "" then return _set_error("missing_expression", "missing COLLECT expression", stmtno, 1)
+      if _eval_expression(expr, stmtno) = 0 then return 0
+      collect_count = collect_count + 1
+      collect_values[collect_count] = eval_value
       return 1
     end
     if _starts_keyword(text, ".GEN") = 1 then do
