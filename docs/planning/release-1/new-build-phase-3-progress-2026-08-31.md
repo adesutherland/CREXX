@@ -186,10 +186,22 @@ Full hosted sanitizer CTest excludes the `performance-measurement` label.
 Those tests retain their separate ordinary-Release lane because sanitizer
 instrumentation and a saturated correctness pool invalidate their timing
 relationships; no correctness or sanitizer regression is excluded.
+The parallel controlled-spawn regression is a `stress` test and is `RUN_SERIAL`:
+it remains in sanitizer qualification, but never shares the worker pool with
+Unicode or another stress variant. Ordinary Apple Debug uses 4,096 launches
+per variant; ASan uses 1,024 through the same eight-worker task shape so
+instrumentation does not turn the correctness watchdog into a timing failure.
+
+The final local candidate passed the focused spawn pair 2/2 under Apple ASan
+in `cmake-build-debugasan/asan-logs/20260831-204902-ctest/ctest.log`, then passed
+the complete designed slice 33/33 with five CTest workers in
+`cmake-build-debugasan/asan-logs/20260831-205106-ctest/ctest.log`. No sanitizer
+diagnostic was reported. Exact-SHA hosted Build and Sanitizer QA remain the
+publication gates.
 
 ## 8. Remaining Phase 3 work
 
-1. Run the designed sanitizer scope through `tools/asan-run.sh`; any finding
+1. Preserve the retained green designed-scope evidence; any later finding
    remains subject to the repository SAN worklist rules.
 2. Push the CMake ownership cutover, then require exact-SHA hosted
    Build, Sanitizer and CodeQL success.

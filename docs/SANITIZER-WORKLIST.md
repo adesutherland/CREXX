@@ -199,6 +199,45 @@ marks SAN-006 closed without weakening any sanitizer closure requirement.
 
 ## Qualification infrastructure repairs
 
+### SAN-QA-010 — parallel spawn stress exceeds its scope under contended ASan
+
+Status: repair implemented; focused and designed-slice Apple-ASan proof passes.
+The item remains open and release-blocking pending exact-SHA hosted sanitizer
+qualification. No sanitizer suppression, product assertion or launcher
+cancellation behavior is weakened.
+
+- Scope: CTest scheduling for the new
+  `test_address_parallel_spawn_{noopt,opt}` launcher-race regressions.
+- Failure: the designed Phase 3 Apple-ASan slice ran both 4,096-spawn variants
+  concurrently with four heavy Unicode tests. At final revision candidate
+  `aecd79da5551de81cc97ecc84210f01c184c9169`, both task scopes reached their
+  60-second correctness deadline after 65–66 seconds and returned typed
+  deadline completions. The retained log is
+  `cmake-build-debugasan/asan-logs/20260831-203532-ctest/ctest.log`. It contains
+  no AddressSanitizer memory diagnostic or process-group launch failure.
+- Original trigger: `tools/asan-run.sh --phase ctest --test-jobs 5 --leaks off`
+  with the designed Phase 3 regex recorded in the Phase 3 progress note.
+- Smallest permanent reproducer: each stress variant launches 4,096 controlled
+  children through a local Level B task pool; the fixture asserts POSIX child
+  process-group ownership. The ordinary Debug pair passed together in about
+  10.5 seconds on the same tree.
+- Repair candidate: retain the assertions, internal deadline and outer timeout,
+  but mark the two stress variants `RUN_SERIAL`. Ordinary Apple Debug retains
+  4,096 launches per variant; sanitizer builds use 1,024 launches per variant
+  through the same eight-worker ownership path because instrumentation makes
+  the full stress exceed the correctness watchdog even in isolation. This
+  keeps maximum race pressure in the stress lane and memory-safety coverage in
+  the sanitizer lane without turning either deadline into a performance test.
+- Repair evidence: the focused Apple-ASan pair passed 2/2 serially in
+  `cmake-build-debugasan/asan-logs/20260831-204902-ctest/ctest.log`. The complete
+  designed Phase 3 slice then passed 33/33 with five CTest workers in
+  `cmake-build-debugasan/asan-logs/20260831-205106-ctest/ctest.log`; the spawn
+  variants waited for the concurrent Unicode work and then ran one at a time.
+  Neither retained run contains an AddressSanitizer diagnostic.
+- Owner/acceptance: new-build Phase 3D. Final exact-SHA GitHub Build and both
+  Sanitizer QA lanes remain required. Linux ASan/LSan remains the leak-closure
+  authority.
+
 ### SAN-QA-009 — interactive stdin watchdogs expire under contended Apple ASan
 
 Status: repair implemented; focused normal-Debug and Apple-ASan proof passes.

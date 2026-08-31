@@ -35,6 +35,25 @@ else()
     set(_address_parallel_spawn_repetitions 128)
 endif()
 
+# ASan makes each process launch substantially more expensive. Keep the full
+# 4,096-launch race stress in ordinary Apple builds, while the sanitizer lane
+# exercises the same eight-worker ownership path with 1,024 launches.
+set(_address_parallel_spawn_sanitizer_flags
+        "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} ${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
+if(CMAKE_BUILD_TYPE)
+    string(TOUPPER "${CMAKE_BUILD_TYPE}" _address_parallel_spawn_build_type)
+    string(APPEND _address_parallel_spawn_sanitizer_flags
+            " ${CMAKE_C_FLAGS_${_address_parallel_spawn_build_type}}"
+            " ${CMAKE_CXX_FLAGS_${_address_parallel_spawn_build_type}}"
+            " ${CMAKE_EXE_LINKER_FLAGS_${_address_parallel_spawn_build_type}}"
+            " ${CMAKE_SHARED_LINKER_FLAGS_${_address_parallel_spawn_build_type}}")
+endif()
+string(FIND "${_address_parallel_spawn_sanitizer_flags}"
+        "-fsanitize=address" _address_parallel_spawn_asan_flag)
+if(NOT WIN32 AND NOT _address_parallel_spawn_asan_flag EQUAL -1)
+    set(_address_parallel_spawn_repetitions 128)
+endif()
+
 crexx_add_compiler_exit_runtime_test(
         test_address_parallel_spawn
         test_address_parallel_spawn.crexx
@@ -51,5 +70,6 @@ set_tests_properties(
         test_address_parallel_spawn_opt
         PROPERTIES
                 LABELS "stress;interpreter;address;spawn;concurrency"
+                RUN_SERIAL TRUE
                 TIMEOUT 90
 )
