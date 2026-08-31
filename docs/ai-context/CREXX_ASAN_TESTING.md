@@ -46,6 +46,12 @@ tools/asan-run.sh --phase build --build-target test_highlight_editor_diagnostics
 tools/asan-run.sh --phase ctest --regex '^crexx_spaced_source_smoke$' --leaks on
 ```
 
+The hosted full sanitizer lanes exclude only the `performance-measurement`
+label. Those tests assert timing relationships that ASan instrumentation and a
+contended CTest pool deliberately invalidate; run them in the separate
+performance lane on an ordinary Release product. Correctness, smoke,
+conformance and sanitizer regressions remain in the full sanitizer gate.
+
 Default build directory is `cmake-build-debugasan`.
 The same runner can target the normal Debug tree with `--build-dir
 cmake-build-debug`; use that for plain, non-sanitized validation when the Debug

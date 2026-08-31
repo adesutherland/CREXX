@@ -39,6 +39,7 @@ if(BUILD_TESTING)
     rxdas
     test_signal_block_levelg_bin
     test_address_after_signal_block_bin
+    test_address_parallel_spawn_bin
     ts_unicode_casefold
     ts_unicode_case_mapping
     ts_unicode_grapheme

@@ -123,6 +123,14 @@ typedef struct rxspawn_snapshot_override {
 static RXSPAWN_THREAD_LOCAL const RXSPAWN_SNAPSHOT_OVERRIDE
         *rxspawn_thread_snapshot;
 
+#ifndef _WIN32
+/* pipe() plus FD_CLOEXEC setup must be indivisible with respect to every
+ * concurrent rxspawn fork.  Otherwise an unrelated child can inherit a launch
+ * status writer and delay EOF until that child exits.  This mutex covers only
+ * pipe setup and fork; child execution remains fully parallel. */
+static pthread_mutex_t rxspawn_posix_launch_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
+
 #ifdef _WIN32
 typedef HANDLE REDIRECT_IO_HANDLE;
 #define REDIRECT_INVALID_IO_HANDLE INVALID_HANDLE_VALUE
@@ -4397,8 +4405,19 @@ int launchChild(SHELLDATA* data, char **errorText) {
     size_t child_failure_bytes = 0u;
     int process_group_child = bounded_child &&
             rxspawn_posix_child_needs_process_group(data);
+    int launch_mutex_error;
+
+    launch_mutex_error = pthread_mutex_lock(&rxspawn_posix_launch_mutex);
+    if (launch_mutex_error != 0) {
+        ErrorCode("Failure locking POSIX child launch", launch_mutex_error,
+                  errorText);
+        return SHELLSPAWN_FAILURE;
+    }
 
     if (pipe(launch_status_pipe) != 0) {
+        int saved_errno = errno;
+        (void)pthread_mutex_unlock(&rxspawn_posix_launch_mutex);
+        errno = saved_errno;
         Error("Failure creating child launch status pipe", errorText);
         return SHELLSPAWN_FAILURE;
     }
@@ -4406,6 +4425,7 @@ int launchChild(SHELLDATA* data, char **errorText) {
         int saved_errno = errno;
         close(launch_status_pipe[0]);
         close(launch_status_pipe[1]);
+        (void)pthread_mutex_unlock(&rxspawn_posix_launch_mutex);
         ErrorCode("Failure protecting child launch status pipe",
                   saved_errno, errorText);
         return SHELLSPAWN_FAILURE;
@@ -4416,6 +4436,7 @@ int launchChild(SHELLDATA* data, char **errorText) {
         close(launch_status_pipe[0]);
         close(launch_status_pipe[1]);
         data->ChildProcessPID = 0;
+        (void)pthread_mutex_unlock(&rxspawn_posix_launch_mutex);
         ErrorCode("Failure forking child process", saved_errno, errorText);
         return SHELLSPAWN_FAILURE;
     }
@@ -4425,6 +4446,7 @@ int launchChild(SHELLDATA* data, char **errorText) {
         ssize_t count;
         close(launch_status_pipe[1]);
         launch_status_pipe[1] = -1;
+        (void)pthread_mutex_unlock(&rxspawn_posix_launch_mutex);
 
         while (child_failure_bytes < sizeof(child_failure)) {
             count = read(launch_status_pipe[0],

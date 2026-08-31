@@ -165,22 +165,27 @@ repeated.
 
 `phase3-level-g-sanitizer-artifacts` is a non-owning preparation target for
 the bounded Phase 3 sanitizer slice. It builds the complete `rxfnsg` lane,
-`rxdas`, both new signal/ADDRESS regressions and all five Unicode functional
-families. CTest remains a separate runner phase, so it cannot race an active
-build:
+`rxdas`, the signal/ADDRESS regressions (including parallel controlled child
+launch) and all five Unicode functional families. CTest remains a separate
+runner phase, so it cannot race an active build:
 
 ```sh
 tools/asan-run.sh --phase build --build-jobs 4 \
   --build-target phase3-level-g-sanitizer-artifacts
 
 tools/asan-run.sh --phase ctest --test-jobs 5 \
-  --regex '^(test_(signal_block_levelg|address_after_signal_block)_(noopt|opt)|rxunicode_(casefold|grapheme|normalization|case_mapping|codec)_rxas_shape|rxunicode_contract_surface|rxfnsg_rxdas_inline_preserve_smoke|ts_unicode_(casefold|case_mapping|grapheme|codec|normalization)_(rxbvm|rxtvm)_(noopt|opt))$'
+  --regex '^(test_(signal_block_levelg|address_after_signal_block|address_parallel_spawn)_(noopt|opt)|rxunicode_(casefold|grapheme|normalization|case_mapping|codec)_rxas_shape|rxunicode_contract_surface|rxfnsg_rxdas_inline_preserve_smoke|ts_unicode_(casefold|case_mapping|grapheme|codec|normalization)_(rxbvm|rxtvm)_(noopt|opt))$'
 ```
 
 Use `--build-leaks off --leaks off` on macOS because Apple ASan has no
 supported LeakSanitizer. Linux uses both options `on` and remains the required
 hosted leak gate. This designed local slice complements rather than replaces
 the mandatory full hosted sanitizer jobs.
+
+Full hosted sanitizer CTest excludes the `performance-measurement` label.
+Those tests retain their separate ordinary-Release lane because sanitizer
+instrumentation and a saturated correctness pool invalidate their timing
+relationships; no correctness or sanitizer regression is excluded.
 
 ## 8. Remaining Phase 3 work
 

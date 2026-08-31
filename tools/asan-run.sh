@@ -15,6 +15,7 @@ test_leaks_set=0
 regex=""
 exclude_regex=""
 exclude_regex_file=""
+exclude_label=""
 ctest_index=""
 fixture_exclude_setup=""
 fixture_exclude_any=""
@@ -49,6 +50,7 @@ Options:
   --exclude-regex REGEX  CTest -E regex for excluding already-covered tests.
   --exclude-regex-file FILE
                          Read CTest -E regex from FILE.
+  --exclude-label REGEX  CTest -LE regex for a deliberately separate test lane.
   --ctest-index SPEC     Pass a CTest -I range, e.g. '125,,' to continue from test 125.
   --fixture-exclude-setup REGEX
                          Pass CTest --fixture-exclude-setup. Use after prebuilding fixture targets.
@@ -257,6 +259,9 @@ run_ctest() {
     if [[ -n "$exclude_regex" ]]; then
         args+=(-E "$exclude_regex")
     fi
+    if [[ -n "$exclude_label" ]]; then
+        args+=(-LE "$exclude_label")
+    fi
     if [[ -n "$ctest_index" ]]; then
         args+=(-I "$ctest_index")
     fi
@@ -282,6 +287,7 @@ while [[ $# -gt 0 ]]; do
         --regex) regex=${2:?}; shift 2 ;;
         --exclude-regex) exclude_regex=${2:?}; shift 2 ;;
         --exclude-regex-file) exclude_regex_file=${2:?}; shift 2 ;;
+        --exclude-label) exclude_label=${2:?}; shift 2 ;;
         --ctest-index) ctest_index=${2:?}; shift 2 ;;
         --fixture-exclude-setup) fixture_exclude_setup=${2:?}; shift 2 ;;
         --fixture-exclude-any) fixture_exclude_any=${2:?}; shift 2 ;;
@@ -350,6 +356,7 @@ stop_on_failure=$stop_on_failure
 regex=$regex
 exclude_regex=$exclude_regex
 exclude_regex_file=$exclude_regex_file
+exclude_label=$exclude_label
 ctest_index=$ctest_index
 fixture_exclude_setup=$fixture_exclude_setup
 fixture_exclude_any=$fixture_exclude_any

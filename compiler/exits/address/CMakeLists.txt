@@ -49,5 +49,7 @@ crexx_add_compiler_exit_runtime_test(
 set_tests_properties(
         test_address_parallel_spawn_noopt
         test_address_parallel_spawn_opt
-        PROPERTIES TIMEOUT 90
+        PROPERTIES
+                LABELS "stress;interpreter;address;spawn;concurrency"
+                TIMEOUT 90
 )

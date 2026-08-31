@@ -62,6 +62,7 @@ jobs:
             --phase full
             --build-jobs 4
             --test-jobs 8
+            --exclude-label '^performance-measurement$'
             --no-live-tail
           )
 
