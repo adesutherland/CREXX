@@ -111,6 +111,7 @@ static int symbol_is_readonly_flag_view(Symbol *symbol) {
 
     return attr_text_equals_ci(attr, "flags.vm") ||
            attr_text_equals_ci(attr, "flags.compiler") ||
+           attr_text_equals_ci(attr, "flags.language") ||
            attr_text_equals_ci(attr, "flags.readable");
 }
 

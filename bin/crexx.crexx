@@ -312,14 +312,24 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
    end
  end
    
-   -- standard libs plugin & classlibs included
+   -- rxvme embeds the shipped bytecode libraries, while native packaging
+   -- still needs those images as explicit rxlink inputs. User -l values are
+   -- required in both modes.
+   runtimeLibs = libs
    libs = libs';'rxpath||'bin'dirsep'classlib'
    libs = libs';'rxpath||'bin'dirsep'classlib_native'
    libs = libs';'rxpath||'bin'dirsep'rxfnsc'
+   libs = libs';'rxpath||'bin'dirsep'rxfnsg'
    libs = libs';'rxpath||'bin'dirsep'rexxscript'
+
+   -- Legacy native plugins remain explicit runtime/native inputs. Providers
+   -- declared in RXBIN metadata are discovered from trusted provider roots.
    libs = libs';'rxpath||'bin'dirsep'rx_treemap'
    libs = libs';'rxpath||'bin'dirsep'rx_llist'
    libs = libs';'rxpath||'bin'dirsep'rx_keyaccess'
+   runtimeLibs = runtimeLibs';'rxpath||'bin'dirsep'rx_treemap'
+   runtimeLibs = runtimeLibs';'rxpath||'bin'dirsep'rx_llist'
+   runtimeLibs = runtimeLibs';'rxpath||'bin'dirsep'rx_keyaccess'
    
    declib = ''
    if \decimal then declib = '-p rxvm_db_decimal'
@@ -741,7 +751,7 @@ do i=.int(1) to filenames[0]
     do bf=1 to binfiles[0]
       call appendArrayValue exArgs, binfiles[bf]
     end
-    call appendSemicolonValuesToArray exArgs, libs
+    call appendSemicolonValuesToArray exArgs, runtimeLibs
     call appendArrayValue exArgs, '-a'
     call appendArrayValues exArgs, cliArgs
     ex_command = renderCommand(exArgs, platformUpper)

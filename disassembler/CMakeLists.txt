@@ -143,6 +143,29 @@ crexx_add_rxdas_roundtrip(
         SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_binary.rxas
 )
 
+# Keep this generated: it must exceed rxdas' ordinary line buffer without
+# burdening the source tree with a hand-maintained multi-kilobyte literal.
+string(REPEAT "000102030405060708090a0b0c0d0e0f" 160
+        _rxdas_large_binary_payload)
+set(_rxdas_large_binary_source
+        "${CMAKE_CURRENT_BINARY_DIR}/tests_rxdas_large_binary.rxas")
+file(GENERATE OUTPUT "${_rxdas_large_binary_source}" CONTENT
+".globals=0
+.const prepared binary 0x${_rxdas_large_binary_payload}
+
+main() .locals=2
+   load r0,prepared
+   blen r1,r0
+   say r1
+   ret 0
+")
+crexx_add_rxdas_roundtrip(
+        NAME rxdas_roundtrip_large_binary_alias
+        SOURCE "${_rxdas_large_binary_source}"
+        EXPECT_DISASSEMBLY_TEXT_1 ".const §rxdas.const."
+        EXPECT_DISASSEMBLY_TEXT_2 "load r0,§rxdas.const."
+)
+
 crexx_add_rxdas_roundtrip(
         NAME rxdas_roundtrip_jtable_linear
         SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_jump_table.rxas
@@ -193,11 +216,13 @@ add_test(
 crexx_label_smoke_tests(
         rxdas_roundtrip_basic
         rxdas_roundtrip_interfaces
+        rxdas_roundtrip_large_binary_alias
         rxdas_graph_error
         rxdas_dump_support
         PREP_TARGETS
             rxdas_roundtrip_basic_artifact
             rxdas_roundtrip_interfaces_artifact
+            rxdas_roundtrip_large_binary_alias_artifact
             rxdas_graph_error_artifact
             test_disassembler_dump
 )

@@ -33,6 +33,7 @@ set(REXXBINS
         ts_date_core.rxbin
         ts_delstr.rxbin
         ts_delword.rxbin
+        ts_fileio_binary.rxbin
         ts_fileio_chars.rxbin
         ts_format.rxbin
         ts_fnv.rxbin
@@ -173,19 +174,33 @@ add_custom_command(
 )
 add_custom_target(ts_linein_stdin_artifact ALL DEPENDS ${_linein_stdin_program})
 
+# One focused boundary owns every executable consumed by the pipe and PTY
+# conversations. This keeps sanitizer/debug reproductions independent of a
+# previous broad product or QA build.
+add_custom_target(ts_linein_stdin_fixtures)
+add_dependencies(ts_linein_stdin_fixtures
+        ts_linein_stdin_artifact
+        linein_stdin_harness
+        rxvme
+        crexx)
+if(APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_dependencies(ts_linein_stdin_fixtures linein_tty_harness)
+endif()
+
 add_custom_target(testbifs ALL)
 add_dependencies(testbifs ts_linein_stdin_artifact)
 
 add_test(
         NAME ts_linein_stdin_prompt
         COMMAND $<TARGET_FILE:linein_stdin_harness>
-                $<TARGET_FILE:rxvme> ${_linein_stdin_program}
+                $<TARGET_FILE:rxvme> ${_linein_stdin_program} 30000
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 set_tests_properties(ts_linein_stdin_prompt PROPERTIES
         LABELS "classlib;interpreter;stdin"
         PASS_REGULAR_EXPRESSION "PASS: linein stdin returns after one newline"
-        TIMEOUT 10
+        RESOURCE_LOCK linein_stdin_conversation
+        TIMEOUT 70
 )
 
 set(_linein_stdin_driver_workdir
@@ -196,13 +211,14 @@ add_test(
         COMMAND $<TARGET_FILE:linein_stdin_harness>
                 $<TARGET_FILE:crexx>
                 ${CMAKE_CURRENT_SOURCE_DIR}/ts_linein_stdin.crexx
-                15000
+                30000
         WORKING_DIRECTORY "${_linein_stdin_driver_workdir}"
 )
 set_tests_properties(ts_linein_stdin_crexx_driver PROPERTIES
         LABELS "classlib;driver;interpreter;stdin"
         PASS_REGULAR_EXPRESSION "PASS: linein stdin returns after one newline"
-        TIMEOUT 20
+        RESOURCE_LOCK linein_stdin_conversation
+        TIMEOUT 70
 )
 
 if(APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -214,14 +230,15 @@ if(APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
             COMMAND $<TARGET_FILE:linein_tty_harness>
                     $<TARGET_FILE:crexx>
                     ${CMAKE_CURRENT_SOURCE_DIR}/ts_linein_stdin.crexx
-                    15000
+                    30000
             WORKING_DIRECTORY "${_linein_tty_driver_workdir}"
     )
     set_tests_properties(ts_linein_stdin_crexx_tty PROPERTIES
             LABELS "classlib;driver;interpreter;stdin;tty;job-control"
             PASS_REGULAR_EXPRESSION
                     "PASS: linein stdin returns after one newline"
-            TIMEOUT 20
+            RESOURCE_LOCK linein_stdin_conversation
+            TIMEOUT 40
     )
 endif()
 
@@ -270,7 +287,8 @@ foreach(_binfile ${REXXBINS})
         set(_rxc_flags)
     endif()
     set(_pass_test_name_argument)
-    if("${_basename}" STREQUAL "ts_fileio_chars" OR
+    if("${_basename}" STREQUAL "ts_fileio_binary" OR
+            "${_basename}" STREQUAL "ts_fileio_chars" OR
             "${_basename}" STREQUAL "ts_rxsystem" OR
             "${_basename}" STREQUAL "ts_signal")
         set(_pass_test_name_argument PASS_TEST_NAME_ARGUMENT)
@@ -306,6 +324,26 @@ foreach(_binfile ${REXXBINS})
             EXPECTED_FAILURE_DESCRIPTION "${_expected_failure_description}"
             ${_pass_test_name_argument}
     )
+endforeach()
+
+# Whole-file binary I/O is a VM byte-path contract.  Exercise the same
+# optimized and unoptimized images on each concrete product interpreter as
+# well as through the normal compiler-selected rxvm runner above.
+set(_fileio_binary_concrete_runners rxbvm)
+if(CREXX_THREADED_VM_SUPPORTED)
+    list(APPEND _fileio_binary_concrete_runners rxtvm)
+endif()
+foreach(_runner IN LISTS _fileio_binary_concrete_runners)
+    foreach(_mode IN ITEMS noopt opt)
+        _crexx_register_runtime_test(
+                NAME ts_fileio_binary_${_runner}_${_mode}
+                RUNNER ${_runner}
+                PROGRAM ts_fileio_binary_${_mode}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                RUNTIME_ARGS ${LIBRPATH} -a ts_fileio_binary_${_runner}_${_mode}
+                TEST_LABELS "classlib;binary-io;${_runner}"
+        )
+    endforeach()
 endforeach()
 
 # CRI-09 is an integration-boundary contract, so retain the same optimized and
@@ -486,6 +524,13 @@ crexx_label_smoke_tests(
         ts_rxjson_noopt
         ts_rxsocket_noopt
 )
+# This short smoke opens several child-process/channel providers and mutates
+# the process-local ADDRESS shell configuration. Under a saturated correctness
+# worker pool the provider start can be rejected before the command runs. Keep
+# the full conversation as a serial test boundary rather than weakening its
+# assertions or lowering parallelism for the rest of the suite.
+set_tests_properties(ts_address_noopt ts_address_opt
+        PROPERTIES RUN_SERIAL TRUE)
 set_tests_properties(ts_rxsocket_noopt ts_rxsocket_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxsocket loopback")
 set_tests_properties(ts_socket_tls_live_noopt ts_socket_tls_live_opt
@@ -504,6 +549,8 @@ set_tests_properties(ts_binary_noopt ts_binary_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: binary helpers")
 set_tests_properties(ts_fileio_chars_noopt ts_fileio_chars_opt
         PROPERTIES RUN_SERIAL TRUE)
+set_tests_properties(ts_fileio_binary_noopt ts_fileio_binary_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: Level B whole-file binary I/O")
 set_tests_properties(ts_arraydelete_noopt ts_arraydelete_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: array helpers")
 set_tests_properties(ts_parse_noopt ts_parse_opt

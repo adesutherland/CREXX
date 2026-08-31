@@ -183,6 +183,13 @@ function(crexx_add_rexx_opt_matrix)
         if(CREXX_LINKED_ALL_MODES OR _crexx_mode STREQUAL "opt")
             list(APPEND _crexx_prep_targets rxlink)
         endif()
+        # A named test-family target is an executable fixture boundary, not
+        # merely a bytecode-generation shortcut. Make it sufficient for the
+        # tests it groups so focused clean-tree runs cannot inherit a runner or
+        # linker accidentally left by an earlier product/QA build.
+        if(CREXX_TARGET_GROUP)
+            add_dependencies(${CREXX_TARGET_GROUP} ${_crexx_prep_targets})
+        endif()
         _crexx_register_runtime_test(
                 NAME ${CREXX_NAME}_${_crexx_mode}
                 RUNNER ${CREXX_RUNNER}
@@ -259,6 +266,9 @@ function(crexx_add_rxas_opt_matrix)
         endif()
         if(_crexx_mode STREQUAL "opt")
             list(APPEND _crexx_prep_targets rxlink)
+        endif()
+        if(CREXX_TARGET_GROUP)
+            add_dependencies(${CREXX_TARGET_GROUP} ${_crexx_prep_targets})
         endif()
         _crexx_register_runtime_test(
                 NAME ${CREXX_NAME}_${_crexx_mode}

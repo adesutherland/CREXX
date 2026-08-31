@@ -171,6 +171,9 @@ list(APPEND RXFNSC_DEPS_RexxClassicBifSpace RexxClassicCharacterOps)
 foreach(_binfile IN LISTS RXFNSC_BINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
   get_filename_component(_member_dir "${_binfile}" DIRECTORY)
+  # Custom-command WORKING_DIRECTORY must exist before Make enters the recipe;
+  # do not rely on Ninja's output-directory materialization.
+  file(MAKE_DIRECTORY "${_member_dir}")
   set(_rxfnsc_source_deps)
   set(_rxfnsc_staged_sources)
   set(_rxfnsc_stage_source_commands)

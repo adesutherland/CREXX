@@ -426,15 +426,38 @@ if(BUILD_TESTING AND CREXX_VM_PROFILING)
 endif()
 
 ##########################################
-# Interpreter linked to CREXX Stdlib
+# Interpreters linked to the shipped cREXX core libraries
 
-# Packed Library
+# Packed core libraries.  The extended VMs must be self-contained for the
+# shipped Level B, C, and G runtime surfaces; external application libraries
+# and metadata-selected native providers remain separate runtime inputs.
+set(CREXX_EMBEDDED_LIBRARY_STEMS
+        ${CMAKE_BINARY_DIR}/bin/library
+        ${CMAKE_BINARY_DIR}/bin/classlib
+        ${CMAKE_BINARY_DIR}/bin/classlib_native
+        ${CMAKE_BINARY_DIR}/bin/rxfnsc
+        ${CMAKE_BINARY_DIR}/bin/rxfnsg
+        ${CMAKE_BINARY_DIR}/bin/rexxscript)
+set(CREXX_EMBEDDED_LIBRARY_RXBINS)
+foreach(_crexx_embedded_library IN LISTS CREXX_EMBEDDED_LIBRARY_STEMS)
+    list(APPEND CREXX_EMBEDDED_LIBRARY_RXBINS
+            "${_crexx_embedded_library}.rxbin")
+endforeach()
 add_custom_command(
         OUTPUT library.c
-        COMMAND $<TARGET_FILE:rxcpack> -o library ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND $<TARGET_FILE:rxcpack> -o library
+                ${CREXX_EMBEDDED_LIBRARY_STEMS}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS library rxcpack ${CMAKE_BINARY_DIR}/bin/library.rxbin
-        COMMENT "C Packing cREXX RXFNSB Library ..."
+        DEPENDS
+                library
+                classlib
+                classlib_native
+                rxfnsc
+                rxfnsg
+                rexxscript
+                rxcpack
+                ${CREXX_EMBEDDED_LIBRARY_RXBINS}
+        COMMENT "C Packing cREXX Core Libraries ..."
 )
 add_custom_target(packed_library ALL DEPENDS library.c)
 

@@ -241,6 +241,110 @@ static void inline_export_debug_reject(Context *context,
     fputc('\n', stderr);
 }
 
+static int inline_scope_is_within(Scope *scope, Scope *root) {
+    if (!root) return 0;
+    while (scope) {
+        if (scope == root) return 1;
+        scope = scope->parent;
+    }
+    return 0;
+}
+
+static int inline_expansion_plan_own_candidate(InlineExpansionPlan *plan,
+                                               ASTNode *candidate_root,
+                                               Scope *candidate_scope) {
+    if (!plan || !candidate_root || !candidate_scope || plan->committed || plan->abandoned) return 0;
+
+    /* A call-discard wrapper can own a BLOCK_EXPR nested below it.  Preserve
+     * the first/root scope so one rollback removes the entire candidate tree. */
+    if (!plan->candidate_root) plan->candidate_root = candidate_root;
+    if (!plan->candidate_scope) plan->candidate_scope = candidate_scope;
+    return 1;
+}
+
+static int inline_expansion_plan_record_external_symbol(InlineExpansionPlan *plan,
+                                                        Symbol *symbol) {
+    Symbol **symbols;
+    size_t i;
+
+    if (!plan || !symbol || plan->committed || plan->abandoned) return 0;
+    if (inline_scope_is_within(symbol->scope, plan->candidate_scope)) return 1;
+
+    for (i = 0; i < plan->external_symbol_count; i++) {
+        if (plan->external_symbols[i] == symbol) return 1;
+    }
+
+    symbols = realloc(plan->external_symbols,
+                      sizeof(Symbol *) * (plan->external_symbol_count + 1));
+    if (!symbols) return 0;
+    plan->external_symbols = symbols;
+    plan->external_symbols[plan->external_symbol_count++] = symbol;
+    return 1;
+}
+
+static Symbol *inline_create_temp_symbol(Context *context,
+                                         Scope *scope,
+                                         ASTNode *shape_source,
+                                         const char *prefix,
+                                         size_t suffix,
+                                         InlineCloneState *state) {
+    Symbol *symbol;
+
+    symbol = rxcp_remap_create_temp_symbol(context, scope, shape_source, prefix, suffix);
+    if (!symbol) return NULL;
+    if (state && state->expansion_plan &&
+        !inline_expansion_plan_record_external_symbol(state->expansion_plan, symbol)) {
+        scp_rmsy(scope, symbol);
+        free_sym(symbol);
+        return NULL;
+    }
+    return symbol;
+}
+
+static void inline_expansion_plan_release_tracking(InlineExpansionPlan *plan) {
+    if (!plan) return;
+    free(plan->external_symbols);
+    plan->external_symbols = NULL;
+    plan->external_symbol_count = 0;
+}
+
+static void inline_expansion_plan_abort(Context *context, InlineExpansionPlan *plan) {
+    ASTNode *node;
+    Symbol *symbol;
+    size_t i;
+
+    if (!context || !plan || plan->committed || plan->abandoned) return;
+
+    /* AST nodes are Context-arena owned.  Disconnect every node allocated by
+     * this transaction, including partially-built nodes which were never
+     * attached below candidate_root. */
+    node = context->free_list;
+    while (node && node != plan->allocation_mark) {
+        if (node->symbolNode && node->symbolNode->symbol) {
+            sym_dno(node->symbolNode->symbol, node);
+        }
+        node = node->free_list;
+    }
+
+    /* A few capture forms deliberately place compiler temporaries in the
+     * caller scope.  They are transaction-owned and must not survive a reject. */
+    for (i = 0; i < plan->external_symbol_count; i++) {
+        symbol = plan->external_symbols[i];
+        if (symbol && symbol->scope && sym_nond(symbol) == 0) {
+            scp_rmsy(symbol->scope, symbol);
+            free_sym(symbol);
+        }
+    }
+
+    if (plan->candidate_scope) {
+        (void)scp_abandon(context, plan->candidate_scope);
+    }
+    inline_expansion_plan_release_tracking(plan);
+    plan->candidate_root = NULL;
+    plan->candidate_scope = NULL;
+    plan->abandoned = 1;
+}
+
 /*
  * These private implementation fragments are kept in the original translation
  * unit while the inline internals still share many static helpers. Promote a

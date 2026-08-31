@@ -1,0 +1,456 @@
+/* Unicode and TUTOR-aligned legacy codec product contract. */
+options levelb
+
+import rxfnsb
+import rxunicode
+
+arg argv = .string[]
+if argv[0] \= 4 then do
+  say "usage: ts_unicode_codec CP1252 CP437 CP850 IBM1047"
+  return 2
+end
+
+errors = 0
+text = "A" || "c3a9"x || "f09f9880"x || "e282ac"x
+
+errors = errors + check(.rxunicode..version() = "17.0.0", "version")
+errors = errors + check(.rxunicode..isEncodingSupported("UTF-8"), "UTF-8 supported")
+errors = errors + check(.rxunicode..isEncodingSupported("utf_16le"), "encoding spelling")
+errors = errors + check(\.rxunicode..isEncodingSupported("UTF-16"), "ambiguous UTF-16 rejected")
+
+utf8 = .rxunicode..encode(text)
+errors = errors + check(bin2x(utf8) = "41C3A9F09F9880E282AC", "UTF-8 bytes")
+errors = errors + check(.rxunicode..decode(utf8) = text, "UTF-8 round trip")
+
+utf16le = .rxunicode..encode(text,"UTF-16LE")
+utf16be = .rxunicode..encode(text,"UTF-16BE")
+errors = errors + check(bin2x(utf16le) = "4100E9003DD800DEAC20", "UTF-16LE bytes")
+errors = errors + check(bin2x(utf16be) = "004100E9D83DDE0020AC", "UTF-16BE bytes")
+errors = errors + check(.rxunicode..decode(utf16le,"UTF-16LE") = text, "UTF-16LE round trip")
+errors = errors + check(.rxunicode..decode(utf16be,"UTF-16BE") = text, "UTF-16BE round trip")
+
+utf32le = .rxunicode..encode(text,"UTF-32LE")
+utf32be = .rxunicode..encode(text,"UTF-32BE")
+errors = errors + check(bin2x(utf32le) = "41000000E900000000F60100AC200000", "UTF-32LE bytes")
+errors = errors + check(bin2x(utf32be) = "00000041000000E90001F600000020AC", "UTF-32BE bytes")
+errors = errors + check(.rxunicode..decode(utf32le,"UTF-32LE") = text, "UTF-32LE round trip")
+errors = errors + check(.rxunicode..decode(utf32be,"UTF-32BE") = text, "UTF-32BE round trip")
+
+boundary_text = hex_sequence_to_string("0000 007F 0080 07FF 0800 D7FF E000 FFFF 010000 10FFFF")
+boundary_utf8 = "007FC280DFBFE0A080ED9FBFEE8080EFBFBFF0908080F48FBFBF"
+boundary_utf16le = "00007F008000FF070008FFD700E0FFFF00D800DCFFDBFFDF"
+boundary_utf16be = "0000007F008007FF0800D7FFE000FFFFD800DC00DBFFDFFF"
+boundary_utf32le = "000000007F00000080000000FF07000000080000FFD7000000E00000FFFF000000000100FFFF1000"
+boundary_utf32be = "000000000000007F00000080000007FF000008000000D7FF0000E0000000FFFF000100000010FFFF"
+errors = errors + check(bin2x(.rxunicode..encode(boundary_text,"UTF-8")) = boundary_utf8, "UTF-8 scalar boundaries")
+errors = errors + check(bin2x(.rxunicode..encode(boundary_text,"UTF-16LE")) = boundary_utf16le, "UTF-16LE scalar boundaries")
+errors = errors + check(bin2x(.rxunicode..encode(boundary_text,"UTF-16BE")) = boundary_utf16be, "UTF-16BE scalar boundaries")
+errors = errors + check(bin2x(.rxunicode..encode(boundary_text,"UTF-32LE")) = boundary_utf32le, "UTF-32LE scalar boundaries")
+errors = errors + check(bin2x(.rxunicode..encode(boundary_text,"UTF-32BE")) = boundary_utf32be, "UTF-32BE scalar boundaries")
+errors = errors + check(.rxunicode..decode(x2bin(boundary_utf8),"UTF-8") = boundary_text, "UTF-8 boundary decode")
+errors = errors + check(.rxunicode..decode(x2bin(boundary_utf16le),"UTF-16LE") = boundary_text, "UTF-16LE boundary decode")
+errors = errors + check(.rxunicode..decode(x2bin(boundary_utf16be),"UTF-16BE") = boundary_text, "UTF-16BE boundary decode")
+errors = errors + check(.rxunicode..decode(x2bin(boundary_utf32le),"UTF-32LE") = boundary_text, "UTF-32LE boundary decode")
+errors = errors + check(.rxunicode..decode(x2bin(boundary_utf32be),"UTF-32BE") = boundary_text, "UTF-32BE boundary decode")
+
+bom = "EFBBBF41"x as .binary
+errors = errors + check(string_hex(.rxunicode..decode(bom,"UTF-8")) = "FEFF 0041", "BOM is text not metadata")
+bom_text = hex_sequence_to_string("FEFF 0041")
+errors = errors + check(bin2x(.rxunicode..encode(bom_text,"UTF-16LE")) = "FFFE4100", "UTF-16LE BOM codepoint is data")
+errors = errors + check(bin2x(.rxunicode..encode(bom_text,"UTF-16BE")) = "FEFF0041", "UTF-16BE BOM codepoint is data")
+errors = errors + check(bin2x(.rxunicode..encode(bom_text,"UTF-32LE")) = "FFFE000041000000", "UTF-32LE BOM codepoint is data")
+errors = errors + check(bin2x(.rxunicode..encode(bom_text,"UTF-32BE")) = "0000FEFF00000041", "UTF-32BE BOM codepoint is data")
+errors = errors + check(.rxunicode..decode("FFFE4100"x as .binary,"UTF-16LE") = bom_text, "UTF-16LE BOM decode is data")
+errors = errors + check(.rxunicode..decode("FEFF0041"x as .binary,"UTF-16BE") = bom_text, "UTF-16BE BOM decode is data")
+errors = errors + check(.rxunicode..decode("FFFE000041000000"x as .binary,"UTF-32LE") = bom_text, "UTF-32LE BOM decode is data")
+errors = errors + check(.rxunicode..decode("0000FEFF00000041"x as .binary,"UTF-32BE") = bom_text, "UTF-32BE BOM decode is data")
+
+malformed = .binary[]
+malformed[1] = "C080"x as .binary
+malformed[2] = "C1BF"x as .binary
+malformed[3] = "E08080"x as .binary
+malformed[4] = "EDA080"x as .binary
+malformed[5] = "F0808080"x as .binary
+malformed[6] = "F4908080"x as .binary
+malformed[7] = "F5808080"x as .binary
+malformed[8] = "80"x as .binary
+malformed[9] = "C2"x as .binary
+malformed[10] = "E180"x as .binary
+malformed[11] = "F18080"x as .binary
+malformed[12] = "C241"x as .binary
+malformed[13] = "E14180"x as .binary
+malformed[14] = "F1418080"x as .binary
+malformed[15] = "FE"x as .binary
+malformed[16] = "FF"x as .binary
+malformed[17] = "00"x as .binary
+malformed[18] = "00D8"x as .binary
+malformed[19] = "00DC"x as .binary
+malformed[20] = "00D84100"x as .binary
+malformed[21] = "00"x as .binary
+malformed[22] = "D800"x as .binary
+malformed[23] = "DC00"x as .binary
+malformed[24] = "D8000041"x as .binary
+malformed[25] = "00"x as .binary
+malformed[26] = "000000"x as .binary
+malformed[27] = "00D80000"x as .binary
+malformed[28] = "00001100"x as .binary
+malformed[29] = "000000"x as .binary
+malformed[30] = "0000D800"x as .binary
+malformed[31] = "00110000"x as .binary
+malformed_count = 31
+encodings = .string[]
+malformed_index = .int
+do malformed_index = 1 to 16
+  encodings[malformed_index] = "UTF-8"
+end
+do malformed_index = 17 to 20
+  encodings[malformed_index] = "UTF-16LE"
+end
+do malformed_index = 21 to 24
+  encodings[malformed_index] = "UTF-16BE"
+end
+do malformed_index = 25 to 28
+  encodings[malformed_index] = "UTF-32LE"
+end
+do malformed_index = 29 to 31
+  encodings[malformed_index] = "UTF-32BE"
+end
+
+do malformed_index = 1 to malformed_count
+  errors = errors + check(\.rxunicode..isDecodable(malformed[malformed_index],encodings[malformed_index]), "malformed predicate " || malformed_index)
+  errors = errors + catches_unicode_decode(malformed[malformed_index],encodings[malformed_index])
+end
+
+/* Exercise every valid Unicode scalar through each algorithm. Exact boundary
+ * vectors above independently pin the byte layout; this exhaustive sweep
+ * proves that there are no holes between those boundaries. */
+scalar_checks = 0
+scalar_batch_count = 0
+scalar_batch = ""
+do codepoint = 0 to 0x10FFFF
+  if codepoint >= 0xD800 & codepoint <= 0xDFFF then iterate
+  assembler appendchar scalar_batch,codepoint
+  scalar_batch_count = scalar_batch_count + 1
+  scalar_checks = scalar_checks + 1
+  if scalar_batch_count = 4096 then do
+    errors = errors + check_utf_batch(scalar_batch,codepoint)
+    scalar_batch = ""
+    scalar_batch_count = 0
+  end
+end
+if scalar_batch_count > 0 then errors = errors + check_utf_batch(scalar_batch,0x10FFFF)
+errors = errors + check(scalar_checks = 1112064,"complete Unicode scalar count")
+
+all_bytes = .binary
+call binresize all_bytes,256
+latin_text = ""
+byte = .int
+do byte = 0 to 255
+  <at..u8>(byte) all_bytes = byte
+  assembler appendchar latin_text,byte
+end
+
+ascii_bytes = .binary
+call binresize ascii_bytes,128
+ascii_text = ""
+do byte = 0 to 127
+  <at..u8>(byte) ascii_bytes = byte
+  assembler appendchar ascii_text,byte
+end
+ascii_decoded = .rxunicode..decode(ascii_bytes,"ASCII")
+if ascii_decoded \== ascii_text then do
+  say "FAIL: rxunicode codec ASCII complete decode expected" string_hex(ascii_text) "got" string_hex(ascii_decoded)
+  errors = errors + 1
+end
+errors = errors + check(bincompare(.rxunicode..encode(ascii_text,"ASCII"),ascii_bytes) = 0,"ASCII complete encode")
+do byte = 128 to 255
+  errors = errors + check(\.rxunicode..isDecodable(one_byte(byte),"ASCII"),"ASCII rejects byte " || d2x(byte))
+end
+latin_decoded = .rxunicode..decode(all_bytes,"ISO-8859-1")
+if latin_decoded \== latin_text then do
+  say "FAIL: rxunicode codec Latin-1 complete decode expected" string_hex(latin_text) "got" string_hex(latin_decoded)
+  errors = errors + 1
+end
+errors = errors + check(bincompare(.rxunicode..encode(latin_text,"ISO-8859-1"),all_bytes) = 0,"Latin-1 complete encode")
+
+legacy = .string[]
+legacy[1] = "Windows-1252"
+legacy[2] = "IBM437"
+legacy[3] = "IBM850"
+legacy[4] = "IBM1047"
+do legacy_index = 1 to 4
+  decoded = .rxunicode..decode(all_bytes,legacy[legacy_index])
+  reencoded = .rxunicode..encode(decoded,legacy[legacy_index])
+  errors = errors + check(bincompare(all_bytes,reencoded) = 0, legacy[legacy_index] || " complete byte round trip")
+end
+
+/* Parse the retained TUTOR mapping sources without using the product's table
+ * compiler, so byte/code-point swaps cannot pass by sharing one oracle. */
+errors = errors + check_format_a(argv[1],"Windows-1252",1)
+errors = errors + check_format_a(argv[2],"IBM437",0)
+errors = errors + check_format_a(argv[3],"IBM850",0)
+errors = errors + check_ibm1047(argv[4],"IBM1047")
+
+errors = errors + check(string_hex(.rxunicode..decode("80"x as .binary,"Windows-1252")) = "20AC", "Windows-1252 euro")
+errors = errors + check(string_hex(.rxunicode..decode("81"x as .binary,"Windows-1252")) = "0081", "Windows-1252 TUTOR C1 mapping")
+errors = errors + check(string_hex(.rxunicode..decode("DB"x as .binary,"CP-437")) = "2588", "IBM437 full block alias")
+errors = errors + check(string_hex(.rxunicode..decode("D5"x as .binary,"CP850")) = "0131", "IBM850 dotless i alias")
+errors = errors + check(.rxunicode..decode("C1"x as .binary,"IBM-1047") = "A", "IBM1047 EBCDIC A")
+errors = errors + check(bin2x(.rxunicode..encode("?","IBM1047")) = "6F", "IBM1047 question-mark byte")
+errors = errors + check(.rxunicode..decode("FF"x as .binary,"latin1") = "c3bf"x, "ISO-8859-1 alias")
+errors = errors + check(\.rxunicode..isDecodable("80"x as .binary,"ASCII"), "ASCII strict predicate")
+errors = errors + catches_unicode_decode("80"x as .binary,"US-ASCII")
+
+coffee = "e29895"x
+replacement_byte = "3F"x as .binary
+errors = errors + check(bin2x(.rxunicode..encode("Tea " || coffee,"Windows-1252",replacement_byte)) = "546561203F", "legacy encode replacement")
+errors = errors + check(.rxunicode..decode("C08041"x as .binary,"UTF-8","?") = "??A", "UTF-8 replacement subparts")
+errors = errors + check(.rxunicode..decode("E18041"x as .binary,"UTF-8","?") = "?A", "UTF-8 three-byte maximal subpart")
+errors = errors + check(.rxunicode..decode("E14180"x as .binary,"UTF-8","?") = "?A?", "UTF-8 bad second byte subparts")
+errors = errors + check(.rxunicode..decode("F1808041"x as .binary,"UTF-8","?") = "?A", "UTF-8 four-byte maximal subpart")
+errors = errors + check(.rxunicode..decode("F1418080"x as .binary,"UTF-8","?") = "?A??", "UTF-8 four-byte bad second subparts")
+errors = errors + check(.rxunicode..decode("00D84100"x as .binary,"UTF-16LE","?") = "?A", "UTF-16 replacement")
+errors = errors + check(.rxunicode..decode("D8000041"x as .binary,"UTF-16BE","?") = "?A", "UTF-16BE replacement")
+errors = errors + check(.rxunicode..decode("0000110041000000"x as .binary,"UTF-32LE","?") = "?A", "UTF-32 replacement")
+errors = errors + check(.rxunicode..decode("0011000000000041"x as .binary,"UTF-32BE","?") = "?A", "UTF-32BE replacement")
+errors = errors + check(.rxunicode..decode("8041"x as .binary,"ASCII","?") = "?A", "ASCII replacement")
+errors = errors + check(.rxunicode..decode("C08041"x as .binary,"UTF-8","[?]") = "[?][?]A", "multi-codepoint decode replacement")
+errors = errors + check(bin2x(.rxunicode..encode(coffee || coffee,"ASCII","3F21"x as .binary)) = "3F213F21", "multi-byte encode replacement")
+errors = errors + catches_unicode_encode("Tea " || coffee,"Windows-1252")
+errors = errors + catches_invalid_encode_replacement("Tea " || coffee)
+errors = errors + catches_empty_decode_replacement()
+errors = errors + catches_invalid_encode_encoding()
+errors = errors + catches_invalid_decode_encoding()
+errors = errors + catches_invalid_predicate_encoding()
+
+if errors = 0 then do
+  say "Unicode scalars round-tripped in five UTF encodings:" scalar_checks
+  say "Independent legacy source relations:" 1024 * 3
+  say "PASS: rxunicode strict and replacement Unicode legacy codecs"
+end
+return errors <> 0
+
+check_utf_batch: procedure = .int
+  arg value = .string, near_codepoint = .int
+  failures = 0
+  names = .string[]
+  names[1] = "UTF-8"
+  names[2] = "UTF-16LE"
+  names[3] = "UTF-16BE"
+  names[4] = "UTF-32LE"
+  names[5] = "UTF-32BE"
+  do encoding_index = 1 to 5
+    encoded = .rxunicode..encode(value,names[encoding_index])
+    if \.rxunicode..isDecodable(encoded,names[encoding_index]) |,
+       .rxunicode..decode(encoded,names[encoding_index]) \== value then do
+      say "FAIL: exhaustive" names[encoding_index] "batch near U+" || right(d2x(near_codepoint),6,"0")
+      failures = failures + 1
+    end
+  end
+  return failures
+
+check_format_a: procedure = .int
+  arg path = .string, encoding = .string, map_undefined_to_control = .int
+  failures = 0
+  mapping_count = 0
+  codepoint = .int
+  seen = .binary
+  call binresize seen,256
+  call binfill seen,0
+  lines = readlines(path)
+  do line_number = 1 to lines[0]
+    line = lines[line_number]
+    comment = pos("#",line)
+    if comment > 0 then line = left(line,comment - 1)
+    line = strip(line)
+    if line = "" then iterate
+    source_token = upper(word(line,1))
+    if length(source_token) \= 4 | left(source_token,2) \= "0X" |,
+       datatype(substr(source_token,3),"X") = 0 then do
+      say "FAIL: malformed independent legacy source at line" line_number
+      failures = failures + 1
+      iterate
+    end
+    byte = x2d(substr(source_token,3))
+    if byte > 255 | <at..u8>(byte) seen \= 0 then do
+      say "FAIL: duplicate independent legacy source at line" line_number
+      failures = failures + 1
+      iterate
+    end
+    <at..u8>(byte) seen = 1
+    if words(line) < 2 then do
+      if map_undefined_to_control = 0 then do
+        say "FAIL: missing independent legacy target at line" line_number
+        failures = failures + 1
+        iterate
+      end
+      codepoint = byte
+    end
+    else do
+      target_token = upper(word(line,2))
+      if length(target_token) < 3 | left(target_token,2) \= "0X" |,
+         datatype(substr(target_token,3),"X") = 0 then do
+        say "FAIL: malformed independent legacy target at line" line_number
+        failures = failures + 1
+        iterate
+      end
+      codepoint = x2d(substr(target_token,3))
+    end
+    failures = failures + check_legacy_relation(encoding,byte,codepoint,line_number)
+    mapping_count = mapping_count + 1
+  end
+  if mapping_count \= 256 then do
+    say "FAIL: independent" encoding "mapping count" mapping_count
+    failures = failures + 1
+  end
+  return failures
+
+check_ibm1047: procedure = .int
+  arg path = .string, encoding = .string
+  failures = 0
+  mapping_count = 0
+  seen = .binary
+  call binresize seen,256
+  call binfill seen,0
+  lines = readlines(path)
+  do line_number = 1 to lines[0]
+    line = strip(lines[line_number])
+    if words(line) < 2 then iterate
+    source_token = upper(word(line,1))
+    target_token = upper(word(line,2))
+    if length(source_token) \= 2 | length(target_token) \= 4 then iterate
+    if datatype(source_token,"X") = 0 | datatype(target_token,"X") = 0 then iterate
+    byte = x2d(source_token)
+    if <at..u8>(byte) seen \= 0 then do
+      say "FAIL: duplicate independent IBM1047 source at line" line_number
+      failures = failures + 1
+      iterate
+    end
+    <at..u8>(byte) seen = 1
+    codepoint = x2d(target_token)
+    failures = failures + check_legacy_relation(encoding,byte,codepoint,line_number)
+    mapping_count = mapping_count + 1
+  end
+  if mapping_count \= 256 then do
+    say "FAIL: independent IBM1047 mapping count" mapping_count
+    failures = failures + 1
+  end
+  return failures
+
+check_legacy_relation: procedure = .int
+  arg encoding = .string, byte = .int, codepoint = .int, line_number = .int
+  expected_text = ""
+  assembler appendchar expected_text,codepoint
+  expected_byte = one_byte(byte)
+  if \.rxunicode..isDecodable(expected_byte,encoding) |,
+     .rxunicode..decode(expected_byte,encoding) \== expected_text |,
+     bincompare(.rxunicode..encode(expected_text,encoding),expected_byte) \= 0 then do
+    say "FAIL: independent" encoding "relation at line" line_number
+    return 1
+  end
+  return 0
+
+one_byte: procedure = .binary
+  arg byte = .int
+  result = .binary
+  call binresize result,1
+  <at..u8>(0) result = byte
+  return result
+
+catches_unicode_decode: procedure = .int
+  arg data = .binary, encoding = .string
+  do
+    ignored = .rxunicode..decode(data,encoding)
+  on signal unicode_error as problem
+    if problem.name() = "UNICODE_ERROR" then return 0
+  end
+  say "FAIL: rxunicode codec missing strict decode signal for" encoding
+  return 1
+
+catches_unicode_encode: procedure = .int
+  arg text = .string, encoding = .string
+  do
+    ignored = .rxunicode..encode(text,encoding)
+  on signal unicode_error as problem
+    if problem.name() = "UNICODE_ERROR" then return 0
+  end
+  say "FAIL: rxunicode codec missing strict encode signal for" encoding
+  return 1
+
+catches_invalid_encode_replacement: procedure = .int
+  arg text = .string
+  do
+    ignored = .rxunicode..encode(text,"ASCII","FF"x as .binary)
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" then return 0
+  end
+  say "FAIL: rxunicode codec accepted invalid target replacement bytes"
+  return 1
+
+catches_empty_decode_replacement: procedure = .int
+  do
+    ignored = .rxunicode..decode("FF"x as .binary,"UTF-8","")
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" then return 0
+  end
+  say "FAIL: rxunicode codec accepted an empty decode replacement"
+  return 1
+
+catches_invalid_encode_encoding: procedure = .int
+  do
+    ignored = .rxunicode..encode("A","UTF-16")
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" then return 0
+  end
+  say "FAIL: rxunicode encode accepted an unsupported encoding"
+  return 1
+
+catches_invalid_decode_encoding: procedure = .int
+  do
+    ignored = .rxunicode..decode("41"x as .binary,"UTF-16")
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" then return 0
+  end
+  say "FAIL: rxunicode decode accepted an unsupported encoding"
+  return 1
+
+catches_invalid_predicate_encoding: procedure = .int
+  do
+    ignored = .rxunicode..isDecodable("41"x as .binary,"UTF-16")
+  on signal invalid_arguments as problem
+    if problem.name() = "INVALID_ARGUMENTS" then return 0
+  end
+  say "FAIL: rxunicode predicate accepted an unsupported encoding"
+  return 1
+
+hex_sequence_to_string: procedure = .string
+  arg sequence = .string
+  result = ""
+  do component_index = 1 to words(sequence)
+    codepoint = x2d(word(sequence,component_index))
+    assembler appendchar result,codepoint
+  end
+  return result
+
+string_hex: procedure = .string
+  arg value = .string
+  result = ""
+  value_length = 0
+  assembler strlen value_length,value
+  do character_index = 0 to value_length - 1
+    codepoint = 0
+    assembler strchar codepoint,value,character_index
+    if result \= "" then result = result || " "
+    width = 4
+    if codepoint > 0xFFFF then width = 6
+    result = result || right(d2x(codepoint),width,"0")
+  end
+  return result
+
+check: procedure = .int
+  arg ok = .boolean, label = .string
+  if \ok then do
+    say "FAIL: rxunicode codec" label
+    return 1
+  end
+  return 0

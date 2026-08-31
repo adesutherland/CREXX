@@ -620,7 +620,22 @@ returns 0 after writing the second argument as UTF text followed by a
 newline to the stream named by the first argument. When the second
 argument is omitted, the named stream is closed. This is a Level B
 `.string` text function, not a binary byte output function. Separate
-binary file BIFs are expected to use `.binary` values.
+binary file BIFs use `.binary` values.
+
+## readbinary(path)
+
+Reads the complete named file and returns its exact contents as `.binary`.
+Embedded NUL and byte sequences that are not valid UTF-8 are preserved. The
+operation raises `NOTREADY` if the file cannot be opened, read, or closed.
+This is a whole-file convenience; callers remain responsible for the memory
+cost of the returned value.
+
+## writebinary(path,data)
+
+Replaces the named file with the exact bytes in the `.binary` second argument
+and returns the number of bytes written. An empty value creates or truncates a
+zero-byte file. The operation raises `NOTREADY` if the file cannot be opened,
+written, flushed, or closed.
 
 ## lower()
 

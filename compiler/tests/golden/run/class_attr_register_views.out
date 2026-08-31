@@ -9,3 +9,4 @@ flags-library=65536
 flags-user=16777216
 flags-after-clear-library=16777216
 flags-public-keeps-compiler=1
+flags-language=15360

@@ -1,0 +1,216 @@
+UNICODE-NORM-03 common prepared normalization family — 2026-08-28
+
+Scope
+  Directional profiling-off Release comparison on the dirty unicode research
+  branch. The host was AC powered and mostly clear, but this is not a formal
+  clean-host performance verdict or a product/API selection.
+
+Correctness and build gate
+  Final Quick_Check prepared directory:
+    cmake-build-unicode-release/unicode-common-compare/prepared.ePhe1i
+  Final Quick_Check predicate run:
+    runs/run.P9BGpG/evidence/
+  Same-source normalization run:
+    cmake-build-unicode-release/unicode-common-compare/prepared.YTxgy1/
+      runs/run.RvSDgU/evidence/
+  Final Quick_Check source fingerprint:
+    788ba47163efdadeca2207a71cf08d6a957f085be0a90184b4a1c3eca498cc33
+  Final Quick_Check prepared fingerprint:
+    b9dbd086e8e5253bd8e7b841967171fecc467794ceb8a1938469b30a97fb36b2
+
+  Before-Quick_Check prepared directory:
+    cmake-build-unicode-release/unicode-common-compare/prepared.2qxxlN
+  Product fingerprint:
+    c89fd8d46d769842e95c032e9b53344d94be6a64f78d655c3ba27e5891d0171e
+  Final predicate-benchmark source fingerprint:
+    51837a16728a131c916bd458ca66fe82f27ca8e2ce5cf32d42d5132eca0653a4
+  Final prepared fingerprint:
+    4df4ae29eb4e71e240c9d45c91b2e8cb0df30b83a272ce3bb227ecbd6201679a
+
+  The Release gate passes on rxtvm and rxbvm, optimized and noopt:
+    400,680 Unicode 17 NFD/NFKD/NFC/NFKC normalization relations
+    400,680 exact normalization-predicate checks
+    1,094,978 unlisted-scalar identity checks per form
+    961 primary-composition pairs and 1,120 exclusions
+    ordinary four-mode case-fold conformance
+
+  The optimized and noopt linked summaries are byte-identical.
+
+  Final source review added an explicit `AC01 0300` LVT-Hangul-plus-Maybe
+  predicate case for both NFC and NFKC and removed a duplicate trailing-Jamo
+  composer call from the exact fallback. The complete gate above was rerun
+  after that correction.
+
+Final optimized RXAS review
+  sealed UNICODE_DATA constants: 1
+  shared constant bytes: 11,237,664
+  packed Quick_Check bytes: 557,056 (two scalars per byte)
+  Unicode 17 counts: NFC No 1,120, Maybe 132; NFKC No 4,965, Maybe 132
+  normalizer-owned image attributes: 0
+  direct constant-backed BGETU32 instructions: 78
+  direct constant-backed BGETU8 instructions: 33
+
+  normalize(): 33 locals; STRCHAR, BGETU32 and APPENDCHAR; no STOBIN, BINTOS,
+    BCOPY or BRESIZE.
+  is_normalized(): 24 locals; one STRCHAR scan; NFC/NFKC decode the packed
+    official Quick_Check nibble directly with BGETU8, reject No, retain a
+    Maybe flag, and check canonical order. There is no APPENDCHAR, STOBIN,
+    BINTOS or BCOPY. All-Yes input returns directly; Maybe alone calls the
+    exact allocation-free _check_composed_string() fallback.
+  _check_composed_string(): 19 locals and no output/conversion operation.
+  _check_emit(): 9 locals and compares with STRCHAR rather than constructing a
+    normalized result.
+
+Measurement protocol
+  one untimed warmup, three retained serial samples per cell
+  both concrete Release VMs
+  rows: 20,034 source strings and exact expected values
+  buffer: eight joined corpus blocks
+  Apple controls: CoreFoundation CFStringNormalize; predicates normalize a
+    mutable copy then CFEqual because there is no direct public predicate
+  host load before normalization run: 3.11/5.34/12.73
+  host load after normalization run: 2.72/4.30/11.18
+  host load before corrected predicate run: 2.41/3.82/10.34
+  host load after corrected predicate run: 3.09/3.73/9.90
+  host load before Quick_Check rerun: 2.57/2.53/4.53
+  host load after Quick_Check rerun: 3.10/2.78/4.34
+  host load before final predicate rerun: 2.50/2.57/3.62
+  host load after final predicate rerun: 2.68/2.62/3.57
+
+Before-Quick_Check normalization medians, rxtvm/rxbvm
+  operation  workload  shared             canonical          Apple
+  NFD        rows      13.141/13.052 ms   14.046/12.624 ms   8.156/7.825 ms
+  NFKD       rows      15.625/15.436 ms   16.047/15.619 ms   8.466/8.222 ms
+  NFC        rows      22.936/22.702 ms   23.148/23.168 ms   7.959/8.594 ms
+  NFKC       rows      24.499/24.374 ms   25.643/24.755 ms   8.291/8.183 ms
+  NFD        buffer    83.801/83.571 ms   84.905/83.427 ms   716.784/716.977 ms
+  NFKD       buffer   111.329/111.333 ms  115.947/113.096 ms 856.758/847.531 ms
+  NFC        buffer   272.079/286.652 ms  289.145/282.699 ms  92.211/92.251 ms
+  NFKC       buffer   310.765/296.685 ms  310.224/310.284 ms 222.984/221.451 ms
+
+Final Quick_Check rerun normalization medians, rxtvm/rxbvm
+  operation  workload  shared             canonical          Apple
+  NFD        rows      13.065/13.022 ms   12.764/13.248 ms   8.185/8.089 ms
+  NFKD       rows      15.892/15.161 ms   15.828/15.344 ms   8.373/8.543 ms
+  NFC        rows      25.976/22.644 ms   23.551/22.732 ms   8.697/8.054 ms
+  NFKC       rows      24.565/24.220 ms   25.436/24.695 ms   8.132/8.370 ms
+  NFD        buffer    84.032/84.507 ms   85.375/84.288 ms  712.072/724.646 ms
+  NFKD       buffer   111.153/114.177 ms  115.875/114.083 ms 854.788/855.343 ms
+  NFC        buffer   274.920/276.375 ms  287.595/281.581 ms  92.555/92.568 ms
+  NFKC       buffer   281.726/291.661 ms  299.570/295.958 ms 221.531/221.605 ms
+
+The Quick_Check table is unused by normalize(). Fifteen of the sixteen CREXX
+normalization cells moved by no more than 9.34% against the immediately prior
+directional run; the outlying rxtvm shared NFC row cell was 13.25% slower while
+its rxbvm peer was 0.26% faster. With one warmup and three samples on a
+non-dedicated host this is neutral/noisy evidence, not an algorithm regression
+or improvement claim.
+
+In the final rerun, shared/canonical normalization ratios range from 0.940x to
+1.103x. The 1.103x outlier is the noisy rxtvm NFC row cell; its rxbvm peer is
+0.996x and all other ratios are 0.940x to 1.024x. Together with the RXAS shape,
+this confirms that the constant pool is not copied per normalizer and is no
+longer carrying the old shared-path penalty.
+
+Comparison with the retained clean 2-warmup/10-sample run
+  Reference:
+    cmake-build-unicode-release/unicode-common-compare/prepared.w8Qd0t/
+      runs/run.M9T6PB/evidence/
+  Reference host load before: 2.48/2.40/2.15
+
+  operation  canonical speedup range  shared speedup range
+  NFD rows       0.85x to 0.90x          0.88x to 0.91x
+  NFD buffer     0.93x to 0.99x          0.90x to 0.98x
+  NFKD rows     58.84x to 60.30x       295.26x to 319.40x
+  NFKD buffer   80.48x to 82.12x       329.42x to 346.71x
+  NFC rows      10.22x to 10.34x        48.04x to 48.39x
+  NFC buffer     8.66x to 8.93x         29.81x to 31.37x
+  NFKC rows     10.10x to 10.52x        42.17x to 54.23x
+  NFKC buffer    8.57x to 8.59x         29.75x to 31.10x
+
+This is cross-session directional evidence. The old and new Apple controls are
+within the same broad range, which is a useful host-envelope check. NFD is
+roughly unchanged/slower under the less settled host. The large NFKD/NFC/NFKC
+gains are far beyond that noise and coincide with removal of the old binary,
+recursive, and per-instance/shared-wrapper routes.
+
+Before-Quick_Check exact predicate medians, rxtvm/rxbvm
+  operation  rows shared/canonical/Apple       normalized buffer shared/canonical/Apple
+  is-NFD      3.928/4.053/6.878 ms              24.907/29.156/5.052 ms
+              3.829/4.047/6.738 ms              24.460/29.040/4.967 ms
+  is-NFKD     4.194/4.515/7.250 ms              45.790/53.701/6.225 ms
+              4.324/4.363/7.313 ms              46.622/52.727/6.243 ms
+  is-NFC     24.364/24.202/7.345 ms             260.991/274.866/5.046 ms
+             23.742/23.942/7.079 ms             259.439/271.701/5.102 ms
+  is-NFKC    25.743/26.351/7.165 ms             268.623/283.225/6.628 ms
+             25.285/25.649/7.139 ms             265.378/276.401/7.169 ms
+
+Final Quick_Check exact predicate medians, rxtvm/rxbvm
+  operation  rows shared/canonical/Apple       normalized buffer shared/canonical/Apple
+  is-NFD      4.010/4.058/7.218 ms              26.951/26.306/4.867 ms
+              4.004/4.029/7.063 ms              25.781/26.572/4.851 ms
+  is-NFKD     4.722/4.495/7.126 ms              49.539/51.678/6.267 ms
+              4.543/4.535/7.229 ms              48.224/50.883/6.088 ms
+  is-NFC      6.258/5.965/7.049 ms             287.072/303.865/5.376 ms
+              5.951/6.021/6.989 ms             285.181/303.844/5.380 ms
+  is-NFKC     6.064/6.255/7.116 ms             298.087/306.309/7.134 ms
+              6.534/6.072/7.131 ms             295.031/313.395/6.787 ms
+
+For the mixed true/false rows, the shared NFC predicate improves 3.893x on
+rxtvm and 3.990x on rxbvm; shared NFKC improves 4.245x and 3.870x. Canonical
+NFC improves 4.057x/3.976x and canonical NFKC 4.213x/4.224x. The Apple row
+controls remain in the same band.
+
+The known-normalized joined NFC/NFKC buffers contain at least one official
+Maybe value. The canonical algorithm therefore completes its preliminary
+Quick_Check scan and then invokes the whole-input exact fallback. Against the
+old exact-stream-only path, shared NFC is 9.99%/9.92% slower and shared NFKC
+is 10.97%/11.17% slower on rxtvm/rxbvm. Canonical NFC is 10.55%/11.83% slower
+and canonical NFKC is 8.15%/13.38% slower. This is the expected cost shape of the
+selected canonical No/Maybe/Yes front end; it is not an across-the-board
+predicate improvement.
+
+The rows cover true and false outcomes. The corrected large-buffer cells use
+the known-normalized expected buffer, so they force a complete true-path scan.
+The first run's source-buffer predicate cells in run.wlMGUE short-circuited on
+an early false result and must not be reported as full-buffer throughput; the
+corrected predicate authority is run.xfj3sN.
+
+Apple conformance boundary
+  Apple transform row mismatches: NFD 2, NFKD 2, NFC 46, NFKC 53.
+  Apple predicate row mismatches: is-NFD 2, is-NFKD 2, is-NFC 43, is-NFKC 38.
+  The Apple numbers are therefore native platform magnitude controls, not
+  Unicode 17 semantic peers.
+
+Review conclusion
+  The four normalize(.string) forms now share the intended RXVM codepoint
+  architecture and one immutable table constant. The previous compatibility
+  and composition slowdown was an algorithm/routing problem, not re2c or RXVM
+  UTF-8 decoding in the current path.
+
+  D-form is_normalized() remains a direct codepoint/table quick rejection and
+  CCC-ordering pass. C-form is_normalized() now implements the official Unicode
+  17 Quick_Check No/Maybe/Yes front end from the same single sealed constant:
+  No rejects, an all-Yes ordered scan accepts, and Maybe selects the existing
+  exact allocation-free streamer. The codepoint scan lets RXVM perform UTF-8
+  decoding and never copies the prepared table into a normalizer instance.
+
+  The row result validates the common fast path. The normalized-buffer result
+  also exposes the canonical algorithm's deliberate limit: any Maybe selects
+  a whole-input fallback. A stable-region/local-Maybe implementation could
+  avoid that repeated prefix work, but that would be a distinct follow-on
+  algorithm and is not justified by this correction alone.
+
+Raw evidence
+  normalization and mixed-row predicates:
+    cmake-build-unicode-release/unicode-common-compare/prepared.2qxxlN/
+      runs/run.wlMGUE/evidence/
+  corrected predicate rows and normalized-buffer true paths:
+    cmake-build-unicode-release/unicode-common-compare/prepared.2qxxlN/
+      runs/run.xfj3sN/evidence/
+  packed-Quick_Check normalization rerun:
+    cmake-build-unicode-release/unicode-common-compare/prepared.YTxgy1/
+      runs/run.RvSDgU/evidence/
+  final packed-Quick_Check predicate rerun after focused Hangul fallback review:
+    cmake-build-unicode-release/unicode-common-compare/prepared.ePhe1i/
+      runs/run.P9BGpG/evidence/

@@ -157,8 +157,3 @@ l70doend:
    .meta "18_array_class_main.process.it"
    .meta "18_array_class_main.process.items"
    .meta "18_array_class_main.process.val"
-
-/* Imported Declaration from file: array_class_lib.crexx */
-
-§array_class_lib.item.get_val() .expose=array_class_lib.item.get_val
-   .meta "array_class_lib.item.get_val"="b" ".string" §array_class_lib.item.get_val() ""

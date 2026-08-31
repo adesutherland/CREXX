@@ -53,7 +53,10 @@ rxas hello.rxas
 rxvme hello.rxbin
 ```
 
-`rxvme` includes the standard library image used by common Level B programs.
+`rxvme` includes the shipped core bytecode images used by Level B, Level C,
+and Level G programs: the base and class libraries, native-provider
+declarations, the Classic compatibility library, the Level G library, and
+RexxScript. Application libraries remain explicit runtime inputs.
 The base `rxvm` can also run bytecode, but programs that call library functions
 need the relevant library image or linked modules available.
 

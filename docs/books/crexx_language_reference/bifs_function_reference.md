@@ -179,9 +179,13 @@ normal Level B UTF-8 contract. They are not byte-oriented binary I/O BIFs.
 | `CHARIN(name [, count])` | `.string` | Read up to `count` UTF codepoints from the named text stream; the default count is `1`. |
 | `CHAROUT(name [, string])` | `.int` | With `string`, write text without appending a newline. Without `string`, close the named stream. |
 | `LINES(name)` | `.int` | Return `1` when more text can be read from the stream, otherwise `0`. |
+| `READBINARY(path)` | `.binary` | Read the complete file as exact bytes; I/O failure raises `NOTREADY`. |
+| `WRITEBINARY(path, data)` | `.int` | Replace the file with `.binary` data and return its byte count; I/O failure raises `NOTREADY`. |
 
-Future binary file BIFs should use `.binary` values and the VM byte I/O path.
-Do not use these text BIFs for arbitrary byte payloads.
+`READBINARY` and `WRITEBINARY` use binary file modes and the VM byte I/O path.
+They preserve embedded NUL and invalid UTF-8 without newline translation. They
+are whole-file conveniences rather than incremental streams; callers own the
+memory cost. Do not use the text BIFs for arbitrary byte payloads.
 
 ## Binary byte helpers
 

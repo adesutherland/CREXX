@@ -1,0 +1,4 @@
+options levelg
+import rxunicode
+
+say rxunicode..graphemeCount("A")

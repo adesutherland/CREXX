@@ -691,6 +691,7 @@ static const char *default_source_for_metadata_type(const char *type_start, cons
     len = (size_t)(type_end - type_start);
 
     if (len == 7 && memcmp(type_start, ".string", 7) == 0) return "\"\"";
+    if (len == 7 && memcmp(type_start, ".binary", 7) == 0) return "\"\"x as .binary";
     if (len == 4 && memcmp(type_start, ".int", 4) == 0) return "0";
     if (len == 6 && memcmp(type_start, ".float", 6) == 0) return "0";
     if (len == 5 && memcmp(type_start, ".bool", 5) == 0) return "0";

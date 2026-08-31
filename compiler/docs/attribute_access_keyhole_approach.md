@@ -32,7 +32,7 @@ safe-access cleanup belongs in the RXAS keyhole optimiser.
   independent storage. A library method that materializes or invalidates a
   representation must update its own library/user flags explicitly.
 - Flag views are status-word views, not payload views. `.flags.vm`,
-  `.flags.compiler`, and `.flags.readable` are read-only. Writable source views
+  `.flags.compiler`, `.flags.language`, and `.flags.readable` are read-only. Writable source views
   lower to `settpmask`, and the VM masks the requested write to the
   source-writable flag bands. Compiler-generated call setup may still update
   compiler-reserved flags through its own internal instructions.

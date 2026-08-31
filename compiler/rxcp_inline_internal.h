@@ -45,6 +45,8 @@ typedef struct {
     int present;
 } InlineOptionalPresenceEntry;
 
+typedef struct InlineExpansionPlan InlineExpansionPlan;
+
 typedef struct {
     Scope *callee_scope;
     Scope *inline_scope;
@@ -69,6 +71,7 @@ typedef struct {
     size_t cleanup_coalesced_bindings;
     size_t method_receiver_detached_guard_expected;
     size_t method_receiver_detached_guard_materialized;
+    InlineExpansionPlan *expansion_plan;
     int method_receiver_needs_copyback;
     int method_receiver_uses_live_attribute_link;
     int method_receiver_uses_live_locator_link;
@@ -118,12 +121,16 @@ typedef struct {
  * target remain attached to the caller while candidate_root is built and
  * checked off-tree.  Only inline_expansion_plan_commit() may install it.
  */
-typedef struct {
+struct InlineExpansionPlan {
     ASTNode *original_call;
     ASTNode *replacement_target;
     ASTNode *candidate_root;
+    ASTNode *allocation_mark;
     Scope *parent_scope;
+    Scope *candidate_scope;
     Symbol *callee_symbol;
+    Symbol **external_symbols;
+    size_t external_symbol_count;
     InlineExpansionKind kind;
     InlineExpansionCost original_call_cost;
     InlineExpansionCost reference_candidate_cost;
@@ -131,7 +138,8 @@ typedef struct {
     InlineExpansionCost cleanup_delta;
     int profitability_required;
     int committed;
-} InlineExpansionPlan;
+    int abandoned;
+};
 
 typedef struct {
     int return_count;

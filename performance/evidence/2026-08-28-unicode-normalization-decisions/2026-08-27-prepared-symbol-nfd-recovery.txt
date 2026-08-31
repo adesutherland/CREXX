@@ -1,0 +1,91 @@
+UNICODE-NORM-02 prepared-symbol NFD recovery — 2026-08-27
+
+Scope
+  Indicative algorithm screen on the unicode research branch. This is not a
+  clean-host product-format verdict and does not select an implicit string API.
+
+What was recovered
+  The previously performance-green implementation had remained uncommitted in
+  /tmp/crexx-unicode-nfd-signal.5E5rDu/repo. It iterates CREXX .string
+  codepoints, reads one dense portable at-u32 prepared symbol per scalar, and
+  dispatches exact synthetic kinds in a shared Level B executor. The slower
+  committed successor instead generated a 3,440-state UTF-8 byte DFA. Only the
+  Rexx/Level L recovery was applied; no scratch compiler C change was retained.
+
+Validated source and product
+  base revision: 7204ed4aa08d2a68d672e2ec5abff810ccb3e209
+  prepared directory:
+    cmake-build-unicode-release/unicode-prepared-compare/prepared.tQ90Tm
+  source fingerprint:
+    2e02cd9593e2aea9b0b43d2ab5031965af321256e290fe6ce88e62fed0a92648
+  product fingerprint:
+    b8e0bbfdbb2659968899530772f96958af545b980739fa5874fd2734e703d027
+  prepared bytecode fingerprint:
+    39c75c250f1df7b98c27630a46d1b6d1525ba974c9fa7d6196d882a4313365ed
+
+Correctness
+  Full Level L/Unicode harness:
+    cmake-build-unicode-release/level-l-bootstrap-recovered.5zPi1c/
+  Result:
+    both VMs PASS; optimized and noopt summaries byte-identical
+    400,680 NFD/NFKD/NFC/NFKC corpus invariants
+    100,170 generated prepared NFD corpus relations
+    1,094,978 unlisted-scalar identity checks per form
+    focused normalization fixtures PASS
+    TinyExpr and Unicode Level L lexer/parser proofs PASS
+    independent C++/re2c semantic and NFD oracles reproduced
+
+Prepared image
+  format: crexx-unicode-normalization-prepared-portable-v3
+  bytes: 6,179,204
+  NFD prepared-symbol section: 4,456,448 bytes
+  SHA-256: 4712c3ae75a8a0217cfb650bb0d97a40d7e2921e1f7981f5c40420684ec38b09
+
+Optimized/disassembled shape
+  unicode_d.unicodednormalizer.normalize(): 32 locals
+  NFD loop: STRCHAR -> BGETU32 -> .jtable acph/JUMPI -> APPENDCHAR
+  The general STobin/BINtos route occurs only after the NFD fast-path return.
+
+Measurement contract
+  ordinary profiling-off Release product
+  one warmup and three recorded samples per cell
+  three alternating-order rounds per VM/workload
+  canonical and prepared use the same .string -> .string surface
+  every invocation checks exact Unicode 17 output before timing
+  preparation/build/generation/linking excluded by the run-only harness
+
+Rows and 101,506-byte buffer evidence
+  cmake-build-unicode-release/unicode-prepared-compare/prepared.tQ90Tm/
+    runs/run.qwMqOx/evidence/
+  load averages: 2.29/3.28/5.23 before; 5.18/4.22/5.09 after
+
+  rxtvm rows prepared/canonical ratios:
+    0.8949, 0.8822, 0.9790; median paired 0.8949
+  rxbvm rows prepared/canonical ratios:
+    1.0077, 0.8826, 0.9239; median paired 0.9239
+  rxtvm 101,506-byte buffer ratios:
+    0.6542, 0.6564, 0.7675; median paired 0.6564
+  rxbvm 101,506-byte buffer ratios:
+    0.6011, 0.4632, 0.5842; median paired 0.5842
+
+Large-buffer evidence
+  cmake-build-unicode-release/unicode-prepared-compare/prepared.tQ90Tm/
+    runs/run.kiTCaH/evidence/
+  load averages: 5.46/4.40/5.12 before; 2.16/3.19/4.39 after
+
+  rxtvm 812,048-byte buffer ratios:
+    0.4484, 0.5281, 0.5239; median paired 0.5239
+  rxbvm 812,048-byte buffer ratios:
+    0.5424, 0.5478, 0.5222; median paired 0.5424
+  rxtvm 6,496,384-byte buffer ratios:
+    0.5178, 0.5092, 0.5347; median paired 0.5178
+  rxbvm 6,496,384-byte buffer ratios:
+    0.5090, 0.5217, 0.5114; median paired 0.5114
+
+Interpretation
+  The previous 8–100x regression belonged to the rejected byte-DFA successor,
+  not to the prepared-symbol codepoint algorithm. The recovered algorithm is
+  again at least at parity for call-heavy short rows and is materially faster
+  on sustained buffers, approaching twice canonical throughput at 812 KB and
+  6.50 MB. Variable load makes the exact percentages provisional, but cannot
+  plausibly account for the disappearance of the old order-of-magnitude loss.

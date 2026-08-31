@@ -2090,6 +2090,35 @@ static void copy_string_payload_to_node(ASTNode *node, const char *string, size_
     ast_sstr(node, buffer, length);
 }
 
+static void prepare_explicit_binary_constant_alias(Symbol *symbol, ASTNode *value_node) {
+    char *alias_name;
+
+    if (!symbol || !value_node || symbol->constant_alias ||
+        value_node->value_type != TP_BINARY || !value_node->node_string ||
+        symbol->creation_ordinal < 0) {
+        return;
+    }
+
+    alias_name = mprintf("\xc2\xa7rxc.const.%d.%s",
+                         symbol->creation_ordinal, symbol->name);
+    if (!sym_set_constant_alias(symbol, alias_name, TP_BINARY,
+                                value_node->node_string,
+                                value_node->node_string_length)) {
+        free(alias_name);
+        RX_PANIC_OOM("capture explicit binary constant alias",
+                     value_node->node_string_length + 1, 0);
+    }
+    free(alias_name);
+}
+
+static void borrow_constant_alias_payload(ASTNode *node, ConstantAlias *alias) {
+    if (!node || !alias) return;
+    if (node->free_node_string) free(node->node_string);
+    node->node_string = alias->value;
+    node->node_string_length = alias->value_length;
+    node->free_node_string = 0;
+}
+
 static void copy_constant_value_to_symbol_nodes(Symbol *symbol, Payload *payload, ASTNode *value_node) {
     ValueType value_type;
     rxinteger int_value;
@@ -2135,7 +2164,12 @@ static void copy_constant_value_to_symbol_nodes(Symbol *symbol, Payload *payload
             }
         }
 
-        if (node_string) copy_string_payload_to_node(n, node_string, node_string_length);
+        if (symbol->constant_alias &&
+            symbol->constant_alias->type == value_type &&
+            n->target_type == value_type) {
+            borrow_constant_alias_payload(n, symbol->constant_alias);
+        }
+        else if (node_string) copy_string_payload_to_node(n, node_string, node_string_length);
         else if (n->free_node_string) {
             free(n->node_string);
             n->node_string = 0;
@@ -2202,6 +2236,7 @@ static void explicit_constant_in_scope(Symbol *symbol, Payload *payload) {
         return;
     }
 
+    prepare_explicit_binary_constant_alias(symbol, value_node);
     copy_constant_value_to_symbol_nodes(symbol, payload, value_node);
     ast_prun(target_node->parent);
 }

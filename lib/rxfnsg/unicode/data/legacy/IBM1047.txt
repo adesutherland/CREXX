@@ -1,0 +1,319 @@
+
+Charset name:     IBM1047
+
+Charset aliases:  IBM-1047
+
+Suitability for use in MIME text:   NO
+
+Published specification(s):
+IBM1047 (EBCDIC Latin 1/Open Systems) can be found at:
+http://www-1.ibm.com/servers/eserver/iseries/software/globalization/pdf/cp01047z.pdf .
+
+ISO 10646 equivalency table:
+   1) For the mapping table from IBM CP 1047 to ISO 10646, refer to the
+      table below:
+
+**************************************************************************
+* Copyright IBM Corporation 1995
+* Name:            Mapping table from IBM CP 1047 to ISO 10646.
+* Creation date:   Fri Nov 10 16:43:19 1995
+* ISO 10646-1:     UCS-2 (level-3 tolerant)
+* Table Version:   1.00
+* Table Owner:     NLTC, IBM Canada Ltd.
+* PUA used:        NO
+* Round-Trip:      YES
+* GCGIDs mapped:   ALL
+* Table Format:
+*                  Columns separated by spaces:
+*                    Col1: (pos.  1-8  ) IBM CP 1047 code in hex
+*                    Col2: (pos. 10-13 ) ISO 10646 code in hex
+*                    Col3: (pos. 16-23 ) IBM GCGID
+*                    Col4: (pos. 25-32 ) Mapping indicator to specify:
+*                         1. Synonym GCGID used when reverse mapping for
+                             this GCGID is not the same.
+*                         2. Code page specific exceptions.
+*                    Col5: (pos.035->  )  ISO 10646 character name
+* Sorting:         The entries are in IBM CP 1047 code point order
+* General Notes:
+*                  1. Control codes are mapped as per CDRA specifications
+                      for mapping between EBCDIC and ISO8 controls
+*                  2. Characters with no UCS-2 equivalent identified with
+                      ????
+*                  3. For PC-Data code pages, SM24 and SM25 are mapped as
+                      explained in: CDRA Level-2, Registry, page 52, Exception.
+**************************************************************************
+*-------------------------------------------------------------------------
+*CP      UCS   GCGID    SYNONYM   ISO 10646 NAME
+*-------------------------------------------------------------------------
+00       0000  ..NUL...           (CC) Null
+01       0001  ..SOH...           (CC) Start of Heading
+02       0002  ..STX...           (CC) Start of Text
+03       0003  ..ETX...           (CC) End of Text
+04       009C  ..SEL... ...ST...  (CC) String Terminator
+05       0009  ...HT...           (CC) Horizontal Tabulation
+06       0086  ..RNL... ..SSA...  (CC) Start of Selected Area
+07       007F  ..DEL...           (CC) Delete
+08       0097  ...GE... ..EPA...  (CC) End of Guarded Area
+09       008D  ..SPS... ...RI...  (CC) Reverse Line Feed (or Reverse Index)
+0A       008E  ..RPT... ..SS2...  (CC) Single Shift Two
+0B       000B  ...VT...           (CC) Vertical Tabulation
+0C       000C  ...FF...           (CC) Form Feed
+0D       000D  ...CR...           (CC) Carriage Return
+0E       000E  ...SO... .SO/LS1.  (CC) Locking Shift One (Shift Out)
+0F       000F  ...SI... .SI/LS0.  (CC) Locking Shift Zero (Shift In)
+10       0010  ..DLE...           (CC) Data Link Escape
+11       0011  ..DC1...           (CC) Device Control One
+12       0012  ..DC2...           (CC) Device Control Two
+13       0013  ..DC3...           (CC) Device Control Three
+14       009D  ........ ..OSC...  (CC) Operating System Command
+15       0085  ...NL... ..NEL...  (CC) Next Line
+16       0008  ...BS...           (CC) Backspace
+17       0087  ..POC... ..ESA...  (CC) End of Selected Area
+18       0018  ..CAN...           (CC) Cancel
+19       0019  ...EM...           (CC) End of Medium
+1A       0092  ..UBS... ..PU2...  (CC) Private Use Two
+1B       008F  ..CU1... ..SS3...  (CC) Single Shift Three
+1C       001C  ..IFS...           (CC) Information File Separator
+1D       001D  ..IGS... ...GS...  (CC) Group Separator
+1E       001E  ..IRS... ...RS...  (CC) Record Separator
+1F       001F  ........ ...US...  (CC) Unit Separator
+20       0080  ...DS... ........
+21       0081  ..SOSI.. ........
+22       0082  ...FS... ..BPH...  (CC) Break Permitted Here
+23       0083  ..WUS... ..NBH...  (CC) No Break Here
+24       0084  ........ ..IND...  (CC) Index
+25       000A  ...LF...           (CC) Line Feed
+26       0017  ..ETB...           (CC) End of Transmission Block
+27       001B  ..ESC...           (CC) Escape
+28       0088  ...SA... ..HTS...  (CC) Character Tabulation Set
+29       0089  ..SFE... ..HTJ...  (CC) Character Tabulation with Justification
+2A       008A  .SM/SW.. ..VTS...  (CC) Line Tabultion Set
+2B       008B  ..CSP... ..PLD...  (CC) Partial Line Down
+2C       008C  ..MFA... ..PLU...  (CC) Partial Line Up
+2D       0005  ..ENQ...           (CC) Enquiry
+2E       0006  ..ACK...           (CC) Acknowledge
+2F       0007  ..BEL...           (CC) Bell
+30       0090  ........ ..DCS...  (CC) Device Control String
+31       0091  ........ ..PU1...  (CC) Private Use One
+32       0016  ..SYN...           (CC) Synchronous Idle
+33       0093  ...IR... ..STS...  (CC) Set Transmit State
+34       0094  ...PP... ..CCH...  (CC) Cancel Character
+35       0095  ..TRN... ...MW...  (CC) Message Waiting
+36       0096  ..NBS... ..SPA...  (CC) Start of Guarded Area
+37       0004  ..EOT...           (CC) End of Transmission
+38       0098  ..SBS... ..SOS...  (CC) Start of String
+39       0099  ...IT... ........
+3A       009A  ..RFF... ..SCI...  (CC) Single Character Introducer
+3B       009B  ..CU3... ..CSI...  (CC) Control Sequence Introducer
+3C       0014  ..DC4...           (CC) Device Control Four
+3D       0015  ..NAK...           (CC) Negative Acknowledge
+3E       009E  ........ ...PM...  (CC) Privacy Message
+3F       001A  ..SUB...           (CC) Substitute
+40       0020  SP010000           SPACE
+41       00A0  SP300000           NO-BREAK SPACE
+42       00E2  LA150000           LATIN SMALL LETTER A WITH CIRCUMFLEX
+43       00E4  LA170000           LATIN SMALL LETTER A WITH DIAERESIS
+44       00E0  LA130000           LATIN SMALL LETTER A WITH GRAVE
+45       00E1  LA110000           LATIN SMALL LETTER A WITH ACUTE
+46       00E3  LA190000           LATIN SMALL LETTER A WITH TILDE
+47       00E5  LA270000           LATIN SMALL LETTER A WITH RING ABOVE
+48       00E7  LC410000           LATIN SMALL LETTER C WITH CEDILLA
+49       00F1  LN190000           LATIN SMALL LETTER N WITH TILDE
+4A       00A2  SC040000           CENT SIGN
+4B       002E  SP110000           FULL STOP
+4C       003C  SA030000           LESS-THAN SIGN
+4D       0028  SP060000           LEFT PARENTHESIS
+4E       002B  SA010000           PLUS SIGN
+4F       007C  SM130000           VERTICAL LINE
+50       0026  SM030000           AMPERSAND
+51       00E9  LE110000           LATIN SMALL LETTER E WITH ACUTE
+52       00EA  LE150000           LATIN SMALL LETTER E WITH CIRCUMFLEX
+53       00EB  LE170000           LATIN SMALL LETTER E WITH DIAERESIS
+54       00E8  LE130000           LATIN SMALL LETTER E WITH GRAVE
+55       00ED  LI110000           LATIN SMALL LETTER I WITH ACUTE
+56       00EE  LI150000           LATIN SMALL LETTER I WITH CIRCUMFLEX
+57       00EF  LI170000           LATIN SMALL LETTER I WITH DIAERESIS
+58       00EC  LI130000           LATIN SMALL LETTER I WITH GRAVE
+59       00DF  LS610000           LATIN SMALL LETTER SHARP S (German)
+5A       0021  SP020000           EXCLAMATION MARK
+5B       0024  SC030000           DOLLAR SIGN
+5C       002A  SM040000           ASTERISK
+5D       0029  SP070000           RIGHT PARENTHESIS
+5E       003B  SP140000           SEMICOLON
+5F       005E  SD150000           CIRCUMFLEX ACCENT
+60       002D  SP100000           HYPHEN-MINUS
+61       002F  SP120000           SOLIDUS
+62       00C2  LA160000           LATIN CAPITAL LETTER A WITH CIRCUMFLEX
+63       00C4  LA180000           LATIN CAPITAL LETTER A WITH DIAERESIS
+64       00C0  LA140000           LATIN CAPITAL LETTER A WITH GRAVE
+65       00C1  LA120000           LATIN CAPITAL LETTER A WITH ACUTE
+66       00C3  LA200000           LATIN CAPITAL LETTER A WITH TILDE
+67       00C5  LA280000           LATIN CAPITAL LETTER A WITH RING ABOVE
+68       00C7  LC420000           LATIN CAPITAL LETTER C WITH CEDILLA
+69       00D1  LN200000           LATIN CAPITAL LETTER N WITH TILDE
+6A       00A6  SM650000           BROKEN BAR
+6B       002C  SP080000           COMMA
+6C       0025  SM020000           PERCENT SIGN
+6D       005F  SP090000           LOW LINE
+6E       003E  SA050000           GREATER-THAN SIGN
+6F       003F  SP150000           QUESTION MARK
+70       00F8  LO610000           LATIN SMALL LETTER O WITH STROKE
+71       00C9  LE120000           LATIN CAPITAL LETTER E WITH ACUTE
+72       00CA  LE160000           LATIN CAPITAL LETTER E WITH CIRCUMFLEX
+73       00CB  LE180000           LATIN CAPITAL LETTER E WITH DIAERESIS
+74       00C8  LE140000           LATIN CAPITAL LETTER E WITH GRAVE
+75       00CD  LI120000           LATIN CAPITAL LETTER I WITH ACUTE
+76       00CE  LI160000           LATIN CAPITAL LETTER I WITH CIRCUMFLEX
+77       00CF  LI180000           LATIN CAPITAL LETTER I WITH DIAERESIS
+78       00CC  LI140000           LATIN CAPITAL LETTER I WITH GRAVE
+79       0060  SD130000           GRAVE ACCENT
+7A       003A  SP130000           COLON
+7B       0023  SM010000           NUMBER SIGN
+7C       0040  SM050000           COMMERCIAL AT
+7D       0027  SP050000           APOSTROPHE
+7E       003D  SA040000           EQUALS SIGN
+7F       0022  SP040000           QUOTATION MARK
+80       00D8  LO620000           LATIN CAPITAL LETTER O WITH STROKE
+81       0061  LA010000           LATIN SMALL LETTER A
+82       0062  LB010000           LATIN SMALL LETTER B
+83       0063  LC010000           LATIN SMALL LETTER C
+84       0064  LD010000           LATIN SMALL LETTER D
+85       0065  LE010000           LATIN SMALL LETTER E
+86       0066  LF010000           LATIN SMALL LETTER F
+87       0067  LG010000           LATIN SMALL LETTER G
+88       0068  LH010000           LATIN SMALL LETTER H
+89       0069  LI010000           LATIN SMALL LETTER I
+8A       00AB  SP170000           LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
+8B       00BB  SP180000           RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
+8C       00F0  LD630000           LATIN SMALL LETTER ETH (Icelandic)
+8D       00FD  LY110000           LATIN SMALL LETTER Y WITH ACUTE
+8E       00FE  LT630000           LATIN SMALL LETTER THORN (Icelandic)
+8F       00B1  SA020000           PLUS-MINUS SIGN
+90       00B0  SM190000           DEGREE SIGN
+91       006A  LJ010000           LATIN SMALL LETTER J
+92       006B  LK010000           LATIN SMALL LETTER K
+93       006C  LL010000           LATIN SMALL LETTER L
+94       006D  LM010000           LATIN SMALL LETTER M
+95       006E  LN010000           LATIN SMALL LETTER N
+96       006F  LO010000           LATIN SMALL LETTER O
+97       0070  LP010000           LATIN SMALL LETTER P
+98       0071  LQ010000           LATIN SMALL LETTER Q
+99       0072  LR010000           LATIN SMALL LETTER R
+9A       00AA  SM210000           FEMININE ORDINAL INDICATOR
+9B       00BA  SM200000           MASCULINE ORDINAL INDICATOR
+9C       00E6  LA510000           LATIN SMALL LIGATURE AE
+9D       00B8  SD410000           CEDILLA
+9E       00C6  LA520000           LATIN CAPITAL LIGATURE AE
+9F       00A4  SC010000           CURRENCY SIGN
+A0       00B5  SM170000           MICRO SIGN
+A1       007E  SD190000           TILDE
+A2       0073  LS010000           LATIN SMALL LETTER S
+A3       0074  LT010000           LATIN SMALL LETTER T
+A4       0075  LU010000           LATIN SMALL LETTER U
+A5       0076  LV010000           LATIN SMALL LETTER V
+A6       0077  LW010000           LATIN SMALL LETTER W
+A7       0078  LX010000           LATIN SMALL LETTER X
+A8       0079  LY010000           LATIN SMALL LETTER Y
+A9       007A  LZ010000           LATIN SMALL LETTER Z
+AA       00A1  SP030000           INVERTED EXCLAMATION MARK
+AB       00BF  SP160000           INVERTED QUESTION MARK
+AC       00D0  LD620000 LD640000  LATIN CAPITAL LETTER ETH (Icelandic)
+AD       005B  SM060000           LEFT SQUARE BRACKET
+AE       00DE  LT640000           LATIN CAPITAL LETTER THORN (Icelandic)
+AF       00AE  SM530000           REGISTERED SIGN
+B0       00AC  SM660000           NOT SIGN
+B1       00A3  SC020000           POUND SIGN
+B2       00A5  SC050000           YEN SIGN
+B3       00B7  SD630000           MIDDLE DOT
+B4       00A9  SM520000           COPYRIGHT SIGN
+B5       00A7  SM240000           SECTION SIGN
+B6       00B6  SM250000           PILCROW SIGN
+B7       00BC  NF040000           VULGAR FRACTION ONE QUARTER
+B8       00BD  NF010000           VULGAR FRACTION ONE HALF
+B9       00BE  NF050000           VULGAR FRACTION THREE QUARTERS
+BA       00DD  LY120000           LATIN CAPITAL LETTER Y WITH ACUTE
+BB       00A8  SD170000           DIAERESIS
+BC       00AF  SM150000 SD310000  MACRON
+BD       005D  SM080000           RIGHT SQUARE BRACKET
+BE       00B4  SD110000           ACUTE ACCENT
+BF       00D7  SA070000           MULTIPLICATION SIGN
+C0       007B  SM110000           LEFT CURLY BRACKET
+C1       0041  LA020000           LATIN CAPITAL LETTER A
+C2       0042  LB020000           LATIN CAPITAL LETTER B
+C3       0043  LC020000           LATIN CAPITAL LETTER C
+C4       0044  LD020000           LATIN CAPITAL LETTER D
+C5       0045  LE020000           LATIN CAPITAL LETTER E
+C6       0046  LF020000           LATIN CAPITAL LETTER F
+C7       0047  LG020000           LATIN CAPITAL LETTER G
+C8       0048  LH020000           LATIN CAPITAL LETTER H
+C9       0049  LI020000           LATIN CAPITAL LETTER I
+CA       00AD  SP320000           SOFT HYPHEN
+CB       00F4  LO150000           LATIN SMALL LETTER O WITH CIRCUMFLEX
+CC       00F6  LO170000           LATIN SMALL LETTER O WITH DIAERESIS
+CD       00F2  LO130000           LATIN SMALL LETTER O WITH GRAVE
+CE       00F3  LO110000           LATIN SMALL LETTER O WITH ACUTE
+CF       00F5  LO190000           LATIN SMALL LETTER O WITH TILDE
+D0       007D  SM140000           RIGHT CURLY BRACKET
+D1       004A  LJ020000           LATIN CAPITAL LETTER J
+D2       004B  LK020000           LATIN CAPITAL LETTER K
+D3       004C  LL020000           LATIN CAPITAL LETTER L
+D4       004D  LM020000           LATIN CAPITAL LETTER M
+D5       004E  LN020000           LATIN CAPITAL LETTER N
+D6       004F  LO020000           LATIN CAPITAL LETTER O
+D7       0050  LP020000           LATIN CAPITAL LETTER P
+D8       0051  LQ020000           LATIN CAPITAL LETTER Q
+D9       0052  LR020000           LATIN CAPITAL LETTER R
+DA       00B9  ND011000           SUPERSCRIPT ONE
+DB       00FB  LU150000           LATIN SMALL LETTER U WITH CIRCUMFLEX
+DC       00FC  LU170000           LATIN SMALL LETTER U WITH DIAERESIS
+DD       00F9  LU130000           LATIN SMALL LETTER U WITH GRAVE
+DE       00FA  LU110000           LATIN SMALL LETTER U WITH ACUTE
+DF       00FF  LY170000           LATIN SMALL LETTER Y WITH DIAERESIS
+E0       005C  SM070000           REVERSE SOLIDUS
+E1       00F7  SA060000           DIVISION SIGN
+E2       0053  LS020000           LATIN CAPITAL LETTER S
+E3       0054  LT020000           LATIN CAPITAL LETTER T
+E4       0055  LU020000           LATIN CAPITAL LETTER U
+E5       0056  LV020000           LATIN CAPITAL LETTER V
+E6       0057  LW020000           LATIN CAPITAL LETTER W
+E7       0058  LX020000           LATIN CAPITAL LETTER X
+E8       0059  LY020000           LATIN CAPITAL LETTER Y
+E9       005A  LZ020000           LATIN CAPITAL LETTER Z
+EA       00B2  ND021000           SUPERSCRIPT TWO
+EB       00D4  LO160000           LATIN CAPITAL LETTER O WITH CIRCUMFLEX
+EC       00D6  LO180000           LATIN CAPITAL LETTER O WITH DIAERESIS
+ED       00D2  LO140000           LATIN CAPITAL LETTER O WITH GRAVE
+EE       00D3  LO120000           LATIN CAPITAL LETTER O WITH ACUTE
+EF       00D5  LO200000           LATIN CAPITAL LETTER O WITH TILDE
+F0       0030  ND100000           DIGIT ZERO
+F1       0031  ND010000           DIGIT ONE
+F2       0032  ND020000           DIGIT TWO
+F3       0033  ND030000           DIGIT THREE
+F4       0034  ND040000           DIGIT FOUR
+F5       0035  ND050000           DIGIT FIVE
+F6       0036  ND060000           DIGIT SIX
+F7       0037  ND070000           DIGIT SEVEN
+F8       0038  ND080000           DIGIT EIGHT
+F9       0039  ND090000           DIGIT NINE
+FA       00B3  ND031000           SUPERSCRIPT THREE
+FB       00DB  LU160000           LATIN CAPITAL LETTER U WITH CIRCUMFLEX
+FC       00DC  LU180000           LATIN CAPITAL LETTER U WITH DIAERESIS
+FD       00D9  LU140000           LATIN CAPITAL LETTER U WITH GRAVE
+FE       00DA  LU120000           LATIN CAPITAL LETTER U WITH ACUTE
+FF       009F  ...EO... ..APC...  (CC) Application Program Command
+************************END OF TABLE**************************************
+
+     2) An alternate mapping table including roundtrip/fallback information
+        is also available at:
+		http://oss.software.ibm.com/cvs/icu/charset/data/ucm/ibm-1047_P100-2000.ucm
+
+Person and email address to contact for further information:
+Reuel Robrigado
+IBM Globalization Centre of Competency, Toronto
+8200 Warden Avenue, Markham, ON. L6G 1C7 Canada
+email: reuelr&ca.ibm.com
+
+Intended usage:   LIMITED USE
+=======================================================================
+                                          
+(record created 2002-09-27)

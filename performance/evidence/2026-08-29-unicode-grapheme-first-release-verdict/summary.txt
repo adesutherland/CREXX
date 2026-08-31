@@ -1,0 +1,12 @@
+vm=rxbvm operation=count variant=stream median_us=47614.5 min_us=46532 max_us=49162 samples=12
+vm=rxbvm operation=count variant=index-e2e median_us=48472.5 min_us=47737 max_us=49072 samples=12
+vm=rxbvm operation=count index_vs_stream_ratio=1.018020 index_vs_stream_pct=+1.802%
+vm=rxbvm operation=substr variant=stream median_us=47787.0 min_us=46440 max_us=48937 samples=12
+vm=rxbvm operation=substr variant=index-e2e median_us=48839.0 min_us=47216 max_us=50572 samples=12
+vm=rxbvm operation=substr index_vs_stream_ratio=1.022014 index_vs_stream_pct=+2.201%
+vm=rxtvm operation=count variant=stream median_us=50303.0 min_us=48811 max_us=51412 samples=12
+vm=rxtvm operation=count variant=index-e2e median_us=51788.5 min_us=50393 max_us=52792 samples=12
+vm=rxtvm operation=count index_vs_stream_ratio=1.029531 index_vs_stream_pct=+2.953%
+vm=rxtvm operation=substr variant=stream median_us=50564.0 min_us=49177 max_us=52265 samples=12
+vm=rxtvm operation=substr variant=index-e2e median_us=51668.0 min_us=50556 max_us=52834 samples=12
+vm=rxtvm operation=substr index_vs_stream_ratio=1.021834 index_vs_stream_pct=+2.183%

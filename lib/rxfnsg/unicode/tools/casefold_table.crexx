@@ -1,0 +1,333 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Product build-time compiler for the pinned Unicode 17.0.0 CaseFolding data.
+ * The generated portable image is consumed by the Level G rxunicode module.
+ */
+
+options levelb
+
+namespace _rxunicodebuild expose casefoldtables casefold_compile
+import rxfnsb
+
+/** Compile pinned CaseFolding.txt into one portable prepared section. */
+casefold_compile: procedure = .casefoldtables
+  arg path = .string, version = .string
+  tables = .casefoldtables()
+  call tables.compile(path, version)
+  return tables
+
+casefold_is_scalar: procedure = .int
+  arg codepoint = .int
+  if codepoint < 0 | codepoint > 0x10FFFF then return 0
+  if codepoint >= 0xD800 & codepoint <= 0xDFFF then return 0
+  return 1
+
+/** Versioned portable case-fold section generated from CaseFolding.txt. */
+casefoldtables: class
+  _status = .int
+  _error = .string
+  _error_line = .int
+  _descriptor = .binary
+  _records = .binary
+  _components = .binary
+  _image = .binary
+  _record_count = .int
+  _component_count = .int
+  _common_count = .int
+  _simple_count = .int
+  _full_count = .int
+  _turkic_count = .int
+  _max_mapping = .int
+
+  *: factory
+    _status = 0
+    _error = ""
+    _error_line = 0
+    _record_count = 0
+    _component_count = 0
+    _common_count = 0
+    _simple_count = 0
+    _full_count = 0
+    _turkic_count = 0
+    _max_mapping = 0
+    call binresize _descriptor, 0x110000 * 4
+    call binresize _records, 0
+    call binresize _components, 0
+    call binresize _image, 0
+    return
+
+  compile: method = .void
+    arg path = .string, version = .string
+    record_index = .int
+    record_offset = .int
+    first = .int
+    flags = .int
+    if version \= "17.0.0" then do
+      call _fail "case-fold compiler requires Unicode version 17.0.0", 0
+      return
+    end
+    lines = readlines(path)
+    if lines[0] <= 0 then do
+      call _fail "CaseFolding input is empty or unreadable", 0
+      return
+    end
+    do line_number = 1 to lines[0] while _status = 0
+      line = lines[line_number]
+      comment = pos("#", line)
+      if comment > 0 then line = left(line, comment - 1)
+      line = strip(line)
+      if line = "" then iterate
+      fields = qsplit(line, ";")
+      if fields[0] < 3 | fields[0] > 4 |,
+         (fields[0] = 4 & strip(fields[4]) \= "") then do
+        call _fail "CaseFolding record does not have three fields", line_number
+        leave
+      end
+      source_text = strip(fields[1])
+      status = strip(fields[2])
+      mapping = strip(fields[3])
+      source = x2d(source_text)
+      if casefold_is_scalar(source) = 0 |,
+         length(source_text) < 4 | length(source_text) > 6 then do
+        call _fail "CaseFolding source is not a Unicode scalar", line_number
+        leave
+      end
+      if status \= "C" & status \= "S" & status \= "F" & status \= "T" then do
+        call _fail "CaseFolding status is not C, S, F, or T", line_number
+        leave
+      end
+      mapping_count = words(mapping)
+      if mapping_count < 1 | mapping_count > 3 then do
+        call _fail "CaseFolding mapping length is outside 1..3", line_number
+        leave
+      end
+      do component_index = 1 to mapping_count while _status = 0
+        component = x2d(word(mapping, component_index))
+        if casefold_is_scalar(component) = 0 then,
+          call _fail "CaseFolding mapping contains a non-scalar", line_number
+      end
+      if _status \= 0 then leave
+
+      descriptor = <at..u32>(source * 4) _descriptor
+      if descriptor = 0 then do
+        record_index = _record_count
+        _record_count = _record_count + 1
+        call binresize _records, _record_count * 24
+        record_offset = record_index * 24
+        <at..u32>(record_offset) _records = source
+        <at..u32>(record_offset + 4) _records = source
+        <at..u32>(record_offset + 8) _records = 0x110000
+        <at..u32>(record_offset + 12) _records = 0
+        <at..u32>(record_offset + 16) _records = 0
+        <at..u8>(record_offset + 20) _records = 0
+        <at..u8>(record_offset + 21) _records = 0
+        <at..u8>(record_offset + 22) _records = 0
+        <at..u8>(record_offset + 23) _records = 0
+        <at..u32>(source * 4) _descriptor = record_index + 1
+      end
+      else do
+        record_index = descriptor - 1
+        record_offset = record_index * 24
+      end
+
+      if status = "C" then flag = 1
+      else if status = "S" then flag = 2
+      else if status = "F" then flag = 4
+      else flag = 8
+      flags = <at..u8>(record_offset + 22) _records
+      if (flags <and> flag) \= 0 then do
+        call _fail "duplicate CaseFolding status for one source", line_number
+        leave
+      end
+      <at..u8>(record_offset + 22) _records = flags <or> flag
+
+      if status = "C" then do
+        if mapping_count \= 1 then do
+          call _fail "common CaseFolding mapping is not simple", line_number
+          leave
+        end
+        <at..u32>(record_offset + 4) _records = x2d(word(mapping, 1))
+        first = _append_sequence(mapping)
+        <at..u32>(record_offset + 12) _records = first
+        <at..u8>(record_offset + 20) _records = mapping_count
+        _common_count = _common_count + 1
+      end
+      else if status = "S" then do
+        if mapping_count \= 1 then do
+          call _fail "simple CaseFolding mapping expands", line_number
+          leave
+        end
+        <at..u32>(record_offset + 4) _records = x2d(word(mapping, 1))
+        _simple_count = _simple_count + 1
+      end
+      else if status = "F" then do
+        first = _append_sequence(mapping)
+        <at..u32>(record_offset + 12) _records = first
+        <at..u8>(record_offset + 20) _records = mapping_count
+        _full_count = _full_count + 1
+      end
+      else do
+        if mapping_count \= 1 then do
+          call _fail "Turkic CaseFolding mapping expands unexpectedly", line_number
+          leave
+        end
+        <at..u32>(record_offset + 8) _records = x2d(word(mapping, 1))
+        first = _append_sequence(mapping)
+        <at..u32>(record_offset + 16) _records = first
+        <at..u8>(record_offset + 21) _records = mapping_count
+        _turkic_count = _turkic_count + 1
+      end
+      if mapping_count > _max_mapping then _max_mapping = mapping_count
+    end
+    if _status \= 0 then return
+
+    do record_index = 0 to _record_count - 1 while _status = 0
+      flags = <at..u8>(record_index * 24 + 22) _records
+      if (flags <and> 1) \= 0 & (flags <and> 6) \= 0 then,
+        call _fail "common CaseFolding record also has S or F", 0
+      if (flags <and> 2) \= 0 & (flags <and> 4) = 0 then,
+        call _fail "simple CaseFolding record has no full partner", 0
+    end
+    if _status \= 0 then return
+    if _record_count \= 1585 | _component_count \= 1707 |,
+       _common_count \= 1481 | _simple_count \= 31 |,
+       _full_count \= 104 | _turkic_count \= 2 | _max_mapping \= 3 then do
+      call _fail "Unicode 17 CaseFolding count audit failed", 0
+      return
+    end
+    call _assemble_image
+    return
+
+  status: method = .int
+    return _status
+
+  error: method = .string
+    return _error
+
+  error_line: method = .int
+    return _error_line
+
+  image: method = .binary
+    return _image
+
+  byte_length: method = .int
+    return <blen>(_image)
+
+  record_count: method = .int
+    return _record_count
+
+  component_count: method = .int
+    return _component_count
+
+  common_count: method = .int
+    return _common_count
+
+  simple_count: method = .int
+    return _simple_count
+
+  full_count: method = .int
+    return _full_count
+
+  turkic_count: method = .int
+    return _turkic_count
+
+  max_mapping: method = .int
+    return _max_mapping
+
+  has_record: method = .int
+    arg codepoint = .int
+    if casefold_is_scalar(codepoint) = 0 then return 0
+    return <at..u32>(64 + codepoint * 4) _image \= 0
+
+  record_source: method = .int
+    arg record_index = .int
+    if record_index < 0 | record_index >= _record_count then return -1
+    records_offset = <at..u32>(24) _image
+    return <at..u32>(records_offset + record_index * 24) _image
+
+  expected_simple: method = .int
+    arg record_index = .int, turkic = .int
+    if record_index < 0 | record_index >= _record_count then return -1
+    records_offset = <at..u32>(24) _image
+    offset = records_offset + record_index * 24
+    mapped = <at..u32>(offset + 4) _image
+    if turkic then do
+      special = <at..u32>(offset + 8) _image
+      if special \= 0x110000 then mapped = special
+    end
+    return mapped
+
+  expected_full: method = .string
+    arg record_index = .int, turkic = .int
+    if record_index < 0 | record_index >= _record_count then return ""
+    records_offset = <at..u32>(24) _image
+    components_offset = <at..u32>(32) _image
+    offset = records_offset + record_index * 24
+    source = <at..u32>(offset) _image
+    first = <at..u32>(offset + 12) _image
+    count = <at..u8>(offset + 20) _image
+    if turkic & <at..u8>(offset + 21) _image > 0 then do
+      first = <at..u32>(offset + 16) _image
+      count = <at..u8>(offset + 21) _image
+    end
+    result = ""
+    if count = 0 then assembler appendchar result,source
+    else do component_index = 0 to count - 1
+      component = <at..u32>(components_offset + (first + component_index) * 4) _image
+      assembler appendchar result,component
+    end
+    return result
+
+  _append_sequence: method = .int
+    arg mapping = .string
+    first = _component_count
+    do component_index = 1 to words(mapping)
+      component = x2d(word(mapping, component_index))
+      _component_count = _component_count + 1
+      call binresize _components, _component_count * 4
+      <at..u32>((_component_count - 1) * 4) _components = component
+    end
+    return first
+
+  _assemble_image: method = .void
+    header_size = 64
+    descriptor_offset = header_size
+    records_offset = descriptor_offset + 0x110000 * 4
+    components_offset = records_offset + _record_count * 24
+    total_size = components_offset + _component_count * 4
+    call binresize _image, total_size
+    <at..u8>(0) _image = 67
+    <at..u8>(1) _image = 85
+    <at..u8>(2) _image = 67
+    <at..u8>(3) _image = 70
+    <at..u16>(4) _image = 1
+    <at..u16>(6) _image = header_size
+    <at..u16>(8) _image = 17
+    <at..u16>(10) _image = 0
+    <at..u16>(12) _image = 0
+    <at..u16>(14) _image = 0
+    <at..u32>(16) _image = descriptor_offset
+    <at..u32>(20) _image = 0x110000
+    <at..u32>(24) _image = records_offset
+    <at..u32>(28) _image = _record_count
+    <at..u32>(32) _image = components_offset
+    <at..u32>(36) _image = _component_count
+    <at..u32>(40) _image = _common_count
+    <at..u32>(44) _image = _simple_count
+    <at..u32>(48) _image = _full_count
+    <at..u32>(52) _image = _turkic_count
+    <at..u32>(56) _image = _max_mapping
+    <at..u32>(60) _image = total_size
+    call bincopy _image, descriptor_offset, _descriptor, 0, <blen>(_descriptor)
+    call bincopy _image, records_offset, _records, 0, <blen>(_records)
+    call bincopy _image, components_offset, _components, 0, <blen>(_components)
+    return
+
+  _fail: method = .void
+    arg message = .string, line_number = .int
+    if _status \= 0 then return
+    _status = 1
+    _error = message
+    _error_line = line_number
+    return

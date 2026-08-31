@@ -332,6 +332,115 @@ void test_utf_status_flags() {
 #endif
 }
 
+void test_normalization_certificates() {
+#ifndef NUTF8
+    const uint32_t all_forms = RXFLAG_LANG_NORMAL_FORM_MASK;
+    const uint32_t selected_forms =
+            RXFLAG_LANG_NORMAL_NFC | RXFLAG_LANG_NORMAL_NFD;
+    numeric_context context = {
+            DEFAULT_NUMERIC_DIGITS, DEFAULT_NUMERIC_FUZZ,
+            DEFAULT_NUMERIC_FORM, DEFAULT_NUMERIC_CASE,
+            NUMERIC_STANDARD_COMMON
+    };
+    value source;
+    value string_copy;
+    value whole_copy;
+    value moved;
+    value transformed;
+    value slice;
+    value suffix;
+    value numeric_temp;
+    value numeric;
+
+    printf("\n--- Running Normalization Certificate Tests ---\n");
+
+    value_init(&source);
+    value_init(&string_copy);
+    value_init(&whole_copy);
+    value_init(&moved);
+    value_init(&transformed);
+    value_init(&slice);
+    value_init(&suffix);
+    value_init(&numeric_temp);
+    value_init(&numeric);
+
+    CHECK_STATUS(&source, all_forms, all_forms);
+
+    set_null_string(&source, "ASCII");
+    CHECK_STATUS(&source, all_forms, all_forms);
+
+    set_null_string(&source, "\xc3\xa9");
+    CHECK_STATUS(&source, all_forms, 0);
+    mark_string_normalization_certificates(&source, selected_forms);
+    CHECK_STATUS(&source, all_forms, selected_forms);
+
+    copy_string_value(&string_copy, &source);
+    CHECK_STATUS(&string_copy, all_forms, selected_forms);
+
+    copy_value(&whole_copy, &source);
+    CHECK_STATUS(&whole_copy, all_forms, selected_forms);
+
+    set_value_string(&transformed, &source);
+    CHECK_STATUS(&transformed, all_forms, selected_forms);
+
+    move_value(&moved, &whole_copy);
+    CHECK_STATUS(&moved, all_forms, selected_forms);
+    CHECK_STATUS(&whole_copy, all_forms, all_forms);
+
+    rxvm_value_set_string_length_known(
+            &transformed, transformed.string_length);
+    CHECK_STATUS(&transformed, all_forms, 0);
+
+    mark_string_normalization_certificates(&source, all_forms);
+    CHECK_RC_ZERO(string_slice_at(&slice, &source, 0u, 1u));
+    CHECK_STATUS(&slice, all_forms, 0);
+
+    mark_string_normalization_certificates(&transformed, all_forms);
+    set_null_string(&suffix, "x");
+    string_append(&transformed, &suffix);
+    CHECK_STATUS(&transformed, all_forms, 0);
+
+    mark_string_normalization_certificates(
+            &transformed, RXFLAG_LANG_NORMAL_NFD);
+    CHECK_RC_ZERO(set_binary(&transformed, "x", 1u));
+    CHECK_STATUS(&transformed, all_forms, RXFLAG_LANG_NORMAL_NFD);
+
+    CHECK_RC_ZERO(set_string_validated(&transformed, "validated", 9u));
+    CHECK_STATUS(&transformed, all_forms, all_forms);
+
+    numeric.int_value = 42;
+    int_to_string(&context, &numeric_temp, &numeric);
+    CHECK_STATUS(&numeric, all_forms, all_forms);
+
+    source.status.all_type_flags =
+            RXFLAG_VM_UTF8_VALID | RXFLAG_LANG_NORMAL_NFC |
+            REGTP_NOTSYM | UINT32_C(0x00010000);
+    source.status.all_type_flags = RXFLAGS_PUBLIC_WRITE(
+            source.status.all_type_flags, REGTP_VAL);
+    CHECK_STATUS(&source, RXFLAG_LANG_NORMAL_FORM_MASK,
+                 RXFLAG_LANG_NORMAL_NFC);
+    CHECK_STATUS(&source, RXFLAG_COMPILER_ABI_MASK, REGTP_VAL);
+    CHECK_STATUS(&source, RXFLAG_LIBRARY_MASK, UINT32_C(0x00010000));
+    source.status.all_type_flags = RXFLAGS_PUBLIC_WRITE(
+            source.status.all_type_flags, 0u);
+    CHECK_STATUS(&source,
+                 RXFLAG_VM_PRIVATE_MASK | RXFLAG_LANGUAGE_MASK,
+                 RXFLAG_VM_UTF8_VALID | RXFLAG_LANG_NORMAL_NFC);
+
+    clear_value(&source);
+    clear_value(&string_copy);
+    clear_value(&whole_copy);
+    clear_value(&moved);
+    clear_value(&transformed);
+    clear_value(&slice);
+    clear_value(&suffix);
+    clear_value(&numeric_temp);
+    clear_value(&numeric);
+
+    printf("--- Normalization Certificate Tests Finished ---\n");
+#endif
+}
+
 void test_binary_buffers() {
     value v;
     value copy;
@@ -1145,6 +1254,7 @@ int main() {
     test_boundary_conditions();
     test_flawed_optimization_trigger();
     test_utf_status_flags();
+    test_normalization_certificates();
     test_binary_buffers();
     test_reference_cells();
     test_reference_identity_helpers();

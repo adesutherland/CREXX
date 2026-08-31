@@ -1,0 +1,238 @@
+/* Complete Unicode 17 case-fold product conformance and public API contract. */
+options levelb
+
+import rxfnsb
+import rxunicode
+import _rxunicodebuild
+
+arg argv = .string[]
+if argv[0] \= 1 then do
+  say "usage: ts_unicode_casefold CaseFolding.txt"
+  return 2
+end
+
+tables = casefold_compile(argv[1], "17.0.0")
+if tables.status() \= 0 then do
+  say "FAIL: CaseFolding line" tables.error_line() || ":" || tables.error()
+  return 1
+end
+if tables.byte_length() \= 4501380 | tables.record_count() \= 1585 |,
+   tables.component_count() \= 1707 | tables.common_count() \= 1481 |,
+   tables.simple_count() \= 31 | tables.full_count() \= 104 |,
+   tables.turkic_count() \= 2 | tables.max_mapping() \= 3 then do
+  say "FAIL: Unicode 17 case-fold prepared-image audit"
+  return 1
+end
+
+failures = 0
+failures = failures + expect_default_full("TUTOR sharp s",,
+  "0053 0074 0072 0061 00DF 0065", "0073 0074 0072 0061 0073 0073 0065")
+failures = failures + expect_simple("simple capital sharp s", "1E9E", "00DF")
+failures = failures + expect_default_full("full capital sharp s", "1E9E", "0073 0073")
+failures = failures + expect_simple("default simple dotted I", "0049 0130", "0069 0130")
+failures = failures + expect_default_full("default full dotted I", "0049 0130", "0069 0069 0307")
+failures = failures + expect_turkic("Turkic full I", "0049 0130", "0131 0069")
+failures = failures + expect_turkic_simple("Turkic simple I", "0049 0130", "0131 0069")
+failures = failures + expect_default_full("full Armenian expansion", "0587", "0565 0582")
+failures = failures + expect_default_full("non-BMP mapping", "10400", "10428")
+failures = failures + expect_default_full("identity emoji", "01F600", "01F600")
+source = .string
+expected = .string
+
+/* Read the normative file independently of the table compiler used at build
+ * time. This prevents a shared parser mistake from becoming its own oracle. */
+raw_lines = readlines(argv[1])
+raw_counts = .int[]
+do raw_index = 1 to 4
+  raw_counts[raw_index] = 0
+end
+raw_checks = 0
+do line_number = 1 to raw_lines[0]
+  raw_line = raw_lines[line_number]
+  comment = pos("#",raw_line)
+  if comment > 0 then raw_line = left(raw_line,comment - 1)
+  raw_line = strip(raw_line)
+  if raw_line = "" then iterate
+  fields = qsplit(raw_line,";")
+  if fields[0] < 3 then do
+    say "FAIL: malformed raw CaseFolding record at line" line_number
+    failures = failures + 1
+    iterate
+  end
+  source_hex = strip(fields[1])
+  status = strip(fields[2])
+  expected_hex = strip(fields[3])
+  source = hex_sequence_to_string(source_hex)
+  expected = hex_sequence_to_string(expected_hex)
+  select status
+    when "C" then do
+      raw_counts[1] = raw_counts[1] + 1
+      if toSimpleCasefold(source) \== expected |,
+         toCasefold(source) \== expected then do
+        say "FAIL: raw common CaseFolding relation at line" line_number
+        failures = failures + 1
+      end
+      raw_checks = raw_checks + 2
+    end
+    when "S" then do
+      raw_counts[2] = raw_counts[2] + 1
+      if toSimpleCasefold(source) \== expected then do
+        say "FAIL: raw simple CaseFolding relation at line" line_number
+        failures = failures + 1
+      end
+      raw_checks = raw_checks + 1
+    end
+    when "F" then do
+      raw_counts[3] = raw_counts[3] + 1
+      if toCasefold(source) \== expected then do
+        say "FAIL: raw full CaseFolding relation at line" line_number
+        failures = failures + 1
+      end
+      raw_checks = raw_checks + 1
+    end
+    when "T" then do
+      raw_counts[4] = raw_counts[4] + 1
+      if toTurkicSimpleCasefold(source) \== expected |,
+         toTurkicCasefold(source) \== expected then do
+        say "FAIL: raw Turkic CaseFolding relation at line" line_number
+        failures = failures + 1
+      end
+      raw_checks = raw_checks + 2
+    end
+    otherwise do
+      say "FAIL: unknown raw CaseFolding status at line" line_number
+      failures = failures + 1
+    end
+  end
+end
+if raw_counts[1] \= 1481 | raw_counts[2] \= 31 |,
+   raw_counts[3] \= 104 | raw_counts[4] \= 2 | raw_checks \= 3101 then do
+  say "FAIL: raw CaseFolding status/count audit"
+  failures = failures + 1
+end
+
+record_checks = 0
+do record_index = 0 to tables.record_count() - 1
+  source_codepoint = tables.record_source(record_index)
+  source = ""
+  assembler appendchar source,source_codepoint
+
+  expected = ""
+  mapped = tables.expected_simple(record_index, 0)
+  assembler appendchar expected,mapped
+  if toSimpleCasefold(source) \== expected then do
+    say "FAIL: simple CaseFolding record" record_index "U+" || d2x(source_codepoint)
+    failures = failures + 1
+  end
+  record_checks = record_checks + 1
+
+  expected = tables.expected_full(record_index, 0)
+  if toCasefold(source) \== expected then do
+    say "FAIL: full CaseFolding record" record_index "U+" || d2x(source_codepoint)
+    failures = failures + 1
+  end
+  record_checks = record_checks + 1
+
+  expected = ""
+  mapped = tables.expected_simple(record_index, 1)
+  assembler appendchar expected,mapped
+  if toTurkicSimpleCasefold(source) \== expected then do
+    say "FAIL: Turkic simple CaseFolding record" record_index "U+" || d2x(source_codepoint)
+    failures = failures + 1
+  end
+  record_checks = record_checks + 1
+
+  expected = tables.expected_full(record_index, 1)
+  if toTurkicCasefold(source) \== expected then do
+    say "FAIL: Turkic full CaseFolding record" record_index "U+" || d2x(source_codepoint)
+    failures = failures + 1
+  end
+  record_checks = record_checks + 1
+end
+
+identity_checks = 0
+batch_count = 0
+batch = ""
+do codepoint = 0 to 0x10FFFF
+  if codepoint >= 0xD800 & codepoint <= 0xDFFF then iterate
+  if tables.has_record(codepoint) then iterate
+  assembler appendchar batch,codepoint
+  batch_count = batch_count + 1
+  identity_checks = identity_checks + 1
+  if batch_count = 4096 then do
+    failures = failures + expect_identity(batch, codepoint)
+    batch = ""
+    batch_count = 0
+  end
+end
+if batch_count > 0 then failures = failures + expect_identity(batch, 0x10FFFF)
+if identity_checks \= 1110479 then do
+  say "FAIL: unexpected unlisted CaseFolding scalar count" identity_checks
+  failures = failures + 1
+end
+
+if failures > 0 then return 1
+say "CaseFolding records checked in four modes:" record_checks
+say "Independent raw CaseFolding relations:" raw_checks
+say "Unlisted CaseFolding scalar identity checks per mode:" identity_checks
+say "PASS: rxunicode default full simple and Turkic case folding"
+return 0
+
+expect_default_full: procedure = .int
+  arg label = .string, source_hex = .string, expected_hex = .string
+  return expect_equal(label, toCasefold(hex_sequence_to_string(source_hex)), expected_hex)
+
+expect_simple: procedure = .int
+  arg label = .string, source_hex = .string, expected_hex = .string
+  return expect_equal(label, toSimpleCasefold(hex_sequence_to_string(source_hex)), expected_hex)
+
+expect_turkic: procedure = .int
+  arg label = .string, source_hex = .string, expected_hex = .string
+  return expect_equal(label, toTurkicCasefold(hex_sequence_to_string(source_hex)), expected_hex)
+
+expect_turkic_simple: procedure = .int
+  arg label = .string, source_hex = .string, expected_hex = .string
+  return expect_equal(label, toTurkicSimpleCasefold(hex_sequence_to_string(source_hex)), expected_hex)
+
+expect_equal: procedure = .int
+  arg label = .string, actual = .string, expected_hex = .string
+  expected = hex_sequence_to_string(expected_hex)
+  if actual \== expected then do
+    say "FAIL:" label "expected" expected_hex "got" string_to_hex_sequence(actual)
+    return 1
+  end
+  return 0
+
+expect_identity: procedure = .int
+  arg expose batch = .string, codepoint = .int
+  if toSimpleCasefold(batch) \== batch | toCasefold(batch) \== batch |,
+     toTurkicSimpleCasefold(batch) \== batch |,
+     toTurkicCasefold(batch) \== batch then do
+    say "FAIL: unlisted identity batch near U+" || right(d2x(codepoint), 6, "0")
+    return 1
+  end
+  return 0
+
+hex_sequence_to_string: procedure = .string
+  arg sequence = .string
+  result = ""
+  do i = 1 to words(sequence)
+    codepoint = x2d(word(sequence, i))
+    assembler appendchar result,codepoint
+  end
+  return result
+
+string_to_hex_sequence: procedure = .string
+  arg value = .string
+  result = ""
+  value_length = 0
+  assembler strlen value_length,value
+  do i = 0 to value_length - 1
+    codepoint = 0
+    assembler strchar codepoint,value,i
+    if result \= "" then result = result || " "
+    width = 4
+    if codepoint > 0xFFFF then width = 6
+    result = result || right(d2x(codepoint), width, "0")
+  end
+  return result

@@ -9,6 +9,9 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/headerless_levelc.rexx
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/explicit_header.crexx
                ${CMAKE_CURRENT_BINARY_DIR}/explicit_header.crexx
                COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/rxunicode_default_runtime.crexx
+               ${CMAKE_CURRENT_BINARY_DIR}/rxunicode_default_runtime.crexx
+               COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/bin/crxc.rexx
                ${CMAKE_CURRENT_BINARY_DIR}/crxc.rexx
                COPYONLY)
@@ -68,6 +71,33 @@ add_test(NAME crexx_explicit_header_smoke
          COMMAND ${CMAKE_COMMAND} -P "${CREXX_EXPLICIT_SMOKE_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+set(CREXX_RXUNICODE_DEFAULT_RUNTIME_SCRIPT
+    "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_rxunicode_default_runtime.cmake")
+set(CREXX_RXUNICODE_DEFAULT_RUNTIME_CONTENT
+    "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"${CMAKE_CURRENT_BINARY_DIR}/rxunicode_default_runtime.crexx\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND CREXX_RXUNICODE_DEFAULT_RUNTIME_CONTENT
+    "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx default rxunicode runtime failed: \\n\${out}\")\nendif()\n")
+string(APPEND CREXX_RXUNICODE_DEFAULT_RUNTIME_CONTENT
+    "if(NOT out STREQUAL \"1\\n\")\n  message(FATAL_ERROR \"Unexpected default rxunicode output. Got: \\n\${out}\")\nendif()\n")
+string(APPEND CREXX_RXUNICODE_DEFAULT_RUNTIME_CONTENT
+    "execute_process(COMMAND \"$<TARGET_FILE:rxvme>\" \"${CMAKE_CURRENT_BINARY_DIR}/rxunicode_default_runtime.rxbin\" -a OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND CREXX_RXUNICODE_DEFAULT_RUNTIME_CONTENT
+    "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxvme embedded rxunicode runtime failed: \\n\${out}\")\nendif()\n")
+string(APPEND CREXX_RXUNICODE_DEFAULT_RUNTIME_CONTENT
+    "if(NOT out STREQUAL \"1\\n\")\n  message(FATAL_ERROR \"Unexpected embedded rxunicode output. Got: \\n\${out}\")\nendif()\n")
+string(APPEND CREXX_RXUNICODE_DEFAULT_RUNTIME_CONTENT
+    "execute_process(COMMAND \"$<TARGET_FILE:rxbvme>\" \"${CMAKE_CURRENT_BINARY_DIR}/rxunicode_default_runtime.rxbin\" -a OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND CREXX_RXUNICODE_DEFAULT_RUNTIME_CONTENT
+    "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxbvme embedded rxunicode runtime failed: \\n\${out}\")\nendif()\n")
+string(APPEND CREXX_RXUNICODE_DEFAULT_RUNTIME_CONTENT
+    "if(NOT out STREQUAL \"1\\n\")\n  message(FATAL_ERROR \"Unexpected embedded rxbvme rxunicode output. Got: \\n\${out}\")\nendif()\n")
+file(GENERATE OUTPUT "${CREXX_RXUNICODE_DEFAULT_RUNTIME_SCRIPT}"
+     CONTENT "${CREXX_RXUNICODE_DEFAULT_RUNTIME_CONTENT}")
+
+add_test(NAME crexx_rxunicode_default_runtime
+         COMMAND ${CMAKE_COMMAND} -P "${CREXX_RXUNICODE_DEFAULT_RUNTIME_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 set(CREXX_ARGS_SMOKE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_args_smoke.cmake")
 set(CREXX_ARGS_SMOKE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/args_smoke_ws\")\n")
 string(APPEND CREXX_ARGS_SMOKE_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
@@ -113,9 +143,13 @@ string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "string(FIND \"\${verbose_out
 string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "if(NOT levelb_pos EQUAL -1)\n  message(FATAL_ERROR \"crexx forced headerless Classic .rexx through Level B. Got: \\n\${verbose_out}\")\nendif()\n")
 string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "string(FIND \"\${verbose_out}\" \"--import rxfnsb\" import_pos)\n")
 string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "if(NOT import_pos EQUAL -1)\n  message(FATAL_ERROR \"crexx injected a source import for headerless Classic .rexx. Got: \\n\${verbose_out}\")\nendif()\n")
-foreach(_needle IN ITEMS "crexx executes:" "bin/rxfnsc" "bin/classlib")
+foreach(_needle IN ITEMS "crexx executes:" "bin/rxvme")
     string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "string(FIND \"\${verbose_out_normalized}\" \"${_needle}\" pos)\n")
     string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "if(pos EQUAL -1)\n  message(FATAL_ERROR \"crexx verbose Level C Classic runtime output missing ${_needle}. Got: \\n\${verbose_out}\")\nendif()\n")
+endforeach()
+foreach(_needle IN ITEMS "bin/rxfnsc" "bin/classlib")
+    string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "string(FIND \"\${verbose_out_normalized}\" \"${_needle}\" pos)\n")
+    string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "if(NOT pos EQUAL -1)\n  message(FATAL_ERROR \"crexx passed embedded core library ${_needle} explicitly. Got: \\n\${verbose_out}\")\nendif()\n")
 endforeach()
 file(GENERATE OUTPUT "${CREXX_LEVELC_CLASSIC_RUNTIME_SCRIPT}" CONTENT "${CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT}")
 
@@ -258,6 +292,9 @@ set_tests_properties(crexx_help_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_
 set_tests_properties(crexx_headerless_simple_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_rexx_levelc_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_explicit_header_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
+set_tests_properties(crexx_rxunicode_default_runtime PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
+set_tests_properties(crexx_rxunicode_default_runtime PROPERTIES
+        LABELS "driver;runtime;library;unicode;levelg")
 set_tests_properties(crexx_args_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_rexxscript_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_levelc_classic_runtime_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})

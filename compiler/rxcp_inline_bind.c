@@ -1191,11 +1191,12 @@ static int inline_capture_locator_method_receiver_reference(
                                   receiver->value_dim_elements,
                                   receiver->value_class);
 
-    reference_symbol = rxcp_remap_create_temp_symbol(context,
-                                                      inline_scope,
-                                                      reference_expr,
-                                                      "__inline_receiver_storage",
-                                                      0);
+    reference_symbol = inline_create_temp_symbol(context,
+                                                 inline_scope,
+                                                 reference_expr,
+                                                 "__inline_receiver_storage",
+                                                 0,
+                                                 clone_state);
     if (!reference_symbol) return 0;
     sym_set_reference_type(reference_symbol,
                            receiver->value_type,
@@ -1392,11 +1393,12 @@ static Symbol *inline_capture_method_receiver_for_scoped_args(Context *context,
         temp_symbol = inline_find_instance_symbol(proc_def, clone_state);
         capture_lhs_scope = inline_scope;
     } else {
-        temp_symbol = rxcp_remap_create_temp_symbol(context,
+        temp_symbol = inline_create_temp_symbol(context,
                                                 caller_scope,
                                                 receiver,
                                                 "__inline_method_receiver",
-                                                0);
+                                                0,
+                                                clone_state);
     }
     if (!temp_symbol) return NULL;
 
@@ -1502,11 +1504,12 @@ static int inline_capture_scoped_call_actuals(Context *context,
             continue;
         }
 
-        temp_symbol = rxcp_remap_create_temp_symbol(context,
+        temp_symbol = inline_create_temp_symbol(context,
                                                 caller_scope,
                                                 actual_arg,
                                                 "__inline_scoped_arg",
-                                                actual_index);
+                                                actual_index,
+                                                clone_state);
         if (!temp_symbol) {
             free(captured_symbols);
             return 0;
@@ -1967,11 +1970,12 @@ static int inline_capture_varg_actuals(Context *context,
 
         if (actual_arg->node_type == NOVAL) return 0;
 
-        temp_symbol = rxcp_remap_create_temp_symbol(context,
+        temp_symbol = inline_create_temp_symbol(context,
                                                 inline_scope,
                                                 varg_type ? varg_type : actual_arg,
                                                 "__inline_varg",
-                                                child_index);
+                                                child_index,
+                                                state);
         if (!temp_symbol) return 0;
 
         capture_assign = rxcp_remap_create_assignment_node(context, inline_scope, actual_arg, actual_arg);
@@ -2993,7 +2997,12 @@ static ASTNode *inline_build_dynamic_varg_value(Context *context,
                                               &instr_list);
     if (!block_expr) return NULL;
 
-    index_symbol = rxcp_remap_create_temp_symbol(context, inline_scope, node->child, "__inline_arg_ix", 0);
+    index_symbol = inline_create_temp_symbol(context,
+                                             inline_scope,
+                                             node->child,
+                                             "__inline_arg_ix",
+                                             0,
+                                             state);
     if (!index_symbol) return NULL;
 
     assign_node = rxcp_remap_create_assignment_node(context, inline_scope, node, node->child);
@@ -3061,7 +3070,12 @@ static ASTNode *inline_build_dynamic_varg_exists(Context *context,
                                               &instr_list);
     if (!block_expr) return NULL;
 
-    index_symbol = rxcp_remap_create_temp_symbol(context, inline_scope, node->child, "__inline_arg_ix", 1);
+    index_symbol = inline_create_temp_symbol(context,
+                                             inline_scope,
+                                             node->child,
+                                             "__inline_arg_ix",
+                                             1,
+                                             state);
     if (!index_symbol) return NULL;
 
     assign_node = rxcp_remap_create_assignment_node(context, inline_scope, node, node->child);

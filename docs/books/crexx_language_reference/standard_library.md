@@ -167,6 +167,16 @@ baseline, but they are not the stable Level B contract. Start with the
 which includes complete checked examples and explains when ordinary work stays
 on the controlling execution.
 
+The `rxunicode` module supplies Unicode 17.0.0 normalization and predicates,
+full default upper/lower conversion, full/simple/Turkic case folding, default
+extended grapheme-cluster operations, and strict-by-default typed codecs between
+`.string` and `.binary`. Supported codecs include UTF-8, explicit-endian
+UTF-16/UTF-32, ASCII, ISO-8859-1, Windows-1252, IBM437, IBM850, and IBM1047.
+It does not change ordinary `.string` equality or codepoint indexing. Level B
+`readbinary` and `writebinary` provide complete-file byte I/O for explicit codec
+composition. See [Unicode text services](../crexx_library_reference/unicode.md)
+for the exact surface and its relationship to TUTOR.
+
 ## Level L Generated-Output Work
 
 `rxfnsl` contains early Level L language-engineering examples. The first module

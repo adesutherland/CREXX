@@ -154,6 +154,11 @@ set(CLASS_SOURCE_DEPS_OffsetDateTime DateTime)
 foreach(_binfile IN LISTS CLSBINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
   get_filename_component(_member_dir "${_binfile}" DIRECTORY)
+  # Makefile generators enter WORKING_DIRECTORY before executing the first
+  # custom command, whereas Ninja may materialize an output directory for us.
+  # Own the directory at configure time so both generators have the same clean
+  # build contract.
+  file(MAKE_DIRECTORY "${_member_dir}")
   set(_class_source_modules ${CLASS_SOURCE_DEPS_${_basename}})
   list(REMOVE_ITEM _class_source_modules "${_basename}")
   list(REMOVE_DUPLICATES _class_source_modules)
@@ -333,6 +338,7 @@ set(CLASSLIB_NATIVE_PROVIDER_FILES_Os rxfs.rxplugin rxplatform.rxplugin)
 foreach(_binfile IN LISTS CLASSLIB_NATIVE_BINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
   get_filename_component(_member_dir "${_binfile}" DIRECTORY)
+  file(MAKE_DIRECTORY "${_member_dir}")
   set(_provider_targets ${CLASSLIB_NATIVE_PROVIDER_TARGETS_${_basename}})
   set(_provider_files ${CLASSLIB_NATIVE_PROVIDER_FILES_${_basename}})
   list(LENGTH _provider_targets _provider_target_count)

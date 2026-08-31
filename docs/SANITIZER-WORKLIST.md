@@ -190,6 +190,55 @@ marks SAN-006 closed without weakening any sanitizer closure requirement.
 
 ## Qualification infrastructure repairs
 
+### SAN-QA-009 — interactive stdin watchdogs expire under contended Apple ASan
+
+Status: repair implemented; focused normal-Debug and Apple-ASan proof passes.
+The item remains open and release-blocking pending exact-SHA hosted sanitizer
+qualification. No sanitizer suppression, test exclusion or product-behaviour
+waiver is authorized.
+
+- Scope: the three interactive `linein(stdin)` correctness tests which launch
+  a VM or the `crexx` driver through pipe/PTY harnesses.
+- Failure: GitHub Sanitizer QA run
+  [33400864223](https://github.com/adesutherland/CREXX/actions/runs/33400864223)
+  failed only `ts_linein_stdin_prompt` and `ts_linein_stdin_crexx_tty` in its
+  [macOS arm64 ASan job](https://github.com/adesutherland/CREXX/actions/runs/33400864223/job/99516538587)
+  at revision `5befda0f86c827fd02cd8f7597833a039dc2e2ef`.
+  The direct prompt did not become visible within its 3-second harness
+  watchdog; the PTY driver exceeded its 15-second watchdog while another
+  instrumented `crexx` driver case was running. The sibling driver case passed
+  in 15.32 seconds. The uploaded sanitizer artifact contains no ASan memory
+  diagnostic; this remains a first-party maintained-lane failure.
+- Original trigger: the workflow's maintained full Apple-ASan build and CTest
+  command, `tools/asan-run.sh --phase full --build-jobs 4 --test-jobs 8
+  --build-leaks off --leaks off`, as retained by the run above.
+- Permanent focused regressions: `ts_linein_stdin_prompt`,
+  `ts_linein_stdin_crexx_driver` and `ts_linein_stdin_crexx_tty`. They verify
+  the complete prompt/input/completion conversation, including real PTY
+  foreground ownership; their behavioral assertions are unchanged.
+- Repair: serialize only this interactive family with the
+  `linein_stdin_conversation` CTest resource lock. Use a 30-second internal
+  correctness watchdog so instrumented compiler/driver startup is not treated
+  as a performance assertion. CTest retains an outer 70-second limit for the
+  two-phase pipe harness and 40 seconds for the single-deadline PTY harness.
+  These tests remain eligible to run alongside unrelated QA; performance tests
+  and timing claims remain outside this correctness lane.
+- Local evidence: the focused fixture target passed ordinary Debug at
+  `cmake-build-debug/asan-logs/20260831-170647-build`, followed by all three
+  tests at `cmake-build-debug/asan-logs/20260831-170829-ctest`. The same target
+  passed Apple ASan at
+  `cmake-build-debugasan/asan-logs/20260831-171457-build`, followed by all three
+  tests at `cmake-build-debugasan/asan-logs/20260831-171637-ctest`. The ASan
+  tree also exposed and qualified clean-Make working-directory ownership for
+  the private classlib, Level C and RexxScript member families.
+- Owner/next action: new-build Phase 2 hosted qualification. Require a clean
+  enough full exact-SHA GitHub Sanitizer QA run. Linux x64 ASan/LSan must also
+  pass before closure; Apple ASan provides no leak-closure authority.
+- Acceptance: retain all three permanent conversations, prove their focused
+  build/test prerequisites from a clean-enough tree, pass the focused normal
+  Debug and maintained Apple-ASan shapes, rerun the original broad trigger,
+  and pass both GitHub sanitizer lanes on the final published revision.
+
 ### SAN-QA-008 — saturated child redirect loses typed timeout completion
 
 Status: closed; the exact macOS arm64 ASan failure and retained runner artifact

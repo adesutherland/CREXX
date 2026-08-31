@@ -120,6 +120,15 @@ More precisely:
   `LEAVE_WITH` appends, semantic-shape copying, and ordinary replacement
   cleanup are now also shared remap-builder operations. The inline layer still
   decides when those operations are legal.
+- Each call-site expansion is an ownership transaction. Its generated root
+  and scope stay off-tree until the candidate has been bound, cloned, cleaned,
+  costed, and accepted. A rejected or partially-built candidate disconnects
+  every symbol connector created since the transaction began, removes its
+  root scope from the caller's child-scope traversal, and releases any
+  caller-scope temporaries owned by the attempt. This is required even for a
+  normal fail-closed decision: leaving an orphan formal or speculative child
+  scope visible can make later fixed-point optimizer passes inspect an AST
+  node that was never attached to the executable tree.
 - Optional formals now inline through the same rewrite path as other supported local plain-procedure calls, with omitted-actual/default-formal semantics preserved during binding.
 - Reference operations and reference-bearing return classes remain deliberately
   fail-closed. The `reference_source_inline_lifetime` fixture is the canary:

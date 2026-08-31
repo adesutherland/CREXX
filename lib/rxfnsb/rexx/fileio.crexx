@@ -26,7 +26,7 @@
  * CREXX LEVEL B - FILE IO Functions
  */
 options levelb
-namespace rxfnsb expose lineout linein lines charin charout _execio readlines loadtext erasefile
+namespace rxfnsb expose lineout linein lines charin charout _execio readlines loadtext readbinary writebinary erasefile
 import _rxsysb
 
 /* Level B UTF text lineout BIF. Writes one line and appends a newline. */
@@ -305,6 +305,107 @@ loadtext: procedure = .string
   assembler fclose rc,fileid
   if rc\=0 then call raise "error", "40.27", "cannot close "fname
 return stream
+
+/**
+ * Read one complete file as arbitrary bytes.
+ *
+ * The file is opened in binary mode and accumulated in bounded chunks, so no
+ * UTF validation, newline translation, or terminating-NUL convention is
+ * applied.  The caller owns the memory policy for the resulting whole-file
+ * value.
+ *
+ * @param fname file-system path
+ * @return exact file contents, including embedded NUL and invalid UTF bytes
+ * @signal NOTREADY when the file cannot be opened, read, or closed
+ */
+readbinary: procedure = .binary
+  arg fname = .string
+
+  result = .binary
+  chunk = .binary
+  fileid = 0
+  close_status = 0
+  read_error = 0
+  eof = 0
+  chunk_length = 0
+  chunk_size = 32768
+  mode = "rb"
+
+  assembler fopen fileid,fname,mode
+  if fileid = 0 then do
+    /* The bootstrap Level B library is built before the certified SIGNAL exit. */
+    call raise "NOTREADY", "READBINARY cannot open", fname
+    return result
+  end
+
+  do while eof = 0
+    assembler freadb chunk,fileid,chunk_size
+    chunk_length = 0
+    assembler blen chunk_length,chunk
+    if chunk_length > 0 then assembler bappend result,chunk
+
+    read_error = 0
+    assembler ferror read_error,fileid
+    if read_error \= 0 then do
+      assembler fclose close_status,fileid
+      call raise "NOTREADY", "READBINARY cannot read", fname
+      return result
+    end
+
+    assembler feof eof,fileid
+    if chunk_length = 0 & eof = 0 then do
+      assembler fclose close_status,fileid
+      call raise "NOTREADY", "READBINARY made no progress reading", fname
+      return result
+    end
+  end
+
+  assembler fclose close_status,fileid
+  if close_status \= 0 then do
+    call raise "NOTREADY", "READBINARY cannot close", fname
+    return result
+  end
+  return result
+
+/**
+ * Replace one file with the exact bytes in a `.binary` value.
+ *
+ * The file is opened in binary replacement mode.  Empty data therefore
+ * creates or truncates the file to zero bytes.  No text encoding or newline
+ * translation is performed.
+ *
+ * @param fname file-system path
+ * @param data bytes to write
+ * @return number of bytes written
+ * @signal NOTREADY when the file cannot be opened, written, flushed, or closed
+ */
+writebinary: procedure = .int
+  arg fname = .string, data = .binary
+
+  fileid = 0
+  write_error = 0
+  flush_status = 0
+  close_status = 0
+  byte_count = 0
+  mode = "wb"
+
+  assembler fopen fileid,fname,mode
+  if fileid = 0 then do
+    call raise "NOTREADY", "WRITEBINARY cannot open", fname
+    return -1
+  end
+
+  assembler fwriteb fileid,data
+  assembler ferror write_error,fileid
+  assembler fflush flush_status,fileid
+  assembler fclose close_status,fileid
+  if write_error \= 0 | flush_status \= 0 | close_status \= 0 then do
+    call raise "NOTREADY", "WRITEBINARY cannot write", fname
+    return -1
+  end
+
+  assembler blen byte_count,data
+  return byte_count
 
 /* --------------------------------------------------------------------
  * eraseFile()

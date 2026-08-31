@@ -150,6 +150,9 @@ The approved flag-view partitions are:
 
 - `.flags.vm`: VM-private band, read-only.
 - `.flags.compiler`: compiler call-ABI band, read-only from Level B source.
+- `.flags.language`: protected language-fact band, read-only from Level B
+  source. The initial allocations are the four intrinsic `.string`
+  normalization certificates.
 - `.flags.library`: stable runtime/library band, read/write.
 - `.flags.user`: user/experimental band, read/write.
 - `.flags.public`: library and user bands only, read/write. The compiler band
@@ -161,9 +164,9 @@ Writes through writable flag views replace only the selected masked band:
 `new_flags = (old_flags & ~view_mask) | (value & view_mask)`. They must not
 clear unrelated public bands and must never write the VM-private or reserved
 bits. The compiler lowers these writes to `settpmask target,value,mask`, with
-`mask` restricted to the writable source-level bands. `.flags.compiler` is a
-read-only view even though generated call setup still owns and updates the
-compiler flag band internally.
+`mask` restricted to the writable source-level bands. `.flags.compiler` and
+`.flags.language` are read-only views even though generated call setup and
+trusted language algorithms still own and update their respective bands.
 
 Binary and text validity are deliberately separate claims. A value may have a
 current binary byte representation without yet having a current `.string`

@@ -30,6 +30,7 @@ Before changing compiler logic or making claims about syntax, AST shape, validat
 - `docs/ai-context/CREXX_ARCHITECTURE.md`
 - `docs/ai-context/CREXX_DEBUGGING.md`
 - `docs/ai-context/CREXX_LEVELB_AUTHORING.md`
+- `docs/ai-context/CREXX_UNICODE.md`
 - `docs/books/crexx_language_reference/classes_and_interfaces.md`
 - `docs/books/crexx_language_reference/data_types.md`
 - `docs/books/crexx_language_reference/statements.md`
