@@ -1,7 +1,33 @@
-# New-build graph tooling
+# New-build tooling
 
-These tools observe the current CMake build. They do not modify CMake targets,
-dependencies or production build behaviour.
+The directory contains both the diagnostic graph tools from Phases 0-2 and the
+production Level B builder introduced in Phase 3. The catalogue and capture
+tools remain observation-only; the two `build_stage_g` programs are now the
+single production owner of the post-bootstrap Level G/Unicode lane.
+
+## Phase 3 Level G builder
+
+`build_stage_g.crexx` is the Level B controller. It owns explicit dependency
+waves, content action keys, exact compiler import roots, incremental skipping
+and atomic final publication. It uses the public Level B concurrency class
+surface.
+
+`build_stage_g_worker.crexx` is a narrow Level G adapter for the compiler-
+sealed task-target expressions. It owns no build graph or stage policy.
+
+CMake bootstraps and invokes the builder through the normal target:
+
+```sh
+cmake --build build --target rxfnsg --parallel 30
+```
+
+Configure `CREXX_LEVEL_G_BUILD_JOBS` to control the builder's internal worker
+pool. The default is 30 on Apple ARM64 and 5 elsewhere. Independent jobs run
+within each readable wave; dependency boundaries remain serial. The full
+design and current acceptance evidence are in
+`docs/planning/release-1/new-build-phase-3-progress-2026-08-31.md`.
+
+## Phase 0-2 graph observation
 
 `cmake_catalogue.py` combines three authoritative configured-build views:
 

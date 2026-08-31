@@ -135,6 +135,8 @@ endforeach()
 
 add_custom_target(ts_unicode_casefold)
 add_dependencies(testrxfnsg ts_unicode_casefold)
+get_filename_component(_rxunicode_casefold_table_dir
+  "${RXUNICODE_CASEFOLD_TABLE_RXBIN}" DIRECTORY)
 
 foreach(_unicode_casefold_runner IN LISTS _math_numeric_runners)
   crexx_add_rexx_opt_matrix(
@@ -145,7 +147,7 @@ foreach(_unicode_casefold_runner IN LISTS _math_numeric_runners)
     RUNNER "${_unicode_casefold_runner}"
     IMPORT_PATHS
       "${CMAKE_BINARY_DIR}/bin"
-      "${RXUNICODE_CASEFOLD_TOOL_DIR}"
+      "${_rxunicode_casefold_table_dir}"
     RXC_FLAGS -x
     DEPENDS
       library
@@ -175,6 +177,8 @@ endforeach()
 
 add_custom_target(ts_unicode_case_mapping)
 add_dependencies(testrxfnsg ts_unicode_case_mapping)
+get_filename_component(_rxunicode_case_mapping_table_dir
+  "${RXUNICODE_CASE_MAPPING_TABLE_RXBIN}" DIRECTORY)
 
 foreach(_unicode_case_mapping_runner IN LISTS _math_numeric_runners)
   crexx_add_rexx_opt_matrix(
@@ -185,7 +189,7 @@ foreach(_unicode_case_mapping_runner IN LISTS _math_numeric_runners)
     RUNNER "${_unicode_case_mapping_runner}"
     IMPORT_PATHS
       "${CMAKE_BINARY_DIR}/bin"
-      "${RXUNICODE_CASEFOLD_TOOL_DIR}"
+      "${_rxunicode_case_mapping_table_dir}"
     RXC_FLAGS -x
     DEPENDS
       library

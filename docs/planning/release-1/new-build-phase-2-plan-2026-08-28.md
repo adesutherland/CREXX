@@ -2,9 +2,9 @@
 
 ## Status and programme context
 
-- **Status:** Phase 2 complete and previously hosted-green; the 2026-08-31
-  `develop` resynchronisation is locally qualified and awaiting exact-SHA
-  hosted integration
+- **Status:** Phase 2 complete and hosted-green at its exact checkpoint; the
+  2026-08-31 `develop` resynchronisation is now carried by the active Phase 3
+  Level B cutover
 - **Planning branch:** `temp/newbuild`
 - **Current `develop` incorporated:** `origin/develop` through
   `9513e20a2af0a7177a487ce21e0f312902b7768b`
@@ -397,6 +397,13 @@ incremental skipping, fail-fast execution, private work paths and atomic
 publication.
 
 ### Decision at the 2026-08-31 resynchronisation
+
+**Subsequent programme decision:** continuing fragility in the enlarged
+Unicode/Level G graph made the direct Phase 3 ownership cutover the critical
+path. The Phase 2 adoption option below is retained as the decision record,
+but it was not used as a reason to preserve the superseded Level G CMake
+graph. Current implementation evidence is recorded in
+`new-build-phase-3-progress-2026-08-31.md`.
 
 Phase 3 is **not** a prerequisite for adopting the Phase 2 build. Once Build
 CREXX and Sanitizer QA are green on the exact resynchronisation revision, the

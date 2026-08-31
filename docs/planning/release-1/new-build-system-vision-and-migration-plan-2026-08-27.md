@@ -1,11 +1,11 @@
 # New Build System Vision and Migration Plan
 
-- **Status:** simplified vision approved; Phase 0 and Phase 1 complete;
-  revised Phase 2 P2A.1 complete and P2A.2 active
+- **Status:** simplified vision approved; Phases 0-2 complete; Phase 3 Level G
+  ownership cutover locally accepted and broader qualification active
 - **Current `develop` incorporated:**
-  `ee8e8f8fefbdc3ee9217f2ef4dd7edf0c8d288e6`
+  `9513e20a2af0a7177a487ce21e0f312902b7768b`
 - **Planning branch:** `temp/newbuild`
-- **Last updated:** 2026-08-28
+- **Last updated:** 2026-08-31
 
 ## 1. Purpose
 
@@ -188,7 +188,7 @@ families, moved active-tree builds out of CTest, separated optional material and
 measurement, introduced named native resource pools, and qualified the exact
 implementation SHA across the hosted matrix.
 
-### Phase 2 — efficient CMake foundation: active
+### Phase 2 — efficient CMake foundation: complete
 
 #### P2A — stage and QA selection
 
@@ -218,7 +218,7 @@ implementation SHA across the hosted matrix.
 **Phase 2 gate:** CMake provides a clear, deterministic and incrementally
 efficient reference/bootstrap build and selective QA interface.
 
-### Phase 3 — direct Level B takeover
+### Phase 3 — direct Level B takeover: active
 
 1. Define the small bootstrap handoff contract.
 2. Implement a Level B runner with readable stages, parallel jobs, explicit
@@ -233,6 +233,13 @@ efficient reference/bootstrap build and selective QA interface.
 
 **Phase 3 gate:** the complete post-bootstrap product is owned by Level B and
 passes focused and broad clean/incremental QA without a permanent dual-run path.
+
+The first real lane is now cut over: a Level B controller owns the complete
+Level G/Unicode graph, using the public Level B task classes for parallel
+waves. CMake only bootstraps and invokes it, and the superseded Level G CMake
+producers have been removed. See
+`new-build-phase-3-progress-2026-08-31.md` for the ownership and acceptance
+evidence.
 
 ### Phase 4 — consolidate and qualify
 
