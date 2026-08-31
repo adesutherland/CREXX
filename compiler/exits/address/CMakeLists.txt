@@ -24,3 +24,30 @@ crexx_add_compiler_exit_runtime_test(
         EXTRA_DEPENDS rxc
         RUN_SUFFIX ${LIBRPATH} -a $<TARGET_FILE:rxc> ${CMAKE_CURRENT_BINARY_DIR}/missing-after-signal.rxbin
 )
+
+add_executable(address_spawn_group_fixture address_spawn_group_fixture.c)
+
+if(APPLE)
+    set(_address_parallel_spawn_repetitions 512)
+elseif(WIN32)
+    set(_address_parallel_spawn_repetitions 32)
+else()
+    set(_address_parallel_spawn_repetitions 128)
+endif()
+
+crexx_add_compiler_exit_runtime_test(
+        test_address_parallel_spawn
+        test_address_parallel_spawn.crexx
+        EXTRA_DEPENDS library classlib address_spawn_group_fixture
+        RUN_SUFFIX ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/classlib -a
+                $<TARGET_FILE:address_spawn_group_fixture>
+                8
+                ${_address_parallel_spawn_repetitions}
+        PASS_REGULAR_EXPRESSION
+                "SUCCESS: parallel controlled child process groups"
+)
+set_tests_properties(
+        test_address_parallel_spawn_noopt
+        test_address_parallel_spawn_opt
+        PROPERTIES TIMEOUT 90
+)

@@ -21,6 +21,15 @@ passed both Linux x64 ASan/LSan and macOS arm64 ASan on final published code
 revision `a744b4d2551d795cf9bbf09c46c5a3fd71e53d46`. The stronger diagnostic
 remains as regression evidence; no sanitizer or product failure reproduced.
 
+Status at 2026-08-31: SAN-QA-008 is reopened after the same typed provider
+failure recurred in the macOS arm64 lane of GitHub Sanitizer QA run
+[33421800264](https://github.com/adesutherland/CREXX/actions/runs/33421800264)
+at `a697c4939310ec5df172a1e37608ef891bd01127`. The retained artifact contains
+no ASan memory diagnostic. A concurrent Level B builder workload then exposed
+a Darwin parent/child `setpgid()` race. The repair candidate gives the child
+sole process-group setup ownership and retains a parallel cREXX spawn
+regression; exact-SHA hosted qualification is pending.
+
 A later production process-channel repair in `c87809d2b` is not a sanitizer
 finding. Its exact three-test process panel passes ordinary Debug at
 `cmake-build-debug/asan-logs/20260823-100116-ctest` and leak-enabled Linux
@@ -241,9 +250,9 @@ waiver is authorized.
 
 ### SAN-QA-008 — saturated child redirect loses typed timeout completion
 
-Status: closed; the exact macOS arm64 ASan failure and retained runner artifact
-are identified, the failure did not repeat in focused or contended local runs,
-and the local plus final-head broad platform gates pass.
+Status: reopened and release-blocking. The original failure recurred in a
+maintained macOS arm64 lane; focused ordinary-Debug, Apple-ASan and exact-SHA
+hosted qualification of the process-group repair are pending.
 
 - Scope: the byte-channel child-process provider's deadline and saturated
   output-redirect completion path, exercised by `rxvmchannel_byte_provider`.
@@ -280,6 +289,20 @@ and the local plus final-head broad platform gates pass.
   macOS arm64 ASan pass above. If the test recurs, its retained state and error
   code distinguish deadline publication, child launch and redirect shutdown;
   do not weaken the assertion or timeout.
+- Recurrence: GitHub Sanitizer QA run
+  [33421800264](https://github.com/adesutherland/CREXX/actions/runs/33421800264)
+  failed this same assertion on macOS arm64 at
+  `a697c4939310ec5df172a1e37608ef891bd01127`. The retained completion is
+  `state=2`, `errorCode=17` (`RXVM_CHANNEL_PROVIDER_FAILURE`), while Linux
+  passed this test and neither artifact contains an ASan/LSan memory report.
+  A concurrent Level B builder workload independently exposed `Failure
+  creating controlled child process group ... Operation not permitted`.
+  A native stress probe confirmed that Darwin can return `EPERM` to one of
+  concurrent parent/child `setpgid()` calls even when the other establishes
+  the requested group. The repair candidate makes the child the sole group
+  creator and uses the close-on-exec launch-status pipe as the parent's proof
+  of setup. The permanent cREXX regression is
+  `test_address_parallel_spawn_{noopt,opt}`.
 - Acceptance: retain a focused regression that fails for the original reason,
   pass the same focused shape in ordinary Debug and maintained sanitizer
   builds, rerun the original broad trigger cleanly, and pass both GitHub

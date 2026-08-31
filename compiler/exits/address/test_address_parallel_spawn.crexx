@@ -1,0 +1,70 @@
+options levelg comments_dash
+
+namespace test_address_parallel_spawn
+import rxfnsb
+import concurrency
+
+spawnwork: class implements .taskwork
+  *: factory
+    return
+
+  run: method = .channelvalue
+    arg request = .channelvalue, context = .taskcontext
+    executable = request.field("executable").as_string()
+    repetitions = request.field("repetitions").as_integer()
+    command = .string[]
+    command[1] = executable
+
+    do iteration = 1 to repetitions
+      if context.cancellation_requested() then return .channelvalue.integer_value(2)
+      captured = .string[]
+      errors = .string[]
+      address crexx "run :command[]" output captured error errors
+      if rc <> 0 then do
+        say "FAIL: parallel controlled spawn" iteration "rc=" || rc
+        do error_index = 1 to errors[0]
+          say errors[error_index]
+        end
+        return .channelvalue.integer_value(1)
+      end
+    end
+    return .channelvalue.integer_value(0)
+
+main: procedure = .int
+  arg arguments = .string[]
+  worker_index = .int
+  if arguments[0] <> 3 then return 2
+
+  executable = arguments[1]
+  workers = arguments[2] as .int
+  repetitions = arguments[3] as .int
+  names = .string[]
+  values = .channelvalue[]
+  names[1] = "executable"
+  values[1] = .channelvalue.string_value(executable)
+  names[2] = "repetitions"
+  values[2] = .channelvalue.integer_value(repetitions)
+  request = .channelvalue.record_value("crexx.test.parallel-spawn", 1, names, values)
+
+  pool = .taskpool.local(workers, workers)
+  scope = .taskscope.collectall(pool, 60000)
+  target = task .spawnwork()
+  children = .task[]
+  do worker_index = 1 to workers
+    children[worker_index] = scope.submit(target, request)
+  end
+  completions = scope.join()
+  call scope.close()
+  call pool.close()
+
+  failures = 0
+  do worker_index = 1 to completions[0]
+    if completions[worker_index].succeeded() = 0 then do
+      say "FAIL: parallel controlled-spawn task" worker_index completions[worker_index].error_code() completions[worker_index].message()
+      failures = failures + 1
+    end
+    else if completions[worker_index].value().as_integer() <> 0 then failures = failures + 1
+  end
+  if failures <> 0 then return 1
+  say "SUCCESS: parallel controlled child process groups"
+  return 0

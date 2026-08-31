@@ -4426,22 +4426,6 @@ int launchChild(SHELLDATA* data, char **errorText) {
         close(launch_status_pipe[1]);
         launch_status_pipe[1] = -1;
 
-        if (process_group_child) {
-            if (setpgid(child_pid, child_pid) != 0 &&
-                    errno != EACCES && errno != ESRCH) {
-                int saved_errno = errno;
-                (void)kill(child_pid, SIGKILL);
-                while (waitpid(child_pid, NULL, 0) == -1 && errno == EINTR) {
-                }
-                close(launch_status_pipe[0]);
-                data->ChildProcessPID = 0;
-                ErrorCode("Failure creating controlled child process group",
-                          saved_errno, errorText);
-                return SHELLSPAWN_FAILURE;
-            }
-            data->ChildProcessGroupOwned = 1u;
-        }
-
         while (child_failure_bytes < sizeof(child_failure)) {
             count = read(launch_status_pipe[0],
                          (char *)&child_failure + child_failure_bytes,
@@ -4467,7 +4451,14 @@ int launchChild(SHELLDATA* data, char **errorText) {
         }
         close(launch_status_pipe[0]);
 
-        if (child_failure_bytes == 0u) return 0;
+        if (child_failure_bytes == 0u) {
+            /* The child creates its own group before exec and the close-on-exec
+             * status pipe proves that setup completed.  Do not race it with a
+             * second setpgid() from the parent: Darwin can report EPERM to one
+             * of two otherwise equivalent concurrent callers. */
+            data->ChildProcessGroupOwned = process_group_child ? 1u : 0u;
+            return 0;
+        }
         while (waitpid(child_pid, NULL, 0) == -1 && errno == EINTR) {
         }
         data->ChildProcessPID = 0;

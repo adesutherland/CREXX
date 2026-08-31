@@ -161,7 +161,28 @@ diagnostic-plumbing slice passed 3/3. The other 2,223 comprehensive tests had
 already passed and their code/build inputs did not change, so they were not
 repeated.
 
-## 7. Remaining Phase 3 work
+## 7. Designed sanitizer scope
+
+`phase3-level-g-sanitizer-artifacts` is a non-owning preparation target for
+the bounded Phase 3 sanitizer slice. It builds the complete `rxfnsg` lane,
+`rxdas`, both new signal/ADDRESS regressions and all five Unicode functional
+families. CTest remains a separate runner phase, so it cannot race an active
+build:
+
+```sh
+tools/asan-run.sh --phase build --build-jobs 4 \
+  --build-target phase3-level-g-sanitizer-artifacts
+
+tools/asan-run.sh --phase ctest --test-jobs 5 \
+  --regex '^(test_(signal_block_levelg|address_after_signal_block)_(noopt|opt)|rxunicode_(casefold|grapheme|normalization|case_mapping|codec)_rxas_shape|rxunicode_contract_surface|rxfnsg_rxdas_inline_preserve_smoke|ts_unicode_(casefold|case_mapping|grapheme|codec|normalization)_(rxbvm|rxtvm)_(noopt|opt))$'
+```
+
+Use `--build-leaks off --leaks off` on macOS because Apple ASan has no
+supported LeakSanitizer. Linux uses both options `on` and remains the required
+hosted leak gate. This designed local slice complements rather than replaces
+the mandatory full hosted sanitizer jobs.
+
+## 8. Remaining Phase 3 work
 
 1. Run the designed sanitizer scope through `tools/asan-run.sh`; any finding
    remains subject to the repository SAN worklist rules.
