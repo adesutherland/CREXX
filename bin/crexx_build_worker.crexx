@@ -1,0 +1,161 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * Sealed task adapter for the installed crexx project builder.
+ *
+ * Dependency policy and publication remain in the Level B crexx controller.
+ * This narrow Level G module only executes one private compile/assemble action.
+ */
+options levelg comments_dash
+
+namespace crexx_build_worker expose compile_target
+import rxfnsb
+import rxfs
+import concurrency
+
+show_failure: procedure = .void
+  arg label = .string, command_rc = .int, captured = .string[], errors = .string[]
+  i = .int
+  say "FAILED:" label "rc=" || command_rc
+  do i = 1 to captured[0]
+    say captured[i]
+  end
+  do i = 1 to errors[0]
+    say errors[i]
+  end
+  return
+
+run_argv: procedure = .int
+  arg label = .string, argv = .string[]
+  captured = .string[]
+  errors = .string[]
+  address crexx "run :argv[]" output captured error errors
+  command_rc = rc
+  if command_rc <> 0 then call show_failure label, command_rc, captured, errors
+  return command_rc
+
+remove_tree: procedure = .int
+  arg path = .string
+  if rxfs..isdir(path) = 0 then return 0
+  captured = .string[]
+  errors = .string[]
+  address crexx "rm -r :path" output captured error errors
+  command_rc = rc
+  if command_rc <> 0 then call show_failure("remove " || path, command_rc, captured, errors)
+  return command_rc
+
+make_directory: procedure = .int
+  arg path = .string
+  captured = .string[]
+  errors = .string[]
+  address crexx "mkdir -p :path" output captured error errors
+  command_rc = rc
+  if command_rc <> 0 then call show_failure("make directory " || path, command_rc, captured, errors)
+  return command_rc
+
+write_stamp: procedure = .int
+  arg path = .string, key = .string
+  temporary = path || ".tmp"
+  if writebinary(temporary, key as .binary) <> length(key) then return 1
+  if rxfs..rename(temporary, path) <> 0 then return 1
+  return 0
+
+/** Execute one isolated compiler/assembler action. */
+compilework: class implements .taskwork
+  *: factory
+    return
+
+  /**
+   * Compile and assemble one source into its private member directory.
+   * @param request canonical build request
+   * @param context task cancellation context
+   * @return zero on success, non-zero on build failure
+   */
+  run: method = .channelvalue
+    arg request = .channelvalue, context = .taskcontext
+    if context.cancellation_requested() then return .channelvalue.integer_value(1)
+    if request.schema() <> "crexx.build.project.compile" | request.version() <> 1 then return .channelvalue.integer_value(2)
+
+    source = request.field("source").as_string()
+    stem = request.field("stem").as_string()
+    work_dir = request.field("workDir").as_string()
+    source_roots = request.field("sourceRoots").as_string()
+    binary_roots = request.field("binaryRoots").as_string()
+    rxc = request.field("rxc").as_string()
+    rxas = request.field("rxas").as_string()
+    key = request.field("key").as_string()
+    optimize = request.field("optimize").as_integer()
+    import_rxas = request.field("importRxas").as_integer()
+    diagnostics = request.field("diagnostics").as_string()
+    diagnostic_locale = request.field("diagnosticLocale").as_string()
+
+    if remove_tree(work_dir) <> 0 then return .channelvalue.integer_value(1)
+    if make_directory(work_dir) <> 0 then return .channelvalue.integer_value(1)
+    output_base = work_dir || "/" || stem
+
+    compile = .string[]
+    call arrayappend compile, rxc
+    if optimize = 0 then call arrayappend compile, "-n"
+    if source_roots <> "" then do
+      call arrayappend compile, "-s"
+      call arrayappend compile, source_roots
+    end
+    if binary_roots <> "" then do
+      call arrayappend compile, "-i"
+      call arrayappend compile, binary_roots
+    end
+    if import_rxas then call arrayappend compile, "--import-rxas"
+    if diagnostics <> "" then do
+      call arrayappend compile, "--diagnostics"
+      call arrayappend compile, diagnostics
+    end
+    if diagnostic_locale <> "" then do
+      call arrayappend compile, "--diagnostic-locale"
+      call arrayappend compile, diagnostic_locale
+    end
+    call arrayappend compile, "-o"
+    call arrayappend compile, output_base
+    call arrayappend compile, source
+
+    say "START: project member" stem
+    if run_argv("compile project member " || stem, compile) <> 0 then return .channelvalue.integer_value(1)
+
+    assemble = .string[]
+    call arrayappend assemble, rxas
+    if optimize = 0 then call arrayappend assemble, "-n"
+    call arrayappend assemble, "-o"
+    call arrayappend assemble, output_base
+    call arrayappend assemble, output_base
+    if run_argv("assemble project member " || stem, assemble) <> 0 then return .channelvalue.integer_value(1)
+
+    output = output_base || ".rxbin"
+    if rxfs..isfile(output) = 0 then return .channelvalue.integer_value(1)
+    if write_stamp(work_dir || "/action.sha256", key) <> 0 then return .channelvalue.integer_value(1)
+    say "BUILT: project member" stem
+    return .channelvalue.integer_value(0)
+
+/** @return compiler-sealed target for a project member action */
+compile_target: procedure = .tasktarget
+  return task .compilework()

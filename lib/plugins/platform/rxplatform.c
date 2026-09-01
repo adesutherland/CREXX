@@ -570,7 +570,6 @@ PROCEDURE(confirm)
         RETURNSIGNAL(
             SIGNAL_FAILURE,
             "RXPLATFORM.CONFIRM failed")
-        ENDPROC
     }
 #elif defined(__APPLE__)
     {
@@ -657,6 +656,7 @@ PROCEDURE(confirm)
         "RXPLATFORM.CONFIRM is not yet implemented on this platform")
 #endif
 
+    ENDPROC
     RESETSIGNAL
 }
 

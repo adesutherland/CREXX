@@ -288,6 +288,18 @@ set_tests_properties(crexx_driver_compile_progress PROPERTIES
         LABELS "driver;regression;diagnostics;cri-18"
         RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK}
         TIMEOUT 150)
+add_test(NAME crexx_project_build_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DCREXX=$<TARGET_FILE:crexx>
+                 -DRXVME=$<TARGET_FILE:rxvme>
+                 -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/crexx_project_build_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/crexx_project_build.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(crexx_project_build_contract PROPERTIES
+        LABELS "driver;build;incremental;parallel;autoload;regression"
+        CREXX_PREP_TARGETS "crexx;rxvme"
+        RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK}
+        TIMEOUT 180)
 set_tests_properties(crexx_help_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_simple_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_rexx_levelc_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
@@ -523,6 +535,7 @@ crexx_label_smoke_tests(
         crexx_native_explicit_header_smoke
         crexx_native_rx_hash_provider
         crexx_native_default_link_strip
+        crexx_project_build_contract
         PREP_TARGETS crexx rxdas
 )
 

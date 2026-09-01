@@ -119,6 +119,10 @@ function(crexx_add_rexx_opt_matrix)
         string(JOIN "$<SEMICOLON>" _crexx_import_path ${CREXX_IMPORT_PATHS})
         set(_crexx_import_arg "\"${_crexx_import_path}\"")
     endif()
+    set(_crexx_matrix_test_labels ${CREXX_TEST_LABELS})
+    if(NOT "performance" IN_LIST _crexx_matrix_test_labels)
+        list(APPEND _crexx_matrix_test_labels optimizer-parity)
+    endif()
 
     set(_crexx_compile_depends
             ${CREXX_COMPILER_TARGET}
@@ -198,7 +202,7 @@ function(crexx_add_rexx_opt_matrix)
                 EXPECTED_EXIT_CODE "${CREXX_EXPECTED_EXIT_CODE}"
                 EXPECTED_FAILURE_DESCRIPTION "${CREXX_EXPECTED_FAILURE_DESCRIPTION}"
                 RUNTIME_ARGS ${CREXX_RUNTIME_ARGS}
-                TEST_LABELS ${CREXX_TEST_LABELS}
+                TEST_LABELS ${_crexx_matrix_test_labels}
                 PREP_TARGETS ${_crexx_prep_targets}
                 REQUIRED_OUTPUT_REGEX ${CREXX_REQUIRED_OUTPUT_REGEX}
                 FORBIDDEN_OUTPUT_REGEX ${CREXX_FORBIDDEN_OUTPUT_REGEX}
@@ -225,6 +229,10 @@ function(crexx_add_rxas_opt_matrix)
     endif()
     if(NOT CREXX_ASSEMBLER_TARGET)
         set(CREXX_ASSEMBLER_TARGET rxas)
+    endif()
+    set(_crexx_matrix_test_labels ${CREXX_TEST_LABELS})
+    if(NOT "performance" IN_LIST _crexx_matrix_test_labels)
+        list(APPEND _crexx_matrix_test_labels optimizer-parity)
     endif()
 
     foreach(_crexx_mode IN ITEMS noopt opt)
@@ -276,7 +284,7 @@ function(crexx_add_rxas_opt_matrix)
                 PROGRAM ${_crexx_output_base}
                 WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
                 RUNTIME_ARGS ${CREXX_RUNTIME_ARGS}
-                TEST_LABELS ${CREXX_TEST_LABELS}
+                TEST_LABELS ${_crexx_matrix_test_labels}
                 PREP_TARGETS ${_crexx_prep_targets}
                 ${_crexx_runtime_test_args}
         )

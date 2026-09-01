@@ -81,6 +81,23 @@ function(crexx_finalize_directory_qa_tiers)
             set(_crexx_labels)
         endif()
 
+        # Timing work is never part of a broad correctness pool.  A few
+        # historical benchmarks carry an explicit smoke label as well as the
+        # topical performance label; normalize those tests here instead of
+        # allowing the explicit smoke tier to override isolation.
+        if("performance" IN_LIST _crexx_labels)
+            foreach(_crexx_scheduling_label IN ITEMS
+                    essential smoke comprehensive qualification stress
+                    performance-measurement)
+                list(REMOVE_ITEM _crexx_labels "${_crexx_scheduling_label}")
+            endforeach()
+            list(APPEND _crexx_labels performance-measurement)
+            list(REMOVE_DUPLICATES _crexx_labels)
+            set_property(TEST "${_crexx_test}" PROPERTY LABELS
+                    "${_crexx_labels}")
+            set_property(TEST "${_crexx_test}" PROPERTY RUN_SERIAL TRUE)
+        endif()
+
         set(_crexx_explicit_tiers)
         foreach(_crexx_label IN LISTS _crexx_labels)
             if(_crexx_label STREQUAL "essential" OR
@@ -149,6 +166,11 @@ function(crexx_finalize_directory_qa_tiers)
                 CREXX_PREP_TARGETS)
         if(_crexx_prep_targets AND
            NOT _crexx_prep_targets MATCHES "NOTFOUND$")
+            if("optimizer-parity" IN_LIST _crexx_labels)
+                set_property(GLOBAL APPEND PROPERTY
+                        CREXX_QA_PREP_OPTIMIZER-PARITY_TARGETS
+                        ${_crexx_prep_targets})
+            endif()
             if(_crexx_tier STREQUAL "performance-measurement")
                 set(_crexx_prep_tier measurement)
             else()
@@ -166,7 +188,8 @@ endfunction()
 # Resolve and attach the collected names once the complete tree is declared.
 function(crexx_finalize_qa_prep_targets)
     foreach(_crexx_prep_tier IN ITEMS
-            essential smoke comprehensive qualification stress measurement)
+            essential smoke comprehensive qualification stress measurement
+            optimizer-parity)
         string(TOUPPER "${_crexx_prep_tier}" _crexx_prep_tier_upper)
         get_property(_crexx_prep_targets GLOBAL PROPERTY
                 "CREXX_QA_PREP_${_crexx_prep_tier_upper}_TARGETS")

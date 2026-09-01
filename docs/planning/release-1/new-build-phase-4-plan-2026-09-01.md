@@ -2,7 +2,7 @@
 
 ## Status and recovery point
 
-- **Status:** approved; P4.1 complete; P4.2 next
+- **Status:** approved; P4.1 and P4.2 complete; P4.3 next
 - **Branch:** `temp/newbuild`
 - **Current `develop` incorporated:**
   `292bf9e70e0dafd73b90c730942eb01902cd74f9`
@@ -147,19 +147,34 @@ point and do not require an obsolete wholesale post-bootstrap migration.
 
 ### P4.2 — developer commands and focused team QA
 
-- [ ] Implement installed `crexx` library/tool modes using a reusable Level B
+- [x] Implement installed `crexx` library/tool modes using a reusable Level B
   dependency-wave/action-key/publication engine.
-- [ ] Provide optimized default, explicit no-opt, automatic/bounded jobs,
+- [x] Provide optimized default, explicit no-opt, automatic/bounded jobs,
   incremental no-op, forced rebuild and atomic final publication.
-- [ ] Add focused tests for clean, no-op, changed-input closure, failure
+- [x] Add focused tests for clean, no-op, changed-input closure, failure
   publication and packaged dependency/autoload behaviour.
-- [ ] Add a named optimizer-parity QA selection and document the core and
+- [x] Add a named optimizer-parity QA selection and document the core and
   plugin developer routes.
-- [ ] Prove the installed REXX workflow and external plugin consumer.
-- [ ] Commit P4.2 locally after its focused gates pass.
+- [x] Prove the installed REXX workflow and external plugin consumer.
+- [x] Commit P4.2 locally after its focused gates pass. The completion commit
+  is the commit containing this checked status.
 
 **Acceptance:** an installed REXX developer can incrementally build a library
 or tool without CMake, while team members retain clear CMake QA entry points.
+
+**Retained P4.2 evidence:**
+
+- `crexx_project_build_contract` passes clean parallel optimized, immediate
+  no-op, changed-source cohort, forced rebuild, no-opt, packaged autoload and
+  failed-publication cases.
+- A scratch install builds and publishes a two-member library with two jobs,
+  then reports `SKIP: project current` without invoking the toolchain.
+- `rxpa_external_sdk_consumer` passes against the staged/install surface.
+- `rxplatform_(rxbvm|rxtvm)_(noopt|opt)` all pass after moving the misplaced
+  `ENDPROC` outside the platform conditional introduced on `develop`.
+- `qa-smoke` passes 149/149 with 30 correctness workers. Its intersection with
+  the `performance` label is zero; timing tests are normalized into the serial
+  measurement tier.
 
 ### P4.3 — hosted workflow policy and artifacts
 

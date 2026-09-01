@@ -384,6 +384,7 @@ if(BUILD_TESTING)
     add_custom_target(qa-prep-qualification)
     add_custom_target(qa-prep-stress)
     add_custom_target(qa-prep-measurement)
+    add_custom_target(qa-prep-optimizer-parity)
     add_dependencies(qa-prep-smoke qa-prep-essential)
     add_dependencies(qa-prep-comprehensive qa-prep-smoke)
     add_dependencies(qa-prep
@@ -845,6 +846,18 @@ if(BUILD_TESTING)
             USES_TERMINAL
             VERBATIM
             COMMENT "Running measurement tests serially; requires a quiescent host")
+    add_custom_target(qa-optimizer-parity
+            COMMAND ${CMAKE_CTEST_COMMAND}
+                    --test-dir "${CMAKE_BINARY_DIR}"
+                    ${_crexx_qa_ctest_configuration}
+                    --parallel "${CREXX_QA_CTEST_JOBS}"
+                    --output-on-failure
+                    --label-regex "^optimizer-parity$"
+                    --label-exclude "^performance-measurement$"
+            DEPENDS qa-prep-optimizer-parity
+            USES_TERMINAL
+            VERBATIM
+            COMMENT "Running focused optimized/non-optimized correctness parity")
 endif()
 
 set(SOURCE_SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)

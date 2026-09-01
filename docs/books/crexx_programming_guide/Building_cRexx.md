@@ -204,6 +204,22 @@ than joining the default product implicitly.
 
 ## QA tiers and useful system test subsets
 
+Use the workflow that matches the work being changed:
+
+| Developer | Normal build and close-out route |
+| --- | --- |
+| REXX user | Install an optimized Release archive/package and run `crexx program`. |
+| REXX library/tool developer | Use installed Release `crexx --library` or `crexx --tool`; prove clean, immediate no-op and changed-source behavior without requiring CMake. |
+| plugin developer | Use the installed Release SDK from an external CMake project; close with the dynamic-plugin consumer, install/autoload checks and relevant sanitizer scope. |
+| core developer | Configure a source Debug tree, build the affected target, run focused tests or `qa-smoke`, then run `qa-optimizer-parity` and `qa-comprehensive` when compiler/optimizer behavior is relevant. |
+| release/QA maintainer | Build a clean Release product, install/package it, and run comprehensive, qualification, separate stress, sanitizer, CodeQL and supported-platform gates for the exact SHA. |
+
+`CMAKE_BUILD_TYPE` controls native C/C++ optimization. The `rxc` optimizer is a
+separate axis: Release is the normal installed/user product, while core Debug
+work still proves optimized and non-optimized REXX equivalence. Debug sanitizer
+builds and MinSizeRel size experiments are assurance products, not substitutes
+for the optimized Release binary supplied for user testing.
+
 Every configured test has exactly one execution tier while retaining its
 topical labels. The named targets make the intended barriers visible:
 
@@ -215,16 +231,17 @@ topical labels. The named targets make the intended barriers visible:
 | `qa-qualification` | Install, packaging, reproducibility and external-consumer proof |
 | `qa-stress` | Explicit high-load and race-oriented workloads |
 | `qa-measurement` | Performance measurement only, serially on a quiescent host |
+| `qa-optimizer-parity` | Focused optimized/non-optimized runtime matrices, excluding performance measurement |
 
 Each target depends on its matching `qa-prep-*` closure. Comprehensive
 preparation includes smoke and essential; qualification and stress remain
 independent. The compatibility `qa-prep` target combines all non-measurement
 closures for older scripts. `qa-measurement` uses `qa-prep-measurement` and
 always selects one CTest worker. Tests carrying the topical `performance`
-label default to this serial measurement tier unless they explicitly declare
-qualification or stress. Do not combine performance measurement with a busy
-correctness or stress worker pool; timings from an active host are only
-indicative.
+label are always normalized to this serial measurement tier, even if an older
+declaration also called them smoke. Do not combine performance measurement
+with a busy correctness or stress worker pool; timings from an active host are
+only indicative.
 
 The named correctness targets use 30 CTest workers by default on Apple ARM64
 and five elsewhere. Override that independently of build parallelism with

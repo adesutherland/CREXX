@@ -46,6 +46,9 @@
  options levelb comments_dash
  import rxfnsb
  import rxfs
+ import concurrency
+ import rxhash
+ import crexx_build_worker
  
  /* procedure main is what is run when crexx starts execution */
  main: procedure = .int
@@ -58,6 +61,7 @@ execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=1;decimal=1
 lastfile=0;sourceRoots='';binaryRoots='';importRxas=0;argsStart=0
 linkStripSource=1;linkPreserveInline=0;linkMap='';linkOptionsUsed=0
 diagnosticsMode='';diagnosticLocale=''
+projectMode='';projectOutput='';projectJobs='auto';projectRebuild=0
 filenames=.string[];binfiles=.string[];cleanupFiles=.string[];cliArgs=.string[]
  
  esc             = '1b'X
@@ -161,6 +165,37 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
 	 if fn.i = '-optimise'   then optimize=1
 	 if fn.i = '-nooptimize' then optimize=0
 	 if fn.i = '-nooptimise' then optimize=0
+	 if fn.i = '-library' | fn.i = '-tool' then do
+           requestedMode = substr(fn.i,2)
+           if projectMode <> '' & projectMode <> requestedMode then do
+             say '--library and --tool are mutually exclusive'
+             return 2
+           end
+           projectMode = requestedMode
+           execute = 0
+           i = i + 1
+           if i > fn.0 then do
+             say 'missing output path after --' || requestedMode
+             return 2
+           end
+           projectOutput = fn.i
+	 end
+	 if fn.i = '-jobs' then do
+           i = i + 1
+           if i > fn.0 then do
+             say 'missing count or auto after --jobs'
+             return 2
+           end
+           projectJobs = lower(fn.i)
+	 end
+	 else if left(fn.i,6) = '-jobs=' then do
+           projectJobs = lower(substr(fn.i,7))
+           if projectJobs = '' then do
+             say 'missing count or auto after --jobs='
+             return 2
+           end
+	 end
+	 if fn.i = '-rebuild' then projectRebuild=1
 	 if fn.i = '-keep'       then keep=1
 	 if fn.i = '-nokeep'     then keep=0
 	 if fn.i = '-nodecimal'  then decimal=0
@@ -315,6 +350,7 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
    -- rxvme embeds the shipped bytecode libraries, while native packaging
    -- still needs those images as explicit rxlink inputs. User -l values are
    -- required in both modes.
+   userLibs = libs
    runtimeLibs = libs
    libs = libs';'rxpath||'bin'dirsep'classlib'
    libs = libs';'rxpath||'bin'dirsep'classlib_native'
@@ -393,6 +429,24 @@ if verbose>1 then say esc||ANSI_GREEN'using i roots   :'esc||ANSI_RESET binaryRo
 if linkOptionsUsed & \native then do
   say 'link options require -native'
   return 2
+end
+
+if projectMode <> '' then do
+  if argsStart > 0 then do
+    say '--args is not available with --library or --tool'
+    return 2
+  end
+  if \compile then do
+    say '--nocompile is not available with --library or --tool'
+    return 2
+  end
+  if projectMode = 'library' & native then do
+    say '--native is available with --tool, not --library'
+    return 2
+  end
+  projectBinaryRoots = rxpath || lpath
+  if binaryRoots <> '' then projectBinaryRoots = projectBinaryRoots || ';' || binaryRoots
+  return buildProject(projectMode, projectOutput, filenames, projectJobs, projectRebuild, optimize, native, sourceRoots, projectBinaryRoots, binaryRoots, libs, userLibs, importRxas, diagnosticsMode, diagnosticLocale, rxpath, dirsep, platformUpper)
 end
 
 /* Output Arrays for command output */
@@ -773,6 +827,427 @@ end   -- do i
   
 return 0
 
+projectFileHash: procedure = .string
+arg path = .string
+do
+  return rxhash..sha256filehex(path)
+on signal
+  return ""
+end
+return ""
+
+projectReadStamp: procedure = .string
+arg path = .string
+do
+  return readbinary(path) as .string
+on signal
+  return ""
+end
+return ""
+
+projectKeyText: procedure = .binary
+arg state = .binary, text = .string
+state = rxhash..sha256update(state, text as .binary)
+state = rxhash..sha256update(state, '00'x as .binary)
+return state
+
+projectCandidateHash: procedure = .string
+arg candidate = .string
+hash = projectFileHash(candidate)
+if hash <> '' then return hash
+hash = projectFileHash(candidate || '.rxbin')
+if hash <> '' then return hash
+hash = projectFileHash(candidate || '.rxplugin')
+return hash
+
+projectKeyRoots: procedure = .binary
+arg state = .binary, roots = .string
+rest = roots
+do while rest <> ''
+  sep = pos(';', rest)
+  if sep = 0 then do
+    root = rest
+    rest = ''
+  end
+  else do
+    root = left(rest, sep - 1)
+    rest = substr(rest, sep + 1)
+  end
+  if root = '' then iterate
+  state = projectKeyText(state, root)
+  entries = .string[]
+  if rxfs..listdir(root, entries) < 0 then do
+    state = projectKeyText(state, '<missing-root>')
+    iterate
+  end
+  ignored = arraysort(entries)
+  do i = 1 to entries[0]
+    candidate = root || '/' || entries[i]
+    hash = projectFileHash(candidate)
+    if hash <> '' then do
+      state = projectKeyText(state, entries[i])
+      state = projectKeyText(state, hash)
+    end
+  end
+end
+return state
+
+projectActionKey: procedure = .string
+arg mode = .string, output = .string, optimize = .int, sources = .string[], sourceRoots = .string, binaryRoots = .string, dependencyBinaryRoots = .string, libraryInputs = .string, rxc = .string, rxas = .string, rxlink = .string
+state = rxhash..sha256init()
+state = projectKeyText(state, 'crexx-project/v1')
+state = projectKeyText(state, mode)
+state = projectKeyText(state, output)
+state = projectKeyText(state, optimize)
+state = projectKeyText(state, sourceRoots)
+state = projectKeyText(state, binaryRoots)
+state = projectKeyRoots(state, sourceRoots)
+state = projectKeyRoots(state, dependencyBinaryRoots)
+state = projectKeyText(state, projectFileHash(rxc))
+state = projectKeyText(state, projectFileHash(rxas))
+state = projectKeyText(state, projectFileHash(rxlink))
+do i = 1 to sources[0]
+  state = projectKeyText(state, sources[i])
+  state = projectKeyText(state, projectFileHash(sources[i]))
+end
+rest = libraryInputs
+do while rest <> ''
+  sep = pos(';', rest)
+  if sep = 0 then do
+    item = rest
+    rest = ''
+  end
+  else do
+    item = left(rest, sep - 1)
+    rest = substr(rest, sep + 1)
+  end
+  if item <> '' then do
+    state = projectKeyText(state, item)
+    state = projectKeyText(state, projectCandidateHash(item))
+  end
+end
+return rxhash..sha256finalhex(state)
+
+projectMemberKey: procedure = .string
+arg projectKey = .string, stem = .string
+state = rxhash..sha256init()
+state = projectKeyText(state, projectKey)
+state = projectKeyText(state, stem)
+return rxhash..sha256finalhex(state)
+
+projectActionCurrent: procedure = .int
+arg output = .string, stamp = .string, key = .string
+if rxfs..isfile(output) = 0 then return 0
+return projectReadStamp(stamp) = key
+
+projectAbsolutePath: procedure = .string
+arg path = .string, cwd = .string, dirsep = .string
+if path = '' then return ''
+if left(path,1) = '/' | left(path,1) = '\' then return path
+if length(path) >= 2 & substr(path,2,1) = ':' then return path
+return cwd || dirsep || path
+
+projectDirectory: procedure = .string
+arg path = .string
+slash = lastpos('/', path)
+backslash = lastpos('\', path)
+separator = max(slash, backslash)
+if separator = 0 then return ''
+if separator = 1 then return left(path,1)
+return left(path,separator - 1)
+
+projectSourceStem: procedure = .string
+arg path = .string
+slash = lastpos('/', path)
+backslash = lastpos('\', path)
+separator = max(slash, backslash)
+name = path
+if separator > 0 then name = substr(path,separator + 1)
+dot = lastpos('.', name)
+if dot > 0 then name = left(name,dot - 1)
+return translate(name,'_','.')
+
+projectNormalizeRoots: procedure = .string
+arg roots = .string, cwd = .string, dirsep = .string
+normalized = ''
+rest = roots
+do while rest <> ''
+  sep = pos(';', rest)
+  if sep = 0 then do
+    item = rest
+    rest = ''
+  end
+  else do
+    item = left(rest, sep - 1)
+    rest = substr(rest, sep + 1)
+  end
+  if item <> '' then normalized = appendSemicolonValue(normalized, projectAbsolutePath(item,cwd,dirsep))
+end
+return normalized
+
+projectMakeDirectory: procedure = .int
+arg path = .string
+captured = .string[]
+errors = .string[]
+address crexx "mkdir -p :path" output captured error errors
+if rc = 0 then return 0
+say 'FAILED: make project directory' path
+do i = 1 to errors[0]
+  say errors[i]
+end
+return rc
+
+projectRunArgv: procedure = .int
+arg label = .string, argv = .string[]
+i = .int
+captured = .string[]
+errors = .string[]
+address crexx "run :argv[]" output captured error errors
+commandRc = rc
+if commandRc <> 0 then do
+  say 'FAILED:' label 'rc=' || commandRc
+  do i = 1 to captured[0]
+    say captured[i]
+  end
+  do i = 1 to errors[0]
+    say errors[i]
+  end
+end
+return commandRc
+
+projectWriteStamp: procedure = .int
+arg path = .string, key = .string
+temporary = path || '.tmp'
+if writebinary(temporary, key as .binary) <> length(key) then return 1
+if rxfs..rename(temporary, path) <> 0 then return 1
+return 0
+
+projectCompileRequest: procedure = .channelvalue
+arg source = .string, stem = .string, workDir = .string, sourceRoots = .string, binaryRoots = .string, rxc = .string, rxas = .string, key = .string, optimize = .int, importRxas = .int, diagnostics = .string, diagnosticLocale = .string
+names = .string[]
+values = .channelvalue[]
+names[1] = 'binaryRoots'
+values[1] = .channelvalue.string_value(binaryRoots)
+names[2] = 'diagnosticLocale'
+values[2] = .channelvalue.string_value(diagnosticLocale)
+names[3] = 'diagnostics'
+values[3] = .channelvalue.string_value(diagnostics)
+names[4] = 'importRxas'
+values[4] = .channelvalue.integer_value(importRxas)
+names[5] = 'key'
+values[5] = .channelvalue.string_value(key)
+names[6] = 'optimize'
+values[6] = .channelvalue.integer_value(optimize)
+names[7] = 'rxas'
+values[7] = .channelvalue.string_value(rxas)
+names[8] = 'rxc'
+values[8] = .channelvalue.string_value(rxc)
+names[9] = 'source'
+values[9] = .channelvalue.string_value(source)
+names[10] = 'sourceRoots'
+values[10] = .channelvalue.string_value(sourceRoots)
+names[11] = 'stem'
+values[11] = .channelvalue.string_value(stem)
+names[12] = 'workDir'
+values[12] = .channelvalue.string_value(workDir)
+return .channelvalue.record_value('crexx.build.project.compile', 1, names, values)
+
+projectRunCompileWave: procedure = .int
+arg jobs = .int, requests = .channelvalue[]
+i = .int
+if requests[0] = 0 then return 0
+workers = min(jobs, requests[0])
+pool = .taskpool.local(workers, requests[0] + workers)
+scope = .taskscope.collectall(pool, -1)
+target = crexx_build_worker..compile_target()
+children = .task[]
+do i = 1 to requests[0]
+  children[i] = scope.submit(target, requests[i])
+end
+completed = scope.join()
+call scope.close()
+call pool.close()
+failed = 0
+do i = 1 to completed[0]
+  if completed[i].succeeded() = 0 then do
+    say 'FAILED: project compile task' i 'code=' || completed[i].error_code() completed[i].message()
+    failed = 1
+  end
+  else if completed[i].value().as_integer() <> 0 then failed = 1
+end
+return failed
+
+projectNativeKey: procedure = .string
+arg projectKey = .string, rxbin = .string, driver = .string, configRoot = .string, dirsep = .string
+state = rxhash..sha256init()
+state = projectKeyText(state, 'crexx-project-native/v1')
+state = projectKeyText(state, projectKey)
+state = projectKeyText(state, projectFileHash(rxbin))
+state = projectKeyText(state, projectFileHash(driver))
+state = projectKeyText(state, projectFileHash(configRoot || 'bin' || dirsep || 'crexx_native_compiler'))
+state = projectKeyText(state, projectFileHash(configRoot || 'bin' || dirsep || 'crexx_native_cflags_argv'))
+state = projectKeyText(state, projectFileHash(configRoot || 'bin' || dirsep || 'crexx_native_ldflags_argv'))
+state = projectKeyText(state, projectFileHash(configRoot || 'bin' || dirsep || 'crexx_native_libs_argv'))
+return rxhash..sha256finalhex(state)
+
+projectPackageNative: procedure = .int
+arg outputBase = .string, workRoot = .string, projectKey = .string, rxpath = .string, dirsep = .string, platformName = .string, userLibraries = .string
+driver = rxpath || 'bin' || dirsep || 'crexx'
+rxbin = outputBase || '.rxbin'
+nativeOutput = outputBase
+if isWindowsPlatform(platformName) then nativeOutput = outputBase || '.exe'
+nativeStamp = workRoot || '/native.action.sha256'
+nativeKey = projectNativeKey(projectKey, rxbin, driver, rxpath, dirsep)
+if projectActionCurrent(nativeOutput, nativeStamp, nativeKey) then do
+  say 'SKIP: native tool current' nativeOutput
+  return 0
+end
+
+argv = .string[]
+call appendArrayValue argv, driver
+call appendArrayValue argv, '-native'
+call appendArrayValue argv, '-nocompile'
+call appendArrayValue argv, '-noexec'
+call appendArrayValue argv, '-keep'
+rest = userLibraries
+do while rest <> ''
+  sep = pos(';', rest)
+  if sep = 0 then do
+    item = rest
+    rest = ''
+  end
+  else do
+    item = left(rest, sep - 1)
+    rest = substr(rest, sep + 1)
+  end
+  if item <> '' then do
+    call appendArrayValue argv, '-l'
+    call appendArrayValue argv, item
+  end
+end
+call appendArrayValue argv, outputBase || '.crexx'
+if projectRunArgv('package native project tool', argv) <> 0 then return 1
+if rxfs..isfile(nativeOutput) = 0 then return 1
+if projectWriteStamp(nativeStamp, nativeKey) <> 0 then return 1
+say 'PUBLISHED: native tool' nativeOutput
+return 0
+
+buildProject: procedure = .int
+arg mode = .string, output = .string, sources = .string[], jobsText = .string, forceRebuild = .int, optimize = .int, native = .int, configuredSourceRoots = .string, configuredBinaryRoots = .string, dependencyBinaryRoots = .string, libraryInputs = .string, userLibraries = .string, importRxas = .int, diagnostics = .string, diagnosticLocale = .string, rxpath = .string, dirsep = .string, platformName = .string
+i = .int
+j = .int
+if output = '' then do
+  say 'missing project output path'
+  return 2
+end
+if sources[0] = 0 then do
+  say '--' || mode 'requires at least one source file'
+  return 2
+end
+
+jobs = 5
+if jobsText = 'auto' then do
+  if platformName = 'MACOS' | platformName = 'MACOSX' then jobs = 30
+end
+else do
+  do
+    jobs = jobsText as .int
+  on signal
+    say 'invalid --jobs value:' jobsText
+    return 2
+  end
+end
+if jobs < 1 | jobs > 65535 then do
+  say '--jobs must be auto or an integer from 1 through 65535'
+  return 2
+end
+
+cwd = rxfs..cwd()
+resolvedSources = .string[]
+stems = .string[]
+sourceRoots = projectNormalizeRoots(configuredSourceRoots, cwd, dirsep)
+do i = 1 to sources[0]
+  resolvedSources[i] = projectAbsolutePath(sources[i], cwd, dirsep)
+  if rxfs..isfile(resolvedSources[i]) = 0 then do
+    say 'missing project source:' sources[i]
+    return 2
+  end
+  stems[i] = projectSourceStem(resolvedSources[i])
+  if stems[i] = '' then do
+    say 'cannot derive project member name from:' sources[i]
+    return 2
+  end
+  do j = 1 to i - 1
+    if stems[j] = stems[i] then do
+      say 'duplicate project member name:' stems[i]
+      return 2
+    end
+  end
+  sourceRoots = appendSemicolonValue(sourceRoots, projectDirectory(resolvedSources[i]))
+end
+
+binaryRoots = projectNormalizeRoots(configuredBinaryRoots, cwd, dirsep)
+dependencyRoots = projectNormalizeRoots(dependencyBinaryRoots, cwd, dirsep)
+outputBase = projectAbsolutePath(output, cwd, dirsep)
+if lower(right(outputBase,6)) = '.rxbin' then outputBase = left(outputBase,length(outputBase) - 6)
+outputDirectory = projectDirectory(outputBase)
+if outputDirectory = '' then outputDirectory = cwd
+if projectMakeDirectory(outputDirectory) <> 0 then return 1
+workRoot = outputBase || '.crexx-build'
+memberRoot = workRoot || '/members'
+publishRoot = workRoot || '/publish'
+if projectMakeDirectory(memberRoot) <> 0 then return 1
+if projectMakeDirectory(publishRoot) <> 0 then return 1
+
+rxc = rxpath || 'bin' || dirsep || 'rxc'
+rxas = rxpath || 'bin' || dirsep || 'rxas'
+rxlink = rxpath || 'bin' || dirsep || 'rxlink'
+projectKey = projectActionKey(mode, outputBase, optimize, resolvedSources, sourceRoots, binaryRoots, dependencyRoots, libraryInputs, rxc, rxas, rxlink)
+finalOutput = outputBase || '.rxbin'
+finalStamp = workRoot || '/product.action.sha256'
+if \forceRebuild & projectActionCurrent(finalOutput, finalStamp, projectKey) then do
+  say 'SKIP: project current' finalOutput
+  if mode = 'tool' & native then return projectPackageNative(outputBase, workRoot, projectKey, rxpath, dirsep, platformName, userLibraries)
+  return 0
+end
+
+requests = .channelvalue[]
+do i = 1 to resolvedSources[0]
+  memberDir = memberRoot || '/' || stems[i]
+  memberOutput = memberDir || '/' || stems[i] || '.rxbin'
+  memberStamp = memberDir || '/action.sha256'
+  memberKey = projectMemberKey(projectKey, stems[i])
+  if \forceRebuild & projectActionCurrent(memberOutput, memberStamp, memberKey) then
+    say 'SKIP: project member current' stems[i]
+  else requests[requests[0] + 1] = projectCompileRequest(resolvedSources[i], stems[i], memberDir, sourceRoots, binaryRoots, rxc, rxas, memberKey, optimize, importRxas, diagnostics, diagnosticLocale)
+end
+if requests[0] > 0 then say 'WAVE: project compile/assemble jobs=' || requests[0]
+if projectRunCompileWave(jobs, requests) <> 0 then return 1
+
+privateBase = publishRoot || '/product'
+privateOutput = privateBase || '.rxbin'
+if rxfs..isfile(privateOutput) then ignored = rxfs..delete(privateOutput)
+linkArgs = .string[]
+call appendArrayValue linkArgs, rxlink
+if optimize then call appendArrayValue linkArgs, '-s'
+call appendArrayValue linkArgs, '-o'
+call appendArrayValue linkArgs, privateBase
+do i = 1 to stems[0]
+  call appendArrayValue linkArgs, memberRoot || '/' || stems[i] || '/' || stems[i] || '.rxbin'
+end
+say 'BARRIER: link' mode
+if projectRunArgv('link project ' || mode, linkArgs) <> 0 then return 1
+if rxfs..isfile(privateOutput) = 0 then return 1
+if rxfs..rename(privateOutput, finalOutput) <> 0 then do
+  say 'FAILED: publish project output' finalOutput
+  return 1
+end
+if projectWriteStamp(finalStamp, projectKey) <> 0 then return 1
+say 'PUBLISHED:' mode finalOutput
+
+if mode = 'tool' & native then return projectPackageNative(outputBase, workRoot, projectKey, rxpath, dirsep, platformName, userLibraries)
+return 0
+
 emitStderr: procedure
 arg message = .string
 fileid = .int
@@ -822,6 +1297,10 @@ say '-compile           -- enable compilation to rxbin (default)'
 say '-nocompile         -- skip rxc/rxas and reuse an existing .rxbin'
 say '-native            -- package a native executable from the compiled program'
 say '-nonative          -- disable native packaging (default)'
+say '-library output    -- incrementally build explicit sources into output.rxbin'
+say '-tool output       -- incrementally build explicit sources into a linked tool'
+say '-jobs auto|count   -- bounded parallel project compilation (default auto)'
+say '-rebuild           -- force every project member and final link to rebuild'
 say '-verbose[0-4]      -- report on progress; default verbose0'
 say '-[no]colo[u]r      -- enable or disable colo[u]r output'
 say '-[no]optimi[s|z]e  -- enable or disable optimization'
@@ -842,6 +1321,9 @@ say
 say 'Source files without OPTIONS use rxc file-type defaults: .rexx is Level C'
 say 'and .crexx/.crx are Level G.'
 say 'Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l.'
+say '--library and --tool optimize by default, compile explicit sources in one parallel'
+say 'wave, link only after that wave succeeds, and publish the final RXBIN atomically.'
+say 'Use --nooptimize for diagnostic parity; --tool also accepts --native.'
 say 'Native packaging uses rxlink before rxcpack; declared provider archives and explicit'
 say 'plugin/static libraries are linked with platform-appropriate retention flags.'
 say
