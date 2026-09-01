@@ -110,12 +110,14 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 "${CMAKE_CURRENT_SOURCE_DIR}/crexx_build_worker.crexx"
                 "${_crexx_build_worker_source}"
-        COMMAND $<TARGET_FILE:rxc>
+        COMMAND ${CMAKE_COMMAND} -E chdir "${_crexx_build_worker_root}"
+                $<TARGET_FILE:rxc>
                 --no-exe-import
                 -i "${CREXX_DRIVER_IMPORT_ROOT}"
                 -o crexx_build_worker
                 "${_crexx_build_worker_source}"
-        COMMAND $<TARGET_FILE:rxas>
+        COMMAND ${CMAKE_COMMAND} -E chdir "${_crexx_build_worker_root}"
+                $<TARGET_FILE:rxas>
                 -o crexx_build_worker crexx_build_worker
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 "${_crexx_build_worker_rxbin}"
@@ -126,7 +128,7 @@ add_custom_command(
                 crexx_driver_imports
                 ${CREXX_DRIVER_IMPORT_FILES}
                 crexx_build_worker.crexx
-        WORKING_DIRECTORY "${_crexx_build_worker_root}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "Bootstrapping the installed crexx project-build worker ..."
         VERBATIM)
 add_custom_target(crexx_build_worker

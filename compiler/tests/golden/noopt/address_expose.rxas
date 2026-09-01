@@ -52,8 +52,10 @@ main() .locals=11
 
 _rxsysb._noredir() .expose=_rxsysb._noredir
    .meta "_rxsysb._noredir"="b" "._rxsysb..addressredirect" _rxsysb._noredir() ""
+   .meta "_rxsysb._noredir"=".autoload" "library"
 
 /* Imported Declaration from file: _address@library.rxbin */
 
 _rxsysb._address() .expose=_rxsysb._address
    .meta "_rxsysb._address"="b" ".int" _rxsysb._address() "?env=.string,?command=.string,in=.addressredirect,out=.addressredirect,err=.addressredirect,expose ...=.string"
+   .meta "_rxsysb._address"=".autoload" "library"

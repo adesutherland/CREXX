@@ -386,9 +386,12 @@ l246iffalse:
 
 §rxfnsb.stem.§factory() .expose=rxfnsb.stem.§factory
    .meta "rxfnsb.stem.§factory"="b" ".rxfnsb..stem" §rxfnsb.stem.§factory() ""
+   .meta "rxfnsb.stem.§factory"=".autoload" "library"
 
 §rxfnsb.stem.get() .expose=rxfnsb.stem.get
    .meta "rxfnsb.stem.get"="b" ".string" §rxfnsb.stem.get() "key=.string"
+   .meta "rxfnsb.stem.get"=".autoload" "library"
 
 §rxfnsb.stem.set() .expose=rxfnsb.stem.set
    .meta "rxfnsb.stem.set"="b" ".void" §rxfnsb.stem.set() "?key=.string,value=.string"
+   .meta "rxfnsb.stem.set"=".autoload" "library"

@@ -29,5 +29,8 @@ add_test(
 set_tests_properties(crexx_contract_installed_consumer PROPERTIES
         LABELS "contract;install;external-consumer"
         RUN_SERIAL TRUE)
+crexx_register_test_prep_targets(
+        TESTS crexx_contract_installed_consumer
+        TARGETS crexx-contract stage-product stage-optional)
 
 crexx_finalize_directory_qa_tiers()

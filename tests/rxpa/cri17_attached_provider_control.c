@@ -32,8 +32,11 @@ int main(int argc, char **argv) {
     rxvm_executor_result result = RXVM_EXECUTOR_INVALID;
     size_t leaks = 0u;
 
-    if (argc != 3) {
-        fprintf(stderr, "usage: %s PROGRAM_RXBIN PROVIDER_DIRECTORY\n", argv[0]);
+    if (argc != 5) {
+        fprintf(stderr,
+                "usage: %s PROGRAM_RXBIN PROVIDER_DIRECTORY LIBRARY_RXBIN "
+                "CLASSLIB_RXBIN\n",
+                argv[0]);
         return 2;
     }
     runtime = rxvm_runtime_create();
@@ -44,6 +47,10 @@ int main(int argc, char **argv) {
     if (!source) goto cleanup;
     source->provider_location = copy_string(argv[2]);
     CHECK(source->provider_location != 0, "copy controller provider path");
+    CHECK(rxvm_load_file(source, argv[3]) != 0,
+          "load packaged standard library bytecode");
+    CHECK(rxvm_load_file(source, argv[4]) != 0,
+          "load packaged class library bytecode");
     CHECK(rxvm_load_file(source, argv[1]) != 0,
           "load CRI-17 provider-bearing bytecode");
     CHECK(rxldmodp(source) >= 0, "load controller static provider catalogue");

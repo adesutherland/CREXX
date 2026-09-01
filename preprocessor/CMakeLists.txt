@@ -91,12 +91,14 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E make_directory ${RXPP_MEMBER_SOURCE_ROOT}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 ${CMAKE_CURRENT_SOURCE_DIR}/rxpp.crexx ${RXPP_MEMBER_SOURCE}
-        COMMAND $<TARGET_FILE:rxc>
+        COMMAND ${CMAKE_COMMAND} -E chdir ${RXPP_MEMBER_ROOT}
+                $<TARGET_FILE:rxc>
                 --no-exe-import
                 -i ${RXPP_IMPORT_ROOT}
                 -o rxpp
                 ${RXPP_MEMBER_SOURCE}
-        COMMAND $<TARGET_FILE:rxas> rxpp
+        COMMAND ${CMAKE_COMMAND} -E chdir ${RXPP_MEMBER_ROOT}
+                $<TARGET_FILE:rxas> rxpp
         DEPENDS
                 ${CMAKE_CURRENT_SOURCE_DIR}/rxpp.crexx
                 rxpp_compiler_imports
@@ -107,7 +109,7 @@ add_custom_command(
                 ${RXPP_IMPORT_EXITS}
                 ${RXPP_IMPORT_PRECOMP}
                 rxc rxas
-        WORKING_DIRECTORY ${RXPP_MEMBER_ROOT}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compile and assemble rxpp in its private member directory ..."
         VERBATIM)
 

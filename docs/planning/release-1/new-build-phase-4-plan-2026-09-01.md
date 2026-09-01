@@ -2,7 +2,8 @@
 
 ## Status and recovery point
 
-- **Status:** approved; P4.1 through P4.3 complete; P4.4 next
+- **Status:** P4.1 through P4.3 complete; P4.4 local qualification complete;
+  exact-SHA hosted gates next
 - **Branch:** `temp/newbuild`
 - **Current `develop` incorporated:**
   `292bf9e70e0dafd73b90c730942eb01902cd74f9`
@@ -214,22 +215,57 @@ effect.
 
 ### P4.4 — qualification and close-out
 
-- [ ] Prove clean Release output equivalence at jobs 1, 5 and 30.
-- [ ] Prove immediate no-op plus representative leaf, shared-library and
+- [x] Prove clean Release output equivalence at jobs 1, 5 and 30.
+- [x] Prove immediate no-op plus representative leaf, shared-library and
   toolchain change closures.
-- [ ] Run output ownership and Ninja missing-dependency checks.
-- [ ] Run installed REXX workflow, install/package and external plugin SDK
+- [x] Run output ownership and Ninja missing-dependency checks.
+- [x] Run installed REXX workflow, install/package and external plugin SDK
   consumers from scratch locations.
-- [ ] Run optimizer parity, comprehensive, qualification, separate stress and
+- [x] Run optimizer parity, comprehensive, qualification, separate stress and
   maintained sanitizer scopes.
 - [ ] Push the completed Phase 4 commits, run exact-SHA Build, Sanitizer and
   CodeQL gates, and retain links/results.
 - [ ] Publish the developer workflow and final evidence record.
-- [ ] Commit the close-out record locally before publication where practical.
+- [x] Commit the close-out record locally before publication where practical.
 
 **Acceptance:** the Phase 4 gate in the programme vision is met. A phase is not
 described as hosted-green, sanitizer-clean or qualified before its applicable
 exact-SHA jobs reach terminal success.
+
+**Retained local P4.4 evidence:**
+
+- Three clean Release `stage-product` builds at jobs 1, 5 and 30 completed from
+  separate build directories. Each immediate repeat was a true no-op, and the
+  eight public `bin/*.rxbin` product images were byte-identical across all
+  three. Elapsed times are deliberately not used as performance evidence.
+- Temporary, comment-only probes produced bounded closures of three actions for
+  a Level L leaf, 160 actions for a shared Level B source, and 338 actions for
+  a compiler source. Restoring each source restored the original public RXBIN
+  manifest; no probe source edit remains.
+- The final observation catalogue is schema-valid and graph-clean, with zero
+  multiple-output-owner findings. `ninja -t missingdeps all` reports no missing
+  generated dependencies across 6,056 nodes. Eight catalogue-only
+  `wave-inversion` reviews remain on the Phase 3 sanitizer aggregate because
+  provisional QA-artifact layer labels are later than their aggregate; they
+  are not missing edges or competing producers.
+- A fresh Release install passed the complete non-CMake REXX project contract:
+  optimized clean/no-op/change/rebuild, explicit no-opt, packaged autoload and
+  failed-publication preservation. The external plugin SDK consumer and all
+  three qualification consumers pass from scratch locations.
+- Release comprehensive QA passes 2,221/2,221; qualification passes 3/3; Debug
+  optimizer parity passes 708/708; and isolated stress passes 9/9. The final
+  prepared Release focus for `rxpp` plus the installed project builder passes
+  8/8, remains a true no-op, and preserves the jobs-1 public RXBIN manifest.
+- The maintained Apple-ASan runner found and repaired `SAN-QA-011`: two private
+  bootstrap rules attempted to enter directories before their own producer
+  commands could create them. Both absent-directory targets pass in normal
+  Debug and Apple ASan. The full Apple-ASan build, explicit QA preparation and
+  all 2,238 non-performance CTests then pass with no sanitizer diagnostic at
+  `cmake-build-debugasan/asan-logs/20260901-114245-full`. Apple LSan remains
+  unsupported; exact-SHA hosted Linux ASan/LSan is still required.
+- Performance tests were not run with any of these parallel correctness or
+  sanitizer workloads. All observed durations are indicative because other
+  host activity was allowed.
 
 ## 7. Interruption and drift controls
 

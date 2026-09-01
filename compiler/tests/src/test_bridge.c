@@ -7,6 +7,9 @@
 #ifndef CREXX_TEST_RXCEXITS_MODULE
 #define CREXX_TEST_RXCEXITS_MODULE "rxcexits"
 #endif
+#ifndef CREXX_TEST_LIBRARY_MODULE
+#define CREXX_TEST_LIBRARY_MODULE "library"
+#endif
 
 int main(int argc, char** argv) {
     rxvml_context* ctx;
@@ -137,6 +140,13 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    /* Embedded clients own their module set.  Load the packaged standard
+     * library explicitly before the compiler-exit image that imports it. */
+    if (rxvml_load_module_file(ctx, CREXX_TEST_LIBRARY_MODULE) <= 0) {
+        rxvml_last_error(ctx, &err);
+        fprintf(stderr, "Failed to load library: %s\n", err ? err : "unknown error");
+        return 1;
+    }
     if (rxvml_load_module_file(ctx, CREXX_TEST_RXCEXITS_MODULE) <= 0) {
         rxvml_last_error(ctx, &err);
         fprintf(stderr, "Failed to load rxcexits: %s\n", err ? err : "unknown error");

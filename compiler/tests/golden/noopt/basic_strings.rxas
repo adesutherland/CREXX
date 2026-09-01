@@ -87,13 +87,16 @@ main() .locals=10
 
 rxfnsb.length() .expose=rxfnsb.length
    .meta "rxfnsb.length"="b" ".int" rxfnsb.length() "string=.string"
+   .meta "rxfnsb.length"=".autoload" "library"
 
 /* Imported Declaration from file: substr@library.rxbin */
 
 rxfnsb.substr() .expose=rxfnsb.substr
    .meta "rxfnsb.substr"="b" ".string" rxfnsb.substr() "string=.string,start=.int,?length=.int,?pad=.string"
+   .meta "rxfnsb.substr"=".autoload" "library"
 
 /* Imported Declaration from file: pos@library.rxbin */
 
 rxfnsb.pos() .expose=rxfnsb.pos
    .meta "rxfnsb.pos"="b" ".int" rxfnsb.pos() "needle=.string,haystack=.string,?start=.int"
+   .meta "rxfnsb.pos"=".autoload" "library"

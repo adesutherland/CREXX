@@ -20,12 +20,6 @@ add_custom_target(cri07_rxpa_sdk_consumer_prereqs
                 id id_static
                 fs fs_static
                 _platform _platform_static)
-if(TARGET qa-prep-qualification)
-    # The installed-consumer test may build its private scratch consumer, but
-    # must never rebuild the active CREXX tree from inside CTest.
-    add_dependencies(qa-prep-qualification
-            cri07_rxpa_sdk_consumer_prereqs)
-endif()
 
 add_test(
         NAME rxpa_external_sdk_consumer
@@ -47,6 +41,9 @@ set_tests_properties(rxpa_external_sdk_consumer PROPERTIES
         LABELS "install;package;rxpa;external-consumer;hash;crexx-rag;rcc-5d;rcc-5e;rcc-5f;stats;vector;packed"
         RUN_SERIAL TRUE
         TIMEOUT 240)
+crexx_register_test_prep_targets(
+        TESTS rxpa_external_sdk_consumer
+        TARGETS cri07_rxpa_sdk_consumer_prereqs stage-optional)
 
 add_test(
         NAME rxpa_native_return_class_import
@@ -136,12 +133,16 @@ function(crexx_configure_cri17_attached_control TARGET_NAME)
     target_link_libraries(${TARGET_NAME} PRIVATE Threads::Threads)
     add_dependencies(${TARGET_NAME}
             cri17_attached_provider_noopt_artifact
-            _cri17_attached)
+            _cri17_attached
+            library
+            classlib)
     add_test(
             NAME ${TARGET_NAME}
             COMMAND ${TARGET_NAME}
                     ${CMAKE_CURRENT_BINARY_DIR}/cri17_attached_provider_noopt.rxbin
                     ${CMAKE_CURRENT_BINARY_DIR}/providers
+                    ${CMAKE_BINARY_DIR}/bin/library.rxbin
+                    ${CMAKE_BINARY_DIR}/bin/classlib.rxbin
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(${TARGET_NAME} PROPERTIES
             LABELS "interpreter;concurrency;rxpa;provider;cri-17;regression;negative"
@@ -195,6 +196,9 @@ add_test(
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/check_provider_package_names.cmake)
 set_tests_properties(rcc_provider_package_names PROPERTIES
         LABELS "rxpa;provider;package")
+crexx_register_test_prep_targets(
+        TESTS rcc_provider_package_names
+        TARGETS _rcc_provider _rcc_provider_static)
 
 add_test(
         NAME rcc_provider_unused_import_elided

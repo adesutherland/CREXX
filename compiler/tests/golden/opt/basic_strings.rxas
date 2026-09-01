@@ -42,3 +42,4 @@ main() .locals=5
 
 rxfnsb.pos() .expose=rxfnsb.pos
    .meta "rxfnsb.pos"="b" ".int" rxfnsb.pos() "needle=.string,haystack=.string,?start=.int"
+   .meta "rxfnsb.pos"=".autoload" "library"

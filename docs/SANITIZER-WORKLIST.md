@@ -204,6 +204,63 @@ marks SAN-006 closed without weakening any sanitizer closure requirement.
 
 ## Qualification infrastructure repairs
 
+### SAN-QA-011 — private bootstrap rules assume their working directories exist
+
+Status: local closure candidate and release-blocking pending exact-SHA hosted
+sanitizer qualification. Focused normal-Debug and Apple-ASan controls plus the
+maintained broad Apple-ASan gate pass. This was a maintained sanitizer build
+failure, not an ASan memory diagnostic.
+
+- Scope: private CMake bootstrap rules for the installed `crexx --library` /
+  `--tool` Level B worker and the `rxpp` member image.
+- Failure: the full Apple-ASan runner reached 98 percent of its build and then
+  Make failed before executing the worker custom command because its declared
+  working directory, `crexx_driver/crexx-build-worker`, did not exist. After
+  that repair passed focused Debug and ASan controls, the broad rerun exposed
+  the same defect in `preprocessor/members/rxpp`.
+- Original trigger: `tools/asan-run.sh --phase full --build-jobs 5
+  --test-jobs 5 --build-leaks off --leaks off --exclude-label
+  '^performance-measurement$' --no-live-tail` on macOS arm64 at local Phase 4
+  revision `bee5f690a20386a7459a173de5e4870f71199e58` plus the uncommitted P4.4
+  qualification corrections.
+- Retained log:
+  `cmake-build-debugasan/asan-logs/20260901-112213-full/build.log`; the second
+  family trigger is retained at
+  `cmake-build-debugasan/asan-logs/20260901-114104-full/build.log`.
+- Root cause: the custom command attempted to create its private directories
+  as its first command, but CMake's Makefile rule changes to `WORKING_DIRECTORY`
+  before any command is run. A clean tree therefore failed at the shell-level
+  `cd`; previously populated Ninja trees masked the missing producer step.
+- Repair: keep each custom command as the sole producer of its private tree.
+  Run each rule itself from its existing component binary directory, create
+  the private source/import directory, and use `cmake -E chdir` only around
+  `rxc` and `rxas` after that directory exists. This avoids configure-time
+  shadow producers and remains safe when the generated private tree starts
+  absent. An audit of every current `add_custom_command` that combines
+  `make_directory` with `WORKING_DIRECTORY` found no other unowned working
+  directory; classlib, Level C and RexxScript member roots are deliberately
+  established at configure time and the remaining rules use existing build
+  directories.
+- Focused reproducers: remove only the generated
+  `crexx_driver/crexx-build-worker` tree and build target
+  `crexx_build_worker`; remove only `preprocessor/members/rxpp` and build target
+  `rxpp`. Both targets must pass in ordinary Debug and through
+  `tools/asan-run.sh --phase build --build-target TARGET` with the
+  platform-appropriate leak setting.
+- Local repair evidence: the absent worker tree passed normal Debug at
+  `cmake-build-debug/asan-logs/20260901-113600-build` and Apple ASan at
+  `cmake-build-debugasan/asan-logs/20260901-114051-build`. The absent `rxpp`
+  member tree passed normal Debug at
+  `cmake-build-debug/asan-logs/20260901-114216-build` and Apple ASan at
+  `cmake-build-debugasan/asan-logs/20260901-114225-build`.
+- Broad Apple-ASan evidence: the original full trigger then passed its complete
+  instrumented build, explicit `qa-prep` barrier and all 2,238 non-performance
+  CTests. No AddressSanitizer diagnostic was present; logs are retained under
+  `cmake-build-debugasan/asan-logs/20260901-114245-full`.
+- Owner/next action: new-build Phase 4 P4.4. Require exact-SHA GitHub Build and
+  Sanitizer QA for the published P4.4 commit. Linux ASan/LSan remains the
+  leak-closure authority.
+
 ### SAN-QA-010 — parallel spawn stress exceeds its scope under contended ASan
 
 Status: repair implemented; focused and designed-slice Apple-ASan proof passes.

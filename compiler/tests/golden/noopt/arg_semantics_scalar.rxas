@@ -173,3 +173,4 @@ l103d:
 
 rxfnsb.upper() .expose=rxfnsb.upper
    .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "string=.string"
+   .meta "rxfnsb.upper"=".autoload" "library"
