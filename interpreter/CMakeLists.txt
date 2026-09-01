@@ -396,8 +396,10 @@ if(BUILD_TESTING)
 
     if(CREXX_DEFAULT_VM_TARGET STREQUAL "rxtvm")
         add_executable(rxvm_instrumented ALIAS rxtvm_instrumented)
+        set(_crexx_default_instrumented_vm_target rxtvm_instrumented)
     else()
         add_executable(rxvm_instrumented ALIAS rxbvm_instrumented)
+        set(_crexx_default_instrumented_vm_target rxbvm_instrumented)
     endif()
 endif()
 
@@ -1157,6 +1159,12 @@ if(BUILD_TESTING)
             EXPECTED_FAILURE_DESCRIPTION "instrumented threaded VM uncaught SIGNAL OTHER"
             REQUIRED_OUTPUT_REGEX ${_instrumented_signal_required_output}
             TEST_LABELS interpreter instrumentation signal)
+    crexx_register_test_prep_targets(
+            TESTS rxvminstrumentedsignaltests
+            TARGETS ${_crexx_default_instrumented_vm_target} run_tests_signals)
+    crexx_register_test_prep_targets(
+            TESTS rxbvminstrumentedsignaltests
+            TARGETS rxbvm_instrumented run_tests_signals)
 endif()
 
 # Instruction Sanity Tests - fallback panic location and source reporting
@@ -1212,6 +1220,12 @@ if(BUILD_TESTING)
     set_tests_properties(rxvminstrumentedbreakpointtests rxbvminstrumentedbreakpointtests PROPERTIES
             PASS_REGULAR_EXPRESSION "VM instrumentation: PASS .*returns=[1-9][0-9]* interrupts=[1-9][0-9]*/[1-9][0-9]*/[1-9][0-9]*/0"
             LABELS "interpreter;instrumentation;breakpoint")
+    crexx_register_test_prep_targets(
+            TESTS rxvminstrumentedbreakpointtests
+            TARGETS ${_crexx_default_instrumented_vm_target} run_tests_breakpoint_address)
+    crexx_register_test_prep_targets(
+            TESTS rxbvminstrumentedbreakpointtests
+            TARGETS rxbvm_instrumented run_tests_breakpoint_address)
 endif()
 
 # Instruction Sanity Tests - register flag partitioning

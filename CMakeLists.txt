@@ -455,7 +455,6 @@ if(BUILD_TESTING)
                 program_generation_control-rxbvml
                 program_generation_control-rxtvml
                 program_generation_control-rxvml
-                rxbvm_instrumented
                 rxc_classdecl_static
                 rxc_staticlink
                 signal_tester
