@@ -268,12 +268,11 @@ jobs:
           $suffix = $payload -replace "^CREXX-", ""
           $assetDir = Join-Path "${{ runner.temp }}" "user-test-assets"
           $asset = "CREXX-user-test-${{ needs.version.outputs.commit }}-$suffix.zip"
+          $payloadPath = Join-Path $payloadRoot $payload
+          $assetPath = Join-Path $assetDir $asset
 
           New-Item -ItemType Directory -Force -Path $assetDir | Out-Null
-          Compress-Archive \
-            -Path (Join-Path $payloadRoot $payload) \
-            -DestinationPath (Join-Path $assetDir $asset) \
-            -Force
+          Compress-Archive -Path $payloadPath -DestinationPath $assetPath -Force
 
       - name: Upload exact-SHA user-test archive
         uses: actions/upload-artifact@v7
