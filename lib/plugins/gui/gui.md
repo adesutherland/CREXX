@@ -32,8 +32,10 @@
 
 ## Overview
 
-This documentation provides an overview of a lightweight graphical user interface (GUI) for CREXX, focusing on the most essential widgets. 
-It contains two files: `gui.c`, which implements the GUI functionality using GTK, and `gui_test.crexx`, which demonstrates how to use the procedures defined in `gui.c`.
+This documentation describes the optional, experimental GTK 3 plugin for cREXX.
+`gui.c` implements the RXPA provider, `gui_sample1.crexx` is the larger
+demonstration, and `gui_test.crexx` is the focused automated/interactive
+contract test. Configure the project with `-DENABLE_GTK=ON` to build it.
 
 ---
 
@@ -44,18 +46,26 @@ It contains two files: `gui.c`, which implements the GUI functionality using GTK
 Creating a basic window is the first step in building a GUI application. Here's a minimal example:
 
 ```rexx
-/* Initialize the window */
-call init_window "My First GUI", 400, 300  /* title, width, height */
+options levelb
+import gui
 
-/* Show the window */
-call show_window
+if init_window("My First GUI", 400, 300) \= 1 then exit 1
+call add_text "GTK is active", 20, 20
+ok_button = add_button("OK", 90, 80)
+cancel_button = add_button("Cancel", 210, 80)
 
-/* Process events */
+call show_window -1, -1
+
 do forever
-    event = process_events(500)  /* Check events every 500ms */
-    if event < 0 then leave      /* Exit if window is closed */
+    event = process_events(250)
+    if event < 0 | event = ok_button | event = cancel_button then leave
 end
+call cleanup_gui
 ```
+
+`process_events(timeout)` returns a positive widget handle for an event, `0`
+when the interval expires without an event, and `-1` when the main window is
+closed. A timeout is an idle poll, not an instruction to exit.
 
 ### Adding Common Widgets
 
@@ -93,10 +103,10 @@ call init_window "Contact Form", 300, 400
 
 /* Add form fields */
 call add_text "Name:", 10, 10
-name_field = add_edit(10, 30, "")
+name_field = add_edit(10, 30, 260)
 
 call add_text "Email:", 10, 70
-email_field = add_edit(10, 90, "")
+email_field = add_edit(10, 90, 260)
 
 call add_text "Type:", 10, 130
 type.1 = "Personal"
@@ -112,7 +122,7 @@ clear = add_button("Clear", 120, 200)
 status = add_text("Ready", 10, 350)
 
 /* Show window */
-call show_window
+call show_window -1, -1
 
 /* Main event loop */
 do forever
@@ -120,19 +130,20 @@ do forever
     
     if event < 0 then leave              /* Window closed */
     else if event = submit then do       /* Submit button clicked */
-        name = get_widget_address(name_field)
-        email = get_widget_address(email_field)
+        name = get_edit(name_field)
+        email = get_edit(email_field)
         if name = "" | email = "" then
             call set_text status, "Please fill all fields"
         else
             call set_text status, "Form submitted!"
     end
     else if event = clear then do        /* Clear button clicked */
-        call set_text name_field, ""
-        call set_text email_field, ""
+        call set_edit name_field, ""
+        call set_edit email_field, ""
         call set_text status, "Form cleared"
     end
 end
+call cleanup_gui
 ```
 
 ### Common Patterns and Best Practices
@@ -251,9 +262,11 @@ To set up the environment for running the GUI application, follow these steps:
      brew install gtk+3
      ```
 
-2. **Compile the Code**: Use a C compiler to compile `gui.c`. For example:
+2. **Configure and build cREXX**:
    ```bash
-   gcc -o gui gui.c `pkg-config --cflags --libs gtk+-3.0`
+   cmake -S . -B cmake-build-debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_GTK=ON
+   cmake --build cmake-build-debug --target gui_test
+   ctest --test-dir cmake-build-debug -R '^gui_test_(noopt|opt)$' --output-on-failure
    ```
 
 ### For Windows
@@ -262,10 +275,9 @@ To set up the environment for running the GUI application, follow these steps:
 
 2. **Set Environment Variables**: After installation, you may need to set the `PATH` environment variable to include the GTK `bin` directory. This allows you to run GTK applications from the command line.
 
-3. **Compile the Code**: Use a C compiler like MinGW or MSYS2 to compile `gui.c`. Open a terminal and run:
-   ```bash
-   gcc -o gui gui.c `pkg-config --cflags --libs gtk+-3.0`
-   ```
+3. **Build cREXX**: Configure the cREXX CMake project with
+   `-DENABLE_GTK=ON`. CMake owns the RXPA module name, include paths, and GTK
+   link dependencies; `gui.c` is not a standalone executable.
 
 ---
 
@@ -278,7 +290,7 @@ To set up the environment for running the GUI application, follow these steps:
 #### INIT_WINDOW
 
 ```
-init_window(title,width,height)(title,width,height)
+init_window(title,width,height)
 ```
 
 - **Description**: Initializes the main application window and sets up the GTK environment.
@@ -364,18 +376,20 @@ add_list(x-offset,y-offset,width,height)
 #### ADD_EDIT
 
 ```
-add_edit(x-offset,y-offset,intitial-value)
+add_edit(x-offset,y-offset,width)
 ```
 
-- **Description**: Creates a new editable text field (entry) and adds it to the fixed container. At present, the entry size is fixed at 100x25 pixels, but this might be changed in the future.
+- **Description**: Creates a new editable text field (entry) and adds it to the fixed container.
 - **Parameters**:
   - `x`: X-coordinate for entry placement.
   - `y`: Y-coordinate for entry placement.
-  - `initial-value`: Initial text for the entry.
+  - `width`: Requested width in pixels.
 - **Returns**: The index of the entry in the global widgets array.
 - **Example**:
   ```rexx
-  edit_index = add_edit(10, 100, "Type here...")
+  edit_index = add_edit(10, 100, 240)
+  call set_edit edit_index, "Type here..."
+  current_text = get_edit(edit_index)
   ```
 
 #### LIST_ADD_ITEM
@@ -428,18 +442,19 @@ list_get_selected_item(list)
 #### LIST_SET_HEADER
 
 ```
-list_set_header(list,header_text,bg_colour)
+list_set_header(list,header_text,text_colour,bg_colour)
 ```
 
 - **Description**: Sets a header for the specified list.
 - **Parameters**:
   - `list`: Index of the list to set the header for.
   - `header_text`: Text to display as the header.
+  - `text_colour`: Text colour for the header.
   - `bg_colour`: Background colour of the header (refer to the [X11 colours](#appendix-x11-colours) for available colours or use RGB in hexadecimal notation).
 - **Returns**: An integer indicating success (1).
 - **Example**:
   ```rexx
-  call list_set_header(list_index, "My List Header", "lightgray")
+  call list_set_header list_index, "My List Header", "black", "lightgray"
   ```
 
 #### CLEANUP_GUI
@@ -448,11 +463,28 @@ list_set_header(list,header_text,bg_colour)
 cleanup_gui
 ```
 
-- **Description**: Cleans up and destroys all widgets and the main window.
+- **Description**: Cleans up the main window, widget and graph registries, and
+  held GTK display/settings references. `cleanup` remains a compatibility
+  alias.
 - **Returns**: None.
 - **Example**:
   ```rexx
   call cleanup_gui
+  ```
+
+#### GET_EDIT
+
+```
+get_edit(index)
+```
+
+- **Description**: Returns the current text from an edit field created by
+  `add_edit`.
+- **Returns**: The edit text, or an empty string for an invalid or non-edit
+  handle.
+- **Example**:
+  ```rexx
+  value = get_edit(edit_index)
   ```
 
 #### GET_WIDGET_ADDRESS
@@ -1179,7 +1211,7 @@ default_btn = add_button("Restore Defaults", 230, 500)
 status_bar = add_status_bar()
 
 /* Show window */
-call show_window
+call show_window -1, -1
 
 /* Main event loop */
 do forever
@@ -1189,12 +1221,12 @@ do forever
     else if event = path_btn then do
         new_path = path_pick("Select Default Save Location", "C:\")
         if new_path \= "" then
-            call set_text path_field, new_path
+            call set_edit path_field, new_path
     end
     
     else if event = save_btn then do
         /* Validate settings */
-        buffer = get_widget_address(buffer_size)
+        buffer = get_edit(buffer_size)
         if \datatype(buffer, 'W') | buffer < 1 then do
             call notify_pick "Error", "Invalid buffer size", "error"
             iterate
@@ -1209,7 +1241,7 @@ do forever
     end
     
     else if event = default_btn then do
-        if dialog_pick("Confirm", "Restore default settings?", ["Yes", "No"]) = 1 then
+        if dialog_pick("Confirm", "Restore default settings?", "Yes|No") = 1 then
             call restore_defaults
     end
     
@@ -1224,7 +1256,7 @@ return 1
 
 /* Helper function to restore defaults */
 restore_defaults: procedure
-    call set_text buffer_size, "1024"
+    call set_edit buffer_size, "1024"
     call set_sensitive auto_save, 1
     call set_sensitive show_toolbar, 1
     call set_sensitive enable_logging, 0
