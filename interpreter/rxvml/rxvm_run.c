@@ -71,6 +71,13 @@ int rxvm_set_provider_path(struct rxvm_context* ctx, const char* path) {
     return 0;
 }
 
+int rxvm_set_autoload(struct rxvm_context* ctx, int enabled) {
+    if (!ctx) return -1;
+    ctx->autoload_enabled = enabled ? 1u : 0u;
+    ctx->link_dirty = 1;
+    return 0;
+}
+
 void rxvm_destroy(struct rxvm_context* ctx) {
     if (ctx) {
         rxfremod(ctx);
@@ -93,6 +100,7 @@ struct module* rxvm_load_file(struct rxvm_context* ctx, char* filename) {
 int rxvm_link(struct rxvm_context* ctx) {
     size_t i;
     int linked_any;
+    int autoloaded;
     rxvm_memory_worker *previous;
 
     if (!ctx) return 0;
@@ -103,19 +111,26 @@ int rxvm_link(struct rxvm_context* ctx) {
         rxvm_memory_leave(previous);
         return 0;
     }
-    if (rxvm_resolve_provider_dependencies(ctx) != 0) {
-        rxvm_memory_leave(previous);
-        return -1;
-    }
-
     linked_any = 0;
-    for (i = 0; i < ctx->num_modules; i++) {
-        if (ctx->modules[i]->state < RXVM_MOD_LINKED) {
-            rxvm_link_module(ctx, i);
-            ctx->modules[i]->state = RXVM_MOD_LINKED;
-            linked_any = 1;
+    do {
+        if (rxvm_resolve_provider_dependencies(ctx) != 0) {
+            rxvm_memory_leave(previous);
+            return -1;
         }
-    }
+        for (i = 0; i < ctx->num_modules; i++) {
+            if (ctx->modules[i]->state < RXVM_MOD_LINKED) {
+                rxvm_link_module(ctx, i);
+                ctx->modules[i]->state = RXVM_MOD_LINKED;
+                linked_any = 1;
+            }
+        }
+        autoloaded = ctx->autoload_enabled
+                ? rxvm_resolve_autoload_dependencies(ctx) : 0;
+        if (autoloaded < 0) {
+            rxvm_memory_leave(previous);
+            return -1;
+        }
+    } while (autoloaded > 0);
 
     ctx->link_dirty = 0;
 

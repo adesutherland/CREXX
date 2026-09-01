@@ -444,6 +444,14 @@ that the generated instruction stream still needs for linking or runtime
 lookup. If optimization or inlining removes every runtime reference to an
 imported file, the imported declaration block is suppressed entirely.
 
+For each retained callable that was actually reconstructed from a packaged
+`.rxbin`, `rxc` also emits an `.autoload` metadata hint containing that
+package's filename stem. It deliberately emits no hint for source or RXAS
+imports: those inputs do not prove a distributable runtime filename. The hint
+is enabled by default and can be suppressed with `--no-autoload`. It is a
+deployment convenience, not a build dependency mechanism and not an alternate
+symbol contract; the callable name and signature remain authoritative.
+
 ## Level B Classes and Interfaces
 
 Level B interface support is now implemented across the compiler, assembler

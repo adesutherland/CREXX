@@ -159,6 +159,8 @@ static void help() {
             "  --level level   Default source level when OPTIONS omits one\n"
             "  --import ns     Inject a file-level IMPORT namespace (repeatable)\n"
             "  --import-rxas   Enable auto-import scanning of .rxas in binary roots\n"
+            "  --autoload      Emit packaged-RXBIN autoload hints (default)\n"
+            "  --no-autoload   Do not emit packaged-RXBIN autoload hints\n"
             "  --no-exe-import Do not add the executable directory to binary roots\n"
             "  --import-resolution-report path  Write observe-only import selection JSON\n"
             "  --diagnostics mode  Diagnostic rendering: localized or raw\n"
@@ -205,6 +207,7 @@ Context *cntx_f() {
     context->comments_slash_specified = 0; /* Set if Slash comments option explicitly specified */
     context->debug_mode = 0;
     context->optimise = 1; /* Optimise by default */
+    context->emit_autoload_hints = 1;
     context->decimal_plugin = 0; /* No decimal plugin by default */
 
     return context;
@@ -349,6 +352,7 @@ int rxcmain(int argc, char *argv[]) {
     int do_optimise = 1;
     int disable_exits = 0;
     int auto_import_rxas = 0;
+    int emit_autoload_hints = 1;
     int add_executable_import = 1;
     size_t executable_import_root_index = 0;
     char *file_directory = 0;
@@ -427,6 +431,16 @@ int rxcmain(int argc, char *argv[]) {
 
         if (strcmp(argv[i], "--import-rxas") == 0) {
             auto_import_rxas = 1;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--autoload") == 0) {
+            emit_autoload_hints = 1;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--no-autoload") == 0) {
+            emit_autoload_hints = 0;
             continue;
         }
 
@@ -699,6 +713,7 @@ int rxcmain(int argc, char *argv[]) {
     context->optimise = do_optimise;
     context->disable_exits = disable_exits || (getenv("RXCP_DISABLE_EXIT") != NULL);
     context->auto_import_rxas = (char) auto_import_rxas;
+    context->emit_autoload_hints = (char) emit_autoload_hints;
     context->executable_import_included = (char)add_executable_import;
     context->executable_import_root_index = executable_import_root_index;
     if (import_resolution_report_path) {

@@ -71,12 +71,14 @@ enum rxbin007_feature_flags {
     RXBIN007_FEATURE_CHANNELS = 1u << 3,
     RXBIN007_FEATURE_NATIVE_PROVIDERS = 1u << 4,
     RXBIN007_FEATURE_INITIALIZERS = 1u << 5,
+    RXBIN007_FEATURE_AUTOLOAD_HINTS = 1u << 6,
     RXBIN007_SUPPORTED_FEATURES = RXBIN007_FEATURE_FIXED_CALLS |
                                    RXBIN007_FEATURE_FROZEN_PARSE |
                                    RXBIN007_FEATURE_NATIVE_STEM |
                                    RXBIN007_FEATURE_CHANNELS |
                                    RXBIN007_FEATURE_NATIVE_PROVIDERS |
-                                   RXBIN007_FEATURE_INITIALIZERS
+                                   RXBIN007_FEATURE_INITIALIZERS |
+                                   RXBIN007_FEATURE_AUTOLOAD_HINTS
 };
 
 typedef struct bin_space bin_space;
@@ -121,7 +123,8 @@ enum const_pool_type {
     STRING_CONST, BINARY_CONST, DECIMAL_CONST, FLOAT_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
     META_FUNC, META_REG, META_CONST, META_CLEAR,
     META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER, META_INLINE, META_SOURCE_STEP,
-    META_TRACE_EVENT, META_TASK_TARGET, META_PROVIDER, META_INITIALIZER
+    META_TRACE_EVENT, META_TASK_TARGET, META_PROVIDER, META_INITIALIZER,
+    META_AUTOLOAD
 };
 
 enum rxbin_provider_flags {
@@ -356,6 +359,15 @@ typedef struct meta_initializer_constant {
     size_t symbol;
     size_t function;
 } meta_initializer_constant;
+
+/* A packaged-bytecode autoload hint for one retained imported callable.
+ * The artifact is a platform-independent RXBIN filename stem, never a path.
+ * Normal symbol/signature linking remains authoritative. */
+typedef struct meta_autoload_constant {
+    meta_entry base;
+    size_t symbol;
+    size_t artifact;
+} meta_autoload_constant;
 
 enum rxbin_section_flags {
     RXBIN_SECTION_INST_PACKED = 1u << 0,

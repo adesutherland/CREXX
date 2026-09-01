@@ -411,6 +411,36 @@ static void output_meta_provider_for_symbol(FILE *stream,
     }
 }
 
+static void output_meta_autoload_for_symbol(FILE *stream,
+                                            module_file *module,
+                                            bin_space *pgm,
+                                            const char *symbol,
+                                            const char *indent) {
+    int m;
+
+    if (!symbol) return;
+    m = module->header.meta_head;
+    while (m != -1) {
+        chameleon_constant *entry =
+            (chameleon_constant *)(module->constant + m);
+        if (entry->type == META_AUTOLOAD) {
+            meta_autoload_constant *autoload =
+                (meta_autoload_constant *)(module->constant + m);
+            char *autoload_symbol =
+                get_const_raw_string_alloc(pgm, autoload->symbol);
+            if (autoload_symbol && strcmp(autoload_symbol, symbol) == 0) {
+                char artifact[MAX_LINE_SIZE];
+                get_const_string(pgm, artifact, sizeof(artifact),
+                                 autoload->artifact);
+                fprintf(stream, "%s.meta \"%s\"=\".autoload\" %s\n",
+                        indent ? indent : "", symbol, artifact);
+            }
+            free(autoload_symbol);
+        }
+        m = ((meta_entry *)(module->constant + m))->next;
+    }
+}
+
 static size_t get_func_string(bin_space *pgm, char *buffer,
                               size_t buffer_len, size_t index);
 
@@ -1243,6 +1273,8 @@ static void output_imported_proc_meta(FILE *stream, module_file *module, bin_spa
                     fprintf(stream, " %s\n",line_buffer);
                     output_meta_inline_for_symbol(stream, module, pgm, raw_symbol, "");
                     output_meta_provider_for_symbol(stream, module, pgm, raw_symbol, "");
+                    output_meta_autoload_for_symbol(stream, module, pgm,
+                                                    raw_symbol, "");
                     output_meta_initializer_for_symbol(stream, module, pgm,
                                                        raw_symbol, "");
                     if (raw_symbol) free(raw_symbol);
@@ -1990,6 +2022,22 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     fprintf(stream, " %s", line_buffer);
                     get_func_string(pgm, line_buffer, MAX_LINE_SIZE,
                                     mentry->function);
+                    fprintf(stream, " %s\n", line_buffer);
+                }
+                    break;
+
+                case META_AUTOLOAD:
+                {
+                    meta_autoload_constant *mentry =
+                        (meta_autoload_constant *)entry;
+                    fprintf(stream,
+                            "* 0x%.6lx META-AUTOLOAD @0x%.6lx",
+                            i, mentry->base.address);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE,
+                                     mentry->symbol);
+                    fprintf(stream, " %s", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE,
+                                     mentry->artifact);
                     fprintf(stream, " %s\n", line_buffer);
                 }
                     break;

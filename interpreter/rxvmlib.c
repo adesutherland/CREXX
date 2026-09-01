@@ -53,6 +53,8 @@ static void help() {
             "cREXX Wrapper Options :\n"
             "  --h              Prints this Help Message\n"
             "  --c              Prints Copyright & License Details\n"
+            "  --autoload       Load hinted packaged RXBIN dependencies (default)\n"
+            "  --no-autoload    Do not load hinted packaged RXBIN dependencies\n"
 #ifndef NDEBUG
             "  --d              Debug/Trace Mode\n"
 #endif
@@ -117,6 +119,14 @@ int main(int argc, char *argv[]) {
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
+        if (strcmp(argv[i], "--autoload") == 0) {
+            context.autoload_enabled = 1u;
+            continue;
+        }
+        if (strcmp(argv[i], "--no-autoload") == 0) {
+            context.autoload_enabled = 0u;
+            continue;
+        }
 #ifdef CREXX_VM_PROFILING
         if (strcmp(argv[i], "--sequence-count") == 0) {
             char *end = 0;

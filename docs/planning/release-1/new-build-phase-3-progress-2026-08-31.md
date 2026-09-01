@@ -99,6 +99,13 @@ This directly addresses the historic `rxc` source-versus-RXBIN search-order
 risk while a library is being built. Compiler-produced metadata remains the
 dependency interface; the build does not invent a second metadata format.
 
+Packaged-RXBIN autoload metadata is deliberately downstream of this build
+graph. When `rxc` actually consumes a declared packaged RXBIN, it may record
+that artifact's stable filename stem for the end-user VM. Source and RXAS
+imports do not create the hint, and the Level B wave builder continues to use
+explicit declared inputs and content keys. Runtime convenience therefore
+cannot become a hidden build dependency or weaken the staged ownership model.
+
 ## 5. Product defects exposed by the builder workload
 
 The builder is also a stress workload for cREXX itself. Two product defects

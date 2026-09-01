@@ -395,6 +395,16 @@ void emit_proc(ASTNode *node, void *pl) {
                             buf = with_provider;
                         }
                     }
+                    if (payload->context->emit_autoload_hints && imported &&
+                        imported->autoload_stem && *imported->autoload_stem) {
+                        char *with_autoload = mprintf(
+                                "%s   .meta \"%s\"=\".autoload\" \"%s\"\n",
+                                buf, proc_fqn, imported->autoload_stem);
+                        if (with_autoload) {
+                            free(buf);
+                            buf = with_autoload;
+                        }
+                    }
                 }
                 if (node->is_task_callable || node_is_taskwork_factory(node)) {
                     char *placeholder = rxcp_task_placeholder_hex(proc_fqn);

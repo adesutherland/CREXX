@@ -82,6 +82,20 @@ letters, digits, `.`, `_`, or `-`. The assembler stores only symbol, provider
 ID and required/optional flags in this record; it does not duplicate the
 callable signature. RXBIN 007 writers set the native-provider feature bit.
 
+Packaged bytecode provenance uses `META_AUTOLOAD`, also paired by callable
+symbol with the canonical `META_FUNC` signature:
+
+```rxas
+.meta "namespace.callable"=".autoload" "packaged-library"
+```
+
+The payload is an exact platform-independent `.rxbin` filename stem, never a
+path. It must start with an ASCII letter or digit and may then contain ASCII
+letters, digits, `.`, `_`, or `-`. RXAS stores the symbol and artifact stem as
+typed string references. RXBIN 007 writers set the autoload-hints feature bit.
+The VM may use the record only if that callable remains unresolved after the
+already loaded module set has linked.
+
 Module initialization uses a dedicated `META_INITIALIZER` record:
 
 ```rxas

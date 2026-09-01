@@ -383,6 +383,10 @@ static int rxinimod_common(rxvm_context *context,
 #endif
     context->location = 0;
     context->provider_location = 0;
+    context->autoload_enabled = 1u;
+    context->autoloaded_artifacts = 0;
+    context->autoloaded_artifact_count = 0u;
+    context->autoloaded_artifact_capacity = 0u;
     context->ext_proc = 0;
     context->ext_argc = 0;
     context->ext_args = 0;
@@ -549,6 +553,10 @@ void rxfremod(rxvm_context *context) {
     rxvm_reference_context_free(&context->references);
     if (context->location) free(context->location);
     if (context->provider_location) free(context->provider_location);
+    for (j = 0; (size_t)j < context->autoloaded_artifact_count; j++) {
+        free(context->autoloaded_artifacts[j]);
+    }
+    free(context->autoloaded_artifacts);
 
     /* Provider instances are context-owned and must die while the worker is
      * idle and its allocator family is still available. */
@@ -1699,6 +1707,122 @@ int rxvm_resolve_provider_dependencies(rxvm_context *context) {
         }
     }
     return 0;
+}
+
+static int autoload_artifact_seen(const rxvm_context *context,
+                                  const char *artifact) {
+    size_t i;
+    for (i = 0u; i < context->autoloaded_artifact_count; i++) {
+        if (strcmp(context->autoloaded_artifacts[i], artifact) == 0) return 1;
+    }
+    return 0;
+}
+
+static void remember_autoload_artifact(rxvm_context *context,
+                                       const char *artifact) {
+    char **items;
+    size_t capacity;
+    char *copy;
+
+    if (autoload_artifact_seen(context, artifact)) return;
+    if (context->autoloaded_artifact_count ==
+        context->autoloaded_artifact_capacity) {
+        capacity = context->autoloaded_artifact_capacity
+                ? context->autoloaded_artifact_capacity * 2u : 8u;
+        items = (char **)realloc(context->autoloaded_artifacts,
+                                capacity * sizeof(*items));
+        if (!items) RX_PANIC_OOM("grow RXBIN autoload set",
+                                 capacity * sizeof(*items), artifact);
+        context->autoloaded_artifacts = items;
+        context->autoloaded_artifact_capacity = capacity;
+    }
+    copy = strdup(artifact);
+    if (!copy) RX_PANIC_OOM("copy RXBIN autoload stem",
+                            strlen(artifact) + 1u, artifact);
+    context->autoloaded_artifacts[context->autoloaded_artifact_count++] = copy;
+}
+
+static int module_symbol_unresolved(module *mod, const char *symbol) {
+    int offset;
+
+    if (!mod || !symbol || !mod->unresolved_symbols) return 0;
+    offset = mod->expose_head;
+    while (offset != -1) {
+        chameleon_constant *entry =
+                (chameleon_constant *)(mod->segment.const_pool + (size_t)offset);
+        if (entry->type == EXPOSE_PROC_CONST) {
+            expose_proc_constant *exposed = (expose_proc_constant *)entry;
+            if (exposed->imported && strcmp(exposed->index, symbol) == 0) {
+                proc_runtime *runtime = rxvm_get_module_runtime_procedure(
+                        mod, exposed->procedure);
+                return runtime && runtime->start == SIZE_MAX;
+            }
+        }
+        offset = ((expose_proc_constant *)entry)->next;
+    }
+    return 0;
+}
+
+int rxvm_resolve_autoload_dependencies(rxvm_context *context) {
+    size_t module_index;
+    int loads = 0;
+
+    if (!context || !context->autoload_enabled) return 0;
+    for (module_index = 0u; module_index < context->num_modules;
+         module_index++) {
+        module *required_module = context->modules[module_index];
+        int offset;
+        size_t visited = 0u;
+
+        if (!required_module || required_module->native ||
+            !required_module->unresolved_symbols) continue;
+        offset = required_module->meta_head;
+        while (offset != -1 &&
+               visited++ <= required_module->segment.const_size / 8u + 1u) {
+            const meta_entry *entry;
+            if (offset < 0 ||
+                (size_t)offset > required_module->segment.const_size ||
+                required_module->segment.const_size - (size_t)offset <
+                        sizeof(meta_entry)) return -1;
+            entry = (const meta_entry *)(required_module->segment.const_pool +
+                                         (size_t)offset);
+            if (entry->base.type == META_AUTOLOAD &&
+                entry->base.size_in_pool >= sizeof(meta_autoload_constant)) {
+                const meta_autoload_constant *autoload =
+                        (const meta_autoload_constant *)entry;
+                const char *symbol = provider_module_string(
+                        required_module, autoload->symbol);
+                const char *artifact = provider_module_string(
+                        required_module, autoload->artifact);
+                if (!symbol || !*symbol || !provider_id_valid(artifact)) {
+                    fprintf(stderr,
+                            "ERROR: invalid RXBIN autoload metadata in module %s\n",
+                            required_module->name);
+                    return -1;
+                }
+                if (module_symbol_unresolved(required_module, symbol) &&
+                    !autoload_artifact_seen(context, artifact)) {
+                    if (rxldmod(context, (char *)artifact) <= 0) {
+                        fprintf(stderr,
+                                "ERROR: RXBIN autoload could not resolve %s for %s; searched for %s.rxbin in %s\n",
+                                symbol, required_module->name, artifact,
+                                context->location ? context->location : ".");
+                        return -1;
+                    }
+                    remember_autoload_artifact(context, artifact);
+                    loads++;
+                }
+            }
+            offset = entry->next;
+        }
+        if (offset != -1) {
+            fprintf(stderr,
+                    "ERROR: cyclic RXBIN metadata chain in module %s\n",
+                    required_module->name);
+            return -1;
+        }
+    }
+    return loads;
 }
 
 /* Loads a module from a memory buffer

@@ -15,6 +15,7 @@ struct rxvm_context* rxvm_create();
  * An empty or NULL path disables dynamic provider discovery; statically linked
  * providers remain available. Returns 0 on success. */
 int rxvm_set_provider_path(struct rxvm_context* ctx, const char* path);
+int rxvm_set_autoload(struct rxvm_context* ctx, int enabled);
 
 /* Destroys a VM context and frees all associated memory. */
 void rxvm_destroy(struct rxvm_context* ctx);

@@ -14,6 +14,7 @@ add_subdirectory(benchmarks)
 add_subdirectory(performance)
 add_subdirectory(reference_iterators)
 add_subdirectory(rxpa)
+add_subdirectory(autoload)
 
 set(CMAKE_C_STANDARD 90)
 

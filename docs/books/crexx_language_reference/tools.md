@@ -21,6 +21,9 @@ Common options:
 - `--level level`: default source level when the source omits one
 - `--import ns`: inject a file-level import; repeatable
 - `--import-rxas`: allow `.rxas` import scanning in binary roots
+- `--autoload`: emit runtime hints for retained imports resolved from packaged
+  `.rxbin` files; this is the default
+- `--no-autoload`: omit packaged-RXBIN runtime hints
 - `--no-exe-import`: omit the compiler executable directory from binary roots;
   intended for toolchain and library self-builds with an explicit dependency set
 - `-o output_stem`: RXAS output stem or `.rxas` file
@@ -111,6 +114,9 @@ Common options:
 - `-c`: copyright and licence details
 - `-d`: debug mode
 - `-l location`: working location
+- `--autoload`: load hinted packaged RXBIN dependencies; this is the default
+- `--no-autoload`: leave hinted dependencies unresolved unless they were
+  supplied explicitly or are already present in a linked/embedded image
 - `-v`: version
 
 The VM executables include:
@@ -122,6 +128,13 @@ The VM executables include:
   not built by MSVC
 - `rxvme`: compiler-selected interpreter with the shipped core bytecode library images
 - `rxbvme`: explicit switch-dispatch interpreter with the shipped core bytecode library images
+
+Autoload hints are exact packaged filename stems, not paths or namespace-to-file
+rules. For example, a hint for `rxfnsg` asks the VM to find `rxfnsg.rxbin` in
+the normal `-l` module roots. The VM first links everything supplied explicitly
+or embedded in the selected executable, and follows a hint only while its
+associated callable remains unresolved. Source and RXAS imports do not create
+these hints.
 
 On Unix-like systems `rxvm` is a relative link to the selected concrete VM. On
 Windows it is a copied executable so ordinary callers always use the same

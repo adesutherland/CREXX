@@ -58,6 +58,8 @@ static void help() {
             "  -p plugin       Load VM Plugin*\n"
             "  --provider-path directories\n"
             "                  Trusted ';'-separated RXPA provider directories\n"
+            "  --autoload      Load hinted packaged RXBIN dependencies (default)\n"
+            "  --no-autoload   Do not load hinted packaged RXBIN dependencies\n"
             "  -c              Prints Copyright & License Details\n"
 #ifndef NDEBUG
             "  -d              Debug/Trace Mode\n"
@@ -202,6 +204,14 @@ int main(int argc, char *argv[]) {
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
+        if (strcmp(argv[i], "--autoload") == 0) {
+            context.autoload_enabled = 1u;
+            continue;
+        }
+        if (strcmp(argv[i], "--no-autoload") == 0) {
+            context.autoload_enabled = 0u;
+            continue;
+        }
         if (strcmp(argv[i], "--provider-path") == 0) {
             i++;
             if (i >= argc || !argv[i][0])

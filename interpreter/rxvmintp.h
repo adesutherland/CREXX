@@ -578,6 +578,11 @@ typedef struct rxvm_context {
     char *location;
     /* Trusted, semicolon-separated RXPA provider-manifest directories. */
     char *provider_location;
+    /* Packaged RXBIN dependency hints are followed by default. */
+    unsigned char autoload_enabled;
+    char **autoloaded_artifacts;
+    size_t autoloaded_artifact_count;
+    size_t autoloaded_artifact_capacity;
     size_t num_modules;
     size_t module_buffer_size;
     module **modules;
@@ -670,6 +675,9 @@ int rxldmod_provider(rxvm_context *context, char *provider_file,
 
 /* Resolves RXBIN META_PROVIDER requirements before ordinary procedure link. */
 int rxvm_resolve_provider_dependencies(rxvm_context *context);
+/* Loads exact <artifact>.rxbin hints for imports still unresolved after the
+ * currently loaded/embedded module set has linked. Returns loads, or -1. */
+int rxvm_resolve_autoload_dependencies(rxvm_context *context);
 
 /* Loads a module from a memory buffer
  * returns 0  - Error

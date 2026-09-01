@@ -896,6 +896,19 @@ RXVM_HANDLER(METALOADDATA_REG_REG_REG, VM_ADVANCE(3);
                                     (rxinteger) ((meta_initializer_constant *)
                                             (pool + i))->function;
                             break;
+                        case META_AUTOLOAD:
+                            set_null_string(op1R->attributes[j],
+                                            ".meta_autoload");
+                            set_num_attributes(op1R->attributes[j], 2);
+                            x = (rxinteger) ((meta_autoload_constant *)
+                                    (pool + i))->symbol;
+                            set_const_string(op1R->attributes[j]->attributes[0],
+                                             (string_constant *) (pool + x));
+                            x = (rxinteger) ((meta_autoload_constant *)
+                                    (pool + i))->artifact;
+                            set_const_string(op1R->attributes[j]->attributes[1],
+                                             (string_constant *) (pool + x));
+                            break;
                         case STRING_CONST:
                         case FLOAT_CONST:
                         case PROC_CONST:

@@ -37,6 +37,19 @@ canonical artifact stem: native packaging prefers `<provider>.a`/`.lib` and
 falls back to the historical `<provider>_static.a`/`.lib` name. A native
 package therefore does not maintain a second hand-written provider list.
 
+## Packaged bytecode autoload hints
+
+Selected `META_AUTOLOAD` records are runtime convenience metadata. `rxlink`
+remaps and preserves their callable-symbol and packaged-filename-stem
+references, but does not use them to discover linker inputs. Explicit link
+inputs and ordinary symbol/signature selection remain authoritative.
+
+It is safe to retain a hint whose provider has been selected into the linked
+image. At runtime the VM links all explicit and embedded modules first and
+follows only hints attached to callables that are still unresolved. Thus a
+deployable linked image does not reopen or duplicate a dependency merely
+because the original separately compiled consumer recorded its package stem.
+
 ## Module initializers
 
 Selected `META_INITIALIZER` records are runtime contract metadata. `rxlink`
@@ -118,7 +131,9 @@ Selectors match by:
   descriptors so a provider with the right name but wrong return or argument
   signature is rejected before output is written.
 
-The linker preserves the metadata chain in output because the VM and tooling still consume it at runtime.
+The linker preserves the metadata chain in output because the VM and tooling
+still consume it at runtime. This includes packaged bytecode autoload hints;
+they are transport metadata, not linker discovery instructions.
 
 Task metadata is also runtime contract metadata. `.task1`, `.task2` and
 `.task3` entries carry an 80-byte sealed binding containing image digest,

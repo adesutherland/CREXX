@@ -132,6 +132,7 @@ struct Context {
     char in_exit_bridge;
     char disable_exits;
     char auto_import_rxas;
+    char emit_autoload_hints;
     /* Contract-stub parsing validates declarations before the complete class
      * registry exists. Imported inline bodies are attached later, when the
      * stub enters a real consumer compilation context. */
@@ -176,6 +177,7 @@ struct imported_func {
     char *args;
     char *implementation;
     char *provider_id; /* Stable RXPA provider ID, or NULL for bytecode/legacy imports. */
+    char *autoload_stem; /* Packaged RXBIN provider stem, or NULL for source/RXAS imports. */
     Context *context;
     char is_variable; /* 0=function, 1=global variable */
     char is_task_callable; /* Sealed Gate F callable contract. */

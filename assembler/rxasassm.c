@@ -2895,6 +2895,41 @@ void rxasmeil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
     const char *option_text;
 
     option_text = (const char *)option->token_value.string;
+    if (strcmp(option_text, ".autoload") == 0) {
+        meta_autoload_constant *autoload;
+        const unsigned char *p;
+        size_t s_artifact;
+
+        if (payload->token_type != STRING) {
+            rxaserat(context, payload, "Autoload metadata requires a string RXBIN artifact stem");
+            return;
+        }
+        p = (const unsigned char *)payload->token_value.string;
+        if (!*p || !((*p >= 'A' && *p <= 'Z') ||
+                     (*p >= 'a' && *p <= 'z') ||
+                     (*p >= '0' && *p <= '9'))) {
+            rxaserat(context, payload, "Autoload artifact stem must start with an ASCII letter or digit");
+            return;
+        }
+        for (; *p; p++) {
+            if (!((*p >= 'A' && *p <= 'Z') ||
+                  (*p >= 'a' && *p <= 'z') ||
+                  (*p >= '0' && *p <= '9') ||
+                  *p == '.' || *p == '_' || *p == '-')) {
+                rxaserat(context, payload, "Autoload artifact stem may contain only ASCII letters, digits, '.', '_' and '-'");
+                return;
+            }
+        }
+        entry = add_meta_entry(context, sizeof(meta_autoload_constant), META_AUTOLOAD);
+        s_sym = add_string_to_pool(
+                context, symbol, (char *)symbol->token_value.string);
+        s_artifact = add_string_to_pool(
+                context, payload, (char *)payload->token_value.string);
+        autoload = (meta_autoload_constant *)(context->binary.const_pool + entry);
+        autoload->symbol = s_sym;
+        autoload->artifact = s_artifact;
+        return;
+    }
     if (strcmp(option_text, ".provider") == 0 ||
         strcmp(option_text, ".provider.required") == 0 ||
         strcmp(option_text, ".provider.optional") == 0) {
@@ -2963,7 +2998,7 @@ void rxasmeil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
     }
 
     if (strcmp(option_text, ".inline") != 0) {
-        rxaserat(context, option, "Expecting .inline, .provider[.required|.optional] or .task1/.task2/.task3 metadata option");
+        rxaserat(context, option, "Expecting .autoload, .inline, .provider[.required|.optional] or .task1/.task2/.task3 metadata option");
         return;
     }
     if (payload->token_type != STRING) {

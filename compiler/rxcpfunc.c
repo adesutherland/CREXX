@@ -833,6 +833,48 @@ static int import_is_rxpa_metadata(const char *file_name) {
     return strcasecmp(file_name + file_len - suffix_len, suffix) == 0;
 }
 
+static char *packaged_rxbin_stem(const char *file_name) {
+    const char *artifact;
+    const char *base;
+    const char *slash;
+    const char *backslash;
+    size_t length;
+    size_t suffix_length = strlen(".rxbin");
+    char *stem;
+    const unsigned char *cursor;
+
+    if (!file_name) return 0;
+    artifact = strrchr(file_name, '@');
+    if (!artifact || !artifact[1]) return 0;
+    artifact++;
+    slash = strrchr(artifact, '/');
+    backslash = strrchr(artifact, '\\');
+    base = artifact;
+    if (slash && slash[1]) base = slash + 1;
+    if (backslash && backslash[1] && backslash >= base) base = backslash + 1;
+    length = strlen(base);
+    if (length <= suffix_length ||
+        strcasecmp(base + length - suffix_length, ".rxbin") != 0) return 0;
+    length -= suffix_length;
+    if (!length) return 0;
+    if (!((base[0] >= 'A' && base[0] <= 'Z') ||
+          (base[0] >= 'a' && base[0] <= 'z') ||
+          (base[0] >= '0' && base[0] <= '9'))) return 0;
+    for (cursor = (const unsigned char *)base;
+         (size_t)(cursor - (const unsigned char *)base) < length;
+         cursor++) {
+        if (!((*cursor >= 'A' && *cursor <= 'Z') ||
+              (*cursor >= 'a' && *cursor <= 'z') ||
+              (*cursor >= '0' && *cursor <= '9') ||
+              *cursor == '.' || *cursor == '_' || *cursor == '-')) return 0;
+    }
+    stem = malloc(length + 1u);
+    if (!stem) RX_PANIC_OOM("copy RXBIN autoload stem", length + 1u, base);
+    memcpy(stem, base, length);
+    stem[length] = 0;
+    return stem;
+}
+
 /* Adds a func / variable to the master context*/
 /* Returns 0 on success, 1 on duplicate
  * If it is a duplicate this function either calls freimpfc(func) or stashes it in the duplicate list
@@ -3808,6 +3850,7 @@ static imported_func *rximpf_provider_f(
     func->is_task_callable = is_task_callable;
     func->provider_id = provider_id && *provider_id
             ? strdup(provider_id) : 0;
+    func->autoload_stem = provider_id ? 0 : packaged_rxbin_stem(file_name);
     func->duplicate = 0;
     func->error_state = 0;
     func->error_field = 0;
@@ -3960,6 +4003,7 @@ void freimpfc(imported_func *func) {
     if (func->args) free(func->args);
     if (func->implementation) free(func->implementation);
     if (func->provider_id) free(func->provider_id);
+    if (func->autoload_stem) free(func->autoload_stem);
     if (func->context) fre_cntx(func->context);
     if (func->duplicate) freimpfc(func->duplicate);
     free(func);

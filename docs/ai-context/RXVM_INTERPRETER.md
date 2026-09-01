@@ -7,11 +7,13 @@ The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loa
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `inc/rxvm.h`):
 1. **Creation**: `rxvm_create()` allocates the root `rxvm_context`.
 2. **Loading**: `rxvm_load()` ingests one or more 007 containers, validates the fixed header and six sections, materializes portable constants/metadata and the semantic graph, expands variable-integer instructions into the normal runtime image, and loads each module directory entry into an internal `module` struct. A linked container shares one materialized pool and graph across its modules; concatenated archive containers remain independently owned.
-3. **Provider resolution and linking**: `rxvm_link()` first resolves declared
+3. **Dependency resolution and linking**: `rxvm_link()` first resolves declared
    `META_PROVIDER` dependencies, then traverses newly loaded modules to resolve
-   exports and external imports into a unified memory map. The call is
-   dirty-checked, so repeated bridge/runtime entry points become fast no-ops
-   when no module state changed.
+   exports and external imports into a unified memory map. After that ordinary
+   link pass, unresolved callable imports with `META_AUTOLOAD` hints may load
+   their exact packaged RXBIN stems. Linking and hint resolution repeat to a
+   fixed point. The call is dirty-checked, so repeated bridge/runtime entry
+   points become fast no-ops when no module state changed.
 4. **Preparation**: `rxvm_prepare()` builds an owned per-module
    `execution_image` for both VM modes. Operand cells are copied and direct
    function operands are rebound to process-local `proc_runtime *` values.
@@ -61,12 +63,27 @@ generic native-library directory sweep. A declared native callable is
 different: `META_PROVIDER` causes provider-stem resolution before procedure
 linking.
 
+Packaged bytecode autoload is a narrower, default-on convenience. A consumer
+compiled against `some-library.rxbin` may carry `META_AUTOLOAD` records naming
+the exact stem `some-library`. The VM first gives explicitly loaded, linked and
+embedded modules the opportunity to satisfy each callable. Only a callable
+that is still unresolved can trigger a search for `some-library.rxbin` in the
+ordinary module roots (`-l`, or the current directory when no location is
+set). Newly loaded packages are linked and their own unresolved hints are
+processed to a fixed point. There is no namespace scan, wildcard search,
+source lookup or path in the metadata.
+
+`--autoload` states the default explicitly; `--no-autoload` retains fully
+explicit loading for diagnostics, packaging checks and compatibility.
+Embedders can make the same choice with `rxvm_set_autoload()`.
+
 The extended `rxvme` and `rxbvme` products embed the shipped core bytecode
 images: the Level B library, class library and native-provider declarations,
 the Level C compatibility library, the Level G library, and RexxScript. This
 embedded bundle is independent of metadata-driven native-provider discovery.
-Application bytecode libraries remain explicit runtime inputs; they are not
-found by sweeping compiler import roots or user-controlled directories.
+Application bytecode libraries can be supplied explicitly, linked into the
+image, or found by an exact packaged-stem autoload hint. They are never found
+by sweeping compiler import roots or by guessing a filename from a namespace.
 
 The static catalogue is checked first. Dynamic fallback opens only
 `<provider-id>.rxplugin` in, in order, the application-local `providers`
@@ -96,6 +113,7 @@ The root state of the VM environment. It houses the loaded modules, global confi
 typedef struct rxvm_context {
     char *location;
     char *provider_location;
+    unsigned char autoload_enabled;
     size_t num_modules;
     module **modules;
     struct avl_tree_node *exposed_proc_tree;
